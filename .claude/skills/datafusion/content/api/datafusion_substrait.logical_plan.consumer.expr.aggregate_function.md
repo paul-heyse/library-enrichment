@@ -10,6 +10,9 @@ Crate `datafusion-substrait` · 1 public items · structured records in [`model/
 async fn from_substrait_agg_func(consumer: &impl SubstraitConsumer, f: &substrait::proto::AggregateFunction, input_schema: &datafusion::common::DFSchema, filter: Option<Box<datafusion::logical_expr::Expr>>, order_by: Vec<datafusion::logical_expr::SortExpr>, distinct: bool) -> datafusion::common::Result<std::sync::Arc<datafusion::logical_expr::Expr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.expr.aggregate_function.from_substrait_agg_func.md).
+
+
 Convert Substrait AggregateFunction to DataFusion Expr
 
 ---

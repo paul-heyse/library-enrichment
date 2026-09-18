@@ -35,6 +35,9 @@ fn new_empty(&self) -> Self
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.value.MetricValue.md).
+
+
 Possible values for a [super::Metric].
 
 Among other differences, the metric types have different ways to
@@ -56,6 +59,9 @@ enum RatioMergeStrategy
 **Variants**: `AddPartAddTotal`, `AddPartSetTotal`, `SetPartAddTotal`
 
 **Derives**: Clone, Debug, Default
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.value.RatioMergeStrategy.md).
+
 
 ---
 
@@ -86,6 +92,9 @@ fn value(&self) -> usize
 ```rust
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.value.Count.md).
+
 
 A counter to record things such as number of input or output rows
 
@@ -123,6 +132,9 @@ fn value(&self) -> usize
 ```rust
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.value.Gauge.md).
+
 
 A gauge is the simplest metrics type. It just returns a value.
 For example, you can easily expose current memory consumption with a gauge.
@@ -163,6 +175,9 @@ fn subtract_matched(&self, n: usize)
 ```rust
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.value.PruningMetrics.md).
+
 
 Counters tracking pruning metrics
 
@@ -210,6 +225,9 @@ fn with_merge_strategy(self, merge_strategy: RatioMergeStrategy) -> Self
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.value.RatioMetrics.md).
+
+
 Counters tracking ratio metrics (e.g. matched vs total)
 
 The counters are thread-safe and shared across clones.
@@ -243,6 +261,9 @@ fn stop_with(&mut self, end_time: Instant)
 ```rust
 fn drop(&mut self)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.value.ScopedTimerGuard.md).
+
 
 RAAI structure that adds all time between its construction and
 destruction to the CPU time or the first call to `stop` whichever
@@ -282,6 +303,9 @@ fn value(&self) -> usize
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.value.Time.md).
+
+
 Measure a potentially non contiguous duration of time
 
 ---
@@ -316,6 +340,9 @@ fn value(&self) -> Option<DateTime<Utc>>
 ```rust
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.value.Timestamp.md).
+
 
 Stores a single timestamp, stored as the number of nanoseconds
 elapsed from Jan 1, 1970 UTC

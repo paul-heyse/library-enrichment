@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 5 public items · structured records in [`model/buoyan
 ## DEFAULT_FILE_ACTIONS_PER_SIDECAR_HINT
 
 `constant` · `buoyant_kernel::checkpoint::DEFAULT_FILE_ACTIONS_PER_SIDECAR_HINT`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.checkpoint.DEFAULT_FILE_ACTIONS_PER_SIDECAR_HINT.md)
 
 Also reachable as `delta_kernel::checkpoint::DEFAULT_FILE_ACTIONS_PER_SIDECAR_HINT`
 
@@ -21,6 +22,7 @@ the caller does not provide an explicit hint.
 ## CheckpointSpec
 
 `enum` · `buoyant_kernel::checkpoint::CheckpointSpec`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.checkpoint.CheckpointSpec.md)
 
 Also reachable as `delta_kernel::checkpoint::CheckpointSpec`
 
@@ -39,6 +41,7 @@ Specifies the checkpoint format and behavior.
 ## V2CheckpointConfig
 
 `enum` · `buoyant_kernel::checkpoint::V2CheckpointConfig`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.checkpoint.V2CheckpointConfig.md)
 
 Also reachable as `delta_kernel::checkpoint::V2CheckpointConfig`
 
@@ -60,6 +63,7 @@ the rest (`protocol`, `metaData`, `txn`, etc.).
 ## CheckpointWriter
 
 `struct` · `buoyant_kernel::checkpoint::CheckpointWriter`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.checkpoint.CheckpointWriter.md)
 
 Also reachable as `delta_kernel::checkpoint::CheckpointWriter`
 
@@ -77,12 +81,6 @@ struct CheckpointWriter
 fn checkpoint_data(&self, engine: &dyn Engine) -> DeltaResult<ActionReconciliationIterator>
 fn checkpoint_path(&self) -> DeltaResult<Url>
 fn finalize(self, engine: &dyn Engine, last_checkpoint_stats: &LastCheckpointHintStats) -> DeltaResult<()>
-```
-
-**via `buoyant_kernel::action_reconciliation::RetentionCalculator`**
-
-```rust
-fn table_properties(&self) -> &TableProperties
 ```
 
 Orchestrates the process of creating a checkpoint for a table.
@@ -103,6 +101,7 @@ See the [module-level documentation](self) for the complete checkpoint workflow
 ## LastCheckpointHintStats
 
 `struct` · `buoyant_kernel::checkpoint::LastCheckpointHintStats`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.checkpoint.LastCheckpointHintStats.md)
 
 Also reachable as `delta_kernel::checkpoint::LastCheckpointHintStats`
 

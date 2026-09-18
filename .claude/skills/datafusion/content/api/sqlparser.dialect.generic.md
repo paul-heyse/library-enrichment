@@ -104,6 +104,9 @@ fn supports_with_fill(&self) -> bool
 fn supports_xml_expressions(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.generic.GenericDialect.md).
+
+
 A permissive, general purpose [`Dialect`], which parses a wide variety of SQL
 statements, from many different dialects.
 

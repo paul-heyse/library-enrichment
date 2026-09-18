@@ -79,15 +79,14 @@ crate::native_struct! {
     /// Exact purpose-specific Delta relation selected by a retained result.
     pub struct ResultVersion {
         tool: String => Rule::Vocabulary(crate::wire::data::ToolData::VALUES.iter().map(|value|(*value).to_owned()).collect()),
-        table_id: String => Rule::NonEmpty,
-        version: u64 => Rule::Text,
-        contract_id: String => Rule::Sha256,
+        source: crate::delta_reference::DeltaVersionRef => Rule::Text,
     }
 }
 crate::native_struct! { pub struct RetainedResult {
     result_artifact_id: String => Rule::Reference(Domain::Artifact),
     body_base: u64 => Rule::UnsignedRange { min: 0, max: 32 * 1024 * 1024 },
     version: ResultVersion => Rule::Text,
+    snapshots: Vec<crate::identity::SnapshotId> => Rule::SequenceBounds { min: 0, max: 32 },
     sections: Vec<ResultSection> => Rule::SequenceBounds { min: 0, max: 128 },
     references: Vec<ResultReference> => Rule::SequenceBounds { min: 0, max: 1024 },
 } }

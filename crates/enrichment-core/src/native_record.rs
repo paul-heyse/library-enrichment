@@ -15,9 +15,18 @@ use std::sync::Arc;
 pub fn record(fields: Fields, args: Vec<Expr>) -> Expr {
     ScalarUDF::from(NativeRecord {
         signature: Signature::variadic_any(Volatility::Immutable),
-        fields,
+        fields: Some(fields),
     })
     .call(args)
+}
+
+/// SQL construction derives each child from the complete input Field. The native
+/// constructor still validates constant names and arity; no domain is invented here.
+pub fn named_struct() -> ScalarUDF {
+    ScalarUDF::from(NativeRecord {
+        signature: Signature::variadic_any(Volatility::Immutable),
+        fields: None,
+    })
 }
 
 pub(crate) fn is_record(function: &ScalarUDF) -> bool {
@@ -27,12 +36,12 @@ pub(crate) fn is_record(function: &ScalarUDF) -> bool {
 #[derive(Debug, PartialEq, Eq, Hash)]
 struct NativeRecord {
     signature: Signature,
-    fields: Fields,
+    fields: Option<Fields>,
 }
 
 impl ScalarUDFImpl for NativeRecord {
     fn name(&self) -> &str {
-        "native_named_struct_v1"
+        "native_named_struct"
     }
     fn signature(&self) -> &Signature {
         &self.signature
@@ -46,29 +55,39 @@ impl ScalarUDFImpl for NativeRecord {
         let DataType::Struct(names) = native.data_type() else {
             return datafusion::common::internal_err!("native named_struct output shape");
         };
+        let values: Vec<_> = fields.iter().skip(1).step_by(2).cloned().collect();
+        let declared = self.fields.clone().unwrap_or_else(|| {
+            names
+                .iter()
+                .zip(&values)
+                .map(|(name, value)| Arc::new(value.as_ref().clone().with_name(name.name())))
+                .collect()
+        });
         if names
             .iter()
             .map(|f| f.name())
-            .ne(self.fields.iter().map(|f| f.name()))
+            .ne(declared.iter().map(|f| f.name()))
         {
             return datafusion::common::plan_err!("native record field names changed");
         }
-        let values: Vec<_> = fields.iter().skip(1).step_by(2).cloned().collect();
-        crate::native_schema::function_arguments(&values, &self.fields)?;
+        crate::native_schema::function_arguments(&values, &declared)?;
         Ok(Arc::new(Field::new(
             self.name(),
-            DataType::Struct(self.fields.clone()),
+            DataType::Struct(declared),
             false,
         )))
     }
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
         crate::native_schema::function_call(self, &args)?;
+        let DataType::Struct(fields) = args.return_field.data_type() else {
+            return datafusion::common::internal_err!("native record output shape");
+        };
         let options = arrow::compute::CastOptions {
             safe: false,
             ..Default::default()
         };
-        let mut arrays = Vec::with_capacity(self.fields.len());
-        for (arg, field) in args.args.iter().skip(1).step_by(2).zip(&self.fields) {
+        let mut arrays = Vec::with_capacity(fields.len());
+        for (arg, field) in args.args.iter().skip(1).step_by(2).zip(fields) {
             let value = arg
                 .cast_to(
                     crate::native_schema::nullable_layout(field).data_type(),
@@ -81,7 +100,7 @@ impl ScalarUDFImpl for NativeRecord {
             )?);
         }
         Ok(ColumnarValue::Array(Arc::new(
-            arrow::array::StructArray::try_new(self.fields.clone(), arrays, None)?,
+            arrow::array::StructArray::try_new(fields.clone(), arrays, None)?,
         )))
     }
 }

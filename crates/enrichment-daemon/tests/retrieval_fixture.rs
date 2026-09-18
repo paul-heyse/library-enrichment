@@ -13,11 +13,6 @@ mod producer_records;
 mod complete_answer;
 use complete_answer::complete_answer;
 
-#[path = "../../enrichment-store/tests/support/read_parquet.rs"]
-mod parquet_read;
-#[path = "../../enrichment-store/tests/support/write_parquet.rs"]
-mod parquet_write;
-
 #[path = "../../enrichment-store/tests/support/native_ingest.rs"]
 pub mod native_ingest;
 
@@ -121,7 +116,8 @@ async fn call(service: &Service, method: &str, params: serde_json::Value) -> ser
             })
         );
     }
-    let result = response.result.expect("an envelope");
+    let result =
+        serde_json::to_value(response.result.expect("an envelope")).expect("RPC JSON projection");
     if method == "library.resolve" {
         complete_answer::wait_for_answer(service, result).await
     } else {
@@ -144,7 +140,12 @@ async fn cold_version_comparison_waits_for_exact_acquisitions() {
         let service = service_with(config.clone(), dir.path());
         let pending = call(&service, "library.compare", request.clone()).await;
         assert_eq!(pending["status"], "pending", "{pending}");
-        let job_id = pending["data"]["job_id"].as_str().unwrap().to_owned();
+        let job_id: enrichment_core::identity::JobId = pending["data"]["job_id"]
+            .as_str()
+            .unwrap()
+            .to_owned()
+            .try_into()
+            .unwrap();
         let active = std::fs::read(
             dir.path()
                 .join("data/jobs/active")
@@ -160,7 +161,7 @@ async fn cold_version_comparison_waits_for_exact_acquisitions() {
                 .await
                 .unwrap()
                 .into_iter()
-                .find(|v| v.operation_id == job_id)
+                .find(|v| v.operation_id == job_id.to_string())
                 .expect("completed comparison operation");
             eprintln!(
                 "PLAN13_COMPARISON_MEASUREMENT {}",
@@ -184,7 +185,7 @@ async fn cold_version_comparison_waits_for_exact_acquisitions() {
             .unwrap()
             .unwrap();
         assert_eq!(
-            published.after_snapshot_id.as_str(),
+            published.after_snapshot_id.to_string().as_str(),
             result["data"]["after"]["snapshot_id"].as_str().unwrap()
         );
         (job_id, result, active)
@@ -471,7 +472,7 @@ fn feature_gated_items_follow_the_documented_build_configuration() {
             .unwrap(),
         );
         let run = ProducerRun {
-            attempt_id: "fixture".into(),
+            attempt_id: enrichment_core::identity::AttemptId::new(),
             producer: "rustdoc-json".into(),
             producer_version: enrichment_core::producer::rustdoc::NORMALIZER_VERSION.into(),
             config_digest: "fixture".into(),
@@ -494,10 +495,10 @@ fn feature_gated_items_follow_the_documented_build_configuration() {
             IngestContext {
                 ecosystem: enrichment_core::identity::Ecosystem::Rust,
                 symbol_package: "enr_fixture".into(),
-                release_id: "rel_fixture".into(),
-                environment_id: "env_fixture".into(),
+                release_id: format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
+                environment_id: format!("env_{}", "a".repeat(64)).try_into().unwrap(),
                 source_version_match: SourceVersionMatch::Exact,
-                producing_attempt: run.attempt_id.clone(),
+                producing_attempt: run.attempt_id,
                 producer_runs: vec![run],
                 artifacts: vec![artifact],
                 indexed: vec![EvidenceKind::PublicApi],
@@ -1071,7 +1072,7 @@ async fn measure_research_operations_one_and_eight_clients() {
                         let frame = serde_json::json!({"jsonrpc":"2.0","id":1,"method":method,"params":params}).to_string();
                         let response = server::dispatch(&service, &frame).await.response.unwrap();
                         assert!(response.error.is_none(), "{:?}", response.error);
-                        let answer = response.result.unwrap();
+                        let answer = serde_json::to_value(response.result.unwrap()).expect("RPC JSON projection");
                         let first_response_micros = start.elapsed().as_micros();
                         let observation = service.repository.runtime.operation_diagnostics().await.unwrap().into_iter().find(|v| Some(v.operation_id.as_str()) == answer["request_id"].as_str()).expect("the response owns its native query observations");
                         let (answer, delivery) = complete_answer::complete_answer_measured(&service, answer).await;
@@ -1338,9 +1339,6 @@ async fn invalid_catalog_selection_cannot_redirect_retained_resolution() {
 
 #[tokio::test]
 async fn corrupted_stored_observations_are_errors_across_retrieval_boundaries() {
-    use arrow::array::StringArray;
-    use arrow::record_batch::RecordBatch;
-    use std::sync::Arc;
     let upstream = Upstream::start();
     let dir = tempfile::tempdir().expect("dir");
     let service = service_with(config_for(&upstream), dir.path());
@@ -1349,21 +1347,36 @@ async fn corrupted_stored_observations_are_errors_across_retrieval_boundaries() 
         resolved["snapshot_id"].as_str().expect("id").to_owned(),
     )
     .expect("id");
-    let snapshot = service.paths.snapshots().join(snapshot_id.as_str());
-    // Deliberate corruption of service-owned test evidence: malformed present fields must
-    // never become empty evidence. A real file read follows, not a mocked query Result.
-    let path = snapshot.join("fragments.parquet");
-    let batches = parquet_read::read_parquet(&path).expect("read");
-    assert_eq!(batches.len(), 1);
-    let batch = &batches[0];
-    let mut columns = batch.columns().to_vec();
-    let text_index = batch.schema().index_of("text").expect("text column");
-    columns[text_index] = Arc::new(StringArray::from(vec![
-        Some("tampered content");
-        batch.num_rows()
-    ]));
-    let corrupted = RecordBatch::try_new(batch.schema(), columns).expect("batch");
-    parquet_write::write_parquet(&path, &corrupted, &[]).expect("corrupt test snapshot");
+    let catalog = service.repository.catalog.pin().await.unwrap();
+    let manifest = catalog
+        .snapshot(&service.repository.runtime, &snapshot_id)
+        .await
+        .unwrap()
+        .unwrap()
+        .publication;
+    let binding = manifest
+        .tables
+        .iter()
+        .find(|binding| binding.relation == "fragments")
+        .unwrap();
+    let delta = enrichment_store::native_delta::DeltaStore::new(
+        &service.paths.data_root.join("delta"),
+        service.repository.runtime.clone(),
+    )
+    .unwrap();
+    let table = delta
+        .load(
+            &binding.source.table.table_uri,
+            Some(binding.source.version),
+        )
+        .await
+        .unwrap();
+    let path = url::Url::parse(&table.get_file_uris().unwrap().next().unwrap())
+        .unwrap()
+        .to_file_path()
+        .unwrap();
+    // Corrupt an actual selected native Delta file, including any warm metadata path.
+    std::fs::write(&path, b"invalid native parquet footer").unwrap();
     for (method, mut params) in [
         (
             "symbol.inspect",
@@ -1408,9 +1421,13 @@ async fn publish_comparison_variant(
         producer::{ProducerRun, RunOutcome},
         wire::{EvidenceClass, SourceVersionMatch},
     };
-    let original = enrichment_daemon::ops::common::open_context(service, &ctx(resolved), None)
-        .await
-        .expect("context");
+    let original = enrichment_daemon::ops::common::open_context(
+        service,
+        &ctx(resolved).try_into().unwrap(),
+        None,
+    )
+    .await
+    .expect("context");
     let mut release = original.release.clone();
     release.key.version = version.into();
     release.release_id = release.key.id();
@@ -1441,8 +1458,6 @@ async fn publish_comparison_variant(
         .await
         .expect("inputs")
         .remove(0);
-    let payload =
-        String::from_utf8(service.blobs.read(&input.sha256).expect("rustdoc bytes")).expect("utf8");
     let source = original
         .reader
         .artifacts()
@@ -1451,6 +1466,20 @@ async fn publish_comparison_variant(
         .into_iter()
         .find(|a| a.artifact_id == input.artifact_id && a.source_uri == input.source_uri)
         .expect("rustdoc source");
+    let bytes = service
+        .blobs
+        .read_owned(
+            &source,
+            268_435_456,
+            &service
+                .repository
+                .runtime
+                .session()
+                .runtime_env()
+                .memory_pool,
+        )
+        .expect("owned rustdoc bytes");
+    let payload = std::str::from_utf8(&bytes).expect("utf8").to_owned();
     let fragments = vec![
         DocumentFact::new(
             FragmentKind::ChangelogSection,
@@ -1469,7 +1498,7 @@ async fn publish_comparison_variant(
         .expect("valid fixture locator"),
     ];
     let run = ProducerRun {
-        attempt_id: format!("fixture-{version}-{}", environment.environment_id),
+        attempt_id: enrichment_core::identity::AttemptId::new(),
         producer: "comparison-fixture".into(),
         producer_version: "1".into(),
         config_digest: "fixture-normalization".into(),
@@ -1497,10 +1526,10 @@ async fn publish_comparison_variant(
         IngestContext {
             ecosystem: release.key.ecosystem,
             symbol_package: original.reader.manifest().crate_name.clone(),
-            release_id: release.release_id.to_string(),
-            environment_id: environment.environment_id.to_string(),
+            release_id: release.release_id.clone(),
+            environment_id: environment.environment_id.clone(),
             source_version_match: SourceVersionMatch::Unknown,
-            producing_attempt: run.attempt_id.clone(),
+            producing_attempt: run.attempt_id,
             producer_runs: vec![run],
             artifacts: vec![artifact, source],
             indexed: vec![

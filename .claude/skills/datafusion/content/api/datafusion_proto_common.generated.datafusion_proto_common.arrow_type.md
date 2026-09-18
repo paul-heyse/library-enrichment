@@ -30,4 +30,7 @@ fn merge(field: &mut ::core::option::Option<ArrowTypeEnum>, tag: u32, wire_type:
 fn try_from(val: &DataType) -> Result<Self, Self::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.arrow_type.ArrowTypeEnum.md).
+
+
 ---

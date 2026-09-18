@@ -73,6 +73,9 @@ fn from_iter<I: IntoIterator<Item = Option<&'a str>>>(iter: I) -> Self
 fn from_iter<I: IntoIterator<Item = &'a str>>(iter: I) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.run_array.RunArray.md).
+
+
 An array of [run-end encoded values].
 
 This encoding is variation on [run-length encoding (RLE)] and is good for representing
@@ -161,6 +164,9 @@ unsafe fn value_unchecked(&self, logical_index: usize) -> Self::Item
 fn into_iter(self) -> Self::IntoIter
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.run_array.TypedRunArray.md).
+
+
 A [`RunArray`] typed typed on its child values array
 
 Implements [`ArrayAccessor`] and [`IntoIterator`] allowing fast access to its elements
@@ -200,6 +206,9 @@ fn values(&self) -> &Arc<dyn Array>
 fn with_values(&self, values: ArrayRef) -> ArrayRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.run_array.AnyRunEndArray.md).
+
+
 An array that can be downcast to a [`RunArray`] of any run end type and any value type.
 
 This can be used to efficiently implement kernels for all possible run end
@@ -214,6 +223,9 @@ types without needing to create specialized implementations for each key type.
 ```rust
 type Int16RunArray = RunArray<types::Int16Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.run_array.Int16RunArray.md).
+
 
 
 A [`RunArray`] with `i16` run ends
@@ -239,6 +251,9 @@ assert_eq!(array.values(), &values);
 type Int32RunArray = RunArray<types::Int32Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.run_array.Int32RunArray.md).
+
+
 
 A [`RunArray`] with `i32` run ends
 
@@ -262,6 +277,9 @@ assert_eq!(array.values(), &values);
 ```rust
 type Int64RunArray = RunArray<types::Int64Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.run_array.Int64RunArray.md).
+
 
 
 A [`RunArray`] with `i64` run ends

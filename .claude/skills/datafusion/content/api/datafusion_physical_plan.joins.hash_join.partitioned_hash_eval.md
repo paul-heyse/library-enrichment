@@ -44,6 +44,9 @@ fn try_to_proto(&self, ctx: &datafusion_physical_expr_common::physical_expr::pro
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.hash_join.partitioned_hash_eval.HashExpr.md).
+
+
 Physical expression that computes hash values for a set of columns
 
 This expression computes the hash of join key columns using a specific RandomState.
@@ -93,6 +96,9 @@ fn try_to_proto(&self, _ctx: &datafusion_physical_expr_common::physical_expr::pr
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.hash_join.partitioned_hash_eval.HashTableLookupExpr.md).
+
+
 Physical expression that checks join keys in a [`Map`] (hash table or array map).
 
 Returns a [`BooleanArray`](arrow::array::BooleanArray) indicating if join keys (from `on_columns`) exist in the map.
@@ -118,6 +124,9 @@ fn random_state(&self) -> &RandomState
 fn seed(&self) -> u64
 const fn with_seed(k: u64) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.hash_join.partitioned_hash_eval.SeededRandomState.md).
+
 
 RandomState wrapper that preserves the seed used to create it.
 

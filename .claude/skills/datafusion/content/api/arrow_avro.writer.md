@@ -24,6 +24,9 @@ fn offsets(&self) -> &[usize]
 fn row(&self, n: usize) -> Result<Bytes, AvroError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.writer.EncodedRows.md).
+
+
 A contiguous set of Avro encoded rows.
 
 `EncodedRows` stores:
@@ -56,6 +59,9 @@ fn encode_batches(&mut self, batches: &[RecordBatch]) -> Result<(), AvroError>
 fn flush(&mut self) -> EncodedRows
 fn schema(&self) -> SchemaRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.writer.Encoder.md).
+
 
 A row-by-row encoder for Avro *stream/message* formats (SOE / registry wire formats / raw binary).
 
@@ -127,6 +133,9 @@ fn write(&mut self, batch: &RecordBatch) -> Result<(), AvroError>
 fn write_batches(&mut self, batches: &[&RecordBatch]) -> Result<(), AvroError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.writer.Writer.md).
+
+
 Generic Avro writer.
 
 This type is generic over the output Write sink (`W`) and the Avro format (`F`).
@@ -159,6 +168,9 @@ fn with_fingerprint_strategy(self, strategy: FingerprintStrategy) -> Self
 fn with_row_capacity(self, capacity: usize) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.writer.WriterBuilder.md).
+
+
 Builder to configure and create a `Writer`.
 
 ---
@@ -170,6 +182,9 @@ Builder to configure and create a `Writer`.
 ```rust
 type AvroStreamWriter<W> = Writer<W, writer::format::AvroSoeFormat>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.writer.AvroStreamWriter.md).
+
 
 Alias for an Avro **Single Object Encoding** stream writer.
 
@@ -212,6 +227,9 @@ assert!(!bytes.is_empty());
 ```rust
 type AvroWriter<W> = Writer<W, writer::format::AvroOcfFormat>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.writer.AvroWriter.md).
+
 
 Alias for an Avro **Object Container File** writer.
 

@@ -16,6 +16,9 @@ enum DecodeResult<T: Debug>
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/parquet.DecodeResult.md).
+
+
 What data is needed to read the next item from a decoder.
 
 This is used to communicate between the decoder and the caller

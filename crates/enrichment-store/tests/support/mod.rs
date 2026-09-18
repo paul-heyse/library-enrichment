@@ -12,7 +12,10 @@ use enrichment_core::{
     wire::SourceVersionMatch,
 };
 
-pub fn rust_evidence_for(release_id: &str, environment_id: &str) -> EvidenceRows {
+pub fn rust_evidence_for(
+    release_id: enrichment_core::identity::ReleaseId,
+    environment_id: enrichment_core::identity::EnvironmentId,
+) -> EvidenceRows {
     let payload = include_str!("../../../../tests/fixtures/rustdoc/enr-fixture-0.1.0-default.json");
     let artifact = Artifact::describe(
         payload.as_bytes(),
@@ -29,12 +32,18 @@ pub fn rust_evidence_for(release_id: &str, environment_id: &str) -> EvidenceRows
         IngestContext {
             ecosystem: Ecosystem::Rust,
             symbol_package: "enr_fixture".into(),
-            release_id: release_id.into(),
-            environment_id: environment_id.into(),
+            release_id,
+            environment_id,
             source_version_match: SourceVersionMatch::Exact,
-            producing_attempt: "attempt-fixture".into(),
+            producing_attempt: "attempt_00112233445566778899aabbccddeeff"
+                .to_owned()
+                .try_into()
+                .unwrap(),
             producer_runs: vec![ProducerRun {
-                attempt_id: "attempt-fixture".into(),
+                attempt_id: "attempt_00112233445566778899aabbccddeeff"
+                    .to_owned()
+                    .try_into()
+                    .unwrap(),
                 producer: "rustdoc-json".into(),
                 producer_version: "2".into(),
                 config_digest: enrichment_core::canonical::sha256_hex(b"configuration"),

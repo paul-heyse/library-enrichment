@@ -16,7 +16,7 @@ pub(crate) async fn resolution(
     let session = runtime.session();
     let batch = crate::control_jobs::Resolution::batch(std::slice::from_ref(value))?;
     let schema = batch.schema();
-    let frame = session.read_batch(batch)?;
+    let frame = crate::native_catalog::batch(&session, "operation_policy", batch)?;
     let predicates = frame.clone();
     let invalid = runtime
         .native_read(async move {
@@ -55,8 +55,8 @@ pub(crate) async fn admit(
         SELECT d.job_id,d.job_key,d.policy_id,d.operation_revision,
           d.arguments.kind AS operation,
           coalesce(d.arguments.resolve.request.ecosystem,d.arguments.compare.request.ecosystem,CASE WHEN d.arguments.compare IS NOT NULL THEN 'rust' END) AS ecosystem,
-          coalesce(d.arguments.verify.request.context_id,d.arguments.inspect.request.context_id) AS context_id,
-          coalesce(d.arguments.verify.request.snapshot_id,d.arguments.inspect.request.snapshot_id) AS snapshot_id,
+          native_coalesce(d.arguments.verify.request.context_id,d.arguments.inspect.request.context_id) AS context_id,
+          native_coalesce(d.arguments.verify.request.snapshot_id,d.arguments.inspect.request.snapshot_id) AS snapshot_id,
           CASE WHEN d.arguments.verify IS NOT NULL THEN CASE WHEN d.arguments.verify.request.mode='runtime' THEN 'runtime' ELSE 'build' END
                WHEN d.arguments.inspect IS NOT NULL THEN CASE WHEN d.arguments.inspect.request.execution.runtime IS NOT NULL THEN 'runtime' ELSE 'build' END
                ELSE 'static' END AS profile,
@@ -72,7 +72,8 @@ pub(crate) async fn admit(
     crate::native_catalog::work(
         session,
         "operation_input",
-        session.read_batches(input.batches)?.into_view(),
+        crate::native_catalog::captured_batches(session, "operation_policy", input.batches)?
+            .into_view(),
     )?;
     let scope = session.sql("SELECT t.*, d.job_key,d.policy_id,d.operation_revision,d.operation,coalesce(d.ecosystem,r.key.ecosystem) AS ecosystem,d.context_id,d.snapshot_id,c.environment_id,d.profile,d.requested_profile,d.freshness,d.snippet,d.snippet_limit FROM operation_input d JOIN operation_queued t ON d.job_id=t.job_id LEFT JOIN state.records.contexts c ON c.context_id=d.context_id LEFT JOIN state.records.releases r ON c.release_id=r.release_id").await?;
     crate::native_catalog::work(session, "operation_scope", scope.into_view())?;
@@ -89,10 +90,10 @@ pub(crate) async fn admit(
           END AS refusal
         FROM operation_scope q LEFT JOIN operation_routes r ON q.ecosystem=r.ecosystem AND q.profile=r.profile
         LEFT JOIN state.records.snapshots s ON q.snapshot_id=s.snapshot_id AND q.context_id=s.context_id
-    "#).await?.with_param_values(vec![
-        datafusion::common::ScalarValue::from(crate::control_jobs::OPERATION_REVISION),
-        datafusion::common::ScalarValue::from(policy.identity()),
-    ])?;
+    "#).await?.with_param_values(datafusion::common::ParamValues::List(vec![
+        datafusion::common::ScalarValue::from(crate::control_jobs::OPERATION_REVISION).into(),
+        policy.identity().parameter(),
+    ]))?;
     runtime
         .require_empty(
             decisions
@@ -109,7 +110,9 @@ pub(crate) async fn admit(
 /// Verify identities at the bounded ingress; callers cannot invent a shared key or policy ID.
 pub(crate) async fn validate(runtime: &QueryRuntime, command: &Command) -> Result<()> {
     let session = runtime.session();
-    let frame = session.read_batch(
+    let frame = crate::native_catalog::batch(
+        &session,
+        "operation_policy",
         <Command as enrichment_core::native_union::NativeStruct>::batch(std::slice::from_ref(
             command,
         ))?,

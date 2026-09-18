@@ -4,11 +4,40 @@ use datafusion::common::{
     runtime::{JoinSetTracer, set_join_set_tracer},
 };
 use futures::future::BoxFuture;
-use std::{any::Any, sync::OnceLock};
+use std::{
+    any::Any,
+    sync::{Arc, OnceLock},
+};
 use tokio_util::task::TaskTracker;
 use tracing::{Instrument, instrument::WithSubscriber};
 
 tokio::task_local! { static TASKS: Option<TaskTracker>; }
+tokio::task_local! { static INPUT: Option<Arc<dyn Send + Sync>>; }
+
+/// Mechanical lifetime propagation for a private input/output owner. It grants no query,
+/// effect or deletion authority. Native async, blocking and final-release descendants retain it.
+#[derive(Clone)]
+pub(crate) struct InputContext(Option<Arc<dyn Send + Sync>>);
+impl InputContext {
+    pub(crate) fn owned(owner: Arc<dyn Send + Sync>) -> Self {
+        Self(Some(owner))
+    }
+    pub(crate) fn capture() -> Self {
+        Self(INPUT.try_with(Clone::clone).ok().flatten())
+    }
+    pub(crate) fn retaining(owner: Arc<dyn Send + Sync>) -> Self {
+        match Self::capture().0 {
+            Some(parent) => Self::owned(Arc::new((parent, owner))),
+            None => Self::owned(owner),
+        }
+    }
+    pub(crate) async fn scope<T>(self, work: impl Future<Output = T>) -> T {
+        INPUT.scope(self.0, work).await
+    }
+    pub(crate) fn run<T>(self, work: impl FnOnce() -> T) -> T {
+        INPUT.sync_scope(self.0, work)
+    }
+}
 
 /// Runtime ownership is distinct from operation/effect authority. Root drivers establish
 /// this scope; DataFusion children keep a token through physical exit, including callbacks
@@ -44,9 +73,10 @@ impl JoinSetTracer for NativeContext {
         let admission = crate::runtime::capture_query_admission();
         let effects = crate::native_effect::capture();
         let physical = physical_context();
+        let input = InputContext::capture();
         let tasks = physical.0.clone();
         let work = physical
-            .scope(admission.scope(operation.scope(effects.scope(work))))
+            .scope(input.scope(admission.scope(operation.scope(effects.scope(work)))))
             .instrument(tracing::Span::current())
             .with_current_subscriber();
         match tasks {
@@ -65,12 +95,13 @@ impl JoinSetTracer for NativeContext {
         let dispatch = tracing::dispatcher::get_default(Clone::clone);
         let span = tracing::Span::current();
         let physical = physical_context();
+        let input = InputContext::capture();
         let token = physical.0.as_ref().map(TaskTracker::token);
         Box::new(move || {
             let _token = token;
             tracing::dispatcher::with_default(&dispatch, || {
                 let _span = span.enter();
-                physical.run(|| admission.run(|| operation.run(|| effects.run(work))))
+                physical.run(|| input.run(|| admission.run(|| operation.run(|| effects.run(work)))))
             })
         })
     }
@@ -89,6 +120,32 @@ pub(crate) fn install() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn plan19_private_owner_survives_cancelled_native_blocking_child() -> Result<()> {
+        let scratch = tempfile::tempdir()?;
+        let runtime = crate::runtime::QueryRuntime::new(scratch.path(), Default::default())?;
+        let owner = Arc::new(());
+        let weak = Arc::downgrade(&owner);
+        let (started, begun) = tokio::sync::oneshot::channel();
+        let (finish, waiting) = std::sync::mpsc::channel();
+        let child = InputContext::owned(owner).run(|| {
+            runtime.spawn_blocking(move || {
+                started.send(()).expect("started");
+                waiting.recv().expect("finish");
+            })
+        });
+        begun.await.expect("native child entered");
+        drop(child);
+        assert!(
+            weak.upgrade().is_some(),
+            "blocking work retains the input after caller cancellation"
+        );
+        finish.send(()).expect("running native child");
+        runtime.close_diagnostics().await?;
+        assert!(weak.upgrade().is_none());
+        Ok(())
+    }
 
     #[tokio::test]
     async fn native_child_tasks_keep_operation_identity_and_expired_budget() -> Result<()> {

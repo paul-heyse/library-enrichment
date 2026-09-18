@@ -1,0 +1,969 @@
+[
+  {
+    "id": "924ce5b595743633a244c2d5",
+    "path": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+    "name": "ReplaceDistinctWithAggregate",
+    "owner": null,
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct ReplaceDistinctWithAggregate",
+    "docs": "Optimizer that replaces logical [[Distinct]] with a logical [[Aggregate]]\n\n```text\nSELECT DISTINCT a, b FROM tab\n```\n\nInto\n```text\nSELECT a, b FROM tab GROUP BY a, b\n```\n\nOn the other hand, for a `DISTINCT ON` query the replacement is\na bit more involved and effectively converts\n```text\nSELECT DISTINCT ON (a) b FROM tab ORDER BY a DESC, c\n```\n\ninto\n```text\nSELECT b FROM (\n    SELECT a, FIRST_VALUE(b ORDER BY a DESC, c) AS b\n    FROM tab\n    GROUP BY a\n)\nORDER BY a DESC\n```\n\nIn case there are no columns, the [[Distinct]] is replaced by a [[Limit]]\n\n```text\nSELECT DISTINCT * FROM empty_table\n```\n\nInto\n```text\nSELECT * FROM empty_table LIMIT 1\n```",
+    "span": {
+      "filename": "src/replace_distinct_aggregate.rs",
+      "begin": [
+        69,
+        1
+      ],
+      "end": [
+        69,
+        43
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": false
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          956,
+          957,
+          958,
+          959,
+          960,
+          961,
+          962,
+          963,
+          964,
+          965,
+          966,
+          967,
+          968,
+          969,
+          970,
+          971,
+          972,
+          974,
+          976,
+          744
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "Distinct": 952,
+      "Aggregate": 953,
+      "Limit": 954
+    },
+    "link_paths": {
+      "Distinct": "datafusion_expr::logical_plan::plan::Distinct",
+      "Aggregate": "datafusion_expr::logical_plan::plan::Aggregate",
+      "Limit": "datafusion_expr::logical_plan::plan::Limit"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "745",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.md",
+    "record_file": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.json",
+    "anchor": "op-924ce5b595743633a244c2d5",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Distinct": "../operations/datafusion_expr.logical_plan.plan.Distinct.md#op-28302c630380381883e33eed",
+      "Aggregate": "../operations/datafusion_expr.logical_plan.plan.Aggregate.md#op-ec4cb4b20e4e0b500a880004",
+      "Limit": "../operations/datafusion_expr.logical_plan.plan.Limit.md#op-67e94f8f23b1855beec8a417"
+    }
+  },
+  {
+    "id": "ed57c14913888a40f69f4406",
+    "path": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate::apply_order",
+    "name": "apply_order",
+    "owner": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_order(&self) -> Option<ApplyOrder>",
+    "docs": "",
+    "span": {
+      "filename": "src/replace_distinct_aggregate.rs",
+      "begin": [
+        206,
+        5
+      ],
+      "end": [
+        208,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 220,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ApplyOrder",
+                          "id": 221,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "220": "core::option::Option",
+      "221": "datafusion_optimizer::optimizer::ApplyOrder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ReplaceDistinctWithAggregate",
+          "id": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/replace_distinct_aggregate.rs",
+        "begin": [
+          78,
+          1
+        ],
+        "end": [
+          209,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "743",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.md",
+    "record_file": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.json",
+    "anchor": "op-ed57c14913888a40f69f4406",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "05bde16b88fc584be113e3cb",
+    "path": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate::default",
+    "name": "default",
+    "owner": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn default() -> ReplaceDistinctWithAggregate",
+    "docs": "",
+    "span": {
+      "filename": "src/replace_distinct_aggregate.rs",
+      "begin": [
+        68,
+        10
+      ],
+      "end": [
+        68,
+        17
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "resolved_path": {
+              "path": "ReplaceDistinctWithAggregate",
+              "id": 745,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "745": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ReplaceDistinctWithAggregate",
+          "id": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/replace_distinct_aggregate.rs",
+        "begin": [
+          68,
+          10
+        ],
+        "end": [
+          68,
+          17
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "973",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.md",
+    "record_file": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.json",
+    "anchor": "op-05bde16b88fc584be113e3cb",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "89fab61e54e0f19f19f97dd6",
+    "path": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate::fmt",
+    "name": "fmt",
+    "owner": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/replace_distinct_aggregate.rs",
+      "begin": [
+        68,
+        19
+      ],
+      "end": [
+        68,
+        24
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 53,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 54,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "53": "core::fmt::Formatter",
+      "54": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ReplaceDistinctWithAggregate",
+          "id": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/replace_distinct_aggregate.rs",
+        "begin": [
+          68,
+          19
+        ],
+        "end": [
+          68,
+          24
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "975",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.md",
+    "record_file": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.json",
+    "anchor": "op-89fab61e54e0f19f19f97dd6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f9f7cff364b813881d34559c",
+    "path": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate::name",
+    "name": "name",
+    "owner": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &str",
+    "docs": "",
+    "span": {
+      "filename": "src/replace_distinct_aggregate.rs",
+      "begin": [
+        202,
+        5
+      ],
+      "end": [
+        204,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ReplaceDistinctWithAggregate",
+          "id": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/replace_distinct_aggregate.rs",
+        "begin": [
+          78,
+          1
+        ],
+        "end": [
+          209,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "742",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.md",
+    "record_file": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.json",
+    "anchor": "op-f9f7cff364b813881d34559c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1f0bab1dc467180d7be95518",
+    "path": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate::new",
+    "name": "new",
+    "owner": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/replace_distinct_aggregate.rs",
+      "begin": [
+        73,
+        5
+      ],
+      "end": [
+        75,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[expect(missing_docs)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ReplaceDistinctWithAggregate",
+          "id": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/replace_distinct_aggregate.rs",
+        "begin": [
+          71,
+          1
+        ],
+        "end": [
+          76,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "955",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.md",
+    "record_file": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.json",
+    "anchor": "op-1f0bab1dc467180d7be95518",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0496659d0f2287f8deaa7c49",
+    "path": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate::rewrite",
+    "name": "rewrite",
+    "owner": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/replace_distinct_aggregate.rs",
+      "begin": [
+        83,
+        5
+      ],
+      "end": [
+        200,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "plan",
+              {
+                "resolved_path": {
+                  "path": "LogicalPlan",
+                  "id": 59,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "OptimizerConfig",
+                            "id": 223,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Transformed",
+                          "id": 148,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "LogicalPlan",
+                                      "id": 59,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "59": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "223": "datafusion_optimizer::optimizer::OptimizerConfig",
+      "61": "datafusion_common::error::Result",
+      "148": "datafusion_common::tree_node::Transformed"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ReplaceDistinctWithAggregate",
+          "id": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/replace_distinct_aggregate.rs",
+        "begin": [
+          78,
+          1
+        ],
+        "end": [
+          209,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "741",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.md",
+    "record_file": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.json",
+    "anchor": "op-0496659d0f2287f8deaa7c49",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "59de3ad48b7dbabbfd0c1cd3",
+    "path": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate::supports_rewrite",
+    "name": "supports_rewrite",
+    "owner": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_rewrite(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/replace_distinct_aggregate.rs",
+      "begin": [
+        79,
+        5
+      ],
+      "end": [
+        81,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ReplaceDistinctWithAggregate",
+          "id": "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/replace_distinct_aggregate.rs",
+        "begin": [
+          78,
+          1
+        ],
+        "end": [
+          209,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "740",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.md",
+    "record_file": "operations/datafusion_optimizer.replace_distinct_aggregate.ReplaceDistinctWithAggregate.json",
+    "anchor": "op-59de3ad48b7dbabbfd0c1cd3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

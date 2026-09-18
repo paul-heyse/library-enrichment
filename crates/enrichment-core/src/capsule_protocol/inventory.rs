@@ -115,6 +115,17 @@ fn file_entry(path: &Path, metadata: &std::fs::Metadata, limit: u64) -> io::Resu
 
 /// Capture every regular file and directory under this root, following no links.
 pub fn capture(root: &Path, byte_limit: u64) -> io::Result<Inventory> {
+    capture_bounded(root, byte_limit, super::ENTRY_LIMIT)
+}
+
+/// Source extractors and contained producers share one physical inventory reader, with
+/// the entry ceiling of their declared input class.
+pub fn capture_bounded(root: &Path, byte_limit: u64, entry_limit: usize) -> io::Result<Inventory> {
+    if entry_limit == 0 {
+        return Err(io::Error::other(
+            "input inventory requires a positive entry bound",
+        ));
+    }
     if !std::fs::symlink_metadata(root)?.file_type().is_dir() {
         return Err(io::Error::other("retained input root is not a directory"));
     }
@@ -131,7 +142,7 @@ pub fn capture(root: &Path, byte_limit: u64) -> io::Result<Inventory> {
                 .to_str()
                 .ok_or_else(|| io::Error::other("non-UTF8 retained input"))?;
             super::validate_path(name)?;
-            if result.len() >= super::ENTRY_LIMIT {
+            if result.len() >= entry_limit {
                 return Err(io::Error::other(
                     "retained input inventory exceeds its path/count bound",
                 ));

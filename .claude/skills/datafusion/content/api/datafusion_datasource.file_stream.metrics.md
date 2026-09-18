@@ -20,6 +20,9 @@ struct FileStreamMetrics
 fn new(metrics: &ExecutionPlanMetricsSet, partition: usize) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_stream.metrics.FileStreamMetrics.md).
+
+
 Metrics for [`FileStream`]
 
 Note that all of these metrics are in terms of wall clock time
@@ -48,6 +51,9 @@ struct StartableTime
 fn start(&mut self)
 fn stop(&mut self)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_stream.metrics.StartableTime.md).
+
 
 A timer that can be started and stopped.
 

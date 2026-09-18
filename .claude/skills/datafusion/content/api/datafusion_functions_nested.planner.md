@@ -20,6 +20,9 @@ struct FieldAccessPlanner
 fn plan_field_access(&self, expr: RawFieldAccessExpr, schema: &DFSchema) -> Result<PlannerResult<RawFieldAccessExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.planner.FieldAccessPlanner.md).
+
+
 ---
 
 ## NestedFunctionPlanner
@@ -41,5 +44,8 @@ fn plan_array_literal(&self, exprs: Vec<Expr>, _schema: &DFSchema) -> Result<Pla
 fn plan_binary_op(&self, expr: RawBinaryExpr, schema: &DFSchema) -> Result<PlannerResult<RawBinaryExpr>>
 fn plan_make_map(&self, args: Vec<Expr>) -> Result<PlannerResult<Vec<Expr>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.planner.NestedFunctionPlanner.md).
+
 
 ---

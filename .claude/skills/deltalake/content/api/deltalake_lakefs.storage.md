@@ -5,6 +5,7 @@ Crate `deltalake-lakefs` · 1 public items · structured records in [`model/delt
 ## LakeFSObjectStoreFactory
 
 `struct` · `deltalake_lakefs::storage::LakeFSObjectStoreFactory`
+[Full member contracts, output types and access classification](../operations/deltalake_lakefs.storage.LakeFSObjectStoreFactory.md)
 
 ```rust
 struct LakeFSObjectStoreFactory

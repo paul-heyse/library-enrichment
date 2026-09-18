@@ -99,7 +99,7 @@ Full table with Rust setters in [`../catalogs/config-options.md`](../catalogs/co
 ## Decision rules
 
 - Row-group and page pruning depend on statistics being written; a reader cannot prune what the writer omitted.
-- Bloom filters help equality predicates on high-cardinality columns and cost space everywhere else.
+- Bloom filters can exclude row groups for supported predicates when written and enabled. Measure usefulness against selectivity, storage and read overhead.
 - Metadata caching matters when the same files are queried repeatedly; it is a `RuntimeEnv` setting.
 
 ## Anti-patterns

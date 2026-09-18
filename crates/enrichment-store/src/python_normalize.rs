@@ -101,7 +101,7 @@ fn validate_transport(path: &Path) -> Result<()> {
 impl PythonFacts {
     pub async fn open(
         runtime: &QueryRuntime,
-        directory: Arc<tempfile::TempDir>,
+        directory: Arc<crate::PrivateDirectory>,
         files: &[WorkerFile],
     ) -> Result<Self> {
         if files.len() > worker::MAX_FILES {
@@ -109,15 +109,20 @@ impl PythonFacts {
         }
         let path = directory.path().join("worker.arrow");
         let check = path.clone();
+        let checking_owner = directory.clone();
         runtime
-            .blocking(move || validate_transport(&check))
+            .blocking(move || {
+                let _owner = checking_owner;
+                validate_transport(&check)
+            })
             .await??;
         let session = runtime.session();
         let provider = arrow_input::provider(runtime, &path, worker::schema()).await?;
         let source = session.read_table(provider)?.into_view();
-        session.register_table(
+        crate::native_catalog::work(
+            &session,
             "worker_facts",
-            leases::staged_view(&source, &session, directory)?,
+            leases::input_view(&source, &session, directory)?,
         )?;
         let inventory = RecordBatch::try_new(
             Arc::new(Schema::new(vec![
@@ -136,7 +141,11 @@ impl PythonFacts {
                 ))),
             ],
         )?;
-        session.register_table("expected_files", session.read_batch(inventory)?.into_view())?;
+        crate::native_catalog::work(
+            &session,
+            "expected_files",
+            crate::native_catalog::batch(&session, "python_normalize", inventory)?.into_view(),
+        )?;
         let this = Self {
             session,
             runtime: runtime.clone(),
@@ -235,8 +244,11 @@ impl PythonFacts {
         Ok(this)
     }
     async fn view(&self, name: &str, sql: &str) -> Result<()> {
-        self.session
-            .register_table(name, self.session.sql(sql).await?.into_view())?;
+        crate::native_catalog::work(
+            &self.session,
+            name,
+            self.session.sql(sql).await?.into_view(),
+        )?;
         Ok(())
     }
     async fn reject(&self, sql: &str, rule: &str) -> Result<()> {
@@ -460,8 +472,11 @@ impl PythonFacts {
                     null(&DataType::Utf8)?,
                 ])?,
             )?;
-        self.session
-            .register_table("identified_variants", variants.clone().into_view())?;
+        crate::native_catalog::work(
+            &self.session,
+            "identified_variants",
+            variants.clone().into_view(),
+        )?;
         let definitions = crate::native_delta::project(
             variants.clone().select(vec![
                 col("definition_id"),
@@ -481,8 +496,7 @@ impl PythonFacts {
             "path_id",
             Key::PublicPath.bind(vec![lit("python"), col("components")])?,
         )?;
-        self.session
-            .register_table("identified_paths", paths.into_view())?;
+        crate::native_catalog::work(&self.session, "identified_paths", paths.into_view())?;
         let bindings = self.session.sql("SELECT *,array_slice(components,1,CAST(array_length(components) AS BIGINT)-1) AS parent_components, array_element(components,-1) AS name FROM identified_paths").await?
             .with_column("parent_path_id",datafusion::logical_expr::when(
                 datafusion::functions_nested::expr_fn::array_length(col("components")).gt(lit(1_u64)),
@@ -494,8 +508,11 @@ impl PythonFacts {
             crate::native_delta::project(bindings, Relation::Symbols.schema()?.as_ref())?
                 .distinct()?;
         let bound = self.session.sql("SELECT b.*, v.symbol_id FROM bound_observations b JOIN identified_variants v ON b.path=v.path AND b.declared_kind=v.declared_kind").await?;
-        self.session
-            .register_table("identified_observations", bound.clone().into_view())?;
+        crate::native_catalog::work(
+            &self.session,
+            "identified_observations",
+            bound.clone().into_view(),
+        )?;
         let subject = variant(
             &field_type(Relation::ApiObservations, "subject")?,
             "symbol",
@@ -787,7 +804,18 @@ mod tests {
             max_memory_bytes: 1024 * 1024 * 1024,
             max_cpu_seconds: 30,
         };
-        let directory = Arc::new(tempfile::tempdir_in(root.path()).unwrap());
+        let runtime = QueryRuntime::new(&root.path().join("spill"), Default::default()).unwrap();
+        let control =
+            crate::control::ControlStore::open(&root.path().join("state"), runtime.clone())
+                .unwrap();
+        let retention = crate::retention::RetentionStore::new(control, runtime.clone());
+        let directory = crate::PrivateDirectory::create(
+            &retention,
+            &runtime,
+            crate::private_directory::Kind::Worker,
+        )
+        .await
+        .unwrap();
         let python = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.venv/bin/python");
         let mut process = Command::new(python)
             .args(["-I", "-B", "-m", "enrichment_worker"])
@@ -798,6 +826,7 @@ mod tests {
             .stderr(Stdio::piped())
             .spawn()
             .unwrap();
+        directory.protect_child(process.id()).await.unwrap();
         process
             .stdin
             .take()
@@ -810,7 +839,6 @@ mod tests {
             "{}",
             String::from_utf8_lossy(&output.stderr)
         );
-        let runtime = QueryRuntime::new(&root.path().join("spill"), Default::default()).unwrap();
         let facts = PythonFacts::open(&runtime, directory.clone(), &files)
             .await
             .unwrap();
@@ -828,7 +856,7 @@ mod tests {
             release_id: format!("rel_{}", "1".repeat(64)).try_into().unwrap(),
             environment_id: format!("env_{}", "1".repeat(64)).try_into().unwrap(),
             source_version_match: SourceVersionMatch::Exact,
-            producing_attempt: "attempt".into(),
+            producing_attempt: enrichment_core::identity::AttemptId::new(),
             producer_runs: vec![],
             artifacts: vec![],
             indexed: vec![],

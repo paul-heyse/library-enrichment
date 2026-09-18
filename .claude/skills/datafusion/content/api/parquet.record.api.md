@@ -38,6 +38,9 @@ fn to_json_value(&self) -> Value
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.record.api.Field.md).
+
+
 API to represent a single field in a `Row`.
 
 ---
@@ -88,6 +91,9 @@ fn get_ulong(&self, i: usize) -> Result<u64>
 fn get_ushort(&self, i: usize) -> Result<u16>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.record.api.List.md).
+
+
 `List` represents a list which contains an array of elements.
 
 ---
@@ -119,6 +125,9 @@ fn len(&self) -> usize
 fn get_keys<'a>(&'a self) -> Box<dyn ListAccessor + 'a>
 fn get_values<'a>(&'a self) -> Box<dyn ListAccessor + 'a>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.record.api.Map.md).
+
 
 `Map` represents a map which contains a list of key->value pairs.
 
@@ -186,6 +195,9 @@ fn is_null(&self, i: usize) -> Result<bool>
 fn fmt(&self, i: usize) -> &dyn fmt::Display
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.record.api.Row.md).
+
+
 `Row` represents a nested Parquet record.
 
 ---
@@ -207,6 +219,9 @@ struct RowColumnIter<'a>
 ```rust
 fn next(&mut self) -> Option<Self::Item>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.record.api.RowColumnIter.md).
+
 
 `RowColumnIter` represents an iterator over column names and values in a Row.
 
@@ -251,6 +266,9 @@ fn get_ulong(&self, i: usize) -> Result<u64>
 fn get_ushort(&self, i: usize) -> Result<u16>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.record.api.ListAccessor.md).
+
+
 Trait for type-safe access of an index for a `List`.
 Note that the get_XXX methods do not do bound checking.
 
@@ -276,6 +294,9 @@ trait MapAccessor
 fn get_keys<'a>(&'a self) -> Box<dyn ListAccessor + 'a>
 fn get_values<'a>(&'a self) -> Box<dyn ListAccessor + 'a>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.record.api.MapAccessor.md).
+
 
 Trait for type-safe access of an index for a `Map`
 
@@ -321,6 +342,9 @@ fn get_ushort(&self, i: usize) -> Result<u16>
 fn is_null(&self, i: usize) -> Result<bool>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.record.api.RowAccessor.md).
+
+
 Trait for type-safe convenient access to fields within a Row.
 
 ---
@@ -344,6 +368,9 @@ trait RowFormatter
 ```rust
 fn fmt(&self, i: usize) -> &dyn fmt::Display
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.record.api.RowFormatter.md).
+
 
 Trait for formatting fields within a Row.
 

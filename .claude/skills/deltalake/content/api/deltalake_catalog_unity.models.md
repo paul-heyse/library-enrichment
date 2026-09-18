@@ -5,6 +5,7 @@ Crate `deltalake-catalog-unity` · 29 public items · structured records in [`mo
 ## CatalogType
 
 `enum` · `deltalake_catalog_unity::models::CatalogType`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.CatalogType.md)
 
 ```rust
 enum CatalogType
@@ -29,6 +30,7 @@ The type of the catalog.
 ## ColumnTypeName
 
 `enum` · `deltalake_catalog_unity::models::ColumnTypeName`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.ColumnTypeName.md)
 
 ```rust
 enum ColumnTypeName
@@ -57,6 +59,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## DataSourceFormat
 
 `enum` · `deltalake_catalog_unity::models::DataSourceFormat`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.DataSourceFormat.md)
 
 ```rust
 enum DataSourceFormat
@@ -81,6 +84,7 @@ Possible data source formats for unity tables
 ## GetSchemaResponse
 
 `enum` · `deltalake_catalog_unity::models::GetSchemaResponse`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.GetSchemaResponse.md)
 
 ```rust
 enum GetSchemaResponse
@@ -105,6 +109,7 @@ List schemas response
 ## GetTableResponse
 
 `enum` · `deltalake_catalog_unity::models::GetTableResponse`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.GetTableResponse.md)
 
 ```rust
 enum GetTableResponse
@@ -129,6 +134,7 @@ Get table response
 ## IsolationMode
 
 `enum` · `deltalake_catalog_unity::models::IsolationMode`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.IsolationMode.md)
 
 ```rust
 enum IsolationMode
@@ -153,6 +159,7 @@ Whether the current securable is accessible from all workspaces or a specific se
 ## ListCatalogsResponse
 
 `enum` · `deltalake_catalog_unity::models::ListCatalogsResponse`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.ListCatalogsResponse.md)
 
 ```rust
 enum ListCatalogsResponse
@@ -177,6 +184,7 @@ List catalogs response
 ## ListSchemasResponse
 
 `enum` · `deltalake_catalog_unity::models::ListSchemasResponse`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.ListSchemasResponse.md)
 
 ```rust
 enum ListSchemasResponse
@@ -201,6 +209,7 @@ List schemas response
 ## ListTableSummariesResponse
 
 `enum` · `deltalake_catalog_unity::models::ListTableSummariesResponse`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.ListTableSummariesResponse.md)
 
 ```rust
 enum ListTableSummariesResponse
@@ -225,6 +234,7 @@ List table summaries response
 ## ProvisioningState
 
 `enum` · `deltalake_catalog_unity::models::ProvisioningState`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.ProvisioningState.md)
 
 ```rust
 enum ProvisioningState
@@ -247,6 +257,7 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 ## TableTempCredentialsResponse
 
 `enum` · `deltalake_catalog_unity::models::TableTempCredentialsResponse`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.TableTempCredentialsResponse.md)
 
 ```rust
 enum TableTempCredentialsResponse
@@ -269,6 +280,7 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 ## TableType
 
 `enum` · `deltalake_catalog_unity::models::TableType`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.TableType.md)
 
 ```rust
 enum TableType
@@ -299,6 +311,7 @@ Possible data source formats for unity tables
 ## AwsTempCredentials
 
 `struct` · `deltalake_catalog_unity::models::AwsTempCredentials`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.AwsTempCredentials.md)
 
 ```rust
 struct AwsTempCredentials
@@ -321,6 +334,7 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 ## AzureUserDelegationSas
 
 `struct` · `deltalake_catalog_unity::models::AzureUserDelegationSas`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.AzureUserDelegationSas.md)
 
 ```rust
 struct AzureUserDelegationSas
@@ -343,6 +357,7 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 ## Catalog
 
 `struct` · `deltalake_catalog_unity::models::Catalog`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.Catalog.md)
 
 ```rust
 struct Catalog
@@ -367,6 +382,7 @@ A catalog within a metastore
 ## ColumnInfo
 
 `struct` · `deltalake_catalog_unity::models::ColumnInfo`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.ColumnInfo.md)
 
 ```rust
 struct ColumnInfo
@@ -395,6 +411,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## DeltaRuntimeProperties
 
 `struct` · `deltalake_catalog_unity::models::DeltaRuntimeProperties`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.DeltaRuntimeProperties.md)
 
 ```rust
 struct DeltaRuntimeProperties
@@ -417,6 +434,7 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 ## EffectivePredictiveOptimizationFlag
 
 `struct` · `deltalake_catalog_unity::models::EffectivePredictiveOptimizationFlag`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.EffectivePredictiveOptimizationFlag.md)
 
 ```rust
 struct EffectivePredictiveOptimizationFlag
@@ -439,6 +457,7 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 ## ErrorDetails
 
 `struct` · `deltalake_catalog_unity::models::ErrorDetails`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.ErrorDetails.md)
 
 ```rust
 struct ErrorDetails
@@ -459,6 +478,7 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 ## ErrorResponse
 
 `struct` · `deltalake_catalog_unity::models::ErrorResponse`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.ErrorResponse.md)
 
 ```rust
 struct ErrorResponse
@@ -489,6 +509,7 @@ Error response from unity API
 ## GcpOauthToken
 
 `struct` · `deltalake_catalog_unity::models::GcpOauthToken`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.GcpOauthToken.md)
 
 ```rust
 struct GcpOauthToken
@@ -511,6 +532,7 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 ## ProvisioningInfo
 
 `struct` · `deltalake_catalog_unity::models::ProvisioningInfo`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.ProvisioningInfo.md)
 
 ```rust
 struct ProvisioningInfo
@@ -531,6 +553,7 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 ## R2TempCredentials
 
 `struct` · `deltalake_catalog_unity::models::R2TempCredentials`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.R2TempCredentials.md)
 
 ```rust
 struct R2TempCredentials
@@ -553,6 +576,7 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 ## Schema
 
 `struct` · `deltalake_catalog_unity::models::Schema`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.Schema.md)
 
 ```rust
 struct Schema
@@ -577,6 +601,7 @@ A schema within a catalog
 ## Table
 
 `struct` · `deltalake_catalog_unity::models::Table`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.Table.md)
 
 ```rust
 struct Table
@@ -601,6 +626,7 @@ A table within a schema
 ## TableSummary
 
 `struct` · `deltalake_catalog_unity::models::TableSummary`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.TableSummary.md)
 
 ```rust
 struct TableSummary
@@ -625,6 +651,7 @@ Summary of the table
 ## TemporaryTableCredentials
 
 `struct` · `deltalake_catalog_unity::models::TemporaryTableCredentials`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.TemporaryTableCredentials.md)
 
 ```rust
 struct TemporaryTableCredentials
@@ -657,6 +684,7 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 ## TemporaryTableCredentialsRequest
 
 `struct` · `deltalake_catalog_unity::models::TemporaryTableCredentialsRequest`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.TemporaryTableCredentialsRequest.md)
 
 ```rust
 struct TemporaryTableCredentialsRequest
@@ -685,6 +713,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## TokenErrorResponse
 
 `struct` · `deltalake_catalog_unity::models::TokenErrorResponse`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.models.TokenErrorResponse.md)
 
 ```rust
 struct TokenErrorResponse

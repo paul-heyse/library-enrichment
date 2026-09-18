@@ -5,6 +5,7 @@ Crate `deltalake-core` · 9 public items · structured records in [`model/deltal
 ## NULL_PARTITION_VALUE_DATA_PATH
 
 `constant` · `deltalake_core::kernel::schema::partitions::NULL_PARTITION_VALUE_DATA_PATH`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.partitions.NULL_PARTITION_VALUE_DATA_PATH.md)
 
 Also reachable as `deltalake::NULL_PARTITION_VALUE_DATA_PATH`, `deltalake::kernel::partitions::NULL_PARTITION_VALUE_DATA_PATH`, `deltalake::kernel::schema::partitions::NULL_PARTITION_VALUE_DATA_PATH`, `deltalake::partitions::NULL_PARTITION_VALUE_DATA_PATH`, `deltalake_core::NULL_PARTITION_VALUE_DATA_PATH`, `deltalake_core::kernel::partitions::NULL_PARTITION_VALUE_DATA_PATH`, `deltalake_core::partitions::NULL_PARTITION_VALUE_DATA_PATH`
 
@@ -19,6 +20,7 @@ A special value used in Hive to represent the null partition in partitioned tabl
 ## FilterOp
 
 `enum` · `deltalake_core::kernel::schema::partitions::FilterOp`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.partitions.FilterOp.md)
 
 Also reachable as `deltalake::FilterOp`, `deltalake::kernel::partitions::FilterOp`, `deltalake::kernel::schema::partitions::FilterOp`, `deltalake::partitions::FilterOp`, `deltalake_core::FilterOp`, `deltalake_core::kernel::partitions::FilterOp`, `deltalake_core::partitions::FilterOp`
 
@@ -57,6 +59,7 @@ The comparison operator of a `(column, op, value)` filter literal.
 ## FilterValue
 
 `enum` · `deltalake_core::kernel::schema::partitions::FilterValue`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.partitions.FilterValue.md)
 
 Also reachable as `deltalake::FilterValue`, `deltalake::kernel::partitions::FilterValue`, `deltalake::kernel::schema::partitions::FilterValue`, `deltalake::partitions::FilterValue`, `deltalake_core::FilterValue`, `deltalake_core::kernel::partitions::FilterValue`, `deltalake_core::partitions::FilterValue`
 
@@ -76,6 +79,7 @@ encoded string, or a set of them for `in` / `not in`.
 ## conjunction_to_kernel_predicate
 
 `function` · `deltalake_core::kernel::schema::partitions::conjunction_to_kernel_predicate`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.partitions.conjunction_to_kernel_predicate.md)
 
 Also reachable as `deltalake::conjunction_to_kernel_predicate`, `deltalake::kernel::partitions::conjunction_to_kernel_predicate`, `deltalake::kernel::schema::partitions::conjunction_to_kernel_predicate`, `deltalake::partitions::conjunction_to_kernel_predicate`, `deltalake_core::conjunction_to_kernel_predicate`, `deltalake_core::kernel::partitions::conjunction_to_kernel_predicate`, `deltalake_core::partitions::conjunction_to_kernel_predicate`
 
@@ -93,6 +97,7 @@ silently match every file.
 ## dnf_to_kernel_predicate
 
 `function` · `deltalake_core::kernel::schema::partitions::dnf_to_kernel_predicate`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.partitions.dnf_to_kernel_predicate.md)
 
 Also reachable as `deltalake::dnf_to_kernel_predicate`, `deltalake::kernel::partitions::dnf_to_kernel_predicate`, `deltalake::kernel::schema::partitions::dnf_to_kernel_predicate`, `deltalake::partitions::dnf_to_kernel_predicate`, `deltalake_core::dnf_to_kernel_predicate`, `deltalake_core::kernel::partitions::dnf_to_kernel_predicate`, `deltalake_core::partitions::dnf_to_kernel_predicate`
 
@@ -108,6 +113,7 @@ Translate filters in disjunctive normal form -- an OR across conjunctions
 ## filter_literal
 
 `function` · `deltalake_core::kernel::schema::partitions::filter_literal`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.partitions.filter_literal.md)
 
 Also reachable as `deltalake::filter_literal`, `deltalake::kernel::partitions::filter_literal`, `deltalake::kernel::schema::partitions::filter_literal`, `deltalake::partitions::filter_literal`, `deltalake_core::filter_literal`, `deltalake_core::kernel::partitions::filter_literal`, `deltalake_core::partitions::filter_literal`
 
@@ -127,6 +133,7 @@ mismatch all yield the pinned `InvalidPartitionFilter` error.
 ## literal_to_kernel_predicate
 
 `function` · `deltalake_core::kernel::schema::partitions::literal_to_kernel_predicate`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.partitions.literal_to_kernel_predicate.md)
 
 Also reachable as `deltalake::kernel::partitions::literal_to_kernel_predicate`, `deltalake::kernel::schema::partitions::literal_to_kernel_predicate`, `deltalake::literal_to_kernel_predicate`, `deltalake::partitions::literal_to_kernel_predicate`, `deltalake_core::kernel::partitions::literal_to_kernel_predicate`, `deltalake_core::literal_to_kernel_predicate`, `deltalake_core::partitions::literal_to_kernel_predicate`
 
@@ -146,6 +153,7 @@ against the null partition value.
 ## DeltaTablePartition
 
 `struct` · `deltalake_core::kernel::schema::partitions::DeltaTablePartition`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.partitions.DeltaTablePartition.md)
 
 Also reachable as `deltalake::DeltaTablePartition`, `deltalake::kernel::partitions::DeltaTablePartition`, `deltalake::kernel::schema::partitions::DeltaTablePartition`, `deltalake::partitions::DeltaTablePartition`, `deltalake_core::DeltaTablePartition`, `deltalake_core::kernel::partitions::DeltaTablePartition`, `deltalake_core::partitions::DeltaTablePartition`
 
@@ -178,6 +186,7 @@ A Struct DeltaTablePartition used to represent a partition of a DeltaTable.
 ## FilterLiteral
 
 `type_alias` · `deltalake_core::kernel::schema::partitions::FilterLiteral`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.partitions.FilterLiteral.md)
 
 Also reachable as `deltalake::FilterLiteral`, `deltalake::kernel::partitions::FilterLiteral`, `deltalake::kernel::schema::partitions::FilterLiteral`, `deltalake::partitions::FilterLiteral`, `deltalake_core::FilterLiteral`, `deltalake_core::kernel::partitions::FilterLiteral`, `deltalake_core::partitions::FilterLiteral`
 

@@ -5,6 +5,7 @@ Crate `deltalake-catalog-unity` · 7 public items · structured records in [`mod
 ## CredentialProvider
 
 `enum` · `deltalake_catalog_unity::credential::CredentialProvider`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.credential.CredentialProvider.md)
 
 ```rust
 enum CredentialProvider
@@ -21,6 +22,7 @@ Provides credentials for use when signing requests
 ## AzureCliCredential
 
 `struct` · `deltalake_catalog_unity::credential::AzureCliCredential`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.credential.AzureCliCredential.md)
 
 ```rust
 struct AzureCliCredential
@@ -49,6 +51,7 @@ Credential for acquiring access tokens via the Azure CLI
 ## ClientSecretOAuthProvider
 
 `struct` · `deltalake_catalog_unity::credential::ClientSecretOAuthProvider`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.credential.ClientSecretOAuthProvider.md)
 
 ```rust
 struct ClientSecretOAuthProvider
@@ -77,6 +80,7 @@ Encapsulates the logic to perform an OAuth token challenge
 ## ImdsManagedIdentityOAuthProvider
 
 `struct` · `deltalake_catalog_unity::credential::ImdsManagedIdentityOAuthProvider`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.credential.ImdsManagedIdentityOAuthProvider.md)
 
 ```rust
 struct ImdsManagedIdentityOAuthProvider
@@ -108,6 +112,7 @@ This authentication type works in Azure VMs, App Service and Azure Functions app
 ## WorkloadIdentityOAuthProvider
 
 `struct` · `deltalake_catalog_unity::credential::WorkloadIdentityOAuthProvider`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.credential.WorkloadIdentityOAuthProvider.md)
 
 ```rust
 struct WorkloadIdentityOAuthProvider
@@ -138,6 +143,7 @@ Credential for using workload identity dfederation
 ## WorkspaceOAuthProvider
 
 `struct` · `deltalake_catalog_unity::credential::WorkspaceOAuthProvider`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.credential.WorkspaceOAuthProvider.md)
 
 ```rust
 struct WorkspaceOAuthProvider
@@ -167,6 +173,7 @@ get tokens directly from the workspace.
 ## TokenCredential
 
 `trait` · `deltalake_catalog_unity::credential::TokenCredential`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.credential.TokenCredential.md)
 
 ```rust
 trait TokenCredential: std::fmt::Debug + Send + Sync + 'static

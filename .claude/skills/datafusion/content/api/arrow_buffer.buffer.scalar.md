@@ -57,6 +57,9 @@ fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self
 fn deref(&self) -> &Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.scalar.ScalarBuffer.md).
+
+
 A strongly-typed [`Buffer`] supporting zero-copy cloning and slicing
 
 The easiest way to think about `ScalarBuffer<T>` is being equivalent to a `Arc<Vec<T>>`,

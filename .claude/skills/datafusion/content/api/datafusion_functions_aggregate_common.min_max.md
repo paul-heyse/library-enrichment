@@ -10,6 +10,9 @@ Crate `datafusion-functions-aggregate-common` · 4 public items · structured re
 fn max_batch(values: &arrow::array::ArrayRef) -> datafusion_common::Result<datafusion_common::ScalarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.min_max.max_batch.md).
+
+
 dynamically-typed max(array) -> ScalarValue
 
 ---
@@ -21,6 +24,9 @@ dynamically-typed max(array) -> ScalarValue
 ```rust
 fn min_batch(values: &arrow::array::ArrayRef) -> datafusion_common::Result<datafusion_common::ScalarValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.min_max.min_batch.md).
+
 
 dynamically-typed min(array) -> ScalarValue
 
@@ -56,6 +62,9 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.min_max.MaxAccumulator.md).
+
+
 An accumulator to compute the maximum value
 
 ---
@@ -89,6 +98,9 @@ fn size(&self) -> usize
 fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.min_max.MinAccumulator.md).
+
 
 An accumulator to compute the minimum value
 

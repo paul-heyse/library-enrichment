@@ -33,6 +33,9 @@ fn schema_source(&self) -> SchemaSource
 fn to_listing_options(&self, _config: &SessionConfig, _table_options: TableOptions) -> ListingOptions
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.datasource.file_format.options.ArrowReadOptions.md).
+
+
 Options that control the reading of ARROW files.
 
 Note this structure is supplied when a datasource is created and
@@ -72,6 +75,9 @@ async fn get_resolved_schema(&self, config: &SessionConfig, state: SessionState,
 fn schema_source(&self) -> SchemaSource
 fn to_listing_options(&self, _config: &SessionConfig, _table_options: TableOptions) -> ListingOptions
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.datasource.file_format.options.AvroReadOptions.md).
+
 
 Options that control the reading of AVRO files.
 
@@ -128,6 +134,9 @@ fn schema_source(&self) -> SchemaSource
 fn to_listing_options(&self, _config: &SessionConfig, table_options: TableOptions) -> ListingOptions
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.datasource.file_format.options.CsvReadOptions.md).
+
+
 Options that control the reading of CSV files.
 
 Note this structure is supplied when a datasource is created and
@@ -173,6 +182,9 @@ async fn get_resolved_schema(&self, config: &SessionConfig, state: SessionState,
 fn schema_source(&self) -> SchemaSource
 fn to_listing_options(&self, _config: &SessionConfig, table_options: TableOptions) -> ListingOptions
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.datasource.file_format.options.JsonReadOptions.md).
+
 
 Options that control the reading of JSON files.
 
@@ -223,6 +235,9 @@ fn schema_source(&self) -> SchemaSource
 fn to_listing_options(&self, _config: &SessionConfig, table_options: TableOptions) -> ListingOptions
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.datasource.file_format.options.ParquetReadOptions.md).
+
+
 Options that control the reading of Parquet files.
 
 Note this structure is supplied when a datasource is created and
@@ -259,6 +274,9 @@ fn schema_source(&self) -> SchemaSource
 fn to_listing_options(&self, config: &SessionConfig, table_options: TableOptions) -> ListingOptions
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.datasource.file_format.options.ReadOptions.md).
+
+
 ['ReadOptions'] is implemented by Options like ['CsvReadOptions'] that control the reading of respective files/sources.
 
 ---
@@ -274,6 +292,9 @@ Also reachable as `datafusion::execution::options::NdJsonReadOptions`
 ```rust
 type NdJsonReadOptions<'a> = JsonReadOptions<'a>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.datasource.file_format.options.NdJsonReadOptions.md).
+
 
 Deprecated: Use [`JsonReadOptions`] instead.
 

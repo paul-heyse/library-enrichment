@@ -1,0 +1,1398 @@
+[
+  {
+    "id": "a5b3e1e1e7bedb74562f62e5",
+    "path": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+    "name": "AlterTableTransactionBuilder",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct",
+    "signature": "struct AlterTableTransactionBuilder<S = Ready>",
+    "docs": "Builder for constructing an [`AlterTableTransaction`] with schema evolution operations.\n\nUses a type-state pattern (`S`) to enforce at compile time:\n- At least one schema operation must be queued before `build()` is callable.\n- Only operations valid for the current state can be chained. This will disallow incompatible\n  chaining.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/transaction/builder/alter_table.rs",
+      "begin": [
+        73,
+        1
+      ],
+      "end": [
+        80,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "S",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": {
+                    "resolved_path": {
+                      "path": "Ready",
+                      "id": 8890,
+                      "args": null
+                    }
+                  },
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          8955,
+          8959,
+          8960,
+          8961,
+          8963,
+          8964,
+          8965,
+          8966,
+          8967,
+          8968,
+          8969,
+          8970,
+          8971,
+          8972,
+          8973,
+          8974,
+          8975,
+          8976,
+          8977,
+          8978,
+          8979,
+          8980,
+          8981,
+          8982,
+          8983,
+          8984,
+          8985,
+          8986,
+          8987,
+          8988
+        ]
+      }
+    },
+    "type_references": {
+      "8890": "buoyant_kernel::transaction::builder::alter_table::Ready"
+    },
+    "impl_context": null,
+    "links": {
+      "`AlterTableTransaction`": 7785
+    },
+    "link_paths": {
+      "`AlterTableTransaction`": "buoyant_kernel::transaction::alter_table::AlterTableTransaction"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "7787",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/transaction/builder/alter_table.rs#L73",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "11326",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.md",
+    "record_file": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.json",
+    "anchor": "op-a5b3e1e1e7bedb74562f62e5",
+    "aliases": [
+      "delta_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder"
+    ],
+    "resolved_doc_links": {
+      "`AlterTableTransaction`": "../operations/buoyant_kernel.transaction.alter_table.AlterTableTransaction.md#op-89f87d3d6d43afebc62b7f72"
+    }
+  },
+  {
+    "id": "01e65a18f1f89e3ac43e329e",
+    "path": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::add_column",
+    "name": "add_column",
+    "owner": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn add_column(self, field: StructField) -> AlterTableTransactionBuilder<Modifying>",
+    "docs": "Add a new top-level column to the table schema.\n\nThe field must not already exist in the schema (case-insensitive). The field must be\nnullable because existing data files do not contain this column and will read NULL for it.\n`field` and any of its nested fields must not carry `delta.columnMapping.id` or\n`delta.columnMapping.physicalName` annotations.\n\nThese constraints are validated during [`build()`](AlterTableTransactionBuilder::build).",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/transaction/builder/alter_table.rs",
+      "begin": [
+        127,
+        5
+      ],
+      "end": [
+        130,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "field",
+              {
+                "resolved_path": {
+                  "path": "StructField",
+                  "id": 180,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "AlterTableTransactionBuilder",
+              "id": 7787,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Modifying",
+                          "id": 8920,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "180": "buoyant_kernel::schema::StructField",
+      "7787": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+      "8920": "buoyant_kernel::transaction::builder::alter_table::Modifying"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AlterTableTransactionBuilder",
+          "id": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "S",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Chainable",
+                        "id": "buoyant_kernel::transaction::builder::alter_table::Chainable",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/transaction/builder/alter_table.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          141,
+          2
+        ]
+      }
+    },
+    "links": {
+      "AlterTableTransactionBuilder::build": 8956
+    },
+    "link_paths": {
+      "AlterTableTransactionBuilder::build": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::build"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8957",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/transaction/builder/alter_table.rs#L127",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "13602",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.md",
+    "record_file": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.json",
+    "anchor": "op-01e65a18f1f89e3ac43e329e",
+    "aliases": [
+      "delta_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::add_column"
+    ],
+    "resolved_doc_links": {
+      "AlterTableTransactionBuilder::build": "../operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.md#op-fd9cf352ebdb1d0de2398eb6"
+    }
+  },
+  {
+    "id": "fd9cf352ebdb1d0de2398eb6",
+    "path": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::build",
+    "name": "build",
+    "owner": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn build(self, _engine: &dyn Engine, committer: Box<dyn Committer>) -> DeltaResult<AlterTableTransaction>",
+    "docs": "Validate and apply schema operations, then build the [`AlterTableTransaction`].\n\nThis method:\n1. Validates the table supports writes\n2. Applies each operation sequentially against the evolving schema\n3. Constructs new Metadata action with evolved schema\n4. Builds the evolved table configuration\n5. Creates the transaction\n\n# Errors\n\n- Any individual operation fails validation (see per-method errors above)\n- Table does not support writes (unsupported features)\n- The evolved schema requires protocol features not enabled on the table (e.g. adding a\n  `timestampNtz` column without the `timestampNtz` feature)",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/transaction/builder/alter_table.rs",
+      "begin": [
+        159,
+        5
+      ],
+      "end": [
+        213,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "_engine",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Engine",
+                            "id": 926,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "committer",
+              {
+                "resolved_path": {
+                  "path": "Box",
+                  "id": 42,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "Committer",
+                                    "id": 1872,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "AlterTableTransaction",
+                          "id": 7785,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "926": "buoyant_kernel::Engine",
+      "42": "alloc::boxed::Box",
+      "1872": "buoyant_kernel::committer::Committer",
+      "239": "buoyant_kernel::error::DeltaResult",
+      "7785": "buoyant_kernel::transaction::alter_table::AlterTableTransaction"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AlterTableTransactionBuilder",
+          "id": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "Modifying",
+                      "id": "buoyant_kernel::transaction::builder::alter_table::Modifying",
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/transaction/builder/alter_table.rs",
+        "begin": [
+          143,
+          1
+        ],
+        "end": [
+          214,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`AlterTableTransaction`": 7785
+    },
+    "link_paths": {
+      "`AlterTableTransaction`": "buoyant_kernel::transaction::alter_table::AlterTableTransaction"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8956",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/transaction/builder/alter_table.rs#L159",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "13601",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.md",
+    "record_file": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.json",
+    "anchor": "op-fd9cf352ebdb1d0de2398eb6",
+    "aliases": [
+      "delta_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::build"
+    ],
+    "resolved_doc_links": {
+      "`AlterTableTransaction`": "../operations/buoyant_kernel.transaction.alter_table.AlterTableTransaction.md#op-89f87d3d6d43afebc62b7f72"
+    }
+  },
+  {
+    "id": "4a572bc199874df3c77df75b",
+    "path": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::set_nullable",
+    "name": "set_nullable",
+    "owner": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn set_nullable(self, column: ColumnName) -> AlterTableTransactionBuilder<Modifying>",
+    "docs": "Change a column's nullability from NOT NULL to nullable. If the column is already\nnullable, the op is a no-op but still generates a commit.\n\nNote: this matches Spark's behavior.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/transaction/builder/alter_table.rs",
+      "begin": [
+        136,
+        5
+      ],
+      "end": [
+        140,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "column",
+              {
+                "resolved_path": {
+                  "path": "ColumnName",
+                  "id": 520,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "AlterTableTransactionBuilder",
+              "id": 7787,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Modifying",
+                          "id": 8920,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "520": "buoyant_kernel::expressions::column_names::ColumnName",
+      "7787": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+      "8920": "buoyant_kernel::transaction::builder::alter_table::Modifying"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AlterTableTransactionBuilder",
+          "id": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "S",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Chainable",
+                        "id": "buoyant_kernel::transaction::builder::alter_table::Chainable",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/transaction/builder/alter_table.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          141,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8958",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/transaction/builder/alter_table.rs#L136",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "13603",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.md",
+    "record_file": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.json",
+    "anchor": "op-4a572bc199874df3c77df75b",
+    "aliases": [
+      "delta_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::set_nullable"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "90ff7beb8c7d76bc541d469a",
+    "path": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::with_correlation_id",
+    "name": "with_correlation_id",
+    "owner": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn with_correlation_id(self, correlation_id: impl Into<Arc<str>>) -> Self",
+    "docs": "Attach an opaque, caller-supplied correlation id for joining the alter-table commit's metric\nevents to the caller's own request or operation id. An empty id is treated as unset.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/transaction/builder/alter_table.rs",
+      "begin": [
+        100,
+        5
+      ],
+      "end": [
+        103,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "correlation_id",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 56,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Arc",
+                                    "id": 40,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "primitive": "str"
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Into<Arc<str>>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 56,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 40,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "primitive": "str"
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "56": "core::convert::Into",
+      "40": "alloc::sync::Arc"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AlterTableTransactionBuilder",
+          "id": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "S",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/transaction/builder/alter_table.rs",
+        "begin": [
+          82,
+          1
+        ],
+        "end": [
+          104,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8954",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/transaction/builder/alter_table.rs#L100",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "13597",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.md",
+    "record_file": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.json",
+    "anchor": "op-90ff7beb8c7d76bc541d469a",
+    "aliases": [
+      "delta_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::with_correlation_id"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "73e3e88fead2330f6164a257",
+    "path": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::_state",
+    "name": "_state",
+    "owner": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "_state: std::marker::PhantomData<S>",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/transaction/builder/alter_table.rs",
+      "begin": [
+        79,
+        5
+      ],
+      "end": [
+        79,
+        27
+      ]
+    },
+    "visibility": {
+      "restricted": {
+        "parent": 13531,
+        "path": "::transaction::builder::alter_table"
+      }
+    },
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "std::marker::PhantomData",
+          "id": 7966,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "7966": "core::marker::PhantomData"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "13595",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/transaction/builder/alter_table.rs#L79",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.md",
+    "record_file": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.json",
+    "anchor": "op-73e3e88fead2330f6164a257",
+    "aliases": [
+      "delta_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::_state"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7199fbfa79ef7a4991d08c5c",
+    "path": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::correlation_id",
+    "name": "correlation_id",
+    "owner": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "correlation_id: Option<std::sync::Arc<str>>",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/transaction/builder/alter_table.rs",
+      "begin": [
+        76,
+        5
+      ],
+      "end": [
+        76,
+        37
+      ]
+    },
+    "visibility": {
+      "restricted": {
+        "parent": 13531,
+        "path": "::transaction::builder::alter_table"
+      }
+    },
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "Option",
+          "id": 11,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::sync::Arc",
+                      "id": 47,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "primitive": "str"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "11": "core::option::Option",
+      "47": "alloc::sync::Arc"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "13594",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/transaction/builder/alter_table.rs#L76",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.md",
+    "record_file": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.json",
+    "anchor": "op-7199fbfa79ef7a4991d08c5c",
+    "aliases": [
+      "delta_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::correlation_id"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a1e94f67de4d743e526416ad",
+    "path": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::operations",
+    "name": "operations",
+    "owner": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "operations: Vec<transaction::schema_evolution::SchemaOperation>",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/transaction/builder/alter_table.rs",
+      "begin": [
+        75,
+        5
+      ],
+      "end": [
+        75,
+        37
+      ]
+    },
+    "visibility": {
+      "restricted": {
+        "parent": 13531,
+        "path": "::transaction::builder::alter_table"
+      }
+    },
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "Vec",
+          "id": 256,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::transaction::schema_evolution::SchemaOperation",
+                      "id": 13593,
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "256": "alloc::vec::Vec",
+      "13593": "buoyant_kernel::transaction::schema_evolution::SchemaOperation"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "13592",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/transaction/builder/alter_table.rs#L75",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.md",
+    "record_file": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.json",
+    "anchor": "op-a1e94f67de4d743e526416ad",
+    "aliases": [
+      "delta_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::operations"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "76a6657d755d2b20d33bb01c",
+    "path": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::snapshot",
+    "name": "snapshot",
+    "owner": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "snapshot: snapshot::SnapshotRef",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/transaction/builder/alter_table.rs",
+      "begin": [
+        74,
+        5
+      ],
+      "end": [
+        74,
+        26
+      ]
+    },
+    "visibility": {
+      "restricted": {
+        "parent": 13531,
+        "path": "::transaction::builder::alter_table"
+      }
+    },
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "crate::snapshot::SnapshotRef",
+          "id": 2240,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "2240": "buoyant_kernel::snapshot::SnapshotRef"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "13591",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/transaction/builder/alter_table.rs#L74",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.md",
+    "record_file": "operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.json",
+    "anchor": "op-76a6657d755d2b20d33bb01c",
+    "aliases": [
+      "delta_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder::snapshot"
+    ],
+    "resolved_doc_links": {}
+  }
+]

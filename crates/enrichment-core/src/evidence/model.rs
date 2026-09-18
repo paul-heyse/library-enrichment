@@ -123,22 +123,6 @@ crate::native_vocabulary! {
     }
 }
 
-impl FragmentKind {
-    /// The `search_evidence` kind family this fragment belongs to.
-    #[must_use]
-    pub fn family(self) -> &'static str {
-        match self {
-            Self::ApiSignature => "api",
-            Self::DocText => "docs",
-            Self::FeatureDefinition => "features",
-            Self::ReadmeSection => "docs",
-            Self::ChangelogSection => "release_notes",
-            Self::Example => "examples",
-            Self::SourceExcerpt => "source",
-        }
-    }
-}
-
 crate::native_struct! {
 /// The configuration a documentation build was observed under (§4.3).
 pub struct ObservedConfiguration {

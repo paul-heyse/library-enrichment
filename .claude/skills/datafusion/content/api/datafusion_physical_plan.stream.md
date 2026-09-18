@@ -32,6 +32,9 @@ fn schema(&self) -> SchemaRef
 fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.stream.BatchSplitStream.md).
+
+
 Stream wrapper that splits large [`RecordBatch`]es into smaller batches.
 
 This ensures upstream operators receive batches no larger than
@@ -82,6 +85,9 @@ fn schema(&self) -> SchemaRef
 fn poll_next(Pin<&mut self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.stream.EmptyRecordBatchStream.md).
+
+
 `EmptyRecordBatchStream` can be used to create a [`RecordBatchStream`]
 that will produce no results
 
@@ -106,6 +112,9 @@ fn spawn_blocking_on<F>(&mut self, f: F, handle: &Handle) where F: FnOnce() -> R
 fn spawn_on<F>(&mut self, task: F, handle: &Handle) where F: Future<Output = Result<()>> + Send + 'static
 fn tx(&self) -> Sender<Result<RecordBatch>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.stream.RecordBatchReceiverStreamBuilder.md).
+
 
 Builder for `RecordBatchReceiverStream` that propagates errors
 and panic's correctly.
@@ -200,6 +209,9 @@ fn schema(&self) -> SchemaRef
 fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>
 fn size_hint(&self) -> (usize, Option<usize>)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.stream.RecordBatchStreamAdapter.md).
+
 
 Combines a [`Stream`] with a [`SchemaRef`] implementing
 [`SendableRecordBatchStream`] for the combination

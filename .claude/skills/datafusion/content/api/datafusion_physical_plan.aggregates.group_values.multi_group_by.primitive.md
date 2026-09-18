@@ -34,6 +34,9 @@ fn vectorized_append(&mut self, array: &ArrayRef, rows: &[usize]) -> Result<()>
 fn vectorized_equal_to(&self, lhs_rows: &[usize], array: &ArrayRef, rhs_rows: &[usize], equal_to_results: &mut BooleanBufferBuilder)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.primitive.PrimitiveGroupValueBuilder.md).
+
+
 An implementation of [`GroupColumn`] for primitive values
 
 Optimized to skip null buffer construction if the input is known to be non nullable

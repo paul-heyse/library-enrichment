@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## DataCheck
 
 `trait` · `deltalake_core::kernel::schema::DataCheck`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.DataCheck.md)
 
 Also reachable as `deltalake::DataCheck`, `deltalake::kernel::DataCheck`, `deltalake::kernel::schema::DataCheck`, `deltalake::schema::DataCheck`, `deltalake_core::DataCheck`, `deltalake_core::kernel::DataCheck`, `deltalake_core::schema::DataCheck`
 

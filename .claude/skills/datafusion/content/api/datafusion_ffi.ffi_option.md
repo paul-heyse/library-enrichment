@@ -32,6 +32,9 @@ fn map<U, F: FnOnce(T) -> U>(self, f: F) -> FFI_Option<U>
 fn from(opt: Option<T>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.ffi_option.FFI_Option.md).
+
+
 An FFI-safe option type.
 
 ---
@@ -67,6 +70,9 @@ fn unwrap_err(self) -> SString
 ```rust
 fn from(res: Result<T, E>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.ffi_option.FFI_Result.md).
+
 
 An FFI-safe result type with SString as the error type.
 

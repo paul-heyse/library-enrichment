@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 5 public items · structured records in [`model/buoyan
 ## ColumnMappingMode
 
 `enum` · `buoyant_kernel::table_features::column_mapping::ColumnMappingMode`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.column_mapping.ColumnMappingMode.md)
 
 Also reachable as `buoyant_kernel::table_features::ColumnMappingMode`, `delta_kernel::table_features::column_mapping::ColumnMappingMode`
 
@@ -49,6 +50,7 @@ Modes of column mapping a table can be in
 ## assign_column_mapping_metadata
 
 `function` · `buoyant_kernel::table_features::column_mapping::assign_column_mapping_metadata`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.column_mapping.assign_column_mapping_metadata.md)
 
 Also reachable as `buoyant_kernel::table_features::assign_column_mapping_metadata`, `delta_kernel::table_features::column_mapping::assign_column_mapping_metadata`
 
@@ -136,6 +138,7 @@ flat CM metadata and `max_id` ends at `1`:
 ## find_max_column_id_in_schema
 
 `function` · `buoyant_kernel::table_features::column_mapping::find_max_column_id_in_schema`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.column_mapping.find_max_column_id_in_schema.md)
 
 Also reachable as `buoyant_kernel::table_features::find_max_column_id_in_schema`, `delta_kernel::table_features::column_mapping::find_max_column_id_in_schema`
 
@@ -152,6 +155,7 @@ per-field `delta.columnMapping.id` annotations and the nested ids in
 ## get_any_level_column_physical_name
 
 `function` · `buoyant_kernel::table_features::column_mapping::get_any_level_column_physical_name`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.column_mapping.get_any_level_column_physical_name.md)
 
 Also reachable as `buoyant_kernel::table_features::get_any_level_column_physical_name`, `delta_kernel::table_features::column_mapping::get_any_level_column_physical_name`
 
@@ -174,6 +178,7 @@ annotations.
 ## validate_schema_column_mapping
 
 `function` · `buoyant_kernel::table_features::column_mapping::validate_schema_column_mapping`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.column_mapping.validate_schema_column_mapping.md)
 
 Also reachable as `buoyant_kernel::table_features::validate_schema_column_mapping`, `delta_kernel::table_features::column_mapping::validate_schema_column_mapping`
 

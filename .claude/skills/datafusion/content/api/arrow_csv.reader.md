@@ -12,6 +12,9 @@ Also reachable as `arrow::csv::infer_schema_from_files`, `arrow_csv::infer_schem
 fn infer_schema_from_files(files: &[String], delimiter: u8, max_read_records: Option<usize>, has_header: bool) -> Result<Schema, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_csv.reader.infer_schema_from_files.md).
+
+
 Infer schema from a list of CSV files by reading through first n records
 with `max_read_records` controlling the maximum number of records to read.
 
@@ -51,6 +54,9 @@ fn schema(&self) -> SchemaRef
 fn next(&mut self) -> Option<Self::Item>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_csv.reader.BufReader.md).
+
+
 CSV file reader implementation. See [`Reader`] for usage
 
 Despite having the same name as [`std::io::BufReader`, this structure does
@@ -75,6 +81,9 @@ fn capacity(&self) -> usize
 fn decode(&mut self, buf: &[u8]) -> Result<usize, ArrowError>
 fn flush(&mut self) -> Result<Option<RecordBatch>, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_csv.reader.Decoder.md).
+
 
 A push-based interface for decoding CSV data from an arbitrary byte stream
 
@@ -143,6 +152,9 @@ fn with_terminator(self, terminator: u8) -> Self
 fn with_truncated_rows(self, allow: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_csv.reader.Format.md).
+
+
 The format specification for the CSV file
 
 ---
@@ -181,6 +193,9 @@ fn with_terminator(self, terminator: u8) -> Self
 fn with_truncated_rows(self, allow: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_csv.reader.ReaderBuilder.md).
+
+
 Builder for CSV [`Reader`]s
 
 ---
@@ -194,6 +209,9 @@ Also reachable as `arrow::csv::Reader`, `arrow_csv::Reader`
 ```rust
 type Reader<R> = BufReader<std::io::BufReader<R>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_csv.reader.Reader.md).
+
 
 CSV file reader using [`std::io::BufReader`]
 

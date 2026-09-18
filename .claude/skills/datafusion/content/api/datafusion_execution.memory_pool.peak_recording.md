@@ -43,6 +43,9 @@ fn try_grow(&self, reservation: &MemoryReservation, additional: usize) -> Result
 fn unregister(&self, consumer: &MemoryConsumer)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md).
+
+
 Wraps a [`MemoryPool`], recording the high-water mark of
 [`MemoryPool::reserved`] as reservations come and go.
 

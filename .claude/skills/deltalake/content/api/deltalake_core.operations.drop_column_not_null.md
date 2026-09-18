@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## DropColumnNotNullBuilder
 
 `struct` · `deltalake_core::operations::drop_column_not_null::DropColumnNotNullBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.drop_column_not_null.DropColumnNotNullBuilder.md)
 
 Also reachable as `deltalake::operations::drop_column_not_null::DropColumnNotNullBuilder`
 
@@ -26,13 +27,6 @@ fn with_custom_execute_handler(self, handler: Arc<dyn CustomExecuteHandler>) -> 
 
 ```rust
 fn into_future(self) -> Self::IntoFuture
-```
-
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
 ```
 
 Drop the `NOT NULL` constraint on a top-level column, making it nullable.

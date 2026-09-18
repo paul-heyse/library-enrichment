@@ -14,6 +14,9 @@ enum ListCoercion
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.ListCoercion.md).
+
+
 Information about how to coerce lists.
 
 ---
@@ -25,6 +28,9 @@ Information about how to coerce lists.
 ```rust
 fn adjust_offsets_for_slice<O: OffsetSizeTrait>(list: &arrow::array::GenericListArray<O>) -> arrow::buffer::OffsetBuffer<O>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.adjust_offsets_for_slice.md).
+
 
 If `list` is sliced, returns an adjusted offset buffer so that
 it points to the sliced portion of the list values, and not the whole list values
@@ -38,6 +44,9 @@ it points to the sliced portion of the list values, and not the whole list value
 ```rust
 fn arrays_into_list_array(arr: impl IntoIterator<Item = arrow::array::ArrayRef>) -> Result<arrow::array::ListArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.arrays_into_list_array.md).
+
 
 Wrap arrays into a single element `ListArray`.
 
@@ -72,6 +81,9 @@ assert_eq!(list_arr, expected);
 fn base_type(data_type: &arrow::datatypes::DataType) -> arrow::datatypes::DataType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.base_type.md).
+
+
 Get the base type of a data type.
 
 Example
@@ -98,6 +110,9 @@ assert_eq!(base_type(&data_type), DataType::Int32);
 fn bisect<const SIDE: bool>(item_columns: &[arrow::array::ArrayRef], target: &[ScalarValue], sort_options: &[arrow::compute::SortOptions]) -> Result<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.bisect.md).
+
+
 This function searches for a tuple of given values (`target`) among the given
 rows (`item_columns`) using the bisection algorithm. It assumes that `item_columns`
 is sorted according to `sort_options` and returns the insertion index of `target`.
@@ -113,6 +128,9 @@ Template argument `SIDE` being `true`/`false` means left/right insertion.
 fn coerced_fixed_size_list_to_list(data_type: &arrow::datatypes::DataType) -> arrow::datatypes::DataType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.coerced_fixed_size_list_to_list.md).
+
+
 Recursively coerce and `FixedSizeList` elements to `List`
 
 ---
@@ -124,6 +142,9 @@ Recursively coerce and `FixedSizeList` elements to `List`
 ```rust
 fn coerced_type_with_base_type_only(data_type: &arrow::datatypes::DataType, base_type: &arrow::datatypes::DataType, array_coercion: Option<&ListCoercion>) -> arrow::datatypes::DataType
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.coerced_type_with_base_type_only.md).
+
 
 A helper function to coerce base type in List.
 
@@ -148,6 +169,9 @@ assert_eq!(coerced_type, DataType::List(Arc::new(Field::new_list_field(DataType:
 ```rust
 fn combine_limit(parent_skip: usize, parent_fetch: Option<usize>, child_skip: usize, child_fetch: Option<usize>) -> (usize, Option<usize>)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.combine_limit.md).
+
 
 Computes the `skip` and `fetch` parameters of a single limit that would be
 equivalent to two consecutive limits with the given `skip`/`fetch` parameters.
@@ -203,6 +227,9 @@ There are multiple cases to consider:
 fn compare_rows(x: &[ScalarValue], y: &[ScalarValue], sort_options: &[arrow::compute::SortOptions]) -> Result<std::cmp::Ordering>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.compare_rows.md).
+
+
 This function compares two tuples depending on the given sort options.
 
 ---
@@ -214,6 +241,9 @@ This function compares two tuples depending on the given sort options.
 ```rust
 fn evaluate_partition_ranges(num_rows: usize, partition_columns: &[arrow::compute::SortColumn]) -> Result<Vec<std::ops::Range<usize>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.evaluate_partition_ranges.md).
+
 
 Given a list of 0 or more already sorted columns, finds the
 partition ranges that would partition equally across columns.
@@ -230,6 +260,9 @@ See [`partition`] for more details.
 fn extract_row_at_idx_to_buf(columns: &[arrow::array::ArrayRef], idx: usize, buf: &mut Vec<ScalarValue>) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.extract_row_at_idx_to_buf.md).
+
+
 Extracts a row at the specified index from a set of columns and stores it in the provided buffer.
 
 ---
@@ -241,6 +274,9 @@ Extracts a row at the specified index from a set of columns and stores it in the
 ```rust
 fn find_bisect_point<F>(item_columns: &[arrow::array::ArrayRef], target: &[ScalarValue], compare_fn: F, low: usize, high: usize) -> Result<usize> where F: Fn(&[ScalarValue], &[ScalarValue]) -> Result<bool>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.find_bisect_point.md).
+
 
 This function searches for a tuple of given values (`target`) among a slice of
 the given rows (`item_columns`) using the bisection algorithm. The slice starts
@@ -259,6 +295,9 @@ the current value as we iteratively bisect the input.
 fn find_indices<T: PartialEq, S: Borrow<T>>(items: &[T], targets: impl IntoIterator<Item = S>) -> Result<Vec<usize>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.find_indices.md).
+
+
 Find indices of each element in `targets` inside `items`. If one of the
 elements is absent in `items`, returns an error.
 
@@ -272,6 +311,9 @@ elements is absent in `items`, returns an error.
 fn fixed_size_list_to_arrays(a: &arrow::array::ArrayRef) -> Vec<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.fixed_size_list_to_arrays.md).
+
+
 Helper function to convert a FixedSizeListArray into a vector of ArrayRefs.
 
 ---
@@ -284,6 +326,9 @@ Helper function to convert a FixedSizeListArray into a vector of ArrayRefs.
 fn get_at_indices<T: Clone, I: Borrow<usize>>(items: &[T], indices: impl IntoIterator<Item = I>) -> Result<Vec<T>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.get_at_indices.md).
+
+
 This function "takes" the elements at `indices` from the slice `items`.
 
 ---
@@ -295,6 +340,9 @@ This function "takes" the elements at `indices` from the slice `items`.
 ```rust
 fn get_available_parallelism() -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.get_available_parallelism.md).
+
 
 Returns the estimated number of threads available for parallel execution.
 
@@ -313,6 +361,9 @@ The result is cached after the first call.
 fn get_row_at_idx(columns: &[arrow::array::ArrayRef], idx: usize) -> Result<Vec<ScalarValue>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.get_row_at_idx.md).
+
+
 Given column vectors, returns row at `idx`.
 
 ---
@@ -324,6 +375,9 @@ Given column vectors, returns row at `idx`.
 ```rust
 fn linear_search<const SIDE: bool>(item_columns: &[arrow::array::ArrayRef], target: &[ScalarValue], sort_options: &[arrow::compute::SortOptions]) -> Result<usize>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.linear_search.md).
+
 
 This function searches for a tuple of given values (`target`) among the given
 rows (`item_columns`) via a linear scan. It assumes that `item_columns` is sorted
@@ -340,6 +394,9 @@ Template argument `SIDE` being `true`/`false` means left/right insertion.
 fn list_ndims(data_type: &arrow::datatypes::DataType) -> u64
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.list_ndims.md).
+
+
 Compute the number of dimensions in a list data type.
 
 ---
@@ -352,6 +409,9 @@ Compute the number of dimensions in a list data type.
 fn list_to_arrays<O: OffsetSizeTrait>(a: &arrow::array::ArrayRef) -> Vec<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.list_to_arrays.md).
+
+
 Helper function to convert a ListArray into a vector of ArrayRefs.
 
 ---
@@ -363,6 +423,9 @@ Helper function to convert a ListArray into a vector of ArrayRefs.
 ```rust
 fn list_values(array: &dyn Array) -> Result<arrow::array::ArrayRef>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.list_values.md).
+
 
 Returns the inner values of a list, or an error otherwise
 For [`ListArray`] and [`LargeListArray`], if it's sliced, it returns a
@@ -378,6 +441,9 @@ you must adjust the offsets using [`adjust_offsets_for_slice`]
 ```rust
 fn list_values_row_number(array: &dyn Array) -> Result<arrow::array::ArrayRef>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.list_values_row_number.md).
+
 
 If `array` is a list or a map, returns a new array of the same length as it's inner values
 where each value is the 1-based index of the sublist it's contained. Example:
@@ -396,6 +462,9 @@ Otherwise returns an error
 fn longest_consecutive_prefix<T: Borrow<usize>>(sequence: impl IntoIterator<Item = T>) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.longest_consecutive_prefix.md).
+
+
 This function finds the longest prefix of the form 0, 1, 2, ... within the
 collection `sequence`. Examples:
 - For 0, 1, 2, 4, 5; we would produce 3, meaning 0, 1, 2 is the longest satisfying
@@ -412,6 +481,9 @@ collection `sequence`. Examples:
 fn merge_and_order_indices<T: Borrow<usize>, S: Borrow<usize>>(first: impl IntoIterator<Item = T>, second: impl IntoIterator<Item = S>) -> Vec<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.merge_and_order_indices.md).
+
+
 Merges collections `first` and `second`, removes duplicates and sorts the
 result, returning it as a [`Vec`].
 
@@ -424,6 +496,9 @@ result, returning it as a [`Vec`].
 ```rust
 fn normalize_float_zero(array: &arrow::array::ArrayRef) -> arrow::array::ArrayRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.normalize_float_zero.md).
+
 
 Replace `-0.0` with `+0.0` in any `Float16`, `Float32`, or `Float64` array.
 For non-float arrays returns the input unchanged. NaN payloads are
@@ -450,6 +525,9 @@ Only arrays that actually contain `-0.0` pay for a new buffer.
 fn normalize_float_zero_scalar(scalar: ScalarValue) -> ScalarValue
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.normalize_float_zero_scalar.md).
+
+
 Replace `-0.0` with `+0.0` in `Float16`, `Float32`, or `Float64` scalar
 values. Other variants are returned unchanged. See [`normalize_float_zero`]
 for context.
@@ -465,6 +543,9 @@ Also reachable as `datafusion::common::project_schema`, `datafusion::physical_pl
 ```rust
 fn project_schema(schema: &arrow::datatypes::SchemaRef, projection: Option<&impl AsRef<[usize]>>) -> Result<arrow::datatypes::SchemaRef>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.project_schema.md).
+
 
 Applies an optional projection to a [`SchemaRef`], returning the
 projected schema
@@ -503,6 +584,9 @@ assert_eq!(projected_schema, expected_schema);
 fn quote_identifier(s: &str) -> std::borrow::Cow<'_, str>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.quote_identifier.md).
+
+
 Wraps identifier string in double quotes, escaping any double quotes in
 the identifier by replacing it with two double quotes
 
@@ -518,6 +602,9 @@ e.g. identifier `tab.le"name` becomes `"tab.le""name"`
 fn remove_list_null_values(array: &arrow::array::ArrayRef) -> Result<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.remove_list_null_values.md).
+
+
 For lists and large lists, truncates the sublist of null values
 Otherwise returns an error
 
@@ -530,6 +617,9 @@ Otherwise returns an error
 ```rust
 fn search_in_slice<F>(item_columns: &[arrow::array::ArrayRef], target: &[ScalarValue], compare_fn: F, low: usize, high: usize) -> Result<usize> where F: Fn(&[ScalarValue], &[ScalarValue]) -> Result<bool>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.search_in_slice.md).
+
 
 This function searches for a tuple of given values (`target`) among a slice of
 the given rows (`item_columns`) via a linear scan. The slice starts at the index
@@ -546,6 +636,9 @@ specifies the stopping criterion.
 fn set_difference<T: Borrow<usize>, S: Borrow<usize>>(first: impl IntoIterator<Item = T>, second: impl IntoIterator<Item = S>) -> Vec<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.set_difference.md).
+
+
 Calculates the set difference between sequences `first` and `second`,
 returning the result as a [`Vec`]. Preserves the ordering of `first`.
 
@@ -558,6 +651,9 @@ returning the result as a [`Vec`]. Preserves the ordering of `first`.
 ```rust
 fn split_vec_min_alloc<T>(vec: &mut Vec<T>, n: usize) -> Vec<T>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.split_vec_min_alloc.md).
+
 
 Splits `vec` at index `n`, returning the first `n` elements and leaving the
 remaining `vec.len() - n` elements in `vec`.
@@ -576,6 +672,9 @@ where `n` can be close to `vec.len()`.
 ```rust
 fn take_function_args<const N: usize, T>(function_name: &str, args: impl IntoIterator<Item = T>) -> Result<[T; N]>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.take_function_args.md).
+
 
 Converts a collection of function arguments into a fixed-size array of length N
 producing a reasonable error message in case of unexpected number of arguments.
@@ -614,6 +713,9 @@ my_function(&args).unwrap();
 fn transpose<T>(original: Vec<Vec<T>>) -> Vec<Vec<T>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.transpose.md).
+
+
 Transposes the given vector of vectors.
 
 ---
@@ -646,6 +748,9 @@ fn with_field(self, field: &Field) -> Self
 fn with_field_name(self, field_name: Option<String>) -> Self
 fn with_nullable(self, nullable: bool) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.SingleRowListArrayBuilder.md).
+
 
 Creates single element [`ListArray`], [`LargeListArray`] and
 [`FixedSizeListArray`] from other arrays

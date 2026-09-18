@@ -8,6 +8,8 @@ use schemars::JsonSchema;
 
 use crate::identity::{Ecosystem, ResearchMode};
 
+pub mod resources;
+
 crate::native_vocabulary! {
 /// The freshness options (§3.3).
 ///
@@ -159,7 +161,7 @@ pub struct SearchRequest {
     /// The query.
     #[schemars(length(min = 1))]
     query: String => crate::native_union::Rule::NonEmpty,
-    /// Evidence families: `api`, `docs`, `examples`, `release_notes`, `features`, `source`.
+    /// Evidence families: `api`, `docs`, `examples`, `release_notes`, `features`. Source requires inspection.
     #[serde(default)]
     kinds: Option<Vec<String>> => crate::native_union::Rule::Text,
     /// Restrict symbol/fragment subjects to this namespace subtree.
@@ -441,7 +443,9 @@ pub fn request_schema() -> serde_json::Value {
         .into_generator()
         .into_root_schema_for::<ResearchRequest>()
         .to_value();
-    schema["x-enrichment-operations"] = serde_json::Value::Array(operation_bindings());
+    let operations = operation_bindings();
+    schema["x-enrichment-resources"] = serde_json::Value::Array(resources::bindings(&operations));
+    schema["x-enrichment-operations"] = serde_json::Value::Array(operations);
     schema["x-enrichment-mcp-delivery"] = crate::mcp_delivery::contract();
     crate::native_wire::schema(schema)
 }

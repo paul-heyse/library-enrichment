@@ -12,6 +12,9 @@ Also reachable as `arrow::row::encode_dictionary_values`
 fn encode_dictionary_values<K: ArrowDictionaryKeyType>(data: &mut [u8], offsets: &mut [usize], column: &DictionaryArray<K>, values: &Rows, null: &Row<'_>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_row.encode_dictionary_values.md).
+
+
 Encode dictionary values not preserving the dictionary encoding
 
 ---
@@ -41,6 +44,9 @@ fn row(&self) -> Row<'_>
 ```rust
 fn as_ref(&self) -> &[u8]
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_row.OwnedRow.md).
+
 
 Owned version of a [`Row`] that can be moved/cloned freely.
 
@@ -74,6 +80,9 @@ fn owned(&self) -> OwnedRow
 ```rust
 fn as_ref(&self) -> &[u8]
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_row.Row.md).
+
 
 A comparable representation of a row.
 
@@ -112,6 +121,9 @@ unsafe fn parser_skip_utf8_validation(&self) -> RowParser
 fn size(&self) -> usize
 fn supports_fields(fields: &[SortField]) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_row.RowConverter.md).
+
 
  Converts [`ArrayRef`] columns into a [row-oriented](self) format.
 
@@ -516,6 +528,9 @@ struct RowParser
 fn parse<'a>(&'a self, bytes: &'a [u8]) -> Row<'a>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_row.RowParser.md).
+
+
 A [`RowParser`] can be created from a [`RowConverter`] and used to parse bytes to [`Row`]
 
 ---
@@ -547,6 +562,9 @@ unsafe fn row_unchecked(&self, index: usize) -> Row<'_>
 fn size(&self) -> usize
 fn try_into_binary(self) -> Result<BinaryArray, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_row.Rows.md).
+
 
 A row-oriented representation of arrow data, that is normalized for comparison.
 
@@ -587,6 +605,9 @@ fn next(&mut self) -> Option<Self::Item>
 fn size_hint(&self) -> (usize, Option<usize>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_row.RowsIter.md).
+
+
 An iterator over [`Rows`]
 
 ---
@@ -611,6 +632,9 @@ fn new_with_options(data_type: DataType, options: SortOptions) -> Self
 fn size(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_row.SortField.md).
+
+
 Configure the data type and sort order for a given column
 
 ---
@@ -624,6 +648,9 @@ Also reachable as `arrow::row::RowLengthIter`
 ```rust
 type RowLengthIter<'a> = std::iter::Map<std::slice::Windows<'a, usize>, fn(&'a [usize]) -> usize>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_row.RowLengthIter.md).
+
 
 The iterator type for [`Rows::lengths`]
 

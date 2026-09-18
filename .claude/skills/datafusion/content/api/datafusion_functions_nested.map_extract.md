@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::map_extract`, `datafusion_functions_nest
 fn map_extract(map: datafusion_expr::Expr, key: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.map_extract.map_extract.md).
+
+
 Return a list containing the value for a given key or an empty list if the key is not contained in the map.
 
 ---
@@ -23,6 +26,9 @@ Return a list containing the value for a given key or an empty list if the key i
 ```rust
 fn map_extract_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.map_extract.map_extract_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 MapExtract
@@ -58,5 +64,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.map_extract.MapExtract.md).
+
 
 ---

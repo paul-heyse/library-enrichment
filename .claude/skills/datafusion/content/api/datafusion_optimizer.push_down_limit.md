@@ -29,6 +29,9 @@ fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Tra
 fn supports_rewrite(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.push_down_limit.PushDownLimit.md).
+
+
 Optimization rule that tries to push down `LIMIT`.
 
 ---

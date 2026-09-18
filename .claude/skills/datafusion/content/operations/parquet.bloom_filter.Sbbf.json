@@ -1,0 +1,1896 @@
+[
+  {
+    "id": "47eb960cc6ee6f46d8423ca5",
+    "path": "parquet::bloom_filter::Sbbf",
+    "name": "Sbbf",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct Sbbf",
+    "docs": "A split block Bloom filter (SBBF).\n\nAn SBBF partitions its bit space into fixed-size 256-bit (32-byte) blocks, each fitting in a\nsingle CPU cache line. Each block contains eight 32-bit words, aligned with SIMD lanes for\nparallel bit manipulation. When checking membership, only one block is accessed per query,\neliminating the cache-miss penalty of standard Bloom filters.\n\n## Sizing and folding\n\nFilters are initially sized for a maximum expected number of distinct values (NDV) via\n[`Sbbf::new_with_ndv_fpp`]. After all values are inserted, the filter is compacted by\ncalling [`Sbbf::fold_to_target_fpp`], which folds the filter down to the smallest size\nthat still meets the target false positive probability.\n\nThe creation of this structure is based on the [`crate::file::properties::BloomFilterProperties`]\nstruct set via [`crate::file::properties::WriterProperties`] and is thus hidden by default.",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        321,
+        1
+      ],
+      "end": [
+        321,
+        29
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "tuple": [
+            null
+          ]
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          4898,
+          4899,
+          4900,
+          4901,
+          4902,
+          4903,
+          4904,
+          4905,
+          4906,
+          4907,
+          4908,
+          4909,
+          4910,
+          4911,
+          4912,
+          4913,
+          4914,
+          4915,
+          4917,
+          4919
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Sbbf::new_with_ndv_fpp`": 4884,
+      "`Sbbf::fold_to_target_fpp`": 4885,
+      "`crate::file::properties::BloomFilterProperties`": 4886,
+      "`crate::file::properties::WriterProperties`": 3207
+    },
+    "link_paths": {
+      "`Sbbf::new_with_ndv_fpp`": "parquet::bloom_filter::Sbbf::new_with_ndv_fpp",
+      "`Sbbf::fold_to_target_fpp`": "parquet::bloom_filter::Sbbf::fold_to_target_fpp",
+      "`crate::file::properties::BloomFilterProperties`": "parquet::file::properties::BloomFilterProperties",
+      "`crate::file::properties::WriterProperties`": "parquet::file::properties::WriterProperties"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3021",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.bloom_filter.Sbbf.md",
+    "record_file": "operations/parquet.bloom_filter.Sbbf.json",
+    "anchor": "op-47eb960cc6ee6f46d8423ca5",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Sbbf::new_with_ndv_fpp`": "../operations/parquet.bloom_filter.Sbbf.md#op-dab59b8a97c422c2a05e474c",
+      "`Sbbf::fold_to_target_fpp`": "../operations/parquet.bloom_filter.Sbbf.md#op-943c66e12ec73793b98e3132",
+      "`crate::file::properties::BloomFilterProperties`": "../operations/parquet.file.properties.BloomFilterProperties.md#op-d8c6090fa6f2cfe781d4070c",
+      "`crate::file::properties::WriterProperties`": "../operations/parquet.file.properties.WriterProperties.md#op-1a8b0462c7a132d1d5004af2"
+    }
+  },
+  {
+    "id": "4690bd8e0262446cd5ff1eda",
+    "path": "parquet::bloom_filter::Sbbf::check",
+    "name": "check",
+    "owner": "parquet::bloom_filter::Sbbf",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn check<T: AsBytes + ?Sized>(&self, value: &T) -> bool",
+    "docs": "Check if an [AsBytes] value is probably present or definitely absent in the filter",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        556,
+        5
+      ],
+      "end": [
+        558,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "AsBytes",
+                          "id": 1116,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    },
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Sized",
+                          "id": 38,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "maybe"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1116": "parquet::data_type::AsBytes",
+      "38": "core::marker::Sized"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Sbbf",
+          "id": "parquet::bloom_filter::Sbbf",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/bloom_filter/mod.rs",
+        "begin": [
+          379,
+          1
+        ],
+        "end": [
+          754,
+          2
+        ]
+      }
+    },
+    "links": {
+      "AsBytes": 1116
+    },
+    "link_paths": {
+      "AsBytes": "parquet::data_type::AsBytes"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4896",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.bloom_filter.Sbbf.md",
+    "record_file": "operations/parquet.bloom_filter.Sbbf.json",
+    "anchor": "op-4690bd8e0262446cd5ff1eda",
+    "aliases": [],
+    "resolved_doc_links": {
+      "AsBytes": "../operations/parquet.data_type.AsBytes.md#op-df19664d53a774fa5f1d6462"
+    }
+  },
+  {
+    "id": "e8b3b5d6f7374f53d080876b",
+    "path": "parquet::bloom_filter::Sbbf::clone",
+    "name": "clone",
+    "owner": "parquet::bloom_filter::Sbbf",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> Sbbf",
+    "docs": "",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        320,
+        17
+      ],
+      "end": [
+        320,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Sbbf",
+              "id": 3021,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3021": "parquet::bloom_filter::Sbbf"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Sbbf",
+          "id": "parquet::bloom_filter::Sbbf",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/bloom_filter/mod.rs",
+        "begin": [
+          320,
+          17
+        ],
+        "end": [
+          320,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4918",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.bloom_filter.Sbbf.md",
+    "record_file": "operations/parquet.bloom_filter.Sbbf.json",
+    "anchor": "op-e8b3b5d6f7374f53d080876b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "aec6838d414ef548a7ffe7e8",
+    "path": "parquet::bloom_filter::Sbbf::fmt",
+    "name": "fmt",
+    "owner": "parquet::bloom_filter::Sbbf",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        320,
+        10
+      ],
+      "end": [
+        320,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 67,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 68,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "67": "core::fmt::Formatter",
+      "68": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Sbbf",
+          "id": "parquet::bloom_filter::Sbbf",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/bloom_filter/mod.rs",
+        "begin": [
+          320,
+          10
+        ],
+        "end": [
+          320,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4916",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.bloom_filter.Sbbf.md",
+    "record_file": "operations/parquet.bloom_filter.Sbbf.json",
+    "anchor": "op-aec6838d414ef548a7ffe7e8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "943c66e12ec73793b98e3132",
+    "path": "parquet::bloom_filter::Sbbf::fold_to_target_fpp",
+    "name": "fold_to_target_fpp",
+    "owner": "parquet::bloom_filter::Sbbf",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fold_to_target_fpp(&mut self, target_fpp: f64)",
+    "docs": "Fold the bloom filter down to the smallest size that still meets the target FPP\n(False Positive Percentage).\n\nFolds the filter by merging groups of adjacent blocks via bitwise OR, where each\nfold level halves the number of blocks. The fold count is chosen as the maximum\nnumber of folds whose estimated FPP stays within `target_fpp`. The filter stops\nat a minimum size of 1 block (32 bytes).\n\n## How it works\n\nSBBFs use multiplicative hashing for block selection:\n\n```text\nblock_index = ((hash >> 32) * num_blocks) >> 32\n```\n\nA single fold halves the block count: when `num_blocks` is halved, the new index\nbecomes `floor(original_index / 2)`, so blocks `2i` and `2i+1` map to the same\nposition. More generally, `k` folds reduce the block count by `2^k`, merging\ngroups of `2^k` adjacent blocks in a single pass:\n\n```text\nfolded[i] = blocks[i*2^k] | blocks[i*2^k + 1] | ... | blocks[i*2^k + 2^k - 1]\n```\n\nThis differs from standard Bloom filter folding, which merges the two halves\n(`B[i] | B[i + m/2]`) because standard filters use modular hashing where\n`h(x) mod (m/2)` maps indices `i` and `i + m/2` to the same position.\n\n## Correctness\n\nFolding **never introduces false negatives**. Every bit that was set in the original\nfilter remains set in the folded filter (via bitwise OR). The only effect is a controlled\nincrease in FPP as set bits from different blocks are merged together.\nThis is was originally proven in [Sailhan & Stehr 2012] for standard bloom filters and is empirically\ndemonstrated for SBBFs in Lemma 1 and Lemma 2 of the tests.\n\n## References\n\n[Sailhan & Stehr 2012]: https://doi.org/10.1109/GreenCom.2012.16",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        618,
+        5
+      ],
+      "end": [
+        623,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "target_fpp",
+              {
+                "primitive": "f64"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Sbbf",
+          "id": "parquet::bloom_filter::Sbbf",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/bloom_filter/mod.rs",
+        "begin": [
+          379,
+          1
+        ],
+        "end": [
+          754,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4885",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.bloom_filter.Sbbf.md",
+    "record_file": "operations/parquet.bloom_filter.Sbbf.json",
+    "anchor": "op-943c66e12ec73793b98e3132",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c0ffe29c53b5b1da991aaa25",
+    "path": "parquet::bloom_filter::Sbbf::from_bytes",
+    "name": "from_bytes",
+    "owner": "parquet::bloom_filter::Sbbf",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from_bytes(bytes: &[u8]) -> Result<Self, ParquetError>",
+    "docs": "Reads a Sbff from Thrift encoded bytes\n\n# Examples\n\n```no_run\n# use parquet::errors::Result;\n# use parquet::bloom_filter::Sbbf;\n# fn main() -> Result<()> {\n// In a real application, you would read serialized bloom filter bytes from a cache.\n// This example demonstrates the deserialization process.\n// Assuming you have bloom filter bytes from a Parquet file:\n# let serialized_bytes: Vec<u8> = vec![];\nlet bloom_filter = Sbbf::from_bytes(&serialized_bytes)?;\n// Now you can use the bloom filter to check for values\nif bloom_filter.check(&\"some_value\") {\n    println!(\"Value might be present (or false positive)\");\n} else {\n    println!(\"Value is definitely not present\");\n}\n# Ok(())\n# }\n```",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        729,
+        5
+      ],
+      "end": [
+        753,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "bytes",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "u8"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetError",
+                          "id": 23,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "23": "parquet::errors::ParquetError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Sbbf",
+          "id": "parquet::bloom_filter::Sbbf",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/bloom_filter/mod.rs",
+        "begin": [
+          379,
+          1
+        ],
+        "end": [
+          754,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4891",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.bloom_filter.Sbbf.md",
+    "record_file": "operations/parquet.bloom_filter.Sbbf.json",
+    "anchor": "op-c0ffe29c53b5b1da991aaa25",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9a93e6db91ce8d5fe29ce5d0",
+    "path": "parquet::bloom_filter::Sbbf::insert",
+    "name": "insert",
+    "owner": "parquet::bloom_filter::Sbbf",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn insert<T: AsBytes + ?Sized>(&mut self, value: &T)",
+    "docs": "Insert an [AsBytes] value into the filter",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        545,
+        5
+      ],
+      "end": [
+        547,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "AsBytes",
+                          "id": 1116,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    },
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Sized",
+                          "id": 38,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "maybe"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1116": "parquet::data_type::AsBytes",
+      "38": "core::marker::Sized"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Sbbf",
+          "id": "parquet::bloom_filter::Sbbf",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/bloom_filter/mod.rs",
+        "begin": [
+          379,
+          1
+        ],
+        "end": [
+          754,
+          2
+        ]
+      }
+    },
+    "links": {
+      "AsBytes": 1116
+    },
+    "link_paths": {
+      "AsBytes": "parquet::data_type::AsBytes"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4895",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.bloom_filter.Sbbf.md",
+    "record_file": "operations/parquet.bloom_filter.Sbbf.json",
+    "anchor": "op-9a93e6db91ce8d5fe29ce5d0",
+    "aliases": [],
+    "resolved_doc_links": {
+      "AsBytes": "../operations/parquet.data_type.AsBytes.md#op-df19664d53a774fa5f1d6462"
+    }
+  },
+  {
+    "id": "b9c21bcd4a4439f083e0a9b9",
+    "path": "parquet::bloom_filter::Sbbf::new",
+    "name": "new",
+    "owner": "parquet::bloom_filter::Sbbf",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(bitset: &[u8]) -> Self",
+    "docs": "Creates a new [Sbbf] from a raw byte slice.",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        403,
+        5
+      ],
+      "end": [
+        415,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "bitset",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "u8"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Sbbf",
+          "id": "parquet::bloom_filter::Sbbf",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/bloom_filter/mod.rs",
+        "begin": [
+          379,
+          1
+        ],
+        "end": [
+          754,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Sbbf": 3021
+    },
+    "link_paths": {
+      "Sbbf": "parquet::bloom_filter::Sbbf"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4890",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.bloom_filter.Sbbf.md",
+    "record_file": "operations/parquet.bloom_filter.Sbbf.json",
+    "anchor": "op-b9c21bcd4a4439f083e0a9b9",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Sbbf": "../operations/parquet.bloom_filter.Sbbf.md#op-47eb960cc6ee6f46d8423ca5"
+    }
+  },
+  {
+    "id": "dab59b8a97c422c2a05e474c",
+    "path": "parquet::bloom_filter::Sbbf::new_with_ndv_fpp",
+    "name": "new_with_ndv_fpp",
+    "owner": "parquet::bloom_filter::Sbbf",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_with_ndv_fpp(ndv: u64, fpp: f64) -> Result<Self, ParquetError>",
+    "docs": "Create a new [Sbbf] with given number of distinct values and false positive probability.\nWill return an error if `fpp` is greater than or equal to 1.0 or less than 0.0.",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        382,
+        5
+      ],
+      "end": [
+        390,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "ndv",
+              {
+                "primitive": "u64"
+              }
+            ],
+            [
+              "fpp",
+              {
+                "primitive": "f64"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetError",
+                          "id": 23,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "23": "parquet::errors::ParquetError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Sbbf",
+          "id": "parquet::bloom_filter::Sbbf",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/bloom_filter/mod.rs",
+        "begin": [
+          379,
+          1
+        ],
+        "end": [
+          754,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Sbbf": 3021
+    },
+    "link_paths": {
+      "Sbbf": "parquet::bloom_filter::Sbbf"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4884",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.bloom_filter.Sbbf.md",
+    "record_file": "operations/parquet.bloom_filter.Sbbf.json",
+    "anchor": "op-dab59b8a97c422c2a05e474c",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Sbbf": "../operations/parquet.bloom_filter.Sbbf.md#op-47eb960cc6ee6f46d8423ca5"
+    }
+  },
+  {
+    "id": "9fa2eb49b10fd3519841a3d5",
+    "path": "parquet::bloom_filter::Sbbf::new_with_num_of_bytes",
+    "name": "new_with_num_of_bytes",
+    "owner": "parquet::bloom_filter::Sbbf",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_with_num_of_bytes(num_bytes: usize) -> Self",
+    "docs": "Create a new [Sbbf] with given number of bytes, the exact number of bytes will be adjusted\nto the next power of two bounded by [BITSET_MIN_LENGTH] and [BITSET_MAX_LENGTH].",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        394,
+        5
+      ],
+      "end": [
+        400,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "num_bytes",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Sbbf",
+          "id": "parquet::bloom_filter::Sbbf",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/bloom_filter/mod.rs",
+        "begin": [
+          379,
+          1
+        ],
+        "end": [
+          754,
+          2
+        ]
+      }
+    },
+    "links": {
+      "BITSET_MIN_LENGTH": 4887,
+      "BITSET_MAX_LENGTH": 4888,
+      "Sbbf": 3021
+    },
+    "link_paths": {
+      "BITSET_MIN_LENGTH": "parquet::bloom_filter::BITSET_MIN_LENGTH",
+      "BITSET_MAX_LENGTH": "parquet::bloom_filter::BITSET_MAX_LENGTH",
+      "Sbbf": "parquet::bloom_filter::Sbbf"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4889",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.bloom_filter.Sbbf.md",
+    "record_file": "operations/parquet.bloom_filter.Sbbf.json",
+    "anchor": "op-9fa2eb49b10fd3519841a3d5",
+    "aliases": [],
+    "resolved_doc_links": {
+      "BITSET_MIN_LENGTH": "../operations/parquet.bloom_filter.BITSET_MIN_LENGTH.md#op-65b75db588b6e018cdc7bd85",
+      "BITSET_MAX_LENGTH": "../operations/parquet.bloom_filter.BITSET_MAX_LENGTH.md#op-10db3716e4217119663fd14c",
+      "Sbbf": "../operations/parquet.bloom_filter.Sbbf.md#op-47eb960cc6ee6f46d8423ca5"
+    }
+  },
+  {
+    "id": "63738dc98abacd84c4277797",
+    "path": "parquet::bloom_filter::Sbbf::num_blocks",
+    "name": "num_blocks",
+    "owner": "parquet::bloom_filter::Sbbf",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn num_blocks(&self) -> usize",
+    "docs": "Returns the number of blocks in this bloom filter.",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        574,
+        5
+      ],
+      "end": [
+        576,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Sbbf",
+          "id": "parquet::bloom_filter::Sbbf",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/bloom_filter/mod.rs",
+        "begin": [
+          379,
+          1
+        ],
+        "end": [
+          754,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4897",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.bloom_filter.Sbbf.md",
+    "record_file": "operations/parquet.bloom_filter.Sbbf.json",
+    "anchor": "op-63738dc98abacd84c4277797",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1bc12cc1f6e669377e9cd563",
+    "path": "parquet::bloom_filter::Sbbf::read_from_column_chunk",
+    "name": "read_from_column_chunk",
+    "owner": "parquet::bloom_filter::Sbbf",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn read_from_column_chunk<R: ChunkReader>(column_metadata: &ColumnChunkMetaData, reader: &R) -> Result<Option<Self>, ParquetError>",
+    "docs": "Read a new bloom filter from the given offset in the given reader.",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        471,
+        5
+      ],
+      "end": [
+        518,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "column_metadata",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ColumnChunkMetaData",
+                      "id": 4360,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "reader",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 74,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "generic": "Self"
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetError",
+                          "id": 23,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "R",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ChunkReader",
+                          "id": 3024,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4360": "parquet::file::metadata::ColumnChunkMetaData",
+      "107": "parquet::errors::Result",
+      "74": "core::option::Option",
+      "23": "parquet::errors::ParquetError",
+      "3024": "parquet::file::reader::ChunkReader"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Sbbf",
+          "id": "parquet::bloom_filter::Sbbf",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/bloom_filter/mod.rs",
+        "begin": [
+          379,
+          1
+        ],
+        "end": [
+          754,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4894",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.bloom_filter.Sbbf.md",
+    "record_file": "operations/parquet.bloom_filter.Sbbf.json",
+    "anchor": "op-1bc12cc1f6e669377e9cd563",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "93c56d91885ef800de8aa093",
+    "path": "parquet::bloom_filter::Sbbf::write",
+    "name": "write",
+    "owner": "parquet::bloom_filter::Sbbf",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn write<W: Write>(&self, writer: W) -> Result<(), ParquetError>",
+    "docs": "Write the bloom filter data (header and then bitset) to the output. This doesn't\nflush the writer in order to boost performance of bulk writing all blocks. Caller\nmust remember to flush the writer.\nThis method usually is used in conjunction with [`Self::from_bytes`] for serialization/deserialization.",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        421,
+        5
+      ],
+      "end": [
+        428,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "writer",
+              {
+                "generic": "W"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetError",
+                          "id": 23,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "W",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Write",
+                          "id": 1102,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "23": "parquet::errors::ParquetError",
+      "1102": "core::io::write::Write"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Sbbf",
+          "id": "parquet::bloom_filter::Sbbf",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/bloom_filter/mod.rs",
+        "begin": [
+          379,
+          1
+        ],
+        "end": [
+          754,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::from_bytes`": 4891
+    },
+    "link_paths": {
+      "`Self::from_bytes`": "parquet::bloom_filter::Sbbf::from_bytes"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4892",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.bloom_filter.Sbbf.md",
+    "record_file": "operations/parquet.bloom_filter.Sbbf.json",
+    "anchor": "op-93c56d91885ef800de8aa093",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::from_bytes`": "../operations/parquet.bloom_filter.Sbbf.md#op-c0ffe29c53b5b1da991aaa25"
+    }
+  },
+  {
+    "id": "147c3294b19540d6eea3105d",
+    "path": "parquet::bloom_filter::Sbbf::write_bitset",
+    "name": "write_bitset",
+    "owner": "parquet::bloom_filter::Sbbf",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn write_bitset<W: Write>(&self, writer: W) -> Result<(), ParquetError>",
+    "docs": "Write the bitset in serialized form to the writer.",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        445,
+        5
+      ],
+      "end": [
+        457,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"target_endian\", value: Some(\"little\"), span: src/bloom_filter/mod.rs:444:11: 444:35 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "writer",
+              {
+                "generic": "W"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetError",
+                          "id": 23,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "W",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Write",
+                          "id": 1102,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "23": "parquet::errors::ParquetError",
+      "1102": "core::io::write::Write"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Sbbf",
+          "id": "parquet::bloom_filter::Sbbf",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/bloom_filter/mod.rs",
+        "begin": [
+          379,
+          1
+        ],
+        "end": [
+          754,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4893",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.bloom_filter.Sbbf.md",
+    "record_file": "operations/parquet.bloom_filter.Sbbf.json",
+    "anchor": "op-147c3294b19540d6eea3105d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

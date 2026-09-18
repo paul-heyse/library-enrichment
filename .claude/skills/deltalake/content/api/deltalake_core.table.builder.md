@@ -5,6 +5,7 @@ Crate `deltalake-core` · 6 public items · structured records in [`model/deltal
 ## DeltaTableConfigKey
 
 `enum` · `deltalake_core::table::builder::DeltaTableConfigKey`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.builder.DeltaTableConfigKey.md)
 
 Also reachable as `deltalake::table::builder::DeltaTableConfigKey`
 
@@ -21,6 +22,7 @@ Enumeration of recognized configuration keys, generated from the struct fields.
 ## DeltaVersion
 
 `enum` · `deltalake_core::table::builder::DeltaVersion`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.builder.DeltaVersion.md)
 
 Also reachable as `deltalake::DeltaVersion`, `deltalake::table::builder::DeltaVersion`, `deltalake_core::DeltaVersion`
 
@@ -39,6 +41,7 @@ possible version specifications for loading a delta table
 ## ensure_table_uri
 
 `function` · `deltalake_core::table::builder::ensure_table_uri`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.builder.ensure_table_uri.md)
 
 Also reachable as `deltalake::ensure_table_uri`, `deltalake::table::builder::ensure_table_uri`, `deltalake_core::ensure_table_uri`
 
@@ -54,6 +57,7 @@ Creates directories for local paths if they don't exist.
 ## parse_table_uri
 
 `function` · `deltalake_core::table::builder::parse_table_uri`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.builder.parse_table_uri.md)
 
 Also reachable as `deltalake::table::builder::parse_table_uri`
 
@@ -77,6 +81,7 @@ This is useful for opening existing tables where we don't want to create directo
 ## DeltaTableBuilder
 
 `struct` · `deltalake_core::table::builder::DeltaTableBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.builder.DeltaTableBuilder.md)
 
 Also reachable as `deltalake::DeltaTableBuilder`, `deltalake::table::builder::DeltaTableBuilder`, `deltalake_core::DeltaTableBuilder`
 
@@ -113,6 +118,7 @@ builder for configuring a delta table load.
 ## DeltaTableConfig
 
 `struct` · `deltalake_core::table::builder::DeltaTableConfig`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.builder.DeltaTableConfig.md)
 
 Also reachable as `deltalake::DeltaTableConfig`, `deltalake::table::builder::DeltaTableConfig`, `deltalake_core::DeltaTableConfig`
 

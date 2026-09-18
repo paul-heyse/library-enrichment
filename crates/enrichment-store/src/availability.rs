@@ -25,7 +25,8 @@ pub async fn select(
     cfg_hints: Option<&[String]>,
 ) -> Result<Option<Availability>> {
     let session = runtime.session();
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "availability_input",
         Input::batch(&[Input {
             observed: observed.cloned(),

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## verify_num_records_present
 
 `function` · `buoyant_kernel::transaction::stats_verifier::verify_num_records_present`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.stats_verifier.verify_num_records_present.md)
 
 Also reachable as `delta_kernel::transaction::stats_verifier::verify_num_records_present`
 
@@ -20,6 +21,7 @@ violation and returns an error containing the `add.path`.
 ## StatsColumnVerifier
 
 `struct` · `buoyant_kernel::transaction::stats_verifier::StatsColumnVerifier`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.stats_verifier.StatsColumnVerifier.md)
 
 Also reachable as `delta_kernel::transaction::stats_verifier::StatsColumnVerifier`
 

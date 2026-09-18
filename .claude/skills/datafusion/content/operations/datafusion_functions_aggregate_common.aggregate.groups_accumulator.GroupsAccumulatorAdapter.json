@@ -1,0 +1,1289 @@
+[
+  {
+    "id": "d2e10609875cb34a913017d4",
+    "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+    "name": "GroupsAccumulatorAdapter",
+    "owner": null,
+    "crate": "datafusion-functions-aggregate-common",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct GroupsAccumulatorAdapter",
+    "docs": "An adapter that implements [`GroupsAccumulator`] for any [`Accumulator`]\n\nWhile [`Accumulator`] are simpler to implement and can support\nmore general calculations (like retractable window functions),\nthey are not as fast as a specialized `GroupsAccumulator`. This\ninterface bridges the gap so the group by operator only operates\nin terms of [`Accumulator`].\n\nInternally, this adapter creates a new [`Accumulator`] for each group which\nstores the state for that group. This both requires an allocation for each\nAccumulator, internal indices, as well as whatever internal allocations the\nAccumulator itself requires.\n\nFor example, a `MinAccumulator` that computes the minimum string value with\na [`ScalarValue::Utf8`]. That will require at least two allocations per group\n(one for the `MinAccumulator` and one for the `ScalarValue::Utf8`).\n\n```text\n                      ┌─────────────────────────────────┐\n                      │MinAccumulator {                 │\n               ┌─────▶│ min: ScalarValue::Utf8(\"A\")     │───────┐\n               │      │}                                │       │\n               │      └─────────────────────────────────┘       └───────▶   \"A\"\n   ┌─────┐     │      ┌─────────────────────────────────┐\n   │  0  │─────┘      │MinAccumulator {                 │\n   ├─────┤     ┌─────▶│ min: ScalarValue::Utf8(\"Z\")     │───────────────▶   \"Z\"\n   │  1  │─────┘      │}                                │\n   └─────┘            └─────────────────────────────────┘                   ...\n     ...                 ...\n   ┌─────┐            ┌────────────────────────────────┐\n   │ N-2 │            │MinAccumulator {                │\n   ├─────┤            │  min: ScalarValue::Utf8(\"A\")   │────────────────▶   \"A\"\n   │ N-1 │─────┐      │}                               │\n   └─────┘     │      └────────────────────────────────┘\n               │      ┌────────────────────────────────┐        ┌───────▶   \"Q\"\n               │      │MinAccumulator {                │        │\n               └─────▶│  min: ScalarValue::Utf8(\"Q\")   │────────┘\n                      │}                               │\n                      └────────────────────────────────┘\n\n\n Logical group         Current Min/Max value for that group stored\n    number             as a ScalarValue which points to an\n                       individually allocated String\n```\n\n# Optimizations\n\nThe adapter minimizes the number of calls to [`Accumulator::update_batch`]\nby first collecting the input rows for each group into a contiguous array\nusing [`compute::take`]",
+    "span": {
+      "filename": "src/aggregate/groups_accumulator.rs",
+      "begin": [
+        90,
+        1
+      ],
+      "end": [
+        103,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          685,
+          686,
+          687,
+          688,
+          689,
+          690,
+          691,
+          692,
+          693,
+          694,
+          695,
+          696,
+          697,
+          698,
+          699,
+          700,
+          707
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`compute::take`": 682,
+      "`Accumulator`": 80,
+      "`GroupsAccumulator`": 313,
+      "`ScalarValue::Utf8`": 680,
+      "`Accumulator::update_batch`": 681
+    },
+    "link_paths": {
+      "`compute::take`": "arrow_select::take::take",
+      "`Accumulator`": "datafusion_expr_common::accumulator::Accumulator",
+      "`GroupsAccumulator`": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+      "`ScalarValue::Utf8`": "datafusion_common::scalar::ScalarValue::Utf8",
+      "`Accumulator::update_batch`": "datafusion_expr_common::accumulator::Accumulator::update_batch"
+    },
+    "artifact": {
+      "id": "81808248bf26d74d3675773ba339836571846becb6ef9669343e6f4d8b12dd2d",
+      "format_version": 61,
+      "item_id": "683",
+      "origin": "https://docs.rs/crate/datafusion-functions-aggregate-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.md",
+    "record_file": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.json",
+    "anchor": "op-d2e10609875cb34a913017d4",
+    "aliases": [
+      "datafusion::physical_expr::GroupsAccumulatorAdapter",
+      "datafusion_physical_expr::GroupsAccumulatorAdapter"
+    ],
+    "resolved_doc_links": {
+      "`compute::take`": "../operations/arrow_select.take.take.md#op-4197d454d308f4ceadb20600",
+      "`Accumulator`": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-2911d7ffb2098886b7dd6ba8",
+      "`GroupsAccumulator`": "../operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md#op-9c9c43a7d8bf357eb3adcb6e",
+      "`ScalarValue::Utf8`": "../operations/datafusion_common.scalar.ScalarValue.md#op-88c5b40ae7777d1dcc20fca9",
+      "`Accumulator::update_batch`": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-1afa6e9a06d15906b5bac2ac"
+    }
+  },
+  {
+    "id": "6ca74d22f810edce92c4319f",
+    "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter::convert_to_state",
+    "name": "convert_to_state",
+    "owner": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+    "crate": "datafusion-functions-aggregate-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn convert_to_state(&self, values: &[ArrayRef], opt_filter: Option<&BooleanArray>) -> Result<Vec<ArrayRef>>",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregate/groups_accumulator.rs",
+      "begin": [
+        397,
+        5
+      ],
+      "end": [
+        443,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 140,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "opt_filter",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 304,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "BooleanArray",
+                                  "id": 305,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 78,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 137,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "ArrayRef",
+                                      "id": 140,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "140": "arrow_array::array::ArrayRef",
+      "304": "core::option::Option",
+      "305": "arrow_array::array::boolean_array::BooleanArray",
+      "78": "datafusion_common::error::Result",
+      "137": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupsAccumulatorAdapter",
+          "id": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "GroupsAccumulator",
+        "id": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+        "args": null
+      },
+      "trait_path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregate/groups_accumulator.rs",
+        "begin": [
+          298,
+          1
+        ],
+        "end": [
+          444,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "81808248bf26d74d3675773ba339836571846becb6ef9669343e6f4d8b12dd2d",
+      "format_version": 61,
+      "item_id": "706",
+      "origin": "https://docs.rs/crate/datafusion-functions-aggregate-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.md",
+    "record_file": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.json",
+    "anchor": "op-6ca74d22f810edce92c4319f",
+    "aliases": [
+      "datafusion::physical_expr::GroupsAccumulatorAdapter::convert_to_state",
+      "datafusion_physical_expr::GroupsAccumulatorAdapter::convert_to_state"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "41dc5106b5b7ef14348b33a5",
+    "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter::evaluate",
+    "name": "evaluate",
+    "owner": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+    "crate": "datafusion-functions-aggregate-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn evaluate(&mut self, emit_to: EmitTo) -> Result<ArrayRef>",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregate/groups_accumulator.rs",
+      "begin": [
+        318,
+        5
+      ],
+      "end": [
+        336,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "emit_to",
+              {
+                "resolved_path": {
+                  "path": "EmitTo",
+                  "id": 307,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 78,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrayRef",
+                          "id": 140,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "307": "datafusion_expr_common::groups_accumulator::EmitTo",
+      "78": "datafusion_common::error::Result",
+      "140": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupsAccumulatorAdapter",
+          "id": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "GroupsAccumulator",
+        "id": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+        "args": null
+      },
+      "trait_path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregate/groups_accumulator.rs",
+        "begin": [
+          298,
+          1
+        ],
+        "end": [
+          444,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "81808248bf26d74d3675773ba339836571846becb6ef9669343e6f4d8b12dd2d",
+      "format_version": 61,
+      "item_id": "702",
+      "origin": "https://docs.rs/crate/datafusion-functions-aggregate-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.md",
+    "record_file": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.json",
+    "anchor": "op-41dc5106b5b7ef14348b33a5",
+    "aliases": [
+      "datafusion::physical_expr::GroupsAccumulatorAdapter::evaluate",
+      "datafusion_physical_expr::GroupsAccumulatorAdapter::evaluate"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7646c7b7af871c62d1b7962b",
+    "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter::merge_batch",
+    "name": "merge_batch",
+    "owner": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+    "crate": "datafusion-functions-aggregate-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn merge_batch(&mut self, values: &[ArrayRef], group_indices: &[usize], total_num_groups: usize) -> Result<()>",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregate/groups_accumulator.rs",
+      "begin": [
+        374,
+        5
+      ],
+      "end": [
+        391,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 140,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "group_indices",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "usize"
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "total_num_groups",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 78,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "140": "arrow_array::array::ArrayRef",
+      "78": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupsAccumulatorAdapter",
+          "id": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "GroupsAccumulator",
+        "id": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+        "args": null
+      },
+      "trait_path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregate/groups_accumulator.rs",
+        "begin": [
+          298,
+          1
+        ],
+        "end": [
+          444,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "81808248bf26d74d3675773ba339836571846becb6ef9669343e6f4d8b12dd2d",
+      "format_version": 61,
+      "item_id": "704",
+      "origin": "https://docs.rs/crate/datafusion-functions-aggregate-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.md",
+    "record_file": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.json",
+    "anchor": "op-7646c7b7af871c62d1b7962b",
+    "aliases": [
+      "datafusion::physical_expr::GroupsAccumulatorAdapter::merge_batch",
+      "datafusion_physical_expr::GroupsAccumulatorAdapter::merge_batch"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2b99ae572eec81695e993bf9",
+    "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter::new",
+    "name": "new",
+    "owner": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+    "crate": "datafusion-functions-aggregate-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new<F>(factory: F) -> Self where F: Fn() -> Result<Box<dyn Accumulator>> + Send + 'static",
+    "docs": "Create a new adapter that will create a new [`Accumulator`]\nfor each group, using the specified factory function",
+    "span": {
+      "filename": "src/aggregate/groups_accumulator.rs",
+      "begin": [
+        132,
+        5
+      ],
+      "end": [
+        141,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "factory",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "F"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Fn",
+                        "id": 77,
+                        "args": {
+                          "parenthesized": {
+                            "inputs": [],
+                            "output": {
+                              "resolved_path": {
+                                "path": "Result",
+                                "id": 78,
+                                "args": {
+                                  "angle_bracketed": {
+                                    "args": [
+                                      {
+                                        "type": {
+                                          "resolved_path": {
+                                            "path": "Box",
+                                            "id": 79,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [
+                                                  {
+                                                    "type": {
+                                                      "dyn_trait": {
+                                                        "traits": [
+                                                          {
+                                                            "trait": {
+                                                              "path": "Accumulator",
+                                                              "id": 80,
+                                                              "args": null
+                                                            },
+                                                            "generic_params": []
+                                                          }
+                                                        ],
+                                                        "lifetime": null
+                                                      }
+                                                    }
+                                                  }
+                                                ],
+                                                "constraints": []
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ],
+                                    "constraints": []
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": 19,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "77": "core::ops::function::Fn",
+      "78": "datafusion_common::error::Result",
+      "79": "alloc::boxed::Box",
+      "80": "datafusion_expr_common::accumulator::Accumulator",
+      "19": "core::marker::Send"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupsAccumulatorAdapter",
+          "id": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregate/groups_accumulator.rs",
+        "begin": [
+          129,
+          1
+        ],
+        "end": [
+          296,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Accumulator`": 80
+    },
+    "link_paths": {
+      "`Accumulator`": "datafusion_expr_common::accumulator::Accumulator"
+    },
+    "artifact": {
+      "id": "81808248bf26d74d3675773ba339836571846becb6ef9669343e6f4d8b12dd2d",
+      "format_version": 61,
+      "item_id": "684",
+      "origin": "https://docs.rs/crate/datafusion-functions-aggregate-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.md",
+    "record_file": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.json",
+    "anchor": "op-2b99ae572eec81695e993bf9",
+    "aliases": [
+      "datafusion::physical_expr::GroupsAccumulatorAdapter::new",
+      "datafusion_physical_expr::GroupsAccumulatorAdapter::new"
+    ],
+    "resolved_doc_links": {
+      "`Accumulator`": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-2911d7ffb2098886b7dd6ba8"
+    }
+  },
+  {
+    "id": "e8db263ba79218e8cb968de6",
+    "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter::size",
+    "name": "size",
+    "owner": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+    "crate": "datafusion-functions-aggregate-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn size(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregate/groups_accumulator.rs",
+      "begin": [
+        393,
+        5
+      ],
+      "end": [
+        395,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupsAccumulatorAdapter",
+          "id": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "GroupsAccumulator",
+        "id": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+        "args": null
+      },
+      "trait_path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregate/groups_accumulator.rs",
+        "begin": [
+          298,
+          1
+        ],
+        "end": [
+          444,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "81808248bf26d74d3675773ba339836571846becb6ef9669343e6f4d8b12dd2d",
+      "format_version": 61,
+      "item_id": "705",
+      "origin": "https://docs.rs/crate/datafusion-functions-aggregate-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.md",
+    "record_file": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.json",
+    "anchor": "op-e8db263ba79218e8cb968de6",
+    "aliases": [
+      "datafusion::physical_expr::GroupsAccumulatorAdapter::size",
+      "datafusion_physical_expr::GroupsAccumulatorAdapter::size"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8ab74c59a272e2e168da174d",
+    "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter::state",
+    "name": "state",
+    "owner": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+    "crate": "datafusion-functions-aggregate-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn state(&mut self, emit_to: EmitTo) -> Result<Vec<ArrayRef>>",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregate/groups_accumulator.rs",
+      "begin": [
+        339,
+        5
+      ],
+      "end": [
+        372,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "emit_to",
+              {
+                "resolved_path": {
+                  "path": "EmitTo",
+                  "id": 307,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 78,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 137,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "ArrayRef",
+                                      "id": 140,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "307": "datafusion_expr_common::groups_accumulator::EmitTo",
+      "78": "datafusion_common::error::Result",
+      "137": "alloc::vec::Vec",
+      "140": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupsAccumulatorAdapter",
+          "id": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "GroupsAccumulator",
+        "id": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+        "args": null
+      },
+      "trait_path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregate/groups_accumulator.rs",
+        "begin": [
+          298,
+          1
+        ],
+        "end": [
+          444,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "81808248bf26d74d3675773ba339836571846becb6ef9669343e6f4d8b12dd2d",
+      "format_version": 61,
+      "item_id": "703",
+      "origin": "https://docs.rs/crate/datafusion-functions-aggregate-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.md",
+    "record_file": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.json",
+    "anchor": "op-8ab74c59a272e2e168da174d",
+    "aliases": [
+      "datafusion::physical_expr::GroupsAccumulatorAdapter::state",
+      "datafusion_physical_expr::GroupsAccumulatorAdapter::state"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e48a7469308f9ff054ef6782",
+    "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter::update_batch",
+    "name": "update_batch",
+    "owner": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+    "crate": "datafusion-functions-aggregate-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn update_batch(&mut self, values: &[ArrayRef], group_indices: &[usize], opt_filter: Option<&BooleanArray>, total_num_groups: usize) -> Result<()>",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregate/groups_accumulator.rs",
+      "begin": [
+        299,
+        5
+      ],
+      "end": [
+        316,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 140,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "group_indices",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "usize"
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "opt_filter",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 304,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "BooleanArray",
+                                  "id": 305,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "total_num_groups",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 78,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "140": "arrow_array::array::ArrayRef",
+      "304": "core::option::Option",
+      "305": "arrow_array::array::boolean_array::BooleanArray",
+      "78": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupsAccumulatorAdapter",
+          "id": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "GroupsAccumulator",
+        "id": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+        "args": null
+      },
+      "trait_path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregate/groups_accumulator.rs",
+        "begin": [
+          298,
+          1
+        ],
+        "end": [
+          444,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "81808248bf26d74d3675773ba339836571846becb6ef9669343e6f4d8b12dd2d",
+      "format_version": 61,
+      "item_id": "701",
+      "origin": "https://docs.rs/crate/datafusion-functions-aggregate-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.md",
+    "record_file": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.json",
+    "anchor": "op-e48a7469308f9ff054ef6782",
+    "aliases": [
+      "datafusion::physical_expr::GroupsAccumulatorAdapter::update_batch",
+      "datafusion_physical_expr::GroupsAccumulatorAdapter::update_batch"
+    ],
+    "resolved_doc_links": {}
+  }
+]

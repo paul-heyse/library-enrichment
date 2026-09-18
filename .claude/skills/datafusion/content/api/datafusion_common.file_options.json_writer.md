@@ -29,6 +29,9 @@ fn new_with_level(compression: CompressionTypeVariant, compression_level: u32) -
 fn try_from(value: &JsonOptions) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.file_options.json_writer.JsonWriterOptions.md).
+
+
 Options for writing JSON files
 
 ---

@@ -5,6 +5,7 @@ Crate `buoyant_kernel_engine` · 1 public items · structured records in [`model
 ## TaskExecutor
 
 `trait` · `buoyant_kernel_engine::executor::TaskExecutor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.executor.TaskExecutor.md)
 
 Also reachable as `delta_kernel_default_engine::executor::TaskExecutor`
 

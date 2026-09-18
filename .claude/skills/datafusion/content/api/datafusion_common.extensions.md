@@ -27,6 +27,9 @@ fn merge(&mut self, other: &Extensions)
 fn new() -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.extensions.Extensions.md).
+
+
 A type-keyed map of opaque `Arc`'d values. Each Rust type `T` occupies
 its own slot, so independent components can each attach their own data
 without conflict.

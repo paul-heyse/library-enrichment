@@ -29,6 +29,9 @@ fn register_type(&mut self, type_name: &str) -> u32
 fn try_from(value: &Vec<SimpleExtensionDeclaration>) -> datafusion::common::Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.extensions.Extensions.md).
+
+
 Substrait uses [SimpleExtensions](https://substrait.io/extensions/#simple-extensions) to define
 behavior of plans in addition to what's supported directly by the protobuf definitions.
 That includes functions, but also provides support for custom types and variations for existing

@@ -8,6 +8,20 @@ use datafusion::{
     prelude::{col, lit},
 };
 
+fn fingerprint(frame: &DataFrame, domain: &str) -> datafusion::logical_expr::Expr {
+    let fields = frame.schema().fields().clone();
+    datafusion::functions::crypto::expr_fn::sha256(
+        enrichment_core::native_identity::canonical_bytes(domain, fields.clone())
+            .call(fields.iter().map(|field| col(field.name())).collect()),
+    )
+}
+
+/// Complete semantic row witnesses; neither a business key nor a selected field subset.
+pub(crate) fn fingerprints(frame: DataFrame, domain: &str) -> Result<DataFrame> {
+    let digest = fingerprint(&frame, domain);
+    frame.select(vec![digest.alias("fingerprint")])
+}
+
 pub(crate) fn distinct(frame: DataFrame, domain: &str) -> Result<DataFrame> {
     const DIGEST: &str = "__native_record_digest";
     const POSITION: &str = "__native_record_position";
@@ -18,10 +32,7 @@ pub(crate) fn distinct(frame: DataFrame, domain: &str) -> Result<DataFrame> {
     {
         return datafusion::common::plan_err!("reserved native deduplication field");
     }
-    let digest = datafusion::functions::crypto::expr_fn::sha256(
-        enrichment_core::native_identity::canonical_bytes(domain, fields.clone())
-            .call(fields.iter().map(|field| col(field.name())).collect()),
-    );
+    let digest = fingerprint(&frame, domain);
     let position = datafusion::functions_window::expr_fn::row_number()
         .partition_by(vec![col(DIGEST)])
         .order_by(vec![col(DIGEST).sort(true, false)])

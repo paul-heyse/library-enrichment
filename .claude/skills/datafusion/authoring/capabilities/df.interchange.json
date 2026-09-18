@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "id": "df.interchange",
+  "title": "Match the boundary to data, plan or ABI interchange",
+  "task_aliases": [
+    "serialize plan",
+    "Substrait",
+    "protobuf custom codec",
+    "Arrow IPC Flight",
+    "FFI ownership"
+  ],
+  "crates": [
+    "datafusion-proto",
+    "datafusion-substrait",
+    "datafusion-ffi",
+    "arrow-ipc",
+    "arrow-flight"
+  ],
+  "input": [
+    "LogicalPlan",
+    "ExecutionPlan",
+    "RecordBatch",
+    "FFI provider"
+  ],
+  "output": [
+    "bytes",
+    "plan",
+    "stream",
+    "FFI handles"
+  ],
+  "properties": [
+    "interchange",
+    "registry",
+    "ownership",
+    "compatibility"
+  ],
+  "operations": [
+    "datafusion_proto::logical_plan::LogicalExtensionCodec",
+    "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+  ],
+  "brief": "IPC/Flight move data, proto/Substrait encode plans, and FFI crosses an ABI boundary. Each needs its own compatibility, registry and ownership contract.",
+  "choices": [
+    {
+      "candidate": "Arrow IPC / Flight",
+      "choose_when": "Move batches/schema",
+      "tradeoff": "No query-plan semantics follow from serializing data.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "DataFusion proto",
+      "choose_when": "Serialize supported DataFusion plans",
+      "tradeoff": "Logical and physical extensions have different codecs; restore required registries/providers.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "Substrait",
+      "choose_when": "Exchange supported relational plans across engines",
+      "tradeoff": "Extension coverage and function mappings determine interoperability.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "datafusion-ffi",
+      "choose_when": "Separately compiled in-process providers/functions",
+      "tradeoff": "Follow explicit ABI/version and release-callback ownership rules.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "df.interchange.codecs",
+      "aspect": "codecs",
+      "statement": "LogicalExtensionCodec and PhysicalExtensionCodec serve different plan layers. Custom nodes and functions may need codec/registry support; successful encoding does not prove equivalent execution elsewhere.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.interchange.ownership",
+      "aspect": "ownership",
+      "statement": "FFI and stream boundaries need resource/release lifetime review. Stable ABI does not imply arbitrary DataFusion-version compatibility or durable serialization.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.interchange.validation",
+      "aspect": "validation",
+      "statement": "Verify a round trip including schema, required registration, custom nodes and execution results under the exact sender/receiver profiles.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Identify whether the payload is data, a plan, or in-process handles.",
+    "List extension codecs and registry/store dependencies.",
+    "Test restoration and execution in the receiver environment."
+  ],
+  "unknowns": [
+    "This card is source-backed routing. Cross-engine round trips and FFI lifetimes are not executed in this probe suite."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "datafusion_proto::logical_plan::LogicalExtensionCodec",
+        "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "datafusion_proto::logical_plan::LogicalExtensionCodec",
+      "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+    ],
+    "candidate_set": [
+      "Arrow IPC / Flight",
+      "DataFusion proto",
+      "Substrait",
+      "datafusion-ffi"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  }
+}

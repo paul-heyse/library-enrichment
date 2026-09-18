@@ -29,6 +29,9 @@ fn record_count(&self) -> usize
 fn next(&mut self) -> Option<Self::Item>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.reader.value_iter.ValueIter.md).
+
+
 JSON file reader that produces a serde_json::Value iterator from a Read trait
 
 # Example

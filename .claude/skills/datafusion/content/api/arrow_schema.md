@@ -42,6 +42,9 @@ fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 fn not(self) -> SortOptions
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.SortOptions.md).
+
+
 Options that define the sort order of a given column
 
 The default sorts equivalently to of `ASC NULLS FIRST` in SQL (i.e.

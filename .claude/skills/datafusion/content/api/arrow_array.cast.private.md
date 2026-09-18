@@ -10,4 +10,7 @@ Crate `arrow-array` · 1 public items · structured records in [`model/arrow_arr
 trait Sealed
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.private.Sealed.md).
+
+
 ---

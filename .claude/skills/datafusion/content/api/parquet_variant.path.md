@@ -35,6 +35,9 @@ fn from(name: &'a String) -> Self
 fn from(name: &'a str) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant.path.VariantPathElement.md).
+
+
 Element of a [`VariantPath`] that can be a field name or an index.
 
 See [`VariantPath`] for more details and examples.
@@ -90,6 +93,9 @@ fn from_iter<T: IntoIterator<Item = VariantPathElement<'a>>>(iter: T) -> Self
 ```rust
 fn deref(&self) -> &Self::Target
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant.path.VariantPath.md).
+
 
 Represents a qualified path to a potential subfield or index of a variant
 value.

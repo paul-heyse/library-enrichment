@@ -17,6 +17,9 @@ fn from_bytes_checked(b: &[u8]) -> Option<&Self>
 unsafe fn from_bytes_unchecked(b: &[u8]) -> &Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.bytes.ByteArrayNativeType.md).
+
+
 ---
 
 ## ByteArrayTypeSealed
@@ -26,5 +29,8 @@ unsafe fn from_bytes_unchecked(b: &[u8]) -> &Self
 ```rust
 trait ByteArrayTypeSealed
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.bytes.ByteArrayTypeSealed.md).
+
 
 ---

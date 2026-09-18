@@ -31,6 +31,9 @@ fn state(&mut self, emit_to: EmitTo) -> Result<Vec<ArrayRef>>
 fn update_batch(&mut self, values: &[ArrayRef], group_indices: &[usize], opt_filter: Option<&BooleanArray>, total_num_groups: usize) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.bool_op.BooleanGroupsAccumulator.md).
+
+
 An accumulator that implements a single operation over a
 [`BooleanArray`] where the accumulated state is also boolean (such
 as [`BitAndAssign`])

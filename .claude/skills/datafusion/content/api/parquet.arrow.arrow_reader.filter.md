@@ -27,6 +27,9 @@ fn evaluate(&mut self, batch: RecordBatch) -> Result<BooleanArray, ArrowError>
 fn projection(&self) -> &ProjectionMask
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.filter.ArrowPredicateFn.md).
+
+
 An [`ArrowPredicate`] created from an [`FnMut`] and a [`ProjectionMask`]
 
 See [`RowFilter`] for more information on applying filters during the
@@ -107,6 +110,9 @@ fn new(predicates: Vec<Box<dyn ArrowPredicate>>) -> Self
 fn predicates(&self) -> &Vec<Box<dyn ArrowPredicate>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.filter.RowFilter.md).
+
+
 Filter applied *during* the parquet read process
 
 See example on [`ArrowReaderBuilder::with_row_filter`]
@@ -172,6 +178,9 @@ trait ArrowPredicate: Send + 'static
 fn evaluate(&mut self, batch: RecordBatch) -> Result<BooleanArray, ArrowError>
 fn projection(&self) -> &ProjectionMask
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.filter.ArrowPredicate.md).
+
 
 A predicate operating on [`RecordBatch`]
 

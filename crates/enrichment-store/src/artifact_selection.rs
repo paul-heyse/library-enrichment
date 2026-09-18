@@ -25,7 +25,8 @@ pub async fn plan(
     result: Option<ArtifactWindow>,
 ) -> Result<ArtifactReadPlan> {
     let session = runtime.session();
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "artifact_request",
         Request::batch(&[Request {
             artifact: artifact.clone(),
@@ -71,7 +72,11 @@ pub async fn markdown(
     heading: &str,
 ) -> Result<Option<ArtifactWindow>> {
     let session = runtime.session();
-    session.register_batch("markdown_windows", ArtifactWindow::batch(&windows)?)?;
+    crate::native_catalog::input(
+        &session,
+        "markdown_windows",
+        ArtifactWindow::batch(&windows)?,
+    )?;
     let frame = session.sql("SELECT * FROM markdown_windows WHERE lower(section)=lower($1) ORDER BY start,end,section LIMIT 1").await?
         .with_param_values(vec![datafusion::common::ScalarValue::from(heading)])?;
     Ok(runtime.records(frame, 1).await?.pop())
@@ -91,7 +96,8 @@ pub async fn slice(
     is_text: bool,
 ) -> Result<ArtifactSlicePlan> {
     let session = runtime.session();
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "slice_input",
         SliceInput::batch(&[SliceInput {
             window: window.clone(),
@@ -138,4 +144,185 @@ async fn one<T: NativeStruct>(
             "artifact selection requires one captured input".into(),
         )
     })
+}
+
+// The full frame varies only with these decimal widths, encoding and terminal-cursor
+// presence. Content prefix lengths come from the linear codec kernel, never copied strings.
+enrichment_core::native_struct! { pub struct FrameClass {
+    length: u64 => Rule::Text,
+    utf8: bool => Rule::Text,
+    end_digits: u64 => Rule::Text,
+    remaining_digits: u64 => Rule::Text,
+    offset_digits: u64 => Rule::Text,
+    finished: bool => Rule::Text,
+} }
+enrichment_core::native_struct! { pub struct FrameMeasure {
+    class: FrameClass => Rule::Text,
+    bytes: u64 => Rule::Text,
+} }
+enrichment_core::native_struct! { pub struct PrefixSelection {
+    length: Option<u64> => Rule::Text,
+    utf8: Option<bool> => Rule::Text,
+    minimum: u64 => Rule::Text,
+} }
+pub struct PrefixPlan {
+    session: datafusion::prelude::SessionContext,
+    // Covers format-fact construction, Arrow conversion and simultaneous native query
+    // branches. Kept through final selection, including optimizer constant folding.
+    _memory: datafusion::execution::memory_pool::MemoryReservation,
+}
+impl PrefixPlan {
+    pub async fn prepare(
+        runtime: &QueryRuntime,
+        bytes: bytes::Bytes,
+        text: bool,
+        slice: &ArtifactSlicePlan,
+        window: &ArtifactWindow,
+    ) -> Result<Self> {
+        use datafusion::{common::ScalarValue, execution::memory_pool::MemoryConsumer};
+        let memory = MemoryConsumer::new("artifact-prefix-facts")
+            .register(&runtime.session().runtime_env().memory_pool);
+        let bound = bytes
+            .len()
+            .checked_add(1)
+            .and_then(|value| value.checked_mul(256))
+            .ok_or_else(|| {
+                datafusion::common::exec_datafusion_err!("artifact prefix allocation overflow")
+            })?;
+        memory.try_grow(bound)?;
+        let session = runtime.session();
+        let frame = session
+            .read_empty()?
+            .select(vec![
+                enrichment_core::native_artifact::boundaries()
+                    .call(vec![
+                        lit(ScalarValue::Binary(Some(bytes.to_vec()))),
+                        lit(text),
+                        lit((slice.end - slice.start) as u64),
+                        lit(slice.end == window.end),
+                    ])
+                    .alias("boundary"),
+            ])?
+            .unnest_columns(&["boundary"])?;
+        crate::native_catalog::work(&session, "artifact_prefix_facts", frame.into_view())?;
+        let frame = session.sql(&format!(r#"
+            SELECT boundary.length AS length, boundary.utf8 AS utf8, boundary.json_bytes AS json_bytes, boundary.resource_bytes AS resource_bytes,
+                CAST(length(CAST({start}+boundary.length AS VARCHAR)) AS BIGINT UNSIGNED) AS end_digits,
+                CAST(length(CAST({end}-{start}-boundary.length AS VARCHAR)) AS BIGINT UNSIGNED) AS remaining_digits,
+                CAST(length(CAST({start}-{origin}+boundary.length AS VARCHAR)) AS BIGINT UNSIGNED) AS offset_digits,
+                {start}+boundary.length={end} AS finished
+            FROM artifact_prefix_facts
+            WHERE boundary.length>0 OR {start}={end}
+        "#, start=slice.start, end=window.end, origin=window.start)).await?;
+        crate::native_catalog::work(&session, "artifact_prefixes", frame.into_view())?;
+        Ok(Self {
+            session,
+            _memory: memory,
+        })
+    }
+    pub async fn classes(&self, runtime: &QueryRuntime) -> Result<Vec<FrameClass>> {
+        runtime.records(self.session.sql("SELECT min(length) AS length,utf8,end_digits,remaining_digits,offset_digits,finished FROM artifact_prefixes GROUP BY utf8,end_digits,remaining_digits,offset_digits,finished").await?, 256).await
+    }
+    pub async fn select(
+        self,
+        runtime: &QueryRuntime,
+        measurements: Vec<FrameMeasure>,
+        budget: usize,
+        resource: bool,
+    ) -> Result<PrefixSelection> {
+        crate::native_catalog::input(
+            &self.session,
+            "artifact_frame_measurements",
+            FrameMeasure::batch(&measurements)?,
+        )?;
+        let query = format!(
+            r#"
+            WITH measured AS (
+                SELECT p.length,p.utf8,m.bytes+p.{content} AS bytes
+                FROM artifact_prefixes p JOIN artifact_frame_measurements m
+                ON p.utf8=m.class.utf8 AND p.end_digits=m.class.end_digits
+                AND p.remaining_digits=m.class.remaining_digits AND p.offset_digits=m.class.offset_digits
+                AND p.finished=m.class.finished
+            ), selected AS (
+                SELECT length,utf8 FROM measured WHERE bytes<={budget} ORDER BY length DESC LIMIT 1
+            ) SELECT selected.length,selected.utf8,coalesce(minimum.bytes,CAST({fallback} AS BIGINT UNSIGNED)) AS minimum
+              FROM (SELECT min(bytes) AS bytes FROM measured) minimum LEFT JOIN selected ON true
+        "#,
+            content = if resource {
+                "resource_bytes"
+            } else {
+                "json_bytes"
+            },
+            fallback = budget.saturating_add(1)
+        );
+        one(runtime, self.session.sql(&query).await?).await
+    }
+}
+
+#[cfg(test)]
+mod prefix_tests {
+    use super::*;
+    #[tokio::test]
+    async fn plan19_native_prefix_selection_handles_escaping_and_terminal_frames() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let runtime = QueryRuntime::new(&root.path().join("spill"), Default::default())?;
+        let text = "a\"🦀\n0123456789";
+        let window = ArtifactWindow {
+            start: 0,
+            end: text.len(),
+            section: None,
+        };
+        let slice = ArtifactSlicePlan {
+            start: 0,
+            end: text.len(),
+            read_bytes: text.len(),
+            invalid_offset: false,
+        };
+        let plan = PrefixPlan::prepare(
+            &runtime,
+            bytes::Bytes::copy_from_slice(text.as_bytes()),
+            true,
+            &slice,
+            &window,
+        )
+        .await?;
+        let classes = plan.classes(&runtime).await?;
+        assert!(!classes.is_empty());
+        let measured = classes
+            .into_iter()
+            .map(|class| {
+                // Independent format envelope: terminal frames omit a long cursor.
+                let bytes = if class.finished { 8 } else { 30 };
+                FrameMeasure { class, bytes }
+            })
+            .collect();
+        let selected = plan
+            .select(
+                &runtime,
+                measured,
+                8 + serde_json::to_string(text).unwrap().len() - 2,
+                false,
+            )
+            .await?;
+        assert_eq!(selected.length, Some(text.len() as u64));
+        assert_eq!(selected.utf8, Some(true));
+        let plan = PrefixPlan::prepare(
+            &runtime,
+            bytes::Bytes::copy_from_slice(text.as_bytes()),
+            true,
+            &slice,
+            &window,
+        )
+        .await?;
+        let measured = plan
+            .classes(&runtime)
+            .await?
+            .into_iter()
+            .map(|class| FrameMeasure { class, bytes: 100 })
+            .collect();
+        let selected = plan.select(&runtime, measured, 104, false).await?;
+        assert_eq!(selected.length, Some(2)); // a and quote cost 1+2, the next character costs 4.
+        runtime.close_diagnostics().await?;
+        Ok(())
+    }
 }

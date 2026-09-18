@@ -34,6 +34,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.command_statement_ingest.TableDefinitionOptions.md).
+
+
 Options for table definition behavior
 
 ---

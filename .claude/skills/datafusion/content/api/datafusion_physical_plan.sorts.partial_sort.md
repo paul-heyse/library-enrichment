@@ -53,6 +53,9 @@ fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md).
+
+
 Sort execution plan for inputs that are already partially sorted.
 
 This operator takes input ordered by a prefix of the required ordering, and

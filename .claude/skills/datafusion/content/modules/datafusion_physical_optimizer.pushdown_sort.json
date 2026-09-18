@@ -1,0 +1,53 @@
+[
+  {
+    "id": "b45baf02cb7114994535e760",
+    "path": "datafusion_physical_optimizer::pushdown_sort",
+    "name": "pushdown_sort",
+    "owner": null,
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "module",
+    "signature": "mod pushdown_sort",
+    "docs": "Sort Pushdown Optimization\n\nThis optimizer attempts to push sort requirements down through the execution plan\ntree to data sources that can natively handle them (e.g., by scanning files in\nreverse order).\n\n## How it works\n\n1. Detects `SortExec` nodes in the plan\n2. Calls `try_pushdown_sort()` on the input to recursively push the sort requirement\n3. Each node type defines its own pushdown behavior:\n   - **Transparent nodes** (CoalesceBatchesExec, RepartitionExec, etc.) delegate to\n     their children and wrap the result\n   - **Data sources** (DataSourceExec) check if they can optimize for the ordering\n   - **Blocking nodes** return `Unsupported` to stop pushdown\n4. Based on the result:\n   - `Exact`: Remove the Sort operator (data source guarantees perfect ordering)\n   - `Inexact`: Keep Sort but use optimized input (enables early termination for TopK)\n   - `Unsupported`: No change\n\n## Capabilities\n\n- **Sort elimination**: when a data source's natural ordering satisfies the\n  request, return `Exact` and remove the `SortExec` entirely. Preserves\n  `fetch` (LIMIT) from the eliminated `SortExec` for early termination.\n- **Statistics-based file sorting**: sort files within each partition by\n  min/max statistics. When files are non-overlapping but listed in wrong\n  order (e.g., alphabetical order ≠ sort key order), this fixes the ordering\n  and enables sort elimination. Works for both single-partition and\n  multi-partition plans with multi-file groups.\n- **Reverse scan optimization**: when required sort is the reverse of the data source's\n  natural ordering, enable reverse scanning (reading row groups in reverse order)\n- **Prefix matching**: if data has ordering [A DESC, B ASC] and query needs\n  [A DESC], the existing ordering satisfies the requirement (`Exact`).\n  If the query needs [A ASC] (reverse of the prefix), a reverse scan is\n  used (`Inexact`, `SortExec` retained)\n\nRelated issue: <https://github.com/apache/datafusion/issues/17348>",
+    "span": {
+      "filename": "src/pushdown_sort.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        231,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          637
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "669",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/datafusion_physical_optimizer.pushdown_sort.md",
+    "record_file": "modules/datafusion_physical_optimizer.pushdown_sort.json",
+    "anchor": "op-b45baf02cb7114994535e760",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

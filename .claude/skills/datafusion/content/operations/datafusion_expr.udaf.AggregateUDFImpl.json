@@ -1,0 +1,3687 @@
+[
+  {
+    "id": "9f175a3c2e0fb1ef9e53572c",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl",
+    "name": "AggregateUDFImpl",
+    "owner": null,
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait AggregateUDFImpl: Debug + DynEq + DynHash + Send + Sync + Any",
+    "docs": "Trait for implementing [`AggregateUDF`].\n\nThis trait exposes the full API for implementing user defined aggregate functions and\ncan be used to implement any function.\n\nSee [`advanced_udaf.rs`] for a full example with complete implementation and\n[`AggregateUDF`] for other available options.\n\n[`advanced_udaf.rs`]: https://github.com/apache/datafusion/blob/main/datafusion-examples/examples/udf/advanced_udaf.rs\n\n# Basic Example\n```\n# use std::any::Any;\n# use std::sync::{Arc, LazyLock};\n# use arrow::datatypes::{DataType, FieldRef};\n# use datafusion_common::{DataFusionError, plan_err, Result};\n# use datafusion_expr::{col, ColumnarValue, Signature, Volatility, Expr, Documentation};\n# use datafusion_expr::{AggregateUDFImpl, AggregateUDF, Accumulator, function::{AccumulatorArgs, StateFieldsArgs}};\n# use datafusion_expr::window_doc_sections::DOC_SECTION_AGGREGATE;\n# use arrow::datatypes::Schema;\n# use arrow::datatypes::Field;\n\n#[derive(Debug, Clone, PartialEq, Eq, Hash)]\nstruct GeoMeanUdf {\n  signature: Signature,\n}\n\nimpl GeoMeanUdf {\n  fn new() -> Self {\n    Self {\n      signature: Signature::uniform(1, vec![DataType::Float64], Volatility::Immutable),\n     }\n  }\n}\n\nstatic DOCUMENTATION: LazyLock<Documentation> = LazyLock::new(|| {\n        Documentation::builder(DOC_SECTION_AGGREGATE, \"calculates a geometric mean\", \"geo_mean(2.0)\")\n            .with_argument(\"arg1\", \"The Float64 number for the geometric mean\")\n            .build()\n    });\n\nfn get_doc() -> &'static Documentation {\n    &DOCUMENTATION\n}\n\n/// Implement the AggregateUDFImpl trait for GeoMeanUdf\nimpl AggregateUDFImpl for GeoMeanUdf {\n   fn name(&self) -> &str { \"geo_mean\" }\n   fn signature(&self) -> &Signature { &self.signature }\n   fn return_type(&self, args: &[DataType]) -> Result<DataType> {\n     if !matches!(args.get(0), Some(&DataType::Float64)) {\n       return plan_err!(\"geo_mean only accepts Float64 arguments\");\n     }\n     Ok(DataType::Float64)\n   }\n   // This is the accumulator factory; DataFusion uses it to create new accumulators.\n   fn accumulator(&self, _acc_args: AccumulatorArgs) -> Result<Box<dyn Accumulator>> { unimplemented!() }\n   fn state_fields(&self, args: StateFieldsArgs) -> Result<Vec<FieldRef>> {\n       Ok(vec![\n            Arc::new(args.return_field.as_ref().clone().with_name(\"value\")),\n            Arc::new(Field::new(\"ordering\", DataType::UInt32, true))\n       ])\n   }\n   fn documentation(&self) -> Option<&Documentation> {\n       Some(get_doc())\n   }\n}\n\n// Create a new AggregateUDF from the implementation\nlet geometric_mean = AggregateUDF::from(GeoMeanUdf::new());\n\n// Call the function `geo_mean(col)`\nlet expr = geometric_mean.call(vec![col(\"a\")]);\n```",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        445,
+        1
+      ],
+      "end": [
+        908,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          564,
+          686,
+          567,
+          687,
+          688,
+          574,
+          689,
+          578,
+          581,
+          583,
+          690,
+          691,
+          588,
+          591,
+          593,
+          695,
+          598,
+          696,
+          604,
+          607,
+          698,
+          700,
+          701,
+          612,
+          615,
+          617,
+          619,
+          702,
+          704
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Debug",
+                "id": 81,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "DynEq",
+                "id": 71,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "DynHash",
+                "id": 76,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 13,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 15,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Any",
+                "id": 55,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": [
+          710,
+          722,
+          733,
+          743,
+          753,
+          762
+        ]
+      }
+    },
+    "type_references": {
+      "81": "core::fmt::Debug",
+      "71": "datafusion_expr_common::dyn_eq::DynEq",
+      "76": "datafusion_expr_common::dyn_eq::DynHash",
+      "13": "core::marker::Send",
+      "15": "core::marker::Sync",
+      "55": "core::any::Any"
+    },
+    "impl_context": null,
+    "links": {
+      "`AggregateUDF`": 558
+    },
+    "link_paths": {
+      "`AggregateUDF`": "datafusion_expr::udaf::AggregateUDF"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "557",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-9f175a3c2e0fb1ef9e53572c",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl",
+      "datafusion_expr::AggregateUDFImpl"
+    ],
+    "resolved_doc_links": {
+      "`AggregateUDF`": "../operations/datafusion_expr.udaf.AggregateUDF.md#op-d90e5a97479981a539718379"
+    }
+  },
+  {
+    "id": "713c637b03a7271bf6533704",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::accumulator",
+    "name": "accumulator",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn accumulator(&self, acc_args: AccumulatorArgs<'_>) -> Result<Box<dyn Accumulator>>",
+    "docs": "Return a new [`Accumulator`] that aggregates values for a specific\ngroup during query execution.\n\nacc_args: [`AccumulatorArgs`] contains information about how the\naggregate function was called.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        556,
+        5
+      ],
+      "end": [
+        556,
+        86
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "acc_args",
+              {
+                "resolved_path": {
+                  "path": "AccumulatorArgs",
+                  "id": 586,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'_"
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 587,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "Accumulator",
+                                            "id": 555,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "586": "datafusion_functions_aggregate_common::accumulator::AccumulatorArgs",
+      "188": "datafusion_common::error::Result",
+      "587": "alloc::boxed::Box",
+      "555": "datafusion_expr_common::accumulator::Accumulator"
+    },
+    "impl_context": null,
+    "links": {
+      "`AccumulatorArgs`": 586,
+      "`Accumulator`": 555
+    },
+    "link_paths": {
+      "`AccumulatorArgs`": "datafusion_functions_aggregate_common::accumulator::AccumulatorArgs",
+      "`Accumulator`": "datafusion_expr_common::accumulator::Accumulator"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "691",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-713c637b03a7271bf6533704",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::accumulator",
+      "datafusion_expr::AggregateUDFImpl::accumulator"
+    ],
+    "resolved_doc_links": {
+      "`AccumulatorArgs`": "../operations/datafusion_functions_aggregate_common.accumulator.AccumulatorArgs.md#op-0011bde6a704a46a9e4e009c",
+      "`Accumulator`": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-2911d7ffb2098886b7dd6ba8"
+    }
+  },
+  {
+    "id": "94c477324d14d121d39a1a87",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::aliases",
+    "name": "aliases",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn aliases(&self) -> &[String]",
+    "docs": "Returns any aliases (alternate names) for this function.\n\nNote: `aliases` should only include names other than [`Self::name`].\nDefaults to `[]` (no aliases)",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        453,
+        5
+      ],
+      "end": [
+        455,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "String",
+                    "id": 298,
+                    "args": null
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "298": "alloc::string::String"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::name`": 564
+    },
+    "link_paths": {
+      "`Self::name`": "datafusion_expr::udaf::AggregateUDFImpl::name"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "686",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-94c477324d14d121d39a1a87",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::aliases",
+      "datafusion_expr::AggregateUDFImpl::aliases"
+    ],
+    "resolved_doc_links": {
+      "`Self::name`": "../operations/datafusion_expr.udaf.AggregateUDFImpl.md#op-7844e1fa23821e46c7cabf21"
+    }
+  },
+  {
+    "id": "677367464a864c7930d31160",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::coerce_types",
+    "name": "coerce_types",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn coerce_types(&self, _arg_types: &[DataType]) -> Result<Vec<DataType>>",
+    "docs": "Coerce arguments of a function call to types that the function can evaluate.\n\nThis function is only called if [`AggregateUDFImpl::signature`] returns [`crate::TypeSignature::UserDefined`]. Most\nUDAFs should return one of the other variants of `TypeSignature` which handle common\ncases\n\nSee the [type coercion module](crate::type_coercion)\ndocumentation for more details on type coercion\n\nFor example, if your function requires a floating point arguments, but the user calls\nit like `my_func(1::int)` (aka with `1` as an integer), coerce_types could return `[DataType::Float64]`\nto ensure the argument was cast to `1::double`\n\n# Parameters\n* `arg_types`: The argument types of the arguments  this function with\n\n# Return value\nA Vec the same length as `arg_types`. DataFusion will `CAST` the function call\narguments to these specific types.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        798,
+        5
+      ],
+      "end": [
+        800,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_arg_types",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "DataType",
+                        "id": 10,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 6,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "DataType",
+                                      "id": 10,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "arrow_schema::datatype::DataType",
+      "188": "datafusion_common::error::Result",
+      "6": "alloc::vec::Vec"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::type_coercion": 11,
+      "`AggregateUDFImpl::signature`": 578,
+      "`crate::TypeSignature::UserDefined`": 699
+    },
+    "link_paths": {
+      "crate::type_coercion": "datafusion_expr::type_coercion",
+      "`AggregateUDFImpl::signature`": "datafusion_expr::udaf::AggregateUDFImpl::signature",
+      "`crate::TypeSignature::UserDefined`": "datafusion_expr_common::signature::TypeSignature::UserDefined"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "700",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-677367464a864c7930d31160",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::coerce_types",
+      "datafusion_expr::AggregateUDFImpl::coerce_types"
+    ],
+    "resolved_doc_links": {
+      "crate::type_coercion": "../modules/datafusion_expr.type_coercion.md#op-e9f5403bd846ccf38493f864",
+      "`AggregateUDFImpl::signature`": "../operations/datafusion_expr.udaf.AggregateUDFImpl.md#op-130a8046da41201cb1a17c63",
+      "`crate::TypeSignature::UserDefined`": "../operations/datafusion_expr_common.signature.TypeSignature.md#op-9a54792c384e19dbdaacb169"
+    }
+  },
+  {
+    "id": "b55923cc32b806eb805e9ffb",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::create_groups_accumulator",
+    "name": "create_groups_accumulator",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn create_groups_accumulator(&self, _args: AccumulatorArgs<'_>) -> Result<Box<dyn GroupsAccumulator>>",
+    "docs": "Return a specialized [`GroupsAccumulator`] that manages state\nfor all groups.\n\nFor maximum performance, a [`GroupsAccumulator`] should be\nimplemented in addition to [`Accumulator`].",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        613,
+        5
+      ],
+      "end": [
+        618,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_args",
+              {
+                "resolved_path": {
+                  "path": "AccumulatorArgs",
+                  "id": 586,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'_"
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 587,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "GroupsAccumulator",
+                                            "id": 595,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "586": "datafusion_functions_aggregate_common::accumulator::AccumulatorArgs",
+      "188": "datafusion_common::error::Result",
+      "587": "alloc::boxed::Box",
+      "595": "datafusion_expr_common::groups_accumulator::GroupsAccumulator"
+    },
+    "impl_context": null,
+    "links": {
+      "`Accumulator`": 555,
+      "`GroupsAccumulator`": 595
+    },
+    "link_paths": {
+      "`Accumulator`": "datafusion_expr_common::accumulator::Accumulator",
+      "`GroupsAccumulator`": "datafusion_expr_common::groups_accumulator::GroupsAccumulator"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "593",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-b55923cc32b806eb805e9ffb",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::create_groups_accumulator",
+      "datafusion_expr::AggregateUDFImpl::create_groups_accumulator"
+    ],
+    "resolved_doc_links": {
+      "`Accumulator`": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-2911d7ffb2098886b7dd6ba8",
+      "`GroupsAccumulator`": "../operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md#op-9c9c43a7d8bf357eb3adcb6e"
+    }
+  },
+  {
+    "id": "e676ad202f44dac4ce6cd314",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::create_sliding_accumulator",
+    "name": "create_sliding_accumulator",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn create_sliding_accumulator(&self, args: AccumulatorArgs<'_>) -> Result<Box<dyn Accumulator>>",
+    "docs": "Sliding accumulator is an alternative accumulator that can be used for\nwindow functions. It has retract method to revert the previous update.\n\nSee [retract_batch] for more details.\n\n[retract_batch]: Accumulator::retract_batch",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        626,
+        5
+      ],
+      "end": [
+        631,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "args",
+              {
+                "resolved_path": {
+                  "path": "AccumulatorArgs",
+                  "id": 586,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'_"
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 587,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "Accumulator",
+                                            "id": 555,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "586": "datafusion_functions_aggregate_common::accumulator::AccumulatorArgs",
+      "188": "datafusion_common::error::Result",
+      "587": "alloc::boxed::Box",
+      "555": "datafusion_expr_common::accumulator::Accumulator"
+    },
+    "impl_context": null,
+    "links": {
+      "Accumulator::retract_batch": 694
+    },
+    "link_paths": {
+      "Accumulator::retract_batch": "datafusion_expr_common::accumulator::Accumulator::retract_batch"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "695",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-e676ad202f44dac4ce6cd314",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::create_sliding_accumulator",
+      "datafusion_expr::AggregateUDFImpl::create_sliding_accumulator"
+    ],
+    "resolved_doc_links": {
+      "Accumulator::retract_batch": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-15a92480d8af9ef2e20e8eb8"
+    }
+  },
+  {
+    "id": "5ae1688167b50fd77316df64",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::default_value",
+    "name": "default_value",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn default_value(&self, data_type: &DataType) -> Result<ScalarValue>",
+    "docs": "Returns default value of the function given the input is all `null`.\n\nMost of the aggregate function return Null if input is Null,\nwhile `count` returns 0 if input is Null",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        828,
+        5
+      ],
+      "end": [
+        830,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "data_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DataType",
+                      "id": 10,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ScalarValue",
+                          "id": 215,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "arrow_schema::datatype::DataType",
+      "188": "datafusion_common::error::Result",
+      "215": "datafusion_common::scalar::ScalarValue"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "615",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-5ae1688167b50fd77316df64",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::default_value",
+      "datafusion_expr::AggregateUDFImpl::default_value"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1bb6dfbde26e11e415def938",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::display_name",
+    "name": "display_name",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn display_name(&self, params: &AggregateFunctionParams) -> Result<String>",
+    "docs": "Returns the user-defined display name of function, given the arguments\n\nThis can be used to customize the output column name generated by this\nfunction.\n\nDefaults to `function_name([DISTINCT] column1, column2, ..) [null_treatment] [filter] [order_by [..]]`",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        493,
+        5
+      ],
+      "end": [
+        495,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "params",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "AggregateFunctionParams",
+                      "id": 569,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "String",
+                          "id": 298,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "569": "datafusion_expr::expr::AggregateFunctionParams",
+      "188": "datafusion_common::error::Result",
+      "298": "alloc::string::String"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "574",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-1bb6dfbde26e11e415def938",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::display_name",
+      "datafusion_expr::AggregateUDFImpl::display_name"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bd4ba2258fea832fc9bac999",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::documentation",
+    "name": "documentation",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn documentation(&self) -> Option<&Documentation>",
+    "docs": "Returns the documentation for this Aggregate UDF.\n\nDocumentation can be accessed programmatically as well as\ngenerating publicly facing documentation.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        899,
+        5
+      ],
+      "end": [
+        901,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 91,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Documentation",
+                              "id": 313,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "91": "core::option::Option",
+      "313": "datafusion_doc::Documentation"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "702",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-bd4ba2258fea832fc9bac999",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::documentation",
+      "datafusion_expr::AggregateUDFImpl::documentation"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fbcc41eac02cc7099e2ddac5",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::groups_accumulator_supported",
+    "name": "groups_accumulator_supported",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn groups_accumulator_supported(&self, _args: AccumulatorArgs<'_>) -> bool",
+    "docs": "If the aggregate expression has a specialized\n[`GroupsAccumulator`] implementation. If this returns true,\n`[Self::create_groups_accumulator]` will be called.\n\n# Notes\n\nEven if this function returns true, DataFusion will still use\n[`Self::accumulator`] for certain queries, such as when this aggregate is\nused as a window function or when there no GROUP BY columns in the\nquery.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        604,
+        5
+      ],
+      "end": [
+        606,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_args",
+              {
+                "resolved_path": {
+                  "path": "AccumulatorArgs",
+                  "id": 586,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'_"
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "586": "datafusion_functions_aggregate_common::accumulator::AccumulatorArgs"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::accumulator`": 691,
+      "`GroupsAccumulator`": 595
+    },
+    "link_paths": {
+      "`Self::accumulator`": "datafusion_expr::udaf::AggregateUDFImpl::accumulator",
+      "`GroupsAccumulator`": "datafusion_expr_common::groups_accumulator::GroupsAccumulator"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "591",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-fbcc41eac02cc7099e2ddac5",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::groups_accumulator_supported",
+      "datafusion_expr::AggregateUDFImpl::groups_accumulator_supported"
+    ],
+    "resolved_doc_links": {
+      "`Self::accumulator`": "../operations/datafusion_expr.udaf.AggregateUDFImpl.md#op-713c637b03a7271bf6533704",
+      "`GroupsAccumulator`": "../operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md#op-9c9c43a7d8bf357eb3adcb6e"
+    }
+  },
+  {
+    "id": "7058483a5bb0c7b0f33d0444",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::human_display",
+    "name": "human_display",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn human_display(&self, params: &AggregateFunctionParams) -> Result<String>",
+    "docs": "Returns a human readable expression.\n\nSee [`Expr::human_display`] for details.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        469,
+        5
+      ],
+      "end": [
+        471,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "params",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "AggregateFunctionParams",
+                      "id": 569,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "String",
+                          "id": 298,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "569": "datafusion_expr::expr::AggregateFunctionParams",
+      "188": "datafusion_common::error::Result",
+      "298": "alloc::string::String"
+    },
+    "impl_context": null,
+    "links": {
+      "`Expr::human_display`": 570
+    },
+    "link_paths": {
+      "`Expr::human_display`": "datafusion_expr::expr::Expr::human_display"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "687",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-7058483a5bb0c7b0f33d0444",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::human_display",
+      "datafusion_expr::AggregateUDFImpl::human_display"
+    ],
+    "resolved_doc_links": {
+      "`Expr::human_display`": "../operations/datafusion_expr.expr.Expr.md#op-3d5b1a93f5851b5885d840ce"
+    }
+  },
+  {
+    "id": "17c961a37d33cf28477ef396",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::is_descending",
+    "name": "is_descending",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn is_descending(&self) -> Option<bool>",
+    "docs": "If this function is max, return true\nIf the function is min, return false\nOtherwise return None (the default)\n\n\nNote: this is used to use special aggregate implementations in certain conditions",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        808,
+        5
+      ],
+      "end": [
+        810,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 91,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "91": "core::option::Option"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "701",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-17c961a37d33cf28477ef396",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::is_descending",
+      "datafusion_expr::AggregateUDFImpl::is_descending"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "24432183afcb23ae5b355d90",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::is_nullable",
+    "name": "is_nullable",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn is_nullable(&self) -> bool",
+    "docs": "Whether the aggregate function is nullable.\n\nNullable means that the function could return `null` for any inputs.\nFor example, aggregate functions like `COUNT` always return a non null value\nbut others like `MIN` will return `NULL` if there is nullable input.\nNote that if the function is declared as *not* nullable, make sure the [`AggregateUDFImpl::default_value`] is `non-null`",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        547,
+        5
+      ],
+      "end": [
+        549,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`AggregateUDFImpl::default_value`": 615
+    },
+    "link_paths": {
+      "`AggregateUDFImpl::default_value`": "datafusion_expr::udaf::AggregateUDFImpl::default_value"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "690",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-24432183afcb23ae5b355d90",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::is_nullable",
+      "datafusion_expr::AggregateUDFImpl::is_nullable"
+    ],
+    "resolved_doc_links": {
+      "`AggregateUDFImpl::default_value`": "../operations/datafusion_expr.udaf.AggregateUDFImpl.md#op-5ae1688167b50fd77316df64"
+    }
+  },
+  {
+    "id": "7844e1fa23821e46c7cabf21",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::name",
+    "name": "name",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &str",
+    "docs": "Returns this function's name",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        447,
+        5
+      ],
+      "end": [
+        447,
+        28
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "564",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-7844e1fa23821e46c7cabf21",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::name",
+      "datafusion_expr::AggregateUDFImpl::name"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3479bdd2a46b48de41f6ff9c",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::order_sensitivity",
+    "name": "order_sensitivity",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn order_sensitivity(&self) -> AggregateOrderSensitivity",
+    "docs": "Gets the order sensitivity of the UDF. See [`AggregateOrderSensitivity`]\nfor possible options.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        659,
+        5
+      ],
+      "end": [
+        664,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "AggregateOrderSensitivity",
+              "id": 600,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "600": "datafusion_functions_aggregate_common::order::AggregateOrderSensitivity"
+    },
+    "impl_context": null,
+    "links": {
+      "`AggregateOrderSensitivity`": 600
+    },
+    "link_paths": {
+      "`AggregateOrderSensitivity`": "datafusion_functions_aggregate_common::order::AggregateOrderSensitivity"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "696",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-3479bdd2a46b48de41f6ff9c",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::order_sensitivity",
+      "datafusion_expr::AggregateUDFImpl::order_sensitivity"
+    ],
+    "resolved_doc_links": {
+      "`AggregateOrderSensitivity`": "../operations/datafusion_functions_aggregate_common.order.AggregateOrderSensitivity.md#op-8b6a26410e0f5b4d59a68b96"
+    }
+  },
+  {
+    "id": "bc99f6392eb81fae9a622a87",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::return_field",
+    "name": "return_field",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn return_field(&self, arg_fields: &[FieldRef]) -> Result<FieldRef>",
+    "docs": "What type will be returned by this function, given the arguments?\n\nBy default, this function calls [`Self::return_type`] with the\ntypes of each argument.\n\n# Notes\n\nMost UDFs should implement [`Self::return_type`] and not this\nfunction as the output type for most functions only depends on the types\nof their inputs (e.g. `sum(f64)` is always `f64`).\n\nThis function can be used for more advanced cases such as:\n\n1. specifying nullability\n2. return types based on the **values** of the arguments (rather than\n   their **types**.\n3. return types based on metadata within the fields of the inputs",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        537,
+        5
+      ],
+      "end": [
+        539,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "arg_fields",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "FieldRef",
+                        "id": 147,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "FieldRef",
+                          "id": 147,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "147": "arrow_schema::field::FieldRef",
+      "188": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::return_type`": 581
+    },
+    "link_paths": {
+      "`Self::return_type`": "datafusion_expr::udaf::AggregateUDFImpl::return_type"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "583",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-bc99f6392eb81fae9a622a87",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::return_field",
+      "datafusion_expr::AggregateUDFImpl::return_field"
+    ],
+    "resolved_doc_links": {
+      "`Self::return_type`": "../operations/datafusion_expr.udaf.AggregateUDFImpl.md#op-02d75f6f8103226358991849"
+    }
+  },
+  {
+    "id": "02d75f6f8103226358991849",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::return_type",
+    "name": "return_type",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>",
+    "docs": "What [`DataType`] will be returned by this function, given the types of\nthe arguments",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        518,
+        5
+      ],
+      "end": [
+        518,
+        71
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "arg_types",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "DataType",
+                        "id": 10,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "DataType",
+                          "id": 10,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "arrow_schema::datatype::DataType",
+      "188": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {
+      "`DataType`": 10
+    },
+    "link_paths": {
+      "`DataType`": "arrow_schema::datatype::DataType"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "581",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-02d75f6f8103226358991849",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::return_type",
+      "datafusion_expr::AggregateUDFImpl::return_type"
+    ],
+    "resolved_doc_links": {
+      "`DataType`": "../operations/arrow_schema.datatype.DataType.md#op-bf69df5b14436e006d3a531c"
+    }
+  },
+  {
+    "id": "0ec0ace7b61b2c7e51ff1cd5",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::reverse_expr",
+    "name": "reverse_expr",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn reverse_expr(&self) -> ReversedUDAF",
+    "docs": "Returns the reverse expression of the aggregate function.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        775,
+        5
+      ],
+      "end": [
+        777,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ReversedUDAF",
+              "id": 603,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "603": "datafusion_expr::udaf::ReversedUDAF"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "698",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-0ec0ace7b61b2c7e51ff1cd5",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::reverse_expr",
+      "datafusion_expr::AggregateUDFImpl::reverse_expr"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2730cda6b3e779ac3cd35ede",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::schema_name",
+    "name": "schema_name",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn schema_name(&self, params: &AggregateFunctionParams) -> Result<String>",
+    "docs": "Returns the name of the column this expression would create\n\nSee [`Expr::schema_name`] for details\n\nExample of schema_name: count(DISTINCT column1) FILTER (WHERE column2 > 10) ORDER BY [..]",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        462,
+        5
+      ],
+      "end": [
+        464,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "params",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "AggregateFunctionParams",
+                      "id": 569,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "String",
+                          "id": 298,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "569": "datafusion_expr::expr::AggregateFunctionParams",
+      "188": "datafusion_common::error::Result",
+      "298": "alloc::string::String"
+    },
+    "impl_context": null,
+    "links": {
+      "`Expr::schema_name`": 299
+    },
+    "link_paths": {
+      "`Expr::schema_name`": "datafusion_expr::expr::Expr::schema_name"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "567",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-2730cda6b3e779ac3cd35ede",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::schema_name",
+      "datafusion_expr::AggregateUDFImpl::schema_name"
+    ],
+    "resolved_doc_links": {
+      "`Expr::schema_name`": "../operations/datafusion_expr.expr.Expr.md#op-82ef8179c0d4e6c2ae471137"
+    }
+  },
+  {
+    "id": "f8dd0de923cb8b0cfc781632",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::set_monotonicity",
+    "name": "set_monotonicity",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn set_monotonicity(&self, _data_type: &DataType) -> SetMonotonicity",
+    "docs": "Indicates whether the aggregation function is monotonic as a set\nfunction. See [`SetMonotonicity`] for details.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        905,
+        5
+      ],
+      "end": [
+        907,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_data_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DataType",
+                      "id": 10,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "SetMonotonicity",
+              "id": 703,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "arrow_schema::datatype::DataType",
+      "703": "datafusion_expr::udaf::SetMonotonicity"
+    },
+    "impl_context": null,
+    "links": {
+      "`SetMonotonicity`": 703
+    },
+    "link_paths": {
+      "`SetMonotonicity`": "datafusion_expr::udaf::SetMonotonicity"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "704",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-f8dd0de923cb8b0cfc781632",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::set_monotonicity",
+      "datafusion_expr::AggregateUDFImpl::set_monotonicity"
+    ],
+    "resolved_doc_links": {
+      "`SetMonotonicity`": "../operations/datafusion_expr.udaf.SetMonotonicity.md#op-a7821c42e6182e86e59e092e"
+    }
+  },
+  {
+    "id": "130a8046da41201cb1a17c63",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::signature",
+    "name": "signature",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn signature(&self) -> &Signature",
+    "docs": "Returns the function's [`Signature`] for information about what input\ntypes are accepted and the function's Volatility.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        514,
+        5
+      ],
+      "end": [
+        514,
+        39
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Signature",
+                  "id": 580,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "580": "datafusion_expr_common::signature::Signature"
+    },
+    "impl_context": null,
+    "links": {
+      "`Signature`": 580
+    },
+    "link_paths": {
+      "`Signature`": "datafusion_expr_common::signature::Signature"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "578",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-130a8046da41201cb1a17c63",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::signature",
+      "datafusion_expr::AggregateUDFImpl::signature"
+    ],
+    "resolved_doc_links": {
+      "`Signature`": "../operations/datafusion_expr_common.signature.Signature.md#op-3501f77593554c0ab3e03e9e"
+    }
+  },
+  {
+    "id": "97048a636c94a209ef572cb4",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::simplify",
+    "name": "simplify",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn simplify(&self) -> Option<AggregateFunctionSimplification>",
+    "docs": "Returns an optional hook for simplifying this user-defined aggregate.\n\nUse this hook to apply function-specific rewrites during optimization.\nThe default implementation returns `None`.\n\nFor example, `percentile_cont(x, 0.0)` and `percentile_cont(x, 1.0)` can\nbe rewritten to `MIN(x)` or `MAX(x)` depending on the `ORDER BY`\ndirection.\n\nDataFusion already simplifies arguments and performs constant folding\n(for example, `my_add(1, 2) -> 3`). For nested expressions, the optimizer\nruns simplification in multiple passes, so arguments are typically\nsimplified before this hook is invoked. As a result, UDF implementations\nusually do not need to handle argument simplification themselves.\n\nSee configuration `datafusion.optimizer.max_passes` for details on how many\noptimization passes may be applied.\n\n# Returns\n\n`None` if simplify is not defined.\n\nOr, a closure ([`AggregateFunctionSimplification`]) invoked with:\n* `aggregate_function`: [AggregateFunction] with already simplified\n  arguments\n* `info`: [crate::simplify::SimplifyContext]\n\nThe closure returns a simplified [Expr] or an error.\n\n# Notes\n\nThe returned expression must have the same schema as the original\nexpression, including both the data type and nullability. For example,\nif the original expression is nullable, the returned expression must\nalso be nullable, otherwise it may lead to schema verification errors\nlater in query planning.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        702,
+        5
+      ],
+      "end": [
+        704,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 91,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "AggregateFunctionSimplification",
+                          "id": 606,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "91": "core::option::Option",
+      "606": "datafusion_expr::function::AggregateFunctionSimplification"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::simplify::SimplifyContext": 697,
+      "AggregateFunction": 609,
+      "`AggregateFunctionSimplification`": 606,
+      "Expr": 301
+    },
+    "link_paths": {
+      "crate::simplify::SimplifyContext": "datafusion_expr::simplify::SimplifyContext",
+      "AggregateFunction": "datafusion_expr::expr::AggregateFunction",
+      "`AggregateFunctionSimplification`": "datafusion_expr::function::AggregateFunctionSimplification",
+      "Expr": "datafusion_expr::expr::Expr"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "604",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-97048a636c94a209ef572cb4",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::simplify",
+      "datafusion_expr::AggregateUDFImpl::simplify"
+    ],
+    "resolved_doc_links": {
+      "crate::simplify::SimplifyContext": "../operations/datafusion_expr.simplify.SimplifyContext.md#op-7b5998cee70553815ef2a10a",
+      "AggregateFunction": "../operations/datafusion_expr.expr.AggregateFunction.md#op-2c30152da50e6f4ca7d2566e",
+      "`AggregateFunctionSimplification`": "../operations/datafusion_expr.function.AggregateFunctionSimplification.md#op-32ef850832a6ca8b0f6da43d",
+      "Expr": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc"
+    }
+  },
+  {
+    "id": "491c7aa80585642342237af6",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::simplify_expr_op_literal",
+    "name": "simplify_expr_op_literal",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn simplify_expr_op_literal(&self, _agg_function: &AggregateFunction, _arg: &Expr, _op: Operator, _lit: &Expr, _arg_is_left: bool) -> Result<Option<Expr>>",
+    "docs": "Rewrite the aggregate to have simpler arguments\n\nThis query pattern is not common in most real workloads, and most\naggregate implementations can safely ignore it. This API is included in\nDataFusion because it is important for ClickBench Q29. See backstory\non <https://github.com/apache/datafusion/issues/15524>\n\n# Rewrite Overview\n\nThe idea is to rewrite multiple aggregates with \"complex arguments\" into\nones with simpler arguments that can be optimized by common subexpression\nelimination (CSE). At a high level the rewrite looks like\n\n* `Aggregate(SUM(x + 1), SUM(x + 2), ...)`\n\nInto\n\n* `Aggregate(SUM(x) + 1 * COUNT(x), SUM(x) + 2 * COUNT(x), ...)`\n\nWhile this rewrite may seem worse (slower) than the original as it\ncomputes *more* aggregate expressions, the common subexpression\nelimination (CSE) can then reduce the number of distinct aggregates the\nquery actually needs to compute with a rewrite like\n\n* `Projection(_A + 1*_B, _A + 2*_B)`\n* `  Aggregate(_A = SUM(x), _B = COUNT(x))`\n\nThis optimization is extremely important for ClickBench Q29, which has 90\nsuch expressions for some reason, and so this optimization results in\nonly two aggregates being needed. The DataFusion optimizer will invoke\nthis method when it detects multiple aggregates in a query that share\narguments of the form `<arg> <op> <literal>`.\n\n# API\n\nIf `agg_function` supports the rewrite, it should return a semantically\nequivalent expression (likely with more aggregate expressions, but\nsimpler arguments)\n\nThis is only called when:\n1. There are no \"special\" aggregate params (filters, null handling, etc)\n2. Aggregate functions with exactly one [`Expr`] argument\n3. There are no volatile expressions\n\nArguments\n* `agg_function`: the original aggregate function detected with complex\n  arguments.\n* `arg`: The common argument shared across multiple aggregates (e.g. `x`\n  in the example above)\n* `op`: the operator between the common argument and the literal (e.g.\n  `+` in `x + 1` or `1 + x`)\n* `lit`: the literal argument (e.g. `1` or `2` in the example above)\n* `arg_is_left`: whether the common argument is on the left or right of\n  the operator (e.g. `true` for `x + 1` and false for `1 + x`)\n\nThe default implementation returns `None`, which is what most aggregates\nshould do.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        763,
+        5
+      ],
+      "end": [
+        772,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_agg_function",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "AggregateFunction",
+                      "id": 609,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_arg",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Expr",
+                      "id": 301,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_op",
+              {
+                "resolved_path": {
+                  "path": "Operator",
+                  "id": 610,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "_lit",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Expr",
+                      "id": 301,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_arg_is_left",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 91,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Expr",
+                                      "id": 301,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "609": "datafusion_expr::expr::AggregateFunction",
+      "301": "datafusion_expr::expr::Expr",
+      "610": "datafusion_expr_common::operator::Operator",
+      "188": "datafusion_common::error::Result",
+      "91": "core::option::Option"
+    },
+    "impl_context": null,
+    "links": {
+      "`Expr`": 301
+    },
+    "link_paths": {
+      "`Expr`": "datafusion_expr::expr::Expr"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "607",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-491c7aa80585642342237af6",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::simplify_expr_op_literal",
+      "datafusion_expr::AggregateUDFImpl::simplify_expr_op_literal"
+    ],
+    "resolved_doc_links": {
+      "`Expr`": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc"
+    }
+  },
+  {
+    "id": "5451e9f265ed39056933ce16",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::state_fields",
+    "name": "state_fields",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>",
+    "docs": "Return the fields used to store the intermediate state of this accumulator.\n\nSee [`Accumulator::state`] for background information.\n\nargs:  [`StateFieldsArgs`] contains arguments passed to the\naggregate function's accumulator.\n\n# Notes:\n\nThe default implementation returns a single state field named `name`\nwith the same type as `value_type`. This is suitable for aggregates such\nas `SUM` or `MIN` where partial state can be combined by applying the\nsame aggregate.\n\nFor aggregates such as `AVG` where the partial state is more complex\n(e.g. a COUNT and a SUM), this method is used to define the additional\nfields.\n\nThe name of the fields must be unique within the query and thus should\nbe derived from `name`. See [`format_state_name`] for a utility function\nto generate a unique name.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        579,
+        5
+      ],
+      "end": [
+        592,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "args",
+              {
+                "resolved_path": {
+                  "path": "StateFieldsArgs",
+                  "id": 590,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'_"
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 6,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "FieldRef",
+                                      "id": 147,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "590": "datafusion_functions_aggregate_common::accumulator::StateFieldsArgs",
+      "188": "datafusion_common::error::Result",
+      "6": "alloc::vec::Vec",
+      "147": "arrow_schema::field::FieldRef"
+    },
+    "impl_context": null,
+    "links": {
+      "`Accumulator::state`": 692,
+      "`StateFieldsArgs`": 590,
+      "`format_state_name`": 693
+    },
+    "link_paths": {
+      "`Accumulator::state`": "datafusion_expr_common::accumulator::Accumulator::state",
+      "`StateFieldsArgs`": "datafusion_functions_aggregate_common::accumulator::StateFieldsArgs",
+      "`format_state_name`": "datafusion_expr::utils::format_state_name"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "588",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-5451e9f265ed39056933ce16",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::state_fields",
+      "datafusion_expr::AggregateUDFImpl::state_fields"
+    ],
+    "resolved_doc_links": {
+      "`Accumulator::state`": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-e13afcecd1da09f0b485e6dc",
+      "`StateFieldsArgs`": "../operations/datafusion_functions_aggregate_common.accumulator.StateFieldsArgs.md#op-e614e74caed7b2cb33bc425c",
+      "`format_state_name`": "../operations/datafusion_expr.utils.format_state_name.md#op-738b514bdebd66d9a4747d71"
+    }
+  },
+  {
+    "id": "20c2d24527663a5d2f4968cb",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::supports_null_handling_clause",
+    "name": "supports_null_handling_clause",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_null_handling_clause(&self) -> bool",
+    "docs": "If this function supports `[IGNORE NULLS | RESPECT NULLS]` SQL clause,\nreturn `true`. Otherwise, return `false` which will cause an error to be\nraised during SQL parsing if these clauses are detected for this function.\n\nFunctions which implement this as `true` are expected to handle the resulting\nnull handling config present in [`AccumulatorArgs`], `ignore_nulls`.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        838,
+        5
+      ],
+      "end": [
+        840,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`AccumulatorArgs`": 586
+    },
+    "link_paths": {
+      "`AccumulatorArgs`": "datafusion_functions_aggregate_common::accumulator::AccumulatorArgs"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "617",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-20c2d24527663a5d2f4968cb",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::supports_null_handling_clause",
+      "datafusion_expr::AggregateUDFImpl::supports_null_handling_clause"
+    ],
+    "resolved_doc_links": {
+      "`AccumulatorArgs`": "../operations/datafusion_functions_aggregate_common.accumulator.AccumulatorArgs.md#op-0011bde6a704a46a9e4e009c"
+    }
+  },
+  {
+    "id": "2bf4f090182fa02ec5a2da5a",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::supports_within_group_clause",
+    "name": "supports_within_group_clause",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_within_group_clause(&self) -> bool",
+    "docs": "If this function supports the `WITHIN GROUP (ORDER BY column [ASC|DESC])`\nSQL syntax, return `true`. Otherwise, return `false` (default) which will\ncause an error when parsing SQL where this syntax is detected for this\nfunction.\n\nThis function should return `true` for ordered-set aggregate functions\nonly.\n\n# Ordered-set aggregate functions\n\nOrdered-set aggregate functions allow specifying a sort order that affects\nhow the function calculates its result, unlike other aggregate functions\nlike `sum` or `count`. For example, `percentile_cont` is an ordered-set\naggregate function that calculates the exact percentile value from a list\nof values; the output of calculating the `0.75` percentile depends on if\nyou're calculating on an ascending or descending list of values.\n\nAn example of how an ordered-set aggregate function is called with the\n`WITHIN GROUP` SQL syntax:\n\n```sql\n-- Ascending\nSELECT percentile_cont(0.75) WITHIN GROUP (ORDER BY c1 ASC) FROM table;\n-- Default ordering is ascending if not explicitly specified\nSELECT percentile_cont(0.75) WITHIN GROUP (ORDER BY c1) FROM table;\n-- Descending\nSELECT percentile_cont(0.75) WITHIN GROUP (ORDER BY c1 DESC) FROM table;\n```\n\nThis calculates the `0.75` percentile of the column `c1` from `table`,\naccording to the specific ordering. The column specified in the `WITHIN GROUP`\nordering clause is taken as the column to calculate values on; specifying\nthe `WITHIN GROUP` clause is optional so these queries are equivalent:\n\n```sql\n-- If no WITHIN GROUP is specified then default ordering is implementation\n-- dependent; in this case ascending for percentile_cont\nSELECT percentile_cont(c1, 0.75) FROM table;\nSELECT percentile_cont(0.75) WITHIN GROUP (ORDER BY c1 ASC) FROM table;\n```\n\nAggregate UDFs can define their default ordering if the function is called\nwithout the `WITHIN GROUP` clause, though a default of ascending is the\nstandard practice.\n\nOrdered-set aggregate function implementations are responsible for handling\nthe input sort order themselves (e.g. `percentile_cont` must buffer and\nsort the values internally). That is, DataFusion does not introduce any\nkind of sort into the plan for these functions with this syntax.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        891,
+        5
+      ],
+      "end": [
+        893,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "619",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-2bf4f090182fa02ec5a2da5a",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::supports_within_group_clause",
+      "datafusion_expr::AggregateUDFImpl::supports_within_group_clause"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "20017ef1e72ea9537862313e",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::value_from_stats",
+    "name": "value_from_stats",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn value_from_stats(&self, _statistics_args: &StatisticsArgs<'_>) -> Option<ScalarValue>",
+    "docs": "Return the value of this aggregate function if it can be determined\nentirely from statistics and arguments.\n\nUsing a [`ScalarValue`] rather than a runtime computation can significantly\nimproving query performance.\n\nFor example, if the minimum value of column `x` is known to be `42` from\nstatistics, then the aggregate `MIN(x)` should return `Some(ScalarValue(42))`",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        820,
+        5
+      ],
+      "end": [
+        822,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_statistics_args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "StatisticsArgs",
+                      "id": 614,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 91,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ScalarValue",
+                          "id": 215,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "614": "datafusion_expr::udaf::StatisticsArgs",
+      "91": "core::option::Option",
+      "215": "datafusion_common::scalar::ScalarValue"
+    },
+    "impl_context": null,
+    "links": {
+      "`ScalarValue`": 215
+    },
+    "link_paths": {
+      "`ScalarValue`": "datafusion_common::scalar::ScalarValue"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "612",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-20017ef1e72ea9537862313e",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::value_from_stats",
+      "datafusion_expr::AggregateUDFImpl::value_from_stats"
+    ],
+    "resolved_doc_links": {
+      "`ScalarValue`": "../operations/datafusion_common.scalar.ScalarValue.md#op-360b267c379d0a7a93dce87b"
+    }
+  },
+  {
+    "id": "1a19753a1d07d2da97a2dedc",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::window_function_display_name",
+    "name": "window_function_display_name",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn window_function_display_name(&self, params: &WindowFunctionParams) -> Result<String>",
+    "docs": "Returns the user-defined display name of function, given the arguments\n\nThis can be used to customize the output column name generated by this\nfunction.\n\nDifferent from `display_name` in that it is used for window aggregate function\n\nDefaults to `function_name([DISTINCT] column1, column2, ..) [null_treatment] [partition by [..]] [order_by [..]]`",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        505,
+        5
+      ],
+      "end": [
+        510,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "params",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "WindowFunctionParams",
+                      "id": 573,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "String",
+                          "id": 298,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "573": "datafusion_expr::expr::WindowFunctionParams",
+      "188": "datafusion_common::error::Result",
+      "298": "alloc::string::String"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "689",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-1a19753a1d07d2da97a2dedc",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::window_function_display_name",
+      "datafusion_expr::AggregateUDFImpl::window_function_display_name"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2179be90b6fdd3ca93bde667",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::window_function_schema_name",
+    "name": "window_function_schema_name",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn window_function_schema_name(&self, params: &WindowFunctionParams) -> Result<String>",
+    "docs": "Returns the name of the column this expression would create\n\nSee [`Expr::schema_name`] for details\n\nDifferent from `schema_name` in that it is used for window aggregate function\n\nExample of schema_name: count(DISTINCT column1) FILTER (WHERE column2 > 10) [PARTITION BY [..]] [ORDER BY [..]]",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        480,
+        5
+      ],
+      "end": [
+        485,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "params",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "WindowFunctionParams",
+                      "id": 573,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "String",
+                          "id": 298,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "573": "datafusion_expr::expr::WindowFunctionParams",
+      "188": "datafusion_common::error::Result",
+      "298": "alloc::string::String"
+    },
+    "impl_context": null,
+    "links": {
+      "`Expr::schema_name`": 299
+    },
+    "link_paths": {
+      "`Expr::schema_name`": "datafusion_expr::expr::Expr::schema_name"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "688",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-2179be90b6fdd3ca93bde667",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::window_function_schema_name",
+      "datafusion_expr::AggregateUDFImpl::window_function_schema_name"
+    ],
+    "resolved_doc_links": {
+      "`Expr::schema_name`": "../operations/datafusion_expr.expr.Expr.md#op-82ef8179c0d4e6c2ae471137"
+    }
+  },
+  {
+    "id": "7be7de13eb811e7ea01e8f98",
+    "path": "datafusion_expr::udaf::AggregateUDFImpl::with_beneficial_ordering",
+    "name": "with_beneficial_ordering",
+    "owner": "datafusion_expr::udaf::AggregateUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_beneficial_ordering(Arc<self>, _beneficial_ordering: bool) -> Result<Option<Arc<dyn AggregateUDFImpl>>>",
+    "docs": "Sets the indicator whether ordering requirements of the AggregateUDFImpl is\nsatisfied by its input. If this is not the case, UDFs with order\nsensitivity `AggregateOrderSensitivity::Beneficial` can still produce\nthe correct result with possibly more work internally.\n\n# Returns\n\nReturns `Ok(Some(updated_udf))` if the process completes successfully.\nIf the expression can benefit from existing input ordering, but does\nnot implement the method, returns an error. Order insensitive and hard\nrequirement aggregators return `Ok(None)`.",
+    "span": {
+      "filename": "src/udaf.rs",
+      "begin": [
+        644,
+        5
+      ],
+      "end": [
+        655,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 151,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_beneficial_ordering",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 91,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 151,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "AggregateUDFImpl",
+                                                        "id": 557,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "151": "alloc::sync::Arc",
+      "188": "datafusion_common::error::Result",
+      "91": "core::option::Option",
+      "557": "datafusion_expr::udaf::AggregateUDFImpl"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "598",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+    "anchor": "op-7be7de13eb811e7ea01e8f98",
+    "aliases": [
+      "datafusion::logical_expr::AggregateUDFImpl::with_beneficial_ordering",
+      "datafusion_expr::AggregateUDFImpl::with_beneficial_ordering"
+    ],
+    "resolved_doc_links": {}
+  }
+]

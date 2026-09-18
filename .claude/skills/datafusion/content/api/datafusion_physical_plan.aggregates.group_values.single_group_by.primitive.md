@@ -17,6 +17,9 @@ fn canonicalize(self) -> Self where Self: Sized
 fn hash(&self, state: &RandomState) -> u64
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.group_values.single_group_by.primitive.HashValue.md).
+
+
 A trait to allow hashing of floating point numbers
 
 ---

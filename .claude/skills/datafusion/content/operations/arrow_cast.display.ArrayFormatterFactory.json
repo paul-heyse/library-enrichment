@@ -1,0 +1,355 @@
+[
+  {
+    "id": "981732bb15cd351972b89354",
+    "path": "arrow_cast::display::ArrayFormatterFactory",
+    "name": "ArrayFormatterFactory",
+    "owner": null,
+    "crate": "arrow-cast",
+    "version": "59.3.0",
+    "kind": "trait",
+    "signature": "trait ArrayFormatterFactory: Debug + Send + Sync",
+    "docs": "Allows creating a new [`ArrayFormatter`] for a given [`Array`] and an optional [`Field`].\n\n# Example\n\nThe example below shows how to create a custom formatter for a custom type `my_money`. Note that\nthis example requires the `prettyprint` feature.\n\n```rust\n# #[cfg(feature = \"prettyprint\")]{\nuse std::fmt::Write;\nuse arrow_array::{cast::AsArray, Array, Int32Array};\nuse arrow_cast::display::{ArrayFormatter, ArrayFormatterFactory, DisplayIndex, FormatOptions, FormatResult};\nuse arrow_cast::pretty::pretty_format_batches_with_options;\nuse arrow_schema::{ArrowError, Field};\n\n/// A custom formatter factory that can create a formatter for the special type `my_money`.\n///\n/// This struct could have access to some kind of extension type registry that can lookup the\n/// correct formatter for an extension type on-demand.\n#[derive(Debug)]\nstruct MyFormatters {}\n\nimpl ArrayFormatterFactory for MyFormatters {\n    fn create_array_formatter<'formatter>(\n        &self,\n        array: &'formatter dyn Array,\n        options: &FormatOptions<'formatter>,\n        field: Option<&'formatter Field>,\n    ) -> Result<Option<ArrayFormatter<'formatter>>, ArrowError> {\n        // check if this is the money type\n        if field\n            .map(|f| f.extension_type_name() == Some(\"my_money\"))\n            .unwrap_or(false)\n        {\n            // We assume that my_money always is an Int32.\n            let array = array.as_primitive();\n            let display_index = Box::new(MyMoneyFormatter { array, options: options.clone() });\n            return Ok(Some(ArrayFormatter::new(display_index, options.safe())));\n        }\n\n        Ok(None) // None indicates that the default formatter should be used.\n    }\n}\n\n/// A formatter for the type `my_money` that wraps a specific array and has access to the\n/// formatting options.\nstruct MyMoneyFormatter<'a> {\n    array: &'a Int32Array,\n    options: FormatOptions<'a>,\n}\n\nimpl<'a> DisplayIndex for MyMoneyFormatter<'a> {\n    fn write(&self, idx: usize, f: &mut dyn Write) -> FormatResult {\n        match self.array.is_valid(idx) {\n            true => write!(f, \"{} €\", self.array.value(idx))?,\n            false => write!(f, \"{}\", self.options.null())?,\n        }\n\n        Ok(())\n    }\n}\n\n// Usually, here you would provide your record batches.\nlet my_batches = vec![];\n\n// Call the pretty printer with the custom formatter factory.\npretty_format_batches_with_options(\n       &my_batches,\n       &FormatOptions::new().with_formatter_factory(Some(&MyFormatters {}))\n);\n# }\n```",
+    "span": {
+      "filename": "src/display.rs",
+      "begin": [
+        378,
+        1
+      ],
+      "end": [
+        391,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          259
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Debug",
+                "id": 126,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 72,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 74,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": []
+      }
+    },
+    "type_references": {
+      "126": "core::fmt::Debug",
+      "72": "core::marker::Send",
+      "74": "core::marker::Sync"
+    },
+    "impl_context": null,
+    "links": {
+      "`Field`": 258,
+      "`ArrayFormatter`": 215,
+      "`Array`": 145
+    },
+    "link_paths": {
+      "`Field`": "arrow_schema::field::Field",
+      "`ArrayFormatter`": "arrow_cast::display::ArrayFormatter",
+      "`Array`": "arrow_array::array::Array"
+    },
+    "artifact": {
+      "id": "752ca5e430612af62fa54422058472f37db7f433eac44e7b27649fd34a282785",
+      "format_version": 61,
+      "item_id": "214",
+      "origin": "https://docs.rs/crate/arrow-cast/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_cast.display.ArrayFormatterFactory.md",
+    "record_file": "operations/arrow_cast.display.ArrayFormatterFactory.json",
+    "anchor": "op-981732bb15cd351972b89354",
+    "aliases": [
+      "arrow::util::display::ArrayFormatterFactory"
+    ],
+    "resolved_doc_links": {
+      "`Field`": "../operations/arrow_schema.field.Field.md#op-66eb7ef45bcc129b0a0189cf",
+      "`ArrayFormatter`": "../operations/arrow_cast.display.ArrayFormatter.md#op-c2a994be3b7cca3db9a55992",
+      "`Array`": "../operations/arrow_array.array.Array.md#op-cabb9fba5e3e968cee823d21"
+    }
+  },
+  {
+    "id": "84219aff82348f6fb0446fdf",
+    "path": "arrow_cast::display::ArrayFormatterFactory::create_array_formatter",
+    "name": "create_array_formatter",
+    "owner": "arrow_cast::display::ArrayFormatterFactory",
+    "crate": "arrow-cast",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn create_array_formatter<'formatter>(&self, array: &'formatter dyn Array, options: &FormatOptions<'formatter>, field: Option<&'formatter Field>) -> Result<Option<ArrayFormatter<'formatter>>, ArrowError>",
+    "docs": "Creates a new [`ArrayFormatter`] for the given [`Array`] and an optional [`Field`]. If the\ndefault implementation should be used, return [`None`].\n\nThe field shall be used to look up metadata about the `array` while `options` provide\ninformation on formatting, for example, dates and times which should be considered by an\nimplementor.",
+    "span": {
+      "filename": "src/display.rs",
+      "begin": [
+        385,
+        5
+      ],
+      "end": [
+        390,
+        65
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "array",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'formatter",
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Array",
+                            "id": 145,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "FormatOptions",
+                      "id": 70,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'formatter"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "field",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 1,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": "'formatter",
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "Field",
+                                  "id": 258,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 1,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "ArrayFormatter",
+                                      "id": 215,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "lifetime": "'formatter"
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 45,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'formatter",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "145": "arrow_array::array::Array",
+      "70": "arrow_cast::display::FormatOptions",
+      "1": "core::option::Option",
+      "258": "arrow_schema::field::Field",
+      "44": "core::result::Result",
+      "215": "arrow_cast::display::ArrayFormatter",
+      "45": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": null,
+    "links": {
+      "`Array`": 145,
+      "`None`": 216,
+      "`Field`": 258,
+      "`ArrayFormatter`": 215
+    },
+    "link_paths": {
+      "`Array`": "arrow_array::array::Array",
+      "`None`": "core::option::Option::None",
+      "`Field`": "arrow_schema::field::Field",
+      "`ArrayFormatter`": "arrow_cast::display::ArrayFormatter"
+    },
+    "artifact": {
+      "id": "752ca5e430612af62fa54422058472f37db7f433eac44e7b27649fd34a282785",
+      "format_version": 61,
+      "item_id": "259",
+      "origin": "https://docs.rs/crate/arrow-cast/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_cast.display.ArrayFormatterFactory.md",
+    "record_file": "operations/arrow_cast.display.ArrayFormatterFactory.json",
+    "anchor": "op-84219aff82348f6fb0446fdf",
+    "aliases": [
+      "arrow::util::display::ArrayFormatterFactory::create_array_formatter"
+    ],
+    "resolved_doc_links": {
+      "`Array`": "../operations/arrow_array.array.Array.md#op-cabb9fba5e3e968cee823d21",
+      "`Field`": "../operations/arrow_schema.field.Field.md#op-66eb7ef45bcc129b0a0189cf",
+      "`ArrayFormatter`": "../operations/arrow_cast.display.ArrayFormatter.md#op-c2a994be3b7cca3db9a55992"
+    }
+  }
+]

@@ -5,6 +5,7 @@ Crate `deltalake-hdfs` · 2 public items · structured records in [`model/deltal
 ## register_handlers
 
 `function` · `deltalake_hdfs::register_handlers`
+[Full member contracts, output types and access classification](../operations/deltalake_hdfs.register_handlers.md)
 
 Also reachable as `deltalake::hdfs::register_handlers`
 
@@ -19,6 +20,7 @@ Register an [ObjectStoreFactory] for common HDFS [Url] schemes
 ## HdfsFactory
 
 `struct` · `deltalake_hdfs::HdfsFactory`
+[Full member contracts, output types and access classification](../operations/deltalake_hdfs.HdfsFactory.md)
 
 Also reachable as `deltalake::hdfs::HdfsFactory`
 

@@ -20,6 +20,9 @@ trait FieldAccessor
 fn field(self, name: impl Literal) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.expr_ext.FieldAccessor.md).
+
+
 Return access to the named field. Example `expr["name"]`
 
 ## Access field "my_field" from column "c1"

@@ -1,6 +1,5 @@
 //! Public immutable GitHub revisions, acquired and published entirely under service state.
-use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
+use std::collections::BTreeMap;
 
 use enrichment_core::{
     evidence::{Artifact, ArtifactKind, EvidenceKind, Gap, GapReason},
@@ -8,7 +7,7 @@ use enrichment_core::{
     policy::ArchivePolicy,
     producer::{RunOutcome, docsrs, python, revision::Revision, source},
     request::{FreshnessMode, ResolveRequest},
-    wire::{Coverage, Envelope, ErrorCode, Freshness, SourceVersionMatch, data::ResolveData},
+    wire::{Envelope, ErrorCode, SourceVersionMatch, data::ResolveData},
 };
 use url::Url;
 
@@ -47,30 +46,13 @@ pub(super) async fn resolve(
         Ok(v) => v,
         Err(e) => return failure(e),
     };
-    let staging = Scratch(
-        service
-            .paths
-            .unpacked()
-            .join(format!("revision-{}", uuid::Uuid::new_v4())),
-    );
-    let result = acquire(service, &request, &identity, &staging.0, work).await;
-    let cleanup = tokio::task::spawn_blocking(move || {
-        if staging.0.exists() {
-            std::fs::remove_dir_all(&staging.0)?;
-        }
-        Ok::<_, std::io::Error>(())
-    })
-    .await;
-    match (result, cleanup) {
-        (Ok(answer), Ok(Ok(()))) => answer,
-        (Err(e), _) => failure(e),
-        (_, result) => failure(format!("Revision scratch cleanup failed: {result:?}")),
-    }
-}
-struct Scratch(std::path::PathBuf);
-impl Drop for Scratch {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.0);
+    let staging = match service.repository.source_directory().await {
+        Ok(directory) => directory,
+        Err(error) => return failure(error.to_string()),
+    };
+    match acquire(service, &request, &identity, staging, work).await {
+        Ok(answer) => answer,
+        Err(error) => failure(error),
     }
 }
 
@@ -78,7 +60,7 @@ async fn acquire(
     service: &Service,
     request: &ResolveRequest,
     identity: &Revision,
-    staging: &Path,
+    staging: std::sync::Arc<enrichment_store::PrivateDirectory>,
     work: &super::resolve_job::Work,
 ) -> Result<Envelope, String> {
     let mut acq = Acquisition::new(service).for_job(work);
@@ -109,17 +91,15 @@ async fn acquire(
             commit.status
         ));
     }
-    let metadata: serde_json::Value =
+    let metadata: enrichment_core::producer::revision::CommitResponse =
         serde_json::from_slice(&commit.bytes).map_err(|e| e.to_string())?;
-    if metadata["sha"].as_str() != Some(identity.commit.as_str()) {
-        return Err("Resolved commit SHA does not equal the requested immutable revision".into());
-    }
-    let tree = metadata["commit"]["tree"]["sha"]
-        .as_str()
-        .ok_or("Commit response has no tree identity")?;
-    if tree.len() != 40 || !tree.bytes().all(|c| c.is_ascii_hexdigit()) {
-        return Err("Invalid commit tree identity".into());
-    }
+    let tree = enrichment_store::revision_capture::commit_tree(
+        &service.repository.runtime,
+        &identity.commit,
+        metadata,
+    )
+    .await
+    .map_err(|e| e.to_string())?;
     let commit_artifact = acq
         .store(
             &commit,
@@ -158,15 +138,16 @@ async fn acquire(
         ..ArchivePolicy::default()
     };
     let archive_bytes = std::mem::take(&mut archive.bytes);
-    let destination = staging.to_owned();
+    let extraction_owner = staging.clone();
     let commit_identity = identity.commit.clone();
     let package_subdir = identity.package_subdir.clone();
     let ecosystem = request.ecosystem;
     let name = request.name.clone();
     let archive_digest = stored.sha256.clone();
-    let (root, text, declared_version, wrapper, extraction_inputs) = tokio::task::spawn_blocking(move || -> Result<_, String> {
+    let (root, text, declared_version, wrapper, extraction_inputs) = service.repository.runtime.blocking(move || -> Result<_, String> {
+        let destination = extraction_owner.path();
         let extracted = enrichment_core::archive::extract_revision_tar_gz(
-            std::io::Cursor::new(archive_bytes.as_slice()), &destination, &policy, &commit_identity).map_err(|e| e.to_string())?;
+            std::io::Cursor::new(archive_bytes.as_ref()), destination, &policy, &commit_identity).map_err(|e| e.to_string())?;
         let wrapper = extracted.top_level.clone().ok_or("Revision archive must have one common wrapper directory")?;
         if !destination.join(&wrapper).is_dir() { return Err("Archive wrapper is not a directory".into()); }
         let root = destination.join(&wrapper).join(&package_subdir);
@@ -178,6 +159,7 @@ async fn acquire(
             archive_digest, &extracted, &package_subdir, ecosystem, &text)?;
         Ok((root, text, declared, wrapper, disposition))
     }).await.map_err(|e| e.to_string())??;
+    let root = super::source_tree::SourceTree::owned(staging, root).map_err(|e| e.to_string())?;
     let receipt = match enrichment_store::revision_capture::retain(
         service.repository.catalog.clone(),
         &service.repository.runtime,
@@ -236,7 +218,7 @@ async fn acquire(
         // This call's record: the receipt URI is `repository@commit#subdir`, so two commits with
         // an identical receipt would otherwise cite the earlier commit.
         .acquired;
-    acq.receipt_ids.insert(receipt_artifact.artifact_id.clone());
+    acq.receipts.push(receipt_artifact.clone());
     acq.remember_artifact(receipt_artifact.clone())
         .map_err(|e| e.to_string())?;
     let mut release = Release::new(ReleaseKey {
@@ -262,11 +244,12 @@ async fn acquire(
     acq.run(
         "github-revision",
         "2",
-        acq.semantic_inputs(),
+        acq.semantic_inputs().await?,
         started,
         RunOutcome::Succeeded,
         Vec::new(),
-    )?;
+    )
+    .await?;
     acq.runs
         .last_mut()
         .ok_or("revision acquisition attempt missing")?
@@ -318,7 +301,7 @@ struct RustSources {
 }
 async fn rust_sources(
     acq: &mut Acquisition<'_>,
-    root: &Path,
+    root: &super::source_tree::SourceTree,
     revision: &Revision,
     manifest: &str,
 ) -> Result<RustSources, String> {
@@ -326,29 +309,42 @@ async fn rust_sources(
     let mut files = BTreeMap::new();
     let mut inputs = BTreeMap::new();
     let source_directory = root.to_owned();
-    let (source_files, document_files) = tokio::task::spawn_blocking(move || {
-        Ok::<_, String>((
-            python::archive::files(&source_directory)?,
-            source::text_files(&source_directory).map_err(|e| e.to_string())?,
-        ))
-    })
+    let source_files = acq
+        .service
+        .repository
+        .runtime
+        .blocking(move || python::archive::files(&source_directory))
+        .await
+        .map_err(|e| e.to_string())??;
+    let captures = enrichment_store::source_capture::select(
+        &acq.service.repository.runtime,
+        source_files,
+        enrichment_store::source_capture::Family::RustRevision,
+    )
     .await
-    .map_err(|e| e.to_string())??;
-    for path in source_files {
+    .map_err(|e| e.to_string())?;
+    for capture in &captures {
         let Some(artifact) = acq
             .store_source_file(
-                root.join(&path),
-                ArtifactKind::SourceFile,
-                "text/plain",
-                revision.source_uri(&path)?,
+                root.clone(),
+                capture.path.clone(),
+                capture.artifact_kind,
+                capture.media_type.clone(),
+                revision.source_uri(&capture.path)?,
             )
             .await
             .map_err(|e| e.to_string())?
         else {
             continue;
         };
-        inputs.insert(format!("revision-source:{path}"), artifact.sha256.clone());
-        files.insert(path, artifact);
+        inputs.insert(
+            capture
+                .role
+                .clone()
+                .ok_or("native revision source role missing")?,
+            artifact.sha256.clone(),
+        );
+        files.insert(capture.path.clone(), artifact);
     }
     let manifest = files
         .get("Cargo.toml")
@@ -356,7 +352,11 @@ async fn rust_sources(
         .clone();
     let mut documents = super::source_documents::SourceDocuments::new(acq.service.blobs.clone());
     documents.features(facts, manifest)?;
-    for (file, kind) in document_files {
+    for capture in captures {
+        let Some(kind) = capture.fragment_kind else {
+            continue;
+        };
+        let file = capture.path;
         let artifact = files
             .get(&file)
             .ok_or("source document artifact missing")?
@@ -373,7 +373,7 @@ async fn publish_rust(
     release: &mut Release,
     context: &Context,
     environment: &enrichment_core::identity::Environment,
-    root: &Path,
+    root: &super::source_tree::SourceTree,
     text: &str,
 ) -> Result<Envelope, String> {
     release.lib_name = Some(request.name.replace('-', "_"));
@@ -382,7 +382,7 @@ async fn publish_rust(
         documents,
         mut inputs,
     } = rust_sources(acq, root, &Revision::from_request(request)?, text).await?;
-    inputs.extend(acq.semantic_inputs());
+    inputs.extend(acq.semantic_inputs().await?);
     acq.indexed.extend([
         EvidenceKind::RegistryMetadata,
         EvidenceKind::CrateSource,
@@ -395,7 +395,7 @@ async fn publish_rust(
             _ => EvidenceKind::Documentation,
         });
     }
-    acq.run("revision-source","5",inputs,enrichment_core::native_time::ObservationTime::now().map_err(|error| error.to_string())?,RunOutcome::Partial,vec![gap(EvidenceKind::PublicApi,"Rust revision API requires an explicitly enabled isolated build; no released rustdoc JSON is substituted"),gap(EvidenceKind::CrateSource,"Archive contents may exclude generated files, export-ignored files, LFS objects and submodules; manifest version does not establish a published release association")])?;
+    acq.run("revision-source","5",inputs,enrichment_core::native_time::ObservationTime::now().map_err(|error| error.to_string())?,RunOutcome::Partial,vec![gap(EvidenceKind::PublicApi,"Rust revision API requires an explicitly enabled isolated build; no released rustdoc JSON is substituted"),gap(EvidenceKind::CrateSource,"Archive contents may exclude generated files, export-ignored files, LFS objects and submodules; manifest version does not establish a published release association")]).await?;
     let producers = BTreeMap::from([
         ("github-revision".into(), "2".into()),
         ("revision-source".into(), "5".into()),
@@ -414,45 +414,34 @@ async fn publish_rust(
         gaps: acq.gaps.clone(),
         answered_from_cache: false,
     };
-    let coverage = Coverage {
-        details: None,
-        assessments: Vec::new(),
-        scope: format!(
-            "Immutable repository source {} {}",
-            request.name, release.key.version
-        ),
-        indexed: acq.indexed.iter().map(|k| k.as_str().into()).collect(),
-        missing: BTreeSet::from([EvidenceKind::PublicApi.as_str().into()]),
-        limitations: acq.gaps.iter().map(|g| g.detail.clone()).collect(),
-    };
-    let freshness = Freshness {
-        registry_checked_at: Some(
-            enrichment_core::native_time::AcquisitionTime::now()
-                .map_err(|error| error.to_string())?,
-        ),
-        source_version_match: SourceVersionMatch::Exact,
-        latest_verified: false,
-    };
-    let summary = format!(
-        "{} at {}: source and declarations; compiled API unobserved",
-        request.name, release.key.version
-    );
-    let artifacts = acq
-        .artifacts
-        .iter()
-        .take(10)
-        .filter_map(|a| common::handle_for(a, "Revision source evidence".into()))
-        .collect::<Vec<_>>();
+    let presentation = enrichment_store::research_resolution::acquisition_presentation(
+        &service.repository.runtime,
+        &data,
+        &acq.indexed.iter().copied().collect::<Vec<_>>(),
+        None,
+        None,
+    )
+    .await
+    .map_err(|error| error.to_string())?;
+    let freshness = enrichment_store::research_resolution::freshness(
+        &service.repository.runtime,
+        request,
+        SourceVersionMatch::Exact,
+        &acq.artifacts,
+    )
+    .await
+    .map_err(|error| error.to_string())?;
+
     acq.delivery_template = Some(
         Research {
-            summary,
+            summary: presentation.summary,
             data: common::payload(&data),
-            coverage,
+            coverage: presentation.coverage,
             freshness,
             context_id: Some(context.context_id.clone()),
             snapshot_id: None,
             evidence: Vec::new(),
-            artifacts,
+            artifacts: presentation.artifacts,
         }
         .partial(),
     );

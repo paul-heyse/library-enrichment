@@ -22,6 +22,9 @@ enum EmitTo
 fn take_needed<T>(&self, v: &mut Vec<T>) -> Vec<T>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.groups_accumulator.EmitTo.md).
+
+
 Describes how many rows should be emitted during grouping.
 
 ---
@@ -56,6 +59,9 @@ fn size(&self) -> usize
 fn state(&mut self, emit_to: EmitTo) -> Result<Vec<ArrayRef>>
 fn update_batch(&mut self, values: &[ArrayRef], group_indices: &[usize], opt_filter: Option<&BooleanArray>, total_num_groups: usize) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md).
+
 
 `GroupsAccumulator` implements a single aggregate (e.g. AVG) and
 stores the state for *all* groups internally.

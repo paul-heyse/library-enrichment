@@ -37,10 +37,8 @@ CONTAINMENT = [
     "--locked",
     "-p",
     "enrichment-daemon",
-    "--test",
-    "execution_boundary",
-    "--test",
-    "execution_cleanup",
+    "--lib",
+    "execution::qualification_tests::",
     "--",
     "--ignored",
     "--test-threads=1",
@@ -174,7 +172,7 @@ def apply_qualification(
         temporary.write(
             json.dumps(
                 {
-                    "qualified_at": datetime.now(UTC).isoformat(timespec="seconds"),
+                    "qualified_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                     "execution_root": str(root),
                     "images": images,
                     "tools": {

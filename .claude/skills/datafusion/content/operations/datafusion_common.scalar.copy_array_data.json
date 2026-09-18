@@ -1,0 +1,99 @@
+[
+  {
+    "id": "f012a05c7c7ef232520171af",
+    "path": "datafusion_common::scalar::copy_array_data",
+    "name": "copy_array_data",
+    "owner": null,
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn copy_array_data(src_data: &arrow::array::ArrayData) -> arrow::array::ArrayData",
+    "docs": "Compacts the data of an `ArrayData` into a new `ArrayData`.\n\nThis is useful when you want to minimize the memory footprint of an\n`ArrayData`. For example, the value returned by [`Array::slice`] still\npoints at the same underlying data buffers as the original array, which may\nhold many more values. Calling `copy_array_data` on the sliced array will\ncreate a new, smaller, `ArrayData` that only contains the data for the\nsliced array.\n\n# Example\n```\n# use arrow::array::{make_array, Array, Int32Array};\nuse datafusion_common::scalar::copy_array_data;\nlet array = Int32Array::from_iter_values(0..8192);\n// Take only the first 2 elements\nlet sliced_array = array.slice(0, 2);\n// The memory footprint of `sliced_array` is close to 8192 * 4 bytes\nassert_eq!(32864, sliced_array.get_array_memory_size());\n// however, we can copy the data to a new `ArrayData`\nlet new_array = make_array(copy_array_data(&sliced_array.into_data()));\n// The memory footprint of `new_array` is now only 2 * 4 bytes\n// and overhead:\nassert_eq!(160, new_array.get_array_memory_size());\n```\n\nSee also [`ScalarValue::compact`] which applies to `ScalarValue` instances\nas necessary.",
+    "span": {
+      "filename": "src/scalar/mod.rs",
+      "begin": [
+        5318,
+        1
+      ],
+      "end": [
+        5323,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "src_data",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "arrow::array::ArrayData",
+                      "id": 4478,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "arrow::array::ArrayData",
+              "id": 4478,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4478": "arrow_data::data::ArrayData"
+    },
+    "impl_context": null,
+    "links": {
+      "`ScalarValue::compact`": 4328,
+      "`Array::slice`": 4476
+    },
+    "link_paths": {
+      "`ScalarValue::compact`": "datafusion_common::scalar::ScalarValue::compact",
+      "`Array::slice`": "arrow_array::array::Array::slice"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "4477",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.scalar.copy_array_data.md",
+    "record_file": "operations/datafusion_common.scalar.copy_array_data.json",
+    "anchor": "op-f012a05c7c7ef232520171af",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ScalarValue::compact`": "../operations/datafusion_common.scalar.ScalarValue.md#op-26119b497e462f00f8475563",
+      "`Array::slice`": "../operations/arrow_array.array.Array.md#op-de5c5ee117de6e0858673954"
+    }
+  }
+]

@@ -53,6 +53,9 @@ fn supports_set_stmt_without_operator(&self) -> bool
 fn supports_window_function_null_treatment_arg(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.oracle.OracleDialect.md).
+
+
 A [`Dialect`] for [Oracle Databases](https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/index.html)
 
 ---

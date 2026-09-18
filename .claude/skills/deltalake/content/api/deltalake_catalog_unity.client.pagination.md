@@ -5,6 +5,7 @@ Crate `deltalake-catalog-unity` · 1 public items · structured records in [`mod
 ## stream_paginated
 
 `function` · `deltalake_catalog_unity::client::pagination::stream_paginated`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.client.pagination.stream_paginated.md)
 
 ```rust
 fn stream_paginated<F, Fut, S, T>(state: S, op: F) -> impl Stream<Item = deltalake_core::data_catalog::DataCatalogResult<T>> where F: Fn(S, Option<String>) -> Fut + Copy, Fut: Future<Output = deltalake_core::data_catalog::DataCatalogResult<(T, S, Option<String>)>>

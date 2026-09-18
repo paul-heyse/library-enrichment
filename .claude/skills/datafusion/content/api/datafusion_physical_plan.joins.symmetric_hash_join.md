@@ -58,6 +58,9 @@ fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.symmetric_hash_join.SymmetricHashJoinExec.md).
+
+
 A symmetric hash join with range conditions is when both streams are hashed on the
 join key and the resulting hash tables are used to join the streams.
 The join is considered symmetric because the hash table is built on the join keys from both

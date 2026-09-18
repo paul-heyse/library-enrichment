@@ -12,6 +12,9 @@ Also reachable as `parquet::variant::variant_get`, `parquet_variant_compute::var
 fn variant_get(input: &arrow::array::ArrayRef, options: GetOptions<'_>) -> arrow::error::Result<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.variant_get.variant_get.md).
+
+
 Returns an array with the specified path extracted from the variant values.
 
 The return array type depends on the `as_type` field of the options parameter
@@ -48,6 +51,9 @@ fn new_with_path(path: VariantPath<'a>) -> Self
 fn with_as_type(self, as_type: Option<FieldRef>) -> Self
 fn with_cast_options(self, cast_options: CastOptions<'a>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.variant_get.GetOptions.md).
+
 
 Controls the action of the variant_get kernel.
 

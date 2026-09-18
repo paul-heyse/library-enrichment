@@ -1,0 +1,4064 @@
+[
+  {
+    "id": "a9ba86b818cec580af8379d6",
+    "path": "parquet_variant::builder::VariantBuilder",
+    "name": "VariantBuilder",
+    "owner": null,
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct VariantBuilder",
+    "docs": "Top level builder for [`Variant`] values\n\n`VariantBuilder` builds a single, self-contained [`Variant`] value -- useful\nfor one-off values and unit tests. To build an array (column) of variants,\none per input row, use [`VariantArrayBuilder`] from the\n`parquet-variant-compute` crate rather than a `VariantBuilder` per row.\n\n[`VariantArrayBuilder`]: https://docs.rs/parquet-variant-compute/latest/parquet_variant_compute/struct.VariantArrayBuilder.html\n\n# Example: create a Primitive Int8\n```\n# use parquet_variant::{Variant, VariantBuilder};\nlet mut builder = VariantBuilder::new();\nbuilder.append_value(Variant::Int8(42));\n// Finish the builder to get the metadata and value\nlet (metadata, value) = builder.finish();\n// use the Variant API to verify the result\nlet variant = Variant::try_new(&metadata, &value).unwrap();\nassert_eq!(variant, Variant::Int8(42));\n```\n\n# Example: Create a [`Variant::Object`]\n\nThis example shows how to create an object with two fields:\n```json\n{\n \"first_name\": \"Jiaying\",\n \"last_name\": \"Li\"\n}\n```\n\n```\n# use parquet_variant::{Variant, VariantBuilder};\nlet mut builder = VariantBuilder::new();\n// Create an object builder that will write fields to the object\nlet mut object_builder = builder.new_object();\nobject_builder.insert(\"first_name\", \"Jiaying\");\nobject_builder.insert(\"last_name\", \"Li\");\nobject_builder.finish(); // call finish to finalize the object\n// Finish the builder to get the metadata and value\nlet (metadata, value) = builder.finish();\n// use the Variant API to verify the result\nlet variant = Variant::try_new(&metadata, &value).unwrap();\nlet variant_object = variant.as_object().unwrap();\nassert_eq!(\n  variant_object.get(\"first_name\"),\n  Some(Variant::from(\"Jiaying\"))\n);\nassert_eq!(\n  variant_object.get(\"last_name\"),\n  Some(Variant::from(\"Li\"))\n);\n```\n\n\nYou can also use the [`ObjectBuilder::with_field`] to add fields to the\nobject\n```\n# use parquet_variant::{Variant, VariantBuilder};\n// build the same object as above\nlet mut builder = VariantBuilder::new();\nbuilder.new_object()\n  .with_field(\"first_name\", \"Jiaying\")\n  .with_field(\"last_name\", \"Li\")\n  .finish();\nlet (metadata, value) = builder.finish();\nlet variant = Variant::try_new(&metadata, &value).unwrap();\nlet variant_object = variant.as_object().unwrap();\nassert_eq!(\n  variant_object.get(\"first_name\"),\n  Some(Variant::from(\"Jiaying\"))\n);\nassert_eq!(\n  variant_object.get(\"last_name\"),\n  Some(Variant::from(\"Li\"))\n);\n```\n# Example: Create a [`Variant::List`] (an Array)\n\nThis example shows how to create an array of integers: `[1, 2, 3]`.\n```\n # use parquet_variant::{Variant, VariantBuilder};\n let mut builder = VariantBuilder::new();\n // Create a builder that will write elements to the list\n let mut list_builder = builder.new_list();\n list_builder.append_value(1i8);\n list_builder.append_value(2i8);\n list_builder.append_value(3i8);\n// call finish to finalize the list\n list_builder.finish();\n// Finish the builder to get the metadata and value\nlet (metadata, value) = builder.finish();\n// use the Variant API to verify the result\nlet variant = Variant::try_new(&metadata, &value).unwrap();\nlet variant_list = variant.as_list().unwrap();\n// Verify the list contents\nassert_eq!(variant_list.get(0).unwrap(), Variant::Int8(1));\nassert_eq!(variant_list.get(1).unwrap(), Variant::Int8(2));\nassert_eq!(variant_list.get(2).unwrap(), Variant::Int8(3));\n```\n\nYou can also use the [`ListBuilder::with_value`] to append values to the\nlist.\n```\n # use parquet_variant::{Variant, VariantBuilder};\n let mut builder = VariantBuilder::new();\n builder.new_list()\n     .with_value(1i8)\n     .with_value(2i8)\n     .with_value(3i8)\n     .finish();\nlet (metadata, value) = builder.finish();\nlet variant = Variant::try_new(&metadata, &value).unwrap();\nlet variant_list = variant.as_list().unwrap();\nassert_eq!(variant_list.get(0).unwrap(), Variant::Int8(1));\nassert_eq!(variant_list.get(1).unwrap(), Variant::Int8(2));\nassert_eq!(variant_list.get(2).unwrap(), Variant::Int8(3));\n```\n\n# Example: [`Variant::List`] of  [`Variant::Object`]s\n\nThis example shows how to create an list of objects:\n```json\n[\n  {\n     \"id\": 1,\n     \"type\": \"Cauliflower\"\n  },\n  {\n     \"id\": 2,\n     \"type\": \"Beets\"\n  }\n]\n```\n```\nuse parquet_variant::{Variant, VariantBuilder};\nlet mut builder = VariantBuilder::new();\n\n// Create a builder that will write elements to the list\nlet mut list_builder = builder.new_list();\n\n{\n    let mut object_builder = list_builder.new_object();\n    object_builder.insert(\"id\", 1);\n    object_builder.insert(\"type\", \"Cauliflower\");\n    object_builder.finish();\n}\n\n{\n    let mut object_builder = list_builder.new_object();\n    object_builder.insert(\"id\", 2);\n    object_builder.insert(\"type\", \"Beets\");\n    object_builder.finish();\n}\n\nlist_builder.finish();\n// Finish the builder to get the metadata and value\nlet (metadata, value) = builder.finish();\n// use the Variant API to verify the result\nlet variant = Variant::try_new(&metadata, &value).unwrap();\nlet variant_list = variant.as_list().unwrap();\n\n\nlet obj1_variant = variant_list.get(0).unwrap();\nlet obj1 = obj1_variant.as_object().unwrap();\nassert_eq!(\n    obj1.get(\"id\"),\n    Some(Variant::from(1))\n);\nassert_eq!(\n    obj1.get(\"type\"),\n    Some(Variant::from(\"Cauliflower\"))\n);\n\nlet obj2_variant = variant_list.get(1).unwrap();\nlet obj2 = obj2_variant.as_object().unwrap();\n\nassert_eq!(\n    obj2.get(\"id\"),\n    Some(Variant::from(2))\n);\nassert_eq!(\n    obj2.get(\"type\"),\n    Some(Variant::from(\"Beets\"))\n);\n\n```\n# Example: Unique Field Validation\n\nThis example shows how enabling unique field validation will cause an error\nif the same field is inserted more than once.\n```\n# use parquet_variant::VariantBuilder;\n#\nlet mut builder = VariantBuilder::new().with_validate_unique_fields(true);\n\n// When validation is enabled, try_with_field will return an error\nlet result = builder\n    .new_object()\n    .with_field(\"a\", 1)\n    .try_with_field(\"a\", 2);\nassert!(result.is_err());\n```\n\n# Example: Sorted dictionaries\n\nThis example shows how to create a [`VariantBuilder`] with a pre-sorted field dictionary\nto improve field access performance when reading [`Variant`] objects.\n\nYou can use [`VariantBuilder::with_field_names`] to add multiple field names at once:\n```\nuse parquet_variant::{Variant, VariantBuilder};\nlet mut builder = VariantBuilder::new()\n    .with_field_names([\"age\", \"name\", \"score\"].into_iter());\n\nlet mut obj = builder.new_object();\nobj.insert(\"name\", \"Alice\");\nobj.insert(\"age\", 30);\nobj.insert(\"score\", 95.5);\nobj.finish();\n\nlet (metadata, value) = builder.finish();\nlet variant = Variant::try_new(&metadata, &value).unwrap();\n```\n\nAlternatively, you can use [`VariantBuilder::add_field_name`] to add field names one by one:\n```\nuse parquet_variant::{Variant, VariantBuilder};\nlet mut builder = VariantBuilder::new();\nbuilder.add_field_name(\"age\"); // field id = 0\nbuilder.add_field_name(\"name\"); // field id = 1\nbuilder.add_field_name(\"score\"); // field id = 2\n\nlet mut obj = builder.new_object();\nobj.insert(\"name\", \"Bob\"); // field id = 3\nobj.insert(\"age\", 25);\nobj.insert(\"score\", 88.0);\nobj.finish();\n\nlet (metadata, value) = builder.finish();\nlet variant = Variant::try_new(&metadata, &value).unwrap();\n```",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        746,
+        1
+      ],
+      "end": [
+        750,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          353,
+          354,
+          355,
+          356,
+          357,
+          358,
+          359,
+          360,
+          361,
+          362,
+          363,
+          364,
+          365,
+          366,
+          367,
+          368,
+          370,
+          372,
+          379
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Variant::List`": 3,
+      "`VariantBuilder`": 4,
+      "`VariantBuilder::add_field_name`": 336,
+      "`VariantBuilder::with_field_names`": 335,
+      "`ObjectBuilder::with_field`": 189,
+      "`ListBuilder::with_value`": 24,
+      "`Variant`": 19,
+      "`Variant::Object`": 186
+    },
+    "link_paths": {
+      "`Variant::List`": "parquet_variant::variant::Variant::List",
+      "`VariantBuilder`": "parquet_variant::builder::VariantBuilder",
+      "`VariantBuilder::add_field_name`": "parquet_variant::builder::VariantBuilder::add_field_name",
+      "`VariantBuilder::with_field_names`": "parquet_variant::builder::VariantBuilder::with_field_names",
+      "`ObjectBuilder::with_field`": "parquet_variant::builder::object::ObjectBuilder::with_field",
+      "`ListBuilder::with_value`": "parquet_variant::builder::list::ListBuilder::with_value",
+      "`Variant`": "parquet_variant::variant::Variant",
+      "`Variant::Object`": "parquet_variant::variant::Variant::Object"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "4",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-a9ba86b818cec580af8379d6",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Variant::List`": "../operations/parquet_variant.variant.Variant.md#op-9ee3bf99ad7b6967fe1dd651",
+      "`VariantBuilder`": "../operations/parquet_variant.builder.VariantBuilder.md#op-a9ba86b818cec580af8379d6",
+      "`VariantBuilder::add_field_name`": "../operations/parquet_variant.builder.VariantBuilder.md#op-739e41b609e8c2b1fa8a1a77",
+      "`VariantBuilder::with_field_names`": "../operations/parquet_variant.builder.VariantBuilder.md#op-0f4edd3ff7f5d2d9dc4ac4ab",
+      "`ObjectBuilder::with_field`": "../operations/parquet_variant.builder.object.ObjectBuilder.md#op-7511f445dd2b13143e045c62",
+      "`ListBuilder::with_value`": "../operations/parquet_variant.builder.list.ListBuilder.md#op-61c616714723e8dfa453f708",
+      "`Variant`": "../operations/parquet_variant.variant.Variant.md#op-56d8e2cab45de055ef39f43d",
+      "`Variant::Object`": "../operations/parquet_variant.variant.Variant.md#op-f448b5728cc2baae6632c68e"
+    }
+  },
+  {
+    "id": "41a08bd9bdeb7d4b56db8a7d",
+    "path": "parquet_variant::builder::VariantBuilder::State",
+    "name": "State",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "assoc_type",
+    "signature": "State",
+    "docs": "",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        1027,
+        5
+      ],
+      "end": [
+        1030,
+        18
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'a"
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "bounds": [],
+        "type": {
+          "tuple": []
+        },
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "VariantBuilderExt",
+        "id": "parquet_variant::builder::VariantBuilderExt",
+        "args": null
+      },
+      "trait_path": "parquet_variant::builder::VariantBuilderExt",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          1026,
+          1
+        ],
+        "end": [
+          1048,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "373",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-41a08bd9bdeb7d4b56db8a7d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "739e41b609e8c2b1fa8a1a77",
+    "path": "parquet_variant::builder::VariantBuilder::add_field_name",
+    "name": "add_field_name",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn add_field_name(&mut self, field_name: &str)",
+    "docs": "Adds a single field name to the field name directory in the Variant metadata.\n\nThis method does the same thing as [`VariantBuilder::with_field_names`] but adds one field name at a time.",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        823,
+        5
+      ],
+      "end": [
+        825,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "field_name",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "primitive": "str"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`VariantBuilder::with_field_names`": 335
+    },
+    "link_paths": {
+      "`VariantBuilder::with_field_names`": "parquet_variant::builder::VariantBuilder::with_field_names"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "336",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-739e41b609e8c2b1fa8a1a77",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`VariantBuilder::with_field_names`": "../operations/parquet_variant.builder.VariantBuilder.md#op-0f4edd3ff7f5d2d9dc4ac4ab"
+    }
+  },
+  {
+    "id": "6ffb9ff28ef7d650b920b14a",
+    "path": "parquet_variant::builder::VariantBuilder::append_null",
+    "name": "append_null",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_null(&mut self)",
+    "docs": "Variant values cannot encode NULL, only [`Variant::Null`]. This is different from the column\nthat holds variant values being NULL at some positions.",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        1034,
+        5
+      ],
+      "end": [
+        1036,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "VariantBuilderExt",
+        "id": "parquet_variant::builder::VariantBuilderExt",
+        "args": null
+      },
+      "trait_path": "parquet_variant::builder::VariantBuilderExt",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          1026,
+          1
+        ],
+        "end": [
+          1048,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Variant::Null`": 374
+    },
+    "link_paths": {
+      "`Variant::Null`": "parquet_variant::variant::Variant::Null"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "375",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-6ffb9ff28ef7d650b920b14a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Variant::Null`": "../operations/parquet_variant.variant.Variant.md#op-a77e1395c0a1609bb5be4d06"
+    }
+  },
+  {
+    "id": "0b7f10bb3f354efd2d0030e3",
+    "path": "parquet_variant::builder::VariantBuilder::append_value",
+    "name": "append_value",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_value<'m, 'v>(&mut self, value: impl Into<Variant<'m, 'v>>)",
+    "docs": "",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        1037,
+        5
+      ],
+      "end": [
+        1039,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 18,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Variant",
+                                    "id": 19,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "lifetime": "'m"
+                                          },
+                                          {
+                                            "lifetime": "'v"
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'m",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'v",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "impl Into<Variant<'m, 'v>>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 18,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Variant",
+                                      "id": 19,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "lifetime": "'m"
+                                            },
+                                            {
+                                              "lifetime": "'v"
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "18": "core::convert::Into",
+      "19": "parquet_variant::variant::Variant"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "VariantBuilderExt",
+        "id": "parquet_variant::builder::VariantBuilderExt",
+        "args": null
+      },
+      "trait_path": "parquet_variant::builder::VariantBuilderExt",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          1026,
+          1
+        ],
+        "end": [
+          1048,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "376",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-0b7f10bb3f354efd2d0030e3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0f5301ff0a475505e8d3a898",
+    "path": "parquet_variant::builder::VariantBuilder::append_value",
+    "name": "append_value",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_value<'m, 'd, T: Into<Variant<'m, 'd>>>(&mut self, value: T)",
+    "docs": "Append a value to the builder.\n\n# Panics\n\nPanics if a top-level variant value has already been written to this builder, or if the\nvariant contains duplicate field names in objects when validation is enabled. For a\nfallible version, use [`VariantBuilder::try_append_value`].\n\n# Example\n```\n# use parquet_variant::{Variant, VariantBuilder};\nlet mut builder = VariantBuilder::new();\n// most primitive types can be appended directly as they implement `Into<Variant>`\nbuilder.append_value(42i8);\n```",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        914,
+        5
+      ],
+      "end": [
+        918,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'m",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'d",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 18,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Variant",
+                                      "id": 19,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "lifetime": "'m"
+                                            },
+                                            {
+                                              "lifetime": "'d"
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "18": "core::convert::Into",
+      "19": "parquet_variant::variant::Variant"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`VariantBuilder::try_append_value`": 347
+    },
+    "link_paths": {
+      "`VariantBuilder::try_append_value`": "parquet_variant::builder::VariantBuilder::try_append_value"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "348",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-0f5301ff0a475505e8d3a898",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`VariantBuilder::try_append_value`": "../operations/parquet_variant.builder.VariantBuilder.md#op-50420908051628e4a672fd24"
+    }
+  },
+  {
+    "id": "9146b000551ad8f91a6bdc2e",
+    "path": "parquet_variant::builder::VariantBuilder::append_value_bytes",
+    "name": "append_value_bytes",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_value_bytes<'m, 'd>(&mut self, value: impl Into<Variant<'m, 'd>>)",
+    "docs": "Appends a variant value to the builder by copying raw bytes when possible.\n\nFor objects and lists, this directly copies their underlying byte representation instead of\nperforming a logical copy and without touching the metadata builder. For other variant\ntypes, this falls back to the standard append behavior.\n\nThe caller must ensure that the metadata dictionary entries are already built and correct for\nany objects or lists being appended.\n\n# Panics\n\nPanics if a top-level variant value has already been written to this builder. For a\nfallible version, use [`VariantBuilder::try_append_value_bytes`].",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        945,
+        5
+      ],
+      "end": [
+        947,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 18,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Variant",
+                                    "id": 19,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "lifetime": "'m"
+                                          },
+                                          {
+                                            "lifetime": "'d"
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'m",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'d",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "impl Into<Variant<'m, 'd>>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 18,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Variant",
+                                      "id": 19,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "lifetime": "'m"
+                                            },
+                                            {
+                                              "lifetime": "'d"
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "18": "core::convert::Into",
+      "19": "parquet_variant::variant::Variant"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`VariantBuilder::try_append_value_bytes`": 349
+    },
+    "link_paths": {
+      "`VariantBuilder::try_append_value_bytes`": "parquet_variant::builder::VariantBuilder::try_append_value_bytes"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "350",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-9146b000551ad8f91a6bdc2e",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`VariantBuilder::try_append_value_bytes`": "../operations/parquet_variant.builder.VariantBuilder.md#op-2e211d1e46a34de588ffbc77"
+    }
+  },
+  {
+    "id": "b31d51832304bba6c20d2104",
+    "path": "parquet_variant::builder::VariantBuilder::default",
+    "name": "default",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn default() -> VariantBuilder",
+    "docs": "",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        745,
+        10
+      ],
+      "end": [
+        745,
+        17
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "resolved_path": {
+              "path": "VariantBuilder",
+              "id": 4,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4": "parquet_variant::builder::VariantBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          745,
+          10
+        ],
+        "end": [
+          745,
+          17
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "369",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-b31d51832304bba6c20d2104",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c6499f2651d2aa75cf302bb5",
+    "path": "parquet_variant::builder::VariantBuilder::finish",
+    "name": "finish",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(self) -> (Vec<u8>, Vec<u8>)",
+    "docs": "Finish the builder and return the metadata and value buffers.\n\n# Panics\n\nPanics if no top-level variant value has been appended. For a fallible version, use\n[`VariantBuilder::try_finish`].",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        969,
+        5
+      ],
+      "end": [
+        971,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "tuple": [
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 154,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "u8"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              },
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 154,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "u8"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "154": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`VariantBuilder::try_finish`": 351
+    },
+    "link_paths": {
+      "`VariantBuilder::try_finish`": "parquet_variant::builder::VariantBuilder::try_finish"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "352",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-c6499f2651d2aa75cf302bb5",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`VariantBuilder::try_finish`": "../operations/parquet_variant.builder.VariantBuilder.md#op-46de13334460d65fe98bb36b"
+    }
+  },
+  {
+    "id": "ea99d6de998c53c93e640887",
+    "path": "parquet_variant::builder::VariantBuilder::fmt",
+    "name": "fmt",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        745,
+        19
+      ],
+      "end": [
+        745,
+        24
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 65,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 66,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "65": "core::fmt::Formatter",
+      "66": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          745,
+          19
+        ],
+        "end": [
+          745,
+          24
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "371",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-ea99d6de998c53c93e640887",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "192ca74f5558c3f3346ac6a2",
+    "path": "parquet_variant::builder::VariantBuilder::new",
+    "name": "new",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "Create a new VariantBuilder with new underlying buffers",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        754,
+        5
+      ],
+      "end": [
+        760,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "337",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-192ca74f5558c3f3346ac6a2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5a36a7e52afed53c4a09ccfa",
+    "path": "parquet_variant::builder::VariantBuilder::new_list",
+    "name": "new_list",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_list(&mut self) -> ListBuilder<'_, ()>",
+    "docs": "Create an [`ListBuilder`] for creating [`Variant::List`] values.\n\nSee the examples on [`VariantBuilder`] for usage.\n\n# Panics\n\nPanics if a top-level variant value has already been written to this builder. For a\nfallible version, use [`VariantBuilder::try_new_list`].",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        860,
+        5
+      ],
+      "end": [
+        862,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ListBuilder",
+              "id": 5,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'_"
+                    },
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "5": "parquet_variant::builder::list::ListBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Variant::List`": 3,
+      "`ListBuilder`": 5,
+      "`VariantBuilder::try_new_list`": 343,
+      "`VariantBuilder`": 4
+    },
+    "link_paths": {
+      "`Variant::List`": "parquet_variant::variant::Variant::List",
+      "`ListBuilder`": "parquet_variant::builder::list::ListBuilder",
+      "`VariantBuilder::try_new_list`": "parquet_variant::builder::VariantBuilder::try_new_list",
+      "`VariantBuilder`": "parquet_variant::builder::VariantBuilder"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "344",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-5a36a7e52afed53c4a09ccfa",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Variant::List`": "../operations/parquet_variant.variant.Variant.md#op-9ee3bf99ad7b6967fe1dd651",
+      "`ListBuilder`": "../operations/parquet_variant.builder.list.ListBuilder.md#op-943a723c42ac5d70b99dbfe9",
+      "`VariantBuilder::try_new_list`": "../operations/parquet_variant.builder.VariantBuilder.md#op-dff468508795651f315c09cc",
+      "`VariantBuilder`": "../operations/parquet_variant.builder.VariantBuilder.md#op-a9ba86b818cec580af8379d6"
+    }
+  },
+  {
+    "id": "ad6d10e9b917a72a12f25db5",
+    "path": "parquet_variant::builder::VariantBuilder::new_object",
+    "name": "new_object",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_object(&mut self) -> ObjectBuilder<'_, ()>",
+    "docs": "Create an [`ObjectBuilder`] for creating [`Variant::Object`] values.\n\nSee the examples on [`VariantBuilder`] for usage.\n\n# Panics\n\nPanics if a top-level variant value has already been written to this builder. For a\nfallible version, use [`VariantBuilder::try_new_object`].",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        882,
+        5
+      ],
+      "end": [
+        884,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ObjectBuilder",
+              "id": 9,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'_"
+                    },
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "9": "parquet_variant::builder::object::ObjectBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ObjectBuilder`": 9,
+      "`Variant::Object`": 186,
+      "`VariantBuilder::try_new_object`": 345,
+      "`VariantBuilder`": 4
+    },
+    "link_paths": {
+      "`ObjectBuilder`": "parquet_variant::builder::object::ObjectBuilder",
+      "`Variant::Object`": "parquet_variant::variant::Variant::Object",
+      "`VariantBuilder::try_new_object`": "parquet_variant::builder::VariantBuilder::try_new_object",
+      "`VariantBuilder`": "parquet_variant::builder::VariantBuilder"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "346",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-ad6d10e9b917a72a12f25db5",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ObjectBuilder`": "../operations/parquet_variant.builder.object.ObjectBuilder.md#op-93ae35f464d302abd3045ea9",
+      "`Variant::Object`": "../operations/parquet_variant.variant.Variant.md#op-f448b5728cc2baae6632c68e",
+      "`VariantBuilder::try_new_object`": "../operations/parquet_variant.builder.VariantBuilder.md#op-a290a2af1c2196ff8ca8c3f7",
+      "`VariantBuilder`": "../operations/parquet_variant.builder.VariantBuilder.md#op-a9ba86b818cec580af8379d6"
+    }
+  },
+  {
+    "id": "9884a1571c099f08777ab618",
+    "path": "parquet_variant::builder::VariantBuilder::reserve",
+    "name": "reserve",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn reserve(&mut self, capacity: usize)",
+    "docs": "This method reserves capacity for field names in the Variant metadata,\nwhich can improve performance when you know the approximate number of unique field\nnames that will be used across all objects in the [`Variant`].",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        816,
+        5
+      ],
+      "end": [
+        818,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "capacity",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Variant`": 19
+    },
+    "link_paths": {
+      "`Variant`": "parquet_variant::variant::Variant"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "342",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-9884a1571c099f08777ab618",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Variant`": "../operations/parquet_variant.variant.Variant.md#op-56d8e2cab45de055ef39f43d"
+    }
+  },
+  {
+    "id": "50420908051628e4a672fd24",
+    "path": "parquet_variant::builder::VariantBuilder::try_append_value",
+    "name": "try_append_value",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_append_value<'m, 'd, T: Into<Variant<'m, 'd>>>(&mut self, value: T) -> Result<(), ArrowError>",
+    "docs": "Append a value to the builder.\n\nReturns an error if a top-level variant value has already been written to this builder.",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        923,
+        5
+      ],
+      "end": [
+        930,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 20,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 21,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'m",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'d",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 18,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Variant",
+                                      "id": 19,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "lifetime": "'m"
+                                            },
+                                            {
+                                              "lifetime": "'d"
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "core::result::Result",
+      "21": "arrow_schema::error::ArrowError",
+      "18": "core::convert::Into",
+      "19": "parquet_variant::variant::Variant"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "347",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-50420908051628e4a672fd24",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2e211d1e46a34de588ffbc77",
+    "path": "parquet_variant::builder::VariantBuilder::try_append_value_bytes",
+    "name": "try_append_value_bytes",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_append_value_bytes<'m, 'd>(&mut self, value: impl Into<Variant<'m, 'd>>) -> Result<(), ArrowError>",
+    "docs": "Tries to append a variant value to the builder by copying raw bytes when possible.\n\nThis is the fallible version of [`VariantBuilder::append_value_bytes`]. Returns an error\nif a top-level variant value has already been written to this builder.",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        953,
+        5
+      ],
+      "end": [
+        961,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 18,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Variant",
+                                    "id": 19,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "lifetime": "'m"
+                                          },
+                                          {
+                                            "lifetime": "'d"
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 20,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 21,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'m",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'d",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "impl Into<Variant<'m, 'd>>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 18,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Variant",
+                                      "id": 19,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "lifetime": "'m"
+                                            },
+                                            {
+                                              "lifetime": "'d"
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "18": "core::convert::Into",
+      "19": "parquet_variant::variant::Variant",
+      "20": "core::result::Result",
+      "21": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`VariantBuilder::append_value_bytes`": 350
+    },
+    "link_paths": {
+      "`VariantBuilder::append_value_bytes`": "parquet_variant::builder::VariantBuilder::append_value_bytes"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "349",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-2e211d1e46a34de588ffbc77",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`VariantBuilder::append_value_bytes`": "../operations/parquet_variant.builder.VariantBuilder.md#op-9146b000551ad8f91a6bdc2e"
+    }
+  },
+  {
+    "id": "46de13334460d65fe98bb36b",
+    "path": "parquet_variant::builder::VariantBuilder::try_finish",
+    "name": "try_finish",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_finish(self) -> Result<(Vec<u8>, Vec<u8>), ArrowError>",
+    "docs": "Finish the builder and return the metadata and value buffers.\n\nReturns an error if no top-level variant value has been appended.",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        976,
+        5
+      ],
+      "end": [
+        985,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 20,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": [
+                          {
+                            "resolved_path": {
+                              "path": "Vec",
+                              "id": 154,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "u8"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "resolved_path": {
+                              "path": "Vec",
+                              "id": 154,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "u8"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 21,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "core::result::Result",
+      "154": "alloc::vec::Vec",
+      "21": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "351",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-46de13334460d65fe98bb36b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c9a35ca96c866370261bf25f",
+    "path": "parquet_variant::builder::VariantBuilder::try_new_list",
+    "name": "try_new_list",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_list(&mut self) -> Result<ListBuilder<'_, Self::State<'_>>, ArrowError>",
+    "docs": "",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        1041,
+        5
+      ],
+      "end": [
+        1043,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 20,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ListBuilder",
+                          "id": 5,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "lifetime": "'_"
+                                },
+                                {
+                                  "type": {
+                                    "qualified_path": {
+                                      "name": "State",
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "lifetime": "'_"
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      },
+                                      "self_type": {
+                                        "generic": "Self"
+                                      },
+                                      "trait": {
+                                        "path": "",
+                                        "id": 73,
+                                        "args": null
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 21,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "core::result::Result",
+      "5": "parquet_variant::builder::list::ListBuilder",
+      "73": "parquet_variant::builder::VariantBuilderExt",
+      "21": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "VariantBuilderExt",
+        "id": "parquet_variant::builder::VariantBuilderExt",
+        "args": null
+      },
+      "trait_path": "parquet_variant::builder::VariantBuilderExt",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          1026,
+          1
+        ],
+        "end": [
+          1048,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "377",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-c9a35ca96c866370261bf25f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "dff468508795651f315c09cc",
+    "path": "parquet_variant::builder::VariantBuilder::try_new_list",
+    "name": "try_new_list",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_list(&mut self) -> Result<ListBuilder<'_, ()>, ArrowError>",
+    "docs": "Create an [`ListBuilder`] for creating [`Variant::List`] values.\n\nReturns an error if a top-level variant value has already been written to this builder.",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        867,
+        5
+      ],
+      "end": [
+        872,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 20,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ListBuilder",
+                          "id": 5,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "lifetime": "'_"
+                                },
+                                {
+                                  "type": {
+                                    "tuple": []
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 21,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "core::result::Result",
+      "5": "parquet_variant::builder::list::ListBuilder",
+      "21": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Variant::List`": 3,
+      "`ListBuilder`": 5
+    },
+    "link_paths": {
+      "`Variant::List`": "parquet_variant::variant::Variant::List",
+      "`ListBuilder`": "parquet_variant::builder::list::ListBuilder"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "343",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-dff468508795651f315c09cc",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Variant::List`": "../operations/parquet_variant.variant.Variant.md#op-9ee3bf99ad7b6967fe1dd651",
+      "`ListBuilder`": "../operations/parquet_variant.builder.list.ListBuilder.md#op-943a723c42ac5d70b99dbfe9"
+    }
+  },
+  {
+    "id": "27f8ad3a6bab49e30cc1a9fa",
+    "path": "parquet_variant::builder::VariantBuilder::try_new_object",
+    "name": "try_new_object",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_object(&mut self) -> Result<ObjectBuilder<'_, Self::State<'_>>, ArrowError>",
+    "docs": "",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        1045,
+        5
+      ],
+      "end": [
+        1047,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 20,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ObjectBuilder",
+                          "id": 9,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "lifetime": "'_"
+                                },
+                                {
+                                  "type": {
+                                    "qualified_path": {
+                                      "name": "State",
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "lifetime": "'_"
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      },
+                                      "self_type": {
+                                        "generic": "Self"
+                                      },
+                                      "trait": {
+                                        "path": "",
+                                        "id": 73,
+                                        "args": null
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 21,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "core::result::Result",
+      "9": "parquet_variant::builder::object::ObjectBuilder",
+      "73": "parquet_variant::builder::VariantBuilderExt",
+      "21": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "VariantBuilderExt",
+        "id": "parquet_variant::builder::VariantBuilderExt",
+        "args": null
+      },
+      "trait_path": "parquet_variant::builder::VariantBuilderExt",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          1026,
+          1
+        ],
+        "end": [
+          1048,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "378",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-27f8ad3a6bab49e30cc1a9fa",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a290a2af1c2196ff8ca8c3f7",
+    "path": "parquet_variant::builder::VariantBuilder::try_new_object",
+    "name": "try_new_object",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_object(&mut self) -> Result<ObjectBuilder<'_, ()>, ArrowError>",
+    "docs": "Create an [`ObjectBuilder`] for creating [`Variant::Object`] values.\n\nReturns an error if a top-level variant value has already been written to this builder.",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        889,
+        5
+      ],
+      "end": [
+        897,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 20,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ObjectBuilder",
+                          "id": 9,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "lifetime": "'_"
+                                },
+                                {
+                                  "type": {
+                                    "tuple": []
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 21,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "core::result::Result",
+      "9": "parquet_variant::builder::object::ObjectBuilder",
+      "21": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ObjectBuilder`": 9,
+      "`Variant::Object`": 186
+    },
+    "link_paths": {
+      "`ObjectBuilder`": "parquet_variant::builder::object::ObjectBuilder",
+      "`Variant::Object`": "parquet_variant::variant::Variant::Object"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "345",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-a290a2af1c2196ff8ca8c3f7",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ObjectBuilder`": "../operations/parquet_variant.builder.object.ObjectBuilder.md#op-93ae35f464d302abd3045ea9",
+      "`Variant::Object`": "../operations/parquet_variant.variant.Variant.md#op-f448b5728cc2baae6632c68e"
+    }
+  },
+  {
+    "id": "19de2948ace5d8216fa395c2",
+    "path": "parquet_variant::builder::VariantBuilder::try_with_value",
+    "name": "try_with_value",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_with_value<'m, 'd, T: Into<Variant<'m, 'd>>>(self, value: T) -> Result<Self, ArrowError>",
+    "docs": "Builder-style API for appending a value to the list and returns self for method chaining.\n\nThis is the fallible version of [`ListBuilder::with_value`].",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        805,
+        5
+      ],
+      "end": [
+        811,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "value",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 20,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 21,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'m",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'d",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 18,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Variant",
+                                      "id": 19,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "lifetime": "'m"
+                                            },
+                                            {
+                                              "lifetime": "'d"
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "core::result::Result",
+      "21": "arrow_schema::error::ArrowError",
+      "18": "core::convert::Into",
+      "19": "parquet_variant::variant::Variant"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ListBuilder::with_value`": 24
+    },
+    "link_paths": {
+      "`ListBuilder::with_value`": "parquet_variant::builder::list::ListBuilder::with_value"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "341",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-19de2948ace5d8216fa395c2",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ListBuilder::with_value`": "../operations/parquet_variant.builder.list.ListBuilder.md#op-61c616714723e8dfa453f708"
+    }
+  },
+  {
+    "id": "0f4edd3ff7f5d2d9dc4ac4ab",
+    "path": "parquet_variant::builder::VariantBuilder::with_field_names",
+    "name": "with_field_names",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_field_names<'a>(self, field_names: impl IntoIterator<Item = &'a str>) -> Self",
+    "docs": "This method pre-populates the field name directory in the Variant metadata with\nthe specific field names, in order.\n\nYou can use this to pre-populate a [`VariantBuilder`] with a sorted dictionary if you\nknow the field names beforehand. Sorted dictionaries can accelerate field access when\nreading [`Variant`]s.",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        785,
+        5
+      ],
+      "end": [
+        789,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "field_names",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "IntoIterator",
+                        "id": 77,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [],
+                            "constraints": [
+                              {
+                                "name": "Item",
+                                "args": null,
+                                "binding": {
+                                  "equality": {
+                                    "type": {
+                                      "borrowed_ref": {
+                                        "lifetime": "'a",
+                                        "is_mutable": false,
+                                        "type": {
+                                          "primitive": "str"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "impl IntoIterator<Item = &'a str>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "IntoIterator",
+                          "id": 77,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "borrowed_ref": {
+                                          "lifetime": "'a",
+                                          "is_mutable": false,
+                                          "type": {
+                                            "primitive": "str"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "77": "core::iter::traits::collect::IntoIterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Variant`": 19,
+      "`VariantBuilder`": 4
+    },
+    "link_paths": {
+      "`Variant`": "parquet_variant::variant::Variant",
+      "`VariantBuilder`": "parquet_variant::builder::VariantBuilder"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "335",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-0f4edd3ff7f5d2d9dc4ac4ab",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Variant`": "../operations/parquet_variant.variant.Variant.md#op-56d8e2cab45de055ef39f43d",
+      "`VariantBuilder`": "../operations/parquet_variant.builder.VariantBuilder.md#op-a9ba86b818cec580af8379d6"
+    }
+  },
+  {
+    "id": "f89bd6f9701a3c286cef6aac",
+    "path": "parquet_variant::builder::VariantBuilder::with_metadata",
+    "name": "with_metadata",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_metadata(self, metadata: VariantMetadata<'_>) -> Self",
+    "docs": "Create a new VariantBuilder with pre-existing [`VariantMetadata`].",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        763,
+        5
+      ],
+      "end": [
+        767,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "metadata",
+              {
+                "resolved_path": {
+                  "path": "VariantMetadata",
+                  "id": 128,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'_"
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "parquet_variant::variant::metadata::VariantMetadata"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`VariantMetadata`": 128
+    },
+    "link_paths": {
+      "`VariantMetadata`": "parquet_variant::variant::metadata::VariantMetadata"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "338",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-f89bd6f9701a3c286cef6aac",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`VariantMetadata`": "../operations/parquet_variant.variant.metadata.VariantMetadata.md#op-6c1715f60a1297fbc36b12c8"
+    }
+  },
+  {
+    "id": "8dbd13a91b2dcf6c9adc1ef6",
+    "path": "parquet_variant::builder::VariantBuilder::with_validate_unique_fields",
+    "name": "with_validate_unique_fields",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_validate_unique_fields(self, validate_unique_fields: bool) -> Self",
+    "docs": "Enables validation of unique field keys in nested objects.\n\nThis setting is propagated to all [`ObjectBuilder`]s created through this [`VariantBuilder`]\n(including via any [`ListBuilder`]), and causes [`ObjectBuilder::finish()`] to return\nan error if duplicate keys were inserted.",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        774,
+        5
+      ],
+      "end": [
+        777,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "validate_unique_fields",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ListBuilder`": 5,
+      "`ObjectBuilder::finish()`": 12,
+      "`ObjectBuilder`": 9,
+      "`VariantBuilder`": 4
+    },
+    "link_paths": {
+      "`ListBuilder`": "parquet_variant::builder::list::ListBuilder",
+      "`ObjectBuilder::finish()`": "parquet_variant::builder::object::ObjectBuilder::finish",
+      "`ObjectBuilder`": "parquet_variant::builder::object::ObjectBuilder",
+      "`VariantBuilder`": "parquet_variant::builder::VariantBuilder"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "339",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-8dbd13a91b2dcf6c9adc1ef6",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ListBuilder`": "../operations/parquet_variant.builder.list.ListBuilder.md#op-943a723c42ac5d70b99dbfe9",
+      "`ObjectBuilder::finish()`": "../operations/parquet_variant.builder.object.ObjectBuilder.md#op-d30016208ba2fe1a4499fbbd",
+      "`ObjectBuilder`": "../operations/parquet_variant.builder.object.ObjectBuilder.md#op-93ae35f464d302abd3045ea9",
+      "`VariantBuilder`": "../operations/parquet_variant.builder.VariantBuilder.md#op-a9ba86b818cec580af8379d6"
+    }
+  },
+  {
+    "id": "79d5ea4f88afc2471d12fc6c",
+    "path": "parquet_variant::builder::VariantBuilder::with_value",
+    "name": "with_value",
+    "owner": "parquet_variant::builder::VariantBuilder",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_value<'m, 'd, T: Into<Variant<'m, 'd>>>(self, value: T) -> Self",
+    "docs": "Builder-style API for appending a value to the list and returning self to enable method chaining.\n\n# Panics\n\nThis method will panic if the variant contains duplicate field names in objects\nwhen validation is enabled. For a fallible version, use [`ListBuilder::try_with_value`].",
+    "span": {
+      "filename": "src/builder.rs",
+      "begin": [
+        797,
+        5
+      ],
+      "end": [
+        800,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "value",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'m",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'d",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 18,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Variant",
+                                      "id": 19,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "lifetime": "'m"
+                                            },
+                                            {
+                                              "lifetime": "'d"
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "18": "core::convert::Into",
+      "19": "parquet_variant::variant::Variant"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantBuilder",
+          "id": "parquet_variant::builder::VariantBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder.rs",
+        "begin": [
+          752,
+          1
+        ],
+        "end": [
+          986,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ListBuilder::try_with_value`": 23
+    },
+    "link_paths": {
+      "`ListBuilder::try_with_value`": "parquet_variant::builder::list::ListBuilder::try_with_value"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "340",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.builder.VariantBuilder.md",
+    "record_file": "operations/parquet_variant.builder.VariantBuilder.json",
+    "anchor": "op-79d5ea4f88afc2471d12fc6c",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ListBuilder::try_with_value`": "../operations/parquet_variant.builder.list.ListBuilder.md#op-de55037219b03aa413a9ab45"
+    }
+  }
+]

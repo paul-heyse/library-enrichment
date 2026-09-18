@@ -20,6 +20,9 @@ struct FFI_ReturnFieldArgs
 fn try_from(value: ReturnFieldArgs<'_>) -> Result<Self, Self::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udf.return_type_args.FFI_ReturnFieldArgs.md).
+
+
 A stable struct for sharing a [`ReturnFieldArgs`] across FFI boundaries.
 
 ---
@@ -40,6 +43,9 @@ struct ForeignReturnFieldArgs<'a>
 fn from(value: &'a ForeignReturnFieldArgsOwned) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udf.return_type_args.ForeignReturnFieldArgs.md).
+
+
 ---
 
 ## ForeignReturnFieldArgsOwned
@@ -57,5 +63,8 @@ struct ForeignReturnFieldArgsOwned
 ```rust
 fn try_from(value: &FFI_ReturnFieldArgs) -> Result<Self, Self::Error>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udf.return_type_args.ForeignReturnFieldArgsOwned.md).
+
 
 ---

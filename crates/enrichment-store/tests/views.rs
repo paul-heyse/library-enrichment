@@ -23,7 +23,10 @@ async fn inspection_projection(leased: bool) {
         datatypes::DataType,
     };
     let dir = tempfile::tempdir().unwrap();
-    let mut evidence = support::rust_evidence_for("rel_fixture", "env_fixture");
+    let mut evidence = support::rust_evidence_for(
+        format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
+        format!("env_{}", "a".repeat(64)).try_into().unwrap(),
+    );
     let mut seed = 17u64;
     let document: String = (0..600_000)
         .map(|_| {
@@ -52,8 +55,8 @@ async fn inspection_projection(leased: bool) {
             &EvidenceScope {
                 ecosystem: Ecosystem::Rust,
                 symbol_package: "enr_fixture".into(),
-                release_id: "rel_fixture".into(),
-                environment_id: "env_fixture".into(),
+                release_id: format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
+                environment_id: format!("env_{}", "a".repeat(64)).try_into().unwrap(),
             },
             native_tables::providers(&dir.path().join("tables"), &runtime, &evidence).await,
         )
@@ -140,15 +143,18 @@ async fn inspection_projection(leased: bool) {
 #[tokio::test]
 async fn admitted_views_preserve_observations_and_derive_ancestry_without_cross_scans() {
     let dir = tempfile::tempdir().expect("directory");
-    let evidence = support::rust_evidence_for("rel_fixture", "env_fixture");
+    let evidence = support::rust_evidence_for(
+        format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
+        format!("env_{}", "a".repeat(64)).try_into().unwrap(),
+    );
     let runtime =
         QueryRuntime::new(&dir.path().join("spill"), QueryLimits::default()).expect("runtime");
     let cache = NativeAdmission::new(runtime.clone(), AdmissionLimits::default()).expect("cache");
     let scope = EvidenceScope {
         ecosystem: Ecosystem::Rust,
         symbol_package: "enr_fixture".into(),
-        release_id: "rel_fixture".into(),
-        environment_id: "env_fixture".into(),
+        release_id: format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
+        environment_id: format!("env_{}", "a".repeat(64)).try_into().unwrap(),
     };
     let admitted = cache
         .admit_native(
@@ -317,8 +323,10 @@ async fn admitted_views_preserve_observations_and_derive_ancestry_without_cross_
                 fragment_kinds: vec![],
                 area: None,
                 page_size: 2,
+                offset: returned.len() as u64,
                 after,
             },
+            500,
         )
         .await
         .expect("native paged search");
@@ -331,7 +339,7 @@ async fn admitted_views_preserve_observations_and_derive_ancestry_without_cross_
                 "no duplicate page result"
             );
         }
-        if !result.has_more {
+        if !result.boundary.has_more {
             break;
         }
     }
@@ -383,7 +391,10 @@ async fn overview_keeps_documentation_when_an_undocumented_observation_sorts_fir
 #[tokio::test]
 async fn documentation_folds_only_the_same_definition_and_source() {
     let dir = tempfile::tempdir().unwrap();
-    let evidence = support::rust_evidence_for("rel_fixture", "env_fixture");
+    let evidence = support::rust_evidence_for(
+        format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
+        format!("env_{}", "a".repeat(64)).try_into().unwrap(),
+    );
     let runtime = QueryRuntime::new(&dir.path().join("spill"), QueryLimits::default()).unwrap();
     let cache = NativeAdmission::new(runtime.clone(), AdmissionLimits::default()).unwrap();
     let admitted = cache
@@ -391,8 +402,8 @@ async fn documentation_folds_only_the_same_definition_and_source() {
             &EvidenceScope {
                 ecosystem: Ecosystem::Rust,
                 symbol_package: "enr_fixture".into(),
-                release_id: "rel_fixture".into(),
-                environment_id: "env_fixture".into(),
+                release_id: format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
+                environment_id: format!("env_{}", "a".repeat(64)).try_into().unwrap(),
             },
             native_tables::providers(&dir.path().join("tables"), &runtime, &evidence).await,
         )
@@ -442,6 +453,7 @@ async fn documentation_folds_only_the_same_definition_and_source() {
             fragment_kinds: vec![enrichment_core::evidence::FragmentKind::DocText],
             area: None,
             page_size: 10,
+            offset: 0,
             after: None,
         },
     )

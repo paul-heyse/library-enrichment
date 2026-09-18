@@ -1,124 +1,94 @@
 # Implementation handoff
 
-Updated **2026-09-17**. **Plan 18 is in progress; the pivot is not complete, qualified or installed.**
-The active execution authority is [Plan 18](docs/plans/18-schema-governed-runtime-and-cache-completion.md),
-including its [package ledger](docs/plans/18-schema-governed-runtime-and-cache-completion.md#10-execution-ledger-and-completion-rule).
-It incorporates Plan 17's remaining FP/L/Q/SC obligations and the cache review. Continue implementation.
+Updated **2026-09-18**. **Plan 19 remains active and incomplete; the pivot is not installed or
+qualified.** Authority: [Plan 19](docs/plans/19-unified-runtime-and-delta-cache-completion.md),
+its package ledger and implementation checkpoints. Inherited Plan 17/18 requirements remain.
 
-## Current boundary
+## Execution boundary
 
-Phase 6 remains the product integration phase. HEAD is `ccf5739`; the shared tree contains substantial
-pre-existing uncommitted Plan 17 work and current Plan 18 changes. Preserve them. The execution
-baseline and file hashes are `.dev-state/plan18/execution/baseline.json`; planning had a separate baseline.
+- Phase 6; **CP00–CP13 remain open**. Report/check at **2026-09-18T22:16:02+00:00**:
+  **0 passed / 0 failed / 0 blocked / 48 not_run**. Source:
+  `32738daebe00f615729a05bd44d9eaf6460231316daa43f9389e2b20721972ae`. Scoped units are development evidence.
+- Shared HEAD `efc646c`, checked 2026-09-18. Preserve extensive preexisting dirty work, including
+  independently updated DataFusion/Delta skills. No source reset or commit. This slice's baseline
+  is `.dev-state/plan19/execution/typed-delta-baseline/source.tar`; its changed Rust inventory is
+  `.dev-state/plan19/execution/typed-delta-rust-paths.txt`.
+- **No full integration, service storage/publication/CDF/export/restart journey, real/installed
+  client or producer qualification, or full CI until actual CP11 architecture/source/package/
+  enforcement/install/state/client deletion closure.** Unit/static/schema/compile checks permitted.
+- Source: **state 26 / snapshot 16.0 / wire 12.0 / native-json/3**, executor **9**, Rust decoder
+  **native-rustdoc-arrow/4**, provider **delta-immutable-cbor/1**, comparison value **4**, bundle
+  **delta-evidence-bundle/2**, contract manifest/intrinsic **2/7**. No historical reader.
 
-Source identities are state **11**, snapshot **10.0**, wire **5.0**, codec **native-json/3**.
-The new materialization diagnostics changed state identity; complete endpoint response budgeting
-changed wire identity. There is no historical reader or migration. Fresh activation has not run.
+## Current implemented boundary
 
-Preserved foundations include generated native schema/union/value contracts and typed IDs,
-producer/registry/revision facts, native results, nine generated tool bindings, composed providers,
-23 atomic Delta control families, exact retention roots/leases/candidate obligations, maintenance
-fences, kernel metrics and owned runtime/release/diagnostic tasks. All have remaining consumer or
-qualification obligations; see Plan 17 §2 and Plan 18 §10 instead of re-deriving their source history.
+Preserve the native catalog/providers, shared caches, physical ownership/cleanup, typed immutable
+definitions/row selection and generated MCP catalog. This bounded slice unifies Delta references:
 
-Plan 18 now adds:
+- CohortId is FixedSizeBinary(16); SchemaContractId is FixedSizeBinary(32) derived directly from
+  the existing native schema-manifest key. Full-field native parameters, predicates, row keys,
+  cache keys and schema registry retain typed identities. Text appears at declared boundaries.
+- Shared DeltaTableRef/DeltaVersionRef/TableSelection/CdfWindow replace duplicate publication,
+  definition, result, discovery, retention and replay scope. External Delta table IDs remain
+  opaque. Returned-state capture supplies committed references; candidates have no captured
+  authority. Legacy flat binding types and the definition Binding alias are deleted.
+- One exact-read admission requires current protection, namespace, semantic contract and fresh
+  metadata history before cache/replay reuse. Evidence, definitions and results consume it.
+  Provider ingredients retain typed exact scope; the lower-level full-snapshot cache stays separate.
+- Native CDF vector/image plans retain typed cohorts and checked inclusive ranges. Retention,
+  cleanup and history use shared nested references and full-field coalescing. Root removal
+  uses the same scope projection. Export still rebinds physical references independently of
+  semantic snapshot identity.
+- The native schema registry keeps typed identity and bounded IPC bytes with a bootstrap-safe
+  physical lookup. Byte-bound intrinsic expressions now explicitly reconcile integer types;
+  Binary and LargeBinary pre-admission are exercised without relying on SQL coercion.
+- Generated schemas/DTOs/worker Arrow/guidance and fixtures advance together. The Delta reference
+  structural guard and `bundle-2026-09-18-typed-delta-references` are added; prior provenance and
+  accepted ADR arguments are preserved. Protected enforcement remains unapplied.
 
-- **Operation-owned CacheFactory:** four declared reuse families, pure admission/planning, exact
-  operation/input/session binding, once-only execution-owned fill, native spill/readback, failed
-  terminal states and owned cancellation/deadline. Paid query permits survive abandoned waiters;
-  leases/reservations follow physical readers. Mutable/volatile/unknown sources refuse before reuse.
-  Native global statistics/order claims are forwarded only when valid after coalescing.
-- **Restricted immutable Delta provider cache:** typed identity/version/cohort/contract/config/build
-  keys; DefaultCache TTL/eviction; bounded native codec writer; native schema/feature/CHECK validation;
-  narrow recorded vendor rebinding seam. Values contain no authority. Each read attaches fresh
-  protection after its complete dependency vector is admitted. Provider/plan/stream reservations
-  survive eviction. Persisted descriptors and fresh-process command replay remain open.
-- **Exact delivery:** checked Page fields share Arrow/Serde validation. A full-field native UDF
-  measures ResultRecord through the same format projection used at delivery; DataFusion selects
-  inline eligibility and ranked retained views. Oversized candidates remain measurable. Rust owns
-  MCP failure previews, terminal-job failure handling, retained links and evidence-resource text.
-  Python's summary/preview fitting loop and fixed 1 KiB framing allowance are deleted.
-- **Pinned SDK framing:** the adapter supplies exact stdio framing, protocol era and resource URI;
-  generated service identity, modern result/cache fields and actual SDK byte equality are checked.
-  Oversized IDs and non-stdio profiles refuse. Local transport errors and the packaged workflow
-  guide are separate from native evidence-budget qualification. Four evidence resource templates
-  and nine tools use the new native boundary.
-- **Diagnostics:** typed materialization activities and cache-family counters replace old index
-  events. Descriptor/cache ownership and native pool reservations are visible separately.
+## Latest verification and known limits
 
-The old CompletedIndex/eager materialization/count channel/custom index IPC machinery and eager
-index benchmark were deleted. Replacements are source implementations, not closed CF/application
-qualification. Proposed decisions are ADR-0052, ADR-0053 and ADR-0054.
+Logs: `.dev-state/plan19/execution/typed-delta-*`. Plan 19 records scope and failures/repairs.
 
-## Verification and known failures
+- **16 distinct scoped units pass across runs.** Initial run: 3 core passed / 12 store failed
+  through the registry byte-bound validator. After the shared fix, all 13 store units pass
+  (46.302 s), including a new Binary/LargeBinary regression. Native runtime diagnostics are
+  incidental unit-fixture initialization, not storage/restart/client qualification.
+- Core/store/daemon **all-target Clippy passes**. Two pinned Delta Parquet deprecations and
+  proc-macro-error2 future warnings remain unsuppressed. All affected terminal tests compile.
+- Schema generation/conformance passes: **4 fixtures / 11 negative cases**; packaged schemas,
+  DTOs, worker Arrow and guidance are reproducible. Generator format-name warnings remain.
+- An incorrectly scoped explicit generated-DTO Ruff run reports 183 style findings. ADR-0007
+  already excludes these generated files; they were not hand-edited or newly suppressed.
+  Maintained-source Ruff and ty pass using the existing scope.
+- Delta reference rule: **1 group / 13 cases passed**; source/rule review scans are empty.
+  Architecture, ADR/index/register, nine provenance bundles and scoped whitespace checks pass.
+  Repository-wide whitespace reports preexisting Delta-skill TSV trailing fields; preserved.
+- Independent audit confirms the report digest, all 48 IDs and stale-receipt exclusion with
+  no discrepancies. Report/check has no product gate receipts for this tree. Full cache/storage/replay/restart,
+  producer and real-client qualification remains deferred. No installation or activation ran.
 
-**2026-09-17:** `just acceptance-report` and `just acceptance-check` regenerate and validate
-**0 passed / 0 failed / 0 blocked / 48 not_run**. No focused unit/probe result is promoted into
-registered acceptance. Source changes require regenerating this source-bound report again.
+## Next unmet work
 
-Focused receipts are under `.dev-state/plan18/execution/`:
+1. Finish other content/digest/reference identities and clock/unit typing, plus the full
+   operator/provider/mutation/feature matrix.
+2. Complete exact effect/environment/fidelity consumers, revocation/exit/unknown acknowledgement,
+   remaining research/recovery routes and materialization lifetime/property cases.
+3. Finish orphan/history/transaction/CDF/replay fences, metadata/predicate/kernel/writer external
+   allocation ownership and queue/shutdown matrices. Author terminal cases only until CP11.
+4. Close L01–L33 and Q/SC/CF/DC source/package/harness removal; actual protected enforcement,
+   matching packages and legacy install/state/client retirement. Only then run CP12 and activate.
 
-- Operation cache: 9 units; restricted provider cache: 3 units; exact retention-vector negatives:
-  1 unit; shared Page decoder: 1 unit; native transport/recovery: 2 units.
-- `result-measure-units.log`: isolated Arrow codec and exact inline byte-boundary selection across
-  envelope/tool/resource profiles. `mcp-framing-units.log`: 10 Python framing units.
-- `mcp-native-parity.log`: 144 native/installed-SDK serialization comparisons, with no daemon or
-  client session. Reproduction is `mcp_delivery_probe` plus `fastmcp-framing/native_parity.py`.
-- Production core/store/daemon strict Clippy and workspace library/binary compilation passed at
-  their logged source boundaries. Two pinned vendor Parquet deprecations remain unsuppressed.
-- Generated schemas/DTOs and conformance passed: four valid fixtures, eight negative cases.
-  Selected Python Ruff/ty and ADR lint passed. All three provenance seals now pass: the pre-existing
-  tool-guide mismatch was resolved by recovering its exact frozen bytes and sealing the wire 5.0
-  guide under a new dated bundle (ADR-0054), without editing old manifests/maps.
-  DataFusion/FastMCP delivery capability scans are clean.
-  Earlier plan-node syntax hints do not recognize the implemented DataFusion 55.1 statistics hooks;
-  Delta vacuum hints refer to the explicitly configured isolated deletion-vector fixture.
-- `just doctor` passed hard prerequisites; installation availability is not execution-profile proof.
+## Pins and resource policy
 
-**Known compile-only failure:** `workspace-targets-check.log` contains stale integration/libtest
-fixtures for binary IDs, owned environment profiles, request defaults and removed resource APIs.
-Production checks do not close this CP10 fixture work. No integration tests ran in this execution.
+Verified by 2026-09-18 doctor: Rust/rust-analyzer **1.98.1**, uv **0.12.17**, just **1.58.0**,
+Python **3.14.7**, ty **0.0.80**, Griffe **2.3.0**. Container tools are present, not freshly qualified.
+Source/lock: DataFusion **55.1.0**, Arrow/Parquet **59.3.0**, object_store **0.13.2**, Delta
+**58f07cd62bfbce3649a7e1c87c696288068ae184**, kernel **8ba063f8f84fec222000f66d40d70911d7c79675**,
+FastMCP **4.0.3**, MCP **2.2.0**, PyArrow **25.0.1**, Ciborium **0.2.2**, rustdoc-types **0.61.0**.
+Use the pinned DataFusion/Delta/FastMCP skills and targeted probes for these libraries.
 
-Historical unresolved application evidence remains in [Plan 17 §2.3](docs/plans/17-schema-governed-unified-runtime-hard-pivot.md#23-failed-and-unresolved-evidence):
-navigation List metadata, execution/export artifact Struct metadata, Decimal diagnostics, nullable
-document kind, result clock/window admission, diagnostic pressure/shutdown, and cleanup fixtures
-expecting retired `owned/*.json`. Earlier publication/CDF/export passes predate current source;
-their diagnostic drops and source limits remain visible. Nothing here closes final Q/SC/CF matrices.
-
-## Next work
-
-**Do not run full integrations until the architecture pivot AND all legacy source/package/installed
-state/client-registration deletions are complete.** Units, isolated native library probes and
-static/schema/compile checks remain authorized. Intermediate discontinuity is accepted.
-
-1. Finish native handler/page/aspect/window/recovery composition. In particular,
-   `ops/artifact.rs::read_blocking` still chooses an encoded prefix procedurally. It must move
-   selection into native plans while preserving UTF-8 boundaries, forward progress and exact
-   resource/tool framing. Do not expand every prefix into quadratic-size result candidates.
-2. Complete remaining domain/digest/witness declarations, full semantic operator/storage/mutation
-   coverage, durable acquisition/producer facts and exact process grants/warm-LSP ownership.
-3. Complete retention consumers, especially read-only/export exact enrollment. Shared root guards
-   still exist and are insufficient for that target. Finish explicit root removal, orphan/cohort
-   reclamation, maintenance/crash fences, persisted descriptors, fresh-process replay and CDF proof.
-4. Complete resource accounting/pressure/shutdown consumers, remaining L01–L25 deletions and stale
-   typed fixtures. Preserve the protected enforcement boundary; prepare its patch separately.
-5. Build a matching candidate and verify actual retired runtime/state/client removal (CP11).
-   Only then run Q01–Q13/SC01–SC10/CF01–CF10, current clients/producers/Linux/C20, durability and
-   performance qualification; repair failures and activate fresh state (CP12–CP13).
-
-Workstation defaults remain **32 GiB native memory, 64 GiB spill, 2 GiB metadata cache, 1 GiB
-immutable-provider descriptor cache, 16 partitions and 16 workers/blocking threads per lane**.
-
-## Tools and pins
-
-**2026-09-17:** `just doctor` passed all hard prerequisites; `just toolchain-check` inside doctor
-confirmed Rust **1.98.1**. Doctor observed uv **0.12.15**, just **1.58.0**, Python **3.14.7**,
-`ty` **0.0.80**, rust-analyzer **1.98.1** and Griffe **2.3.0**. bwrap/Podman/Docker are present;
-installation is not profile qualification.
-
-Current lock/source pins: DataFusion **55.1.0**, Arrow/Parquet **59.3.0**, object_store **0.13.2**,
-delta-rs **58f07cd62bfbce3649a7e1c87c696288068ae184**, buoyant kernel
-**8ba063f8f84fec222000f66d40d70911d7c79675**, FastMCP **4.0.3**, MCP **2.2.0**,
-PyArrow **25.0.1**, rustdoc-types **0.61.0**. Exact capability evidence lives in the pinned
-DataFusion/Delta/FastMCP skills and [compatibility matrix](docs/architecture/compatibility-matrix.md).
-Use those skills and targeted probes, not Context7, for these libraries.
+Performance defaults remain: pool **32 GiB**, spill **64 GiB**, metadata **2 GiB**, snapshots
+**4 GiB** / entry **512 MiB**, providers **1 GiB**, contracts **64 MiB**, predicate cache **100 MiB**
+per row group, checkpoints control **10** / others **100**, and **16** partitions/workers/parsers/
+blocking threads per lane. Do not restore tiny development pools.

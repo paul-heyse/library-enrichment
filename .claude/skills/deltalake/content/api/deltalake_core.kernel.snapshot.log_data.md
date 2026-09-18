@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## LogDataHandler
 
 `struct` · `deltalake_core::kernel::snapshot::log_data::LogDataHandler`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.snapshot.log_data.LogDataHandler.md)
 
 Also reachable as `deltalake::kernel::LogDataHandler`, `deltalake_core::kernel::LogDataHandler`
 

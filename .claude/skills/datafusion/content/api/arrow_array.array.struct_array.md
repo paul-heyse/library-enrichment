@@ -77,6 +77,9 @@ fn try_from(values: Vec<(&str, ArrayRef)>) -> Result<Self, ArrowError>
 fn index(&self, name: &str) -> &Self::Output
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.struct_array.StructArray.md).
+
+
 An array of [structs](https://arrow.apache.org/docs/format/Columnar.html#struct-layout)
 
 Each child (called *field*) is represented by a separate array.

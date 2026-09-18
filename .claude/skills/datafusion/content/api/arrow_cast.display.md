@@ -16,6 +16,9 @@ enum DurationFormat
 
 **Derives**: Clone, Copy, Debug, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.display.DurationFormat.md).
+
+
 Format for displaying durations
 
 ---
@@ -41,6 +44,9 @@ fn from(value: ArrowError) -> Self
 fn from(value: std::fmt::Error) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.display.FormatError.md).
+
+
 Either an [`ArrowError`] or [`std::fmt::Error`]
 
 ---
@@ -54,6 +60,9 @@ Also reachable as `arrow::util::display::array_value_to_string`
 ```rust
 fn array_value_to_string(column: &dyn Array, row: usize) -> Result<String, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.display.array_value_to_string.md).
+
 
 Get the value at the given row in an array as a String.
 
@@ -73,6 +82,9 @@ Also reachable as `arrow::util::display::lexical_to_string`
 ```rust
 fn lexical_to_string<N: lexical_core::ToLexical>(n: N) -> String
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.display.lexical_to_string.md).
+
 
 Converts numeric type to a `String`
 
@@ -95,6 +107,9 @@ fn new(format: Box<dyn DisplayIndex + 'a>, safe: bool) -> Self
 fn try_new(array: &'a dyn Array, options: &FormatOptions<'a>) -> Result<Self, ArrowError>
 fn value(&self, idx: usize) -> ValueFormatter<'_>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.display.ArrayFormatter.md).
+
 
 A string formatter for an [`Array`]
 
@@ -192,6 +207,9 @@ const fn with_timestamp_tz_format(self, timestamp_tz_format: Option<&'a str>) ->
 const fn with_types_info(self, types_info: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.display.FormatOptions.md).
+
+
 Options for formatting arrays
 
 By default nulls are formatted as `""` and temporal types formatted
@@ -230,6 +248,9 @@ fn write(&self, s: &mut dyn Write) -> Result<(), ArrowError>
 fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.display.ValueFormatter.md).
+
+
 Implements [`Display`] for a specific array value
 
 ---
@@ -253,6 +274,9 @@ trait ArrayFormatterFactory: Debug + Send + Sync
 ```rust
 fn create_array_formatter<'formatter>(&self, array: &'formatter dyn Array, options: &FormatOptions<'formatter>, field: Option<&'formatter Field>) -> Result<Option<ArrayFormatter<'formatter>>, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.display.ArrayFormatterFactory.md).
+
 
 Allows creating a new [`ArrayFormatter`] for a given [`Array`] and an optional [`Field`].
 
@@ -345,6 +369,9 @@ trait DisplayIndex
 fn write(&self, idx: usize, f: &mut dyn Write) -> FormatResult
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.display.DisplayIndex.md).
+
+
 [`Display`] but accepting an index
 
 ---
@@ -358,6 +385,9 @@ Also reachable as `arrow::util::display::FormatResult`
 ```rust
 type FormatResult = Result<(), FormatError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.display.FormatResult.md).
+
 
 The result of formatting an array element via [`DisplayIndex::write`].
 

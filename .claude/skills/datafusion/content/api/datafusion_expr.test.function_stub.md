@@ -10,6 +10,9 @@ Crate `datafusion-expr` · 15 public items · structured records in [`model/data
 fn avg(expr: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.avg.md).
+
+
 ---
 
 ## avg_udaf
@@ -19,6 +22,9 @@ fn avg(expr: Expr) -> Expr
 ```rust
 fn avg_udaf() -> std::sync::Arc<AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.avg_udaf.md).
+
 
 AggregateFunction that returns a [AggregateUDF](crate::AggregateUDF) for [`Avg`]
 
@@ -32,6 +38,9 @@ AggregateFunction that returns a [AggregateUDF](crate::AggregateUDF) for [`Avg`]
 fn count(expr: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.count.md).
+
+
 ---
 
 ## count_udaf
@@ -41,6 +50,9 @@ fn count(expr: Expr) -> Expr
 ```rust
 fn count_udaf() -> std::sync::Arc<AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.count_udaf.md).
+
 
 AggregateFunction that returns a [AggregateUDF](crate::AggregateUDF) for [`Count`]
 
@@ -54,6 +66,9 @@ AggregateFunction that returns a [AggregateUDF](crate::AggregateUDF) for [`Count
 fn max(expr: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.max.md).
+
+
 ---
 
 ## max_udaf
@@ -63,6 +78,9 @@ fn max(expr: Expr) -> Expr
 ```rust
 fn max_udaf() -> std::sync::Arc<AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.max_udaf.md).
+
 
 AggregateFunction that returns a [AggregateUDF](crate::AggregateUDF) for [`Max`]
 
@@ -76,6 +94,9 @@ AggregateFunction that returns a [AggregateUDF](crate::AggregateUDF) for [`Max`]
 fn min(expr: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.min.md).
+
+
 ---
 
 ## min_udaf
@@ -85,6 +106,9 @@ fn min(expr: Expr) -> Expr
 ```rust
 fn min_udaf() -> std::sync::Arc<AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.min_udaf.md).
+
 
 AggregateFunction that returns a [AggregateUDF](crate::AggregateUDF) for [`Min`]
 
@@ -98,6 +122,9 @@ AggregateFunction that returns a [AggregateUDF](crate::AggregateUDF) for [`Min`]
 fn sum(expr: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.sum.md).
+
+
 ---
 
 ## sum_udaf
@@ -107,6 +134,9 @@ fn sum(expr: Expr) -> Expr
 ```rust
 fn sum_udaf() -> std::sync::Arc<AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.sum_udaf.md).
+
 
 AggregateFunction that returns a [AggregateUDF](crate::AggregateUDF) for [`Sum`]
 
@@ -141,6 +171,9 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 fn state_fields(&self, _args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.Avg.md).
+
 
 Testing stub implementation of avg aggregate
 
@@ -178,6 +211,9 @@ fn signature(&self) -> &Signature
 fn state_fields(&self, _args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.Count.md).
+
+
 Testing stub implementation of COUNT aggregate
 
 ---
@@ -213,6 +249,9 @@ fn signature(&self) -> &Signature
 fn state_fields(&self, _args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.Max.md).
+
+
 Testing stub implementation of MAX aggregate
 
 ---
@@ -247,6 +286,9 @@ fn reverse_expr(&self) -> ReversedUDAF
 fn signature(&self) -> &Signature
 fn state_fields(&self, _args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.Min.md).
+
 
 Testing stub implementation of Min aggregate
 
@@ -284,6 +326,9 @@ fn reverse_expr(&self) -> ReversedUDAF
 fn signature(&self) -> &Signature
 fn state_fields(&self, _args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.test.function_stub.Sum.md).
+
 
 Stub `sum` used for optimizer testing
 

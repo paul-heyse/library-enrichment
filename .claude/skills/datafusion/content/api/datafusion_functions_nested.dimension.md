@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_dims`, `datafusion_functions_neste
 fn array_dims(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.dimension.array_dims.md).
+
+
 returns an array of the array's dimensions.
 
 ---
@@ -23,6 +26,9 @@ returns an array of the array's dimensions.
 ```rust
 fn array_dims_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.dimension.array_dims_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayDims
@@ -39,6 +45,9 @@ Also reachable as `datafusion::prelude::array_ndims`, `datafusion_functions_nest
 fn array_ndims(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.dimension.array_ndims.md).
+
+
 returns the number of dimensions of the array.
 
 ---
@@ -50,6 +59,9 @@ returns the number of dimensions of the array.
 ```rust
 fn array_ndims_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.dimension.array_ndims_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayNdims
@@ -84,5 +96,8 @@ fn name(&self) -> &str
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.dimension.ArrayDims.md).
+
 
 ---

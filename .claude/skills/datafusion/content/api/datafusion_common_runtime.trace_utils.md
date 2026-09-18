@@ -24,6 +24,9 @@ enum JoinSetTracerError
 fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common_runtime.trace_utils.JoinSetTracerError.md).
+
+
 A custom error type for tracer injection failures.
 
 ---
@@ -37,6 +40,9 @@ Also reachable as `datafusion::common::runtime::set_join_set_tracer`, `datafusio
 ```rust
 fn set_join_set_tracer(tracer: &'static dyn JoinSetTracer) -> Result<(), JoinSetTracerError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common_runtime.trace_utils.set_join_set_tracer.md).
+
 
 Set the custom tracer for both futures and blocking closures.
 
@@ -55,6 +61,9 @@ Also reachable as `datafusion::common::runtime::trace_block`, `datafusion_common
 ```rust
 fn trace_block<T, F>(f: F) -> Box<dyn FnOnce() -> T + Send> where F: FnOnce() -> T + Send + 'static, T: Send + 'static
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common_runtime.trace_utils.trace_block.md).
+
 
 Optionally instruments a blocking closure with custom tracing.
 
@@ -81,6 +90,9 @@ Also reachable as `datafusion::common::runtime::trace_future`, `datafusion_commo
 ```rust
 fn trace_future<T, F>(future: F) -> futures::future::BoxFuture<'static, T> where F: Future<Output = T> + Send + 'static, T: Send + 'static
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common_runtime.trace_utils.trace_future.md).
+
 
 Optionally instruments a future with custom tracing.
 
@@ -113,6 +125,9 @@ trait JoinSetTracer: Send + Sync + 'static
 fn trace_block(&self, f: Box<dyn FnOnce() -> Box<dyn Any + Send> + Send>) -> Box<dyn FnOnce() -> Box<dyn Any + Send> + Send>
 fn trace_future(&self, fut: BoxFuture<'static, Box<dyn Any + Send>>) -> BoxFuture<'static, Box<dyn Any + Send>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common_runtime.trace_utils.JoinSetTracer.md).
+
 
 A trait for injecting instrumentation into either asynchronous futures or
 blocking closures at runtime.

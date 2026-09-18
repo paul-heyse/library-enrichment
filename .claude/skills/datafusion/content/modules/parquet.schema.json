@@ -1,0 +1,68 @@
+[
+  {
+    "id": "8f68e8d1972333f8e4689b62",
+    "path": "parquet::schema",
+    "name": "schema",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod schema",
+    "docs": "Parquet schema definitions and methods to print and parse schema.\n\n* [`SchemaDescriptor`] describes the data types of the columns stored in a file\n* [`ColumnDescriptor`]: Describes the schema of a single (leaf) column.\n* [`ColumnPath`]: Represents the location of a column in the schema (e.g. a nested field)\n\nParquet distinguishes\nbetween \"logical\" and \"physical\" data types.\nFor instance, strings (logical type) are stored as byte arrays (physical type).\nLikewise, temporal types like dates, times, timestamps, etc. (logical type)\nare stored as integers (physical type).\n\n[`SchemaDescriptor`]: types::SchemaDescriptor\n[`ColumnDescriptor`]: types::ColumnDescriptor\n[`ColumnPath`]: types::ColumnPath\n\n# Example\n\n```rust\nuse parquet::{\n    basic::{ConvertedType, Repetition, Type as PhysicalType},\n    schema::{parser, printer, types::Type},\n};\nuse std::sync::Arc;\n\n// Create the following schema:\n//\n// message schema {\n//   OPTIONAL BYTE_ARRAY a (UTF8);\n//   REQUIRED INT32 b;\n// }\n\nlet field_a = Type::primitive_type_builder(\"a\", PhysicalType::BYTE_ARRAY)\n    .with_converted_type(ConvertedType::UTF8)\n    .with_repetition(Repetition::OPTIONAL)\n    .build()\n    .unwrap();\n\nlet field_b = Type::primitive_type_builder(\"b\", PhysicalType::INT32)\n    .with_repetition(Repetition::REQUIRED)\n    .build()\n    .unwrap();\n\nlet schema = Type::group_type_builder(\"schema\")\n    .with_fields(vec![Arc::new(field_a), Arc::new(field_b)])\n    .build()\n    .unwrap();\n\nlet mut buf = Vec::new();\n\n// Print schema into buffer\nprinter::print_schema(&mut buf, &schema);\n\n// Parse schema from the string\nlet string_schema = String::from_utf8(buf).unwrap();\nlet parsed_schema = parser::parse_message_type(&string_schema).unwrap();\n\nassert_eq!(schema, parsed_schema);\n```",
+    "span": {
+      "filename": "src/schema/mod.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        81,
+        17
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          7607,
+          7611,
+          7891,
+          7899
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "types::SchemaDescriptor": 2937,
+      "types::ColumnPath": 5753,
+      "types::ColumnDescriptor": 4119
+    },
+    "link_paths": {
+      "types::SchemaDescriptor": "parquet::schema::types::SchemaDescriptor",
+      "types::ColumnPath": "parquet::schema::types::ColumnPath",
+      "types::ColumnDescriptor": "parquet::schema::types::ColumnDescriptor"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "7900",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/parquet.schema.md",
+    "record_file": "modules/parquet.schema.json",
+    "anchor": "op-8f68e8d1972333f8e4689b62",
+    "aliases": [],
+    "resolved_doc_links": {
+      "types::SchemaDescriptor": "../operations/parquet.schema.types.SchemaDescriptor.md#op-cb960d451851ace5640135f7",
+      "types::ColumnPath": "../operations/parquet.schema.types.ColumnPath.md#op-af9bcd597f4e17b094dee0f4",
+      "types::ColumnDescriptor": "../operations/parquet.schema.types.ColumnDescriptor.md#op-31e0bc49c5df5529126a8abd"
+    }
+  }
+]

@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::interleave`, `arrow::compute::kernels::interl
 fn interleave(values: &[&dyn Array], indices: &[(usize, usize)]) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.interleave.interleave.md).
+
+
 
 Takes elements by index from a list of [`Array`], creating a new [`Array`] from those values.
 
@@ -51,6 +54,9 @@ Also reachable as `arrow::compute::interleave_record_batch`, `arrow::compute::ke
 ```rust
 fn interleave_record_batch(record_batches: &[&RecordBatch], indices: &[(usize, usize)]) -> Result<RecordBatch, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_select.interleave.interleave_record_batch.md).
+
 
 Interleave rows by index from multiple [`RecordBatch`] instances and return a new [`RecordBatch`].
 

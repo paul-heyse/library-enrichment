@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_window::expr_fn::ntile`
 fn ntile(arg: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.ntile.ntile.md).
+
+
 Create a [`WindowFunction`](datafusion_expr::Expr::WindowFunction) expression for
 `Ntile` user-defined window function.
 
@@ -26,6 +29,9 @@ Integer ranging from 1 to the argument value, dividing the partition as equally 
 ```rust
 fn ntile_udwf() -> std::sync::Arc<datafusion_expr::WindowUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.ntile.ntile_udwf.md).
+
 
 Returns a [`WindowUDF`](datafusion_expr::WindowUDF) for [`ntile`].
 
@@ -61,5 +67,8 @@ fn name(&self) -> &str
 fn partition_evaluator(&self, partition_evaluator_args: PartitionEvaluatorArgs<'_>) -> Result<Box<dyn PartitionEvaluator>>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.ntile.Ntile.md).
+
 
 ---

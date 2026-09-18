@@ -10,6 +10,9 @@ Crate `datafusion-expr` · 2 public items · structured records in [`model/dataf
 fn cast_subquery(subquery: Subquery, cast_to_type: &arrow::datatypes::DataType) -> datafusion_common::Result<Subquery>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_schema.cast_subquery.md).
+
+
 Cast subquery in InSubquery/ScalarSubquery to a given type.
 
 1. **Projection plan**: If the subquery is a projection (i.e. a SELECT statement with specific
@@ -44,6 +47,9 @@ fn metadata(&self, schema: &dyn ExprSchema) -> Result<FieldMetadata>
 fn nullable(&self, input_schema: &dyn ExprSchema) -> Result<bool>
 fn to_field(&self, input_schema: &dyn ExprSchema) -> Result<(Option<TableReference>, Arc<Field>)>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_schema.ExprSchemable.md).
+
 
 Trait to allow expr to typable with respect to a schema
 

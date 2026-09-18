@@ -27,6 +27,9 @@ fn serialize_metadata(&self) -> Option<String>
 fn storage_type(&self) -> DataType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.canonical_extensions.fixed_shape_tensor.DFFixedShapeTensor.md).
+
+
 Defines the extension type logic for the canonical `arrow.fixed_shape_tensor` extension type.
 This extension type can be used to store a [tensor](https://en.wikipedia.org/wiki/Tensor) of
 a fixed shape.

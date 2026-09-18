@@ -1,0 +1,112 @@
+[
+  {
+    "id": "d4cc306244974d635bf8ea56",
+    "path": "datafusion_physical_plan::aggregates",
+    "name": "aggregates",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "module",
+    "signature": "mod aggregates",
+    "docs": "Aggregate functionality\n\n# Aggregate planning\n\nDataFusion selects different aggregate implementations (streams) based on the\nquery shape and configuration. This section provides an overview of the\navailable stream variants.\n\nSee each stream's documentation for details.\n\n## 1. Two-stage hash aggregation\n\nTwo-stage hash aggregation is used for regular parallel execution.\n\nThe input passes through three execution operators to produce the final\naggregation result:\n\n1. Partial aggregation reads the input and produces partial states. It\n   aggregates independently within each partition, which usually reduces\n   cardinality before the later shuffle.\n2. Hash repartitioning on the group keys sends all partial states for each\n   group to the same output partition for final aggregation.\n3. Final aggregation reads the partial states, combines them, and emits the\n   final results.\n\n```text\nAggregateExec (final)\n  RepartitionExec (hash by group keys)\n    AggregateExec (partial)\n```\n\nSee [`PartialHashAggregateStream`] and [`FinalHashAggregateStream`] for details.\n\n### Ordering optimization\n\nWhen the input is ordered by the group key, an ordered fast path is used. It\nuses a similar two-stage hash aggregation with an early-emission optimization.\n\n```text\nAggregateExec (final, ordered)\n  RepartitionExec (hash by group keys, order-preserving)\n    AggregateExec (partial, ordered)\n```\n\nSee [`OrderedPartialAggregateStream`] and [`OrderedFinalAggregateStream`] for\ndetails.\n\nRelated configuration:\n\n- [`datafusion.execution.target_partitions`](datafusion_common::config::ExecutionOptions::target_partitions)\n- [`datafusion.optimizer.repartition_aggregations`](datafusion_common::config::OptimizerOptions::repartition_aggregations)\n- [`datafusion.optimizer.prefer_existing_sort`](datafusion_common::config::OptimizerOptions::prefer_existing_sort)\n\n## 2. Single-stage hash aggregation\n\nWhen there is a single partition, or the aggregation input is already\nkey-partitioned (e.g., a data source has existing range partitioning),\n`Single` mode aggregation is used.\n\nIt takes raw input and directly produces the final result.\n\n```text\nAggregateExec (mode=Single or SinglePartitioned)\n  input\n```\n\nSee [`SingleHashAggregateStream`] for details.\n\nRelated configuration:\n\n- [`datafusion.execution.target_partitions`](datafusion_common::config::ExecutionOptions::target_partitions)\n- [`datafusion.optimizer.repartition_aggregations`](datafusion_common::config::OptimizerOptions::repartition_aggregations)\n\n## 3. Aggregation without grouping expressions\n\nA global aggregate maintains one accumulator set per input partition rather\nthan a hash table of groups. Partial stages compute local states and a final\nstage combines them into one output row:\n\n```text\nAggregateExec (final, no-grouping)\n  CoalescePartitionsExec\n    AggregateExec (partial, no-grouping)\n```\n\nEvery stage without grouping expressions uses [`AggregateStream`]. This path\nis selected before the grouped-stream migration setting is considered.\n\n## 4. Grouped TopK aggregation\n\nWhen a query only needs the best `N` groups, retaining every group in a hash\ntable and sorting them afterward does unnecessary work. The optimizer pushes\nthe sort limit and direction into the aggregate:\n\n```text\nSortExec (fetch=N)\n  AggregateExec (limit=N, order=...)\n    input\n```\n\n[`GroupedTopKAggregateStream`] keeps a bounded priority map for a single group\nkey. It supports group-by-only queries and compatible `MIN` or `MAX`\naggregates. An unordered group-by-only soft limit instead stays on the normal\nhash aggregation path.\n\nRelated configuration:\n\n- [`datafusion.optimizer.enable_topk_aggregation`](datafusion_common::config::OptimizerOptions::enable_topk_aggregation)\n- [`datafusion.optimizer.enable_distinct_aggregation_soft_limit`](datafusion_common::config::OptimizerOptions::enable_distinct_aggregation_soft_limit)\n\n## 5. Partial-reduce hash aggregation\n\nThis implementation will not be planned by DataFusion SQL interface, it must be\nmanually constructed at [`ExecutionPlan`] level.\n\nThis mode is useful in a distributed setting.\n\nSee [`PartialReduceHashAggregateStream`] for details.\n\n## 6. Fallback grouped hash aggregation\n\n[`GroupedHashAggregateStream`] is the legacy implementation for several of the\nstream types above. It is being incrementally migrated to separate streams.\n\nSee the issue for details: <https://github.com/apache/datafusion/issues/22710>",
+    "span": {
+      "filename": "src/aggregates/mod.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        7982,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[expect(rustdoc::private_intra_doc_links)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          375,
+          473,
+          483,
+          489,
+          543,
+          488,
+          627,
+          674,
+          725,
+          820,
+          821,
+          824,
+          825,
+          827,
+          828,
+          829,
+          830
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`AggregateStream`": 839,
+      "`GroupedHashAggregateStream`": 844,
+      "`FinalHashAggregateStream`": 832,
+      "datafusion_common::config::OptimizerOptions::enable_topk_aggregation": 841,
+      "`ExecutionPlan`": 126,
+      "`OrderedPartialAggregateStream`": 833,
+      "`SingleHashAggregateStream`": 838,
+      "datafusion_common::config::OptimizerOptions::repartition_aggregations": 836,
+      "`PartialHashAggregateStream`": 831,
+      "`OrderedFinalAggregateStream`": 834,
+      "datafusion_common::config::OptimizerOptions::enable_distinct_aggregation_soft_limit": 842,
+      "`PartialReduceHashAggregateStream`": 843,
+      "datafusion_common::config::ExecutionOptions::target_partitions": 835,
+      "`GroupedTopKAggregateStream`": 840,
+      "datafusion_common::config::OptimizerOptions::prefer_existing_sort": 837
+    },
+    "link_paths": {
+      "`AggregateStream`": null,
+      "`GroupedHashAggregateStream`": null,
+      "`FinalHashAggregateStream`": null,
+      "datafusion_common::config::OptimizerOptions::enable_topk_aggregation": "datafusion_common::config::OptimizerOptions::enable_topk_aggregation",
+      "`ExecutionPlan`": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "`OrderedPartialAggregateStream`": null,
+      "`SingleHashAggregateStream`": null,
+      "datafusion_common::config::OptimizerOptions::repartition_aggregations": "datafusion_common::config::OptimizerOptions::repartition_aggregations",
+      "`PartialHashAggregateStream`": null,
+      "`OrderedFinalAggregateStream`": null,
+      "datafusion_common::config::OptimizerOptions::enable_distinct_aggregation_soft_limit": "datafusion_common::config::OptimizerOptions::enable_distinct_aggregation_soft_limit",
+      "`PartialReduceHashAggregateStream`": null,
+      "datafusion_common::config::ExecutionOptions::target_partitions": "datafusion_common::config::ExecutionOptions::target_partitions",
+      "`GroupedTopKAggregateStream`": null,
+      "datafusion_common::config::OptimizerOptions::prefer_existing_sort": "datafusion_common::config::OptimizerOptions::prefer_existing_sort"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "845",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/datafusion_physical_plan.aggregates.md",
+    "record_file": "modules/datafusion_physical_plan.aggregates.json",
+    "anchor": "op-d4cc306244974d635bf8ea56",
+    "aliases": [],
+    "resolved_doc_links": {
+      "datafusion_common::config::OptimizerOptions::enable_topk_aggregation": "../operations/datafusion_common.config.OptimizerOptions.md#op-8fa5c63d916ac979d6706d0a",
+      "`ExecutionPlan`": "../operations/datafusion_physical_plan.execution_plan.ExecutionPlan.md#op-ac09436cd73f869917923673",
+      "datafusion_common::config::OptimizerOptions::repartition_aggregations": "../operations/datafusion_common.config.OptimizerOptions.md#op-ba1a89a998944c2e46d77a16",
+      "datafusion_common::config::OptimizerOptions::enable_distinct_aggregation_soft_limit": "../operations/datafusion_common.config.OptimizerOptions.md#op-5ab67707c8fceb8a72d24fb7",
+      "datafusion_common::config::ExecutionOptions::target_partitions": "../operations/datafusion_common.config.ExecutionOptions.md#op-46ada57ee69e97ba4665453c",
+      "datafusion_common::config::OptimizerOptions::prefer_existing_sort": "../operations/datafusion_common.config.OptimizerOptions.md#op-31096c6a01db3303f22d738e"
+    }
+  }
+]

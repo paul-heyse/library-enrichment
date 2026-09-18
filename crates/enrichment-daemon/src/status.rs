@@ -10,7 +10,6 @@
 //! `ok` means successful within the declared scope, and the scope here is "what is installed".
 
 use enrichment_core::config::Config;
-use enrichment_core::producer::{cratesio, rustdoc};
 use enrichment_core::wire::Envelope;
 use enrichment_core::wire::status::{
     EvidenceCounters, FetchCounters, LspMetrics, SingleFlightCounts, VerificationCounters,
@@ -19,28 +18,10 @@ use enrichment_core::wire::status::{
 use crate::envelope;
 use crate::service::Service;
 
-// The payload types live in `enrichment_core::wire::status`, not here. `data` is wire
-// surface, and §6.3 gives the core one authoritative definition from which the generated
-// schema and the Python DTOs are emitted; a status payload defined in the daemon would be the
-// one tool result the adapter cannot check against its own contract. What stays here is the
-// logic that decides what is true, which is a daemon concern.
+// Declarations and native plans own component availability. This adapter captures facts.
 pub use enrichment_core::wire::status::{
     ComponentStatus, Health, Sandbox, SchemaCompatibility, StatusData as ServiceStatus, Versions,
 };
-
-/// Report what this build can do without an open store: configuration only.
-///
-/// Used where no [`Service`] exists (the pre-start CLI path and unit tests). Every producer that
-/// needs the store reports absent here, because without a store it is.
-#[must_use]
-pub fn service_status() -> ServiceStatus {
-    // A configuration this daemon could not parse is surfaced rather than swallowed: reporting
-    // defaults as though they were the operator's settings is the failure this facet exists to
-    // avoid. `serve` refuses to start on a parse error, so reaching the fallback here means the
-    // file appeared or changed after startup.
-    let config = Config::from_env().unwrap_or_default();
-    from_config(&config)
-}
 
 /// Report status against a specific configuration, with no store open.
 #[must_use]
@@ -71,25 +52,12 @@ pub fn from_config(config: &Config) -> ServiceStatus {
                 .to_owned(),
             admitted_images: std::collections::BTreeMap::new(),
         },
-        producers: vec![
-            ComponentStatus::not_implemented("rustdoc-json", 1),
-            ComponentStatus {
-                name: "crates-io-registry".to_owned(),
-                available: false,
-                version: None,
-                detail: "requires an open evidence store; none is open in this process".to_owned(),
-            },
-            ComponentStatus::not_implemented("griffe", 2),
-            ComponentStatus::not_implemented("pypi-registry", 2),
-            ComponentStatus::not_implemented("rust-analyzer", 4),
-            ComponentStatus::not_implemented("ty", 4),
-        ],
-        features: vec![
-            ComponentStatus::not_implemented("evidence-search", 1),
-            ComponentStatus::not_implemented("release-comparison", 3),
-            ComponentStatus::not_implemented("usage-verification", 4),
-            ComponentStatus::not_implemented("jobs", 4),
-        ],
+        producers: enrichment_core::status_components::without_store(
+            enrichment_core::status_components::Kind::Producer,
+        ),
+        features: enrichment_core::status_components::without_store(
+            enrichment_core::status_components::Kind::Feature,
+        ),
         health: Health {
             queued_jobs: 0,
             running_jobs: 0,
@@ -128,177 +96,22 @@ pub async fn from_service(service: &Service) -> std::io::Result<ServiceStatus> {
         .admitted_images()
         .await
         .map_err(std::io::Error::other)?;
-    for producer in &mut status.producers {
-        if producer.name == "crates-io-registry" {
-            *producer = if cache_ready {
-                ComponentStatus::available(
-                    "crates-io-registry",
-                    cratesio::VERSION,
-                    "sparse index, version records and crate tarballs, stored as content-addressed \
-                     artifacts",
-                )
-            } else {
-                ComponentStatus {
-                    name: "crates-io-registry".to_owned(),
-                    available: false,
-                    version: None,
-                    detail: format!(
-                        "the data root {} is not writable",
-                        service.paths.data_root.display()
-                    ),
-                }
-            };
-        }
-    }
-    if cache_ready {
-        let formats: Vec<String> = rustdoc::SUPPORTED_FORMAT_VERSIONS
-            .iter()
-            .map(u32::to_string)
-            .collect();
-        for producer in &mut status.producers {
-            if producer.name == "pypi-registry" {
-                *producer = ComponentStatus::available(
-                    "pypi-registry",
-                    enrichment_core::producer::python::VERSION,
-                    "Exact distribution selection, bounded archive inspection and immutable snapshots",
-                );
-            }
-            if producer.name == "griffe" {
-                *producer = if service
-                    .python_worker_qualified
-                    .load(std::sync::atomic::Ordering::Relaxed)
-                {
-                    ComponentStatus::available(
-                        "griffe",
-                        "2.3.0",
-                        "Pinned static worker completed a validated job in this daemon process",
-                    )
-                } else {
-                    ComponentStatus {
-                        name: "griffe".into(),
-                        available: false,
-                        version: None,
-                        detail: format!(
-                            "Static adapter implemented; worker {} has not completed qualification in this daemon process",
-                            service.config.producers.python.worker_python.display()
-                        ),
-                    }
-                };
-            }
-            // A language server is available only when *its own* ecosystem's image is both
-            // configured and qualified. Qualification is per-image, so a service with a Python
-            // image and no Rust one can run ty and cannot run rust-analyzer -- and saying
-            // otherwise would advertise a capability that has no image to run in.
-            if producer.name == "ty" {
-                *producer = if status.sandbox.admitted_images.contains_key("python") {
-                    ComponentStatus::available(
-                        "ty",
-                        "0.0.80",
-                        "Typecheck probes run `ty check` in the admitted Python image, and the \
-                         explicit semantic execution in inspect_symbol uses a warm `ty server` session \
-                         against the same capsule.",
-                    )
-                } else {
-                    // The else branch is the point. Leaving the `from_config` default in place
-                    // told a caller "not implemented; scheduled for phase 4" about a component
-                    // that shipped -- pointing them at a phase instead of at the one recipe that
-                    // would make it available.
-                    ComponentStatus {
-                        name: "ty".into(),
-                        available: false,
-                        version: Some("0.0.80".into()),
-                        detail: format!(
-                            "ty probes and warm sessions are implemented, but no qualified Python \
-                             producer image is available: {}",
-                            qualification.detail
-                        ),
-                    }
-                };
-            }
-            if producer.name == "rust-analyzer" {
-                *producer = if status.sandbox.admitted_images.contains_key("rust") {
-                    ComponentStatus::available(
-                        "rust-analyzer",
-                        "1.98.1",
-                        "Explicit semantic execution in inspect_symbol uses a warm rust-analyzer \
-                         session in the admitted Rust image, with build scripts, proc macros \
-                         and check-on-save disabled.",
-                    )
-                } else {
-                    ComponentStatus {
-                        name: "rust-analyzer".into(),
-                        available: false,
-                        version: Some("1.98.1".into()),
-                        detail: format!(
-                            "Warm rust-analyzer sessions are implemented, but no qualified Rust \
-                             producer image is available: {}",
-                            qualification.detail
-                        ),
-                    }
-                };
-            }
-            if producer.name == "rustdoc-json" {
-                *producer = ComponentStatus::available(
-                    "rustdoc-json",
-                    rustdoc::NORMALIZER_VERSION,
-                    &format!(
-                        "hosted docs.rs rustdoc JSON in formats {}d to symbols, \
-                         relationships and fragments; signatures rendered by public-api {}",
-                        formats.join("/"),
-                        enrichment_core::producer::rustdoc::facts::PUBLIC_API_VERSION
-                    ),
-                );
-            }
-        }
-        for feature in &mut status.features {
-            if feature.name == "release-comparison" {
-                *feature = ComponentStatus::available(
-                    "release-comparison",
-                    "1",
-                    "Pinned API/document/configuration comparison with bounded output and confounders",
-                );
-            }
-            if feature.name == "jobs" {
-                *feature = ComponentStatus::available(
-                    "jobs",
-                    "1",
-                    "Durable journal, bounded queue, independent caller interests and restart interruption",
-                );
-            }
-            if feature.name == "usage-verification" {
-                *feature = if qualification.qualified {
-                    ComponentStatus::available(
-                        "usage-verification",
-                        "1",
-                        &format!(
-                            "Compile/typecheck/runtime probes in an admitted image; {}. Each \
-                             request still requires an operator-enabled build or runtime profile.",
-                            qualification.detail
-                        ),
-                    )
-                } else {
-                    ComponentStatus {
-                        name: "usage-verification".into(),
-                        available: false,
-                        version: Some("1".into()),
-                        detail: format!(
-                            "Compile/typecheck/runtime probes are implemented, but execution is \
-                             not qualified: {}",
-                            qualification.detail
-                        ),
-                    }
-                };
-            }
-            if feature.name == "evidence-search" {
-                *feature = ComponentStatus::available(
-                    "evidence-search",
-                    "1",
-                    "deterministic lexical ranking over a published snapshot, with recorded \
-                     score factors and checksummed cursors",
-                );
-            }
-        }
-    }
+    let components = enrichment_store::status_plan::components(
+        &service.repository.runtime,
+        enrichment_store::status_plan::Observations {
+            cache_ready,
+            worker_python: service.config.producers.python.worker_python.clone(),
+            python_worker_qualified: service
+                .python_worker_qualified
+                .load(std::sync::atomic::Ordering::Relaxed),
+            execution_routes: status.sandbox.execution_routes.clone(),
+            execution_detail: qualification.detail,
+        },
+    )
+    .await
+    .map_err(std::io::Error::other)?;
+    status.producers = components.producers;
+    status.features = components.features;
     let (queued, running) = service.jobs.counts().await?;
     status.health.queued_jobs = queued as u64;
     status.health.running_jobs = running as u64;
@@ -382,6 +195,7 @@ pub async fn status_envelope(service: &Service, component: Option<&str>) -> Enve
 
 #[cfg(test)]
 mod tests {
+    use enrichment_core::producer::{cratesio, rustdoc};
     use enrichment_store::StatePaths;
 
     use super::*;
@@ -391,7 +205,7 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let runtime =
             enrichment_store::runtime::QueryRuntime::new(root.path(), Default::default()).unwrap();
-        let input = service_status();
+        let input = from_config(&Config::default());
         let name = input.producers[0].name.clone();
         let selected = enrichment_store::status_plan::select(&runtime, input.clone(), Some(&name))
             .await
@@ -477,7 +291,10 @@ mod tests {
 
     #[tokio::test]
     async fn every_absent_producer_names_a_reason() {
-        for status in [service_status(), open_service().1.into_status().await] {
+        for status in [
+            from_config(&Config::default()),
+            open_service().1.into_status().await,
+        ] {
             assert!(!status.producers.is_empty());
             for producer in status.producers.iter().filter(|p| !p.available) {
                 assert!(
@@ -491,9 +308,12 @@ mod tests {
 
     #[test]
     fn the_cache_is_not_claimed_ready_without_an_open_store() {
-        assert!(!service_status().health.cache_ready);
+        assert!(!from_config(&Config::default()).health.cache_ready);
         assert!(
-            service_status().producers.iter().all(|p| !p.available),
+            from_config(&Config::default())
+                .producers
+                .iter()
+                .all(|p| !p.available),
             "without a store no producer can be available"
         );
     }
@@ -546,7 +366,7 @@ mod tests {
 
     #[test]
     fn the_emitted_schema_version_matches_the_core_constant() {
-        let status = service_status();
+        let status = from_config(&Config::default());
         assert_eq!(
             status.schema_compatibility.emits,
             enrichment_core::SCHEMA_VERSION

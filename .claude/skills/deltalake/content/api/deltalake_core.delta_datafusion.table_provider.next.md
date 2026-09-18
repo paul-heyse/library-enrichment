@@ -5,6 +5,7 @@ Crate `deltalake-core` · 5 public items · structured records in [`model/deltal
 ## MissingSelectedFilePolicy
 
 `enum` · `deltalake_core::delta_datafusion::table_provider::next::MissingSelectedFilePolicy`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.table_provider.next.MissingSelectedFilePolicy.md)
 
 Also reachable as `deltalake::delta_datafusion::MissingSelectedFilePolicy`, `deltalake_core::delta_datafusion::MissingSelectedFilePolicy`
 
@@ -37,6 +38,7 @@ Policy for selected files that are not active in a scan snapshot.
 ## SnapshotWrapper
 
 `enum` · `deltalake_core::delta_datafusion::table_provider::next::SnapshotWrapper`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.table_provider.next.SnapshotWrapper.md)
 
 ```rust
 enum SnapshotWrapper
@@ -74,6 +76,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## DeletionVectorSelection
 
 `struct` · `deltalake_core::delta_datafusion::table_provider::next::DeletionVectorSelection`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.table_provider.next.DeletionVectorSelection.md)
 
 Also reachable as `deltalake::delta_datafusion::DeletionVectorSelection`, `deltalake_core::delta_datafusion::DeletionVectorSelection`
 
@@ -92,6 +95,7 @@ Deletion vector selection for one data file.
 ## DeltaScan
 
 `struct` · `deltalake_core::delta_datafusion::table_provider::next::DeltaScan`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.table_provider.next.DeltaScan.md)
 
 Also reachable as `deltalake::delta_datafusion::DeltaScanNext`, `deltalake_core::delta_datafusion::DeltaScanNext`
 
@@ -150,6 +154,7 @@ aware file selection and the originating log store. It is the unit produced by
 ## FileSelection
 
 `struct` · `deltalake_core::delta_datafusion::table_provider::next::FileSelection`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.table_provider.next.FileSelection.md)
 
 Also reachable as `deltalake::delta_datafusion::FileSelection`, `deltalake_core::delta_datafusion::FileSelection`
 

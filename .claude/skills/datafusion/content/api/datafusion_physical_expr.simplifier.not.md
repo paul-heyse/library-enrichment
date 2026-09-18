@@ -12,6 +12,9 @@ Crate `datafusion-physical-expr` · 1 public items · structured records in [`mo
 fn simplify_not_expr(expr: std::sync::Arc<dyn PhysicalExpr>, schema: &arrow::datatypes::Schema) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<std::sync::Arc<dyn PhysicalExpr>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.simplifier.not.simplify_not_expr.md).
+
+
 Attempts to simplify NOT expressions by applying one level of transformation
 
 This function applies a single simplification rule and returns. When used with

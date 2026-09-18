@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::{self, Write};
 
 /// Conservative input/output limits independent of the query memory pool.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct WriteLimits {
     pub record_bytes: usize,
     pub batch_rows: usize,

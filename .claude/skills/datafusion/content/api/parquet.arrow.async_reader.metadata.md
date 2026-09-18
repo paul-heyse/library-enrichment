@@ -20,6 +20,9 @@ trait MetadataFetch
 fn fetch(&mut self, range: Range<u64>) -> BoxFuture<'_, Result<Bytes>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.async_reader.metadata.MetadataFetch.md).
+
+
  A data source that can be used with [`ParquetMetaDataReader`] to load [`ParquetMetaData`]
 
  Note that implementation is provided for [`AsyncFileReader`].
@@ -74,6 +77,9 @@ trait MetadataSuffixFetch: MetadataFetch
 ```rust
 fn fetch_suffix(&mut self, suffix: usize) -> BoxFuture<'_, Result<Bytes>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.async_reader.metadata.MetadataSuffixFetch.md).
+
 
 A data source that can be used with [`ParquetMetaDataReader`] to load [`ParquetMetaData`] via suffix
 requests, without knowing the file size

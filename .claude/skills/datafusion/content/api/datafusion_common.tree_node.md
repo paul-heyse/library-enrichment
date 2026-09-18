@@ -22,6 +22,9 @@ fn visit_parent<F: FnOnce() -> Result<TreeNodeRecursion>>(self, f: F) -> Result<
 fn visit_sibling<F: FnOnce() -> Result<TreeNodeRecursion>>(self, f: F) -> Result<TreeNodeRecursion>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.tree_node.TreeNodeRecursion.md).
+
+
 Controls how [`TreeNode`] recursions should proceed.
 
 ---
@@ -53,6 +56,9 @@ fn transform_sibling<F: FnOnce(T) -> Result<Transformed<T>>>(self, f: F) -> Resu
 fn update_data<U, F: FnOnce(T) -> U>(self, f: F) -> Transformed<U>
 fn yes(data: T) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.tree_node.Transformed.md).
+
 
 Result of tree walk / transformation APIs
 
@@ -160,6 +166,9 @@ fn take_children(self) -> (Self, Vec<Self>)
 fn with_new_children(self, children: Vec<Self>) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.tree_node.ConcreteTreeNode.md).
+
+
 Instead of implementing [`TreeNode`], it's recommended to implement a [`ConcreteTreeNode`] for
 trees that contain nodes with payloads. This approach ensures safe execution of algorithms
 involving payloads, by enforcing rules for detaching and reattaching child nodes.
@@ -180,6 +189,9 @@ trait DynTreeNode
 fn arc_children(&self) -> Vec<&Arc<Self>>
 fn with_new_arc_children(&self, arc_self: Arc<Self>, new_children: Vec<Arc<Self>>) -> Result<Arc<Self>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.tree_node.DynTreeNode.md).
+
 
 Helper trait for implementing [`TreeNode`] that have children stored as
 `Arc`s. If some trait object, such as `dyn T`, implements this trait,
@@ -206,6 +218,9 @@ fn data(self) -> Result<T>
 fn tnr(self) -> Result<TreeNodeRecursion>
 fn transformed(self) -> Result<bool>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.tree_node.TransformedResult.md).
+
 
 Transformation helper to access [`Transformed`] fields in a [`Result`] easily.
 
@@ -255,6 +270,9 @@ fn transform_down_up<FD: FnMut(Self) -> Result<Transformed<Self>>, FU: FnMut(Sel
 fn transform_up<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>
 fn visit<'n, V: TreeNodeVisitor<'n, Node = Self>>(&'n self, visitor: &mut V) -> Result<TreeNodeRecursion>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.tree_node.TreeNode.md).
+
 
 API for inspecting and rewriting tree data structures.
 
@@ -348,6 +366,9 @@ fn apply_elements<F: FnMut(&'a T) -> Result<TreeNodeRecursion>>(&'a self, f: F) 
 fn map_elements<F: FnMut(T) -> Result<Transformed<T>>>(self, f: F) -> Result<Transformed<Self>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.tree_node.TreeNodeContainer.md).
+
+
 [`TreeNodeContainer`] contains elements that a function can be applied on or mapped.
 The elements of the container are siblings so the continuation rules are similar to
 [`TreeNodeRecursion::visit_sibling`] / [`Transformed::transform_sibling`].
@@ -368,6 +389,9 @@ trait TreeNodeIterator: Iterator
 fn apply_until_stop<F: FnMut(Self::Item) -> Result<TreeNodeRecursion>>(self, f: F) -> Result<TreeNodeRecursion>
 fn map_until_stop_and_collect<F: FnMut(Self::Item) -> Result<Transformed<Self::Item>>>(self, f: F) -> Result<Transformed<Vec<Self::Item>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.tree_node.TreeNodeIterator.md).
+
 
 Transformation helper to process a sequence of iterable tree nodes that are siblings.
 
@@ -390,6 +414,9 @@ trait TreeNodeRefContainer<'a, T: 'a>: Sized
 ```rust
 fn apply_ref_elements<F: FnMut(&'a T) -> Result<TreeNodeRecursion>>(&self, f: F) -> Result<TreeNodeRecursion>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.tree_node.TreeNodeRefContainer.md).
+
 
 [`TreeNodeRefContainer`] contains references to elements that a function can be
 applied on. The elements of the container are siblings so the continuation rules are
@@ -431,6 +458,9 @@ trait TreeNodeRewriter: Sized
 fn f_down(&mut self, node: Self::Node) -> Result<Transformed<Self::Node>>
 fn f_up(&mut self, node: Self::Node) -> Result<Transformed<Self::Node>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.tree_node.TreeNodeRewriter.md).
+
 
 A [Visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for recursively
 rewriting [`TreeNode`]s via [`TreeNode::rewrite`].
@@ -478,6 +508,9 @@ trait TreeNodeVisitor<'n>: Sized
 fn f_down(&mut self, _node: &'n Self::Node) -> Result<TreeNodeRecursion>
 fn f_up(&mut self, _node: &'n Self::Node) -> Result<TreeNodeRecursion>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.tree_node.TreeNodeVisitor.md).
+
 
 A [Visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for recursively
 inspecting [`TreeNode`]s via [`TreeNode::visit`].

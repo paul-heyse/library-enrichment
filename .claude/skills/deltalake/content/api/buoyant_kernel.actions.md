@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 37 public items · structured records in [`model/buoya
 ## ADD_NAME
 
 `constant` · `buoyant_kernel::actions::ADD_NAME`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.ADD_NAME.md)
 
 Also reachable as `delta_kernel::actions::ADD_NAME`
 
@@ -17,6 +18,7 @@ const ADD_NAME: &str = "add"
 ## CDC_NAME
 
 `constant` · `buoyant_kernel::actions::CDC_NAME`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.CDC_NAME.md)
 
 Also reachable as `delta_kernel::actions::CDC_NAME`
 
@@ -29,6 +31,7 @@ const CDC_NAME: &str = "cdc"
 ## CHECKPOINT_METADATA_NAME
 
 `constant` · `buoyant_kernel::actions::CHECKPOINT_METADATA_NAME`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.CHECKPOINT_METADATA_NAME.md)
 
 Also reachable as `delta_kernel::actions::CHECKPOINT_METADATA_NAME`
 
@@ -41,6 +44,7 @@ const CHECKPOINT_METADATA_NAME: &str = "checkpointMetadata"
 ## COMMIT_INFO_NAME
 
 `constant` · `buoyant_kernel::actions::COMMIT_INFO_NAME`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.COMMIT_INFO_NAME.md)
 
 Also reachable as `delta_kernel::actions::COMMIT_INFO_NAME`
 
@@ -53,6 +57,7 @@ const COMMIT_INFO_NAME: &str = "commitInfo"
 ## DOMAIN_METADATA_NAME
 
 `constant` · `buoyant_kernel::actions::DOMAIN_METADATA_NAME`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.DOMAIN_METADATA_NAME.md)
 
 Also reachable as `delta_kernel::actions::DOMAIN_METADATA_NAME`
 
@@ -65,6 +70,7 @@ const DOMAIN_METADATA_NAME: &str = "domainMetadata"
 ## MAX_VALUES
 
 `constant` · `buoyant_kernel::actions::MAX_VALUES`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.MAX_VALUES.md)
 
 Also reachable as `delta_kernel::actions::MAX_VALUES`
 
@@ -79,6 +85,7 @@ Per-column upper bounds, as a nested struct mirroring the table schema.
 ## METADATA_NAME
 
 `constant` · `buoyant_kernel::actions::METADATA_NAME`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.METADATA_NAME.md)
 
 Also reachable as `delta_kernel::actions::METADATA_NAME`
 
@@ -91,6 +98,7 @@ const METADATA_NAME: &str = "metaData"
 ## MIN_VALUES
 
 `constant` · `buoyant_kernel::actions::MIN_VALUES`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.MIN_VALUES.md)
 
 Also reachable as `delta_kernel::actions::MIN_VALUES`
 
@@ -105,6 +113,7 @@ Per-column lower bounds, as a nested struct mirroring the table schema.
 ## NULL_COUNT
 
 `constant` · `buoyant_kernel::actions::NULL_COUNT`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.NULL_COUNT.md)
 
 Also reachable as `delta_kernel::actions::NULL_COUNT`
 
@@ -119,6 +128,7 @@ Per-column null counts, as a nested struct mirroring the table schema.
 ## NUM_RECORDS
 
 `constant` · `buoyant_kernel::actions::NUM_RECORDS`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.NUM_RECORDS.md)
 
 Also reachable as `delta_kernel::actions::NUM_RECORDS`
 
@@ -133,6 +143,7 @@ Logical (post-DV) row count, stored as a `long`.
 ## PROTOCOL_NAME
 
 `constant` · `buoyant_kernel::actions::PROTOCOL_NAME`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.PROTOCOL_NAME.md)
 
 Also reachable as `delta_kernel::actions::PROTOCOL_NAME`
 
@@ -145,6 +156,7 @@ const PROTOCOL_NAME: &str = "protocol"
 ## REMOVE_NAME
 
 `constant` · `buoyant_kernel::actions::REMOVE_NAME`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.REMOVE_NAME.md)
 
 Also reachable as `delta_kernel::actions::REMOVE_NAME`
 
@@ -157,6 +169,7 @@ const REMOVE_NAME: &str = "remove"
 ## SET_TRANSACTION_NAME
 
 `constant` · `buoyant_kernel::actions::SET_TRANSACTION_NAME`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.SET_TRANSACTION_NAME.md)
 
 Also reachable as `delta_kernel::actions::SET_TRANSACTION_NAME`
 
@@ -169,6 +182,7 @@ const SET_TRANSACTION_NAME: &str = "txn"
 ## SIDECAR_NAME
 
 `constant` · `buoyant_kernel::actions::SIDECAR_NAME`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.SIDECAR_NAME.md)
 
 Also reachable as `delta_kernel::actions::SIDECAR_NAME`
 
@@ -181,6 +195,7 @@ const SIDECAR_NAME: &str = "sidecar"
 ## STATS_PARSED
 
 `constant` · `buoyant_kernel::actions::STATS_PARSED`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.STATS_PARSED.md)
 
 Also reachable as `delta_kernel::actions::STATS_PARSED`
 
@@ -195,6 +210,7 @@ Struct-encoded per-file statistics column (checkpoints with `writeStatsAsStruct=
 ## TIGHT_BOUNDS
 
 `constant` · `buoyant_kernel::actions::TIGHT_BOUNDS`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.TIGHT_BOUNDS.md)
 
 Also reachable as `delta_kernel::actions::TIGHT_BOUNDS`
 
@@ -209,6 +225,7 @@ Whether the min/max/nullCount stats are tight or wide. Defaults to `true` when a
 ## get_all_actions_schema
 
 `function` · `buoyant_kernel::actions::get_all_actions_schema`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.get_all_actions_schema.md)
 
 Also reachable as `delta_kernel::actions::get_all_actions_schema`
 
@@ -223,6 +240,7 @@ Gets a schema for all actions defined by the delta spec.
 ## get_commit_schema
 
 `function` · `buoyant_kernel::actions::get_commit_schema`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.get_commit_schema.md)
 
 Also reachable as `delta_kernel::actions::get_commit_schema`
 
@@ -238,6 +256,7 @@ logs.  This excludes actions that can only appear in checkpoints.
 ## schema_contains_file_actions
 
 `function` · `buoyant_kernel::actions::schema_contains_file_actions`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.schema_contains_file_actions.md)
 
 Also reachable as `delta_kernel::actions::schema_contains_file_actions`
 
@@ -253,6 +272,7 @@ columns.
 ## LOG_ADD_SCHEMA
 
 `static` · `buoyant_kernel::actions::LOG_ADD_SCHEMA`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.LOG_ADD_SCHEMA.md)
 
 Also reachable as `delta_kernel::actions::LOG_ADD_SCHEMA`
 
@@ -268,6 +288,7 @@ Wraps the Add action schema in a top-level struct with "add" field name.
 ## LOG_COMMIT_INFO_SCHEMA
 
 `static` · `buoyant_kernel::actions::LOG_COMMIT_INFO_SCHEMA`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.LOG_COMMIT_INFO_SCHEMA.md)
 
 Also reachable as `delta_kernel::actions::LOG_COMMIT_INFO_SCHEMA`
 
@@ -283,6 +304,7 @@ Wraps the CommitInfo schema in a top-level struct with "commitInfo" field name.
 ## LOG_DOMAIN_METADATA_SCHEMA
 
 `static` · `buoyant_kernel::actions::LOG_DOMAIN_METADATA_SCHEMA`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.LOG_DOMAIN_METADATA_SCHEMA.md)
 
 Also reachable as `delta_kernel::actions::LOG_DOMAIN_METADATA_SCHEMA`
 
@@ -295,6 +317,7 @@ static LOG_DOMAIN_METADATA_SCHEMA: std::sync::LazyLock<schema::SchemaRef>
 ## LOG_METADATA_SCHEMA
 
 `static` · `buoyant_kernel::actions::LOG_METADATA_SCHEMA`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.LOG_METADATA_SCHEMA.md)
 
 Also reachable as `delta_kernel::actions::LOG_METADATA_SCHEMA`
 
@@ -307,6 +330,7 @@ static LOG_METADATA_SCHEMA: std::sync::LazyLock<schema::SchemaRef>
 ## LOG_PROTOCOL_SCHEMA
 
 `static` · `buoyant_kernel::actions::LOG_PROTOCOL_SCHEMA`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.LOG_PROTOCOL_SCHEMA.md)
 
 Also reachable as `delta_kernel::actions::LOG_PROTOCOL_SCHEMA`
 
@@ -319,6 +343,7 @@ static LOG_PROTOCOL_SCHEMA: std::sync::LazyLock<schema::SchemaRef>
 ## LOG_REMOVE_SCHEMA
 
 `static` · `buoyant_kernel::actions::LOG_REMOVE_SCHEMA`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.LOG_REMOVE_SCHEMA.md)
 
 Also reachable as `delta_kernel::actions::LOG_REMOVE_SCHEMA`
 
@@ -334,6 +359,7 @@ Wraps the Remove action schema in a top-level struct with "remove" field name.
 ## LOG_TXN_SCHEMA
 
 `static` · `buoyant_kernel::actions::LOG_TXN_SCHEMA`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.LOG_TXN_SCHEMA.md)
 
 Also reachable as `delta_kernel::actions::LOG_TXN_SCHEMA`
 
@@ -349,6 +375,7 @@ Wraps the SetTransaction schema in a top-level struct with "txn" field name.
 ## Add
 
 `struct` · `buoyant_kernel::actions::Add`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.Add.md)
 
 Also reachable as `delta_kernel::actions::Add`
 
@@ -379,6 +406,7 @@ fn to_schema() -> delta_kernel::schema::StructType
 ## Cdc
 
 `struct` · `buoyant_kernel::actions::Cdc`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.Cdc.md)
 
 Also reachable as `delta_kernel::actions::Cdc`
 
@@ -403,6 +431,7 @@ fn to_schema() -> delta_kernel::schema::StructType
 ## CheckpointMetadata
 
 `struct` · `buoyant_kernel::actions::CheckpointMetadata`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.CheckpointMetadata.md)
 
 Also reachable as `delta_kernel::actions::CheckpointMetadata`
 
@@ -442,6 +471,7 @@ specification.
 ## CommitInfo
 
 `struct` · `buoyant_kernel::actions::CommitInfo`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.CommitInfo.md)
 
 Also reachable as `delta_kernel::actions::CommitInfo`
 
@@ -470,6 +500,7 @@ fn to_schema() -> delta_kernel::schema::StructType
 ## DomainMetadata
 
 `struct` · `buoyant_kernel::actions::DomainMetadata`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.DomainMetadata.md)
 
 Also reachable as `delta_kernel::actions::DomainMetadata`
 
@@ -532,6 +563,7 @@ Note that the `delta.*` domain is reserved for internal use.
 ## Format
 
 `struct` · `buoyant_kernel::actions::Format`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.Format.md)
 
 Also reachable as `delta_kernel::actions::Format`
 
@@ -566,6 +598,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## Metadata
 
 `struct` · `buoyant_kernel::actions::Metadata`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.Metadata.md)
 
 Also reachable as `delta_kernel::actions::Metadata`, `deltalake::kernel::Metadata`, `deltalake::kernel::models::Metadata`, `deltalake_core::kernel::Metadata`, `deltalake_core::kernel::models::Metadata`
 
@@ -623,6 +656,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## Protocol
 
 `struct` · `buoyant_kernel::actions::Protocol`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.Protocol.md)
 
 Also reachable as `delta_kernel::actions::Protocol`, `deltalake::kernel::Protocol`, `deltalake::kernel::models::Protocol`, `deltalake_core::kernel::Protocol`, `deltalake_core::kernel::models::Protocol`
 
@@ -672,6 +706,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## Remove
 
 `struct` · `buoyant_kernel::actions::Remove`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.Remove.md)
 
 Also reachable as `delta_kernel::actions::Remove`
 
@@ -696,6 +731,7 @@ fn to_schema() -> delta_kernel::schema::StructType
 ## SetTransaction
 
 `struct` · `buoyant_kernel::actions::SetTransaction`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.SetTransaction.md)
 
 Also reachable as `delta_kernel::actions::SetTransaction`
 
@@ -736,6 +772,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## Sidecar
 
 `struct` · `buoyant_kernel::actions::Sidecar`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.Sidecar.md)
 
 Also reachable as `delta_kernel::actions::Sidecar`
 

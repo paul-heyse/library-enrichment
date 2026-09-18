@@ -1,0 +1,11 @@
+id: native-retained-validation-owner
+valid:
+  - 'runtime.blocking(move || { read_owned(input) }).await'
+  - 'snapshot_validation::manifest(runtime, session, manifest, limits).await'
+  - 'match outcome { Ok(value) => value, Err(error) => return Err(error) }'
+invalid:
+  - 'tokio::task::spawn_blocking(move || read(input)).await'
+  - 'let mut text_cache = BTreeMap::new();'
+  - 'let mut seen_deliveries = BTreeSet::new();'
+  - 'delivery_bytes = delivery_bytes.checked_add(bytes)?;'
+  - 'match observation.payload { ExecutionPayload::SemanticQuery(query) => query.document, _ => "" }'

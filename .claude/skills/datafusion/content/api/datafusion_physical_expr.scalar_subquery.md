@@ -43,6 +43,9 @@ fn try_to_proto(&self, _ctx: &datafusion_physical_expr_common::physical_expr::pr
 fn with_new_children(Arc<self>, _children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.scalar_subquery.ScalarSubqueryExpr.md).
+
+
 A physical expression whose value is provided by a scalar subquery.
 
 Subquery execution is handled by `ScalarSubqueryExec`, which stores the

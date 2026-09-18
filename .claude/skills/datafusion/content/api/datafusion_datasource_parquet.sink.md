@@ -54,6 +54,9 @@ async fn write_all(&self, data: SendableRecordBatchStream, context: &Arc<TaskCon
 fn fmt_as(&self, t: DisplayFormatType, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.sink.ParquetSink.md).
+
+
 Implements [`DataSink`] for writing to a parquet file.
 
 ---

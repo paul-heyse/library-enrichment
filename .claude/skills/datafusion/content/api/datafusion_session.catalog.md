@@ -24,6 +24,9 @@ fn catalog_names(&self) -> Vec<String>
 fn register_catalog(&self, _name: String, _catalog: Arc<dyn CatalogProvider>) -> Option<Arc<dyn CatalogProvider>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_session.catalog.EmptyCatalogProviderList.md).
+
+
 A catalog list that contains no catalogs.
 
 [`Session`](crate::Session) implementations that do not provide catalog
@@ -55,6 +58,9 @@ fn register_schema(&self, name: &str, schema: Arc<dyn SchemaProvider>) -> Result
 fn schema(&self, name: &str) -> Option<Arc<dyn SchemaProvider>>
 fn schema_names(&self) -> Vec<String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_session.catalog.CatalogProvider.md).
+
 
 Represents a catalog, comprising a number of named schemas.
 
@@ -166,6 +172,9 @@ fn catalog(&self, name: &str) -> Option<Arc<dyn CatalogProvider>>
 fn catalog_names(&self) -> Vec<String>
 fn register_catalog(&self, name: String, catalog: Arc<dyn CatalogProvider>) -> Option<Arc<dyn CatalogProvider>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_session.catalog.CatalogProviderList.md).
+
 
 Represent a list of named [`CatalogProvider`]s.
 

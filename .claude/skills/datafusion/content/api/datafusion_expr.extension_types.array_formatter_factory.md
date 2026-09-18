@@ -26,6 +26,9 @@ fn new(registry: ExtensionTypeRegistryRef) -> Self
 fn create_array_formatter<'formatter>(&self, array: &'formatter dyn Array, options: &FormatOptions<'formatter>, field: Option<&'formatter Field>) -> Result<Option<ArrayFormatter<'formatter>>, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.extension_types.array_formatter_factory.DFArrayFormatterFactory.md).
+
+
 A factory for creating [`ArrayFormatter`]s that checks whether a registered extension type can
 format a given array based on its metadata.
 

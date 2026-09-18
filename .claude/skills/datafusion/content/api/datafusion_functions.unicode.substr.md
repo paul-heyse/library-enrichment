@@ -10,6 +10,9 @@ Crate `datafusion-functions` · 3 public items · structured records in [`model/
 fn enable_ascii_fast_path<'a, V: StringArrayType<'a>>(string_array: &V, start: &arrow::array::Int64Array, count: Option<&arrow::array::Int64Array>) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.substr.enable_ascii_fast_path.md).
+
+
 ---
 
 ## get_true_start_end
@@ -19,6 +22,9 @@ fn enable_ascii_fast_path<'a, V: StringArrayType<'a>>(string_array: &V, start: &
 ```rust
 fn get_true_start_end(input: &str, start: i64, count: Option<i64>, is_input_ascii_only: bool) -> datafusion_common::Result<(usize, usize)>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.substr.get_true_start_end.md).
+
 
 Convert the given `start` and `count` to valid byte indices within `input` string.
 
@@ -67,5 +73,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.substr.SubstrFunc.md).
+
 
 ---

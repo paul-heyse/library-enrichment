@@ -32,4 +32,7 @@ fn signature(&self) -> &Signature
 fn simplify(&self, args: Vec<Expr>, _info: &SimplifyContext) -> Result<ExprSimplifyResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.concat.ConcatFunc.md).
+
+
 ---

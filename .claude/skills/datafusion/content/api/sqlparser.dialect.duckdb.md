@@ -56,6 +56,9 @@ fn supports_select_wildcard_replace(&self) -> bool
 fn supports_trailing_commas(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.duckdb.DuckDbDialect.md).
+
+
 A [`Dialect`] for [DuckDB](https://duckdb.org/)
 
 ---

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## FileSizeHistogram
 
 `struct` · `buoyant_kernel::crc::file_size_histogram::FileSizeHistogram`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.crc.file_size_histogram.FileSizeHistogram.md)
 
 Also reachable as `buoyant_kernel::FileSizeHistogram`, `buoyant_kernel::crc::FileSizeHistogram`, `delta_kernel::crc::file_size_histogram::FileSizeHistogram`
 

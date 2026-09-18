@@ -14,6 +14,9 @@ enum ExprSimplifyResult
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.simplify.ExprSimplifyResult.md).
+
+
 Was the expression simplified?
 
 ---
@@ -46,6 +49,9 @@ fn with_query_execution_start_time(self, query_execution_start_time: Option<Date
 fn with_schema(self, schema: DFSchemaRef) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.simplify.SimplifyContext.md).
+
+
 Provides simplification information based on schema, query execution time,
 and configuration options.
 
@@ -75,6 +81,9 @@ fn with_current_time(self) -> Self
 fn with_query_execution_start_time(self, query_execution_start_time: Option<DateTime<Utc>>) -> Self
 fn with_schema(self, schema: DFSchemaRef) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.simplify.SimplifyContextBuilder.md).
+
 
 Builder for [`SimplifyContext`].
 

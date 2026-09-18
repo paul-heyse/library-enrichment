@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## ExpectedStatsSchemas
 
 `struct` · `buoyant_kernel::table_configuration::ExpectedStatsSchemas`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_configuration.ExpectedStatsSchemas.md)
 
 Also reachable as `delta_kernel::table_configuration::ExpectedStatsSchemas`
 
@@ -25,6 +26,7 @@ Wrapped in a struct so it can be extended with a logical-name variant if needed.
 ## TableConfiguration
 
 `struct` · `buoyant_kernel::table_configuration::TableConfiguration`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_configuration.TableConfiguration.md)
 
 Also reachable as `delta_kernel::table_configuration::TableConfiguration`
 

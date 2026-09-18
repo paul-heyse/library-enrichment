@@ -12,6 +12,9 @@ Also reachable as `datafusion::datasource::physical_plan::csv::plan_to_csv`
 async fn plan_to_csv(task_ctx: std::sync::Arc<datafusion_execution::TaskContext>, plan: std::sync::Arc<dyn ExecutionPlan>, path: impl AsRef<str>) -> datafusion_common::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_csv.source.plan_to_csv.md).
+
+
 ---
 
 ## CsvOpener
@@ -37,6 +40,9 @@ fn new(config: Arc<CsvSource>, file_compression_type: FileCompressionType, objec
 ```rust
 fn open(&self, partitioned_file: PartitionedFile) -> Result<FileOpenFuture>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_csv.source.CsvOpener.md).
+
 
 A [`FileOpener`] that opens a CSV file and yields a [`FileOpenFuture`]
 
@@ -91,6 +97,9 @@ fn try_pushdown_projection(&self, projection: &ProjectionExprs) -> Result<Option
 fn try_to_proto(&self, base: &FileScanConfig, ctx: &datafusion_physical_plan::proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>
 fn with_batch_size(&self, batch_size: usize) -> Arc<dyn FileSource>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_csv.source.CsvSource.md).
+
 
 A Config for [`CsvOpener`]
 

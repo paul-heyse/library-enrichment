@@ -40,6 +40,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.helpers.key_value_options.KeyValueOptionKind.md).
+
+
 An option can have a single value, multiple values or a nested list of values.
 
 A value can be numeric, boolean, etc. Enum-style values are represented
@@ -86,6 +89,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.helpers.key_value_options.KeyValueOptionsDelimiter.md).
+
 
 The delimiter used between key-value options.
 
@@ -135,6 +141,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.helpers.key_value_options.KeyValueOption.md).
+
+
 A single key-value option.
 
 ---
@@ -182,6 +191,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.helpers.key_value_options.KeyValueOptions.md).
+
 
 A collection of key-value options.
 

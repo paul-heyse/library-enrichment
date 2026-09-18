@@ -31,4 +31,7 @@ fn return_type(&self, arg_types: &[DataType]) -> datafusion_common::Result<DataT
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.input_file_name.InputFileNameFunc.md).
+
+
 ---

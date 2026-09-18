@@ -61,6 +61,9 @@ fn supports_string_literal_backslash_escape(&self) -> bool
 fn supports_with_fill(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.clickhouse.ClickHouseDialect.md).
+
+
 A [`Dialect`] for [ClickHouse](https://clickhouse.com/).
 
 ---

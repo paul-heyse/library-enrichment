@@ -19,6 +19,13 @@ def bindings() -> dict[str, dict[str, Any]]:
     return {entry["name"]: entry for entry in schema["x-enrichment-operations"]}
 
 
+@cache
+def resources() -> list[dict[str, Any]]:
+    """Load resource registrations projected from the native operation contracts."""
+    schema = json.loads(SCHEMA_PATH.with_name("request.schema.json").read_text())
+    return schema["x-enrichment-resources"]
+
+
 def output_schema(tool: str) -> dict[str, Any]:
     """The daemon's generated response contract, including all native conditional rules."""
     return bindings()[tool]["output_schema"]

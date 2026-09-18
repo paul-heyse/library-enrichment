@@ -29,7 +29,7 @@ pub struct EvidenceRows {
     pub input_artifacts: Vec<InputArtifact>,
     pub coverage: Vec<CoverageFact>,
     pub release_metadata: Vec<enrichment_core::evidence::metadata::ReleaseMetadata>,
-    pub attempt_artifacts: BTreeMap<String, Vec<Artifact>>,
+    pub attempt_artifacts: BTreeMap<enrichment_core::identity::AttemptId, Vec<Artifact>>,
 }
 
 impl EvidenceRows {
@@ -176,7 +176,11 @@ pub fn normalize(context: IngestContext, input: DocumentBatch) -> Result<Evidenc
                 context,
                 input,
                 None,
-                root.path(),
+                &enrichment_store::retention::RetentionStore::new(
+                    enrichment_store::control::ControlStore::open(root.path(), runtime.clone())
+                        .map_err(|e| e.to_string())?,
+                    runtime.clone(),
+                ),
                 &runtime,
                 &limits,
             )

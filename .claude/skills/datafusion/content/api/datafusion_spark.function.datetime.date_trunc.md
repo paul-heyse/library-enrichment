@@ -31,6 +31,9 @@ fn signature(&self) -> &Signature
 fn simplify(&self, args: Vec<Expr>, info: &SimplifyContext) -> Result<ExprSimplifyResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.date_trunc.SparkDateTrunc.md).
+
+
 Spark date_trunc supports extra format aliases.
 It also handles timestamps with timezones by converting to session timezone first.
 <https://spark.apache.org/docs/latest/api/sql/index.html#date_trunc>

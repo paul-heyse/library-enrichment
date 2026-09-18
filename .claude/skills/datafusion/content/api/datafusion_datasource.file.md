@@ -12,6 +12,9 @@ Also reachable as `datafusion_datasource::as_file_source`
 fn as_file_source<T: FileSource + 'static>(source: T) -> std::sync::Arc<dyn FileSource>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file.as_file_source.md).
+
+
 Helper function to convert any type implementing [`FileSource`] to `Arc<dyn FileSource>`
 
 ---
@@ -58,6 +61,9 @@ fn try_to_proto(&self, _base: &FileScanConfig, _ctx: &datafusion_physical_plan::
 fn with_batch_size(&self, batch_size: usize) -> Arc<dyn FileSource>
 fn with_schema_adapter_factory(&self, _factory: Arc<dyn SchemaAdapterFactory>) -> Result<Arc<dyn FileSource>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file.FileSource.md).
+
 
 File format specific behaviors for [`DataSource`]
 

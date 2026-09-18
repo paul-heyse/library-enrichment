@@ -25,6 +25,9 @@ fn map<U, F: FnOnce(T) -> U>(self, f: F) -> SortOrderPushdownResult<U>
 fn try_map<U, E, F: FnOnce(T) -> Result<U, E>>(self, f: F) -> Result<SortOrderPushdownResult<U>, E>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.sort_pushdown.SortOrderPushdownResult.md).
+
+
 Result of attempting to push down sort ordering to a node.
 
 Used by [`ExecutionPlan::try_pushdown_sort`] to communicate

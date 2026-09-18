@@ -10,4 +10,7 @@ Crate `datafusion-substrait` · 1 public items · structured records in [`model/
 fn from_placeholder(producer: &mut impl SubstraitProducer, placeholder: &datafusion::logical_expr::expr::Placeholder) -> datafusion::common::Result<substrait::proto::Expression>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.placeholder.from_placeholder.md).
+
+
 ---

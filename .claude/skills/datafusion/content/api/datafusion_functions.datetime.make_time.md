@@ -30,4 +30,7 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.make_time.MakeTimeFunc.md).
+
+
 ---

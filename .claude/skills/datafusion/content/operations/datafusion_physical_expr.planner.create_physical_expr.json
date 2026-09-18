@@ -1,0 +1,203 @@
+[
+  {
+    "id": "b01a3449753ecee1419f6104",
+    "path": "datafusion_physical_expr::planner::create_physical_expr",
+    "name": "create_physical_expr",
+    "owner": null,
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn create_physical_expr(e: &datafusion_expr::Expr, input_dfschema: &datafusion_common::DFSchema, execution_props: &datafusion_expr::execution_props::ExecutionProps, planning_ctx: &datafusion_expr::physical_planning_context::PhysicalPlanningContext) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>",
+    "docs": "[PhysicalExpr] evaluate DataFusion expressions such as `A + 1`, or `CAST(c1\nAS int)`.\n\n[PhysicalExpr] are the physical counterpart to [Expr] used in logical\nplanning, and can be evaluated directly on a [RecordBatch]. They are\nnormally created from [Expr] by a [PhysicalPlanner] and can be created\ndirectly using [create_physical_expr].\n\nA Physical expression knows its type, nullability and how to evaluate itself.\n\n[PhysicalPlanner]: https://docs.rs/datafusion/latest/datafusion/physical_planner/trait.PhysicalPlanner.html\n[RecordBatch]: https://docs.rs/arrow/latest/arrow/record_batch/struct.RecordBatch.html\n\n# Example: Create `PhysicalExpr` from `Expr`\n```\n# use arrow::datatypes::{DataType, Field, Schema};\n# use datafusion_common::DFSchema;\n# use datafusion_expr::{Expr, col, lit};\n# use datafusion_physical_expr::create_physical_expr;\n# use datafusion_expr::execution_props::ExecutionProps;\n# use datafusion_expr::physical_planning_context::PhysicalPlanningContext;\n// For a logical expression `a = 1`, we can create a physical expression\nlet expr = col(\"a\").eq(lit(1));\n// To create a PhysicalExpr we need 1. a schema\nlet schema = Schema::new(vec![Field::new(\"a\", DataType::Int32, true)]);\nlet df_schema = DFSchema::try_from(schema).unwrap();\n// 2. ExecutionProps\nlet props = ExecutionProps::new();\n// We can now create a PhysicalExpr. Expressions with no scalar\n// subqueries use an empty `PhysicalPlanningContext`:\nlet physical_expr =\n    create_physical_expr(&expr, &df_schema, &props, &PhysicalPlanningContext::default())\n        .unwrap();\n```\n\n# Example: Executing a PhysicalExpr to obtain [ColumnarValue]\n```\n# use std::sync::Arc;\n# use arrow::array::{cast::AsArray, BooleanArray, Int32Array, RecordBatch};\n# use arrow::datatypes::{DataType, Field, Schema};\n# use datafusion_common::{assert_batches_eq, DFSchema};\n# use datafusion_expr::{Expr, col, lit, ColumnarValue};\n# use datafusion_physical_expr::create_physical_expr;\n# use datafusion_expr::execution_props::ExecutionProps;\n# use datafusion_expr::physical_planning_context::PhysicalPlanningContext;\n# let expr = col(\"a\").eq(lit(1));\n# let schema = Schema::new(vec![Field::new(\"a\", DataType::Int32, true)]);\n# let df_schema = DFSchema::try_from(schema.clone()).unwrap();\n# let props = ExecutionProps::new();\n// Given a PhysicalExpr, for `a = 1` we can evaluate it against a RecordBatch like this:\nlet physical_expr =\n    create_physical_expr(&expr, &df_schema, &props, &PhysicalPlanningContext::default())\n        .unwrap();\n// Input of [1,2,3]\nlet input_batch = RecordBatch::try_from_iter(vec![\n  (\"a\", Arc::new(Int32Array::from(vec![1, 2, 3])) as _)\n]).unwrap();\n// The result is a ColumnarValue (either an Array or a Scalar)\nlet result = physical_expr.evaluate(&input_batch).unwrap();\n// In this case, a BooleanArray with the result of the comparison\nlet ColumnarValue::Array(arr) = result else {\n panic!(\"Expected an array\")\n};\nassert_eq!(arr.as_boolean(), &BooleanArray::from(vec![true, false, false]));\n```\n\n[ColumnarValue]: datafusion_expr::ColumnarValue\n\nCreate a physical expression from a logical expression ([Expr]).\n\n# Arguments\n\n* `e` - The logical expression\n* `input_dfschema` - The DataFusion schema for the input, used to resolve `Column` references\n  to qualified or unqualified fields by name.\n* `execution_props` - Per-execution properties such as the query start time.\n* `planning_ctx` - The [`PhysicalPlanningContext`] used to resolve\n  `Expr::ScalarSubquery` and `Expr::LambdaVariable` nodes. The physical\n  planner threads the subquery index map and shared results container from\n  its `ScalarSubqueryExec` construction into calls to\n  `create_physical_expr`; the lambda variable qualifiers are added by this\n  function itself as it descends into lambda bodies. Callers creating\n  physical expressions outside of physical planning should pass\n  `&PhysicalPlanningContext::default()`; converting a scalar subquery then returns a\n  planning error.",
+    "span": {
+      "filename": "src/planner.rs",
+      "begin": [
+        132,
+        46
+      ],
+      "end": [
+        132,
+        66
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "e",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_expr::Expr",
+                      "id": 148,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "input_dfschema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_common::DFSchema",
+                      "id": 151,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "execution_props",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_expr::execution_props::ExecutionProps",
+                      "id": 153,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "planning_ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+                      "id": 154,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 41,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "std::sync::Arc",
+                          "id": 35,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "PhysicalExpr",
+                                            "id": 38,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "148": "datafusion_expr::expr::Expr",
+      "151": "datafusion_common::dfschema::DFSchema",
+      "153": "datafusion_expr::execution_props::ExecutionProps",
+      "154": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+      "41": "datafusion_common::error::Result",
+      "35": "alloc::sync::Arc",
+      "38": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+    },
+    "impl_context": null,
+    "links": {
+      "PhysicalExpr": 38,
+      "datafusion_expr::ColumnarValue": 350,
+      "Expr": 148,
+      "create_physical_expr": 2125,
+      "`PhysicalPlanningContext`": 154
+    },
+    "link_paths": {
+      "PhysicalExpr": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "datafusion_expr::ColumnarValue": "datafusion_expr_common::columnar_value::ColumnarValue",
+      "Expr": "datafusion_expr::expr::Expr",
+      "create_physical_expr": "datafusion_physical_expr::planner::create_physical_expr",
+      "`PhysicalPlanningContext`": "datafusion_expr::physical_planning_context::PhysicalPlanningContext"
+    },
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2125",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.planner.create_physical_expr.md",
+    "record_file": "operations/datafusion_physical_expr.planner.create_physical_expr.json",
+    "anchor": "op-b01a3449753ecee1419f6104",
+    "aliases": [
+      "datafusion::physical_expr::create_physical_expr",
+      "datafusion_physical_expr::create_physical_expr"
+    ],
+    "resolved_doc_links": {
+      "PhysicalExpr": "../operations/datafusion_physical_expr_common.physical_expr.PhysicalExpr.md#op-fe8284c43330456b0d4e6af7",
+      "datafusion_expr::ColumnarValue": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-d5fec5b0e8fcb4446aea8c7f",
+      "Expr": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc",
+      "create_physical_expr": "../operations/datafusion_physical_expr.planner.create_physical_expr.md#op-b01a3449753ecee1419f6104",
+      "`PhysicalPlanningContext`": "../operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.md#op-6c42198b3422be2c46b9cf8b"
+    }
+  }
+]

@@ -22,6 +22,9 @@ fn start_row<W: Write>(&self, writer: &mut W, is_first_row: bool) -> Result<(), 
 fn start_stream<W: Write>(&self, writer: &mut W) -> Result<(), ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.writer.JsonArray.md).
+
+
 Produces JSON output as a single JSON array.
 
 For example:
@@ -49,6 +52,9 @@ struct LineDelimited
 ```rust
 fn end_row<W: Write>(&self, writer: &mut W) -> Result<(), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_json.writer.LineDelimited.md).
+
 
 Produces JSON output with one record per line.
 
@@ -95,6 +101,9 @@ fn close(self) -> Result<(), ArrowError>
 fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.writer.Writer.md).
+
+
 A JSON writer which serializes [`RecordBatch`]es to a stream of
 `u8` encoded JSON objects.
 
@@ -137,6 +146,9 @@ fn with_timestamp_format(self, format: String) -> Self
 fn with_timestamp_tz_format(self, tz_format: String) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.writer.WriterBuilder.md).
+
+
 JSON writer builder.
 
 ---
@@ -163,6 +175,9 @@ fn start_row<W: Write>(&self, _writer: &mut W, _is_first_row: bool) -> Result<()
 fn start_stream<W: Write>(&self, _writer: &mut W) -> Result<(), ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.writer.JsonFormat.md).
+
+
 This trait defines how to format a sequence of JSON objects to a
 byte stream.
 
@@ -178,6 +193,9 @@ Also reachable as `arrow::json::ArrayWriter`, `arrow_json::ArrayWriter`
 type ArrayWriter<W> = Writer<W, JsonArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.writer.ArrayWriter.md).
+
+
 A JSON writer which serializes [`RecordBatch`]es to JSON arrays.
 
 ---
@@ -191,6 +209,9 @@ Also reachable as `arrow::json::LineDelimitedWriter`, `arrow_json::LineDelimited
 ```rust
 type LineDelimitedWriter<W> = Writer<W, LineDelimited>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_json.writer.LineDelimitedWriter.md).
+
 
 A JSON writer which serializes [`RecordBatch`]es to newline delimited JSON objects.
 

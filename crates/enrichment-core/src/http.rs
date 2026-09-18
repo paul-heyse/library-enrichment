@@ -12,14 +12,14 @@ crate::native_struct! {
         last_modified: Option<String> => Rule::Text,
         final_url: String => Rule::NonEmpty,
         retrieved_at: crate::native_time::AcquisitionTime => Rule::Text,
-    } ephemeral { bytes: Vec<u8> = Vec::new() }
+    } ephemeral { bytes: bytes::Bytes = bytes::Bytes::new() }
 }
 impl Fetched {
     /// Capture response facts without copying the separately owned, bounded byte buffer.
     pub fn metadata(&self) -> Self {
         Self {
             status: self.status,
-            bytes: Vec::new(),
+            bytes: bytes::Bytes::new(),
             content_type: self.content_type.clone(),
             etag: self.etag.clone(),
             last_modified: self.last_modified.clone(),
@@ -33,7 +33,7 @@ crate::native_struct! {
         response: Fetched => Rule::Text,
         request_url: String => Rule::NonEmpty,
         accept: Option<String> => Rule::Text,
-        body_digest: String => Rule::Sha256,
+        body_digest: crate::native_digest::Sha256Digest => Rule::Text,
         body_bytes: u64 => Rule::Text,
     }
 }
@@ -59,9 +59,10 @@ impl Cached {
     }
     pub fn artifact(&self) -> Artifact {
         // Decode the admitted cache's physical descriptor. No state selection occurs here.
+        let digest = self.record.body_digest.to_string();
         Artifact {
-            artifact_id: crate::evidence::artifact_id_for(&self.record.body_digest),
-            sha256: self.record.body_digest.clone(),
+            artifact_id: crate::evidence::artifact_id_for(&digest),
+            sha256: digest,
             size_bytes: self.record.body_bytes,
             media_type: self
                 .record

@@ -5,6 +5,7 @@ Crate `deltalake-catalog-unity` · 7 public items · structured records in [`mod
 ## UnityCatalogConfigKey
 
 `enum` · `deltalake_catalog_unity::UnityCatalogConfigKey`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.UnityCatalogConfigKey.md)
 
 Also reachable as `deltalake::unity_catalog::UnityCatalogConfigKey`, `deltalake_catalog_unity::prelude::UnityCatalogConfigKey`
 
@@ -35,6 +36,7 @@ Configuration options for unity catalog client
 ## UnityCatalogError
 
 `enum` · `deltalake_catalog_unity::UnityCatalogError`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.UnityCatalogError.md)
 
 Also reachable as `deltalake::unity_catalog::UnityCatalogError`, `deltalake_catalog_unity::prelude::UnityCatalogError`
 
@@ -78,6 +80,7 @@ Possible errors from the unity-catalog/tables API call
 ## register_handlers
 
 `function` · `deltalake_catalog_unity::register_handlers`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.register_handlers.md)
 
 Also reachable as `deltalake::unity_catalog::register_handlers`
 
@@ -92,6 +95,7 @@ Register an [ObjectStoreFactory] for common UnityCatalogFactory [Url] schemes
 ## UnityCatalog
 
 `struct` · `deltalake_catalog_unity::UnityCatalog`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.UnityCatalog.md)
 
 Also reachable as `deltalake::unity_catalog::UnityCatalog`, `deltalake_catalog_unity::prelude::UnityCatalog`
 
@@ -128,6 +132,7 @@ Databricks Unity Catalog
 ## UnityCatalogBuilder
 
 `struct` · `deltalake_catalog_unity::UnityCatalogBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.UnityCatalogBuilder.md)
 
 Also reachable as `deltalake::unity_catalog::UnityCatalogBuilder`, `deltalake_catalog_unity::prelude::UnityCatalogBuilder`
 
@@ -153,6 +158,7 @@ Builder for creating a UnityCatalogClient
 ## UnityCatalogBuilderBuilder
 
 `struct` · `deltalake_catalog_unity::UnityCatalogBuilderBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.UnityCatalogBuilderBuilder.md)
 
 Also reachable as `deltalake::unity_catalog::UnityCatalogBuilderBuilder`
 
@@ -192,6 +198,7 @@ See [`UnityCatalogBuilder::builder()`] for more info.
 ## UnityCatalogFactory
 
 `struct` · `deltalake_catalog_unity::UnityCatalogFactory`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.UnityCatalogFactory.md)
 
 Also reachable as `deltalake::unity_catalog::UnityCatalogFactory`
 

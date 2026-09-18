@@ -31,6 +31,9 @@ fn table_exist(&self, name: &str) -> bool
 fn table_names(&self) -> Vec<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.listing_schema.ListingSchemaProvider.md).
+
+
 A [`SchemaProvider`] that scans an [`ObjectStore`] to automatically discover tables
 
 A subfolder relationship is assumed, i.e. given:

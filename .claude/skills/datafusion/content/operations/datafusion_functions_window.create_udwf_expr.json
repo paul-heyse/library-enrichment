@@ -1,0 +1,63 @@
+[
+  {
+    "id": "d903ccbb58f3e1e9e6e08203",
+    "path": "datafusion_functions_window::create_udwf_expr",
+    "name": "create_udwf_expr",
+    "owner": null,
+    "crate": "datafusion-functions-window",
+    "version": "55.1.0",
+    "kind": "macro",
+    "signature": "macro_rules! create_udwf_expr",
+    "docs": "Create a [`WindowFunction`] expression that exposes a fluent API\nwhich you can use to build more complex expressions.\n\n[`WindowFunction`]: datafusion_expr::Expr::WindowFunction\n\n# Parameters\n\n* `$UDWF`: The struct which defines the [`Signature`] of the\n  user-defined window function.\n* `$OUT_FN_NAME`: The basename to generate a unique function name like\n  `$OUT_FN_NAME_udwf`.\n* `$DOC`: Doc comments for UDWF.\n* (optional) `[$($PARAM:ident),+]`: An array of 1 or more parameters\n  for the generated function. The type of parameters is [`Expr`].\n  When omitted this creates a function with zero parameters.\n\n[`Signature`]: datafusion_expr::Signature\n[`Expr`]: datafusion_expr::Expr\n\n# Example\n\n1. With Zero Parameters\n```\nuse arrow::datatypes::FieldRef;\n# use datafusion_common::arrow::datatypes::{DataType, Field};\n# use datafusion_expr::{PartitionEvaluator, Signature, Volatility, WindowUDFImpl};\n# use datafusion_functions_window::{create_udwf_expr, get_or_init_udwf};\n# use datafusion_functions_window_common::field::WindowUDFFieldArgs;\n# use datafusion_functions_window_common::partition::PartitionEvaluatorArgs;\n\n# get_or_init_udwf!(\n#     RowNumber,\n#     row_number,\n#     row_number_udwf,\n#     \"Returns a unique row number for each row in window partition beginning at 1.\"\n# );\n/// Creates `row_number()` API which has zero parameters:\n///\n///     ```\n///     /// Returns a unique row number for each row in window partition\n///     /// beginning at 1.\n///     pub fn row_number() -> datafusion_expr::Expr {\n///        row_number_udwf().call(vec![])\n///     }\n///     ```\ncreate_udwf_expr!(\n    RowNumber,\n    row_number,\n    row_number_udwf,\n    \"Returns a unique row number for each row in window partition beginning at 1.\"\n);\n#\n# assert_eq!(\n#     row_number().name_for_alias().unwrap(),\n#     \"row_number() ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\"\n# );\n#\n# #[derive(Debug, PartialEq, Eq, Hash)]\n# struct RowNumber {\n#     signature: Signature,\n# }\n# impl Default for RowNumber {\n#     fn default() -> Self {\n#         Self {\n#             signature: Signature::any(0, Volatility::Immutable),\n#         }\n#     }\n# }\n# impl WindowUDFImpl for RowNumber {\n#     fn name(&self) -> &str {\n#         \"row_number\"\n#     }\n#     fn signature(&self) -> &Signature {\n#         &self.signature\n#     }\n#     fn partition_evaluator(\n#         &self,\n#         _partition_evaluator_args: PartitionEvaluatorArgs,\n#     ) -> datafusion_common::Result<Box<dyn PartitionEvaluator>> {\n#         unimplemented!()\n#     }\n#     fn field(&self, field_args: WindowUDFFieldArgs) -> datafusion_common::Result<FieldRef> {\n#         Ok(Field::new(field_args.name(), DataType::UInt64, false).into())\n#     }\n# }\n```\n\n2. With Multiple Parameters\n```\nuse arrow::datatypes::FieldRef;\n#\n# use datafusion_expr::{\n#     PartitionEvaluator, Signature, TypeSignature, Volatility, WindowUDFImpl,\n# };\n#\n# use datafusion_functions_window::{create_udwf_expr, get_or_init_udwf};\n# use datafusion_functions_window_common::field::WindowUDFFieldArgs;\n#\n# use datafusion_common::arrow::datatypes::Field;\n# use datafusion_common::ScalarValue;\n# use datafusion_expr::{col, lit};\n# use datafusion_functions_window_common::partition::PartitionEvaluatorArgs;\n#\n# get_or_init_udwf!(Lead, lead,lead_udwf, \"user-defined window function\");\n#\n/// Creates `lead(expr, offset, default)` with 3 parameters:\n///\n///     ```\n///     /// Returns a value evaluated at the row that is offset rows\n///     /// after the current row within the partition.\n///     pub fn lead(\n///         expr: datafusion_expr::Expr,\n///         offset: datafusion_expr::Expr,\n///         default: datafusion_expr::Expr,\n///     ) -> datafusion_expr::Expr {\n///         lead_udwf().call(vec![expr, offset, default])\n///     }\n///     ```\ncreate_udwf_expr!(\n    Lead,\n    lead,\n    [expr, offset, default],\n    lead_udwf,\n    \"Returns a value evaluated at the row that is offset rows after the current row within the partition.\"\n);\n#\n# assert_eq!(\n#     lead(col(\"a\"), lit(1i64), lit(ScalarValue::Null))\n#         .name_for_alias()\n#         .unwrap(),\n#     \"lead(a,Int64(1),NULL) ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\"\n# );\n#\n# #[derive(Debug, PartialEq, Eq, Hash)]\n# struct Lead {\n#     signature: Signature,\n# }\n#\n# impl Default for Lead {\n#     fn default() -> Self {\n#         Self {\n#             signature: Signature::one_of(\n#                 vec![\n#                     TypeSignature::Any(1),\n#                     TypeSignature::Any(2),\n#                     TypeSignature::Any(3),\n#                 ],\n#                 Volatility::Immutable,\n#             ),\n#         }\n#     }\n# }\n#\n# impl WindowUDFImpl for Lead {\n#     fn name(&self) -> &str {\n#         \"lead\"\n#     }\n#     fn signature(&self) -> &Signature {\n#         &self.signature\n#     }\n#     fn partition_evaluator(\n#         &self,\n#         partition_evaluator_args: PartitionEvaluatorArgs,\n#     ) -> datafusion_common::Result<Box<dyn PartitionEvaluator>> {\n#         unimplemented!()\n#     }\n#     fn field(&self, field_args: WindowUDFFieldArgs) -> datafusion_common::Result<FieldRef> {\n#         Ok(Field::new(\n#             field_args.name(),\n#             field_args.get_input_field(0).unwrap().data_type().clone(),\n#             false,\n#         ).into())\n#     }\n# }\n```",
+    "span": {
+      "filename": "src/macros.rs",
+      "begin": [
+        289,
+        1
+      ],
+      "end": [
+        314,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      "macro_export"
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "macro": "macro_rules! create_udwf_expr {\n    ($UDWF:ident, $OUT_FN_NAME:ident, $UDWF_FN:ident, $DOC:expr) => { ... };\n    ($UDWF:ident, $OUT_FN_NAME:ident, [$($PARAM:ident),+], $UDWF_FN:ident, $DOC:expr) => { ... };\n}"
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "datafusion_expr::Expr": 7,
+      "datafusion_expr::Expr::WindowFunction": 6,
+      "datafusion_expr::Signature": 87
+    },
+    "link_paths": {
+      "datafusion_expr::Expr": "datafusion_expr::expr::Expr",
+      "datafusion_expr::Expr::WindowFunction": "datafusion_expr::expr::Expr::WindowFunction",
+      "datafusion_expr::Signature": "datafusion_expr_common::signature::Signature"
+    },
+    "artifact": {
+      "id": "e39780ca066e2cac61bd60b52e705d0c0ba137249e8deb377e3d9ca8d6256330",
+      "format_version": 61,
+      "item_id": "556",
+      "origin": "https://docs.rs/crate/datafusion-functions-window/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_functions_window.create_udwf_expr.md",
+    "record_file": "operations/datafusion_functions_window.create_udwf_expr.json",
+    "anchor": "op-d903ccbb58f3e1e9e6e08203",
+    "aliases": [
+      "datafusion::functions_window::create_udwf_expr"
+    ],
+    "resolved_doc_links": {
+      "datafusion_expr::Expr": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc",
+      "datafusion_expr::Expr::WindowFunction": "../operations/datafusion_expr.expr.Expr.md#op-1ab47cd303f22d10dd7f4cec",
+      "datafusion_expr::Signature": "../operations/datafusion_expr_common.signature.Signature.md#op-3501f77593554c0ab3e03e9e"
+    }
+  }
+]

@@ -75,14 +75,10 @@ impl RustFacts {
                 .with_extension("arrow");
             let provider = crate::arrow_input::provider(runtime, &path, fact.schema()).await?;
             let source = session.read_table(provider)?.into_view();
-            session.register_table(
+            crate::native_catalog::work(
+                &session,
                 fact.name(),
-                crate::leases::captured_view(
-                    &source,
-                    &session,
-                    Arc::clone(&captured.directory),
-                    Arc::clone(&captured.retention),
-                )?,
+                crate::leases::input_view(&source, &session, Arc::clone(&captured.directory))?,
             )?;
         }
         runtime.require_empty(session.sql("SELECT CAST(id AS VARCHAR) AS witness_id FROM rust_items WHERE id<>index_id OR line=0").await?, "rust_fact_identity", "rustdoc").await?;
@@ -112,8 +108,11 @@ impl RustFacts {
         Ok(this)
     }
     async fn view(&self, name: &str, sql: &str) -> Result<()> {
-        self.session
-            .register_table(name, self.session.sql(sql).await?.into_view())?;
+        crate::native_catalog::work(
+            &self.session,
+            name,
+            self.session.sql(sql).await?.into_view(),
+        )?;
         Ok(())
     }
     async fn reject(&self, sql: &str, rule: &str) -> Result<()> {
@@ -159,14 +158,10 @@ impl RustFacts {
             .read_table(delta.provider(&table, &contract).await?)?
             .into_view();
         self.session.deregister_table(name)?;
-        self.session.register_table(
+        crate::native_catalog::work(
+            &self.session,
             name,
-            crate::leases::captured_view(
-                &view,
-                &self.session,
-                Arc::clone(&self.captured.directory),
-                Arc::clone(&self.captured.retention),
-            )?,
+            crate::leases::input_view(&view, &self.session, Arc::clone(&self.captured.directory))?,
         )?;
         self.reject(
             &format!("SELECT '{name}' AS witness_id FROM {name} HAVING count(*)>{max_rows}"),
@@ -291,8 +286,11 @@ impl RustFacts {
                 "path_id",
                 Key::PublicPath.bind(vec![lit("rust"), col("components")])?,
             )?;
-        self.session
-            .register_table("rust_identified", variants.clone().into_view())?;
+        crate::native_catalog::work(
+            &self.session,
+            "rust_identified",
+            variants.clone().into_view(),
+        )?;
         self.materialize("rust_identified").await?;
         self.view("rust_render_associations",r#"SELECT s.ordinal,s.id,s.parent_id,s.text,
             count(DISTINCT v.symbol_id) AS bindings,count(DISTINCT v.definition_id) AS definitions,
@@ -407,8 +405,7 @@ impl RustFacts {
         let observed = self.session.sql("SELECT v.*,i.file,i.line,i.docs,i.deprecated,i.deprecated_since,i.deprecated_note,i.attrs,i.rust FROM rust_identified v JOIN rust_items i ON v.id=i.id").await?
             .with_column("cfg_hints",datafusion::functions_nested::expr_fn::array_filter(col("attrs"),
                 datafusion::logical_expr::expr_fn::lambda(vec!["attr"],datafusion::functions::string::expr_fn::contains(attr,lit("cfg")))))?;
-        self.session
-            .register_table("rust_observed", observed.into_view())?;
+        crate::native_catalog::work(&self.session, "rust_observed", observed.into_view())?;
         // item/parent IDs are candidate associations, not alias occurrence IDs. A unique
         // binding is symbol-scoped; several bindings of one definition are definition-scoped.
         // Other renderings remain library fragments with a diagnostic, never invented APIs.
@@ -649,9 +646,72 @@ mod tests {
             .unwrap()
             .acquired;
         let runtime = QueryRuntime::new(&root.path().join("spill"), Default::default()).unwrap();
-        let facts = crate::native_rustdoc::from_artifact(&runtime, blobs, artifact.clone(), 240)
+        let control = crate::control::ControlStore::open(root.path(), runtime.clone()).unwrap();
+        let retention = crate::retention::RetentionStore::new(control.clone(), runtime.clone());
+        // This worker/storage fixture runs only after the deletion barrier. Exercise
+        // the real claim path; a test must not bypass the decoder's effect admission.
+        let config = Arc::new(enrichment_core::config::Config::default());
+        let jobs = crate::control_jobs::JobStore::new(
+            control,
+            runtime.clone(),
+            "rustdoc_fixture".into(),
+            config.clone(),
+        );
+        let command = jobs
+            .command_input(crate::control_jobs::Arguments::Resolve {
+                request: enrichment_core::request::ResolveRequest {
+                    name: "enr-fixture".into(),
+                    ..Default::default()
+                },
+            })
             .await
             .unwrap();
+        let (id, _) = jobs
+            .submit(command, enrichment_core::identity::InterestId::new())
+            .await
+            .unwrap();
+        let policy = crate::execution_policy::Policy::bind(
+            &runtime,
+            &config,
+            crate::execution_policy::Capture {
+                execution_root: root.path().join("execution").display().to_string(),
+                containment_identity: None,
+                containment_error: None,
+                receipt: None,
+                receipt_error: None,
+                cleanup_error: None,
+            },
+        )
+        .await
+        .unwrap();
+        assert!(
+            jobs.start(&id, &enrichment_core::identity::AttemptId::new(), &policy)
+                .await
+                .unwrap()
+        );
+        let pin = jobs.pin().await.unwrap();
+        let claim = jobs.claim(&pin, &id).await.unwrap().unwrap();
+        let grant = jobs.grant(&id, claim.fence).await.unwrap();
+        drop(pin);
+        let (sender, result) = tokio::sync::oneshot::channel();
+        let worker_runtime = runtime.clone();
+        let input = artifact.clone();
+        runtime
+            .command(id, crate::native_effect::CommandKind::Resolve, async move {
+                crate::native_effect::bind_claim(grant).unwrap();
+                let value = crate::native_rustdoc::from_artifact(
+                    &worker_runtime,
+                    retention,
+                    blobs,
+                    input,
+                    240,
+                )
+                .await;
+                assert!(sender.send(value).is_ok());
+            })
+            .await
+            .unwrap();
+        let facts = result.await.unwrap().unwrap();
         assert_eq!(facts.header.crate_name, "enr_fixture");
         let context = IngestContext {
             ecosystem: Ecosystem::Rust,
@@ -659,7 +719,7 @@ mod tests {
             release_id: format!("rel_{}", "1".repeat(64)).try_into().unwrap(),
             environment_id: format!("env_{}", "1".repeat(64)).try_into().unwrap(),
             source_version_match: SourceVersionMatch::Exact,
-            producing_attempt: "attempt".into(),
+            producing_attempt: enrichment_core::identity::AttemptId::new(),
             producer_runs: vec![],
             artifacts: vec![],
             indexed: vec![],
@@ -771,7 +831,8 @@ mod tests {
                 .any(|e| e.relation == enrichment_core::evidence::RelationKind::Implements)
         );
         assert!(fragments.iter().any(|f| f.text.contains("Widget::new")));
-        assert!(crate::leases::exclusive(root.path()).is_err());
+        // Private fact scans retain their own owned bytes, not a blanket artifact-root fence.
+        drop(crate::leases::exclusive(root.path()).unwrap());
         assert_eq!(facts.derivation_plans().len(), 4);
         assert!(
             facts
@@ -787,5 +848,10 @@ mod tests {
                 .iter()
                 .all(|g| g.reason != "depth_limit")
         );
+        let directory = facts.captured.directory.path().to_owned();
+        assert!(directory.exists());
+        drop(facts);
+        runtime.close_diagnostics().await.unwrap();
+        assert!(!directory.exists());
     }
 }

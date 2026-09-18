@@ -1,0 +1,67 @@
+[
+  {
+    "id": "57648637b865f7acdab34be8",
+    "path": "arrow_csv::writer",
+    "name": "writer",
+    "owner": null,
+    "crate": "arrow-csv",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod writer",
+    "docs": "CSV Writing: [`Writer`] and [`WriterBuilder`]\n\nThis CSV writer allows Arrow data (in record batches) to be written as CSV files.\nThe writer does not support writing `ListArray` and `StructArray`.\n\n# Example\n```\n# use arrow_array::*;\n# use arrow_array::types::*;\n# use arrow_csv::Writer;\n# use arrow_schema::*;\n# use std::sync::Arc;\n\nlet schema = Schema::new(vec![\n    Field::new(\"c1\", DataType::Utf8, false),\n    Field::new(\"c2\", DataType::Float64, true),\n    Field::new(\"c3\", DataType::UInt32, false),\n    Field::new(\"c4\", DataType::Boolean, true),\n]);\nlet c1 = StringArray::from(vec![\n    \"Lorem ipsum dolor sit amet\",\n    \"consectetur adipiscing elit\",\n    \"sed do eiusmod tempor\",\n]);\nlet c2 = PrimitiveArray::<Float64Type>::from(vec![\n    Some(123.564532),\n    None,\n    Some(-556132.25),\n]);\nlet c3 = PrimitiveArray::<UInt32Type>::from(vec![3, 2, 1]);\nlet c4 = BooleanArray::from(vec![Some(true), Some(false), None]);\n\nlet batch = RecordBatch::try_new(\n    Arc::new(schema),\n    vec![Arc::new(c1), Arc::new(c2), Arc::new(c3), Arc::new(c4)],\n)\n.unwrap();\n\nlet mut output = Vec::with_capacity(1024);\n\nlet mut writer = Writer::new(&mut output);\nlet batches = vec![&batch, &batch];\nfor batch in batches {\n    writer.write(batch).unwrap();\n}\n```\n\n# Whitespace Handling\n\nThe writer supports trimming leading and trailing whitespace from string values,\ncompatible with Apache Spark's CSV options `ignoreLeadingWhiteSpace` and\n`ignoreTrailingWhiteSpace`. This is useful when working with data that may have\nunwanted padding.\n\nWhitespace trimming is applied to all string data types:\n- `DataType::Utf8`\n- `DataType::LargeUtf8`\n- `DataType::Utf8View`\n\n## Example: Use [`WriterBuilder`] to control whitespace handling\n\n```\n# use arrow_array::*;\n# use arrow_csv::WriterBuilder;\n# use arrow_schema::*;\n# use std::sync::Arc;\nlet schema = Schema::new(vec![\n    Field::new(\"name\", DataType::Utf8, false),\n    Field::new(\"comment\", DataType::Utf8, false),\n]);\n\nlet name = StringArray::from(vec![\n    \"  Alice  \",   // Leading and trailing spaces\n    \"Bob\",         // No spaces\n    \"  Charlie\",   // Leading spaces only\n]);\nlet comment = StringArray::from(vec![\n    \"  Great job!  \",\n    \"Well done\",\n    \"Excellent  \",\n]);\n\nlet batch = RecordBatch::try_new(\n    Arc::new(schema),\n    vec![Arc::new(name), Arc::new(comment)],\n)\n.unwrap();\n\n// Trim both leading and trailing whitespace\nlet mut output = Vec::new();\nWriterBuilder::new()\n    .with_ignore_leading_whitespace(true)\n    .with_ignore_trailing_whitespace(true)\n    .build(&mut output)\n    .write(&batch)\n    .unwrap();\nassert_eq!(\n    String::from_utf8(output).unwrap(),\n    \"\\\nname,comment\\n\\\nAlice,Great job!\\n\\\nBob,Well done\\n\\\nCharlie,Excellent\\n\"\n);\n```\n\n# Quoting Styles\n\nThe writer supports different quoting styles for fields, compatible with Apache Spark's\nCSV options like `quoteAll`. You can control when fields are quoted using the\n[`QuoteStyle`] enum.\n\n## Example\n\n```\n# use arrow_array::*;\n# use arrow_csv::{WriterBuilder, QuoteStyle};\n# use arrow_schema::*;\n# use std::sync::Arc;\n\nlet schema = Schema::new(vec![\n    Field::new(\"product\", DataType::Utf8, false),\n    Field::new(\"price\", DataType::Float64, false),\n]);\n\nlet product = StringArray::from(vec![\"apple\", \"banana,organic\", \"cherry\"]);\nlet price = Float64Array::from(vec![1.50, 2.25, 3.00]);\n\nlet batch = RecordBatch::try_new(\n    Arc::new(schema),\n    vec![Arc::new(product), Arc::new(price)],\n)\n.unwrap();\n\n// Default behavior (QuoteStyle::Necessary)\nlet mut output = Vec::new();\nWriterBuilder::new()\n    .build(&mut output)\n    .write(&batch)\n    .unwrap();\nassert_eq!(\n    String::from_utf8(output).unwrap(),\n    \"product,price\\napple,1.5\\n\\\"banana,organic\\\",2.25\\ncherry,3.0\\n\"\n);\n\n// Quote all fields (Spark's quoteAll=true)\nlet mut output = Vec::new();\nWriterBuilder::new()\n    .with_quote_style(QuoteStyle::Always)\n    .build(&mut output)\n    .write(&batch)\n    .unwrap();\nassert_eq!(\n    String::from_utf8(output).unwrap(),\n    \"\\\"product\\\",\\\"price\\\"\\n\\\"apple\\\",\\\"1.5\\\"\\n\\\"banana,organic\\\",\\\"2.25\\\"\\n\\\"cherry\\\",\\\"3.0\\\"\\n\"\n);\n```",
+    "span": {
+      "filename": "src/writer.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        1429,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          203,
+          217,
+          219,
+          292
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`WriterBuilder`": 219,
+      "`QuoteStyle`": 204,
+      "`Writer`": 217
+    },
+    "link_paths": {
+      "`WriterBuilder`": "arrow_csv::writer::WriterBuilder",
+      "`QuoteStyle`": "csv::QuoteStyle",
+      "`Writer`": "arrow_csv::writer::Writer"
+    },
+    "artifact": {
+      "id": "8bc70021e0951ef4350d8bbda6b3ad80c76264b8f77161afdde5e41a8359a8f7",
+      "format_version": 61,
+      "item_id": "216",
+      "origin": "https://docs.rs/crate/arrow-csv/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/arrow_csv.writer.md",
+    "record_file": "modules/arrow_csv.writer.json",
+    "anchor": "op-57648637b865f7acdab34be8",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`WriterBuilder`": "../operations/arrow_csv.writer.WriterBuilder.md#op-44e2845dc1cd29d45ec5dba4",
+      "`Writer`": "../operations/arrow_csv.writer.Writer.md#op-9112f918255e66827bb62542"
+    }
+  }
+]

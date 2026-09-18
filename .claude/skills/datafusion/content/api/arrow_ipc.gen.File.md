@@ -12,6 +12,9 @@ Also reachable as `arrow::ipc::FooterOffset`, `arrow_ipc::FooterOffset`
 enum FooterOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.File.FooterOffset.md).
+
+
 ---
 
 ## finish_footer_buffer
@@ -23,6 +26,9 @@ Also reachable as `arrow::ipc::finish_footer_buffer`, `arrow_ipc::finish_footer_
 ```rust
 fn finish_footer_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<Footer<'a>>)
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.File.finish_footer_buffer.md).
+
 
 ---
 
@@ -36,6 +42,9 @@ Also reachable as `arrow::ipc::finish_size_prefixed_footer_buffer`, `arrow_ipc::
 fn finish_size_prefixed_footer_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<Footer<'a>>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.File.finish_size_prefixed_footer_buffer.md).
+
+
 ---
 
 ## root_as_footer
@@ -47,6 +56,9 @@ Also reachable as `arrow::ipc::root_as_footer`, `arrow_ipc::root_as_footer`
 ```rust
 fn root_as_footer(buf: &[u8]) -> Result<Footer<'_>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.File.root_as_footer.md).
+
 
 Verifies that a buffer of bytes contains a `Footer`
 and returns it.
@@ -67,6 +79,9 @@ Also reachable as `arrow::ipc::root_as_footer_unchecked`, `arrow_ipc::root_as_fo
 unsafe fn root_as_footer_unchecked(buf: &[u8]) -> Footer<'_>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.File.root_as_footer_unchecked.md).
+
+
 Assumes, without verification, that a buffer of bytes contains a Footer and returns it.
 # Safety
 Callers must trust the given bytes do indeed contain a valid `Footer`.
@@ -82,6 +97,9 @@ Also reachable as `arrow::ipc::root_as_footer_with_opts`, `arrow_ipc::root_as_fo
 ```rust
 fn root_as_footer_with_opts<'b, 'o>(opts: &'o flatbuffers::VerifierOptions, buf: &'b [u8]) -> Result<Footer<'b>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.File.root_as_footer_with_opts.md).
+
 
 Verifies, with the given options, that a buffer of bytes
 contains a `Footer` and returns it.
@@ -102,6 +120,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_footer`, `arrow_ipc::size_p
 fn size_prefixed_root_as_footer(buf: &[u8]) -> Result<Footer<'_>, flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.File.size_prefixed_root_as_footer.md).
+
+
 Verifies that a buffer of bytes contains a size prefixed
 `Footer` and returns it.
 Note that verification is still experimental and may not
@@ -121,6 +142,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_footer_unchecked`, `arrow_i
 unsafe fn size_prefixed_root_as_footer_unchecked(buf: &[u8]) -> Footer<'_>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.File.size_prefixed_root_as_footer_unchecked.md).
+
+
 Assumes, without verification, that a buffer of bytes contains a size prefixed Footer and returns it.
 # Safety
 Callers must trust the given bytes do indeed contain a valid size prefixed `Footer`.
@@ -136,6 +160,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_footer_with_opts`, `arrow_i
 ```rust
 fn size_prefixed_root_as_footer_with_opts<'b, 'o>(opts: &'o flatbuffers::VerifierOptions, buf: &'b [u8]) -> Result<Footer<'b>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.File.size_prefixed_root_as_footer_with_opts.md).
+
 
 Verifies, with the given verifier options, that a buffer of
 bytes contains a size prefixed `Footer` and returns
@@ -191,6 +218,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.File.Block.md).
+
+
 ---
 
 ## Footer
@@ -233,6 +263,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.File.Footer.md).
+
+
 ----------------------------------------------------------------------
 Arrow File metadata
 
@@ -251,6 +284,9 @@ struct FooterArgs<'a>
 **Fields**: `version`, `schema`, `dictionaries`, `recordBatches`, `custom_metadata`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.File.FooterArgs.md).
+
 
 ---
 
@@ -275,5 +311,8 @@ fn add_version(&mut self, version: MetadataVersion)
 fn finish(self) -> flatbuffers::WIPOffset<Footer<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> FooterBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.File.FooterBuilder.md).
+
 
 ---

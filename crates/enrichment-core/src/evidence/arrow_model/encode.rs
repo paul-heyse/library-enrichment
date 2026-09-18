@@ -3,12 +3,11 @@ use std::sync::Arc;
 use crate::evidence::relational::{
     ApiObservation, ApiPayload, Definition, FactSource, Locator, PublicBinding, SubjectRef,
 };
-use crate::identity::Ecosystem;
 use arrow::array::{ArrayRef, BooleanArray};
 use arrow::error::ArrowError;
 use arrow::record_batch::RecordBatch;
 
-use super::cells::{batch, column, list, optional, text};
+use super::cells::{batch, column, list, native_column, optional, ruled_column, text};
 
 /// Definition rows, shared by public aliases.
 ///
@@ -26,6 +25,7 @@ pub fn definitions(rows: &[Definition]) -> Result<RecordBatch, ArrowError> {
 /// # Errors
 /// Inconsistent Arrow column shapes cannot be published.
 pub fn bindings(rows: &[PublicBinding]) -> Result<RecordBatch, ArrowError> {
+    let ecosystems: Vec<_> = rows.iter().map(|row| row.path.ecosystem()).collect();
     let path_ids: Vec<_> = rows.iter().map(|r| r.path.id()).collect();
     let displays: Vec<_> = rows.iter().map(|r| r.path.display()).collect();
     let parents: Vec<_> = rows
@@ -35,33 +35,32 @@ pub fn bindings(rows: &[PublicBinding]) -> Result<RecordBatch, ArrowError> {
     batch(
         "symbols",
         vec![
-            column(
+            ruled_column(
                 "symbol_id",
                 text(rows.iter().map(|r| r.symbol_id.as_str())),
                 false,
                 "key:symbol",
+                crate::native_union::Rule::NonEmpty,
             ),
-            column(
+            ruled_column(
                 "definition_id",
                 text(rows.iter().map(|r| r.definition_id.as_str())),
                 false,
                 "ref:definition",
+                crate::native_union::Rule::Reference(crate::native_union::Domain::Definition),
             ),
-            column(
+            ruled_column(
                 "path_id",
                 text(path_ids.iter().map(String::as_str)),
                 false,
                 "ref:path",
+                crate::native_union::Rule::NonEmpty,
             ),
-            column(
+            native_column(
                 "ecosystem",
-                text(rows.iter().map(|r| match r.path.ecosystem() {
-                    Ecosystem::Rust => "rust",
-                    Ecosystem::Python => "python",
-                })),
-                false,
-                "vocabulary:ecosystem/1",
-            ),
+                &ecosystems.iter().map(Some).collect::<Vec<_>>(),
+                crate::native_union::Rule::Text,
+            )?,
             column(
                 "components",
                 list(rows.iter().map(|r| r.path.components())),
@@ -74,11 +73,12 @@ pub fn bindings(rows: &[PublicBinding]) -> Result<RecordBatch, ArrowError> {
                 false,
                 "display:public-path",
             ),
-            column(
+            ruled_column(
                 "parent_path_id",
                 optional(parents.iter().map(|p| p.as_deref())),
                 true,
                 "ref:path",
+                crate::native_union::Rule::NonEmpty,
             ),
             column(
                 "name",
@@ -135,11 +135,12 @@ pub fn observations(rows: &[ApiObservation]) -> Result<RecordBatch, ArrowError> 
 
 pub(crate) fn observations_fields(rows: &[ApiObservation]) -> Result<RecordBatch, ArrowError> {
     let mut columns = vec![
-        column(
+        ruled_column(
             "observation_id",
             text(rows.iter().map(|r| r.observation_id.as_str())),
             false,
             "key:observation",
+            crate::native_union::Rule::NonEmpty,
         ),
         column(
             "subject",
@@ -147,12 +148,11 @@ pub(crate) fn observations_fields(rows: &[ApiObservation]) -> Result<RecordBatch
             false,
             "typed-subject",
         ),
-        column(
+        native_column(
             "origin",
-            text(rows.iter().map(|r| r.origin.as_str())),
-            false,
-            "vocabulary:api-origin/1",
-        ),
+            &rows.iter().map(|row| Some(&row.origin)).collect::<Vec<_>>(),
+            crate::native_union::Rule::Text,
+        )?,
         (
             crate::native_union::field::<crate::identity::EnvironmentId>(
                 "environment_id",

@@ -14,6 +14,9 @@ struct WorkTable
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.work_table.WorkTable.md).
+
+
 The name is from PostgreSQL's terminology.
 See <https://wiki.postgresql.org/wiki/CTEReadme#How_Recursion_Works>
 This table serves as a mirror or buffer between each iteration of a recursive query.
@@ -60,6 +63,9 @@ fn statistics_from_inputs(&self, _input_stats: &[Arc<Statistics>], _args: &Stati
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 fn with_new_state(&self, state: Arc<dyn Any + Send + Sync>) -> Option<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.work_table.WorkTableExec.md).
+
 
 A temporary "working table" operation where the input data will be
 taken from the named handle during the execution and will be re-published

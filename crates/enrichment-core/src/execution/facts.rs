@@ -21,7 +21,7 @@ pub struct ResourceProbe {
 #[serde(deny_unknown_fields)]
 pub struct Receipt {
     pub containment_identity: String,
-    pub qualified_at: String,
+    pub qualified_at: crate::native_time::ObservationTime,
     pub execution_root: String,
     pub images: BTreeMap<String, String>,
     pub tools: BTreeMap<String, BTreeMap<String, String>>,

@@ -16,6 +16,9 @@ struct BackoffConfig
 
 **Derives**: Clone, Debug, Default
 
+[Full member, field, variant and typed contracts](../operations/object_store.client.backoff.BackoffConfig.md).
+
+
 Exponential backoff with decorrelated jitter algorithm
 
 The first backoff will always be `init_backoff`.

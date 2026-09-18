@@ -25,6 +25,9 @@ fn reset(&mut self)
 fn try_new(order_indices: Vec<usize>) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.md).
+
+
 Tracks grouping state when the data is ordered by some subset of
 the group keys.
 

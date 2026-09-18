@@ -12,6 +12,9 @@ Also reachable as `datafusion_sql::unparser::plan_to_sql`
 fn plan_to_sql(plan: &datafusion_expr::LogicalPlan) -> datafusion_common::Result<ast::Statement>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.plan.plan_to_sql.md).
+
+
 Convert a DataFusion [`LogicalPlan`] to [`ast::Statement`]
 
 This function is the opposite of [`SqlToRel::sql_statement_to_plan`] and can

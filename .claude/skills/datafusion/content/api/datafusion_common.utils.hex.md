@@ -14,6 +14,9 @@ enum HexCase
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.hex.HexCase.md).
+
+
 Case of the emitted hex digits.
 
 ---
@@ -25,6 +28,9 @@ Case of the emitted hex digits.
 ```rust
 fn encode_bytes(bytes: &[u8], case: HexCase) -> String
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.hex.encode_bytes.md).
+
 
 Returns the hex encoding of `bytes` as an owned `String`.
 
@@ -47,6 +53,9 @@ assert_eq!(encode_bytes(&[0xde, 0xad, 0xbe, 0xef], HexCase::Upper), "DEADBEEF");
 fn encode_bytes_into(bytes: &[u8], case: HexCase, out: &mut Vec<u8>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.hex.encode_bytes_into.md).
+
+
 Appends the hex encoding of `bytes` to `out`.
 
 Allocates only through `out`'s own growth. Callers that must bound or guard
@@ -61,6 +70,9 @@ that growth should reserve capacity in `out` before calling.
 ```rust
 fn encode_bytes_to_slice(bytes: &[u8], case: HexCase, out: &mut [u8]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.hex.encode_bytes_to_slice.md).
+
 
 Writes the hex encoding of `bytes` into `out`.
 
@@ -91,6 +103,9 @@ assert_eq!(&out, b"deadbeef");
 ```rust
 fn encode_u64(v: u64, case: HexCase, buf: &mut [u8; 16]) -> &[u8]
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.hex.encode_u64.md).
+
 
 Writes `v` as hex into `buf` and returns the written subslice.
 
@@ -129,6 +144,9 @@ trait ToHex: ArrowNativeType
 ```rust
 fn write_hex(self, case: HexCase, buf: &mut [u8; 16]) -> &[u8]
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.hex.ToHex.md).
+
 
 Trait for converting integer types to hexadecimal in a buffer
 

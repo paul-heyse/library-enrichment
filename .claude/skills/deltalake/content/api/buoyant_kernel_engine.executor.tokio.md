@@ -5,6 +5,7 @@ Crate `buoyant_kernel_engine` · 2 public items · structured records in [`model
 ## TokioBackgroundExecutor
 
 `struct` · `buoyant_kernel_engine::executor::tokio::TokioBackgroundExecutor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.executor.tokio.TokioBackgroundExecutor.md)
 
 Also reachable as `delta_kernel_default_engine::executor::tokio::TokioBackgroundExecutor`
 
@@ -48,6 +49,7 @@ shut down before the executor is destroyed.
 ## TokioMultiThreadExecutor
 
 `struct` · `buoyant_kernel_engine::executor::tokio::TokioMultiThreadExecutor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.executor.tokio.TokioMultiThreadExecutor.md)
 
 Also reachable as `delta_kernel_default_engine::executor::tokio::TokioMultiThreadExecutor`
 

@@ -14,6 +14,9 @@ enum Precedence
 
 **Derives**: Clone, Copy, Debug
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.Precedence.md).
+
+
 Operators for which precedence must be defined.
 
 Higher number -> higher precedence.
@@ -28,6 +31,9 @@ See expression parsing for how these values are used.
 ```rust
 fn dialect_from_str(dialect_name: impl AsRef<str>) -> Option<Box<dyn Dialect>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.dialect_from_str.md).
+
 
 Returns the built in [`Dialect`] corresponding to `dialect_name`.
 
@@ -227,6 +233,9 @@ fn supports_with_fill(&self) -> bool
 fn supports_within_after_array_aggregation(&self) -> bool
 fn supports_xml_expressions(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.Dialect.md).
+
 
 Encapsulates the differences between SQL implementations.
 

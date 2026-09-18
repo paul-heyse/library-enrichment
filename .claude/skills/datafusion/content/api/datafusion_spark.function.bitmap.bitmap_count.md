@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 2 public items · structured records in [`model/data
 fn bitmap_count_inner(arg: &[arrow::array::ArrayRef]) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.bitmap.bitmap_count.bitmap_count_inner.md).
+
+
 ---
 
 ## BitmapCount
@@ -39,5 +42,8 @@ fn return_field_from_args(&self, args: datafusion_expr::ReturnFieldArgs<'_>) -> 
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.bitmap.bitmap_count.BitmapCount.md).
+
 
 ---

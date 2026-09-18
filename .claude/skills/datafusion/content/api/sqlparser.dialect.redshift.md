@@ -53,6 +53,9 @@ fn supports_top_before_distinct(&self) -> bool
 fn supports_window_function_null_treatment_arg(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.redshift.RedshiftSqlDialect.md).
+
+
 A [`Dialect`] for [RedShift](https://aws.amazon.com/redshift/)
 
 ---

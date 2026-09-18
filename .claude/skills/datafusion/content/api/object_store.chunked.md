@@ -41,6 +41,9 @@ async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions)
 async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.chunked.ChunkedStore.md).
+
+
 Wraps a [`ObjectStore`] and makes its get response return chunks
 in a controllable manner.
 

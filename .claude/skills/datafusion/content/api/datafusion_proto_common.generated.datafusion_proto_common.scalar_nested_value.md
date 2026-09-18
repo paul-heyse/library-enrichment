@@ -35,4 +35,7 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.scalar_nested_value.Dictionary.md).
+
+
 ---

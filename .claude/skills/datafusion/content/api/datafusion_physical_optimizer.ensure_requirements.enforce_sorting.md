@@ -12,6 +12,9 @@ Also reachable as `datafusion_physical_optimizer::enforce_sorting::ensure_sortin
 fn ensure_sorting(requirements: PlanWithCorrespondingSort) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<PlanWithCorrespondingSort>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.ensure_sorting.md).
+
+
 This function enforces sorting requirements and makes optimizations without
 violating these requirements whenever possible. Requires a bottom-up traversal.
 
@@ -45,6 +48,9 @@ Also reachable as `datafusion_physical_optimizer::enforce_sorting::parallelize_s
 ```rust
 fn parallelize_sorts(requirements: PlanWithCorrespondingCoalescePartitions) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<PlanWithCorrespondingCoalescePartitions>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.parallelize_sorts.md).
+
 
 Transform [`CoalescePartitionsExec`] + [`SortExec`] cascades into [`SortExec`]
 + [`SortPreservingMergeExec`] cascades, as illustrated below.
@@ -145,6 +151,9 @@ Also reachable as `datafusion_physical_optimizer::enforce_sorting::replace_with_
 fn replace_with_partial_sort(plan: std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.replace_with_partial_sort.md).
+
+
 Only interested with [`SortExec`]s and their unbounded children.
 If the plan is not a [`SortExec`] or its child is not unbounded, returns the original plan.
 Otherwise, by checking the requirement satisfaction searches for a replacement chance.
@@ -161,6 +170,9 @@ Also reachable as `datafusion_physical_optimizer::enforce_sorting::PlanWithCorre
 ```rust
 type PlanWithCorrespondingCoalescePartitions = datafusion_physical_plan::tree_node::PlanContext<bool>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.PlanWithCorrespondingCoalescePartitions.md).
+
 
 Tracks the closest
 [`CoalescePartitionsExec`] descendant(s) for every child of a plan. The data
@@ -183,6 +195,9 @@ Also reachable as `datafusion_physical_optimizer::enforce_sorting::PlanWithCorre
 ```rust
 type PlanWithCorrespondingSort = datafusion_physical_plan::tree_node::PlanContext<bool>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.PlanWithCorrespondingSort.md).
+
 
 Context object used by sort enforcement to track the closest
 [`SortExec`] descendant(s) for every child of a plan. The data attribute

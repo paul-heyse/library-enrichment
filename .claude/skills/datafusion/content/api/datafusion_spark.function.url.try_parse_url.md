@@ -29,6 +29,9 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.url.try_parse_url.TryParseUrl.md).
+
+
 TRY_PARSE_URL function for tolerant URL component extraction (never errors; returns NULL on invalid or missing parts).
 <https://spark.apache.org/docs/latest/api/sql/index.html#try_parse_url>
 

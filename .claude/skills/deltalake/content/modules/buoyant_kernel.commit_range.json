@@ -1,0 +1,105 @@
+[
+  {
+    "id": "234589133bf1990cbd24ed95",
+    "path": "buoyant_kernel::commit_range",
+    "name": "commit_range",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "module",
+    "signature": "mod commit_range",
+    "docs": "Read a contiguous range of raw Delta commits.\n\nA [`CommitRange`] holds an inclusive `[start_version, end_version]` range and the list of\ncommit files; reads are lazy (no JSON I/O until [`CommitRange::commits`] is called).\n\nTwo construction paths, differing only in how `_delta_log/` is listed at build time:\n- [`CommitRange::builder_for`]: lists `_delta_log/` for the requested range.\n- [`CommitRange::builder_from`]: reuses an existing snapshot's `LogSegment`, avoiding the\n  listing.\n\n[`CommitRange::commits`] takes a list of [`DeltaAction`]\nand an optional `start_snapshot`. When the snapshot is supplied, the iterator seeds its\n`latest_protocol` / `latest_metadata` from it and the snapshot's version must match the\nrange's `start_version` (in ascending order) or `end_version` (in descending order). When\nthe snapshot is `None`, validation is purely commit-driven. See [`CommitRange::commits`]\nfor protocol-validation details.\n\n# Example\n```no_run\nuse std::sync::Arc;\nuse buoyant_kernel as delta_kernel;\nuse delta_kernel::commit_range::{CommitRange, DeltaAction};\nuse delta_kernel::{Engine, Error, Snapshot};\nuse delta_kernel::object_store::local::LocalFileSystem;\nuse test_utils::delta_kernel_default_engine::DefaultEngineBuilder;\n\nlet engine: Arc<dyn Engine> =\n    Arc::new(DefaultEngineBuilder::new(Arc::new(LocalFileSystem::new())).build());\nlet start_snapshot = Snapshot::builder_for(\"file:///data/T\").at_version(0).build(engine.as_ref())?;\nlet range = CommitRange::builder_for(\"file:///data/T\", 0)\n    .with_end_version(4)\n    .build(engine.as_ref())?;\n\nfor commit in range.commits(\n    engine.clone(),\n    Some(start_snapshot),\n    &[DeltaAction::Add, DeltaAction::Remove],\n)? {\n    let commit = commit?;\n    println!(\"v={} ts={}\", commit.version(), commit.timestamp());\n    for batch in commit.get_actions(engine.as_ref())? {\n        let _batch = batch?;\n    }\n}\n# Ok::<(), Error>(())\n```",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/commit_range/mod.rs",
+      "begin": [
+        1,
+        1
+      ],
+      "end": [
+        858,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          1768,
+          1769,
+          1770,
+          1771,
+          1688
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`CommitRange`": 1688,
+      "`CommitRange::builder_for`": 1689,
+      "`DeltaAction`": 1594,
+      "`CommitRange::builder_from`": 1690,
+      "`CommitRange::commits`": 1646
+    },
+    "link_paths": {
+      "`CommitRange`": "buoyant_kernel::commit_range::CommitRange",
+      "`CommitRange::builder_for`": "buoyant_kernel::commit_range::CommitRange::builder_for",
+      "`DeltaAction`": "buoyant_kernel::commit_range::actions::DeltaAction",
+      "`CommitRange::builder_from`": "buoyant_kernel::commit_range::CommitRange::builder_from",
+      "`CommitRange::commits`": "buoyant_kernel::commit_range::CommitRange::commits"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "1813",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/commit_range/mod.rs#L1",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "2399",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "modules/buoyant_kernel.commit_range.md",
+    "record_file": "modules/buoyant_kernel.commit_range.json",
+    "anchor": "op-234589133bf1990cbd24ed95",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`CommitRange`": "../operations/buoyant_kernel.commit_range.CommitRange.md#op-7308777d4b0c84353f5470a4",
+      "`CommitRange::builder_for`": "../operations/buoyant_kernel.commit_range.CommitRange.md#op-d558fffe48e24faa5c16db01",
+      "`DeltaAction`": "../operations/buoyant_kernel.commit_range.actions.DeltaAction.md#op-ab52457262c777b7e2a7a5d8",
+      "`CommitRange::builder_from`": "../operations/buoyant_kernel.commit_range.CommitRange.md#op-b85017bbbf1059bb4f0f92d0",
+      "`CommitRange::commits`": "../operations/buoyant_kernel.commit_range.CommitRange.md#op-82385bf443cf1811dcd55fe8"
+    }
+  }
+]

@@ -56,6 +56,9 @@ fn from(value: StructArray) -> Self
 fn index(&self, name: &str) -> &Self::Output
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.record_batch.RecordBatch.md).
+
+
 A two-dimensional batch of column-oriented data with a defined
 [schema](arrow_schema::Schema).
 
@@ -113,6 +116,9 @@ fn next(&mut self) -> Option<Self::Item>
 fn size_hint(&self) -> (usize, Option<usize>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.record_batch.RecordBatchIterator.md).
+
+
 Generic implementation of [RecordBatchReader] that wraps an iterator.
 
 # Example
@@ -163,6 +169,9 @@ fn with_match_field_names(self, match_field_names: bool) -> Self
 fn with_row_count(self, row_count: Option<usize>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.record_batch.RecordBatchOptions.md).
+
+
 Options that control the behaviour used when creating a [`RecordBatch`].
 
 ---
@@ -195,6 +204,9 @@ trait RecordBatchReader: Iterator<Item = Result<RecordBatch, arrow_schema::Arrow
 fn schema(&self) -> SchemaRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.record_batch.RecordBatchReader.md).
+
+
 Trait for types that can read `RecordBatch`'s.
 
 To create from an iterator, see [RecordBatchIterator].
@@ -225,6 +237,9 @@ trait RecordBatchWriter
 fn close(self) -> Result<(), ArrowError>
 fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.record_batch.RecordBatchWriter.md).
+
 
 Trait for types that can write `RecordBatch`'s.
 

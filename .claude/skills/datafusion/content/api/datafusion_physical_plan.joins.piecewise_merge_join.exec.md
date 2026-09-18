@@ -55,6 +55,9 @@ fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.piecewise_merge_join.exec.PiecewiseMergeJoinExec.md).
+
+
 `PiecewiseMergeJoinExec` is a join execution plan that only evaluates single range filter and show much
 better performance for these workloads than `NestedLoopJoin`
 

@@ -1,0 +1,180 @@
+{
+  "id": "delta.retention",
+  "title": "Preview and execute vacuum with explicit historical-read consequences",
+  "reviewed": "2026-09-18",
+  "brief": "Vacuum removes physical files and can make historical snapshots unreadable. At this pin its default is Lite with dry_run=false and retention enforcement enabled; request preview explicitly.",
+  "task_aliases": [
+    "vacuum cleanup",
+    "dry run",
+    "full lite orphan files",
+    "retention historical reads",
+    "keep versions"
+  ],
+  "crates": [
+    "deltalake-core"
+  ],
+  "input": [
+    "DeltaTable",
+    "retention interval",
+    "VacuumMode",
+    "kept versions"
+  ],
+  "output": [
+    "(DeltaTable, VacuumMetrics)",
+    "deleted or candidate file paths"
+  ],
+  "properties": [
+    "vacuum cleanup",
+    "dry run",
+    "full lite orphan files",
+    "retention historical reads",
+    "keep versions"
+  ],
+  "operations": [
+    "deltalake_core::table::DeltaTable::vacuum",
+    "deltalake_core::operations::vacuum::VacuumBuilder::with_dry_run",
+    "deltalake_core::operations::vacuum::VacuumBuilder::with_mode",
+    "deltalake_core::operations::vacuum::VacuumBuilder::with_keep_versions",
+    "deltalake_core::operations::vacuum::VacuumBuilder::Output"
+  ],
+  "choices": [
+    {
+      "candidate": "with_dry_run(true)",
+      "choose_when": "You need candidate paths before removal",
+      "tradeoff": "Metrics naming does not mean preview actually deleted files"
+    },
+    {
+      "candidate": "Lite",
+      "choose_when": "Candidates should come from tracked tombstones",
+      "tradeoff": "Does not find every untracked orphan"
+    },
+    {
+      "candidate": "Full",
+      "choose_when": "Untracked eligible objects must also be considered",
+      "tradeoff": "Lists storage; path/age rules and backend costs matter"
+    },
+    {
+      "candidate": "with_keep_versions",
+      "choose_when": "Selected historical snapshots must retain required files",
+      "tradeoff": "Experimental option; does not create an unlimited history guarantee"
+    }
+  ],
+  "claims": [
+    {
+      "id": "delta.retention.1",
+      "aspect": "modes",
+      "statement": "A controlled-clock orphan fixture was found by Full and not Lite. A kept historical version excluded its required file from the preview.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "vacuum_full_finds_orphan_lite_does_not"
+    },
+    {
+      "id": "delta.retention.2",
+      "aspect": "retention",
+      "statement": "Zero retention was rejected with enforcement enabled. Historical v0 remained readable before actual removal and failed when consuming data after vacuum removed its files.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "vacuum_preview_keep_versions_and_history_loss"
+    },
+    {
+      "id": "delta.retention.3",
+      "aspect": "effects",
+      "statement": "Loading an old log snapshot after vacuum can succeed while scanning its data fails. Restore cannot recreate bytes that are no longer present.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    }
+  ],
+  "implementation": [
+    "Specify preview/mode/retention deliberately and inspect candidate paths before choosing a production policy.",
+    "Account for active readers, CDF consumers and recovery requirements when selecting retention; validate the exact backend behavior."
+  ],
+  "effects": [
+    "delete physical objects",
+    "reduce historical/CDF recoverability"
+  ],
+  "errors": [
+    "Retention guard and missing history/files are material conditions, not proof the current logical table is corrupt."
+  ],
+  "unknowns": [
+    "Remote listing consistency, authorization and deletion behavior remain untested."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "scope": "Exact git-capture full contracts for the selected operations"
+    },
+    {
+      "id": "source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/vacuum.rs",
+      "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+    },
+    {
+      "id": "runtime",
+      "kind": "runtime_observation",
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Named local assertions only; see profile, fixtures and source digests",
+      "tests": [
+        "vacuum_preview_keep_versions_and_history_loss",
+        "vacuum_full_finds_orphan_lite_does_not"
+      ]
+    }
+  ],
+  "resolved_operations": [
+    {
+      "path": "deltalake_core::table::DeltaTable::vacuum",
+      "id": "f35c76fceb4dd387be47d4c5",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.table.DeltaTable.json",
+      "page": "operations/deltalake_core.table.DeltaTable.md#op-f35c76fceb4dd387be47d4c5",
+      "signature": "fn vacuum(self) -> VacuumBuilder"
+    },
+    {
+      "path": "deltalake_core::operations::vacuum::VacuumBuilder::with_dry_run",
+      "id": "64b36ce2d7cda9e7d12d98d1",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.vacuum.VacuumBuilder.json",
+      "page": "operations/deltalake_core.operations.vacuum.VacuumBuilder.md#op-64b36ce2d7cda9e7d12d98d1",
+      "signature": "fn with_dry_run(self, dry_run: bool) -> Self"
+    },
+    {
+      "path": "deltalake_core::operations::vacuum::VacuumBuilder::with_mode",
+      "id": "1a50ecdb4534ce3068f563dc",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.vacuum.VacuumBuilder.json",
+      "page": "operations/deltalake_core.operations.vacuum.VacuumBuilder.md#op-1a50ecdb4534ce3068f563dc",
+      "signature": "fn with_mode(self, mode: VacuumMode) -> Self"
+    },
+    {
+      "path": "deltalake_core::operations::vacuum::VacuumBuilder::with_keep_versions",
+      "id": "972e70574d351c468cfb45c7",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.vacuum.VacuumBuilder.json",
+      "page": "operations/deltalake_core.operations.vacuum.VacuumBuilder.md#op-972e70574d351c468cfb45c7",
+      "signature": "fn with_keep_versions(self, versions: &[Version]) -> Self"
+    },
+    {
+      "path": "deltalake_core::operations::vacuum::VacuumBuilder::Output",
+      "id": "9efeffefd9cbc54190d5ac4a",
+      "kind": "assoc_type",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.vacuum.VacuumBuilder.json",
+      "page": "operations/deltalake_core.operations.vacuum.VacuumBuilder.md#op-9efeffefd9cbc54190d5ac4a",
+      "signature": "type Output = Result<(DeltaTable, VacuumMetrics), DeltaTableError>"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/delta.retention.json"
+}

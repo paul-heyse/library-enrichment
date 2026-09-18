@@ -21,7 +21,7 @@ async fn capsule_reuse_compares_complete_native_inventory() {
         artifact_digest: None,
     });
     let environment = Environment::resolved(
-        "stable".into(),
+        "rust-1.98.1;image".into(),
         "x86_64-unknown-linux-gnu".into(),
         vec![],
         Some(false),
@@ -45,19 +45,31 @@ async fn capsule_reuse_compares_complete_native_inventory() {
     let capsule = RetainedCapsule {
         generation: format!("{key}-{}", "a".repeat(32)),
         key,
-        inputs,
         cache: "/service/cache".into(),
-        environment,
-        lock: "lock".into(),
-        inventory: [(
-            "input.rs".into(),
-            Entry::File {
-                mode: 0o600,
-                bytes: 6,
-                sha256: "a".repeat(64),
-            },
-        )]
-        .into(),
+        prepared: enrichment_core::operation::ownership::PreparedCapsule {
+            inputs,
+            environment,
+            lock: "lock".into(),
+            inventory: [
+                (
+                    "enrichment.lock".into(),
+                    Entry::File {
+                        mode: 0o600,
+                        bytes: 4,
+                        sha256: enrichment_core::canonical::sha256_hex(b"lock"),
+                    },
+                ),
+                (
+                    "input.rs".into(),
+                    Entry::File {
+                        mode: 0o600,
+                        bytes: 6,
+                        sha256: "a".repeat(64),
+                    },
+                ),
+            ]
+            .into(),
+        },
         sequence: 1,
     };
     let root = tempfile::tempdir().unwrap();
@@ -66,12 +78,12 @@ async fn capsule_reuse_compares_complete_native_inventory() {
         enrichment_store::physical_ownership::reusable_capsule(
             &runtime,
             &capsule,
-            &capsule.inventory
+            &capsule.prepared.inventory
         )
         .await
         .unwrap()
     );
-    let mut changed = capsule.inventory.clone();
+    let mut changed = capsule.prepared.inventory.clone();
     changed.insert(
         "input.rs".into(),
         Entry::File {

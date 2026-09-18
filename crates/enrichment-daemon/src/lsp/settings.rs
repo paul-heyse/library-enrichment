@@ -35,19 +35,6 @@ impl Server {
         }
     }
 
-    /// The argv that starts it inside the capsule image.
-    ///
-    /// `ty server` takes no configuration flags -- its only listed option is `--help` -- and
-    /// rust-analyzer starts its server with no subcommand at all. Both were checked against the
-    /// installed binaries, not inferred from documentation.
-    #[must_use]
-    pub fn argv(self) -> Vec<String> {
-        match self {
-            Self::Ty => vec!["/opt/producers/bin/ty".to_owned(), "server".to_owned()],
-            Self::RustAnalyzer => vec!["/usr/local/cargo/bin/rust-analyzer".to_owned()],
-        }
-    }
-
     /// The initialization options for this server in a capsule.
     #[must_use]
     pub fn initialization_options(self) -> Value {
@@ -177,10 +164,5 @@ mod tests {
     fn neither_server_is_started_with_a_configuration_flag() {
         // Both were probed: `ty server` has no options but `--help`, and rust-analyzer needs no
         // subcommand. Settings travel over LSP, not the command line.
-        assert_eq!(Server::Ty.argv(), ["/opt/producers/bin/ty", "server"]);
-        assert_eq!(
-            Server::RustAnalyzer.argv(),
-            ["/usr/local/cargo/bin/rust-analyzer"]
-        );
     }
 }

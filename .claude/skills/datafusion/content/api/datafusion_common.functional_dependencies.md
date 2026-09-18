@@ -18,6 +18,9 @@ enum Constraint
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.functional_dependencies.Constraint.md).
+
+
 This object defines a constraint on a table.
 
 ---
@@ -36,6 +39,9 @@ enum Dependency
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.functional_dependencies.Dependency.md).
+
+
 Describes functional dependency mode.
 
 ---
@@ -50,6 +56,9 @@ Also reachable as `datafusion::common::aggregate_functional_dependencies`, `data
 fn aggregate_functional_dependencies(aggr_input_schema: &DFSchema, group_by_expr_names: &[String], aggr_schema: &DFSchema) -> FunctionalDependencies
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.functional_dependencies.aggregate_functional_dependencies.md).
+
+
 Calculates functional dependencies for aggregate output, when there is a GROUP BY expression.
 
 ---
@@ -63,6 +72,9 @@ Also reachable as `datafusion::common::get_required_group_by_exprs_indices`, `da
 ```rust
 fn get_required_group_by_exprs_indices(schema: &DFSchema, group_by_expr_names: &[String]) -> Option<Vec<usize>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.functional_dependencies.get_required_group_by_exprs_indices.md).
+
 
 Returns indices for the minimal subset of GROUP BY expressions that are
 functionally equivalent to the original set of GROUP BY expressions.
@@ -79,6 +91,9 @@ Also reachable as `datafusion::common::get_required_sort_exprs_indices`, `datafu
 fn get_required_sort_exprs_indices(schema: &DFSchema, sort_expr_names: &[String]) -> Vec<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.functional_dependencies.get_required_sort_exprs_indices.md).
+
+
 Returns indices for the minimal subset of ORDER BY expressions that are
 functionally equivalent to the original set of ORDER BY expressions.
 
@@ -93,6 +108,9 @@ Also reachable as `datafusion::common::get_target_functional_dependencies`, `dat
 ```rust
 fn get_target_functional_dependencies(schema: &DFSchema, group_by_expr_names: &[String]) -> Option<Vec<usize>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.functional_dependencies.get_target_functional_dependencies.md).
+
 
 Returns target indices, for the determinant keys that are inside
 group by expressions.
@@ -139,6 +157,9 @@ fn into_iter(self) -> Self::IntoIter
 fn deref(&self) -> &Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.functional_dependencies.Constraints.md).
+
+
 This object encapsulates a list of functional constraints:
 
 ---
@@ -163,6 +184,9 @@ struct FunctionalDependence
 fn new(source_indices: Vec<usize>, target_indices: Vec<usize>, nullable: bool) -> Self
 fn with_mode(self, mode: Dependency) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.functional_dependencies.FunctionalDependence.md).
+
 
 This object defines a functional dependence in the schema. A functional
 dependence defines a relationship between determinant keys and dependent
@@ -213,6 +237,9 @@ fn with_dependency(self, mode: Dependency) -> Self
 ```rust
 fn deref(&self) -> &Self::Target
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.functional_dependencies.FunctionalDependencies.md).
+
 
 This object encapsulates all functional dependencies in a given relation.
 

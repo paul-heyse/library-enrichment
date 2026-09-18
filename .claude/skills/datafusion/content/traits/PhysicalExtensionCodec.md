@@ -19,7 +19,7 @@ fn try_encode(&self, node: Arc<dyn ExecutionPlan>, buf: &mut Vec<u8>, proto_conv
 
 ## Provided
 
-Defaulted, and this is where the capability hides. The default is the conservative answer -- no pushdown, no statistics, no specialization -- so an implementation that overrides none of these works correctly and performs badly.
+These methods have defaults. Read each full contract before overriding: some defaults reject unsupported operations, while others provide suitable general behavior. Required methods alone do not prove correctness or performance.
 
 ```rust
 fn try_decode_expr(&self, _buf: &[u8], _inputs: &[Arc<dyn PhysicalExpr>], _ctx: &PhysicalExprDecodeCtx<'_>) -> Result<Arc<dyn PhysicalExpr>>

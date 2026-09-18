@@ -5,6 +5,7 @@ Crate `deltalake-core` · 8 public items · structured records in [`model/deltal
 ## parse_bool
 
 `function` · `deltalake_core::logstore::config::parse_bool`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.config.parse_bool.md)
 
 Also reachable as `deltalake::logstore::config::parse_bool`
 
@@ -27,6 +28,7 @@ assert!(!parse_bool("0").unwrap());
 ## parse_f64
 
 `function` · `deltalake_core::logstore::config::parse_f64`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.config.parse_f64.md)
 
 Also reachable as `deltalake::logstore::config::parse_f64`
 
@@ -47,6 +49,7 @@ assert!(parse_f64("not_a_number").is_err());
 ## parse_string
 
 `function` · `deltalake_core::logstore::config::parse_string`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.config.parse_string.md)
 
 Also reachable as `deltalake::logstore::config::parse_string`
 
@@ -61,6 +64,7 @@ Parse a configuration value as a plain string (an infallible identity conversion
 ## parse_usize
 
 `function` · `deltalake_core::logstore::config::parse_usize`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.config.parse_usize.md)
 
 Also reachable as `deltalake::logstore::config::parse_usize`
 
@@ -81,6 +85,7 @@ assert!(parse_usize("not_a_number").is_err());
 ## str_is_truthy
 
 `function` · `deltalake_core::logstore::config::str_is_truthy`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.config.str_is_truthy.md)
 
 Also reachable as `deltalake::logstore::config::str_is_truthy`
 
@@ -107,6 +112,7 @@ for value in ["0", "FALSE", "off", "NO", "n", "bork"] {
 ## ParseResult
 
 `struct` · `deltalake_core::logstore::config::ParseResult`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.config.ParseResult.md)
 
 Also reachable as `deltalake::logstore::config::ParseResult`
 
@@ -139,6 +145,7 @@ Generic container for parsing configuration
 ## StorageConfig
 
 `struct` · `deltalake_core::logstore::config::StorageConfig`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.config.StorageConfig.md)
 
 Also reachable as `deltalake::logstore::StorageConfig`, `deltalake::logstore::config::StorageConfig`, `deltalake_core::logstore::StorageConfig`
 
@@ -177,6 +184,7 @@ passthrough options used to build the underlying [`ObjectStore`].
 ## TryUpdateKey
 
 `trait` · `deltalake_core::logstore::config::TryUpdateKey`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.config.TryUpdateKey.md)
 
 Also reachable as `deltalake::logstore::config::TryUpdateKey`
 

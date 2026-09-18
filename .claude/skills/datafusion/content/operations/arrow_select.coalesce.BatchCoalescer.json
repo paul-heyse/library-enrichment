@@ -1,0 +1,2056 @@
+[
+  {
+    "id": "76e0a8f9b55b024998e5f424",
+    "path": "arrow_select::coalesce::BatchCoalescer",
+    "name": "BatchCoalescer",
+    "owner": null,
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct BatchCoalescer",
+    "docs": "Concatenate multiple [`RecordBatch`]es\n\nImplements the common pattern of incrementally creating output\n[`RecordBatch`]es of a specific size from an input stream of\n[`RecordBatch`]es.\n\nThis is useful after operations such as [`filter`] and [`take`] that produce\nsmaller batches, and we want to coalesce them into larger batches for\nfurther processing.\n\n# Motivation\n\nIf we use [`concat_batches`] to implement the same functionality, there are 2 potential issues:\n1. At least 2x peak memory (holding the input and output of concat)\n2. 2 copies of the data (to create the output of filter and then create the output of concat)\n\nSee: <https://github.com/apache/arrow-rs/issues/6692> for more discussions\nabout the motivation.\n\n[`filter`]: crate::filter::filter\n[`take`]: crate::take::take\n[`concat_batches`]: crate::concat::concat_batches\n\n# Example\n```\nuse arrow_array::record_batch;\nuse arrow_select::coalesce::{BatchCoalescer};\nlet batch1 = record_batch!((\"a\", Int32, [1, 2, 3])).unwrap();\nlet batch2 = record_batch!((\"a\", Int32, [4, 5])).unwrap();\n\n// Create a `BatchCoalescer` that will produce batches with at least 4 rows\nlet target_batch_size = 4;\nlet mut coalescer = BatchCoalescer::new(batch1.schema(), 4);\n\n// push the batches\ncoalescer.push_batch(batch1).unwrap();\n// only pushed 3 rows (not yet 4, enough to produce a batch)\nassert!(coalescer.next_completed_batch().is_none());\ncoalescer.push_batch(batch2).unwrap();\n// now we have 5 rows, so we can produce a batch\nlet finished = coalescer.next_completed_batch().unwrap();\n// 4 rows came out (target batch size is 4)\nlet expected = record_batch!((\"a\", Int32, [1, 2, 3, 4])).unwrap();\nassert_eq!(finished, expected);\n\n// Have no more input, but still have an in-progress batch\nassert!(coalescer.next_completed_batch().is_none());\n// We can finish the batch, which will produce the remaining rows\ncoalescer.finish_buffered_batch().unwrap();\nlet expected = record_batch!((\"a\", Int32, [5])).unwrap();\nassert_eq!(coalescer.next_completed_batch().unwrap(), expected);\n\n// The coalescer is now empty\nassert!(coalescer.next_completed_batch().is_none());\n```\n\n# Background\n\nGenerally speaking, larger [`RecordBatch`]es are more efficient to process\nthan smaller [`RecordBatch`]es (until the CPU cache is exceeded) because\nthere is fixed processing overhead per batch. This coalescer builds up these\nlarger batches incrementally.\n\n```text\n┌────────────────────┐\n│    RecordBatch     │\n│   num_rows = 100   │\n└────────────────────┘                 ┌────────────────────┐\n                                       │                    │\n┌────────────────────┐     Coalesce    │                    │\n│                    │      Batches    │                    │\n│    RecordBatch     │                 │                    │\n│   num_rows = 200   │  ─ ─ ─ ─ ─ ─ ▶  │                    │\n│                    │                 │    RecordBatch     │\n│                    │                 │   num_rows = 400   │\n└────────────────────┘                 │                    │\n                                       │                    │\n┌────────────────────┐                 │                    │\n│                    │                 │                    │\n│    RecordBatch     │                 │                    │\n│   num_rows = 100   │                 └────────────────────┘\n│                    │\n└────────────────────┘\n```\n\n# Notes:\n\n1. Output rows are produced in the same order as the input rows\n\n2. The output is a sequence of batches, with all but the last being at exactly\n   `target_batch_size` rows.",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        148,
+        1
+      ],
+      "end": [
+        165,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          37,
+          38,
+          40,
+          42,
+          44,
+          46,
+          48,
+          50,
+          53,
+          57,
+          61,
+          64,
+          68,
+          72,
+          75,
+          80
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "crate::filter::filter": 11,
+      "crate::concat::concat_batches": 13,
+      "`RecordBatch`": 10,
+      "crate::take::take": 12
+    },
+    "link_paths": {
+      "crate::filter::filter": "arrow_select::filter::filter",
+      "crate::concat::concat_batches": "arrow_select::concat::concat_batches",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch",
+      "crate::take::take": "arrow_select::take::take"
+    },
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "14",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-76e0a8f9b55b024998e5f424",
+    "aliases": [
+      "arrow::compute::BatchCoalescer",
+      "arrow::compute::kernels::coalesce::BatchCoalescer"
+    ],
+    "resolved_doc_links": {
+      "crate::filter::filter": "../operations/arrow_select.filter.filter.md#op-81498df4434a7e4fa4ec4f9e",
+      "crate::concat::concat_batches": "../operations/arrow_select.concat.concat_batches.md#op-7310cab72665168768fae19e",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "crate::take::take": "../operations/arrow_select.take.take.md#op-4197d454d308f4ceadb20600"
+    }
+  },
+  {
+    "id": "5725127b1365f20ac91e5a7f",
+    "path": "arrow_select::coalesce::BatchCoalescer::biggest_coalesce_batch_size",
+    "name": "biggest_coalesce_batch_size",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn biggest_coalesce_batch_size(&self) -> Option<usize>",
+    "docs": "Get the current biggest coalesce batch size limit\n\nSee [`Self::with_biggest_coalesce_batch_size`] for details",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        218,
+        5
+      ],
+      "end": [
+        220,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 18,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "18": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          167,
+          1
+        ],
+        "end": [
+          602,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::with_biggest_coalesce_batch_size`": 17
+    },
+    "link_paths": {
+      "`Self::with_biggest_coalesce_batch_size`": "arrow_select::coalesce::BatchCoalescer::with_biggest_coalesce_batch_size"
+    },
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "19",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-5725127b1365f20ac91e5a7f",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::biggest_coalesce_batch_size",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::biggest_coalesce_batch_size"
+    ],
+    "resolved_doc_links": {
+      "`Self::with_biggest_coalesce_batch_size`": "../operations/arrow_select.coalesce.BatchCoalescer.md#op-124f677e969ea01083b6ec07"
+    }
+  },
+  {
+    "id": "22ca9b3fc4d9885cb81352e3",
+    "path": "arrow_select::coalesce::BatchCoalescer::finish_buffered_batch",
+    "name": "finish_buffered_batch",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_buffered_batch(&mut self) -> Result<(), ArrowError>",
+    "docs": "Concatenates any buffered batches into a single `RecordBatch` and\nclears any output buffers\n\nNormally this is called when the input stream is exhausted, and\nwe want to finalize the last batch of rows.\n\nSee [`Self::next_completed_batch()`] for the completed batches.",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        547,
+        5
+      ],
+      "end": [
+        570,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 26,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 27,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "26": "core::result::Result",
+      "27": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          167,
+          1
+        ],
+        "end": [
+          602,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::next_completed_batch()`": 31
+    },
+    "link_paths": {
+      "`Self::next_completed_batch()`": "arrow_select::coalesce::BatchCoalescer::next_completed_batch"
+    },
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "32",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-22ca9b3fc4d9885cb81352e3",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::finish_buffered_batch",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::finish_buffered_batch"
+    ],
+    "resolved_doc_links": {
+      "`Self::next_completed_batch()`": "../operations/arrow_select.coalesce.BatchCoalescer.md#op-c748cb59ec3643dfcc8168aa"
+    }
+  },
+  {
+    "id": "4dab6dc8e0b5b31e5bfc17af",
+    "path": "arrow_select::coalesce::BatchCoalescer::fmt",
+    "name": "fmt",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        147,
+        10
+      ],
+      "end": [
+        147,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 78,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 79,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "78": "core::fmt::Formatter",
+      "79": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          147,
+          10
+        ],
+        "end": [
+          147,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "77",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-4dab6dc8e0b5b31e5bfc17af",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::fmt",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "325ab46095b8898fdbac0967",
+    "path": "arrow_select::coalesce::BatchCoalescer::get_buffered_rows",
+    "name": "get_buffered_rows",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_buffered_rows(&self) -> usize",
+    "docs": "Returns the number of buffered rows",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        536,
+        5
+      ],
+      "end": [
+        538,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          167,
+          1
+        ],
+        "end": [
+          602,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "33",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-325ab46095b8898fdbac0967",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::get_buffered_rows",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::get_buffered_rows"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fe39a436fe71a600d14ec02f",
+    "path": "arrow_select::coalesce::BatchCoalescer::has_completed_batch",
+    "name": "has_completed_batch",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn has_completed_batch(&self) -> bool",
+    "docs": "Returns true if there are any completed batches",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        578,
+        5
+      ],
+      "end": [
+        580,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          167,
+          1
+        ],
+        "end": [
+          602,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "35",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-fe39a436fe71a600d14ec02f",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::has_completed_batch",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::has_completed_batch"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "448c9c81b5254293e4833023",
+    "path": "arrow_select::coalesce::BatchCoalescer::is_empty",
+    "name": "is_empty",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "Returns true if there is any buffered data",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        573,
+        5
+      ],
+      "end": [
+        575,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          167,
+          1
+        ],
+        "end": [
+          602,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "34",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-448c9c81b5254293e4833023",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::is_empty",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::is_empty"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c4a2e06d08ad8443d55dc03b",
+    "path": "arrow_select::coalesce::BatchCoalescer::new",
+    "name": "new",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(schema: SchemaRef, target_batch_size: usize) -> Self",
+    "docs": "Create a new `BatchCoalescer`\n\n# Arguments\n- `schema` - the schema of the output batches\n- `target_batch_size` - the number of rows in each output batch.\n  Typical values are `4096` or `8192` rows.\n",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        175,
+        5
+      ],
+      "end": [
+        196,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 16,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "target_batch_size",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "16": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          167,
+          1
+        ],
+        "end": [
+          602,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "15",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-c4a2e06d08ad8443d55dc03b",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::new",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::new"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c748cb59ec3643dfcc8168aa",
+    "path": "arrow_select::coalesce::BatchCoalescer::next_completed_batch",
+    "name": "next_completed_batch",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn next_completed_batch(&mut self) -> Option<RecordBatch>",
+    "docs": "Removes and returns the next completed batch, if any.",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        583,
+        5
+      ],
+      "end": [
+        585,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 18,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "RecordBatch",
+                          "id": 10,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "18": "core::option::Option",
+      "10": "arrow_array::record_batch::RecordBatch"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          167,
+          1
+        ],
+        "end": [
+          602,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "31",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-c748cb59ec3643dfcc8168aa",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::next_completed_batch",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::next_completed_batch"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "075c8b56053a62116f4064fb",
+    "path": "arrow_select::coalesce::BatchCoalescer::push_batch",
+    "name": "push_batch",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn push_batch(&mut self, batch: RecordBatch) -> Result<(), ArrowError>",
+    "docs": "Push all the rows from `batch` into the Coalescer\n\nWhen buffered data plus incoming rows reach `target_batch_size` ,\ncompleted batches are generated eagerly and can be retrieved via\n[`Self::next_completed_batch()`].\nOutput batches contain exactly `target_batch_size` rows, so the tail of\nthe input batch may remain buffered.\nRemaining partial data either waits for future input batches or can be\nmaterialized immediately by calling [`Self::finish_buffered_batch()`].\n\n# Example\n```\n# use arrow_array::record_batch;\n# use arrow_select::coalesce::BatchCoalescer;\nlet batch1 = record_batch!((\"a\", Int32, [1, 2, 3])).unwrap();\nlet batch2 = record_batch!((\"a\", Int32, [4, 5, 6])).unwrap();\n// create a new Coalescer that targets creating 1000 row batches\nlet mut coalescer = BatchCoalescer::new(batch1.schema(), 1000);\ncoalescer.push_batch(batch1);\ncoalescer.push_batch(batch2);\n// finsh and retrieve the created batch\ncoalescer.finish_buffered_batch().unwrap();\nlet completed_batch = coalescer.next_completed_batch().unwrap();\nlet expected_batch = record_batch!((\"a\", Int32, [1, 2, 3, 4, 5, 6])).unwrap();\nassert_eq!(completed_batch, expected_batch);\n```",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        325,
+        5
+      ],
+      "end": [
+        533,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch",
+              {
+                "resolved_path": {
+                  "path": "RecordBatch",
+                  "id": 10,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 26,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 27,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "arrow_array::record_batch::RecordBatch",
+      "26": "core::result::Result",
+      "27": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          167,
+          1
+        ],
+        "end": [
+          602,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::next_completed_batch()`": 31,
+      "`Self::finish_buffered_batch()`": 32
+    },
+    "link_paths": {
+      "`Self::next_completed_batch()`": "arrow_select::coalesce::BatchCoalescer::next_completed_batch",
+      "`Self::finish_buffered_batch()`": "arrow_select::coalesce::BatchCoalescer::finish_buffered_batch"
+    },
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "22",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-075c8b56053a62116f4064fb",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::push_batch",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::push_batch"
+    ],
+    "resolved_doc_links": {
+      "`Self::next_completed_batch()`": "../operations/arrow_select.coalesce.BatchCoalescer.md#op-c748cb59ec3643dfcc8168aa",
+      "`Self::finish_buffered_batch()`": "../operations/arrow_select.coalesce.BatchCoalescer.md#op-22ca9b3fc4d9885cb81352e3"
+    }
+  },
+  {
+    "id": "6b6f2aefd75314df7d9112ca",
+    "path": "arrow_select::coalesce::BatchCoalescer::push_batch_with_filter",
+    "name": "push_batch_with_filter",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn push_batch_with_filter(&mut self, batch: RecordBatch, filter: &BooleanArray) -> Result<(), ArrowError>",
+    "docs": "Push a batch into the Coalescer after applying a filter\n\nThis is semantically equivalent of calling [`Self::push_batch`]\nwith the results from [`crate::filter::filter_record_batch`]\n\n# Example\n```\n# use arrow_array::{record_batch, BooleanArray};\n# use arrow_select::coalesce::BatchCoalescer;\nlet batch1 = record_batch!((\"a\", Int32, [1, 2, 3])).unwrap();\nlet batch2 = record_batch!((\"a\", Int32, [4, 5, 6])).unwrap();\n// Apply a filter to each batch to pick the first and last row\nlet filter = BooleanArray::from(vec![true, false, true]);\n// create a new Coalescer that targets creating 1000 row batches\nlet mut coalescer = BatchCoalescer::new(batch1.schema(), 1000);\ncoalescer.push_batch_with_filter(batch1, &filter);\ncoalescer.push_batch_with_filter(batch2, &filter);\n// finsh and retrieve the created batch\ncoalescer.finish_buffered_batch().unwrap();\nlet completed_batch = coalescer.next_completed_batch().unwrap();\n// filtered out 2 and 5:\nlet expected_batch = record_batch!((\"a\", Int32, [1, 3, 4, 6])).unwrap();\nassert_eq!(completed_batch, expected_batch);\n```",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        258,
+        5
+      ],
+      "end": [
+        264,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch",
+              {
+                "resolved_path": {
+                  "path": "RecordBatch",
+                  "id": 10,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "filter",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "BooleanArray",
+                      "id": 25,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 26,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 27,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "arrow_array::record_batch::RecordBatch",
+      "25": "arrow_array::array::boolean_array::BooleanArray",
+      "26": "core::result::Result",
+      "27": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          167,
+          1
+        ],
+        "end": [
+          602,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`crate::filter::filter_record_batch`": 23,
+      "`Self::push_batch`": 22
+    },
+    "link_paths": {
+      "`crate::filter::filter_record_batch`": "arrow_select::filter::filter_record_batch",
+      "`Self::push_batch`": "arrow_select::coalesce::BatchCoalescer::push_batch"
+    },
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "24",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-6b6f2aefd75314df7d9112ca",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::push_batch_with_filter",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::push_batch_with_filter"
+    ],
+    "resolved_doc_links": {
+      "`crate::filter::filter_record_batch`": "../operations/arrow_select.filter.filter_record_batch.md#op-50a068de42a854681b747251",
+      "`Self::push_batch`": "../operations/arrow_select.coalesce.BatchCoalescer.md#op-075c8b56053a62116f4064fb"
+    }
+  },
+  {
+    "id": "81e7a18488f3d01eff93e1c9",
+    "path": "arrow_select::coalesce::BatchCoalescer::push_batch_with_indices",
+    "name": "push_batch_with_indices",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn push_batch_with_indices(&mut self, batch: RecordBatch, indices: &dyn Array) -> Result<(), ArrowError>",
+    "docs": "Push a batch into the Coalescer after applying a set of indices\nThis is semantically equivalent of calling [`Self::push_batch`]\nwith the results from  [`take_record_batch`]\n\n# Example\n```\n# use arrow_array::{record_batch, UInt64Array};\n# use arrow_select::coalesce::BatchCoalescer;\nlet batch1 = record_batch!((\"a\", Int32, [0, 0, 0])).unwrap();\nlet batch2 = record_batch!((\"a\", Int32, [1, 1, 4, 5, 1, 4])).unwrap();\n// Sorted indices to create a sorted output, this can be obtained with\n// `arrow-ord`'s sort_to_indices operation\nlet indices = UInt64Array::from(vec![0, 1, 4, 2, 5, 3]);\n// create a new Coalescer that targets creating 1000 row batches\nlet mut coalescer = BatchCoalescer::new(batch1.schema(), 1000);\ncoalescer.push_batch(batch1);\ncoalescer.push_batch_with_indices(batch2, &indices);\n// finsh and retrieve the created batch\ncoalescer.finish_buffered_batch().unwrap();\nlet completed_batch = coalescer.next_completed_batch().unwrap();\nlet expected_batch = record_batch!((\"a\", Int32, [0, 0, 0, 1, 1, 1, 4, 4, 5])).unwrap();\nassert_eq!(completed_batch, expected_batch);\n```",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        289,
+        5
+      ],
+      "end": [
+        297,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch",
+              {
+                "resolved_path": {
+                  "path": "RecordBatch",
+                  "id": 10,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "indices",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Array",
+                            "id": 30,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 26,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 27,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "arrow_array::record_batch::RecordBatch",
+      "30": "arrow_array::array::Array",
+      "26": "core::result::Result",
+      "27": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          167,
+          1
+        ],
+        "end": [
+          602,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`take_record_batch`": 28,
+      "`Self::push_batch`": 22
+    },
+    "link_paths": {
+      "`take_record_batch`": "arrow_select::take::take_record_batch",
+      "`Self::push_batch`": "arrow_select::coalesce::BatchCoalescer::push_batch"
+    },
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "29",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-81e7a18488f3d01eff93e1c9",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::push_batch_with_indices",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::push_batch_with_indices"
+    ],
+    "resolved_doc_links": {
+      "`take_record_batch`": "../operations/arrow_select.take.take_record_batch.md#op-929c00ffe22d86d208c23db7",
+      "`Self::push_batch`": "../operations/arrow_select.coalesce.BatchCoalescer.md#op-075c8b56053a62116f4064fb"
+    }
+  },
+  {
+    "id": "dba930bd745879b559bcbfe5",
+    "path": "arrow_select::coalesce::BatchCoalescer::schema",
+    "name": "schema",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn schema(&self) -> SchemaRef",
+    "docs": "Return the schema of the output batches",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        230,
+        5
+      ],
+      "end": [
+        232,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "SchemaRef",
+              "id": 16,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "16": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          167,
+          1
+        ],
+        "end": [
+          602,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "21",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-dba930bd745879b559bcbfe5",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::schema",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d99429526c0e50377d4825a6",
+    "path": "arrow_select::coalesce::BatchCoalescer::set_biggest_coalesce_batch_size",
+    "name": "set_biggest_coalesce_batch_size",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn set_biggest_coalesce_batch_size(&mut self, limit: Option<usize>)",
+    "docs": "Set the biggest coalesce batch size limit\n\nSee [`Self::with_biggest_coalesce_batch_size`] for details",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        225,
+        5
+      ],
+      "end": [
+        227,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "limit",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 18,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "18": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          167,
+          1
+        ],
+        "end": [
+          602,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::with_biggest_coalesce_batch_size`": 17
+    },
+    "link_paths": {
+      "`Self::with_biggest_coalesce_batch_size`": "arrow_select::coalesce::BatchCoalescer::with_biggest_coalesce_batch_size"
+    },
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "20",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-d99429526c0e50377d4825a6",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::set_biggest_coalesce_batch_size",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::set_biggest_coalesce_batch_size"
+    ],
+    "resolved_doc_links": {
+      "`Self::with_biggest_coalesce_batch_size`": "../operations/arrow_select.coalesce.BatchCoalescer.md#op-124f677e969ea01083b6ec07"
+    }
+  },
+  {
+    "id": "fb8b80005228a272df0210b7",
+    "path": "arrow_select::coalesce::BatchCoalescer::size",
+    "name": "size",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn size(&self) -> usize",
+    "docs": "Returns the number of bytes used by this data structure.",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        588,
+        5
+      ],
+      "end": [
+        601,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          167,
+          1
+        ],
+        "end": [
+          602,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "36",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-fb8b80005228a272df0210b7",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::size",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::size"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "124f677e969ea01083b6ec07",
+    "path": "arrow_select::coalesce::BatchCoalescer::with_biggest_coalesce_batch_size",
+    "name": "with_biggest_coalesce_batch_size",
+    "owner": "arrow_select::coalesce::BatchCoalescer",
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_biggest_coalesce_batch_size(self, limit: Option<usize>) -> Self",
+    "docs": "Set the coalesce batch size limit (default `None`)\n\nThis limit determine when batches should bypass coalescing. Intuitively,\nbatches that are already large are costly to coalesce and are efficient\nenough to process directly without coalescing.\n\nIf `Some(limit)`, batches larger than this limit will bypass coalescing\nwhen there is no buffered data, or when the previously buffered data\nalready exceeds this limit.\n\nIf `None`, all batches will be coalesced according to the\ntarget_batch_size.",
+    "span": {
+      "filename": "src/coalesce.rs",
+      "begin": [
+        210,
+        5
+      ],
+      "end": [
+        213,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "limit",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 18,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "18": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BatchCoalescer",
+          "id": "arrow_select::coalesce::BatchCoalescer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/coalesce.rs",
+        "begin": [
+          167,
+          1
+        ],
+        "end": [
+          602,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "17",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.coalesce.BatchCoalescer.md",
+    "record_file": "operations/arrow_select.coalesce.BatchCoalescer.json",
+    "anchor": "op-124f677e969ea01083b6ec07",
+    "aliases": [
+      "arrow::compute::BatchCoalescer::with_biggest_coalesce_batch_size",
+      "arrow::compute::kernels::coalesce::BatchCoalescer::with_biggest_coalesce_batch_size"
+    ],
+    "resolved_doc_links": {}
+  }
+]

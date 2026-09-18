@@ -1,0 +1,82 @@
+[
+  {
+    "id": "25db457d3f0428d093a6aeb9",
+    "path": "datafusion_physical_plan::coop",
+    "name": "coop",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "module",
+    "signature": "mod coop",
+    "docs": "Utilities for improved cooperative scheduling.\n\n# Cooperative scheduling\n\nA single call to `poll_next` on a top-level [`Stream`] may potentially perform a lot of work\nbefore it returns a `Poll::Pending`. Think for instance of calculating an aggregation over a\nlarge dataset.\n\nIf a `Stream` runs for a long period of time without yielding back to the Tokio executor,\nit can starve other tasks waiting on that executor to execute them.\nAdditionally, this prevents the query execution from being cancelled.\n\nFor more background, please also see the [Using Rust async for Query Execution and Cancelling Long-Running Queries blog]\n\n[Using Rust async for Query Execution and Cancelling Long-Running Queries blog]: https://datafusion.apache.org/blog/2025/06/30/cancellation\n\nTo ensure that `Stream` implementations yield regularly, operators can insert explicit yield\npoints using the utilities in this module. For most operators this is **not** necessary. The\n`Stream`s of the built-in DataFusion operators that generate (rather than manipulate)\n`RecordBatch`es such as `DataSourceExec` and those that eagerly consume `RecordBatch`es\n(for instance, `RepartitionExec`) contain yield points that will make most query `Stream`s yield\nperiodically.\n\nThere are a couple of types of operators that _should_ insert yield points:\n- New source operators that do not make use of Tokio resources\n- Exchange like operators that do not use Tokio's `Channel` implementation to pass data between\n  tasks\n\n## Adding yield points\n\nYield points can be inserted manually using the facilities provided by the\n[Tokio coop module](https://docs.rs/tokio/latest/tokio/task/coop/index.html) such as\n[`tokio::task::coop::consume_budget`](https://docs.rs/tokio/latest/tokio/task/coop/fn.consume_budget.html).\n\nAnother option is to use the wrapper `Stream` implementation provided by this module which will\nconsume a unit of task budget every time a `RecordBatch` is produced.\nWrapper `Stream`s can be created using the [`cooperative`] and [`make_cooperative`] functions.\n\n[`cooperative`] is a generic function that takes ownership of the wrapped [`RecordBatchStream`].\nThis function has the benefit of not requiring an additional heap allocation and can avoid\ndynamic dispatch.\n\n[`make_cooperative`] is a non-generic function that wraps a [`SendableRecordBatchStream`]. This\ncan be used to wrap dynamically typed, heap allocated [`RecordBatchStream`]s.\n\n## Automatic cooperation\n\nThe `EnsureCooperative` physical optimizer rule, which is included in the default set of\noptimizer rules, inspects query plans for potential cooperative scheduling issues.\nIt injects the [`CooperativeExec`] wrapper `ExecutionPlan` into the query plan where necessary.\nThis `ExecutionPlan` uses [`make_cooperative`] to wrap the `Stream` of its input.\n\nThe optimizer rule currently checks the plan for exchange-like operators and leave operators\nthat report [`SchedulingType::NonCooperative`] in their [plan properties](ExecutionPlan::properties).",
+    "span": {
+      "filename": "src/coop.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        517,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          1345,
+          1377,
+          1427,
+          1376
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`RecordBatchStream`": 1346,
+      "`make_cooperative`": 1376,
+      "`SendableRecordBatchStream`": 103,
+      "`CooperativeExec`": 1377,
+      "ExecutionPlan::properties": 1429,
+      "`Stream`": 1079,
+      "`SchedulingType::NonCooperative`": 1428,
+      "`cooperative`": 1427
+    },
+    "link_paths": {
+      "`RecordBatchStream`": "datafusion_execution::stream::RecordBatchStream",
+      "`make_cooperative`": "datafusion_physical_plan::coop::make_cooperative",
+      "`SendableRecordBatchStream`": "datafusion_execution::stream::SendableRecordBatchStream",
+      "`CooperativeExec`": "datafusion_physical_plan::coop::CooperativeExec",
+      "ExecutionPlan::properties": "datafusion_physical_plan::execution_plan::ExecutionPlan::properties",
+      "`Stream`": "futures_core::stream::Stream",
+      "`SchedulingType::NonCooperative`": "datafusion_physical_plan::execution_plan::SchedulingType::NonCooperative",
+      "`cooperative`": "datafusion_physical_plan::coop::cooperative"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1344",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/datafusion_physical_plan.coop.md",
+    "record_file": "modules/datafusion_physical_plan.coop.json",
+    "anchor": "op-25db457d3f0428d093a6aeb9",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RecordBatchStream`": "../operations/datafusion_execution.stream.RecordBatchStream.md#op-6a21cda33374b9fc18902881",
+      "`make_cooperative`": "../operations/datafusion_physical_plan.coop.make_cooperative.md#op-5ca0ae018ad6b781199ba404",
+      "`SendableRecordBatchStream`": "../operations/datafusion_execution.stream.SendableRecordBatchStream.md#op-7cf25e4c554567392af11cb6",
+      "`CooperativeExec`": "../operations/datafusion_physical_plan.coop.CooperativeExec.md#op-1efab241141bdbd717c01df7",
+      "ExecutionPlan::properties": "../operations/datafusion_physical_plan.execution_plan.ExecutionPlan.md#op-ef2d89ab2da894daea49ae8e",
+      "`SchedulingType::NonCooperative`": "../operations/datafusion_physical_plan.execution_plan.SchedulingType.md#op-87aaf2d02bb118a5b3d7c4aa",
+      "`cooperative`": "../operations/datafusion_physical_plan.coop.cooperative.md#op-7cac1f0905838379990a4e69"
+    }
+  }
+]

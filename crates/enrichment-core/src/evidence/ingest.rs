@@ -70,7 +70,7 @@ pub struct IngestContext {
     pub release_id: crate::identity::ReleaseId,
     pub environment_id: crate::identity::EnvironmentId,
     pub source_version_match: SourceVersionMatch,
-    pub producing_attempt: String,
+    pub producing_attempt: crate::identity::AttemptId,
     pub producer_runs: Vec<ProducerRun>,
     pub artifacts: Vec<Artifact>,
     pub indexed: Vec<EvidenceKind>,

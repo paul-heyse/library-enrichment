@@ -1,0 +1,163 @@
+{
+  "id": "delta.optimize",
+  "title": "Compact or Z-order while preserving logical data",
+  "reviewed": "2026-09-18",
+  "brief": "Use Compact to combine eligible files and ZOrder for selected-column clustering. Measure output file/scan behavior separately from logical-row preservation.",
+  "task_aliases": [
+    "compact small files",
+    "z order cluster",
+    "optimize metrics",
+    "no op optimize"
+  ],
+  "crates": [
+    "deltalake-core"
+  ],
+  "input": [
+    "DeltaTable",
+    "partition selection",
+    "target size",
+    "OptimizeType"
+  ],
+  "output": [
+    "(DeltaTable, Metrics)",
+    "rewritten files"
+  ],
+  "properties": [
+    "compact small files",
+    "z order cluster",
+    "optimize metrics",
+    "no op optimize"
+  ],
+  "operations": [
+    "deltalake_core::table::DeltaTable::optimize",
+    "deltalake_core::operations::optimize::OptimizeBuilder::with_type",
+    "deltalake_core::operations::optimize::OptimizeBuilder::with_target_size",
+    "deltalake_core::operations::optimize::OptimizeBuilder::Output"
+  ],
+  "choices": [
+    {
+      "candidate": "Compact",
+      "choose_when": "Small eligible files should be combined",
+      "tradeoff": "A repeated run may be a no-op"
+    },
+    {
+      "candidate": "ZOrder(columns)",
+      "choose_when": "Clustering by those columns may improve later data skipping",
+      "tradeoff": "Requires workload evidence; it is not a global result-order guarantee"
+    },
+    {
+      "candidate": "Leave layout unchanged",
+      "choose_when": "Rewrite cost exceeds demonstrated benefit",
+      "tradeoff": "Track file and scan metrics before introducing periodic maintenance"
+    }
+  ],
+  "claims": [
+    {
+      "id": "delta.optimize.1",
+      "aspect": "rows",
+      "statement": "Compaction removed multiple small files and preserved all rows in the probe; repeating it did not advance the version. Z-order preserved the same logical rows.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "optimize_compact_and_zorder_preserve_rows"
+    },
+    {
+      "id": "delta.optimize.2",
+      "aspect": "features",
+      "statement": "The deletion-vector fixture preserved the eight live logical rows across optimize.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "deletion_vectors_filter_rows_and_optimize_keeps_logical_rows"
+    },
+    {
+      "id": "delta.optimize.3",
+      "aspect": "resources",
+      "statement": "Target size is an optimization input. Concurrency, buffering, memory pool and spill configuration jointly affect resources; no exact RSS or throughput bound follows from the API signature.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    }
+  ],
+  "implementation": [
+    "Compare file counts, bytes, operation metrics and query read metrics before/after representative workloads.",
+    "Keep Z-order columns aligned with actual filtering patterns and type support."
+  ],
+  "effects": [
+    "rewrite data files",
+    "publish layout changes or no-op"
+  ],
+  "errors": [
+    "Feature/protocol, data read, expression, resource and commit failures remain possible."
+  ],
+  "unknowns": [
+    "No workload-level speedup, exact file-size bound or resource envelope is claimed."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "scope": "Exact git-capture full contracts for the selected operations"
+    },
+    {
+      "id": "source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/optimize.rs",
+      "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+    },
+    {
+      "id": "runtime",
+      "kind": "runtime_observation",
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Named local assertions only; see profile, fixtures and source digests",
+      "tests": [
+        "optimize_compact_and_zorder_preserve_rows",
+        "deletion_vectors_filter_rows_and_optimize_keeps_logical_rows"
+      ]
+    }
+  ],
+  "resolved_operations": [
+    {
+      "path": "deltalake_core::table::DeltaTable::optimize",
+      "id": "30b3d3701758d0059efa4146",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.table.DeltaTable.json",
+      "page": "operations/deltalake_core.table.DeltaTable.md#op-30b3d3701758d0059efa4146",
+      "signature": "fn optimize<'a>(self) -> OptimizeBuilder<'a>"
+    },
+    {
+      "path": "deltalake_core::operations::optimize::OptimizeBuilder::with_type",
+      "id": "7197eaf7da542a4421fa2def",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.optimize.OptimizeBuilder.json",
+      "page": "operations/deltalake_core.operations.optimize.OptimizeBuilder.md#op-7197eaf7da542a4421fa2def",
+      "signature": "fn with_type(self, optimize_type: OptimizeType) -> Self"
+    },
+    {
+      "path": "deltalake_core::operations::optimize::OptimizeBuilder::with_target_size",
+      "id": "17215fd88c454cd2ccdba9cf",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.optimize.OptimizeBuilder.json",
+      "page": "operations/deltalake_core.operations.optimize.OptimizeBuilder.md#op-17215fd88c454cd2ccdba9cf",
+      "signature": "fn with_target_size(self, target: NonZeroU64) -> Self"
+    },
+    {
+      "path": "deltalake_core::operations::optimize::OptimizeBuilder::Output",
+      "id": "bff0e9f1314e94985cdd4cdc",
+      "kind": "assoc_type",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.optimize.OptimizeBuilder.json",
+      "page": "operations/deltalake_core.operations.optimize.OptimizeBuilder.md#op-bff0e9f1314e94985cdd4cdc",
+      "signature": "type Output = Result<(DeltaTable, Metrics), DeltaTableError>"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/delta.optimize.json"
+}

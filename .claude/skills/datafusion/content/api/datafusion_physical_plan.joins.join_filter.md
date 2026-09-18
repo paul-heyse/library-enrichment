@@ -33,6 +33,9 @@ fn swap(&self) -> JoinFilter
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.join_filter.JoinFilter.md).
+
+
 Filter applied before join output. Fields are crate-public to allow
 downstream implementations to experiment with custom joins.
 

@@ -42,6 +42,9 @@ fn try_to_proto(&self, _ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Optio
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.empty.EmptyExec.md).
+
+
 Execution plan for empty relation with produce_one_row=false
 
 ---

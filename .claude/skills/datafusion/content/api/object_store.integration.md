@@ -10,6 +10,9 @@ Crate `object_store` · 16 public items · structured records in [`model/object_
 async fn copy_if_not_exists(storage: &DynObjectStore)
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.integration.copy_if_not_exists.md).
+
+
 Tests copy if not exists
 
 ---
@@ -21,6 +24,9 @@ Tests copy if not exists
 ```rust
 async fn copy_rename_nonexistent_object(storage: &DynObjectStore)
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.integration.copy_rename_nonexistent_object.md).
+
 
 Tests copy and renaming behaviour of non-existent objects
 
@@ -34,6 +40,9 @@ Tests copy and renaming behaviour of non-existent objects
 async fn get_nonexistent_object(storage: &DynObjectStore, location: Option<path::Path>) -> Result<bytes::Bytes>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.integration.get_nonexistent_object.md).
+
+
 Tests fetching a non-existent object returns a not found error
 
 ---
@@ -45,6 +54,9 @@ Tests fetching a non-existent object returns a not found error
 ```rust
 async fn get_opts(storage: &dyn ObjectStore)
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.integration.get_opts.md).
+
 
 Tests conditional read requests
 
@@ -58,6 +70,9 @@ Tests conditional read requests
 async fn list_paginated(storage: &dyn ObjectStore, list: &dyn PaginatedListStore)
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.integration.list_paginated.md).
+
+
 Tests [`PaginatedListStore`]
 
 ---
@@ -69,6 +84,9 @@ Tests [`PaginatedListStore`]
 ```rust
 async fn list_uses_directories_correctly(storage: &DynObjectStore)
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.integration.list_uses_directories_correctly.md).
+
 
 Tests that directories are transparent
 
@@ -82,6 +100,9 @@ Tests that directories are transparent
 async fn list_with_delimiter(storage: &DynObjectStore)
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.integration.list_with_delimiter.md).
+
+
 Tests listing with delimiter
 
 ---
@@ -93,6 +114,9 @@ Tests listing with delimiter
 ```rust
 async fn list_with_offset_exclusivity(storage: &DynObjectStore)
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.integration.list_with_offset_exclusivity.md).
+
 
 Tests that [`ObjectStore::list_with_offset`] returns an exclusive list
 that does not include the offset value itself.
@@ -109,6 +133,9 @@ while AWS S3 and GCP return exclusive results.
 async fn multipart(storage: &dyn ObjectStore, multipart: &dyn MultipartStore)
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.integration.multipart.md).
+
+
 Tests [`MultipartStore`]
 
 ---
@@ -120,6 +147,9 @@ Tests [`MultipartStore`]
 ```rust
 async fn multipart_out_of_order(storage: &dyn ObjectStore)
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.integration.multipart_out_of_order.md).
+
 
 Tests performing out of order multipart uploads
 
@@ -133,6 +163,9 @@ Tests performing out of order multipart uploads
 async fn multipart_race_condition(storage: &dyn ObjectStore, last_writer_wins: bool)
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.integration.multipart_race_condition.md).
+
+
 Tests a race condition where 2 threads are performing multipart writes to the same path
 
 ---
@@ -144,6 +177,9 @@ Tests a race condition where 2 threads are performing multipart writes to the sa
 ```rust
 async fn put_get_attributes(integration: &dyn ObjectStore)
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.integration.put_get_attributes.md).
+
 
 Tests the ability to read and write [`Attributes`]
 
@@ -157,6 +193,9 @@ Tests the ability to read and write [`Attributes`]
 async fn put_get_delete_list(storage: &DynObjectStore)
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.integration.put_get_delete_list.md).
+
+
 Tests basic read/write and listing operations
 
 ---
@@ -168,6 +207,9 @@ Tests basic read/write and listing operations
 ```rust
 async fn put_opts(storage: &dyn ObjectStore, supports_update: bool)
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.integration.put_opts.md).
+
 
 Tests conditional writes
 
@@ -181,6 +223,9 @@ Tests conditional writes
 async fn rename_and_copy(storage: &DynObjectStore)
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.integration.rename_and_copy.md).
+
+
 Tests copying
 
 ---
@@ -192,6 +237,9 @@ Tests copying
 ```rust
 async fn stream_get(storage: &DynObjectStore)
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.integration.stream_get.md).
+
 
 Tests the ability to perform multipart writes
 

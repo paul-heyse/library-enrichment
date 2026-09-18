@@ -1,0 +1,129 @@
+[
+  {
+    "id": "8b6174e0942219488f9d16f9",
+    "path": "deltalake_core",
+    "name": "deltalake_core",
+    "owner": null,
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "module",
+    "signature": "mod deltalake_core",
+    "docs": "Native Delta Lake implementation in Rust\n\n# Usage\n\nLoad a Delta Table by URL:\n\n```rust\n# use url::Url;\nasync {\n  let table_url = Url::from_directory_path(\"/abs/test/tests/data/simple_table\").unwrap();\n  let table = deltalake_core::open_table(table_url).await.unwrap();\n  let version = table.version();\n};\n```\n\nLoad a specific version of Delta Table by URL then filter files by partitions:\n\n```rust\n# use url::Url;\nasync {\n  let table_url = Url::from_directory_path(\"/abs/test/tests/data/simple_table\").unwrap();\n  let table = deltalake_core::open_table_with_version(table_url, 0).await.unwrap();\n  let filter = [(\n      \"month\",\n      deltalake_core::FilterOp::Eq,\n      deltalake_core::FilterValue::Scalar(\"12\"),\n  )];\n  let files = table.get_files_by_partitions(&filter).await.unwrap();\n};\n```\n\nLoad a specific version of Delta Table by URL and datetime:\n\n```rust\n# use url::Url;\nasync {\n  let table_url = Url::from_directory_path(\"../test/tests/data/simple_table\").unwrap();\n  let table = deltalake_core::open_table_with_ds(\n      table_url,\n      \"2020-05-02T23:47:31-07:00\",\n  ).await.unwrap();\n  let version = table.version();\n};\n```\n\n# Optional cargo package features\n\n- `s3`, `gcs`, `azure` - enable the storage backends for AWS S3, Google Cloud Storage (GCS),\n  or Azure Blob Storage / Azure Data Lake Storage Gen2 (ADLS2). Use `s3-native-tls` to use native TLS\n  instead of Rust TLS implementation.\n- `datafusion` - enable the `datafusion::datasource::TableProvider` trait implementation\n  for Delta Tables, allowing them to be queried using [DataFusion](https://github.com/apache/arrow-datafusion).\n- `datafusion-ext` - DEPRECATED: alias for `datafusion` feature.\n\n# Querying Delta Tables with Datafusion\n\nQuerying from local filesystem:\n```\nuse std::sync::Arc;\n# use url::Url;\n\n# #[cfg(feature=\"datafusion\")]\nasync {\n  use datafusion::prelude::SessionContext;\n  let mut ctx = SessionContext::new();\n  let table_url = Url::from_directory_path(\"/abs/test/tests/data/simple_table\").unwrap();\n  let table = deltalake_core::open_table(table_url)\n      .await\n      .unwrap();\n  ctx.register_table(\"demo\", table.table_provider().await.unwrap()).unwrap();\n\n  let batches = ctx\n      .sql(\"SELECT * FROM demo\").await.unwrap()\n      .collect()\n      .await.unwrap();\n};\n```",
+    "span": {
+      "filename": "crates/core/src/lib.rs",
+      "begin": [
+        1,
+        1
+      ],
+      "end": [
+        803,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[warn(missing_docs)]"
+      },
+      {
+        "other": "#[allow(rustdoc::invalid_html_tags)]"
+      },
+      {
+        "other": "#[allow(clippy::nonminimal_bool)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": true,
+        "items": [
+          179,
+          722,
+          944,
+          3304,
+          3825,
+          5866,
+          6309,
+          6860,
+          8022,
+          8256,
+          8257,
+          8258,
+          8259,
+          8260,
+          8261,
+          8262,
+          8263,
+          8264,
+          8265,
+          8266,
+          8267,
+          8268,
+          8269,
+          8270,
+          8271,
+          8272,
+          8274,
+          8276,
+          8278,
+          8279,
+          8280,
+          8281,
+          8282,
+          8283,
+          8284,
+          8285,
+          8286
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "8287",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/lib.rs#L1",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "16249",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "modules/deltalake_core.md",
+    "record_file": "modules/deltalake_core.json",
+    "anchor": "op-8b6174e0942219488f9d16f9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

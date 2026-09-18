@@ -20,4 +20,7 @@ struct AggregateFunctionPlanner
 fn plan_aggregate(&self, raw_expr: RawAggregateExpr) -> Result<PlannerResult<RawAggregateExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.planner.AggregateFunctionPlanner.md).
+
+
 ---

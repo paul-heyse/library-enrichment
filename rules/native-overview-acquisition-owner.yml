@@ -1,0 +1,30 @@
+id: native-overview-acquisition-owner
+language: Rust
+severity: error
+message: Overview assembly and acquisition presentation/provenance use native plans and declared records.
+files:
+  - crates/enrichment-store/src/browse.rs
+  - crates/enrichment-daemon/src/ops/resolve.rs
+  - crates/enrichment-daemon/src/ops/python.rs
+  - crates/enrichment-daemon/src/ops/revision.rs
+  - crates/enrichment-daemon/src/ops/publication.rs
+rule:
+  any:
+    - kind: function_item
+      has:
+        field: name
+        regex: '^(hosted_requires_requested_build|summarize)$'
+    - kind: call_expression
+      has:
+        field: function
+        regex: '^projection::browse::'
+    - kind: field_identifier
+      regex: '^(truncated_children|counts_by_kind)$'
+      inside:
+        kind: assignment_expression
+        stopBy: end
+    - kind: scoped_type_identifier
+      regex: '^serde_json::Value$'
+    - kind: use_declaration
+      regex: '^use serde_json::Value;$'
+note: This guards removed procedural owners; generated decoding and native schema/semantic admission remain independently required.

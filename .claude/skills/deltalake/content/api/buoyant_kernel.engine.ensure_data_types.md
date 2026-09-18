@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 3 public items · structured records in [`model/buoyan
 ## DataTypeCompat
 
 `enum` · `buoyant_kernel::engine::ensure_data_types::DataTypeCompat`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.ensure_data_types.DataTypeCompat.md)
 
 Also reachable as `delta_kernel::engine::ensure_data_types::DataTypeCompat`
 
@@ -21,6 +22,7 @@ Capture the compatibility between two data-types, as passed to [`ensure_data_typ
 ## ValidationMode
 
 `enum` · `buoyant_kernel::engine::ensure_data_types::ValidationMode`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.ensure_data_types.ValidationMode.md)
 
 Also reachable as `delta_kernel::engine::ensure_data_types::ValidationMode`
 
@@ -39,6 +41,7 @@ Controls how `ensure_data_types` validates struct fields and metadata.
 ## ensure_data_types
 
 `function` · `buoyant_kernel::engine::ensure_data_types::ensure_data_types`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.ensure_data_types.ensure_data_types.md)
 
 Also reachable as `delta_kernel::engine::ensure_data_types::ensure_data_types`
 

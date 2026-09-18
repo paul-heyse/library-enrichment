@@ -12,6 +12,9 @@ Also reachable as `datafusion::datasource::file_format::DEFAULT_SCHEMA_INFER_MAX
 const DEFAULT_SCHEMA_INFER_MAX_RECORD: usize = 1000
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_format.DEFAULT_SCHEMA_INFER_MAX_RECORD.md).
+
+
 Default max records to scan to infer the schema
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `datafusion::datasource::file_format::file_type_to_format`
 ```rust
 fn file_type_to_format(file_type: &std::sync::Arc<dyn FileType>) -> datafusion_common::Result<std::sync::Arc<dyn FileFormatFactory>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_format.file_type_to_format.md).
+
 
 Converts a [FileType] to a [FileFormatFactory].
 Returns an error if the [FileType] cannot be
@@ -41,6 +47,9 @@ Also reachable as `datafusion::datasource::file_format::format_as_file_type`
 ```rust
 fn format_as_file_type(file_format_factory: std::sync::Arc<dyn FileFormatFactory>) -> std::sync::Arc<dyn FileType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_format.format_as_file_type.md).
+
 
 Converts a [FileFormatFactory] to a [FileType]
 
@@ -85,6 +94,9 @@ fn as_any(&self) -> &dyn Any
 fn get_ext(&self) -> String
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_format.DefaultFileType.md).
+
+
 A container of [FileFormatFactory] which also implements [FileType].
 This enables converting a dyn FileFormat to a dyn FileType.
 The former trait is a superset of the latter trait, which includes execution time
@@ -113,6 +125,9 @@ struct FileMeta
 fn new(statistics: Statistics) -> Self
 fn with_ordering(self, ordering: Option<LexOrdering>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_format.FileMeta.md).
+
 
 Metadata fetched from a file, including statistics and ordering.
 
@@ -154,6 +169,9 @@ async fn infer_stats(&self, state: &dyn Session, store: &Arc<dyn ObjectStore>, t
 async fn infer_stats_and_ordering(&self, state: &dyn Session, store: &Arc<dyn ObjectStore>, table_schema: SchemaRef, object: &ObjectMeta) -> Result<FileMeta>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_format.FileFormat.md).
+
+
 This trait abstracts all the file format specific implementations
 from the [`TableProvider`]. This helps code re-utilization across
 providers that support the same file formats.
@@ -186,6 +204,9 @@ trait FileFormatFactory: Any + Sync + Send + GetExt + fmt::Debug
 fn create(&self, state: &dyn Session, format_options: &HashMap<String, String>) -> Result<Arc<dyn FileFormat>>
 fn default(&self) -> Arc<dyn FileFormat>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_format.FileFormatFactory.md).
+
 
 Factory for creating [`FileFormat`] instances based on session and command level options
 

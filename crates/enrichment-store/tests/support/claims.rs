@@ -1,7 +1,7 @@
 /// Obtain a real native claim for a fixture publication; no fabricated owner/fence witness.
 pub async fn publication_fence(
     repo: &enrichment_store::repository::EvidenceRepository,
-    job: &str,
+    job: &enrichment_core::identity::JobId,
     arguments: enrichment_store::control_jobs::Arguments,
 ) -> enrichment_store::control::PublicationFence {
     use enrichment_store::control_jobs::JobStore;
@@ -12,8 +12,8 @@ pub async fn publication_fence(
         std::sync::Arc::new(enrichment_core::config::Config::default()),
     );
     jobs.submit(
-        jobs.command_with_id(job.into(), arguments).await.unwrap(),
-        format!("interest_{job}"),
+        jobs.command_with_id(*job, arguments).await.unwrap(),
+        enrichment_core::identity::InterestId::new(),
     )
     .await
     .unwrap();
@@ -32,7 +32,7 @@ pub async fn publication_fence(
     .await
     .unwrap();
     assert!(
-        jobs.start(job, &format!("attempt_{job}"), &policy)
+        jobs.start(job, &enrichment_core::identity::AttemptId::new(), &policy)
             .await
             .unwrap()
     );

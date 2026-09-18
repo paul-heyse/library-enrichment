@@ -22,6 +22,9 @@ enum FFI_AggregateOrderSensitivity
 fn from(value: AggregateOrderSensitivity) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udaf.FFI_AggregateOrderSensitivity.md).
+
+
 ---
 
 ## AggregateUDFPrivateData
@@ -33,6 +36,9 @@ struct AggregateUDFPrivateData
 ```
 
 **Fields**: `udaf`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udaf.AggregateUDFPrivateData.md).
+
 
 ---
 
@@ -61,6 +67,9 @@ fn from(udaf: Arc<AggregateUDF>) -> Self
 ```rust
 fn drop(&mut self)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udaf.FFI_AggregateUDF.md).
+
 
 A stable struct for sharing a [`AggregateUDF`] across FFI boundaries.
 
@@ -98,6 +107,9 @@ fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 fn supports_null_handling_clause(&self) -> bool
 fn with_beneficial_ordering(Arc<self>, beneficial_ordering: bool) -> Result<Option<Arc<dyn AggregateUDFImpl>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udaf.ForeignAggregateUDF.md).
+
 
 This struct is used to access an UDF provided by a foreign
 library across a FFI boundary.

@@ -10,4 +10,7 @@ Crate `datafusion-substrait` · 1 public items · structured records in [`model/
 fn from_lambda_variable(producer: &mut impl SubstraitProducer, lambda_variable: &datafusion::logical_expr::expr::LambdaVariable, _schema: &datafusion::common::DFSchema) -> Result<substrait::proto::Expression, datafusion::error::DataFusionError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.lambda_variable.from_lambda_variable.md).
+
+
 ---

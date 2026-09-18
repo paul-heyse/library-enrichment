@@ -107,8 +107,8 @@ impl Relation {
 pub struct EvidenceScope {
     pub ecosystem: Ecosystem,
     pub symbol_package: String,
-    pub release_id: String,
-    pub environment_id: String,
+    pub release_id: enrichment_core::identity::ReleaseId,
+    pub environment_id: enrichment_core::identity::EnvironmentId,
 }
 
 /// Native evidence admission limits; producer decoding owns its separate physical bounds.
@@ -431,35 +431,12 @@ impl NativeAdmission {
             }
         }
         for relation in Relation::ALL {
-            for rule in relation.references() {
-                self.runtime
-                    .require_empty(
-                        rule.violations(
-                            &session,
-                            TableReference::full("candidate", "evidence", relation.name()),
-                            relation.key(),
-                        )
-                        .await?,
-                        rule.id,
-                        "admission",
-                    )
-                    .await?;
-            }
-        }
-        for relation in Relation::ALL {
-            let frame = session
-                .table(TableReference::full(
-                    "candidate",
-                    "evidence",
-                    relation.name(),
-                ))
-                .await?;
             for (rule, violations) in crate::field_admission::violations(
                 &session,
-                frame,
+                TableReference::full("candidate", "evidence", relation.name()),
                 relation.schema()?.as_ref(),
                 relation.key(),
-                &scope.release_id,
+                crate::field_admission::ReferenceNamespace::Evidence(&scope.release_id),
             )
             .await?
             {

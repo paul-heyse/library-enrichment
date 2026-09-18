@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_to_string`, `datafusion_functions_
 fn array_to_string(array: datafusion_expr::Expr, delimiter: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.string.array_to_string.md).
+
+
 converts each element to its text representation.
 
 ---
@@ -23,6 +26,9 @@ converts each element to its text representation.
 ```rust
 fn array_to_string_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.string.array_to_string_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayToString
@@ -39,6 +45,9 @@ Also reachable as `datafusion::prelude::string_to_array`, `datafusion_functions_
 fn string_to_array(string: datafusion_expr::Expr, delimiter: datafusion_expr::Expr, null_string: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.string.string_to_array.md).
+
+
 splits a `string` based on a `delimiter` and returns an array of parts. Any parts matching the optional `null_string` will be replaced with `NULL`
 
 ---
@@ -50,6 +59,9 @@ splits a `string` based on a `delimiter` and returns an array of parts. Any part
 ```rust
 fn string_to_array_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.string.string_to_array_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 StringToArray
@@ -85,6 +97,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.string.ArrayToString.md).
+
+
 ---
 
 ## StringToArray
@@ -115,5 +130,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.string.StringToArray.md).
+
 
 ---

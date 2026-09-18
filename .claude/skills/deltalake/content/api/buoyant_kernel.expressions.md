@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 27 public items · structured records in [`model/buoya
 ## BinaryExpressionOp
 
 `enum` · `buoyant_kernel::expressions::BinaryExpressionOp`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.BinaryExpressionOp.md)
 
 Also reachable as `delta_kernel::expressions::BinaryExpressionOp`
 
@@ -43,6 +44,7 @@ A binary expression operator.
 ## BinaryPredicateOp
 
 `enum` · `buoyant_kernel::expressions::BinaryPredicateOp`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.BinaryPredicateOp.md)
 
 Also reachable as `delta_kernel::expressions::BinaryPredicateOp`
 
@@ -81,6 +83,7 @@ A binary predicate operator.
 ## Expression
 
 `enum` · `buoyant_kernel::expressions::Expression`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.Expression.md)
 
 Also reachable as `buoyant_kernel::Expression`, `delta_kernel::expressions::Expression`
 
@@ -192,6 +195,7 @@ expression against a schema and add appropriate casts as required.
 ## JunctionPredicateOp
 
 `enum` · `buoyant_kernel::expressions::JunctionPredicateOp`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.JunctionPredicateOp.md)
 
 Also reachable as `delta_kernel::expressions::JunctionPredicateOp`
 
@@ -224,6 +228,7 @@ A junction (AND/OR) predicate operator.
 ## Predicate
 
 `enum` · `buoyant_kernel::expressions::Predicate`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.Predicate.md)
 
 Also reachable as `buoyant_kernel::Predicate`, `delta_kernel::expressions::Predicate`
 
@@ -307,6 +312,7 @@ predicate against a schema and add appropriate casts as required.
 ## UnaryExpressionOp
 
 `enum` · `buoyant_kernel::expressions::UnaryExpressionOp`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.UnaryExpressionOp.md)
 
 Also reachable as `delta_kernel::expressions::UnaryExpressionOp`
 
@@ -345,6 +351,7 @@ A unary expression operator.
 ## UnaryPredicateOp
 
 `enum` · `buoyant_kernel::expressions::UnaryPredicateOp`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.UnaryPredicateOp.md)
 
 Also reachable as `delta_kernel::expressions::UnaryPredicateOp`
 
@@ -377,6 +384,7 @@ A unary predicate operator.
 ## VariadicExpressionOp
 
 `enum` · `buoyant_kernel::expressions::VariadicExpressionOp`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.VariadicExpressionOp.md)
 
 Also reachable as `delta_kernel::expressions::VariadicExpressionOp`
 
@@ -415,6 +423,7 @@ A variadic expression operator.
 ## lit
 
 `function` · `buoyant_kernel::expressions::lit`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.lit.md)
 
 Also reachable as `delta_kernel::expressions::lit`
 
@@ -438,6 +447,7 @@ let _zero = lit(0i64);
 ## BinaryExpression
 
 `struct` · `buoyant_kernel::expressions::BinaryExpression`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.BinaryExpression.md)
 
 Also reachable as `delta_kernel::expressions::BinaryExpression`
 
@@ -468,6 +478,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## BinaryPredicate
 
 `struct` · `buoyant_kernel::expressions::BinaryPredicate`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.BinaryPredicate.md)
 
 Also reachable as `delta_kernel::expressions::BinaryPredicate`
 
@@ -498,6 +509,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## JunctionPredicate
 
 `struct` · `buoyant_kernel::expressions::JunctionPredicate`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.JunctionPredicate.md)
 
 Also reachable as `delta_kernel::expressions::JunctionPredicate`
 
@@ -528,6 +540,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## MapToStructExpression
 
 `struct` · `buoyant_kernel::expressions::MapToStructExpression`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.MapToStructExpression.md)
 
 Also reachable as `delta_kernel::expressions::MapToStructExpression`
 
@@ -571,6 +584,7 @@ empty bytes for binary, and to null for every other type.
 ## OpaqueExpression
 
 `struct` · `buoyant_kernel::expressions::OpaqueExpression`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.OpaqueExpression.md)
 
 Also reachable as `delta_kernel::expressions::OpaqueExpression`
 
@@ -587,6 +601,7 @@ struct OpaqueExpression
 ## OpaquePredicate
 
 `struct` · `buoyant_kernel::expressions::OpaquePredicate`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.OpaquePredicate.md)
 
 Also reachable as `delta_kernel::expressions::OpaquePredicate`
 
@@ -603,6 +618,7 @@ struct OpaquePredicate
 ## ParseJsonExpression
 
 `struct` · `buoyant_kernel::expressions::ParseJsonExpression`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.ParseJsonExpression.md)
 
 Also reachable as `delta_kernel::expressions::ParseJsonExpression`
 
@@ -637,6 +653,7 @@ struct column.
 ## UnaryExpression
 
 `struct` · `buoyant_kernel::expressions::UnaryExpression`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.UnaryExpression.md)
 
 Also reachable as `delta_kernel::expressions::UnaryExpression`
 
@@ -667,6 +684,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## UnaryPredicate
 
 `struct` · `buoyant_kernel::expressions::UnaryPredicate`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.UnaryPredicate.md)
 
 Also reachable as `delta_kernel::expressions::UnaryPredicate`
 
@@ -697,6 +715,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## VariadicExpression
 
 `struct` · `buoyant_kernel::expressions::VariadicExpression`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.VariadicExpression.md)
 
 Also reachable as `delta_kernel::expressions::VariadicExpression`
 
@@ -727,6 +746,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## OpaqueExpressionOp
 
 `trait` · `buoyant_kernel::expressions::OpaqueExpressionOp`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.OpaqueExpressionOp.md)
 
 Also reachable as `delta_kernel::expressions::OpaqueExpressionOp`
 
@@ -752,6 +772,7 @@ An opaque expression operation (ie defined and implemented by the engine).
 ## OpaquePredicateOp
 
 `trait` · `buoyant_kernel::expressions::OpaquePredicateOp`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.OpaquePredicateOp.md)
 
 Also reachable as `delta_kernel::expressions::OpaquePredicateOp`
 
@@ -779,6 +800,7 @@ An opaque predicate operation (ie defined and implemented by the engine).
 ## ExpressionRef
 
 `type_alias` · `buoyant_kernel::expressions::ExpressionRef`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.ExpressionRef.md)
 
 Also reachable as `buoyant_kernel::ExpressionRef`, `delta_kernel::expressions::ExpressionRef`
 
@@ -788,17 +810,12 @@ type ExpressionRef = std::sync::Arc<Expression>
 
 **Implements**: `buoyant_kernel::struct_patch::ExpressionItem`
 
-**via `buoyant_kernel::struct_patch::ExpressionItem`**
-
-```rust
-fn expr(&self) -> &ExpressionRef
-```
-
 ---
 
 ## ExpressionStructPatchBuilder
 
 `type_alias` · `buoyant_kernel::expressions::ExpressionStructPatchBuilder`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.ExpressionStructPatchBuilder.md)
 
 Also reachable as `delta_kernel::expressions::ExpressionStructPatchBuilder`
 
@@ -815,6 +832,7 @@ expressions, lowered into an [`ExpressionStructPatch`] that can be embedded in a
 ## OpaqueExpressionOpRef
 
 `type_alias` · `buoyant_kernel::expressions::OpaqueExpressionOpRef`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.OpaqueExpressionOpRef.md)
 
 Also reachable as `delta_kernel::expressions::OpaqueExpressionOpRef`
 
@@ -829,6 +847,7 @@ A shared reference to an [`OpaqueExpressionOp`] instance.
 ## OpaquePredicateOpRef
 
 `type_alias` · `buoyant_kernel::expressions::OpaquePredicateOpRef`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.OpaquePredicateOpRef.md)
 
 Also reachable as `delta_kernel::expressions::OpaquePredicateOpRef`
 
@@ -843,6 +862,7 @@ A shared reference to an [`OpaquePredicateOp`] instance.
 ## PredicateRef
 
 `type_alias` · `buoyant_kernel::expressions::PredicateRef`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.PredicateRef.md)
 
 Also reachable as `buoyant_kernel::PredicateRef`, `delta_kernel::expressions::PredicateRef`
 
@@ -855,6 +875,7 @@ type PredicateRef = std::sync::Arc<Predicate>
 ## ScalarExpressionEvaluator
 
 `type_alias` · `buoyant_kernel::expressions::ScalarExpressionEvaluator`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.ScalarExpressionEvaluator.md)
 
 Also reachable as `delta_kernel::expressions::ScalarExpressionEvaluator`
 

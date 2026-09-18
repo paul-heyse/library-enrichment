@@ -12,6 +12,9 @@ Also reachable as `datafusion_spark::expr_fn::array`
 fn array(args: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.expr_fn.array.md).
+
+
 Returns an array with the given elements.
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `datafusion_spark::expr_fn::array_repeat`
 ```rust
 fn array_repeat(element: datafusion_expr::Expr, count: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.expr_fn.array_repeat.md).
+
 
 returns an array containing element count times.
 
@@ -40,6 +46,9 @@ Also reachable as `datafusion_spark::expr_fn::shuffle`
 fn shuffle(args: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.expr_fn.shuffle.md).
+
+
 Returns a random permutation of the given array.
 
 ---
@@ -54,6 +63,9 @@ Also reachable as `datafusion_spark::expr_fn::slice`
 fn slice(array: datafusion_expr::Expr, start: datafusion_expr::Expr, length: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.expr_fn.slice.md).
+
+
 Returns a slice of the array from the start index with the given length.
 
 ---
@@ -67,6 +79,9 @@ Also reachable as `datafusion_spark::expr_fn::spark_array_contains`
 ```rust
 fn spark_array_contains(array: datafusion_expr::Expr, element: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.expr_fn.spark_array_contains.md).
+
 
 Returns true if the array contains the element (Spark semantics).
 

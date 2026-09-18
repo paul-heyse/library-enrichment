@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::map_values`, `datafusion_functions_neste
 fn map_values(map: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.map_values.map_values.md).
+
+
 Return a list of all values in the map.
 
 ---
@@ -23,6 +26,9 @@ Return a list of all values in the map.
 ```rust
 fn map_values_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.map_values.map_values_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 MapValuesFunc

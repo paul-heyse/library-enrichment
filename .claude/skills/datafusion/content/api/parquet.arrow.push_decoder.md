@@ -27,6 +27,9 @@ fn try_decode(&mut self) -> Result<DecodeResult<RecordBatch>, ParquetError>
 fn try_next_reader(&mut self) -> Result<DecodeResult<ParquetRecordBatchReader>, ParquetError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.push_decoder.ParquetPushDecoder.md).
+
+
 A push based Parquet Decoder
 
 See [`ParquetPushDecoderBuilder`] for an example of how to build and use the decoder.
@@ -56,6 +59,9 @@ struct PushDecoderInput
 
 **Derives**: Debug, Default
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.push_decoder.PushDecoderInput.md).
+
+
 The `input` of a [`ParquetPushDecoderBuilder`].
 
 The shared [`ArrowReaderBuilder`] is generic over an `input`. The sync and
@@ -72,6 +78,9 @@ accumulate in (empty for a fresh builder).
 ```rust
 type ParquetPushDecoderBuilder = arrow::arrow_reader::ArrowReaderBuilder<PushDecoderInput>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.push_decoder.ParquetPushDecoderBuilder.md).
+
 
 A builder for [`ParquetPushDecoder`].
 

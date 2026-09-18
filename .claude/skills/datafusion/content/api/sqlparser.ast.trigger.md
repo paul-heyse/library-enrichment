@@ -48,6 +48,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.trigger.TriggerEvent.md).
+
+
 Used to describe trigger events
 
 ---
@@ -97,6 +100,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.trigger.TriggerExecBodyType.md).
+
 
 Types of trigger body execution body.
 
@@ -148,6 +154,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.trigger.TriggerObject.md).
+
+
 This specifies whether the trigger function should be fired once for every row affected by the trigger event, or just once per SQL statement.
 
 ---
@@ -197,6 +206,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.trigger.TriggerPeriod.md).
+
 
 Trigger period
 
@@ -248,6 +260,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.trigger.TriggerReferencingType.md).
+
+
 This clause indicates whether the following relation name is for the before-image transition relation or the after-image transition relation
 
 ---
@@ -298,6 +313,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.trigger.TriggerExecBody.md).
+
+
 This keyword immediately precedes the declaration of one or two relation names that provide access to the transition relations of the triggering statement
 
 ---
@@ -347,6 +365,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.trigger.TriggerReferencing.md).
+
 
 This keyword immediately precedes the declaration of one or two relation names that provide access to the transition relations of the triggering statement
 

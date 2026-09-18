@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## RestoreBuilder
 
 `struct` · `deltalake_core::operations::restore::RestoreBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.restore.RestoreBuilder.md)
 
 Also reachable as `deltalake::operations::restore::RestoreBuilder`
 
@@ -31,13 +32,6 @@ fn with_version_to_restore(self, version: Version) -> Self
 fn into_future(self) -> Self::IntoFuture
 ```
 
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
-```
-
 Restore a Delta table with given version
 See this module's documentation for more information
 
@@ -46,6 +40,7 @@ See this module's documentation for more information
 ## RestoreMetrics
 
 `struct` · `deltalake_core::operations::restore::RestoreMetrics`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.restore.RestoreMetrics.md)
 
 Also reachable as `deltalake::operations::restore::RestoreMetrics`
 

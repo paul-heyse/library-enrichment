@@ -65,13 +65,17 @@ fn execute() -> io::Result<()> {
     let operation: Operation = serde_json::from_slice(&bytes)?;
     operation.validate()?;
     let started = Instant::now();
-    let deadline = Duration::from_millis(operation.deadline_millis);
+    let deadline = Duration::from_millis(operation.launch.deadline_millis);
     initialize(&operation)?;
     if started.elapsed() >= deadline {
         return Err(io::Error::other("input initialization exceeded deadline"));
     }
     let mut command = Command::new(&operation.argv[0]);
-    command.args(&operation.argv[1..]).current_dir("/capsule");
+    command
+        .env_clear()
+        .envs(&operation.launch.environment)
+        .args(&operation.argv[1..])
+        .current_dir("/capsule");
     if operation.mode == Mode::LanguageServer {
         return Err(command.exec());
     }
@@ -94,7 +98,7 @@ fn execute() -> io::Result<()> {
             .stdout
             .take()
             .ok_or_else(|| io::Error::other("missing target stdout"))?,
-        operation.output_bytes,
+        operation.launch.output_bytes,
         overflow.clone(),
     );
     let stderr = bounded(
@@ -102,7 +106,7 @@ fn execute() -> io::Result<()> {
             .stderr
             .take()
             .ok_or_else(|| io::Error::other("missing target stderr"))?,
-        operation.output_bytes,
+        operation.launch.output_bytes,
         overflow.clone(),
     );
     let (mut end, exit_code) = loop {
@@ -145,7 +149,7 @@ fn execute() -> io::Result<()> {
         inventory::selected(
             Path::new("/capsule"),
             &operation.outputs,
-            operation.data_bytes,
+            operation.launch.resources.scratch_bytes,
         )?
     } else {
         inventory::Inventory::new()
@@ -191,7 +195,7 @@ fn execute() -> io::Result<()> {
 
 fn initialize(operation: &Operation) -> io::Result<()> {
     let inputs = Path::new("/inputs");
-    if inventory::capture(inputs, operation.data_bytes)? != operation.inputs {
+    if inventory::capture(inputs, operation.launch.resources.scratch_bytes)? != operation.inputs {
         return Err(io::Error::other("admitted input inventory mismatch"));
     }
     for (path, entry) in &operation.inputs {

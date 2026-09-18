@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## TableChanges
 
 `struct` · `buoyant_kernel::table_changes::TableChanges`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_changes.TableChanges.md)
 
 Also reachable as `delta_kernel::table_changes::TableChanges`
 

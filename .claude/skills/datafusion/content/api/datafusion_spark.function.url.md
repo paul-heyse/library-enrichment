@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 6 public items · structured records in [`model/data
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.url.functions.md).
+
+
 ---
 
 ## parse_url
@@ -19,6 +22,9 @@ fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```rust
 fn parse_url() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.url.parse_url.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of parse_url
 
@@ -32,6 +38,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of parse_url
 fn try_parse_url() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.url.try_parse_url.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of try_parse_url
 
 ---
@@ -43,6 +52,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of try_parse_u
 ```rust
 fn try_url_decode() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.url.try_url_decode.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of try_url_decode
 
@@ -56,6 +68,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of try_url_dec
 fn url_decode() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.url.url_decode.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of url_decode
 
 ---
@@ -67,6 +82,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of url_decode
 ```rust
 fn url_encode() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.url.url_encode.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of url_encode
 

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 6 public items · structured records in [`model/buoyan
 ## IncrementalListing
 
 `struct` · `buoyant_kernel::incremental_scan::IncrementalListing`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.incremental_scan.IncrementalListing.md)
 
 Also reachable as `delta_kernel::incremental_scan::IncrementalListing`
 
@@ -24,6 +25,7 @@ batches plus the summary (no cross-snapshot classification).
 ## IncrementalListingAgainstBase
 
 `struct` · `buoyant_kernel::incremental_scan::IncrementalListingAgainstBase`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.incremental_scan.IncrementalListingAgainstBase.md)
 
 Also reachable as `delta_kernel::incremental_scan::IncrementalListingAgainstBase`
 
@@ -44,6 +46,7 @@ Add batches plus the classified summary.
 ## IncrementalScanBuilder
 
 `struct` · `buoyant_kernel::incremental_scan::IncrementalScanBuilder`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.incremental_scan.IncrementalScanBuilder.md)
 
 Also reachable as `delta_kernel::incremental_scan::IncrementalScanBuilder`
 
@@ -68,6 +71,7 @@ Builder for an incremental scan over `(base_version, target_version]`. Construct
 ## IncrementalScanStream
 
 `struct` · `buoyant_kernel::incremental_scan::IncrementalScanStream`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.incremental_scan.IncrementalScanStream.md)
 
 Also reachable as `delta_kernel::incremental_scan::IncrementalScanStream`
 
@@ -118,6 +122,7 @@ rather than producing a partial summary.
 ## IncrementalScanSummary
 
 `struct` · `buoyant_kernel::incremental_scan::IncrementalScanSummary`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.incremental_scan.IncrementalScanSummary.md)
 
 Also reachable as `delta_kernel::incremental_scan::IncrementalScanSummary`
 
@@ -142,6 +147,7 @@ files, and collapsing to path alone loses that distinction.
 ## IncrementalScanSummaryAgainstBase
 
 `struct` · `buoyant_kernel::incremental_scan::IncrementalScanSummaryAgainstBase`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.incremental_scan.IncrementalScanSummaryAgainstBase.md)
 
 Also reachable as `delta_kernel::incremental_scan::IncrementalScanSummaryAgainstBase`
 

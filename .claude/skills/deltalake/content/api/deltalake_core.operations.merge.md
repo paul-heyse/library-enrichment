@@ -5,6 +5,7 @@ Crate `deltalake-core` · 5 public items · structured records in [`model/deltal
 ## DeleteBuilder
 
 `struct` · `deltalake_core::operations::merge::DeleteBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.merge.DeleteBuilder.md)
 
 Also reachable as `deltalake::operations::merge::DeleteBuilder`
 
@@ -27,6 +28,7 @@ Builder for delete clauses
 ## InsertBuilder
 
 `struct` · `deltalake_core::operations::merge::InsertBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.merge.InsertBuilder.md)
 
 Also reachable as `deltalake::operations::merge::InsertBuilder`
 
@@ -50,6 +52,7 @@ Builder for insert clauses
 ## MergeBuilder
 
 `struct` · `deltalake_core::operations::merge::MergeBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.merge.MergeBuilder.md)
 
 Also reachable as `deltalake::operations::merge::MergeBuilder`
 
@@ -86,13 +89,6 @@ fn with_writer_properties(self, writer_properties: WriterProperties) -> Self
 fn into_future(self) -> Self::IntoFuture
 ```
 
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
-```
-
 Merge records into a Delta Table.
 
 ---
@@ -100,6 +96,7 @@ Merge records into a Delta Table.
 ## MergeMetrics
 
 `struct` · `deltalake_core::operations::merge::MergeMetrics`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.merge.MergeMetrics.md)
 
 Also reachable as `deltalake::operations::merge::MergeMetrics`
 
@@ -126,6 +123,7 @@ Metrics for the Merge Operation
 ## UpdateBuilder
 
 `struct` · `deltalake_core::operations::merge::UpdateBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.merge.UpdateBuilder.md)
 
 Also reachable as `deltalake::operations::merge::UpdateBuilder`
 

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## WithMetricsReporterLayer
 
 `trait` · `buoyant_kernel::metrics::WithMetricsReporterLayer`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.WithMetricsReporterLayer.md)
 
 Also reachable as `delta_kernel::metrics::WithMetricsReporterLayer`
 

@@ -104,53 +104,87 @@ pub(crate) struct LeasedProvider {
 #[derive(Clone, Debug)]
 enum Retained {
     Evidence(Arc<File>),
-    Staging(Arc<tempfile::TempDir>),
-    Captured(Arc<tempfile::TempDir>, Arc<File>),
+    Input(Arc<crate::private_directory::PrivateDirectory>),
     Durable(Arc<crate::retention::LeaseGuard>),
-    Memory(Arc<datafusion::execution::memory_pool::MemoryReservation>),
+    Exact(Arc<ImmutableRead>),
+    Memory(Arc<crate::snapshot_registry::SnapshotMemory>),
+    Flight(Arc<crate::snapshot_registry::Flight>),
     Combined(Arc<Retained>, Arc<Retained>),
 }
 
-/// Protection captured before opening a version. Read-only exports currently use
-/// the shared physical root guard; writable service reads use exact durable facts.
+/// Exact dependencies under an explicit sealed-root contract. The physical root lock
+/// prevents concurrent removal; only the immutable seal and exact vector admit reads.
+pub struct ImmutableRead {
+    namespace: std::path::PathBuf,
+    root: Arc<File>,
+    dependencies: Vec<crate::retention::Dependency>,
+    runtime: crate::runtime::QueryRuntime,
+    immutable: Arc<crate::immutable_root::ImmutableRoot>,
+}
+impl std::fmt::Debug for ImmutableRead {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ImmutableRead")
+            .field("namespace", &self.namespace)
+            .field("dependencies", &self.dependencies)
+            .finish_non_exhaustive()
+    }
+}
+
+/// The exact vector survives logical rewrites, optimized-away leaves and physical streams.
 #[derive(Clone, Debug)]
 pub enum ReadProtection {
     Durable(Arc<crate::retention::LeaseGuard>),
-    Root(Arc<File>),
+    Immutable(Arc<ImmutableRead>),
 }
 impl ReadProtection {
+    pub(crate) fn immutable(
+        root: Arc<crate::immutable_root::ImmutableRoot>,
+        dependencies: Vec<crate::retention::Dependency>,
+        runtime: crate::runtime::QueryRuntime,
+    ) -> Result<Self> {
+        root.validate()?;
+        if dependencies.is_empty() || dependencies.len() > 1024 {
+            return datafusion::common::plan_err!("immutable read dependency bound");
+        }
+        let value = ImmutableRead {
+            namespace: root.root().join("delta").canonicalize()?,
+            root: root.lease(),
+            dependencies,
+            runtime,
+            immutable: root,
+        };
+        value.require_namespace(&value.namespace)?;
+        Ok(Self::Immutable(Arc::new(value)))
+    }
     pub(crate) async fn require_tables(
         &self,
         namespace: &Path,
         bindings: &[enrichment_core::evidence::snapshot::DeltaBinding],
     ) -> Result<()> {
+        self.require_selections(
+            namespace,
+            &bindings
+                .iter()
+                .map(|binding| binding.selection())
+                .collect::<Vec<_>>(),
+        )
+        .await
+    }
+    pub(crate) async fn require_selections(
+        &self,
+        namespace: &Path,
+        selections: &[enrichment_core::delta_reference::TableSelection],
+    ) -> Result<()> {
         match self {
-            Self::Durable(guard) => guard.require_tables(namespace, bindings).await,
-            Self::Root(guard) => {
-                // Read-only roots cannot append durable leases. Verify the pinned inode
-                // belongs to this namespace before opening any dependent provider.
-                let root = namespace
-                    .parent()
-                    .ok_or_else(|| io::Error::other("missing read root"))?;
-                let actual = open(root)?.metadata()?;
-                let held = guard.metadata()?;
-                #[cfg(unix)]
-                {
-                    use std::os::unix::fs::MetadataExt;
-                    if (actual.dev(), actual.ino()) != (held.dev(), held.ino()) {
-                        return Err(DataFusionError::Plan(
-                            "read protection namespace mismatch".into(),
-                        ));
-                    }
-                }
-                #[cfg(not(unix))]
-                {
-                    let _ = (actual, held);
-                    return Err(DataFusionError::NotImplemented(
-                        "read-only root identity requires inode qualification".into(),
-                    ));
-                }
-                Ok(())
+            Self::Durable(guard) => guard.require_selections(namespace, selections).await,
+            Self::Immutable(guard) => {
+                guard.require_namespace(namespace)?;
+                crate::retention::require_selection_vector(
+                    &guard.runtime,
+                    &guard.dependencies,
+                    selections,
+                )
+                .await
             }
         }
     }
@@ -162,7 +196,7 @@ impl ReadProtection {
     ) -> Result<Arc<dyn TableProvider>> {
         let lease = match self {
             Self::Durable(guard) => Retained::Durable(guard),
-            Self::Root(guard) => Retained::Evidence(guard),
+            Self::Immutable(guard) => Retained::Exact(guard),
         };
         if input.get_logical_plan().is_some() {
             retained_view(&input, session, lease)
@@ -171,28 +205,54 @@ impl ReadProtection {
         }
     }
 }
+impl ImmutableRead {
+    fn require_namespace(&self, namespace: &Path) -> Result<()> {
+        self.immutable.validate()?;
+        use std::os::unix::fs::MetadataExt;
+        if namespace.canonicalize()? != self.namespace {
+            return datafusion::common::plan_err!("immutable read namespace mismatch");
+        }
+        let parent = namespace
+            .parent()
+            .ok_or_else(|| io::Error::other("missing read root"))?;
+        let actual = open(parent)?.metadata()?;
+        let held = self.root.metadata()?;
+        if (actual.dev(), actual.ino(), actual.created()?)
+            != (held.dev(), held.ino(), held.created()?)
+        {
+            return datafusion::common::plan_err!("immutable read root was replaced");
+        }
+        Ok(())
+    }
+}
+
 impl Retained {
     fn protects_delta(&self) -> bool {
         match self {
-            Self::Evidence(_) | Self::Captured(..) | Self::Durable(_) => true,
+            Self::Evidence(_) | Self::Durable(_) | Self::Exact(_) => true,
             Self::Combined(a, b) => a.protects_delta() || b.protects_delta(),
-            Self::Staging(_) | Self::Memory(_) => false,
+            Self::Input(_) | Self::Memory(_) | Self::Flight(_) => false,
         }
     }
     fn protects_staging(&self) -> bool {
         match self {
-            Self::Staging(_) | Self::Captured(..) => true,
+            Self::Input(_) => true,
             Self::Combined(a, b) => a.protects_staging() || b.protects_staging(),
-            Self::Evidence(_) | Self::Durable(_) | Self::Memory(_) => false,
+            Self::Evidence(_)
+            | Self::Durable(_)
+            | Self::Exact(_)
+            | Self::Memory(_)
+            | Self::Flight(_) => false,
         }
     }
     fn same(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Evidence(a), Self::Evidence(b)) => Arc::ptr_eq(a, b),
-            (Self::Staging(a), Self::Staging(b)) => Arc::ptr_eq(a, b),
-            (Self::Captured(a, x), Self::Captured(b, y)) => Arc::ptr_eq(a, b) && Arc::ptr_eq(x, y),
+            (Self::Input(a), Self::Input(b)) => Arc::ptr_eq(a, b),
             (Self::Durable(a), Self::Durable(b)) => Arc::ptr_eq(a, b),
+            (Self::Exact(a), Self::Exact(b)) => Arc::ptr_eq(a, b),
             (Self::Memory(a), Self::Memory(b)) => Arc::ptr_eq(a, b),
+            (Self::Flight(a), Self::Flight(b)) => Arc::ptr_eq(a, b),
             (Self::Combined(a, x), Self::Combined(b, y)) => Arc::ptr_eq(a, b) && Arc::ptr_eq(x, y),
             _ => false,
         }
@@ -225,13 +285,11 @@ impl std::hash::Hash for Retention {
             std::mem::discriminant(lease).hash(state);
             match lease {
                 Retained::Evidence(a) => Arc::as_ptr(a).hash(state),
-                Retained::Staging(a) => Arc::as_ptr(a).hash(state),
-                Retained::Captured(a, b) => {
-                    Arc::as_ptr(a).hash(state);
-                    Arc::as_ptr(b).hash(state);
-                }
+                Retained::Input(a) => Arc::as_ptr(a).hash(state),
                 Retained::Durable(a) => Arc::as_ptr(a).hash(state),
+                Retained::Exact(a) => Arc::as_ptr(a).hash(state),
                 Retained::Memory(a) => Arc::as_ptr(a).hash(state),
+                Retained::Flight(a) => Arc::as_ptr(a).hash(state),
                 Retained::Combined(a, b) => {
                     Arc::as_ptr(a).hash(state);
                     Arc::as_ptr(b).hash(state);
@@ -457,9 +515,20 @@ impl LeasedProvider {
 
 pub(crate) fn accounted_provider(
     input: Arc<dyn TableProvider>,
-    memory: Arc<datafusion::execution::memory_pool::MemoryReservation>,
+    memory: Arc<crate::snapshot_registry::SnapshotMemory>,
 ) -> Arc<dyn TableProvider> {
     Arc::new(LeasedProvider::retaining(input, Retained::Memory(memory)))
+}
+
+pub(crate) fn coordinated_provider(
+    input: Arc<dyn TableProvider>,
+    memory: Arc<crate::snapshot_registry::SnapshotMemory>,
+    flight: Arc<crate::snapshot_registry::Flight>,
+) -> Arc<dyn TableProvider> {
+    Arc::new(LeasedProvider::retaining(
+        accounted_provider(input, memory),
+        Retained::Flight(flight),
+    ))
 }
 
 pub(crate) fn protected_provider(
@@ -482,21 +551,12 @@ pub(crate) fn leased_view(
     retained_view(view, session, Retained::Evidence(Arc::clone(lease)))
 }
 
-pub(crate) fn staged_view(
+pub(crate) fn input_view(
     view: &Arc<dyn TableProvider>,
     session: &datafusion::prelude::SessionContext,
-    directory: Arc<tempfile::TempDir>,
+    directory: Arc<crate::private_directory::PrivateDirectory>,
 ) -> Result<Arc<dyn TableProvider>> {
-    retained_view(view, session, Retained::Staging(directory))
-}
-
-pub(crate) fn captured_view(
-    view: &Arc<dyn TableProvider>,
-    session: &datafusion::prelude::SessionContext,
-    directory: Arc<tempfile::TempDir>,
-    evidence: Arc<File>,
-) -> Result<Arc<dyn TableProvider>> {
-    retained_view(view, session, Retained::Captured(directory, evidence))
+    retained_view(view, session, Retained::Input(directory))
 }
 
 fn retained_view(
@@ -562,7 +622,9 @@ impl TableProvider for LeasedProvider {
         limit: Option<usize>,
     ) -> Result<Arc<dyn ExecutionPlan>> {
         Ok(Arc::new(LeasedExec {
-            input: self.input.scan(state, projection, filters, limit).await?,
+            input: crate::task_context::InputContext::retaining(Arc::new(self.lease.clone()))
+                .scope(self.input.scan(state, projection, filters, limit))
+                .await?,
             lease: self.lease.clone(),
         }))
     }
@@ -572,7 +634,10 @@ impl TableProvider for LeasedProvider {
         args: ScanArgs<'a>,
     ) -> Result<ScanResult> {
         Ok(ScanResult::new(Arc::new(LeasedExec {
-            input: self.input.scan_with_args(state, args).await?.into_inner(),
+            input: crate::task_context::InputContext::retaining(Arc::new(self.lease.clone()))
+                .scope(self.input.scan_with_args(state, args))
+                .await?
+                .into_inner(),
             lease: self.lease.clone(),
         })))
     }
@@ -673,20 +738,24 @@ impl ExecutionPlan for LeasedExec {
         partition: usize,
         context: Arc<TaskContext>,
     ) -> Result<SendableRecordBatchStream> {
+        let lease = Arc::new(self.lease.clone());
+        let inner = crate::task_context::InputContext::retaining(lease.clone())
+            .run(|| self.input.execute(partition, context))?;
         Ok(Box::pin(LeasedStream {
-            inner: self.input.execute(partition, context)?,
-            _lease: self.lease.clone(),
+            inner,
+            _lease: lease,
         }))
     }
 }
 struct LeasedStream {
     inner: SendableRecordBatchStream,
-    _lease: Retained,
+    _lease: Arc<Retained>,
 }
 impl Stream for LeasedStream {
     type Item = Result<RecordBatch>;
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        self.inner.as_mut().poll_next(cx)
+        crate::task_context::InputContext::retaining(self._lease.clone())
+            .run(|| self.inner.as_mut().poll_next(cx))
     }
 }
 impl RecordBatchStream for LeasedStream {
@@ -706,13 +775,216 @@ mod tests {
     use futures::TryStreamExt;
 
     #[tokio::test]
+    async fn native_stream_children_retain_exact_read_after_stream_cancellation() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        initialize(root.path())?;
+        std::fs::create_dir(root.path().join("delta"))?;
+        let runtime =
+            crate::runtime::QueryRuntime::new(&root.path().join("spill"), Default::default())?;
+        crate::immutable_root::ImmutableRoot::seal(root.path())?;
+        let guard = ReadProtection::immutable(
+            crate::immutable_root::ImmutableRoot::open(root.path())?,
+            vec![crate::retention::Dependency::Artifact {
+                artifact_id: format!("art_{}", "a".repeat(64)),
+            }],
+            runtime.clone(),
+        )?;
+        let ReadProtection::Immutable(guard) = guard else {
+            unreachable!()
+        };
+        let (started, wait_started) = tokio::sync::oneshot::channel();
+        let (release, wait_release) = std::sync::mpsc::channel();
+        let schema = Arc::new(Schema::empty());
+        let returned = schema.clone();
+        let inner = futures::stream::once(async move {
+            datafusion::common::runtime::SpawnedTask::spawn_blocking(move || {
+                let _ = started.send(());
+                wait_release.recv().unwrap();
+                Ok(RecordBatch::new_empty(returned))
+            })
+            .await
+            .map_err(|error| DataFusionError::Execution(error.to_string()))?
+        });
+        let stream = LeasedStream {
+            inner: Box::pin(
+                datafusion::physical_plan::stream::RecordBatchStreamAdapter::new(schema, inner),
+            ),
+            _lease: Arc::new(Retained::Exact(guard)),
+        };
+        struct Notice(Option<tokio::sync::oneshot::Sender<()>>);
+        impl Drop for Notice {
+            fn drop(&mut self) {
+                if let Some(sender) = self.0.take() {
+                    let _ = sender.send(());
+                }
+            }
+        }
+        struct Input {
+            stream: LeasedStream,
+            _notice: Notice,
+        }
+        let (cancelled, wait_cancelled) = tokio::sync::oneshot::channel();
+        let mut input = Input {
+            stream,
+            _notice: Notice(Some(cancelled)),
+        };
+        let waiter = runtime.spawn(async move {
+            let result = input.stream.try_next().await;
+            drop(input);
+            result
+        });
+        wait_started.await.unwrap();
+        drop(waiter);
+        wait_cancelled.await.unwrap();
+        assert!(
+            exclusive(root.path()).is_err(),
+            "native blocking child owns protection after its stream is gone"
+        );
+        release.send(()).unwrap();
+        runtime.close_diagnostics().await?;
+        assert!(exclusive(root.path()).is_ok());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn immutable_protection_survives_pruned_plans_streams_and_cancelled_blocking_reads()
+    -> Result<()> {
+        for pruned in [false, true] {
+            let root = tempfile::tempdir()?;
+            initialize(root.path())?;
+            std::fs::create_dir(root.path().join("delta"))?;
+            let runtime =
+                crate::runtime::QueryRuntime::new(&root.path().join("spill"), Default::default())?;
+            crate::immutable_root::ImmutableRoot::seal(root.path())?;
+            let guard = ReadProtection::immutable(
+                crate::immutable_root::ImmutableRoot::open(root.path())?,
+                vec![crate::retention::Dependency::Artifact {
+                    artifact_id: format!("art_{}", "a".repeat(64)),
+                }],
+                runtime.clone(),
+            )?;
+            let session = runtime.session();
+            let batch = RecordBatch::try_new(
+                Arc::new(Schema::new(vec![Field::new("n", DataType::UInt64, false)])),
+                vec![Arc::new(UInt64Array::from(vec![1, 2, 3]))],
+            )?;
+            let input = crate::native_catalog::batch(&session, "leases", batch)?.into_view();
+            let owned = guard.provider(input.clone(), &session)?;
+            let frame = session
+                .read_table(owned.clone())?
+                .filter(datafusion::prelude::lit(!pruned))?;
+            let physical = frame.create_physical_plan().await?;
+            drop((frame, input, owned));
+            assert!(
+                exclusive(root.path()).is_err(),
+                "even a pruned plan retains exact root protection"
+            );
+            let mut stream =
+                datafusion::physical_plan::execute_stream(physical.clone(), session.task_ctx())?;
+            drop((physical, session));
+            let mut count = 0;
+            while let Some(batch) = stream.try_next().await? {
+                count += batch.num_rows();
+            }
+            assert_eq!(count, if pruned { 0 } else { 3 });
+            assert!(
+                exclusive(root.path()).is_err(),
+                "exhausted stream remains a physical owner"
+            );
+            drop(stream);
+            assert!(
+                exclusive(root.path()).is_ok(),
+                "last physical owner releases the root"
+            );
+
+            let guard = ReadProtection::immutable(
+                crate::immutable_root::ImmutableRoot::open(root.path())?,
+                vec![crate::retention::Dependency::Artifact {
+                    artifact_id: format!("art_{}", "a".repeat(64)),
+                }],
+                runtime.clone(),
+            )?;
+            let (started, wait_started) = tokio::sync::oneshot::channel();
+            let (release, wait_release) = std::sync::mpsc::channel();
+            let (finished, wait_finished) = tokio::sync::oneshot::channel();
+            let driver = runtime.clone();
+            let waiter = tokio::spawn(async move {
+                driver
+                    .blocking(move || {
+                        let protection = guard;
+                        let _ = started.send(());
+                        wait_release.recv().unwrap();
+                        drop(protection);
+                        let _ = finished.send(());
+                    })
+                    .await
+            });
+            wait_started.await.unwrap();
+            waiter.abort();
+            let _ = waiter.await;
+            assert!(
+                exclusive(root.path()).is_err(),
+                "cancelled waiter cannot release a live reader"
+            );
+            release.send(()).unwrap();
+            wait_finished.await.unwrap();
+            assert!(exclusive(root.path()).is_ok());
+            runtime.close_diagnostics().await?;
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn plan19_immutable_read_requires_exact_vector_and_root() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        initialize(root.path())?;
+        let namespace = root.path().join("delta");
+        std::fs::create_dir(&namespace)?;
+        let runtime =
+            crate::runtime::QueryRuntime::new(&root.path().join("spill"), Default::default())?;
+        let binding = enrichment_core::evidence::snapshot::DeltaBinding {source: enrichment_core::delta_reference::DeltaVersionRef { table: enrichment_core::delta_reference::DeltaTableRef { table_uri: "evidence_symbols".into(), table_id: "fixture".into(), contract_id: enrichment_core::identity::SchemaContractId::try_from("schema_contract_cc8321d6375c494d043fdd0260f21bc0ec51dacc9f6abb7f909cdcd3041b78bf".to_owned()).unwrap() }, version: 7 }, relation: "symbols".into(), cohort_id: enrichment_core::identity::CohortId::try_from("cohort_d7cbbb688b2e506c022e95cef8c4f629".to_owned()).unwrap(), rows: 1,};
+        crate::immutable_root::ImmutableRoot::seal(root.path())?;
+        let guard = ReadProtection::immutable(
+            crate::immutable_root::ImmutableRoot::open(root.path())?,
+            vec![crate::retention::dependency(&binding)],
+            runtime.clone(),
+        )?;
+        guard
+            .require_tables(&namespace, std::slice::from_ref(&binding))
+            .await?;
+        let mut wrong = binding.clone();
+        wrong.cohort_id = enrichment_core::identity::CohortId::try_from(
+            "cohort_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee".to_owned(),
+        )
+        .unwrap();
+        assert!(guard.require_tables(&namespace, &[wrong]).await.is_err());
+        // A replacement permanent lock is a different root even at the same path.
+        std::fs::rename(root.path().join(LOCK_FILE), root.path().join("old-lock"))?;
+        initialize(root.path())?;
+        assert!(guard.require_tables(&namespace, &[binding]).await.is_err());
+        drop(guard);
+        runtime.close_diagnostics().await?;
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn private_input_directory_survives_planning_and_stream_ownership() {
         let root = tempfile::tempdir().unwrap();
         let runtime =
             crate::runtime::QueryRuntime::new(&root.path().join("spill"), Default::default())
                 .unwrap();
-        let directory = Arc::new(tempfile::tempdir_in(root.path()).unwrap());
-        let path = directory.path().join("input.arrow");
+        let control =
+            crate::control::ControlStore::open(&root.path().join("state"), runtime.clone())
+                .unwrap();
+        let retention = crate::retention::RetentionStore::new(control, runtime.clone());
+        let directory = crate::PrivateDirectory::create(
+            &retention,
+            &runtime,
+            crate::private_directory::Kind::Documents,
+        )
+        .await
+        .unwrap();
+        let path = directory.path().join("documents.arrow");
         let schema = Arc::new(Schema::new(vec![Field::new("n", DataType::UInt64, false)]));
         let batch = RecordBatch::try_new(
             schema.clone(),
@@ -727,7 +999,7 @@ mod tests {
         let input = crate::arrow_input::provider(&runtime, &path, schema)
             .await
             .unwrap();
-        let owned = staged_view(&input, &session, directory.clone()).unwrap();
+        let owned = input_view(&input, &session, directory.clone()).unwrap();
         let frame = session
             .read_table(owned.clone())
             .unwrap()
@@ -759,6 +1031,7 @@ mod tests {
             "exhaustion does not release the caller's retained stream"
         );
         drop(stream);
+        runtime.close_diagnostics().await.unwrap();
         assert!(
             !path.exists(),
             "last physical owner reclaims the private directory"

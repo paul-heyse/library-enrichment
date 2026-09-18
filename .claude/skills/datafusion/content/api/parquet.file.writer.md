@@ -19,6 +19,9 @@ fn typed<T: DataType>(&mut self) -> &mut ColumnWriterImpl<'a, T>
 fn untyped(&mut self) -> &mut ColumnWriter<'a>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.writer.SerializedColumnWriter.md).
+
+
 A wrapper around a [`ColumnWriter`] that invokes a callback on [`Self::close`]
 
 ---
@@ -51,6 +54,9 @@ fn properties(&self) -> &WriterPropertiesPtr
 fn schema_descr(&self) -> &SchemaDescriptor
 fn write_all(&mut self, buf: &[u8]) -> std::io::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.writer.SerializedFileWriter.md).
+
 
 Parquet file writer API.
 
@@ -94,6 +100,9 @@ fn close(&mut self) -> Result<()>
 fn write_page(&mut self, page: CompressedPage) -> Result<PageWriteSpec>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.writer.SerializedPageWriter.md).
+
+
 A serialized implementation for Parquet [`PageWriter`].
 Writes and serializes pages and metadata into output stream.
 
@@ -117,6 +126,9 @@ fn close(self) -> Result<RowGroupMetaDataPtr>
 fn new(schema_descr: SchemaDescPtr, properties: WriterPropertiesPtr, buf: &'a mut TrackedWrite<W>, row_group_index: i16, on_close: Option<OnCloseRowGroup<'a, W>>) -> Self
 fn next_column(&mut self) -> Result<Option<SerializedColumnWriter<'_>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.writer.SerializedRowGroupWriter.md).
+
 
 Parquet row group writer API.
 
@@ -162,6 +174,9 @@ fn write_all(&mut self, buf: &[u8]) -> std::io::Result<()>
 fn write_vectored(&mut self, bufs: &[IoSlice<'_>]) -> std::io::Result<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.writer.TrackedWrite.md).
+
+
 A wrapper around a [`Write`] that keeps track of the number
 of bytes that have been written. The given [`Write`] is wrapped
 with a [`BufWriter`] to optimize writing performance.
@@ -176,6 +191,9 @@ with a [`BufWriter`] to optimize writing performance.
 type OnCloseColumnChunk<'a> = Box<dyn FnOnce(column::writer::ColumnCloseResult) -> errors::Result<()> + 'a>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.writer.OnCloseColumnChunk.md).
+
+
 Callback invoked on closing a column chunk
 
 ---
@@ -187,6 +205,9 @@ Callback invoked on closing a column chunk
 ```rust
 type OnCloseRowGroup<'a, W> = Box<dyn FnOnce(&'a mut TrackedWrite<W>, RowGroupMetaData, Vec<Option<bloom_filter::Sbbf>>, Vec<Option<file::page_index::column_index::ColumnIndexMetaData>>, Vec<Option<file::page_index::offset_index::OffsetIndexMetaData>>) -> errors::Result<()> + Send + 'a>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.writer.OnCloseRowGroup.md).
+
 
 Callback invoked on closing a row group, arguments are:
 

@@ -67,7 +67,7 @@ pub(crate) fn derived(
 }
 
 /// Cheap change witness only. Digest/schema validation establishes authority before this exists.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct FileWitness {
     bytes: u64,
     modified: std::time::SystemTime,

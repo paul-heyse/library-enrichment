@@ -21,6 +21,9 @@ fn into_nullable_field(self) -> Field
 fn into_nullable_field_ref(self) -> FieldRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.datatype.DataTypeExt.md).
+
+
 DataFusion extension methods for Arrow [`DataType`]
 
 ---
@@ -49,6 +52,9 @@ fn retyped(self, new_data_type: DataType) -> Self
 fn with_field_metadata(self, metadata: &FieldMetadata) -> Self
 fn with_field_metadata_opt(self, metadata: Option<&FieldMetadata>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.datatype.FieldExt.md).
+
 
 DataFusion extension methods for Arrow [`Field`] and [`FieldRef`]
 

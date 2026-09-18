@@ -1,0 +1,386 @@
+[
+  {
+    "id": "4f2bfbb3e4aa340eb4071d97",
+    "path": "datafusion::execution::context::FunctionFactory",
+    "name": "FunctionFactory",
+    "owner": null,
+    "crate": "datafusion",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait FunctionFactory: Debug + Sync + Send",
+    "docs": "Interface for handling `CREATE FUNCTION` statements and interacting with\n[SessionState] to create and register functions ([`ScalarUDF`],\n[`AggregateUDF`], [`WindowUDF`], and [`TableFunctionImpl`]) dynamically.\n\nImplement this trait to create user-defined functions in a custom way, such\nas loading from external libraries or defining them programmatically.\nDataFusion will parse `CREATE FUNCTION` statements into [`CreateFunction`]\nstructs and pass them to the [`create`](Self::create) method.\n\nNote there is no default implementation of this trait provided in DataFusion,\nbecause the implementation and requirements vary widely. Please see\n[function_factory example] for a reference implementation.\n\n[function_factory example]: https://github.com/apache/datafusion/blob/main/datafusion-examples/examples/builtin_functions/function_factory.rs\n\n# Examples of syntax that can be supported\n\n```sql\nCREATE FUNCTION f1(BIGINT)\n  RETURNS BIGINT\n  RETURN $1 + 1;\n```\nor\n```sql\nCREATE FUNCTION to_miles(DOUBLE)\nRETURNS DOUBLE\nLANGUAGE PYTHON\nAS '\nimport pyarrow.compute as pc\n\nconversation_rate_multiplier = 0.62137119\n\ndef to_miles(km_data):\n    return pc.multiply(km_data, conversation_rate_multiplier)\n'\n```",
+    "span": {
+      "filename": "src/execution/context/mod.rs",
+      "begin": [
+        2225,
+        1
+      ],
+      "end": [
+        2232,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          891
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Debug",
+                "id": 203,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 19,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 17,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": []
+      }
+    },
+    "type_references": {
+      "203": "core::fmt::Debug",
+      "19": "core::marker::Sync",
+      "17": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {
+      "`CreateFunction`": 890,
+      "Self::create": 891,
+      "`AggregateUDF`": 799,
+      "SessionState": 81,
+      "`ScalarUDF`": 795,
+      "`WindowUDF`": 801,
+      "`TableFunctionImpl`": 793
+    },
+    "link_paths": {
+      "`CreateFunction`": "datafusion_expr::logical_plan::ddl::CreateFunction",
+      "Self::create": "datafusion::execution::context::FunctionFactory::create",
+      "`AggregateUDF`": "datafusion_expr::udaf::AggregateUDF",
+      "SessionState": "datafusion::execution::session_state::SessionState",
+      "`ScalarUDF`": "datafusion_expr::udf::ScalarUDF",
+      "`WindowUDF`": "datafusion_expr::udwf::WindowUDF",
+      "`TableFunctionImpl`": "datafusion_session::table::TableFunctionImpl"
+    },
+    "artifact": {
+      "id": "931f8268834495b996c92450e89e002476fbdbba546709ba6577edcc9cb33244",
+      "format_version": 61,
+      "item_id": "759",
+      "origin": "https://docs.rs/crate/datafusion/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion.execution.context.FunctionFactory.md",
+    "record_file": "operations/datafusion.execution.context.FunctionFactory.json",
+    "anchor": "op-4f2bfbb3e4aa340eb4071d97",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`CreateFunction`": "../operations/datafusion_expr.logical_plan.ddl.CreateFunction.md#op-3668c6565f5901a6967c489f",
+      "Self::create": "../operations/datafusion.execution.context.FunctionFactory.md#op-bd82706856a20ed1742b5a55",
+      "`AggregateUDF`": "../operations/datafusion_expr.udaf.AggregateUDF.md#op-d90e5a97479981a539718379",
+      "SessionState": "../operations/datafusion.execution.session_state.SessionState.md#op-3ba80ad5c25fa63e8340a601",
+      "`ScalarUDF`": "../operations/datafusion_expr.udf.ScalarUDF.md#op-12eb8b815a2294fbbbd085a0",
+      "`WindowUDF`": "../operations/datafusion_expr.udwf.WindowUDF.md#op-42e8216e20a1c833692a7e65",
+      "`TableFunctionImpl`": "../operations/datafusion_session.table.TableFunctionImpl.md#op-7e3147f93fdf3640b07177ce"
+    }
+  },
+  {
+    "id": "bd82706856a20ed1742b5a55",
+    "path": "datafusion::execution::context::FunctionFactory::create",
+    "name": "create",
+    "owner": "datafusion::execution::context::FunctionFactory",
+    "crate": "datafusion",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "async fn create(&self, state: &SessionState, statement: CreateFunction) -> Result<RegisterFunction>",
+    "docs": "Creates a new dynamic function from the SQL in the [CreateFunction] statement",
+    "span": {
+      "filename": "src/execution/context/mod.rs",
+      "begin": [
+        2227,
+        5
+      ],
+      "end": [
+        2231,
+        35
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "state",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "SessionState",
+                      "id": 81,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "statement",
+              {
+                "resolved_path": {
+                  "path": "CreateFunction",
+                  "id": 890,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 236,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 237,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 238,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 90,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "RegisterFunction",
+                                                                        "id": 892,
+                                                                        "args": null
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 17,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "81": "datafusion::execution::session_state::SessionState",
+      "890": "datafusion_expr::logical_plan::ddl::CreateFunction",
+      "236": "core::pin::Pin",
+      "237": "alloc::boxed::Box",
+      "238": "core::future::future::Future",
+      "90": "datafusion_common::error::Result",
+      "892": "datafusion::execution::context::RegisterFunction",
+      "17": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {
+      "CreateFunction": 890
+    },
+    "link_paths": {
+      "CreateFunction": "datafusion_expr::logical_plan::ddl::CreateFunction"
+    },
+    "artifact": {
+      "id": "931f8268834495b996c92450e89e002476fbdbba546709ba6577edcc9cb33244",
+      "format_version": 61,
+      "item_id": "891",
+      "origin": "https://docs.rs/crate/datafusion/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion.execution.context.FunctionFactory.md",
+    "record_file": "operations/datafusion.execution.context.FunctionFactory.json",
+    "anchor": "op-bd82706856a20ed1742b5a55",
+    "aliases": [],
+    "resolved_doc_links": {
+      "CreateFunction": "../operations/datafusion_expr.logical_plan.ddl.CreateFunction.md#op-3668c6565f5901a6967c489f"
+    }
+  }
+]

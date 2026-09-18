@@ -1,0 +1,186 @@
+{
+  "id": "delta.merge",
+  "title": "Merge with explicit key, null, clause and duplicate semantics",
+  "reviewed": "2026-09-18",
+  "brief": "Merge composes a source DataFrame, target snapshot and ordered conditional actions. Decide null-key and duplicate-source policy before treating it as an upsert.",
+  "task_aliases": [
+    "upsert merge",
+    "duplicate source keys",
+    "null keys",
+    "matched update",
+    "by source delete",
+    "merge aliases"
+  ],
+  "crates": [
+    "deltalake-core"
+  ],
+  "input": [
+    "DataFrame source",
+    "join predicate",
+    "ordered clauses"
+  ],
+  "output": [
+    "(DeltaTable, MergeMetrics)"
+  ],
+  "properties": [
+    "upsert merge",
+    "duplicate source keys",
+    "null keys",
+    "matched update",
+    "by source delete",
+    "merge aliases"
+  ],
+  "operations": [
+    "deltalake_core::table::DeltaTable::merge",
+    "deltalake_core::operations::merge::MergeBuilder::when_matched_update",
+    "deltalake_core::operations::merge::MergeBuilder::when_not_matched_insert",
+    "deltalake_core::operations::merge::MergeBuilder::when_not_matched_by_source_delete",
+    "deltalake_core::operations::merge::MergeBuilder::Output"
+  ],
+  "choices": [
+    {
+      "candidate": "MergeBuilder",
+      "choose_when": "Different matched/unmatched cases need different actions",
+      "tradeoff": "Aliases and ordered predicates define the semantics"
+    },
+    {
+      "candidate": "WriteBuilder append/replace_where",
+      "choose_when": "Source data is already a complete replacement slice or pure append",
+      "tradeoff": "Simpler input contract; no source-target action matrix"
+    },
+    {
+      "candidate": "Pre-aggregate/deduplicate source",
+      "choose_when": "Multiple source rows can match one target with conflicting updates",
+      "tradeoff": "Requires an application-defined tie-break rule; do not silently drop duplicates"
+    }
+  ],
+  "claims": [
+    {
+      "id": "delta.merge.1",
+      "aspect": "clauses",
+      "statement": "The first applicable matched update won in the probe; source and target null keys did not match under ordinary equality. Unmatched insert and by-source delete contributed independently.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "merge_clause_order_null_keys_and_duplicate_updates"
+    },
+    {
+      "id": "delta.merge.2",
+      "aspect": "duplicates",
+      "statement": "Two matching source rows attempting to update one target produced an error and left the observed version unchanged in the tested case.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "merge_clause_order_null_keys_and_duplicate_updates"
+    },
+    {
+      "id": "delta.merge.3",
+      "aspect": "construction",
+      "statement": "when_* takes a closure configuring a merge clause builder. Its UpdateBuilder/DeleteBuilder types are not constructors for standalone table update/delete operations.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.merge.4",
+      "aspect": "result",
+      "statement": "Await returns updated table plus MergeMetrics; interpret inserted/updated/deleted counts in the context of source multiplicity and chosen clauses.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    }
+  ],
+  "implementation": [
+    "Use explicit source/target aliases and qualified columns.",
+    "Choose equality versus a deliberate null-safe condition and independently specify duplicate-source handling.",
+    "Assert rows, versions and per-action metrics; a completed merge is not evidence of an application-level unique key."
+  ],
+  "effects": [
+    "rewrite or add/remove data",
+    "publish transaction",
+    "return metrics"
+  ],
+  "errors": [
+    "Invalid expressions, ambiguous/multiple matches, protocol/schema restrictions and optimistic conflicts require distinct recovery."
+  ],
+  "unknowns": [
+    "Every schema-evolution/duplicate-delete combination and concurrency schedule is not certified by the selected fixture."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "scope": "Exact git-capture full contracts for the selected operations"
+    },
+    {
+      "id": "source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/merge/mod.rs",
+      "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+    },
+    {
+      "id": "runtime",
+      "kind": "runtime_observation",
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Named local assertions only; see profile, fixtures and source digests",
+      "tests": [
+        "merge_clause_order_null_keys_and_duplicate_updates"
+      ]
+    }
+  ],
+  "resolved_operations": [
+    {
+      "path": "deltalake_core::table::DeltaTable::merge",
+      "id": "6520d30123b98065a7c363a4",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.table.DeltaTable.json",
+      "page": "operations/deltalake_core.table.DeltaTable.md#op-6520d30123b98065a7c363a4",
+      "signature": "fn merge<E: Into<Expression>>(self, source: datafusion::prelude::DataFrame, predicate: E) -> MergeBuilder"
+    },
+    {
+      "path": "deltalake_core::operations::merge::MergeBuilder::when_matched_update",
+      "id": "3b956eb522c0b07669f78099",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.merge.MergeBuilder.json",
+      "page": "operations/deltalake_core.operations.merge.MergeBuilder.md#op-3b956eb522c0b07669f78099",
+      "signature": "fn when_matched_update<F>(self, builder: F) -> DeltaResult<MergeBuilder> where F: FnOnce(UpdateBuilder) -> UpdateBuilder"
+    },
+    {
+      "path": "deltalake_core::operations::merge::MergeBuilder::when_not_matched_insert",
+      "id": "5df71d61188e1549d37abb11",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.merge.MergeBuilder.json",
+      "page": "operations/deltalake_core.operations.merge.MergeBuilder.md#op-5df71d61188e1549d37abb11",
+      "signature": "fn when_not_matched_insert<F>(self, builder: F) -> DeltaResult<MergeBuilder> where F: FnOnce(InsertBuilder) -> InsertBuilder"
+    },
+    {
+      "path": "deltalake_core::operations::merge::MergeBuilder::when_not_matched_by_source_delete",
+      "id": "c47b2f8a582c539f8251a343",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.merge.MergeBuilder.json",
+      "page": "operations/deltalake_core.operations.merge.MergeBuilder.md#op-c47b2f8a582c539f8251a343",
+      "signature": "fn when_not_matched_by_source_delete<F>(self, builder: F) -> DeltaResult<MergeBuilder> where F: FnOnce(DeleteBuilder) -> DeleteBuilder"
+    },
+    {
+      "path": "deltalake_core::operations::merge::MergeBuilder::Output",
+      "id": "246dbe6c66042a837a13c116",
+      "kind": "assoc_type",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.merge.MergeBuilder.json",
+      "page": "operations/deltalake_core.operations.merge.MergeBuilder.md#op-246dbe6c66042a837a13c116",
+      "signature": "type Output = Result<(DeltaTable, MergeMetrics), DeltaTableError>"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/delta.merge.json"
+}

@@ -42,6 +42,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.data_type.ArrayElemTypeDef.md).
+
+
 Represents the data type of the elements in an array (if any) as well as
 the syntax used to declare the array.
 
@@ -95,6 +98,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.data_type.BinaryLength.md).
+
+
 Information about [binary length][1], including length and possibly unit.
 
 [1]: https://jakewheat.github.io/sql-overview/sql-2016-foundation-grammar.html#binary-length
@@ -146,6 +152,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.data_type.CharLengthUnits.md).
+
 
 Possible units for characters, initially based on 2016 ANSI [SQL Standard][1].
 
@@ -199,6 +208,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.data_type.CharacterLength.md).
+
+
 Information about [character length][1], including length and possibly unit.
 
 [1]: https://jakewheat.github.io/sql-overview/sql-2016-foundation-grammar.html#character-length
@@ -251,6 +263,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.data_type.DataType.md).
+
+
 SQL data types
 
 ---
@@ -294,6 +309,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.data_type.EnumMember.md).
+
 
 A member of an ENUM type.
 
@@ -344,6 +362,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.data_type.ExactNumberInfo.md).
+
 
 Additional information for `NUMERIC`, `DECIMAL`, and `DEC` data types
 following the 2016 [SQL Standard].
@@ -398,6 +419,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.data_type.GeometricTypeKind.md).
+
+
 Represents different types of geometric shapes which are commonly used in
 PostgreSQL/Redshift for spatial operations and geometry-related computations.
 
@@ -451,6 +475,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.data_type.IntervalFields.md).
+
+
 Fields for [Postgres] `INTERVAL` type.
 
 [Postgres]: https://www.postgresql.org/docs/17/datatype-datetime.html
@@ -496,6 +523,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.data_type.StructBracketKind.md).
+
 
 Type of brackets used for `STRUCT` literals.
 
@@ -546,6 +576,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.data_type.TimezoneInfo.md).
+
 
 Timestamp and Time data types information about TimeZone formatting.
 

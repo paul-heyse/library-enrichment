@@ -1,0 +1,233 @@
+{
+  "schema_version": 1,
+  "id": "df.pushdown",
+  "title": "Advertise only sound filter, projection and limit pushdown",
+  "task_aliases": [
+    "custom provider scan",
+    "exact inexact predicate",
+    "min max pruning",
+    "limit projection filter column",
+    "false negatives"
+  ],
+  "crates": [
+    "datafusion-session",
+    "datafusion-expr",
+    "datafusion-physical-plan"
+  ],
+  "input": [
+    "Expr",
+    "projection indices",
+    "limit",
+    "Session"
+  ],
+  "output": [
+    "ExecutionPlan",
+    "ScanResult"
+  ],
+  "properties": [
+    "nulls",
+    "duplicates",
+    "exactness",
+    "projection",
+    "limit",
+    "pruning"
+  ],
+  "operations": [
+    "datafusion_session::table::TableProvider::scan",
+    "datafusion_session::table::TableProvider::supports_filters_pushdown",
+    "datafusion_session::table::TableProvider::scan_with_args",
+    "datafusion_expr::table_source::TableProviderFilterPushDown",
+    "datafusion_expr::table_source::TableProviderFilterPushDown::Exact"
+  ],
+  "brief": "Exact fully enforces SQL predicates; Inexact retains a conservative superset; Unsupported delegates evaluation. The logical scan order is filter, limit, then projection.",
+  "choices": [
+    {
+      "candidate": "Exact",
+      "choose_when": "All accepted predicates are fully enforced",
+      "tradeoff": "Planner can remove residual filters; incorrect claims silently change results.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "Inexact",
+      "choose_when": "Sound candidate pruning retains every match",
+      "tradeoff": "Residual evaluation removes false positives; limit cannot be pushed past inexact filtering.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "Unsupported",
+      "choose_when": "No sound/useful pruning implementation",
+      "tradeoff": "Correct general choice; do not invent approximate filtering merely to override a hook.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "df.pushdown.inputs",
+      "aspect": "inputs",
+      "statement": "scan receives Session, optional ordered projection indices, a conjunction of filters, and optional limit. Filter inputs can be omitted from output projection; retain them internally until evaluation.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.pushdown.outputs",
+      "aspect": "outputs",
+      "statement": "Return a physical scan plan with the requested output schema/order. supports_filters_pushdown returns one classification for each input filter in matching order.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.pushdown.exactness",
+      "aspect": "exactness",
+      "statement": "Inexact may keep false positives but must not lose matches. Residual filtering cannot recover false negatives; SQL null/type semantics and duplicates must be retained.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.pushdown.limit",
+      "aspect": "limit",
+      "statement": "The documented order is filters -> limit -> projection. A pushed limit requests at least that many qualifying rows when available; the scan may return more. Applying it to raw candidates can underproduce.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.pushdown.new-entry",
+      "aspect": "new-entry",
+      "statement": "scan_with_args takes ScanArgs and returns ScanResult, allowing additional requests. Inspect this pin's full member contract instead of transferring older signatures.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.pushdown.upstream-wording-conflict",
+      "aspect": "upstream-wording-conflict",
+      "statement": "The Exact enum variant documentation at this pin says a source can omit tuples which pass the predicate. That wording conflicts with TableProvider::scan and the observed removal of residual filtering. Follow the scan contract: keep qualifying rows and fully enforce the predicate. The variant sentence is treated as a documentation defect, not an alternative semantic contract.",
+      "kind": "source_runtime_reconciliation",
+      "evidence": [
+        "upstream",
+        "probe"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0; predicate b > 5 in the recorded Exact/Inexact control"
+      ]
+    }
+  ],
+  "implementation": [
+    "Evaluate support per expression, not just by predicate column name.",
+    "Keep predicate inputs available through filtering, then apply safe limit and output projection.",
+    "Differentially compare Unsupported/reference execution with Exact/Inexact; inspect residual plans and scan arguments.",
+    "Separate a scan limit hint (may overproduce) from final SQL LIMIT. Assert an actual Some(limit) scan call in a control without ORDER BY; an ordered query can keep LIMIT above a sort and miss this path."
+  ],
+  "unknowns": [
+    "The test Inexact provider retains all candidates; it verifies planner/residual behavior, not a particular min/max algorithm."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "datafusion_session::table::TableProvider::scan",
+        "datafusion_session::table::TableProvider::supports_filters_pushdown",
+        "datafusion_session::table::TableProvider::scan_with_args",
+        "datafusion_expr::table_source::TableProviderFilterPushDown"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    },
+    {
+      "id": "probe",
+      "kind": "runtime_observation",
+      "tests": [
+        "provider_exact_inexact_projection_limit_match_reference"
+      ],
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Only the named assertions in the recorded Cargo profile."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "datafusion_session::table::TableProvider::scan",
+      "datafusion_session::table::TableProvider::supports_filters_pushdown",
+      "datafusion_session::table::TableProvider::scan_with_args",
+      "datafusion_expr::table_source::TableProviderFilterPushDown"
+    ],
+    "candidate_set": [
+      "Exact",
+      "Inexact",
+      "Unsupported"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  },
+  "resolved_operations": [
+    {
+      "path": "datafusion_session::table::TableProvider::scan",
+      "id": "116d00acf0401874b7f0d9f0",
+      "kind": "function",
+      "crate": "datafusion-session",
+      "record": "operations/datafusion_session.table.TableProvider.json",
+      "page": "operations/datafusion_session.table.TableProvider.md#op-116d00acf0401874b7f0d9f0",
+      "signature": "async fn scan(&self, state: &dyn Session, projection: Option<&Vec<usize>>, filters: &[Expr], limit: Option<usize>) -> Result<Arc<dyn ExecutionPlan>>"
+    },
+    {
+      "path": "datafusion_session::table::TableProvider::supports_filters_pushdown",
+      "id": "a929088704b5681a65528134",
+      "kind": "function",
+      "crate": "datafusion-session",
+      "record": "operations/datafusion_session.table.TableProvider.json",
+      "page": "operations/datafusion_session.table.TableProvider.md#op-a929088704b5681a65528134",
+      "signature": "fn supports_filters_pushdown(&self, filters: &[&Expr]) -> Result<Vec<TableProviderFilterPushDown>>"
+    },
+    {
+      "path": "datafusion_session::table::TableProvider::scan_with_args",
+      "id": "274938cecb923835571bdb77",
+      "kind": "function",
+      "crate": "datafusion-session",
+      "record": "operations/datafusion_session.table.TableProvider.json",
+      "page": "operations/datafusion_session.table.TableProvider.md#op-274938cecb923835571bdb77",
+      "signature": "async fn scan_with_args<'a>(&self, state: &dyn Session, args: ScanArgs<'a>) -> Result<ScanResult>"
+    },
+    {
+      "path": "datafusion_expr::table_source::TableProviderFilterPushDown",
+      "id": "4fd1b17084602ce2b715fb21",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "record": "operations/datafusion_expr.table_source.TableProviderFilterPushDown.json",
+      "page": "operations/datafusion_expr.table_source.TableProviderFilterPushDown.md#op-4fd1b17084602ce2b715fb21",
+      "signature": "enum TableProviderFilterPushDown"
+    },
+    {
+      "path": "datafusion_expr::table_source::TableProviderFilterPushDown::Exact",
+      "id": "76dd051fb92b19d07ce613a6",
+      "kind": "variant",
+      "crate": "datafusion-expr",
+      "record": "operations/datafusion_expr.table_source.TableProviderFilterPushDown.json",
+      "page": "operations/datafusion_expr.table_source.TableProviderFilterPushDown.md#op-76dd051fb92b19d07ce613a6",
+      "signature": "Exact"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/df.pushdown.json"
+}

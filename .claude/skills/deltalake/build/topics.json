@@ -113,7 +113,7 @@
         "integrations/delta-lake-arrow.md"
       ],
       "decision_rules": [
-        "Write the Delta schema explicitly when creating a table. Inferring it from a `RecordBatch` locks in whatever Arrow happened to produce.",
+        "Declare a Delta schema when the domain requires independent schema control; batch-derived schemas are appropriate when their normalization and protocol consequences match the intended contract.",
         "Schema evolution is opt-in per write, through the write builder's schema mode -- not a table-level setting."
       ],
       "anti_patterns": [
@@ -153,7 +153,7 @@
       ],
       "decision_rules": [
         "Set a schema mode if incoming data may carry new columns; the default neither evolves nor merges.",
-        "Set commit properties with an application transaction id to make a retried write idempotent.",
+        "Application transaction markers persist coordination metadata; repeating a marker does not suppress sequential appends at this pin. See the reviewed replay contract.",
         "Partition on a low-cardinality column that queries actually filter on -- otherwise partitioning only multiplies small files."
       ],
       "anti_patterns": [
@@ -307,7 +307,7 @@
       "slug": "transactions",
       "title": "Transactions and commits",
       "covers": "Commit properties, application transaction ids, conflict handling, isolation",
-      "mental_model": "A commit is an atomic rename of a numbered log entry: exactly one writer wins version N. A loser retries against the new version, which is where conflict resolution lives. An application transaction id makes a retried write idempotent -- without one, a retry after an ambiguous failure appends the data twice.",
+      "mental_model": "Log publication is delegated to the selected LogStore. Optimistic conflict checking and retries operate against intervening commits. Application transaction markers do not alone provide replay suppression at this pin, and errors can occur after a log entry is visible. Inspect the reviewed commit and replay contracts before designing recovery.",
       "entry_points": [
         "deltalake_core::kernel::transaction::CommitBuilder",
         "deltalake_core::kernel::transaction::CommitProperties",
@@ -400,7 +400,7 @@
         "usage/querying-delta-tables.md"
       ],
       "decision_rules": [
-        "Reuse one `SessionContext` across queries; building one per query discards every cache.",
+        "Reuse an appropriately configured session/runtime when its shared resources match the workload. Delta operations need the Delta planner; trait-wrapper fallback policy determines which caller capabilities survive.",
         "Rebuild the provider when you need a newer version -- it is bound to the snapshot it was made from.",
         "Check `EXPLAIN` for the file count actually scanned before concluding pruning works."
       ],
@@ -409,7 +409,7 @@
         "Overriding the session's object store registry and losing the table's own backend wiring."
       ],
       "checklist": [
-        "Is the session reused?",
+        "Does the session preserve the required planner, functions, store mappings and resource settings?",
         "Does EXPLAIN show pruning reaching the file level?",
         "Is the provider rebuilt when freshness matters?"
       ]

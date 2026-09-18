@@ -1,7 +1,11 @@
 //! Concrete isolated producer intent. Callers cannot supply process arguments or host paths.
 use crate::policy::ExecutionProfile;
 
+pub mod environment;
 pub mod facts;
+pub mod producer;
+pub mod rustdoc_decoder;
+pub mod static_worker;
 
 crate::native_vocabulary! {
     #[schemars(inline)]
@@ -48,11 +52,11 @@ crate::native_struct! {
 #[derive(Default)]
 pub struct JobRequest {
     #[schemars(length(min = 1))]
-    job_id: String => crate::native_union::Rule::NonEmpty,
+    job_id: crate::identity::JobId => crate::native_union::Rule::Text,
     #[serde(default)]
     action: JobAction => crate::native_union::Rule::Text,
     #[serde(default)]
-    interest_token: Option<String> => crate::native_union::Rule::Text,
+    interest_token: Option<crate::identity::InterestId> => crate::native_union::Rule::Text,
     #[serde(default)]
     wait_seconds: u64 => crate::native_union::Rule::UnsignedRange { min: 0, max: 10 },
     #[serde(default)]
@@ -63,13 +67,13 @@ pub struct JobRequest {
 
 crate::native_struct! {
 pub struct JobData {
-    job_id: String => crate::native_union::Rule::Text,
+    job_id: crate::identity::JobId => crate::native_union::Rule::Text,
     state: crate::wire::JobState => crate::native_union::Rule::Text,
     stage: String => crate::native_union::Rule::Text,
-    interest_token: Option<String> => crate::native_union::Rule::Text,
+    interest_token: Option<crate::identity::InterestId> => crate::native_union::Rule::Text,
     active_interests: usize => crate::native_union::Rule::Text,
-    submitted_at: String => crate::native_union::Rule::Text,
-    updated_at: String => crate::native_union::Rule::Text,
+    submitted_at: crate::native_time::SubmissionTime => crate::native_union::Rule::Text,
+    updated_at: crate::native_time::UpdateTime => crate::native_union::Rule::Text,
     result: Option<JobResult> => crate::native_union::Rule::Text,
 }
 }
@@ -127,18 +131,18 @@ crate::native_union! {
 /// Actual process authority, independent of the probe's semantic outcome.
 pub enum ProcessAuthority {
     Command = "command" {
-        effect_id: String => crate::native_union::Rule::NonEmpty,
-        grant_id: String => crate::native_union::Rule::NonEmpty,
+        effect_id: crate::identity::ProcessEffectId => crate::native_union::Rule::Text,
+        grant_id: crate::identity::GrantId => crate::native_union::Rule::Text,
         environment_id: Option<crate::identity::EnvironmentId> => crate::native_union::Rule::Text,
         snapshot_id: Option<crate::identity::SnapshotId> => crate::native_union::Rule::Text,
     },
-    Qualification = "qualification" { definition_id: String => crate::native_union::Rule::NonEmpty },
+    Qualification = "qualification" { definition_id: crate::identity::ProcessOperationId => crate::native_union::Rule::Text },
 }
 }
 
 crate::native_struct! {
 pub struct ProcessObservation {
-    operation_id: String => crate::native_union::Rule::Text,
+    operation_id: crate::identity::ProcessOperationId => crate::native_union::Rule::Text,
     authority: ProcessAuthority => crate::native_union::Rule::Text,
     image_id: String => crate::native_union::Rule::Text,
     command: Vec<String> => crate::native_union::Rule::Sequence,
@@ -149,6 +153,21 @@ pub struct ProcessObservation {
     stdout: String => crate::native_union::Rule::Text,
     stderr: String => crate::native_union::Rule::Text,
     cleanup_confirmed: bool => crate::native_union::Rule::Text,
+}
+}
+
+crate::native_struct! {
+/// Physical producer facts before normalization. Logs project this record for diagnostics;
+/// publication consumes the native value directly, never parses the projected log back.
+pub struct VerificationCapture {
+    job_id: crate::identity::JobId => crate::native_union::Rule::Text,
+    request: VerifyRequest => crate::native_union::Rule::Text,
+    source_release: crate::identity::Release => crate::native_union::Rule::Text,
+    source_snapshot: crate::identity::SnapshotId => crate::native_union::Rule::Text,
+    environment: crate::identity::Environment => crate::native_union::Rule::Text,
+    containment_identity: String => crate::native_union::Rule::NonEmpty,
+    observations: Vec<ProcessObservation> => crate::native_union::Rule::SequenceBounds { min: 1, max: 64 },
+    input_artifacts: Vec<crate::evidence::Artifact> => crate::native_union::Rule::SequenceBounds { min: 0, max: 4098 },
 }
 }
 

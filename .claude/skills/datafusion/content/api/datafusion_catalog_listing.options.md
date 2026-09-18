@@ -30,6 +30,9 @@ fn with_output_partitioning(self, output_partitioning: Option<Partitioning>) -> 
 fn with_table_partition_cols(self, table_partition_cols: Vec<(String, DataType)>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog_listing.options.ListingOptions.md).
+
+
 Options for creating a [`crate::ListingTable`]
 
 ---

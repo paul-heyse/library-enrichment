@@ -26,6 +26,9 @@ fn new(column_map: &'a HashMap<Column, Arc<dyn PhysicalExpr>>) -> Self
 fn f_down(&mut self, node: Self::Node) -> datafusion_common::Result<Transformed<Self::Node>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.column_rewriter.PhysicalColumnRewriter.md).
+
+
 Rewrite column references in a physical expr according to a mapping.
 
 This rewriter traverses the expression tree and replaces [`Column`] nodes

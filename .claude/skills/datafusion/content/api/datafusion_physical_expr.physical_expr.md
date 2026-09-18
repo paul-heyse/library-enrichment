@@ -12,6 +12,9 @@ Also reachable as `datafusion::physical_expr::add_offset_to_expr`, `datafusion_p
 fn add_offset_to_expr(expr: std::sync::Arc<dyn PhysicalExpr>, offset: isize) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.physical_expr.add_offset_to_expr.md).
+
+
 Adds the `offset` value to `Column` indices inside `expr`. This function is
 generally used during the update of the right table schema in join operations.
 
@@ -27,6 +30,9 @@ Also reachable as `datafusion::physical_expr::add_offset_to_physical_sort_exprs`
 fn add_offset_to_physical_sort_exprs(sort_exprs: impl IntoIterator<Item = PhysicalSortExpr>, offset: isize) -> datafusion_common::Result<Vec<PhysicalSortExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.physical_expr.add_offset_to_physical_sort_exprs.md).
+
+
 ---
 
 ## create_lex_ordering
@@ -38,6 +44,9 @@ Also reachable as `datafusion::physical_expr::create_lex_ordering`, `datafusion_
 ```rust
 fn create_lex_ordering(schema: &arrow::datatypes::SchemaRef, sort_order: &[Vec<datafusion_expr::SortExpr>], execution_props: &datafusion_expr::execution_props::ExecutionProps) -> datafusion_common::Result<Vec<LexOrdering>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.physical_expr.create_lex_ordering.md).
+
 
 Creates a vector of [LexOrdering] from a vector of logical expression
 
@@ -52,6 +61,9 @@ Also reachable as `datafusion::datasource::create_ordering`, `datafusion::physic
 ```rust
 fn create_ordering(schema: &arrow::datatypes::Schema, sort_order: &[Vec<datafusion_expr::SortExpr>]) -> datafusion_common::Result<Vec<LexOrdering>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.physical_expr.create_ordering.md).
+
 
 Converts logical sort expressions to physical sort expressions.
 
@@ -111,6 +123,9 @@ Also reachable as `datafusion::physical_expr::create_physical_partitioning`, `da
 fn create_physical_partitioning(partitioning: &datafusion_expr::Partitioning, input_dfschema: &datafusion_common::DFSchema, execution_props: &datafusion_expr::execution_props::ExecutionProps, planning_ctx: &datafusion_expr::physical_planning_context::PhysicalPlanningContext) -> datafusion_common::Result<Partitioning>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.physical_expr.create_physical_partitioning.md).
+
+
 Create physical partitioning from logical partitioning.
 
 See [`create_physical_expr`] for details on the `planning_ctx` argument.
@@ -126,6 +141,9 @@ Also reachable as `datafusion::physical_expr::create_physical_sort_expr`, `dataf
 ```rust
 fn create_physical_sort_expr(e: &datafusion_expr::SortExpr, input_dfschema: &datafusion_common::DFSchema, execution_props: &datafusion_expr::execution_props::ExecutionProps, planning_ctx: &datafusion_expr::physical_planning_context::PhysicalPlanningContext) -> datafusion_common::Result<PhysicalSortExpr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.physical_expr.create_physical_sort_expr.md).
+
 
 Create a physical sort expression from a logical expression
 
@@ -143,6 +161,9 @@ Also reachable as `datafusion::physical_expr::create_physical_sort_exprs`, `data
 fn create_physical_sort_exprs(exprs: &[datafusion_expr::SortExpr], input_dfschema: &datafusion_common::DFSchema, execution_props: &datafusion_expr::execution_props::ExecutionProps, planning_ctx: &datafusion_expr::physical_planning_context::PhysicalPlanningContext) -> datafusion_common::Result<Vec<PhysicalSortExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.physical_expr.create_physical_sort_exprs.md).
+
+
 Create vector of physical sort expression from a vector of logical expression
 
 See [`create_physical_expr`] for details on the `planning_ctx` argument.
@@ -159,6 +180,9 @@ Also reachable as `datafusion::physical_expr::physical_exprs_bag_equal`, `datafu
 fn physical_exprs_bag_equal(lhs: &[std::sync::Arc<dyn PhysicalExpr>], rhs: &[std::sync::Arc<dyn PhysicalExpr>]) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.physical_expr.physical_exprs_bag_equal.md).
+
+
 Checks whether the given physical expression slices are equal in the sense
 of bags (multi-sets), disregarding their orderings.
 
@@ -174,6 +198,9 @@ Also reachable as `datafusion::physical_expr::physical_exprs_contains`, `datafus
 fn physical_exprs_contains(physical_exprs: &[std::sync::Arc<dyn PhysicalExpr>], expr: &std::sync::Arc<dyn PhysicalExpr>) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.physical_expr.physical_exprs_contains.md).
+
+
 This function is similar to the `contains` method of `Vec`. It finds
 whether `expr` is among `physical_exprs`.
 
@@ -188,6 +215,9 @@ Also reachable as `datafusion::physical_expr::physical_exprs_equal`, `datafusion
 ```rust
 fn physical_exprs_equal(lhs: &[std::sync::Arc<dyn PhysicalExpr>], rhs: &[std::sync::Arc<dyn PhysicalExpr>]) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.physical_expr.physical_exprs_equal.md).
+
 
 Checks whether the given physical expression slices are equal.
 

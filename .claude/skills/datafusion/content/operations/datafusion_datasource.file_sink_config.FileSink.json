@@ -1,0 +1,807 @@
+[
+  {
+    "id": "4b127d53a23ced55ba491938",
+    "path": "datafusion_datasource::file_sink_config::FileSink",
+    "name": "FileSink",
+    "owner": null,
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait FileSink: DataSink",
+    "docs": "General behaviors for files that do `DataSink` operations",
+    "span": {
+      "filename": "src/file_sink_config.rs",
+      "begin": [
+        86,
+        1
+      ],
+      "end": [
+        137,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          709,
+          710,
+          714
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "DataSink",
+                "id": 716,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": []
+      }
+    },
+    "type_references": {
+      "716": "datafusion_datasource::sink::DataSink"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "715",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_sink_config.FileSink.md",
+    "record_file": "operations/datafusion_datasource.file_sink_config.FileSink.json",
+    "anchor": "op-4b127d53a23ced55ba491938",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSink"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "17dbf620376a1d9fb8cbdad5",
+    "path": "datafusion_datasource::file_sink_config::FileSink::config",
+    "name": "config",
+    "owner": "datafusion_datasource::file_sink_config::FileSink",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn config(&self) -> &FileSinkConfig",
+    "docs": "Retrieves the file sink configuration.",
+    "span": {
+      "filename": "src/file_sink_config.rs",
+      "begin": [
+        88,
+        5
+      ],
+      "end": [
+        88,
+        41
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "FileSinkConfig",
+                  "id": 371,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "371": "datafusion_datasource::file_sink_config::FileSinkConfig"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "709",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_sink_config.FileSink.md",
+    "record_file": "operations/datafusion_datasource.file_sink_config.FileSink.json",
+    "anchor": "op-17dbf620376a1d9fb8cbdad5",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSink::config"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8ed990510dd9595c6eb0350a",
+    "path": "datafusion_datasource::file_sink_config::FileSink::spawn_writer_tasks_and_join",
+    "name": "spawn_writer_tasks_and_join",
+    "owner": "datafusion_datasource::file_sink_config::FileSink",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "async fn spawn_writer_tasks_and_join(&self, context: &Arc<TaskContext>, demux_task: SpawnedTask<Result<()>>, file_stream_rx: DemuxedStreamReceiver, object_store: Arc<dyn ObjectStore>) -> Result<u64>",
+    "docs": "Spawns writer tasks and joins them to perform file writing operations.\nIs a critical part of `FileSink` trait, since it's the very last step for `write_all`.\n\nThis function handles the process of writing data to files by:\n1. Spawning tasks for writing data to individual files.\n2. Coordinating the tasks using a demuxer to distribute data among files.\n3. Collecting results using `tokio::join`, ensuring that all tasks complete successfully.\n\n# Parameters\n- `context`: The execution context (`TaskContext`) that provides resources\n  like memory management and runtime environment.\n- `demux_task`: A spawned task that handles demuxing, responsible for splitting\n  an input [`SendableRecordBatchStream`] into dynamically determined partitions.\n  See `start_demuxer_task()`\n- `file_stream_rx`: A receiver that yields streams of record batches and their\n  corresponding file paths for writing. See `start_demuxer_task()`\n- `object_store`: A handle to the object store where the files are written.\n\n# Returns\n- `Result<u64>`: Returns the total number of rows written across all files.",
+    "span": {
+      "filename": "src/file_sink_config.rs",
+      "begin": [
+        110,
+        5
+      ],
+      "end": [
+        116,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "context",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Arc",
+                      "id": 13,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "resolved_path": {
+                                  "path": "TaskContext",
+                                  "id": 581,
+                                  "args": null
+                                }
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "demux_task",
+              {
+                "resolved_path": {
+                  "path": "SpawnedTask",
+                  "id": 711,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Result",
+                              "id": 119,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "tuple": []
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "file_stream_rx",
+              {
+                "resolved_path": {
+                  "path": "DemuxedStreamReceiver",
+                  "id": 712,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "object_store",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 13,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ObjectStore",
+                                    "id": 14,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 196,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 364,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 119,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "primitive": "u64"
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 19,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "13": "alloc::sync::Arc",
+      "581": "datafusion_execution::task::TaskContext",
+      "711": "datafusion_common_runtime::common::SpawnedTask",
+      "119": "datafusion_common::error::Result",
+      "712": "datafusion_datasource::write::demux::DemuxedStreamReceiver",
+      "14": "object_store::ObjectStore",
+      "61": "core::pin::Pin",
+      "196": "alloc::boxed::Box",
+      "364": "core::future::future::Future",
+      "19": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {
+      "`SendableRecordBatchStream`": 582
+    },
+    "link_paths": {
+      "`SendableRecordBatchStream`": "datafusion_execution::stream::SendableRecordBatchStream"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "710",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_sink_config.FileSink.md",
+    "record_file": "operations/datafusion_datasource.file_sink_config.FileSink.json",
+    "anchor": "op-8ed990510dd9595c6eb0350a",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSink::spawn_writer_tasks_and_join"
+    ],
+    "resolved_doc_links": {
+      "`SendableRecordBatchStream`": "../operations/datafusion_execution.stream.SendableRecordBatchStream.md#op-7cf25e4c554567392af11cb6"
+    }
+  },
+  {
+    "id": "66076d9ad788aea44ec2c9b2",
+    "path": "datafusion_datasource::file_sink_config::FileSink::write_all",
+    "name": "write_all",
+    "owner": "datafusion_datasource::file_sink_config::FileSink",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "async fn write_all(&self, data: SendableRecordBatchStream, context: &Arc<TaskContext>) -> Result<u64>",
+    "docs": "File sink implementation of the [`DataSink::write_all`] method.",
+    "span": {
+      "filename": "src/file_sink_config.rs",
+      "begin": [
+        119,
+        5
+      ],
+      "end": [
+        136,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "data",
+              {
+                "resolved_path": {
+                  "path": "SendableRecordBatchStream",
+                  "id": 582,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "context",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Arc",
+                      "id": 13,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "resolved_path": {
+                                  "path": "TaskContext",
+                                  "id": 581,
+                                  "args": null
+                                }
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 196,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 364,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 119,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "primitive": "u64"
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 19,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "::core::marker::Sync",
+                        "id": 21,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "582": "datafusion_execution::stream::SendableRecordBatchStream",
+      "13": "alloc::sync::Arc",
+      "581": "datafusion_execution::task::TaskContext",
+      "61": "core::pin::Pin",
+      "196": "alloc::boxed::Box",
+      "364": "core::future::future::Future",
+      "119": "datafusion_common::error::Result",
+      "19": "core::marker::Send",
+      "21": "core::marker::Sync"
+    },
+    "impl_context": null,
+    "links": {
+      "`DataSink::write_all`": 713
+    },
+    "link_paths": {
+      "`DataSink::write_all`": "datafusion_datasource::sink::DataSink::write_all"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "714",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_sink_config.FileSink.md",
+    "record_file": "operations/datafusion_datasource.file_sink_config.FileSink.json",
+    "anchor": "op-66076d9ad788aea44ec2c9b2",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSink::write_all"
+    ],
+    "resolved_doc_links": {
+      "`DataSink::write_all`": "../operations/datafusion_datasource.sink.DataSink.md#op-03153e06dfae84f047577032"
+    }
+  }
+]

@@ -5,7 +5,6 @@ use crate::{
     admission::{AdmissionLimits, AdmittedRelations, EvidenceScope, NativeAdmission, Relation},
     control::{CommitOutcome, ControlBatch, ControlSnapshot, ControlStore, SelectionChange},
     dataset::WriteLimits,
-    projection,
     provider::FileWitness,
     runtime::QueryRuntime,
 };
@@ -23,11 +22,7 @@ use enrichment_core::{
     },
     identity::SnapshotId,
 };
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    fs::File,
-    sync::{Arc, Mutex},
-};
+use std::{collections::BTreeMap, fs::File, sync::Arc};
 
 const MAX_REBASE_ATTEMPTS: usize = 4;
 pub type Attempts = Vec<(
@@ -45,9 +40,15 @@ pub struct OpenedSnapshot {
     search: crate::search_projection::SearchProjection,
     _lease: Arc<File>,
     protection: Option<Arc<crate::retention::LeaseGuard>>,
+    read_protection: crate::leases::ReadProtection,
 }
 
 impl OpenedSnapshot {
+    /// Carry the exact dependency vector into blocking readers that may outlive their waiter.
+    pub fn read_protection(&self) -> crate::leases::ReadProtection {
+        self.read_protection.clone()
+    }
+
     /// Bind cached native view plans to this request's immutable retention lease.
     /// # Errors
     /// Physical changes and view planning failures are explicit.
@@ -59,19 +60,10 @@ impl OpenedSnapshot {
             .await?
             .ok_or_else(|| invalid("publication has no selected search checkpoint"))?;
         let full = self.binding.research_session(runtime, None).await?;
-        let mut materialized = self
+        let materialized = self
             .search
-            .providers(&self.manifest, &checkpoint, &full)
+            .providers(&self.manifest, &checkpoint, &full, &self.read_protection)
             .await?;
-        if let Some(protection) = &self.protection {
-            for provider in materialized.values_mut() {
-                *provider = crate::leases::protected_provider(
-                    Arc::clone(provider),
-                    Arc::clone(protection),
-                    &runtime.session(),
-                )?;
-            }
-        }
         self.binding
             .research_session_with(runtime, Some(Arc::clone(&self._lease)), &materialized)
             .await
@@ -98,19 +90,14 @@ impl OpenedSnapshot {
 /// Shared publication, admission, immutable artifact validation and cleanup coordination.
 #[derive(Clone)]
 pub struct EvidenceRepository {
-    read_only: bool,
+    immutable: Option<Arc<crate::immutable_root::ImmutableRoot>>,
     pub catalog: ControlStore,
     pub runtime: QueryRuntime,
     paths: StatePaths,
     blobs: BlobStore,
     admission: Arc<NativeAdmission>,
     write_limits: WriteLimits,
-    verified_blobs: Arc<Mutex<BTreeMap<String, (u64, FileWitness)>>>,
-    verified_manifests: Arc<Mutex<BTreeSet<String>>>,
-    verified_attempts: Arc<Mutex<BTreeMap<String, LogReferences>>>,
 }
-
-type LogReferences = Vec<(String, u64)>;
 
 /// Exact candidate and its already-admitted transport view selected by one publication commit.
 pub struct PublishedSnapshot {
@@ -129,9 +116,9 @@ impl std::ops::Deref for PublishedSnapshot {
 #[derive(Clone)]
 pub struct JobCompletion {
     pub publication_fence: crate::control::PublicationFence,
-    pub job_id: String,
+    pub job_id: enrichment_core::identity::JobId,
     pub kind: enrichment_core::evidence::catalog::PublishedJobKind,
-    pub attempt_id: String,
+    pub attempt_id: enrichment_core::identity::AttemptId,
     pub result_artifact_ids: Vec<String>,
     /// Complete native input; candidate rebinding is the fixed DataFusion result plan.
     pub result: enrichment_core::operation::results::ResultRecord,
@@ -144,10 +131,10 @@ impl JobCompletion {
         state: enrichment_core::wire::JobState,
     ) -> enrichment_core::evidence::catalog::JobPublication {
         enrichment_core::evidence::catalog::JobPublication {
-            job_id: self.job_id.clone(),
+            job_id: self.job_id,
             kind: self.kind,
             state,
-            attempt_id: self.attempt_id.clone(),
+            attempt_id: self.attempt_id,
             result_artifact_ids: self.result_artifact_ids.clone(),
             delivery,
             context_id: manifest.context_id.clone(),
@@ -183,7 +170,7 @@ impl EvidenceRepository {
         context: enrichment_core::identity::Context,
         environment: enrichment_core::identity::Environment,
     ) -> Result<EvidenceManifest> {
-        if self.read_only {
+        if self.immutable.is_some() {
             return Err(invalid("evidence repository was opened read-only"));
         }
         if context.parent_context_id.as_ref() != Some(&parent.manifest.context_id)
@@ -265,38 +252,36 @@ impl EvidenceRepository {
         std::fs::create_dir_all(&paths.data_root)?;
         crate::leases::initialize(&paths.data_root)?;
         Ok(Self {
-            read_only: false,
+            immutable: None,
             catalog: ControlStore::open(&paths.data_root, runtime.clone())?,
             blobs: BlobStore::open(&paths.data_root)?,
             admission: Arc::new(NativeAdmission::new(runtime.clone(), admission_limits)?),
             runtime,
             paths,
             write_limits,
-            verified_blobs: Arc::new(Mutex::new(BTreeMap::new())),
-            verified_manifests: Arc::new(Mutex::new(BTreeSet::new())),
-            verified_attempts: Arc::new(Mutex::new(BTreeMap::new())),
         })
     }
 
-    /// Admit evidence from an existing store or portable bundle without mutating it.
+    /// Admit a sealed portable bundle without mutating its contents.
     /// # Errors
     /// Missing immutable state and invalid resource limits fail explicitly.
-    pub fn read_only(
+    pub fn immutable(
+        root: Arc<crate::immutable_root::ImmutableRoot>,
         paths: StatePaths,
         runtime: QueryRuntime,
         admission_limits: AdmissionLimits,
     ) -> Result<Self> {
+        if paths.data_root.canonicalize()? != root.root() {
+            return Err(invalid("immutable repository namespace mismatch"));
+        }
         Ok(Self {
-            read_only: true,
-            catalog: ControlStore::read_only(&paths.data_root, runtime.clone())?,
+            catalog: ControlStore::immutable(root.clone(), runtime.clone())?,
+            immutable: Some(root),
             blobs: BlobStore::read_only(&paths.data_root)?,
             admission: Arc::new(NativeAdmission::new(runtime.clone(), admission_limits)?),
             runtime,
             paths,
             write_limits: WriteLimits::default(),
-            verified_blobs: Arc::new(Mutex::new(BTreeMap::new())),
-            verified_manifests: Arc::new(Mutex::new(BTreeSet::new())),
-            verified_attempts: Arc::new(Mutex::new(BTreeMap::new())),
         })
     }
 
@@ -323,7 +308,7 @@ impl EvidenceRepository {
         metadata: Option<enrichment_core::evidence::metadata::ReleaseMetadata>,
     ) -> futures::future::BoxFuture<'_, Result<(EvidencePlans, Attempts)>> {
         Box::pin(async move {
-            if self.read_only {
+            if self.immutable.is_some() {
                 return Err(invalid("evidence repository was opened read-only"));
             }
             let lease = crate::leases::shared(&self.paths.data_root)?;
@@ -331,7 +316,7 @@ impl EvidenceRepository {
                 context,
                 input,
                 metadata,
-                &self.paths.staging(),
+                &self.retention(),
                 &self.runtime,
                 &self.write_limits,
             )
@@ -387,7 +372,7 @@ impl EvidenceRepository {
         completion: Option<JobCompletion>,
     ) -> futures::future::BoxFuture<'_, Result<PublishedSnapshot>> {
         Box::pin(async move {
-            if self.read_only {
+            if self.immutable.is_some() {
                 return Err(invalid("evidence repository was opened read-only"));
             }
             metadata.validate().map_err(invalid)?;
@@ -484,7 +469,7 @@ impl EvidenceRepository {
         mut expected_base: Option<SnapshotId>,
         completion: Option<JobCompletion>,
     ) -> Result<PublishedSnapshot> {
-        if self.read_only {
+        if self.immutable.is_some() {
             return Err(invalid("evidence repository was opened read-only"));
         }
         let _lease = crate::leases::shared(&self.paths.data_root)?;
@@ -534,7 +519,7 @@ impl EvidenceRepository {
                         &session,
                         &self.runtime,
                         &manifest,
-                        &crate::coverage::acquisition_kinds(&manifest),
+                        &crate::coverage::acquisition_kinds(&self.runtime, &manifest).await?,
                         None,
                         format!(
                             "requested acquisition evidence in snapshot {}",
@@ -711,6 +696,33 @@ impl EvidenceRepository {
         )
     }
 
+    /// Recover only native-selected private obligations whose process has physically exited.
+    /// # Errors
+    /// Unknown files, changed ownership and failed durable settlement remain errors.
+    pub async fn recover_private_directories(&self) -> Result<()> {
+        self.retention().recover_private_directories().await
+    }
+
+    /// Enroll private extraction before creating bytes. Blocking readers retain this owner.
+    pub async fn source_directory(&self) -> Result<Arc<crate::PrivateDirectory>> {
+        crate::PrivateDirectory::create(
+            &self.retention(),
+            &self.runtime,
+            crate::private_directory::Kind::Source,
+        )
+        .await
+    }
+
+    /// Keep worker stdout under the same durable physical ownership as its native scans.
+    pub async fn worker_directory(&self) -> Result<Arc<crate::PrivateDirectory>> {
+        crate::PrivateDirectory::create(
+            &self.retention(),
+            &self.runtime,
+            crate::private_directory::Kind::Worker,
+        )
+        .await
+    }
+
     pub fn retention(&self) -> crate::retention::RetentionStore {
         crate::retention::RetentionStore::new(self.catalog.clone(), self.runtime.clone())
     }
@@ -725,8 +737,8 @@ impl EvidenceRepository {
         let scope = EvidenceScope {
             ecosystem: descriptor.ecosystem,
             symbol_package: descriptor.symbol_package.clone(),
-            release_id: descriptor.release_id.to_string(),
-            environment_id: descriptor.environment_id.to_string(),
+            release_id: descriptor.release_id.clone(),
+            environment_id: descriptor.environment_id.clone(),
         };
         // Materialize each native normalization plan once into a private cohort. Cross-table
         // admission then checks the exact immutable version vector that could be selected.
@@ -735,17 +747,26 @@ impl EvidenceRepository {
             return Err(invalid("incomplete native publication input"));
         }
         let native = self.evidence_tables()?;
-        let cohort = uuid::Uuid::new_v4().to_string();
+        let cohort = enrichment_core::identity::CohortId::new();
         let retention = self.retention();
         let obligation = retention
             .create_obligation(
-                cohort.clone(),
+                cohort.to_string(),
                 Relation::ALL
                     .into_iter()
-                    .map(|relation| crate::retention::Dependency::TableScope {
-                        table_uri: format!("evidence_{}", relation.name()),
+                    .map(|relation| {
+                        crate::retention::pending_row(
+                            &format!("evidence_{}", relation.name()),
+                            &crate::delta_evidence::EvidenceTables::contract(relation)?,
+                            crate::retention::RowKey {
+                                column: "cohort_id".into(),
+                                value: enrichment_core::identity::RowValue::Cohort {
+                                    value: cohort,
+                                },
+                            },
+                        )
                     })
-                    .collect(),
+                    .collect::<Result<Vec<_>>>()?,
             )
             .await?;
         let mut rows = BTreeMap::new();
@@ -928,33 +949,42 @@ impl EvidenceRepository {
         )?;
         // Enroll the exact manifest and selected materialization versions before native
         // providers load them. This guard follows scans even after the OpenedSnapshot drops.
-        let protection = if self.read_only {
+        let mut dependencies = manifest
+            .tables
+            .iter()
+            .map(crate::retention::dependency)
+            .collect::<Vec<_>>();
+        let mut roots = vec![id.to_string()];
+        if let Some(checkpoint) = catalog.search_projection(&self.runtime, id).await? {
+            dependencies.extend(checkpoint.outputs.iter().map(crate::retention::dependency));
+            roots.push(checkpoint.projection_id);
+        }
+        let protection = if self.immutable.is_some() {
             None
         } else {
-            let mut dependencies = manifest
-                .tables
-                .iter()
-                .map(crate::retention::dependency)
-                .collect::<Vec<_>>();
-            if let Some(checkpoint) = catalog.search_projection(&self.runtime, id).await? {
-                dependencies.extend(checkpoint.outputs.iter().map(crate::retention::dependency));
-            }
             Some(
-                crate::retention::RetentionStore::new(self.catalog.clone(), self.runtime.clone())
-                    .enroll(
+                self.retention()
+                    .enroll_rooted(
                         id.to_string(),
                         crate::retention::ProtectionKind::Query,
-                        dependencies,
+                        dependencies.clone(),
+                        &roots,
                     )
                     .await?,
             )
         };
         let read = match &protection {
             Some(guard) => crate::leases::ReadProtection::Durable(guard.clone()),
-            None => crate::leases::ReadProtection::Root(lease.clone()),
+            None => crate::leases::ReadProtection::immutable(
+                self.immutable
+                    .clone()
+                    .ok_or_else(|| invalid("immutable repository root missing"))?,
+                dependencies,
+                self.runtime.clone(),
+            )?,
         };
         let binding = self
-            .admit_protected_manifest(&manifest, &bytes, read)
+            .admit_protected_manifest(&manifest, &bytes, read.clone())
             .await?;
         let binding = match &protection {
             Some(guard) => Arc::new(binding.protected(&self.runtime, Arc::clone(guard))?),
@@ -970,6 +1000,7 @@ impl EvidenceRepository {
             catalog,
             _lease: lease,
             protection,
+            read_protection: read,
         })
     }
 
@@ -984,6 +1015,16 @@ impl EvidenceRepository {
         let dependencies = catalog
             .result_dependencies(&self.runtime, &self.blobs, &publication.delivery)
             .await?;
+        self.admit_job_delivery(&catalog, publication).await?;
+        Ok(dependencies)
+    }
+
+    async fn admit_job_delivery(
+        &self,
+        catalog: &ControlSnapshot,
+        publication: &enrichment_core::evidence::catalog::JobPublication,
+    ) -> Result<()> {
+        publication.validate().map_err(invalid)?;
         let retained = catalog
             .retained_result(&self.runtime, &publication.delivery.artifact_id)
             .await?;
@@ -992,8 +1033,7 @@ impl EvidenceRepository {
             publication,
             catalog.result_record(&retained).await?,
         )
-        .await?;
-        Ok(dependencies)
+        .await
     }
 
     /// Commit a derived result without a producer attempt or a change to either input selection.
@@ -1039,6 +1079,17 @@ impl EvidenceRepository {
         let dependencies = catalog
             .result_dependencies(&self.runtime, &self.blobs, &publication.delivery)
             .await?;
+        self.admit_comparison_delivery(&catalog, publication)
+            .await?;
+        Ok(dependencies)
+    }
+
+    async fn admit_comparison_delivery(
+        &self,
+        catalog: &ControlSnapshot,
+        publication: &enrichment_core::evidence::catalog::ComparisonPublication,
+    ) -> Result<()> {
+        publication.validate().map_err(invalid)?;
         let retained = catalog
             .retained_result(&self.runtime, &publication.delivery.artifact_id)
             .await?;
@@ -1047,8 +1098,7 @@ impl EvidenceRepository {
             publication,
             catalog.result_record(&retained).await?,
         )
-        .await?;
-        Ok(dependencies)
+        .await
     }
 
     async fn validate_attempts(
@@ -1058,16 +1108,22 @@ impl EvidenceRepository {
         manifest: &EvidenceManifest,
         digest: &str,
     ) -> Result<()> {
-        let key = format!("{digest}:{}", catalog.identity());
-        let cached = self
-            .verified_attempts
-            .lock()
-            .map_err(|_| invalid("attempt cache poisoned"))?
-            .get(&key)
-            .cloned();
-        if let Some(logs) = cached {
-            for (digest, bytes) in logs {
-                self.validate_blob(&digest, bytes).await?;
+        let key = crate::contract_cache::ValidationKey::Attempts {
+            evidence: crate::contract_cache::EvidenceScope::new(
+                &self.paths.data_root,
+                manifest,
+                digest,
+                &self.runtime,
+                &self.write_limits,
+            )?,
+            catalog: crate::snapshot_registry::Namespace::read(
+                &self.paths.data_root.join("delta/control"),
+            )?,
+            identity: catalog.identity().into(),
+        };
+        if let Some(proof) = self.runtime.contracts.validation(&key) {
+            for (digest, bytes) in proof.logs() {
+                self.validate_blob(digest, *bytes).await?;
             }
             return Ok(());
         }
@@ -1118,74 +1174,48 @@ impl EvidenceRepository {
         }
         let deliveries = self
             .runtime
-            .execute_family(
+            .records::<enrichment_core::evidence::catalog::JobPublication>(
                 session
                     .table("state.records.job_publications")
                     .await?
                     .filter(col("snapshot_id").eq(manifest.snapshot_id.literal()))?,
-                Some(crate::preparation::QueryFamily::Catalog(
-                    crate::control::Table::JobPublications,
-                )),
+                1024,
             )
             .await?;
-        let mut delivery_bytes = 0u64;
-        let mut seen_deliveries = BTreeSet::new();
-        for batch in deliveries.batches {
-            for publication in projection::catalog::job_publications_from_batch(&batch)? {
-                let dependencies = self.validate_delivery(&publication).await?;
-                if seen_deliveries.insert(publication.delivery.artifact_id.clone()) {
-                    delivery_bytes = delivery_bytes
-                        .checked_add(publication.delivery.size_bytes)
-                        .filter(|n| *n <= 512 * 1024 * 1024)
-                        .ok_or_else(|| invalid("job delivery closure exceeds 512 MiB"))?;
-                    logs.push((publication.delivery.sha256, publication.delivery.size_bytes));
-                }
-                for artifact in dependencies {
-                    if seen_deliveries.insert(artifact.artifact_id) {
-                        delivery_bytes = delivery_bytes
-                            .checked_add(artifact.size_bytes)
-                            .filter(|n| *n <= 512 * 1024 * 1024)
-                            .ok_or_else(|| invalid("job delivery closure exceeds 512 MiB"))?;
-                        logs.push((artifact.sha256, artifact.size_bytes));
-                    }
-                }
-            }
-        }
         let comparisons = self
             .runtime
-            .execute_family(
+            .records::<enrichment_core::evidence::catalog::ComparisonPublication>(
                 session
                     .table("state.records.comparison_publications")
                     .await?
                     .filter(col("after_snapshot_id").eq(manifest.snapshot_id.literal()))?,
-                Some(crate::preparation::QueryFamily::Catalog(
-                    crate::control::Table::ComparisonPublications,
-                )),
+                1024,
             )
             .await?;
-        for batch in comparisons.batches {
-            for publication in projection::catalog::comparison_publications_from_batch(&batch)? {
-                let dependencies = self.validate_comparison_delivery(&publication).await?;
-                for artifact in std::iter::once(publication.delivery).chain(dependencies) {
-                    if seen_deliveries.insert(artifact.artifact_id) {
-                        delivery_bytes = delivery_bytes
-                            .checked_add(artifact.size_bytes)
-                            .filter(|n| *n <= 512 * 1024 * 1024)
-                            .ok_or_else(|| invalid("job delivery closure exceeds 512 MiB"))?;
-                        logs.push((artifact.sha256, artifact.size_bytes));
-                    }
-                }
-            }
+        let roots = deliveries
+            .iter()
+            .map(|publication| publication.delivery.clone())
+            .chain(
+                comparisons
+                    .iter()
+                    .map(|publication| publication.delivery.clone()),
+            )
+            .collect::<Vec<_>>();
+        let artifacts = catalog
+            .result_artifacts(&self.runtime, &self.blobs, &roots)
+            .await?;
+        for publication in &deliveries {
+            self.admit_job_delivery(catalog, publication).await?;
         }
-        let mut cache = self
-            .verified_attempts
-            .lock()
-            .map_err(|_| invalid("attempt cache poisoned"))?;
-        if cache.len() >= 256 {
-            cache.clear();
+        for publication in &comparisons {
+            self.admit_comparison_delivery(catalog, publication).await?;
         }
-        cache.insert(key, logs);
-        Ok(())
+        logs.extend(
+            artifacts
+                .into_iter()
+                .map(|artifact| (artifact.sha256, artifact.size_bytes)),
+        );
+        self.runtime.contracts.admit_validation(key, logs)
     }
 
     async fn admit_manifest(
@@ -1202,10 +1232,12 @@ impl EvidenceRepository {
         &self,
         tables: &[enrichment_core::evidence::snapshot::DeltaBinding],
     ) -> Result<crate::leases::ReadProtection> {
-        if self.read_only {
-            Ok(crate::leases::ReadProtection::Root(crate::leases::shared(
-                &self.paths.data_root,
-            )?))
+        if let Some(root) = &self.immutable {
+            crate::leases::ReadProtection::immutable(
+                root.clone(),
+                tables.iter().map(crate::retention::dependency).collect(),
+                self.runtime.clone(),
+            )
         } else {
             Ok(crate::leases::ReadProtection::Durable(
                 self.retention()
@@ -1213,6 +1245,33 @@ impl EvidenceRepository {
                         format!("evidence/{}", uuid::Uuid::new_v4()),
                         crate::retention::ProtectionKind::Query,
                         tables.iter().map(crate::retention::dependency).collect(),
+                    )
+                    .await?,
+            ))
+        }
+    }
+
+    pub(crate) async fn protect_artifacts(
+        &self,
+        ids: Vec<String>,
+    ) -> Result<crate::leases::ReadProtection> {
+        let dependencies = ids
+            .into_iter()
+            .map(|artifact_id| crate::retention::Dependency::Artifact { artifact_id })
+            .collect();
+        if let Some(root) = &self.immutable {
+            crate::leases::ReadProtection::immutable(
+                root.clone(),
+                dependencies,
+                self.runtime.clone(),
+            )
+        } else {
+            Ok(crate::leases::ReadProtection::Durable(
+                self.retention()
+                    .enroll(
+                        format!("input-validation/{}", uuid::Uuid::new_v4()),
+                        crate::retention::ProtectionKind::Query,
+                        dependencies,
                     )
                     .await?,
             ))
@@ -1245,91 +1304,29 @@ impl EvidenceRepository {
         manifest: &EvidenceManifest,
         bytes: &[u8],
     ) -> Result<()> {
-        let key = canonical::sha256_hex(bytes);
-        if self
-            .verified_manifests
-            .lock()
-            .map_err(|_| invalid("manifest validation cache poisoned"))?
-            .contains(&key)
-        {
+        let key = crate::contract_cache::ValidationKey::Snapshot(
+            crate::contract_cache::EvidenceScope::new(
+                &self.paths.data_root,
+                manifest,
+                &canonical::sha256_hex(bytes),
+                &self.runtime,
+                &self.write_limits,
+            )?,
+        );
+        if self.runtime.contracts.validation(&key).is_some() {
             return Ok(());
         }
         let session = binding.session(&self.runtime, None)?;
-        let mut components = BTreeMap::new();
-        for relation in Relation::ALL {
-            components.insert(
-                relation.name().into(),
-                crate::semantic::digest(
-                    relation,
-                    session.table(relation.reference()).await?,
-                    &self.runtime,
-                    self.write_limits.table_rows,
-                )
-                .await?,
-            );
-        }
-        if components != manifest.components {
-            return Err(invalid(
-                "semantic table components disagree with physical evidence",
-            ));
-        }
-        for (name, count) in [
-            ("definitions", manifest.counts.definitions),
-            ("symbols", manifest.counts.symbols),
-            ("relationships", manifest.counts.relationships),
-            ("fragments", manifest.counts.fragments),
-        ] {
-            if manifest
-                .tables
-                .iter()
-                .find(|t| t.relation == name)
-                .map(|t| t.rows)
-                != Some(count)
-            {
-                return Err(invalid("snapshot summary count disagrees with table count"));
-            }
-        }
-        let reexports = self
-            .count(
-                &session,
-                "SELECT CAST(count(*) AS BIGINT UNSIGNED) AS count FROM snapshot.evidence.symbols WHERE is_reexport",
-            )
+        crate::snapshot_validation::manifest(&self.runtime, &session, manifest, &self.write_limits)
             .await?;
-        let unresolved = self.count(&session, "SELECT CAST(count(*) AS BIGINT UNSIGNED) AS count FROM snapshot.evidence.relationships WHERE relation = 'reexports' AND target.kind IN ('unresolved', 'external')").await?;
-        if reexports != manifest.counts.reexports
-            || unresolved != manifest.counts.unresolved_reexports
-            || manifest.counts.producer_items != manifest.metadata.producer_items
-        {
-            return Err(invalid("snapshot derived counts disagree with relations"));
-        }
-        let coverage = crate::coverage_plan::summarize(&self.runtime, &session).await?;
-        if coverage.indexed != manifest.indexed || coverage.missing != manifest.missing {
-            return Err(invalid(
-                "coverage summaries disagree with typed coverage facts",
-            ));
-        }
-        if manifest
-            .tables
-            .iter()
-            .any(|t| t.relation == "execution_observations" && t.rows != 0)
-        {
-            crate::execution_documents::validate(
-                &self.runtime,
-                &session,
-                self.blobs.clone(),
-                self.write_limits.table_rows,
-            )
-            .await?;
-        }
-        let mut cache = self
-            .verified_manifests
-            .lock()
-            .map_err(|_| invalid("manifest validation cache poisoned"))?;
-        if cache.len() >= 256 {
-            cache.clear();
-        }
-        cache.insert(key);
-        Ok(())
+        crate::execution_documents::validate(
+            self,
+            &session,
+            self.blobs.clone(),
+            self.write_limits.table_rows,
+        )
+        .await?;
+        self.runtime.contracts.admit_validation(key, vec![])
     }
 
     async fn count(&self, session: &SessionContext, sql: &str) -> Result<u64> {
@@ -1358,65 +1355,63 @@ impl EvidenceRepository {
 
     async fn validate_blobs(&self, binding: &AdmittedRelations) -> Result<()> {
         let session = binding.session(&self.runtime, None)?;
-        let inputs = session
-            .table("snapshot.evidence.input_artifacts")
-            .await?
-            .select_columns(&["sha256", "size_bytes"])?
-            .distinct()?;
-        let mut total_bytes = 0u64;
-        self.runtime
-            .visit_async(inputs, self.write_limits.table_rows, |batch| {
-                let values = (|| -> Result<Vec<(String, u64)>> {
-                    let digests = projection::TextColumn::new(batch.column(0).as_ref())?;
-                    let sizes = batch
-                        .column(1)
-                        .as_any()
-                        .downcast_ref::<arrow::array::UInt64Array>()
-                        .ok_or_else(|| invalid("invalid input size representation"))?;
-                    let mut values = Vec::with_capacity(batch.num_rows());
-                    for row in 0..batch.num_rows() {
-                        let size = sizes.value(row);
-                        total_bytes = total_bytes
-                            .checked_add(size)
-                            .filter(|n| *n <= self.write_limits.file_bytes.saturating_mul(2))
-                            .ok_or_else(|| {
-                                invalid("input closure exceeds validation byte budget")
-                            })?;
-                        values.push((digests.required(row)?.to_owned(), size));
-                    }
-                    Ok(values)
-                })();
-                async move {
-                    for (digest, size) in values? {
-                        self.validate_blob(&digest, size).await?;
-                    }
-                    Ok(())
-                }
-            })
-            .await?;
+        let inputs =
+            crate::snapshot_validation::inputs(&self.runtime, &session, &self.write_limits).await?;
+        for chunk in inputs.chunks(256) {
+            let protection = self
+                .protect_artifacts(
+                    chunk
+                        .iter()
+                        .map(|input| enrichment_core::evidence::artifact_id_for(&input.sha256))
+                        .collect(),
+                )
+                .await?;
+            for input in chunk {
+                self.validate_protected_blob(&input.sha256, input.size_bytes, protection.clone())
+                    .await?;
+            }
+        }
         Ok(())
     }
 
     async fn validate_blob(&self, digest: &str, bytes: u64) -> Result<()> {
+        let protection = self
+            .protect_artifacts(vec![enrichment_core::evidence::artifact_id_for(digest)])
+            .await?;
+        self.validate_protected_blob(digest, bytes, protection)
+            .await
+    }
+
+    async fn validate_protected_blob(
+        &self,
+        digest: &str,
+        bytes: u64,
+        protection: crate::leases::ReadProtection,
+    ) -> Result<()> {
         if bytes > self.write_limits.file_bytes {
             return Err(invalid("artifact exceeds validation byte budget"));
         }
+        let artifact_id = enrichment_core::evidence::artifact_id_for(digest);
         let path = self.blobs.path_for(digest);
         let witness = FileWitness::read(&path)?;
-        let cached = self
-            .verified_blobs
-            .lock()
-            .map_err(|_| invalid("blob validation cache poisoned"))?
-            .get(digest)
-            .cloned();
-        if cached.as_ref() == Some(&(bytes, witness.clone())) {
+        let key = crate::contract_cache::ValidationKey::Blob {
+            path: path.clone(),
+            digest: digest.into(),
+            bytes,
+            physical: witness.clone(),
+        };
+        if self.runtime.contracts.validation(&key).is_some() {
             return Ok(());
         }
         let expected_digest = digest.to_owned();
+        let source = self.blobs.clone();
+        let limit = self.write_limits.file_bytes;
 
         self.runtime
             .blocking(move || {
-                let (found, length) = canonical::sha256_reader(File::open(&path)?, bytes)?;
+                let _protection = protection;
+                let file = source.open_content(&artifact_id, &expected_digest, bytes, limit)?;
+                let (found, length) = canonical::sha256_reader(file, bytes)?;
                 if found != expected_digest || length != bytes {
                     return Err(invalid("input artifact bytes disagree with provenance"));
                 }
@@ -1427,15 +1422,7 @@ impl EvidenceRepository {
         if FileWitness::read(&self.blobs.path_for(digest))? != witness {
             return Err(invalid("input artifact changed during validation"));
         }
-        let mut cache = self
-            .verified_blobs
-            .lock()
-            .map_err(|_| invalid("blob validation cache poisoned"))?;
-        if cache.len() >= 4096 {
-            cache.clear();
-        }
-        cache.insert(digest.to_owned(), (bytes, witness));
-        Ok(())
+        self.runtime.contracts.admit_validation(key, vec![])
     }
 
     async fn attempts(
@@ -1486,8 +1473,8 @@ fn scope(manifest: &EvidenceManifest) -> EvidenceScope {
     EvidenceScope {
         ecosystem: manifest.metadata.ecosystem,
         symbol_package: manifest.metadata.symbol_package.clone(),
-        release_id: manifest.metadata.release_id.to_string(),
-        environment_id: manifest.metadata.environment_id.to_string(),
+        release_id: manifest.metadata.release_id.clone(),
+        environment_id: manifest.metadata.environment_id.clone(),
     }
 }
 

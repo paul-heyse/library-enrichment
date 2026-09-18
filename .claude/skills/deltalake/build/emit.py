@@ -20,7 +20,6 @@ import hashlib
 import json
 from collections import defaultdict
 from dataclasses import asdict
-from datetime import UTC, datetime
 from pathlib import Path
 
 from model import Item
@@ -186,6 +185,11 @@ def write_api(grouped: dict[str, list[Item]], root: Path) -> int:
             lines.append(f"## {item.name}")
             lines.append("")
             lines.append(f"`{item.kind}` · `{item.path}`")
+            full_page = item.path.replace("::", ".") + ".md"
+            lines.append(
+                "[Full member contracts, output types and access classification]"
+                f"(../operations/{full_page})"
+            )
             if item.deprecated:
                 lines.append("")
                 lines.append(f"> **Deprecated** — {item.deprecated}")
@@ -248,7 +252,7 @@ def write_provenance(
 ) -> None:
     provenance = {
         "repository": manifest["repository"]["name"],
-        "generated_at": datetime.now(UTC).strftime("%Y-%m-%d"),
+        "generated_at": manifest["repository"]["reference_date"],
         "tools": tool_versions,
         "counts": counts,
         # The cache-invalidation key: anything here changing invalidates the whole repository.

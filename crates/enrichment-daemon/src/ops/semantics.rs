@@ -8,7 +8,6 @@ use crate::{
     lsp::{
         self, SessionKey,
         client::{Scope, Session},
-        document::{self, Consumer},
     },
     service::Service,
 };
@@ -16,15 +15,14 @@ use enrichment_core::{
     canonical,
     evidence::{Artifact, SymbolHeader, execution::*, relational::SubjectRef},
     identity::{Ecosystem, Release},
+    native_semantics::Consumer,
     policy::ExecutionProfile,
     request::InspectionOptions,
-    wire::EvidenceClass,
 };
-use serde_json::{Value, json};
+use serde_json::json;
 use std::{
     collections::BTreeMap,
     io,
-    path::Path,
     sync::{
         Arc,
         atomic::{AtomicBool, Ordering},
@@ -38,11 +36,18 @@ pub async fn produce(
     service: &Service,
     opened: &common::Opened,
     symbol: &SymbolHeader,
-    options: &InspectionOptions,
+    _options: &InspectionOptions,
     cancel: Arc<AtomicBool>,
 ) -> io::Result<Produced> {
-    let consumer =
-        Consumer::new(symbol, opened.release.key.ecosystem, options).map_err(io::Error::other)?;
+    let prepared = enrichment_store::semantic_grants::prepare(
+        enrichment_store::native_effect::authorize()
+            .await
+            .map_err(io::Error::other)?,
+        &opened.reader,
+        &symbol.symbol_id,
+    )
+    .await
+    .map_err(io::Error::other)?;
     let image = match opened.release.key.ecosystem {
         Ecosystem::Rust => service.config.execution.rust_image.clone(),
         Ecosystem::Python => service.config.execution.python_image.clone(),
@@ -73,7 +78,6 @@ pub async fn produce(
             .is_nominal_python_class(&symbol.symbol_id)
             .await
             .map_err(io::Error::other)?;
-    let selected_methods = inspect_execution::methods(options);
     let query_service = service.clone();
     let query_release = opened.release.clone();
     service.lsp.with_session(key, cancel, &service.execution, move || async move {
@@ -87,13 +91,13 @@ pub async fn produce(
             let prepared = capsule::prepare_retained(service, opened, &runner, &start_image, start_cancel.clone()).await.map_err(preparation_error)?;
             let inputs = inspect_execution::capsule_inputs(service, opened, &prepared).await?;
             if start_cancel.load(Ordering::Acquire) { return Err(io::Error::new(io::ErrorKind::Interrupted, "capsule preparation cancelled")); }
-            let served = runner.serve(&start_image, &prepared.root, &server.argv()).await?;
-            Session::initialize(server, served, START_DEADLINE, start_cancel, Scope { environment: prepared.environment.clone(), lock: prepared.lock.clone(), inputs }).await
+            let served = runner.for_capsule(&prepared).serve(&start_image, &prepared.root, &enrichment_core::execution::producer::Invocation::LanguageServer { ecosystem:opened.release.key.ecosystem }).await?;
+            Session::initialize(server, served, START_DEADLINE, start_cancel, Scope { inputs }).await
         }.await;
         if startup.is_err() { service.execution.wait_for_cleanup(&lease).await?; }
         startup
     }, move |session| Box::pin(async move {
-        query(&query_service, &query_release, session, Query { consumer, symbol_id, structural_scope, methods: selected_methods, containment, cancel: query_cancel }).await
+        query(&query_service, &query_release, session, Query { prepared, symbol_id, structural_scope, containment, cancel: query_cancel }).await
     })).await
 }
 
@@ -114,10 +118,9 @@ pub fn preparation_error(error: capsule::PreparationError) -> io::Error {
 }
 
 struct Query {
-    consumer: Consumer,
+    prepared: enrichment_store::semantic_grants::Prepared,
     symbol_id: String,
     structural_scope: bool,
-    methods: Vec<SemanticMethod>,
     containment: String,
     cancel: Arc<AtomicBool>,
 }
@@ -130,7 +133,7 @@ async fn query(
 ) -> io::Result<Produced> {
     let started_at =
         enrichment_core::native_time::ObservationTime::now().map_err(std::io::Error::other)?;
-    let consumer = query.consumer;
+    let consumer = query.prepared.consumer().clone();
     let document = inspect_execution::store(
         service,
         consumer.text.as_bytes(),
@@ -147,160 +150,115 @@ async fn query(
         .map(|a| (a.sha256.clone(), a))
         .collect();
     inputs.insert(document.sha256.clone(), document.clone());
-    session
-        .open(
-            consumer.uri,
-            if release.key.ecosystem == Ecosystem::Rust {
-                "rust"
-            } else {
-                "python"
-            },
-            &consumer.text,
-        )
-        .await?;
+    session.open(query.prepared).await?;
     session.await_readiness(Duration::from_secs(15)).await?;
     let mut facts = Vec::new();
     let mut transcript = Vec::new();
-    for method in query.methods {
+    for method in consumer.methods.iter().copied() {
         if query.cancel.load(Ordering::Acquire) {
             return Err(io::Error::new(
                 io::ErrorKind::Interrupted,
                 "semantic inspection cancelled",
             ));
         }
-        let (name, capability) = match method {
-            SemanticMethod::Hover => ("textDocument/hover", "hoverProvider"),
-            SemanticMethod::Definition => ("textDocument/definition", "definitionProvider"),
-            SemanticMethod::Implementation => {
-                ("textDocument/implementation", "implementationProvider")
+        let name = method.protocol_method();
+        let params = session.semantic_parameters(method)?;
+        let answer = session.semantic_request(method, QUERY_DEADLINE).await;
+        let response = match answer {
+            Err(error) if error.kind() == io::ErrorKind::InvalidData => {
+                transcript.push(json!({"method":name,"params":params,"error":error.to_string()}));
+                enrichment_core::native_lsp::Decoded {
+                    kind: enrichment_core::native_lsp::ResponseKind::Value,
+                    hover: None,
+                    locations: vec![],
+                    diagnostics: vec![],
+                    issue: Some(error.to_string().chars().take(1000).collect()),
+                }
             }
-            SemanticMethod::References => ("textDocument/references", "referencesProvider"),
-            SemanticMethod::Diagnostics => ("textDocument/diagnostic", "diagnosticProvider"),
-        };
-        let position = if method == SemanticMethod::Diagnostics {
-            None
-        } else {
-            consumer.position
-        };
-        let mut params = json!({"textDocument":{"uri":consumer.uri}});
-        if let Some(position) = position {
-            let (line, character) =
-                document::protocol_position(&consumer.text, position, &session.position_encoding)
-                    .map_err(io::Error::other)?;
-            params["position"] = json!({"line":line,"character":character});
-        }
-        if method == SemanticMethod::References {
-            params["context"] = json!({"includeDeclaration":true});
-        }
-        let answer = if method == SemanticMethod::Diagnostics {
-            session.diagnostic(consumer.uri, QUERY_DEADLINE).await
-        } else if session.advertises(capability) {
-            session.request(name, params.clone(), QUERY_DEADLINE).await
-        } else {
-            Ok(json!({"kind":"unsupported"}))
-        };
-        let mut q = SemanticQuery {
-            method,
-            document_artifact_id: document.artifact_id.clone(),
-            position,
-            anchor_symbol_id: Some(query.symbol_id.clone()),
-            server: session.server_version.clone(),
-            outcome: ExecutionOutcome::Empty,
-            hover: None,
-            locations: Vec::new(),
-            diagnostics: Vec::new(),
-            limitations: Vec::new(),
-        };
-        match answer {
-            Err(e) if e.kind() == io::ErrorKind::InvalidData => {
-                q.outcome = ExecutionOutcome::Unresolved;
-                q.limitations
-                    .push(e.to_string().chars().take(1000).collect());
-                transcript.push(json!({"method":name,"params":params,"error":e.to_string()}));
-            }
-            Err(e) => return Err(e),
+            Err(error) => return Err(error),
             Ok(answer) => {
-                if serde_json::to_vec(&answer)?.len() > 256 * 1024 {
+                let raw = serde_json::to_string(&answer)?;
+                if raw.len() > 256 * 1024 {
                     return Err(io::Error::other(
-                        "semantic response exceeds the retained record byte budget",
+                        "semantic response exceeds retained byte budget",
                     ));
                 }
+                let response = enrichment_store::semantic_response_plan::decode(
+                    &service.repository.runtime,
+                    &enrichment_core::native_lsp::Input {
+                        method,
+                        answer: raw,
+                        document: consumer.text.clone(),
+                        encoding: enrichment_core::native_semantics::PositionEncoding::parse(
+                            &session.position_encoding,
+                        )
+                        .ok_or_else(|| {
+                            io::Error::other("unnegotiated semantic response encoding")
+                        })?,
+                    },
+                )
+                .await
+                .map_err(io::Error::other)?;
                 transcript.push(json!({"method":name,"params":params,"result":answer}));
-                if answer["kind"] == "unsupported" {
-                    q.outcome = ExecutionOutcome::Unsupported;
-                    q.limitations.push(format!("{} did not advertise {name}; no matching version-qualified diagnostic push was available when applicable.", session.server_version));
-                } else if let Err(error) = normalize_answer(
-                    service,
-                    release,
-                    session,
-                    (&consumer, &document),
-                    &mut inputs,
-                    &answer,
-                    &mut q,
-                ) {
-                    q.outcome = if q.hover.is_some()
-                        || !q.locations.is_empty()
-                        || !q.diagnostics.is_empty()
-                    {
-                        ExecutionOutcome::Incomplete
-                    } else {
-                        ExecutionOutcome::Unresolved
-                    };
-                    q.limitations.push(error.to_string());
+                response
+            }
+        };
+        let mut locations = Vec::new();
+        let mut capture_issue = None;
+        for location in &response.locations {
+            match target(
+                service,
+                release,
+                session,
+                &consumer,
+                &document,
+                &mut inputs,
+                location,
+            )
+            .await
+            {
+                Ok(location) => locations.push(location),
+                Err(error) => {
+                    capture_issue = Some(error.to_string());
+                    break;
                 }
             }
         }
-        if let Some(gap) = session.indexing_gap() {
-            if matches!(
-                q.outcome,
-                ExecutionOutcome::Results | ExecutionOutcome::Empty
-            ) {
-                q.outcome = ExecutionOutcome::Incomplete;
-            }
-            q.limitations.push(gap);
-        }
-        if method == SemanticMethod::References {
-            q.limitations.push("References cover the opened isolated consumer and the server's selected workspace; external projects were not searched.".into());
-        }
-        if session.server == lsp::settings::Server::RustAnalyzer {
-            q.limitations.push("rust-analyzer runs with build scripts and procedural macros disabled; generated declarations may be unresolved.".into());
-        }
-        if method == SemanticMethod::Implementation
-            && session.server == lsp::settings::Server::Ty
-            && query.structural_scope
-        {
-            if matches!(
-                q.outcome,
-                ExecutionOutcome::Results | ExecutionOutcome::Empty
-            ) {
-                q.outcome = ExecutionOutcome::Incomplete;
-            }
-            q.limitations.push(
-                "This query does not establish exhaustive structural protocol implementors.".into(),
-            );
-        }
-        let class = if release.key.ecosystem == Ecosystem::Rust {
-            EvidenceClass::CompilerDerived
-        } else {
-            EvidenceClass::TypecheckerObserved
-        };
+        let selected = enrichment_store::semantic_response_plan::lower(
+            &service.repository.runtime,
+            enrichment_store::semantic_response_plan::Capture {
+                method,
+                document_artifact_id: document.artifact_id.clone(),
+                position: consumer.position,
+                anchor_symbol_id: Some(query.symbol_id.clone()),
+                server: session.server_version.clone(),
+                response,
+                locations,
+                capture_issue,
+                indexing_gap: session.indexing_gap(),
+                ecosystem: release.key.ecosystem,
+                structural_scope: query.structural_scope,
+            },
+        )
+        .await
+        .map_err(io::Error::other)?;
         facts.push((
             SubjectRef::Document {
                 artifact_id: document.artifact_id.clone(),
                 heading: "consumer semantic query".into(),
             },
-            ExecutionPayload::SemanticQuery(q),
-            class,
+            ExecutionPayload::SemanticQuery(selected.query),
+            selected.evidence_class,
         ));
     }
-    let raw = json!({"position_encoding":session.position_encoding,"document_version":session.document_version(), "capsule":session.inputs_root(), "server_log":session.diagnostics(),"queries":transcript});
+    let raw = json!({"conversation_id":session.conversation_id(),"position_encoding":session.position_encoding,"document_version":session.document_version(), "capsule":session.inputs_root(), "server_log":session.diagnostics(),"queries":transcript});
     if serde_json::to_vec(&raw)?.len() > 1536 * 1024 {
         return Err(io::Error::other(
             "inspection transcript exceeds its byte budget",
         ));
     }
     Ok(Produced {
-        environment: session.environment.clone(),
+        environment: session.prepared()?.environment.clone(),
         image: session.image_id().into(),
         containment: query.containment,
         producer: "semantic-inspection".into(),
@@ -311,213 +269,99 @@ async fn query(
             .map_err(std::io::Error::other)?,
         facts,
         inputs: inputs.into_values().collect(),
-        lock: session.lock.clone(),
+        lock: session.prepared()?.lock.as_bytes().to_vec(),
         transcript: raw,
     })
 }
 
-fn normalize_answer(
-    service: &Service,
-    release: &Release,
-    session: &Session,
-    source: (&Consumer, &Artifact),
-    inputs: &mut BTreeMap<String, Artifact>,
-    answer: &Value,
-    query: &mut SemanticQuery,
-) -> io::Result<()> {
-    let (consumer, document) = source;
-    if answer.is_null() {
-        query.outcome = ExecutionOutcome::Unresolved;
-        query.limitations.push("The server returned null; target resolution or method availability was not established by that response.".into());
-        return Ok(());
-    }
-    match query.method {
-        SemanticMethod::Hover => {
-            if !answer.is_null() {
-                let contents = answer
-                    .get("contents")
-                    .ok_or_else(|| io::Error::other("hover result lacks contents"))?;
-                fn markup(value: &Value) -> io::Result<String> {
-                    match value {
-                        Value::String(s) => Ok(s.clone()),
-                        Value::Array(values) => values
-                            .iter()
-                            .map(markup)
-                            .collect::<Result<Vec<_>, _>>()
-                            .map(|v| v.join("\n")),
-                        Value::Object(_) => value
-                            .get("value")
-                            .and_then(Value::as_str)
-                            .map(str::to_owned)
-                            .ok_or_else(|| io::Error::other("invalid hover markup")),
-                        _ => Err(io::Error::other("invalid hover content")),
-                    }
-                }
-                let text = markup(contents)?;
-                if text.len() > 32 * 1024 {
-                    return Err(io::Error::other(
-                        "hover text exceeds its retained byte budget",
-                    ));
-                }
-                if !text.is_empty() {
-                    query.hover = Some(text);
-                }
-            }
-        }
-        SemanticMethod::Diagnostics => {
-            if answer["kind"] != "full" {
-                return Err(io::Error::other(
-                    "diagnostic result is not a resolved full report",
-                ));
-            }
-            let items = answer["items"]
-                .as_array()
-                .ok_or_else(|| io::Error::other("diagnostic items missing"))?;
-            if items.len() > 256 {
-                return Err(io::Error::other("diagnostic result exceeds 256 items"));
-            }
-            for item in items {
-                let range =
-                    document::range(&consumer.text, &item["range"], &session.position_encoding)
-                        .map_err(io::Error::other)?;
-                let severity = item
-                    .get("severity")
-                    .map(|v| {
-                        v.as_u64()
-                            .and_then(|n| u32::try_from(n).ok())
-                            .filter(|n| (1..=4).contains(n))
-                            .ok_or_else(|| io::Error::other("invalid diagnostic severity"))
-                    })
-                    .transpose()?;
-                let code = match item.get("code") {
-                    None | Some(Value::Null) => None,
-                    Some(Value::String(s)) => Some(s.clone()),
-                    Some(Value::Number(n)) => Some(n.to_string()),
-                    _ => return Err(io::Error::other("invalid diagnostic code")),
-                };
-                let source = item
-                    .get("source")
-                    .map(|v| {
-                        v.as_str()
-                            .map(str::to_owned)
-                            .ok_or_else(|| io::Error::other("invalid diagnostic source"))
-                    })
-                    .transpose()?;
-                let message = item["message"]
-                    .as_str()
-                    .ok_or_else(|| io::Error::other("diagnostic message missing"))?
-                    .to_owned();
-                query.diagnostics.push(ExecutionDiagnostic {
-                    range,
-                    severity,
-                    code,
-                    source,
-                    message,
-                });
-            }
-        }
-        SemanticMethod::Definition
-        | SemanticMethod::Implementation
-        | SemanticMethod::References => {
-            let locations = lsp::client::Location::all_from(answer)?;
-            if locations.len() > 256 {
-                return Err(io::Error::other("location result exceeds 256 items"));
-            }
-            for location in locations {
-                query.locations.push(target(
-                    service, release, session, consumer, document, inputs, &location,
-                )?);
-            }
-        }
-    }
-    query.outcome =
-        if query.hover.is_some() || !query.locations.is_empty() || !query.diagnostics.is_empty() {
-            ExecutionOutcome::Results
-        } else {
-            ExecutionOutcome::Empty
-        };
-    Ok(())
-}
-
-fn target(
+async fn target(
     service: &Service,
     release: &Release,
     session: &Session,
     consumer: &Consumer,
     document: &Artifact,
     inputs: &mut BTreeMap<String, Artifact>,
-    location: &lsp::client::Location,
+    location: &enrichment_core::native_lsp::Location,
 ) -> io::Result<ExecutionTarget> {
-    let range = |text: &str| -> Result<Utf8Range, String> {
-        let range = Utf8Range {
-            start: document::byte_position(
-                text,
-                location.line,
-                location.character,
-                &session.position_encoding,
-            )?,
-            end: document::byte_position(
-                text,
-                location.end_line,
-                location.end_character,
-                &session.position_encoding,
-            )?,
-        };
-        range.validate()?;
-        Ok(range)
-    };
-    if location.uri == consumer.uri {
+    use enrichment_store::semantic_source_plan::{self, RouteKind};
+    let route = semantic_source_plan::route(
+        &service.repository.runtime,
+        &location.uri,
+        &consumer.uri,
+        &session.prepared()?.inventory,
+    )
+    .await
+    .map_err(io::Error::other)?;
+    if route.kind == RouteKind::Consumer {
         return Ok(ExecutionTarget::Artifact {
             artifact_id: document.artifact_id.clone(),
-            range: range(&consumer.text).map_err(io::Error::other)?,
+            range: enrichment_store::semantic_response_plan::range(
+                &service.repository.runtime,
+                &enrichment_core::native_lsp::RangeInput {
+                    document: consumer.text.clone(),
+                    range: location.range.clone(),
+                },
+            )
+            .await
+            .map_err(io::Error::other)?,
         });
     }
-    let url = url::Url::parse(&location.uri).map_err(io::Error::other)?;
-    let path = url
-        .to_file_path()
-        .map_err(|()| io::Error::other("server location is not a local file URI"))?;
-    if let Ok(relative) = path.strip_prefix("/capsule") {
-        match inspect_execution::read_input(session.inputs_root(), relative, 1024 * 1024) {
-            Ok(bytes) => {
-                if inputs.len() >= 256
-                    || inputs
-                        .values()
-                        .filter(|a| a.media_type.starts_with("text/"))
-                        .map(|a| a.size_bytes)
-                        .sum::<u64>()
-                        + bytes.len() as u64
-                        > 16 * 1024 * 1024
-                {
-                    return Err(io::Error::other(
-                        "retained source document closure exceeds its bound",
-                    ));
-                }
-                let text = std::str::from_utf8(&bytes).map_err(io::Error::other)?;
-                let range = range(text).map_err(io::Error::other)?;
-                let artifact = inspect_execution::store(
-                    service,
-                    &bytes,
-                    &format!(
-                        "consumer-source://document/{}",
-                        canonical::sha256_hex(&bytes)
-                    ),
-                    "text/plain; charset=utf-8",
-                )?;
-                inputs.insert(artifact.sha256.clone(), artifact.clone());
-                return Ok(ExecutionTarget::Artifact {
-                    artifact_id: artifact.artifact_id,
-                    range,
-                });
-            }
-            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-            Err(error) => return Err(error),
-        }
+    if route.kind == RouteKind::Refused {
+        return Err(io::Error::other(
+            "server location exceeds the native source contract",
+        ));
     }
-    let relative = path
-        .strip_prefix(Path::new("/"))
-        .map_err(io::Error::other)?
-        .to_string_lossy()
-        .to_string();
+    if route.kind == RouteKind::Installed {
+        let relative = route
+            .relative
+            .as_deref()
+            .ok_or_else(|| io::Error::other("installed source route has no path"))?;
+        let root = session.inputs_root().to_owned();
+        let path = std::path::PathBuf::from(relative);
+        let bytes = service
+            .repository
+            .runtime
+            .blocking(move || inspect_execution::read_input(&root, &path, 1024 * 1024))
+            .await
+            .map_err(io::Error::other)??;
+        let text = std::str::from_utf8(&bytes).map_err(io::Error::other)?;
+        semantic_source_plan::admit_document(
+            &service.repository.runtime,
+            &route,
+            text,
+            inputs.values().cloned().collect(),
+        )
+        .await
+        .map_err(io::Error::other)?;
+        let range = enrichment_store::semantic_response_plan::range(
+            &service.repository.runtime,
+            &enrichment_core::native_lsp::RangeInput {
+                document: text.into(),
+                range: location.range.clone(),
+            },
+        )
+        .await
+        .map_err(io::Error::other)?;
+        let artifact = inspect_execution::store(
+            service,
+            &bytes,
+            &format!(
+                "consumer-source://document/{}",
+                canonical::sha256_hex(&bytes)
+            ),
+            "text/plain; charset=utf-8",
+        )?;
+        inputs.insert(artifact.sha256.clone(), artifact.clone());
+        return Ok(ExecutionTarget::Artifact {
+            artifact_id: artifact.artifact_id,
+            range,
+        });
+    }
+    let relative = route
+        .path
+        .strip_prefix('/')
+        .ok_or_else(|| io::Error::other("external source path is not absolute"))?
+        .to_owned();
     let target = ExecutionTarget::External {
         scope: format!("release={};image={};server={}", release.release_id, session.image_id(), session.server_version),
         path: relative, limitation: "The server location is outside retained source documents; its range is not asserted as an artifact span.".into(),

@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 5 public items · structured records in [`model/data
 fn avg() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.aggregate.avg.md).
+
+
 ---
 
 ## collect_list
@@ -19,6 +22,9 @@ fn avg() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```rust
 fn collect_list() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.aggregate.collect_list.md).
+
 
 ---
 
@@ -30,6 +36,9 @@ fn collect_list() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 fn collect_set() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.aggregate.collect_set.md).
+
+
 ---
 
 ## functions
@@ -40,6 +49,9 @@ fn collect_set() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::AggregateUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.aggregate.functions.md).
+
+
 ---
 
 ## try_sum
@@ -49,5 +61,8 @@ fn functions() -> Vec<std::sync::Arc<datafusion_expr::AggregateUDF>>
 ```rust
 fn try_sum() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.aggregate.try_sum.md).
+
 
 ---

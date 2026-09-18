@@ -10,6 +10,9 @@ Crate `datafusion-optimizer` · 3 public items · structured records in [`model/
 const UN_MATCHED_ROW_INDICATOR: &str = "__always_true"
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.decorrelate.UN_MATCHED_ROW_INDICATOR.md).
+
+
 Used to indicate the unmatched rows from the inner(subquery) table after the left out Join
 This is used to handle [the Count bug]
 
@@ -47,6 +50,9 @@ fn f_down(&mut self, plan: LogicalPlan) -> Result<Transformed<LogicalPlan>>
 fn f_up(&mut self, plan: LogicalPlan) -> Result<Transformed<LogicalPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.decorrelate.PullUpCorrelatedExpr.md).
+
+
 This struct rewrite the sub query plan by pull up the correlated
 expressions(contains outer reference columns) from the inner subquery's
 'Filter'. It adds the inner reference columns to the 'Projection' or
@@ -62,6 +68,9 @@ evaluated by the parent operator as the join condition.
 ```rust
 type ExprResultMap = datafusion_common::HashMap<String, datafusion_expr::Expr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.decorrelate.ExprResultMap.md).
+
 
 Mapping from expr display name to its evaluation result on empty record
 batch (for example: 'count(*)' is 'ScalarValue(0)', 'count(*) + 2' is

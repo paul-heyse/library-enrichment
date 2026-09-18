@@ -37,6 +37,9 @@ fn from(e: DataFusionError) -> Self
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.from_proto.Error.md).
+
+
 ---
 
 ## parse_i32_to_interval_unit
@@ -46,6 +49,9 @@ fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```rust
 fn parse_i32_to_interval_unit(value: &i32) -> datafusion_common::Result<arrow::datatypes::IntervalUnit, Error>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.from_proto.parse_i32_to_interval_unit.md).
+
 
 ---
 
@@ -57,6 +63,9 @@ fn parse_i32_to_interval_unit(value: &i32) -> datafusion_common::Result<arrow::d
 fn parse_i32_to_time_unit(value: &i32) -> datafusion_common::Result<arrow::datatypes::TimeUnit, Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.from_proto.parse_i32_to_time_unit.md).
+
+
 ---
 
 ## parse_proto_fields_to_fields
@@ -66,6 +75,9 @@ fn parse_i32_to_time_unit(value: &i32) -> datafusion_common::Result<arrow::datat
 ```rust
 fn parse_proto_fields_to_fields<'a, I>(fields: I) -> Result<Vec<arrow::datatypes::Field>, Error> where I: IntoIterator<Item = &'a protobuf::Field>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.from_proto.parse_proto_fields_to_fields.md).
+
 
 Converts a vector of `protobuf::Field`s to `Arc<arrow::Field>`s.
 
@@ -89,6 +101,9 @@ trait FromOptionalField<T>
 fn optional(self) -> datafusion_common::Result<Option<T>, Error>
 fn required(self, field: impl Into<String>) -> datafusion_common::Result<T, Error>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.from_proto.FromOptionalField.md).
+
 
 An extension trait that adds the methods `optional` and `required` to any
 Option containing a type implementing `TryInto<U, Error = Error>`

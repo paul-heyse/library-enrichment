@@ -9,9 +9,9 @@ The protocol version and feature set are the compatibility contract. A client th
 | `buoyant_kernel::actions::Protocol` | struct | 12 | [prose](../api/buoyant_kernel.actions.md#protocol) | [records](../model/buoyant_kernel.actions.json) |
 | `buoyant_kernel::table_features::TableFeature` | enum | 14 | [prose](../api/buoyant_kernel.table_features.md#tablefeature) | [records](../model/buoyant_kernel.table_features.json) |
 | `deltalake_core::kernel::models::actions::TableFeatures` | enum | 10 | [prose](../api/deltalake_core.kernel.models.actions.md#tablefeatures) | [records](../model/deltalake_core.kernel.models.actions.json) |
-| `deltalake_core::operations::constraints::ConstraintBuilder` | struct | 8 | [prose](../api/deltalake_core.operations.constraints.md#constraintbuilder) | [records](../model/deltalake_core.operations.constraints.json) |
-| `deltalake_core::operations::add_feature::AddTableFeatureBuilder` | struct | 8 | [prose](../api/deltalake_core.operations.add_feature.md#addtablefeaturebuilder) | [records](../model/deltalake_core.operations.add_feature.json) |
-| `deltalake_core::operations::drop_column_not_null::DropColumnNotNullBuilder` | struct | 6 | [prose](../api/deltalake_core.operations.drop_column_not_null.md#dropcolumnnotnullbuilder) | [records](../model/deltalake_core.operations.drop_column_not_null.json) |
+| `deltalake_core::operations::constraints::ConstraintBuilder` | struct | 6 | [prose](../api/deltalake_core.operations.constraints.md#constraintbuilder) | [records](../model/deltalake_core.operations.constraints.json) |
+| `deltalake_core::operations::add_feature::AddTableFeatureBuilder` | struct | 6 | [prose](../api/deltalake_core.operations.add_feature.md#addtablefeaturebuilder) | [records](../model/deltalake_core.operations.add_feature.json) |
+| `deltalake_core::operations::drop_column_not_null::DropColumnNotNullBuilder` | struct | 4 | [prose](../api/deltalake_core.operations.drop_column_not_null.md#dropcolumnnotnullbuilder) | [records](../model/deltalake_core.operations.drop_column_not_null.json) |
 
 ## Extension points
 

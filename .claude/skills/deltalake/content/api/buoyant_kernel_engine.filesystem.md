@@ -5,6 +5,7 @@ Crate `buoyant_kernel_engine` · 1 public items · structured records in [`model
 ## ObjectStoreStorageHandler
 
 `struct` · `buoyant_kernel_engine::filesystem::ObjectStoreStorageHandler`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.filesystem.ObjectStoreStorageHandler.md)
 
 Also reachable as `delta_kernel_default_engine::filesystem::ObjectStoreStorageHandler`
 

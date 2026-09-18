@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 7 public items · structured records in [`model/buoyan
 ## HistoryCommitType
 
 `enum` · `buoyant_kernel::history_manager::HistoryCommitType`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.history_manager.HistoryCommitType.md)
 
 Also reachable as `delta_kernel::history_manager::HistoryCommitType`
 
@@ -23,6 +24,7 @@ Selects which commit the [`get_earliest_commit`] query returns.
 ## first_version_after
 
 `function` · `buoyant_kernel::history_manager::first_version_after`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.history_manager.first_version_after.md)
 
 Also reachable as `delta_kernel::history_manager::first_version_after`
 
@@ -60,6 +62,7 @@ let commit = first_version_after(&snapshot, &engine, timestamp, HistoryCommitTyp
 ## get_earliest_commit
 
 `function` · `buoyant_kernel::history_manager::get_earliest_commit`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.history_manager.get_earliest_commit.md)
 
 Also reachable as `delta_kernel::history_manager::get_earliest_commit`
 
@@ -96,6 +99,7 @@ operation may delete the underlying file.
 ## latest_version_as_of
 
 `function` · `buoyant_kernel::history_manager::latest_version_as_of`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.history_manager.latest_version_as_of.md)
 
 Also reachable as `delta_kernel::history_manager::latest_version_as_of`
 
@@ -134,6 +138,7 @@ let commit = latest_version_as_of(&snapshot, &engine, timestamp, HistoryCommitTy
 ## timestamp_range_to_versions
 
 `function` · `buoyant_kernel::history_manager::timestamp_range_to_versions`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.history_manager.timestamp_range_to_versions.md)
 
 Also reachable as `delta_kernel::history_manager::timestamp_range_to_versions`
 
@@ -190,6 +195,7 @@ let (start_version, end_version) =
 ## CommitAt
 
 `struct` · `buoyant_kernel::history_manager::CommitAt`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.history_manager.CommitAt.md)
 
 Also reachable as `delta_kernel::history_manager::CommitAt`
 
@@ -214,6 +220,7 @@ A commit located by a timestamp query: the commit [`Version`] paired with its ti
 ## Timestamp
 
 `type_alias` · `buoyant_kernel::history_manager::Timestamp`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.history_manager.Timestamp.md)
 
 Also reachable as `delta_kernel::history_manager::Timestamp`
 

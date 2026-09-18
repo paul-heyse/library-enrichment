@@ -12,6 +12,9 @@ Also reachable as `datafusion::datasource::default_table_source::provider_as_sou
 fn provider_as_source(table_provider: std::sync::Arc<dyn TableProvider>) -> std::sync::Arc<dyn TableSource>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.default_table_source.provider_as_source.md).
+
+
 Wrap TableProvider in TableSource
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `datafusion::datasource::default_table_source::source_as_provi
 ```rust
 fn source_as_provider(source: &std::sync::Arc<dyn TableSource>) -> datafusion_common::Result<std::sync::Arc<dyn TableProvider>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.default_table_source.source_as_provider.md).
+
 
 Attempt to downcast a TableSource to DefaultTableSource and access the
 TableProvider. This will only work with a TableSource created by DataFusion.
@@ -61,6 +67,9 @@ fn schema(&self) -> SchemaRef
 fn supports_filters_pushdown(&self, filter: &[&Expr]) -> datafusion_common::Result<Vec<TableProviderFilterPushDown>>
 fn table_type(&self) -> TableType
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.default_table_source.DefaultTableSource.md).
+
 
 Implements [`TableSource`] for a [`TableProvider`]
 

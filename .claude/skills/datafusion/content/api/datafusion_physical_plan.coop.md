@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 4 public items · structured records in [`mo
 fn cooperative<T>(stream: T) -> CooperativeStream<T> where T: RecordBatchStream + Unpin + Send + 'static
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.coop.cooperative.md).
+
+
 Creates a [`CooperativeStream`] wrapper around the given [`RecordBatchStream`].
 This wrapper collaborates with the Tokio cooperative scheduler by consuming a unit of
 scheduling budget for each returned record batch.
@@ -23,6 +26,9 @@ scheduling budget for each returned record batch.
 ```rust
 fn make_cooperative(stream: SendableRecordBatchStream) -> SendableRecordBatchStream
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.coop.make_cooperative.md).
+
 
 Wraps a `SendableRecordBatchStream` inside a [`CooperativeStream`] to enable cooperative multitasking.
 Since `SendableRecordBatchStream` is a `dyn RecordBatchStream` this requires the use of dynamic
@@ -82,6 +88,9 @@ fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.coop.CooperativeExec.md).
+
+
 An execution plan decorator that enables cooperative multitasking.
 It wraps the streams produced by its input execution plan using the [`make_cooperative`] function,
 which makes the stream participate in Tokio cooperative scheduling.
@@ -115,6 +124,9 @@ fn schema(&self) -> Arc<Schema>
 ```rust
 fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.coop.CooperativeStream.md).
+
 
 A stream that passes record batches through unchanged while cooperating with the Tokio runtime.
 It consumes cooperative scheduling budget for each returned [`RecordBatch`],

@@ -12,6 +12,9 @@ Crate `datafusion-optimizer` · 3 public items · structured records in [`model/
 fn make_filter(predicate: datafusion_expr::Expr, input: std::sync::Arc<datafusion_expr::logical_plan::LogicalPlan>) -> datafusion_common::Result<datafusion_expr::logical_plan::LogicalPlan>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.push_down_filter.make_filter.md).
+
+
 Creates a new LogicalPlan::Filter node.
 
 Deprecated: use [`Filter::try_new`] directly.
@@ -25,6 +28,9 @@ Deprecated: use [`Filter::try_new`] directly.
 ```rust
 fn replace_cols_by_name(e: datafusion_expr::Expr, replace_map: &std::collections::HashMap<String, impl AsRef<datafusion_expr::Expr>>) -> datafusion_common::Result<datafusion_expr::Expr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.push_down_filter.replace_cols_by_name.md).
+
 
 replaces columns by its name on the projection.
 
@@ -56,6 +62,9 @@ fn name(&self) -> &str
 fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>>
 fn supports_rewrite(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.push_down_filter.PushDownFilter.md).
+
 
 Optimizer rule for pushing (moving) filter expressions down in a plan so
 they are applied as early as possible.

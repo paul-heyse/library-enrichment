@@ -5,6 +5,7 @@ Crate `deltalake-core` · 7 public items · structured records in [`model/deltal
 ## logstore_factories
 
 `function` · `deltalake_core::logstore::factories::logstore_factories`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.factories.logstore_factories.md)
 
 Also reachable as `deltalake::logstore::logstore_factories`, `deltalake_core::logstore::logstore_factories`
 
@@ -19,6 +20,7 @@ Access global registry of logstore factories.
 ## object_store_factories
 
 `function` · `deltalake_core::logstore::factories::object_store_factories`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.factories.object_store_factories.md)
 
 Also reachable as `deltalake::logstore::object_store_factories`, `deltalake_core::logstore::object_store_factories`
 
@@ -33,6 +35,7 @@ Access global registry of object store factories
 ## store_for
 
 `function` · `deltalake_core::logstore::factories::store_for`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.factories.store_for.md)
 
 Also reachable as `deltalake::logstore::store_for`, `deltalake_core::logstore::store_for`
 
@@ -47,6 +50,7 @@ Simpler access pattern for the [ObjectStoreFactoryRegistry] to get a single stor
 ## LogStoreFactory
 
 `trait` · `deltalake_core::logstore::factories::LogStoreFactory`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.factories.LogStoreFactory.md)
 
 Also reachable as `deltalake::logstore::LogStoreFactory`, `deltalake_core::logstore::LogStoreFactory`
 
@@ -79,6 +83,7 @@ Trait for generating [LogStore] implementations
 ## ObjectStoreFactory
 
 `trait` · `deltalake_core::logstore::factories::ObjectStoreFactory`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.factories.ObjectStoreFactory.md)
 
 Also reachable as `deltalake::logstore::ObjectStoreFactory`, `deltalake_core::logstore::ObjectStoreFactory`
 
@@ -111,6 +116,7 @@ Factory trait for creating [`ObjectStore`](::object_store::ObjectStore) instance
 ## LogStoreFactoryRegistry
 
 `type_alias` · `deltalake_core::logstore::factories::LogStoreFactoryRegistry`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.factories.LogStoreFactoryRegistry.md)
 
 Also reachable as `deltalake::logstore::LogStoreFactoryRegistry`, `deltalake_core::logstore::LogStoreFactoryRegistry`
 
@@ -125,6 +131,7 @@ Registry of [`LogStoreFactory`] instances
 ## ObjectStoreFactoryRegistry
 
 `type_alias` · `deltalake_core::logstore::factories::ObjectStoreFactoryRegistry`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.factories.ObjectStoreFactoryRegistry.md)
 
 Also reachable as `deltalake::logstore::ObjectStoreFactoryRegistry`, `deltalake_core::logstore::ObjectStoreFactoryRegistry`
 

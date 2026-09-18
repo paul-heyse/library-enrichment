@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "id": "df.storage-reuse",
+  "title": "Separate source reuse, plan reuse, materialization and writes",
+  "task_aliases": [
+    "repeat query",
+    "reuse view cache",
+    "write Parquet files",
+    "object store registry",
+    "metadata cache",
+    "insert overwrite"
+  ],
+  "crates": [
+    "datafusion",
+    "datafusion-execution",
+    "datafusion-datasource",
+    "object_store",
+    "parquet"
+  ],
+  "input": [
+    "DataFrame",
+    "ObjectStore",
+    "TableProvider"
+  ],
+  "output": [
+    "files",
+    "DataFrame",
+    "ExecutionPlan"
+  ],
+  "properties": [
+    "reuse",
+    "storage",
+    "lifecycle",
+    "configuration",
+    "errors"
+  ],
+  "operations": [
+    "datafusion::dataframe::DataFrame::cache",
+    "datafusion::dataframe::DataFrame::into_view",
+    "datafusion::dataframe::DataFrame::write_parquet",
+    "datafusion::dataframe::DataFrame::write_table",
+    "datafusion_execution::runtime_env::RuntimeEnv",
+    "datafusion_session::table::TableProvider::insert_into"
+  ],
+  "brief": "Provider reuse, logical views, cached result batches and file-metadata caches reuse different things. File writers and provider DML also have different capability and failure boundaries.",
+  "choices": [
+    {
+      "candidate": "view / cloned logical plan",
+      "choose_when": "Reuse query definition",
+      "tradeoff": "Does not by itself freeze data or cache results.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "DataFrame::cache",
+      "choose_when": "Reuse materialized results",
+      "tradeoff": "Consumes memory and can become stale relative to changing sources.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "RuntimeEnv metadata cache/store registry",
+      "choose_when": "Reuse source metadata or storage handles",
+      "tradeoff": "Invalidation/lifetime differs from query-result caching.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "write_parquet / COPY / provider DML",
+      "choose_when": "Persist output or mutate a table",
+      "tradeoff": "Choose the actual sink contract, write mode and error handling.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "df.storage-reuse.configuration",
+      "aspect": "configuration",
+      "statement": "SessionContext clones share state, while RuntimeEnv resources may be shared across contexts. Choose isolation based on catalogs, configuration and workload ownership rather than one-context-per-service folklore.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.storage-reuse.writes",
+      "aspect": "writes",
+      "statement": "DataFrame writers execute query output into format/sink paths. write_table/INSERT depend on provider insertion support. A readable provider need not implement DML; COPY to files is not evidence it does.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.storage-reuse.failure",
+      "aspect": "failure",
+      "statement": "Inspect append/overwrite/partitioning and sink-specific partial-write behavior. Neither a successful plan nor Arrow batch validity establishes transactional or atomic persistence.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Specify exactly which computation/data/metadata is reused and when it becomes stale.",
+    "Verify writer and source ownership, registry lifetime and output schema.",
+    "Round-trip a small written file; separately qualify atomicity or cloud failure guarantees if required."
+  ],
+  "unknowns": [
+    "Cloud stores, transactional semantics and cache invalidation under external mutation are not established by local fixtures."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "datafusion::dataframe::DataFrame::cache",
+        "datafusion::dataframe::DataFrame::into_view",
+        "datafusion::dataframe::DataFrame::write_parquet",
+        "datafusion::dataframe::DataFrame::write_table",
+        "datafusion_execution::runtime_env::RuntimeEnv",
+        "datafusion_session::table::TableProvider::insert_into"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    },
+    {
+      "id": "probe",
+      "kind": "runtime_observation",
+      "tests": [
+        "stream_collect_cache_and_sort_resource_error",
+        "parquet_listing_source_executes_query"
+      ],
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Only the named assertions in the recorded Cargo profile."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "datafusion::dataframe::DataFrame::cache",
+      "datafusion::dataframe::DataFrame::into_view",
+      "datafusion::dataframe::DataFrame::write_parquet",
+      "datafusion::dataframe::DataFrame::write_table",
+      "datafusion_execution::runtime_env::RuntimeEnv",
+      "datafusion_session::table::TableProvider::insert_into"
+    ],
+    "candidate_set": [
+      "view / cloned logical plan",
+      "DataFrame::cache",
+      "RuntimeEnv metadata cache/store registry",
+      "write_parquet / COPY / provider DML"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  },
+  "resolved_operations": [
+    {
+      "path": "datafusion::dataframe::DataFrame::cache",
+      "id": "46de08d8309fcb4f0782d08e",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-46de08d8309fcb4f0782d08e",
+      "signature": "async fn cache(self) -> Result<DataFrame>"
+    },
+    {
+      "path": "datafusion::dataframe::DataFrame::into_view",
+      "id": "ce2618e84e6ecfd888a3b153",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-ce2618e84e6ecfd888a3b153",
+      "signature": "fn into_view(self) -> Arc<dyn TableProvider>"
+    },
+    {
+      "path": "datafusion::dataframe::DataFrame::write_parquet",
+      "id": "3c9ca113f3c5829bfb6ac6f0",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-3c9ca113f3c5829bfb6ac6f0",
+      "signature": "async fn write_parquet(self, path: &str, options: DataFrameWriteOptions, writer_options: Option<TableParquetOptions>) -> Result<Vec<RecordBatch>, DataFusionError>"
+    },
+    {
+      "path": "datafusion::dataframe::DataFrame::write_table",
+      "id": "03b06a16dfccd7287df86167",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-03b06a16dfccd7287df86167",
+      "signature": "async fn write_table(self, table_name: &str, write_options: DataFrameWriteOptions) -> Result<Vec<RecordBatch>, DataFusionError>"
+    },
+    {
+      "path": "datafusion_execution::runtime_env::RuntimeEnv",
+      "id": "c598f4df4cf51824ae4b9a67",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "record": "operations/datafusion_execution.runtime_env.RuntimeEnv.json",
+      "page": "operations/datafusion_execution.runtime_env.RuntimeEnv.md#op-c598f4df4cf51824ae4b9a67",
+      "signature": "struct RuntimeEnv"
+    },
+    {
+      "path": "datafusion_session::table::TableProvider::insert_into",
+      "id": "f6f850e68c1fe795e5e5fac4",
+      "kind": "function",
+      "crate": "datafusion-session",
+      "record": "operations/datafusion_session.table.TableProvider.json",
+      "page": "operations/datafusion_session.table.TableProvider.md#op-f6f850e68c1fe795e5e5fac4",
+      "signature": "async fn insert_into(&self, _state: &dyn Session, _input: Arc<dyn ExecutionPlan>, _insert_op: InsertOp) -> Result<Arc<dyn ExecutionPlan>>"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/df.storage-reuse.json"
+}

@@ -3,8 +3,8 @@
 Three catalogs, each solving a different lookup that the raw upstream file makes awkward.
 
 `configs.md` is a 204 KB flat table of 155 settings. Useful once you know the setting name;
-useless for "what can I tune", and it never says how to reach a setting from Rust. This joins each
-setting to the `SessionConfig` builder method that sets it, which is the missing half.
+useless for "what can I tune", and it never says how to reach a setting from Rust. This adds
+name-based builder candidates; mappings remain heuristic until the method is inspected.
 
 The SQL function docs are 327 functions across three files. This produces one categorized index so
 a single grep answers "is there a function for X".
@@ -77,8 +77,8 @@ def write_config_options(items: dict[str, Item], content: Path) -> int:
     lines = [
         "# Configuration settings",
         "",
-        f"{len(rows)} settings, grouped by subsystem, each joined to the Rust builder method that",
-        "sets it where one exists. Upstream's own table is the source and stays authoritative for",
+        f"{len(rows)} settings, grouped by subsystem. Builder candidates are name-based discovery",
+        "leads, not verified setting-to-setter mappings. Upstream's table is the source for",
         "defaults and descriptions: [`corpus/guides/user-guide/configs.md`]"
         "(../corpus/guides/user-guide/configs.md).",
         "",
@@ -90,7 +90,9 @@ def write_config_options(items: dict[str, Item], content: Path) -> int:
         'ctx.sql("SET datafusion.execution.batch_size = 4096")       // at runtime, from SQL',
         "```",
         "",
-        "A setting with no builder method is reachable only through the string form.",
+        "Typed `ConfigOptions` fields and `SessionConfig::options_mut` provide another path. "
+        "A missing builder candidate does not imply string-only access. RuntimeEnv settings "
+        "also have a different construction/lifetime boundary from session SQL settings.",
         "",
     ]
 
@@ -99,7 +101,7 @@ def write_config_options(items: dict[str, Item], content: Path) -> int:
         lines.append("")
         lines.append(SUBSYSTEMS.get(prefix, ""))
         lines.append("")
-        lines.append("| Setting | Default | Rust setter | Description |")
+        lines.append("| Setting | Default | Builder candidate (heuristic) | Description |")
         lines.append("|---|---|---|---|")
         for key, default, description in sorted(grouped[prefix]):
             leaf = key.split(".")[-1]

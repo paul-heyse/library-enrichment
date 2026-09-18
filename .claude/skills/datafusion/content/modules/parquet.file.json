@@ -1,0 +1,76 @@
+[
+  {
+    "id": "32c82f677bb3901ca5a9d887",
+    "path": "parquet::file",
+    "name": "file",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod file",
+    "docs": "APIs for reading parquet data.\n\nProvides access to file and row group readers and writers, record API, metadata, etc.\n\n# See Also:\n* [`SerializedFileReader`] and [`SerializedFileWriter`] for reading / writing parquet\n* [`metadata`]: for working with metadata such as schema\n* [`statistics`]: for working with statistics in metadata\n\n[`SerializedFileReader`]: serialized_reader::SerializedFileReader\n[`SerializedFileWriter`]: writer::SerializedFileWriter\n\n# Example of writing a new file\n\n```rust,no_run\nuse std::{fs, path::Path, sync::Arc};\n\nuse parquet::{\n    file::{\n        properties::WriterProperties,\n        writer::SerializedFileWriter,\n    },\n    schema::parser::parse_message_type,\n};\n\nlet path = Path::new(\"/path/to/sample.parquet\");\n\nlet message_type = \"\n  message schema {\n    REQUIRED INT32 b;\n  }\n\";\nlet schema = Arc::new(parse_message_type(message_type).unwrap());\nlet file = fs::File::create(&path).unwrap();\nlet mut writer = SerializedFileWriter::new(file, schema, Default::default()).unwrap();\nlet mut row_group_writer = writer.next_row_group().unwrap();\nwhile let Some(mut col_writer) = row_group_writer.next_column().unwrap() {\n    // ... write values to a column writer\n    col_writer.close().unwrap()\n}\nrow_group_writer.close().unwrap();\nwriter.close().unwrap();\n\nlet bytes = fs::read(&path).unwrap();\nassert_eq!(&bytes[0..4], &[b'P', b'A', b'R', b'1']);\n```\n# Example of reading an existing file\n\n```rust,no_run\nuse parquet::file::reader::{FileReader, SerializedFileReader};\nuse std::{fs::File, path::Path};\n\nlet path = Path::new(\"/path/to/sample.parquet\");\nif let Ok(file) = File::open(&path) {\n    let reader = SerializedFileReader::new(file).unwrap();\n\n    let parquet_metadata = reader.metadata();\n    assert_eq!(parquet_metadata.num_row_groups(), 1);\n\n    let row_group_reader = reader.get_row_group(0).unwrap();\n    assert_eq!(row_group_reader.num_columns(), 1);\n}\n```\n# Example of reading multiple files\n\n```rust,no_run\nuse parquet::file::reader::SerializedFileReader;\nuse std::convert::TryFrom;\n\nlet paths = vec![\n    \"/path/to/sample.parquet/part-1.snappy.parquet\",\n    \"/path/to/sample.parquet/part-2.snappy.parquet\"\n];\n// Create a reader for each file and flat map rows\nlet rows = paths.iter()\n    .map(|p| SerializedFileReader::try_from(*p).unwrap())\n    .flat_map(|r| r.into_iter());\n\nfor row in rows {\n    println!(\"{}\", row.unwrap());\n}\n```",
+    "span": {
+      "filename": "src/file/mod.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        113,
+        53
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          5163,
+          5966,
+          6219,
+          6649,
+          6724,
+          6864,
+          6986,
+          7141,
+          7142
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`metadata`": 5966,
+      "`statistics`": 6986,
+      "serialized_reader::SerializedFileReader": 6651,
+      "writer::SerializedFileWriter": 3232
+    },
+    "link_paths": {
+      "`metadata`": "parquet::file::metadata",
+      "`statistics`": "parquet::file::statistics",
+      "serialized_reader::SerializedFileReader": "parquet::file::serialized_reader::SerializedFileReader",
+      "writer::SerializedFileWriter": "parquet::file::writer::SerializedFileWriter"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "7143",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/parquet.file.md",
+    "record_file": "modules/parquet.file.json",
+    "anchor": "op-32c82f677bb3901ca5a9d887",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`metadata`": "../modules/parquet.file.metadata.md#op-83908534150f436bfde8c42b",
+      "`statistics`": "../modules/parquet.file.statistics.md#op-50c431aef6bd8f8fb6fb3a3a",
+      "serialized_reader::SerializedFileReader": "../operations/parquet.file.serialized_reader.SerializedFileReader.md#op-770b38e09c96846980922df5",
+      "writer::SerializedFileWriter": "../operations/parquet.file.writer.SerializedFileWriter.md#op-0b9cc37c23222f2e8aef5d0f"
+    }
+  }
+]

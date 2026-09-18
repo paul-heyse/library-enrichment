@@ -1,0 +1,151 @@
+{
+  "query": "row level inserts updates deletes CDF explicit versions incremental consumer metadata Arrow types exact row filtering",
+  "capabilities": [
+    {
+      "id": "delta.cdf",
+      "title": "Read change data with explicit bounds, images and residual filtering",
+      "brief": "CDF uses an explicit build path or DeltaCdfTableProvider rather than IntoFuture. Plan for inclusive version ranges, change images, retention and operation-specific feature restrictions.",
+      "why": {
+        "matched_terms": [
+          "arrow",
+          "cdf",
+          "exact",
+          "explicit",
+          "filtering",
+          "incremental",
+          "level",
+          "metadata",
+          "row",
+          "versions"
+        ],
+        "facets": {}
+      },
+      "choices": [
+        {
+          "candidate": "DeltaCdfTableProvider",
+          "choose_when": "CDF should be queried as a DataFusion relation",
+          "tradeoff": "Its scan applies residual row filtering; register it in a compatible context"
+        },
+        {
+          "candidate": "CdfLoadBuilder::build",
+          "choose_when": "You need a physical plan directly",
+          "tradeoff": "Execute the returned plan with the appropriate TaskContext and preserve required residual filtering"
+        },
+        {
+          "candidate": "Snapshot comparison / application log",
+          "choose_when": "Required historical change data is unavailable",
+          "tradeoff": "Define a different recovery contract; do not invent missing CDF history"
+        }
+      ],
+      "unknowns": [
+        "An ORDER BY id query over the tiny update fixture encountered DataFusion SinglePartition/UnknownPartitioning(0) planning failure; the unordered query followed by caller sorting succeeded. Timestamp boundary and all enablement-transition combinations are not exhaustively tested."
+      ],
+      "contract": "content/capabilities/delta.cdf.json"
+    },
+    {
+      "id": "delta.schema",
+      "title": "Preserve schema meaning across Arrow, Delta and schema evolution",
+      "brief": "Distinguish representation conversion, value casting, schema normalization and table evolution. A successful Arrow conversion does not by itself authorize a Delta write or preserve every Arrow datatype exactly.",
+      "why": {
+        "matched_terms": [
+          "arrow",
+          "consumer",
+          "exact",
+          "explicit",
+          "metadata",
+          "row",
+          "types"
+        ],
+        "facets": {}
+      },
+      "choices": [
+        {
+          "candidate": "Existing compatible schema",
+          "choose_when": "Appending values without changing table metadata",
+          "tradeoff": "Check actual nullability, nested fields and protocol-dependent types"
+        },
+        {
+          "candidate": "SchemaMode::Merge",
+          "choose_when": "Additive source fields should evolve the table",
+          "tradeoff": "Existing rows need compatible missing-field/null behavior; mapped tables have extra restrictions"
+        },
+        {
+          "candidate": "SchemaMode::Overwrite",
+          "choose_when": "A full replacement also changes schema",
+          "tradeoff": "Requires overwrite mode and operation-specific validation"
+        },
+        {
+          "candidate": "Arrow/kernel conversion traits",
+          "choose_when": "You need a schema at the integration boundary",
+          "tradeoff": "Conversion errors and normalization are separate from row-value casting"
+        }
+      ],
+      "unknowns": [
+        "The local controls cover additive nullable fields, string/integer casts, a nested decimal schema, unsigned schema conversion and timestamp normalization. Every value-range, timezone and nested evolution combination is not certified."
+      ],
+      "contract": "content/capabilities/delta.schema.json"
+    },
+    {
+      "id": "delta.kernel",
+      "title": "Use kernel snapshots, scans and engine interfaces at the correct layer",
+      "brief": "Use high-level DeltaTable operations for normal table work. Use the kernel and engine interfaces when implementing a scan/engine boundary and when prepared to honor its selection, schema and protocol contracts.",
+      "why": {
+        "matched_terms": [
+          "arrow",
+          "consumer",
+          "exact",
+          "level",
+          "metadata"
+        ],
+        "facets": {}
+      },
+      "choices": [
+        {
+          "candidate": "DeltaTable/provider",
+          "choose_when": "The task is querying or mutating a Delta table",
+          "tradeoff": "Already integrates protocol, storage and DataFusion semantics"
+        },
+        {
+          "candidate": "Kernel Engine/EngineData",
+          "choose_when": "You are implementing engine evaluation/I/O or consuming kernel scan primitives",
+          "tradeoff": "Own the engine contract and apply selection/deletion semantics correctly"
+        },
+        {
+          "candidate": "buoyant_kernel_engine",
+          "choose_when": "The supplied engine implementation fits the integration",
+          "tradeoff": "Keep its fork/feature/version identity aligned with delta-rs"
+        }
+      ],
+      "unknowns": [
+        "Custom engine correctness and every internal-api surface are unreviewed beyond the selected contracts; no complete custom engine implementation is certified."
+      ],
+      "contract": "content/capabilities/delta.kernel.json"
+    }
+  ],
+  "matching_capabilities": 18,
+  "operations": [],
+  "matching_operation_paths": 0,
+  "crate_routes": [
+    {
+      "crate": "buoyant_kernel",
+      "role": "Protocol, schema, snapshot/scan and engine interfaces",
+      "representations": "Cargo alias delta_kernel; fork commit and internal-api feature must remain explicit",
+      "tasks": "delta.kernel"
+    },
+    {
+      "crate": "buoyant_kernel_engine",
+      "role": "Default kernel execution and I/O support",
+      "representations": "Cargo alias delta_kernel_default_engine; distinguish engine primitives from high-level Delta operations",
+      "tasks": "delta.kernel"
+    },
+    {
+      "crate": "deltalake-core",
+      "role": "Table state, high-level operations, commits, Delta-aware DataFusion integration",
+      "representations": "Prefer public operation before custom log actions or internal plans",
+      "tasks": "delta.read"
+    }
+  ],
+  "profile": "content/profile.json",
+  "scope": "Ranked lexical/task/facet discovery, not a semantic completeness claim. Empty results do not prove absence.",
+  "more": "Use show <id or canonical/facade path>; full indexes and crate routes remain available."
+}

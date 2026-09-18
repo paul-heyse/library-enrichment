@@ -1,0 +1,1630 @@
+[
+  {
+    "id": "ee1b051e6137f40583414068",
+    "path": "datafusion_pruning::pruning_predicate::PruningPredicate",
+    "name": "PruningPredicate",
+    "owner": null,
+    "crate": "datafusion-pruning",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct PruningPredicate",
+    "docs": "Used to prove that arbitrary predicates (boolean expression) can not\npossibly evaluate to `true` given information about a column provided by\n[`PruningStatistics`].\n\n# Introduction\n\n`PruningPredicate` analyzes filter expressions using statistics such as\nmin/max values and null counts, attempting to prove a \"container\" (e.g.\nParquet Row Group) can be skipped without reading the actual data,\npotentially leading to significant performance improvements.\n\nFor example, `PruningPredicate`s are used to prune Parquet Row Groups based\non the min/max values found in the Parquet metadata. If the\n`PruningPredicate` can prove that the filter can never evaluate to `true`\nfor any row in the Row Group, the entire Row Group is skipped during query\nexecution.\n\nThe `PruningPredicate` API is general, and can be used for pruning other\ntypes of containers (e.g. files) based on statistics that may be known from\nexternal catalogs (e.g. Delta Lake) or other sources. How this works is a\nsubtle topic.  See the Background and Implementation section for details.\n\n`PruningPredicate` supports:\n\n1. Arbitrary expressions (including user defined functions)\n\n2. Vectorized evaluation (provide more than one set of statistics at a time)\n   so it is suitable for pruning 1000s of containers.\n\n3. Any source of information that implements the [`PruningStatistics`] trait\n   (not just Parquet metadata).\n\n# Example\n\nSee the [`pruning.rs` example in the `datafusion-examples`] for a complete\nexample of how to use `PruningPredicate` to prune files based on min/max\nvalues.\n\n[`pruning.rs` example in the `datafusion-examples`]: https://github.com/apache/datafusion/blob/main/datafusion-examples/examples/query_planning/pruning.rs\n\nGiven an expression like `x = 5` and statistics for 3 containers (Row\nGroups, files, etc) `A`, `B`, and `C`:\n\n```text\n  A: {x_min = 0, x_max = 4}\n  B: {x_min = 2, x_max = 10}\n  C: {x_min = 5, x_max = 8}\n```\n\n`PruningPredicate` will conclude that the rows in container `A` can never\nbe true (as the maximum value is only `4`), so it can be pruned:\n\n```text\nA: false (no rows could possibly match x = 5)\nB: true  (rows might match x = 5)\nC: true  (rows might match x = 5)\n```\n\nSee [`PruningPredicateBuilder`] and [`PruningPredicate::prune`] for more information.\n\n# Background\n\n## Boolean Tri-state logic\n\nTo understand the details of the rest of this documentation, it is important\nto understand how the tri-state boolean logic in SQL works. As this is\nsomewhat esoteric, we review it here.\n\nSQL has a notion of `NULL` that represents the value is `“unknown”` and this\nuncertainty propagates through expressions. SQL `NULL` behaves very\ndifferently than the `NULL` in most other languages where it is a special,\nsentinel value (e.g. `0` in `C/C++`). While representing uncertainty with\n`NULL` is powerful and elegant, SQL `NULL`s are often deeply confusing when\nfirst encountered as they behave differently than most programmers may\nexpect.\n\nIn most other programming languages,\n* `a == NULL` evaluates to `true` if `a` also had the value `NULL`\n* `a == NULL` evaluates to `false` if `a` has any other value\n\nHowever, in SQL `a = NULL` **always** evaluates to `NULL` (never `true` or\n`false`):\n\nExpression    | Result\n------------- | ---------\n`1 = NULL`    | `NULL`\n`NULL = NULL` | `NULL`\n\nAlso important is how `AND` and `OR` works with tri-state boolean logic as\n(perhaps counterintuitively) the result is **not** always NULL. While\nconsistent with the notion of `NULL` representing “unknown”, this is again,\noften deeply confusing 🤯 when first encountered.\n\nExpression       | Result    | Intuition\n---------------  | --------- | -----------\n`NULL AND true`  |   `NULL`  | The `NULL` stands for “unknown” and if it were `true` or `false` the overall expression value could change\n`NULL AND false` |  `false`  | If the `NULL` was either `true` or `false` the overall expression is still `false`\n`NULL AND NULL`  | `NULL`    |\n\nExpression      | Result    | Intuition\n--------------- | --------- | ----------\n`NULL OR true`  | `true`    |  If the `NULL` was either `true` or `false` the overall expression is still `true`\n`NULL OR false` | `NULL`    |  The `NULL` stands for “unknown” and if it were `true` or `false` the overall expression value could change\n`NULL OR NULL`  |  `NULL`   |\n\n## SQL Filter Semantics\n\nThe SQL `WHERE` clause has a boolean expression, often called a filter or\npredicate. The semantics of this predicate are that the query evaluates the\npredicate for each row in the input tables and:\n\n* Rows that evaluate to `true` are returned in the query results\n\n* Rows that evaluate to `false` are not returned (“filtered out” or “pruned” or “skipped”).\n\n* Rows that evaluate to `NULL` are **NOT** returned (also “filtered out”).\n  Note: *this treatment of `NULL` is **DIFFERENT** than how `NULL` is treated\n  in the rewritten predicate described below.*\n\n# `PruningPredicate` Implementation\n\nArmed with the information in the Background section, we can now understand\nhow the `PruningPredicate` logic works.\n\n## Interface\n\n**Inputs**\n1. An input schema describing what columns exist\n\n2. A predicate (expression that evaluates to a boolean)\n\n3. [`PruningStatistics`] that provides information about columns in that\n   schema, for multiple “containers”. For each column in each container, it\n   provides optional information on contained values, min_values, max_values,\n   null_counts counts, and row_counts counts.\n\n**Outputs**:\nA (non null) boolean value for each container:\n* `true`: There MAY be rows that match the predicate\n\n* `false`: There are no rows that could possibly match the predicate (the\n  predicate can never possibly be true). The container can be pruned (skipped)\n  entirely.\n\nWhile `PruningPredicate` will never return a `NULL` value, the\nrewritten predicate (as returned by `build_predicate_expression` and used internally\nby `PruningPredicate`) may evaluate to `NULL` when some of the min/max values\nor null / row counts are not known.\n\nIn order to be correct, `PruningPredicate` must return false\n**only** if it can determine that for all rows in the container, the\npredicate could never evaluate to `true` (always evaluates to either `NULL`\nor `false`).\n\n## Contains Analysis and Min/Max Rewrite\n\n`PruningPredicate` works by first analyzing the predicate to see what\n[`LiteralGuarantee`] must hold for the predicate to be true.\n\nThen, the `PruningPredicate` rewrites the original predicate into an\nexpression that references the min/max values of each column in the original\npredicate.\n\nWhen the min/max values are actually substituted in to this expression and\nevaluated, the result means\n\n* `true`: there MAY be rows that pass the predicate, **KEEPS** the container\n\n* `NULL`: there MAY be rows that pass the predicate, **KEEPS** the container\n  Note that rewritten predicate can evaluate to NULL when some of\n  the min/max values are not known. *Note that this is different than\n  the SQL filter semantics where `NULL` means the row is filtered\n  out.*\n\n* `false`: there are no rows that could possibly match the predicate,\n  **PRUNES** the container\n\nFor example, given a column `x`, the `x_min`, `x_max`, `x_null_count`, and\n`x_row_count` represent the minimum and maximum values, the null count of\ncolumn `x`, and the row count of column `x`, provided by the `PruningStatistics`.\n`x_null_count` and `x_row_count` are used to handle the case where the column `x`\nis known to be all `NULL`s. Note this is different from knowing nothing about\nthe column `x`, which confusingly is encoded by returning `NULL` for the min/max\nvalues from [`PruningStatistics::max_values`] and [`PruningStatistics::min_values`].\n\nHere are some examples of the rewritten predicates:\n\nOriginal Predicate | Rewritten Predicate\n------------------ | --------------------\n`x = 5` | `x_null_count != x_row_count AND (x_min <= 5 AND 5 <= x_max)`\n`x < 5` | `x_null_count != x_row_count AND (x_min < 5)`\n`x = 5 AND y = 10` | `x_null_count != x_row_count AND (x_min <= 5 AND 5 <= x_max) AND y_null_count != y_row_count (y_min <= 10 AND 10 <= y_max)`\n`x IS NULL`  | `x_null_count > 0`\n`x IS NOT NULL`  | `x_null_count != row_count`\n`CAST(x as int) = 5` | `x_null_count != x_row_count (CAST(x_min as int) <= 5 AND 5 <= CAST(x_max as int))`\n\n## Predicate Evaluation\nThe PruningPredicate works in two passes\n\n**First pass**:  For each `LiteralGuarantee` calls\n[`PruningStatistics::contained`] and rules out containers where the\nLiteralGuarantees are not satisfied\n\n**Second Pass**: Evaluates the rewritten expression using the\nmin/max/null_counts/row_counts values for each column for each container. For any\ncontainer that this expression evaluates to `false`, it rules out those\ncontainers.\n\n\n### Example 1\n\nGiven the predicate, `x = 5 AND y = 10`, the rewritten predicate would look like:\n\n```sql\nx_null_count != x_row_count AND (x_min <= 5 AND 5 <= x_max)\nAND\ny_null_count != y_row_count AND (y_min <= 10 AND 10 <= y_max)\n```\n\nIf we know that for a given container, `x` is between `1 and 100` and we know that\n`y` is between `4` and `7`, we know nothing about the null count and row count of\n`x` and `y`, the input statistics might look like:\n\nColumn   | Value\n-------- | -----\n`x_min`  | `1`\n`x_max`  | `100`\n`x_null_count` | `null`\n`x_row_count`  | `null`\n`y_min`  | `4`\n`y_max`  | `7`\n`y_null_count` | `null`\n`y_row_count`  | `null`\n\nWhen these statistics values are substituted in to the rewritten predicate and\nsimplified, the result is `false`:\n\n* `null != null AND (1 <= 5 AND 5 <= 100) AND null != null AND (4 <= 10 AND 10 <= 7)`\n* `null = null` is `null` which is not true, so the AND moves on to the next clause\n* `null and (1 <= 5 AND 5 <= 100) AND null AND (4 <= 10 AND 10 <= 7)`\n* evaluating the clauses further we get:\n* `null and true and null and false`\n* `null and false`\n* `false`\n\nReturning `false` means the container can be pruned, which matches the\nintuition that  `x = 5 AND y = 10` can’t be true for any row if all values of `y`\nare `7` or less.\n\nNote that if we had ended up with `null AND true AND null AND true` the result\nwould have been `null`.\n`null` is treated the same as`true`, because we can't prove that the predicate is `false.`\n\nIf, for some other container, we knew `y` was between the values `4` and\n`15`, then the rewritten predicate evaluates to `true` (verifying this is\nleft as an exercise to the reader -- are you still here?), and the container\n**could not** be pruned. The intuition is that there may be rows where the\npredicate *might* evaluate to `true`, and the only way to find out is to do\nmore analysis, for example by actually reading the data and evaluating the\npredicate row by row.\n\n### Example 2\n\nGiven the same predicate, `x = 5 AND y = 10`, the rewritten predicate would\nlook like the same as example 1:\n\n```sql\nx_null_count != x_row_count AND (x_min <= 5 AND 5 <= x_max)\nAND\ny_null_count != y_row_count AND (y_min <= 10 AND 10 <= y_max)\n```\n\nIf we know that for another given container, `x_min` is NULL and `x_max` is\nNULL (the min/max values are unknown), `x_null_count` is `100` and `x_row_count`\n is `100`; we know that `y` is between `4` and `7`, but we know nothing about\nthe null count and row count of `y`. The input statistics might look like:\n\nColumn   | Value\n-------- | -----\n`x_min`  | `null`\n`x_max`  | `null`\n`x_null_count` | `100`\n`x_row_count`  | `100`\n`y_min`  | `4`\n`y_max`  | `7`\n`y_null_count` | `null`\n`y_row_count`  | `null`\n\nWhen these statistics values are substituted in to the rewritten predicate and\nsimplified, the result is `false`:\n\n* `100 != 100 AND (null <= 5 AND 5 <= null) AND null = null AND (4 <= 10 AND 10 <= 7)`\n* `false AND null AND null AND false`\n* `false AND false`\n* `false`\n\nReturning `false` means the container can be pruned, which matches the\nintuition that  `x = 5 AND y = 10` can’t be true because all values in `x`\nare known to be NULL.\n\n# Related Work\n\n[`PruningPredicate`] implements the type of min/max pruning described in\nSection `3.3.3` of the [`Snowflake SIGMOD Paper`]. The technique is\ndescribed by various research such as [small materialized aggregates], [zone\nmaps], and [data skipping].\n\n[`Snowflake SIGMOD Paper`]: https://dl.acm.org/doi/10.1145/2882903.2903741\n[small materialized aggregates]: https://www.vldb.org/conf/1998/p476.pdf\n[zone maps]: https://dl.acm.org/doi/10.1007/978-3-642-03730-6_10\n[data skipping]: https://dl.acm.org/doi/10.1145/2588555.2610515",
+    "span": {
+      "filename": "src/pruning_predicate.rs",
+      "begin": [
+        365,
+        1
+      ],
+      "end": [
+        381,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103,
+          105,
+          108,
+          109,
+          110,
+          111,
+          112,
+          116,
+          118,
+          119,
+          123,
+          126
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`PruningStatistics::contained`": 80,
+      "`PruningStatistics`": 69,
+      "`PruningPredicate`": 81,
+      "`PruningStatistics::min_values`": 79,
+      "`LiteralGuarantee`": 77,
+      "`PruningPredicateBuilder`": 75,
+      "`PruningStatistics::max_values`": 78,
+      "`PruningPredicate::prune`": 76
+    },
+    "link_paths": {
+      "`PruningStatistics::contained`": "datafusion_common::pruning::PruningStatistics::contained",
+      "`PruningStatistics`": "datafusion_common::pruning::PruningStatistics",
+      "`PruningPredicate`": "datafusion_pruning::pruning_predicate::PruningPredicate",
+      "`PruningStatistics::min_values`": "datafusion_common::pruning::PruningStatistics::min_values",
+      "`LiteralGuarantee`": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+      "`PruningPredicateBuilder`": "datafusion_pruning::pruning_predicate::PruningPredicateBuilder",
+      "`PruningStatistics::max_values`": "datafusion_common::pruning::PruningStatistics::max_values",
+      "`PruningPredicate::prune`": "datafusion_pruning::pruning_predicate::PruningPredicate::prune"
+    },
+    "artifact": {
+      "id": "e21e7ba95ccff49cb5d575f4a3e9e3a971c5a85297592ea5ec0eeef533718311",
+      "format_version": 61,
+      "item_id": "81",
+      "origin": "https://docs.rs/crate/datafusion-pruning/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.md",
+    "record_file": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.json",
+    "anchor": "op-ee1b051e6137f40583414068",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningPredicate",
+      "datafusion_pruning::PruningPredicate"
+    ],
+    "resolved_doc_links": {
+      "`PruningStatistics::contained`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-ce199de49dd127f0662b232f",
+      "`PruningStatistics`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-a18da0087d8b285319f91952",
+      "`PruningPredicate`": "../operations/datafusion_pruning.pruning_predicate.PruningPredicate.md#op-ee1b051e6137f40583414068",
+      "`PruningStatistics::min_values`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-17b86d88f7f1c17005006104",
+      "`LiteralGuarantee`": "../operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.md#op-c6447f3f77c11eaea6c2ddd0",
+      "`PruningPredicateBuilder`": "../operations/datafusion_pruning.pruning_predicate.PruningPredicateBuilder.md#op-ea310a6e9152a39747b3a0e2",
+      "`PruningStatistics::max_values`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-df936253c52bf6f48b06ff68",
+      "`PruningPredicate::prune`": "../operations/datafusion_pruning.pruning_predicate.PruningPredicate.md#op-1b094f28669e1ee1d645e711"
+    }
+  },
+  {
+    "id": "4b267a027eda6e0ca96ed469",
+    "path": "datafusion_pruning::pruning_predicate::PruningPredicate::always_true",
+    "name": "always_true",
+    "owner": "datafusion_pruning::pruning_predicate::PruningPredicate",
+    "crate": "datafusion-pruning",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn always_true(&self) -> bool",
+    "docs": "Returns true if this pruning predicate can not prune anything.\n\nThis happens if the predicate is a literal `true`  and\nliteral_guarantees is empty.\n\nThis can happen when a predicate is simplified to a constant `true`",
+    "span": {
+      "filename": "src/pruning_predicate.rs",
+      "begin": [
+        700,
+        5
+      ],
+      "end": [
+        702,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PruningPredicate",
+          "id": "datafusion_pruning::pruning_predicate::PruningPredicate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/pruning_predicate.rs",
+        "begin": [
+          566,
+          1
+        ],
+        "end": [
+          725,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e21e7ba95ccff49cb5d575f4a3e9e3a971c5a85297592ea5ec0eeef533718311",
+      "format_version": 61,
+      "item_id": "89",
+      "origin": "https://docs.rs/crate/datafusion-pruning/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.md",
+    "record_file": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.json",
+    "anchor": "op-4b267a027eda6e0ca96ed469",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningPredicate::always_true",
+      "datafusion_pruning::PruningPredicate::always_true"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8f356fa64b4764bca4263c7d",
+    "path": "datafusion_pruning::pruning_predicate::PruningPredicate::clone",
+    "name": "clone",
+    "owner": "datafusion_pruning::pruning_predicate::PruningPredicate",
+    "crate": "datafusion-pruning",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> PruningPredicate",
+    "docs": "",
+    "span": {
+      "filename": "src/pruning_predicate.rs",
+      "begin": [
+        364,
+        17
+      ],
+      "end": [
+        364,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "PruningPredicate",
+              "id": 81,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "81": "datafusion_pruning::pruning_predicate::PruningPredicate"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PruningPredicate",
+          "id": "datafusion_pruning::pruning_predicate::PruningPredicate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/pruning_predicate.rs",
+        "begin": [
+          364,
+          17
+        ],
+        "end": [
+          364,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e21e7ba95ccff49cb5d575f4a3e9e3a971c5a85297592ea5ec0eeef533718311",
+      "format_version": 61,
+      "item_id": "125",
+      "origin": "https://docs.rs/crate/datafusion-pruning/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.md",
+    "record_file": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.json",
+    "anchor": "op-8f356fa64b4764bca4263c7d",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningPredicate::clone",
+      "datafusion_pruning::PruningPredicate::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3b0bb2e5a536d9b489b99ff9",
+    "path": "datafusion_pruning::pruning_predicate::PruningPredicate::fmt",
+    "name": "fmt",
+    "owner": "datafusion_pruning::pruning_predicate::PruningPredicate",
+    "crate": "datafusion-pruning",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/pruning_predicate.rs",
+      "begin": [
+        364,
+        10
+      ],
+      "end": [
+        364,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 121,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 122,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "121": "core::fmt::Formatter",
+      "122": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PruningPredicate",
+          "id": "datafusion_pruning::pruning_predicate::PruningPredicate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/pruning_predicate.rs",
+        "begin": [
+          364,
+          10
+        ],
+        "end": [
+          364,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e21e7ba95ccff49cb5d575f4a3e9e3a971c5a85297592ea5ec0eeef533718311",
+      "format_version": 61,
+      "item_id": "120",
+      "origin": "https://docs.rs/crate/datafusion-pruning/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.md",
+    "record_file": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.json",
+    "anchor": "op-3b0bb2e5a536d9b489b99ff9",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningPredicate::fmt",
+      "datafusion_pruning::PruningPredicate::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "262d8e465556707d54fd2d68",
+    "path": "datafusion_pruning::pruning_predicate::PruningPredicate::literal_columns",
+    "name": "literal_columns",
+    "owner": "datafusion_pruning::pruning_predicate::PruningPredicate",
+    "crate": "datafusion-pruning",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn literal_columns(&self) -> Vec<String>",
+    "docs": "Names of the columns that are known to be / not be in a set\nof literals (constants). These are the columns the that may be passed to\n[`PruningStatistics::contained`] during pruning.\n\nThis is useful to avoid fetching statistics for columns that will not be\nused in the predicate. For example, it can be used to avoid reading\nunneeded bloom filters (a non trivial operation).",
+    "span": {
+      "filename": "src/pruning_predicate.rs",
+      "begin": [
+        715,
+        5
+      ],
+      "end": [
+        724,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 11,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "String",
+                          "id": 93,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "11": "alloc::vec::Vec",
+      "93": "alloc::string::String"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PruningPredicate",
+          "id": "datafusion_pruning::pruning_predicate::PruningPredicate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/pruning_predicate.rs",
+        "begin": [
+          566,
+          1
+        ],
+        "end": [
+          725,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`PruningStatistics::contained`": 80
+    },
+    "link_paths": {
+      "`PruningStatistics::contained`": "datafusion_common::pruning::PruningStatistics::contained"
+    },
+    "artifact": {
+      "id": "e21e7ba95ccff49cb5d575f4a3e9e3a971c5a85297592ea5ec0eeef533718311",
+      "format_version": 61,
+      "item_id": "92",
+      "origin": "https://docs.rs/crate/datafusion-pruning/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.md",
+    "record_file": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.json",
+    "anchor": "op-262d8e465556707d54fd2d68",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningPredicate::literal_columns",
+      "datafusion_pruning::PruningPredicate::literal_columns"
+    ],
+    "resolved_doc_links": {
+      "`PruningStatistics::contained`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-ce199de49dd127f0662b232f"
+    }
+  },
+  {
+    "id": "7d3f191aacc2cdd1e033db04",
+    "path": "datafusion_pruning::pruning_predicate::PruningPredicate::literal_guarantees",
+    "name": "literal_guarantees",
+    "owner": "datafusion_pruning::pruning_predicate::PruningPredicate",
+    "crate": "datafusion-pruning",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn literal_guarantees(&self) -> &[LiteralGuarantee]",
+    "docs": "Returns a reference to the literal guarantees\n\nNote that **All** `LiteralGuarantee`s must be satisfied for the\nexpression to possibly be `true`. If any is not satisfied, the\nexpression is guaranteed to be `null` or `false`.",
+    "span": {
+      "filename": "src/pruning_predicate.rs",
+      "begin": [
+        690,
+        5
+      ],
+      "end": [
+        692,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "LiteralGuarantee",
+                    "id": 77,
+                    "args": null
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "77": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PruningPredicate",
+          "id": "datafusion_pruning::pruning_predicate::PruningPredicate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/pruning_predicate.rs",
+        "begin": [
+          566,
+          1
+        ],
+        "end": [
+          725,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e21e7ba95ccff49cb5d575f4a3e9e3a971c5a85297592ea5ec0eeef533718311",
+      "format_version": 61,
+      "item_id": "88",
+      "origin": "https://docs.rs/crate/datafusion-pruning/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.md",
+    "record_file": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.json",
+    "anchor": "op-7d3f191aacc2cdd1e033db04",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningPredicate::literal_guarantees",
+      "datafusion_pruning::PruningPredicate::literal_guarantees"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4cb5b1bed1d81fa909bd1ac0",
+    "path": "datafusion_pruning::pruning_predicate::PruningPredicate::orig_expr",
+    "name": "orig_expr",
+    "owner": "datafusion_pruning::pruning_predicate::PruningPredicate",
+    "crate": "datafusion-pruning",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn orig_expr(&self) -> &Arc<dyn PhysicalExpr>",
+    "docs": "Returns a reference to the physical expr used to construct this pruning predicate",
+    "span": {
+      "filename": "src/pruning_predicate.rs",
+      "begin": [
+        676,
+        5
+      ],
+      "end": [
+        678,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 8,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "PhysicalExpr",
+                                    "id": 9,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8": "alloc::sync::Arc",
+      "9": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PruningPredicate",
+          "id": "datafusion_pruning::pruning_predicate::PruningPredicate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/pruning_predicate.rs",
+        "begin": [
+          566,
+          1
+        ],
+        "end": [
+          725,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e21e7ba95ccff49cb5d575f4a3e9e3a971c5a85297592ea5ec0eeef533718311",
+      "format_version": 61,
+      "item_id": "86",
+      "origin": "https://docs.rs/crate/datafusion-pruning/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.md",
+    "record_file": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.json",
+    "anchor": "op-4cb5b1bed1d81fa909bd1ac0",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningPredicate::orig_expr",
+      "datafusion_pruning::PruningPredicate::orig_expr"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3da6f0ef9781fabfb61b8edf",
+    "path": "datafusion_pruning::pruning_predicate::PruningPredicate::predicate_expr",
+    "name": "predicate_expr",
+    "owner": "datafusion_pruning::pruning_predicate::PruningPredicate",
+    "crate": "datafusion-pruning",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn predicate_expr(&self) -> &Arc<dyn PhysicalExpr>",
+    "docs": "Returns a reference to the predicate expr",
+    "span": {
+      "filename": "src/pruning_predicate.rs",
+      "begin": [
+        681,
+        5
+      ],
+      "end": [
+        683,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 8,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "PhysicalExpr",
+                                    "id": 9,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8": "alloc::sync::Arc",
+      "9": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PruningPredicate",
+          "id": "datafusion_pruning::pruning_predicate::PruningPredicate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/pruning_predicate.rs",
+        "begin": [
+          566,
+          1
+        ],
+        "end": [
+          725,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e21e7ba95ccff49cb5d575f4a3e9e3a971c5a85297592ea5ec0eeef533718311",
+      "format_version": 61,
+      "item_id": "87",
+      "origin": "https://docs.rs/crate/datafusion-pruning/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.md",
+    "record_file": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.json",
+    "anchor": "op-3da6f0ef9781fabfb61b8edf",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningPredicate::predicate_expr",
+      "datafusion_pruning::PruningPredicate::predicate_expr"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1b094f28669e1ee1d645e711",
+    "path": "datafusion_pruning::pruning_predicate::PruningPredicate::prune",
+    "name": "prune",
+    "owner": "datafusion_pruning::pruning_predicate::PruningPredicate",
+    "crate": "datafusion-pruning",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn prune<S: PruningStatistics + ?Sized>(&self, statistics: &S) -> Result<Vec<bool>>",
+    "docs": "For each set of statistics, evaluates the pruning predicate\nand returns a `bool` with the following meaning for a\nall rows whose values match the statistics:\n\n`true`: There MAY be rows that match the predicate\n\n`false`: There are no rows that could possibly match the predicate\n\nNote: the predicate passed to `prune` should already be simplified as\nmuch as possible (e.g. this pass doesn't handle some\nexpressions like `b = false`, but it does handle the\nsimplified version `b`. See [`ExprSimplifier`] to simplify expressions.\n\n[`ExprSimplifier`]: https://docs.rs/datafusion/latest/datafusion/optimizer/simplify_expressions/struct.ExprSimplifier.html",
+    "span": {
+      "filename": "src/pruning_predicate.rs",
+      "begin": [
+        618,
+        5
+      ],
+      "end": [
+        668,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "statistics",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 15,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 11,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "primitive": "bool"
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "S",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "PruningStatistics",
+                          "id": 69,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    },
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Sized",
+                          "id": 37,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "maybe"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "15": "datafusion_common::error::Result",
+      "11": "alloc::vec::Vec",
+      "69": "datafusion_common::pruning::PruningStatistics",
+      "37": "core::marker::Sized"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PruningPredicate",
+          "id": "datafusion_pruning::pruning_predicate::PruningPredicate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/pruning_predicate.rs",
+        "begin": [
+          566,
+          1
+        ],
+        "end": [
+          725,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e21e7ba95ccff49cb5d575f4a3e9e3a971c5a85297592ea5ec0eeef533718311",
+      "format_version": 61,
+      "item_id": "76",
+      "origin": "https://docs.rs/crate/datafusion-pruning/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.md",
+    "record_file": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.json",
+    "anchor": "op-1b094f28669e1ee1d645e711",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningPredicate::prune",
+      "datafusion_pruning::PruningPredicate::prune"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b9edce1fce065f51938867d6",
+    "path": "datafusion_pruning::pruning_predicate::PruningPredicate::required_columns",
+    "name": "required_columns",
+    "owner": "datafusion_pruning::pruning_predicate::PruningPredicate",
+    "crate": "datafusion-pruning",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn required_columns(&self) -> &RequiredColumns",
+    "docs": "",
+    "span": {
+      "filename": "src/pruning_predicate.rs",
+      "begin": [
+        704,
+        5
+      ],
+      "end": [
+        706,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "RequiredColumns",
+                  "id": 91,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "91": "datafusion_pruning::pruning_predicate::RequiredColumns"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PruningPredicate",
+          "id": "datafusion_pruning::pruning_predicate::PruningPredicate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/pruning_predicate.rs",
+        "begin": [
+          566,
+          1
+        ],
+        "end": [
+          725,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e21e7ba95ccff49cb5d575f4a3e9e3a971c5a85297592ea5ec0eeef533718311",
+      "format_version": 61,
+      "item_id": "90",
+      "origin": "https://docs.rs/crate/datafusion-pruning/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.md",
+    "record_file": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.json",
+    "anchor": "op-b9edce1fce065f51938867d6",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningPredicate::required_columns",
+      "datafusion_pruning::PruningPredicate::required_columns"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6dccad808e2a48fc212c3f3a",
+    "path": "datafusion_pruning::pruning_predicate::PruningPredicate::schema",
+    "name": "schema",
+    "owner": "datafusion_pruning::pruning_predicate::PruningPredicate",
+    "crate": "datafusion-pruning",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn schema(&self) -> &SchemaRef",
+    "docs": "Return a reference to the input schema",
+    "span": {
+      "filename": "src/pruning_predicate.rs",
+      "begin": [
+        671,
+        5
+      ],
+      "end": [
+        673,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 10,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PruningPredicate",
+          "id": "datafusion_pruning::pruning_predicate::PruningPredicate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/pruning_predicate.rs",
+        "begin": [
+          566,
+          1
+        ],
+        "end": [
+          725,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e21e7ba95ccff49cb5d575f4a3e9e3a971c5a85297592ea5ec0eeef533718311",
+      "format_version": 61,
+      "item_id": "85",
+      "origin": "https://docs.rs/crate/datafusion-pruning/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.md",
+    "record_file": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.json",
+    "anchor": "op-6dccad808e2a48fc212c3f3a",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningPredicate::schema",
+      "datafusion_pruning::PruningPredicate::schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "12f49917988a96f8bac6f0d4",
+    "path": "datafusion_pruning::pruning_predicate::PruningPredicate::try_new",
+    "name": "try_new",
+    "owner": "datafusion_pruning::pruning_predicate::PruningPredicate",
+    "crate": "datafusion-pruning",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_new(expr: Arc<dyn PhysicalExpr>, schema: SchemaRef) -> Result<Self>",
+    "docs": "Try to create a new instance of [`PruningPredicate`]\n\nThis will translate the provided `expr` filter expression into\na *pruning predicate*.\n\nA pruning predicate is one that has been rewritten in terms of\nthe min and max values of column references and that evaluates\nto FALSE if the filter predicate would evaluate FALSE *for\nevery row* whose values fell within the min / max ranges (aka\ncould be pruned).\n\nThe pruning predicate evaluates to TRUE or NULL\nif the filter predicate *might* evaluate to TRUE for at least\none row whose values fell within the min/max ranges (in other\nwords they might pass the predicate)\n\nFor example, the filter expression `(column / 2) = 4` becomes\nthe pruning predicate\n`(column_min / 2) <= 4 && 4 <= (column_max / 2))`\n\nSee the struct level documentation on [`PruningPredicate`] for more\ndetails.\n\nNote that `PruningPredicate` does not attempt to normalize or simplify\nthe input expression unless calling [`snapshot_physical_expr_opt`]\nreturns a new expression.\nIt is recommended that you pass the expressions through [`PhysicalExprSimplifier`]\nbefore calling this method to make sure the expressions can be used for pruning.\n\nUse [`PruningPredicateBuilder`] to construct new pruning predicates.",
+    "span": {
+      "filename": "src/pruning_predicate.rs",
+      "begin": [
+        598,
+        5
+      ],
+      "end": [
+        602,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": {
+      "since": "55.0.0",
+      "note": "Use PruningPredicateBuilder instead"
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "expr",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 8,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "PhysicalExpr",
+                                    "id": 9,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 10,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 15,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8": "alloc::sync::Arc",
+      "9": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "10": "arrow_schema::schema::SchemaRef",
+      "15": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PruningPredicate",
+          "id": "datafusion_pruning::pruning_predicate::PruningPredicate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/pruning_predicate.rs",
+        "begin": [
+          566,
+          1
+        ],
+        "end": [
+          725,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`PruningPredicate`": 81,
+      "`PruningPredicateBuilder`": 75,
+      "`snapshot_physical_expr_opt`": 82,
+      "`PhysicalExprSimplifier`": 83
+    },
+    "link_paths": {
+      "`PruningPredicate`": "datafusion_pruning::pruning_predicate::PruningPredicate",
+      "`PruningPredicateBuilder`": "datafusion_pruning::pruning_predicate::PruningPredicateBuilder",
+      "`snapshot_physical_expr_opt`": "datafusion_physical_expr_common::physical_expr::snapshot_physical_expr_opt",
+      "`PhysicalExprSimplifier`": "datafusion_physical_expr::simplifier::PhysicalExprSimplifier"
+    },
+    "artifact": {
+      "id": "e21e7ba95ccff49cb5d575f4a3e9e3a971c5a85297592ea5ec0eeef533718311",
+      "format_version": 61,
+      "item_id": "84",
+      "origin": "https://docs.rs/crate/datafusion-pruning/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.md",
+    "record_file": "operations/datafusion_pruning.pruning_predicate.PruningPredicate.json",
+    "anchor": "op-12f49917988a96f8bac6f0d4",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningPredicate::try_new",
+      "datafusion_pruning::PruningPredicate::try_new"
+    ],
+    "resolved_doc_links": {
+      "`PruningPredicate`": "../operations/datafusion_pruning.pruning_predicate.PruningPredicate.md#op-ee1b051e6137f40583414068",
+      "`PruningPredicateBuilder`": "../operations/datafusion_pruning.pruning_predicate.PruningPredicateBuilder.md#op-ea310a6e9152a39747b3a0e2",
+      "`snapshot_physical_expr_opt`": "../operations/datafusion_physical_expr_common.physical_expr.snapshot_physical_expr_opt.md#op-10930068c0622236b2eb4c6f",
+      "`PhysicalExprSimplifier`": "../operations/datafusion_physical_expr.simplifier.PhysicalExprSimplifier.md#op-7c319dda665b42503117f47d"
+    }
+  }
+]

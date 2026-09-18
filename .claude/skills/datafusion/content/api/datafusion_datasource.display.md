@@ -20,6 +20,9 @@ struct FileGroupDisplay<'a>
 fn fmt_as(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> FmtResult
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.display.FileGroupDisplay.md).
+
+
 A wrapper to customize partitioned group of files display
 
 Prints in the format:

@@ -65,6 +65,9 @@ fn supports_update_order_by(&self) -> bool
 fn supports_user_host_grantee(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.mysql.MySqlDialect.md).
+
+
 A [`Dialect`] for [MySQL](https://www.mysql.com/)
 
 ---

@@ -26,6 +26,9 @@ fn page_type(&self) -> PageType
 fn statistics(&self) -> Option<&Statistics>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.page.Page.md).
+
+
 Parquet Page definition.
 
 List of supported pages.
@@ -56,6 +59,9 @@ fn page_type(&self) -> PageType
 fn uncompressed_size(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.page.CompressedPage.md).
+
+
 Helper struct to represent pages with potentially compressed buffer (data page v1) or
 compressed and concatenated buffer (def levels + rep levels + compressed values for
 data page v2).
@@ -75,6 +81,9 @@ struct PageMetadata
 **Fields**: `num_rows`, `num_levels`, `is_dict`
 
 **Derives**: Clone
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.page.PageMetadata.md).
+
 
 Contains metadata for a page
 
@@ -98,6 +107,9 @@ struct PageWriteSpec
 fn new() -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.page.PageWriteSpec.md).
+
+
 Contains page write metrics.
 
 ---
@@ -113,6 +125,9 @@ trait PageIterator: Iterator<Item = errors::Result<Box<dyn PageReader>>> + Send
 **Implementors** (1)
 
 - `parquet::file::reader::FilePageIterator`
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.page.PageIterator.md).
+
 
 An iterator over pages of one specific column in a parquet file.
 
@@ -139,6 +154,9 @@ fn peek_next_page(&mut self) -> Result<Option<PageMetadata>>
 fn skip_next_page(&mut self) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.page.PageReader.md).
+
+
 API for reading pages from a column chunk.
 This offers a iterator like API to get the next page.
 
@@ -162,6 +180,9 @@ trait PageWriter: Send
 fn close(&mut self) -> Result<()>
 fn write_page(&mut self, page: CompressedPage) -> Result<PageWriteSpec>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.page.PageWriter.md).
+
 
 API for writing pages in a column chunk.
 

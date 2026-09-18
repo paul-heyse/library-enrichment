@@ -1,0 +1,3602 @@
+[
+  {
+    "id": "829376217ecac1017e254b5f",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "name": "FixedSizeBinaryDictionaryBuilder",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct FixedSizeBinaryDictionaryBuilder<K> where K: ArrowDictionaryKeyType",
+    "docs": "Builder for [`DictionaryArray`] of [`FixedSizeBinaryArray`]\n\nThe output array has a dictionary of unique, fixed-size binary values. The\nbuilder handles deduplication.\n\n# Example\n```\n# use arrow_array::builder::{FixedSizeBinaryDictionaryBuilder};\n# use arrow_array::array::{Array, FixedSizeBinaryArray};\n# use arrow_array::DictionaryArray;\n# use arrow_array::types::Int8Type;\n// Build 3 byte FixedBinaryArrays\nlet byte_width = 3;\nlet mut builder = FixedSizeBinaryDictionaryBuilder::<Int8Type>::new(3);\nbuilder.append(\"abc\").unwrap();\nbuilder.append_null();\nbuilder.append(b\"def\").unwrap();\nbuilder.append(b\"def\").unwrap(); // duplicate value\n// Result is a Dictionary Array\nlet array = builder.finish();\nlet dict_array = array.as_any().downcast_ref::<DictionaryArray<Int8Type>>().unwrap();\n// The array represents \"abc\", null, \"def\", \"def\"\nassert_eq!(array.keys().len(), 4);\n// but there are only 2 unique values\nassert_eq!(array.values().len(), 2);\nlet values = dict_array.values().as_any().downcast_ref::<FixedSizeBinaryArray>().unwrap();\nassert_eq!(values.value(0), \"abc\".as_bytes());\nassert_eq!(values.value(1), \"def\".as_bytes());\n```\n\n[`FixedSizeBinaryArray`]: crate::FixedSizeBinaryArray",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        61,
+        1
+      ],
+      "end": [
+        71,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "K",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "K"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowDictionaryKeyType",
+                        "id": 298,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "impls": [
+          2481,
+          2490,
+          2491,
+          2492,
+          2493,
+          2494,
+          2495,
+          2496,
+          2497,
+          2498,
+          2499,
+          2500,
+          2501,
+          2502,
+          2503,
+          2504,
+          2505,
+          2507,
+          2515
+        ]
+      }
+    },
+    "type_references": {
+      "298": "arrow_array::types::ArrowDictionaryKeyType"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::FixedSizeBinaryArray": 444,
+      "`DictionaryArray`": 277
+    },
+    "link_paths": {
+      "crate::FixedSizeBinaryArray": "arrow_array::array::fixed_size_binary_array::FixedSizeBinaryArray",
+      "`DictionaryArray`": "arrow_array::array::dictionary_array::DictionaryArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2476",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-829376217ecac1017e254b5f",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::FixedSizeBinaryArray": "../operations/arrow_array.array.fixed_size_binary_array.FixedSizeBinaryArray.md#op-9ede10c8076f692a67198c02",
+      "`DictionaryArray`": "../operations/arrow_array.array.dictionary_array.DictionaryArray.md#op-761ab0c11d727f026bdc2e47"
+    }
+  },
+  {
+    "id": "2345395e310d72721c2b9ad9",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::append",
+    "name": "append",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append(&mut self, value: impl AsRef<[u8]>) -> Result<K::Native, ArrowError>",
+    "docs": "Append a value to the array. Return an existing index\nif already present in the values array or a new index if the\nvalue is appended to the values array.\n\nReturns an error if the new index would overflow the key type.",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        245,
+        5
+      ],
+      "end": [
+        257,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsRef",
+                        "id": 190,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "slice": {
+                                    "primitive": "u8"
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Native",
+                          "args": null,
+                          "self_type": {
+                            "generic": "K"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 307,
+                            "args": null
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl AsRef<[u8]>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "AsRef",
+                          "id": 190,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "slice": {
+                                      "primitive": "u8"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "190": "core::convert::AsRef",
+      "45": "core::result::Result",
+      "307": "arrow_array::types::ArrowPrimitiveType",
+      "186": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          210,
+          1
+        ],
+        "end": [
+          375,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2482",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-2345395e310d72721c2b9ad9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ce8c03b9fd52e5a4c9844edf",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::append_n",
+    "name": "append_n",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_n(&mut self, value: impl AsRef<[u8]>, count: usize) -> Result<K::Native, ArrowError>",
+    "docs": "Append a value multiple times to the array.\nThis is the same as [`Self::append`] but allows to append the same value multiple times without doing multiple lookups.\n\nReturns an error if the new index would overflow the key type.",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        263,
+        5
+      ],
+      "end": [
+        279,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsRef",
+                        "id": 190,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "slice": {
+                                    "primitive": "u8"
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ],
+            [
+              "count",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Native",
+                          "args": null,
+                          "self_type": {
+                            "generic": "K"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 307,
+                            "args": null
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl AsRef<[u8]>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "AsRef",
+                          "id": 190,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "slice": {
+                                      "primitive": "u8"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "190": "core::convert::AsRef",
+      "45": "core::result::Result",
+      "307": "arrow_array::types::ArrowPrimitiveType",
+      "186": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          210,
+          1
+        ],
+        "end": [
+          375,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::append`": 2482
+    },
+    "link_paths": {
+      "`Self::append`": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::append"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2483",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-ce8c03b9fd52e5a4c9844edf",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::append`": "../operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md#op-2345395e310d72721c2b9ad9"
+    }
+  },
+  {
+    "id": "efe8f2559b1132e0a28ae412",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::append_null",
+    "name": "append_null",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_null(&mut self)",
+    "docs": "Appends a null slot into the builder",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        283,
+        5
+      ],
+      "end": [
+        285,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          210,
+          1
+        ],
+        "end": [
+          375,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2484",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-efe8f2559b1132e0a28ae412",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "aedbce550bddaeebaee5565e",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::append_nulls",
+    "name": "append_nulls",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_nulls(&mut self, n: usize)",
+    "docs": "Appends `n` `null`s into the builder.",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        289,
+        5
+      ],
+      "end": [
+        291,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          210,
+          1
+        ],
+        "end": [
+          375,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2485",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-aedbce550bddaeebaee5565e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "81b5b2588bd897e91ca496f3",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::append_value",
+    "name": "append_value",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_value(&mut self, value: impl AsRef<[u8]>)",
+    "docs": "Infallibly append a value to this builder\n\n# Panics\n\nPanics if the resulting length of the dictionary values array would exceed `T::Native::MAX`",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        298,
+        5
+      ],
+      "end": [
+        300,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsRef",
+                        "id": 190,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "slice": {
+                                    "primitive": "u8"
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl AsRef<[u8]>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "AsRef",
+                          "id": 190,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "slice": {
+                                      "primitive": "u8"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "190": "core::convert::AsRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          210,
+          1
+        ],
+        "end": [
+          375,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2486",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-81b5b2588bd897e91ca496f3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5c0bad6ad6fa3a534197df5d",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::as_any",
+    "name": "as_any",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any(&self) -> &dyn Any",
+    "docs": "Returns the builder as an non-mutable `Any` reference.",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        176,
+        5
+      ],
+      "end": [
+        178,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          171,
+          1
+        ],
+        "end": [
+          208,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2508",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-5c0bad6ad6fa3a534197df5d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a5c0e1ee3eb9e5a7e28188eb",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::as_any_mut",
+    "name": "as_any_mut",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any_mut(&mut self) -> &mut dyn Any",
+    "docs": "Returns the builder as an mutable `Any` reference.",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        181,
+        5
+      ],
+      "end": [
+        183,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          171,
+          1
+        ],
+        "end": [
+          208,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2509",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-a5c0e1ee3eb9e5a7e28188eb",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3c620e91649f9e3991ffd4f4",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> DictionaryArray<K>",
+    "docs": "Builds the `DictionaryArray` and reset this builder.",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        303,
+        5
+      ],
+      "end": [
+        320,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DictionaryArray",
+              "id": 277,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "K"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "277": "arrow_array::array::dictionary_array::DictionaryArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          210,
+          1
+        ],
+        "end": [
+          375,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2487",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-3c620e91649f9e3991ffd4f4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fc4adada199b4ff349c5c089",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> ArrayRef",
+    "docs": "Builds the array and reset this builder.",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        196,
+        5
+      ],
+      "end": [
+        198,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          171,
+          1
+        ],
+        "end": [
+          208,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2512",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-fc4adada199b4ff349c5c089",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a76849def90de7ec493d271b",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> DictionaryArray<K>",
+    "docs": "Builds the `DictionaryArray` without resetting the builder.",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        323,
+        5
+      ],
+      "end": [
+        339,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DictionaryArray",
+              "id": 277,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "K"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "277": "arrow_array::array::dictionary_array::DictionaryArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          210,
+          1
+        ],
+        "end": [
+          375,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2488",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-a76849def90de7ec493d271b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b7111c98a2db0432f0cfbbc6",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> ArrayRef",
+    "docs": "Builds the array without resetting the builder.",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        201,
+        5
+      ],
+      "end": [
+        203,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          171,
+          1
+        ],
+        "end": [
+          208,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2513",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-b7111c98a2db0432f0cfbbc6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ac401ab8f1dafd09371b22f5",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::finish_preserve_values",
+    "name": "finish_preserve_values",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_preserve_values(&mut self) -> DictionaryArray<K>",
+    "docs": "Builds the `DictionaryArray` without resetting the values builder or\nthe internal de-duplication map.\n\nThe advantage of doing this is that the values will represent the entire\nset of what has been built so-far by this builder and ensures\nconsistency in the assignment of keys to values across multiple calls\nto `finish_preserve_values`. This enables ipc writers to efficiently\nemit delta dictionaries.\n\nThe downside to this is that building the record requires creating a\ncopy of the values, which can become slowly more expensive if the\ndictionary grows.\n\nAdditionally, if record batches from multiple different dictionary\nbuilders for the same column are fed into a single ipc writer, beware\nthat entire dictionaries are likely to be re-sent frequently even when\nthe majority of the values are not used by the current record batch.",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        358,
+        5
+      ],
+      "end": [
+        374,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DictionaryArray",
+              "id": 277,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "K"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "277": "arrow_array::array::dictionary_array::DictionaryArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          210,
+          1
+        ],
+        "end": [
+          375,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2489",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-ac401ab8f1dafd09371b22f5",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c348a1183a2449cbe10dabc2",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::finish_preserve_values",
+    "name": "finish_preserve_values",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_preserve_values(&mut self) -> ArrayRef",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        205,
+        5
+      ],
+      "end": [
+        207,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          171,
+          1
+        ],
+        "end": [
+          208,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2514",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-c348a1183a2449cbe10dabc2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6bc601382b013697c998a129",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::fmt",
+    "name": "fmt",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        60,
+        10
+      ],
+      "end": [
+        60,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 117,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 118,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "117": "core::fmt::Formatter",
+      "118": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "$crate::fmt::Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          60,
+          10
+        ],
+        "end": [
+          60,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2506",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-6bc601382b013697c998a129",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d9d7dfd605285679cf186e38",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::into_box_any",
+    "name": "into_box_any",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_box_any(Box<self>) -> Box<dyn Any>",
+    "docs": "Returns the boxed builder as a box of `Any`.",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        186,
+        5
+      ],
+      "end": [
+        188,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Box",
+                  "id": 1788,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Box",
+              "id": 1788,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "Any",
+                                "id": 106,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1788": "alloc::boxed::Box",
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          171,
+          1
+        ],
+        "end": [
+          208,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2510",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-d9d7dfd605285679cf186e38",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "29cec1e5a9d7ec64e373f4eb",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::len",
+    "name": "len",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Returns the number of array slots in the builder",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        191,
+        5
+      ],
+      "end": [
+        193,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          171,
+          1
+        ],
+        "end": [
+          208,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2511",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-29cec1e5a9d7ec64e373f4eb",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d7b1d12f1afc03a5844a2abb",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::new",
+    "name": "new",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(byte_width: i32) -> Self",
+    "docs": "Creates a new `FixedSizeBinaryDictionaryBuilder`",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        78,
+        5
+      ],
+      "end": [
+        88,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "byte_width",
+              {
+                "primitive": "i32"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          73,
+          1
+        ],
+        "end": [
+          169,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2477",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-d7b1d12f1afc03a5844a2abb",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c97d3de0a9a865ae85a59e21",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::try_new_from_builder",
+    "name": "try_new_from_builder",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_from_builder<K2>(source: FixedSizeBinaryDictionaryBuilder<K2>) -> Result<Self, ArrowError> where K::Native: NumCast, K2: ArrowDictionaryKeyType, K2::Native: NumCast",
+    "docs": "Creates a new `FixedSizeBinaryDictionaryBuilder` from the existing builder with the same\nkeys and values, but with a new data type for the keys.\n\n# Example\n```\n# use arrow_array::builder::FixedSizeBinaryDictionaryBuilder;\n# use arrow_array::types::{UInt8Type, UInt16Type, UInt64Type};\n# use arrow_array::UInt16Array;\n# use arrow_schema::ArrowError;\n\nlet mut u8_keyed_builder = FixedSizeBinaryDictionaryBuilder::<UInt8Type>::new(2);\n// appending too many values causes the dictionary to overflow\nfor i in 0..=255 {\n    u8_keyed_builder.append_value(vec![0, i]);\n}\nlet result = u8_keyed_builder.append(vec![1, 0]);\nassert!(matches!(result, Err(ArrowError::DictionaryKeyOverflowError{})));\n\n// we need to upgrade to a larger key type\nlet mut u16_keyed_builder = FixedSizeBinaryDictionaryBuilder::<UInt16Type>::try_new_from_builder(u8_keyed_builder).unwrap();\nlet dictionary_array = u16_keyed_builder.finish();\nlet keys = dictionary_array.keys();\n\nassert_eq!(keys, &UInt16Array::from_iter(0..256));\n```",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        130,
+        5
+      ],
+      "end": [
+        168,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "source",
+              {
+                "resolved_path": {
+                  "path": "FixedSizeBinaryDictionaryBuilder",
+                  "id": 2476,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "K2"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "K2",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "qualified_path": {
+                    "name": "Native",
+                    "args": null,
+                    "self_type": {
+                      "generic": "K"
+                    },
+                    "trait": {
+                      "path": "",
+                      "id": 307,
+                      "args": null
+                    }
+                  }
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "NumCast",
+                        "id": 2480,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "K2"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowDictionaryKeyType",
+                        "id": 298,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "qualified_path": {
+                    "name": "Native",
+                    "args": null,
+                    "self_type": {
+                      "generic": "K2"
+                    },
+                    "trait": {
+                      "path": "",
+                      "id": 307,
+                      "args": null
+                    }
+                  }
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "NumCast",
+                        "id": 2480,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2476": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+      "45": "core::result::Result",
+      "186": "arrow_schema::error::ArrowError",
+      "307": "arrow_array::types::ArrowPrimitiveType",
+      "2480": "num_traits::cast::NumCast",
+      "298": "arrow_array::types::ArrowDictionaryKeyType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          73,
+          1
+        ],
+        "end": [
+          169,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2479",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-c97d3de0a9a865ae85a59e21",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e451fad2e4c665adce47e701",
+    "path": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder::with_capacity",
+    "name": "with_capacity",
+    "owner": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_capacity(keys_capacity: usize, value_capacity: usize, byte_width: i32) -> Self",
+    "docs": "Creates a new `FixedSizeBinaryDictionaryBuilder` with the provided capacities\n\n`keys_capacity`: the number of keys, i.e. length of array to build\n`value_capacity`: the number of distinct dictionary values, i.e. size of dictionary\n`byte_width`: the byte width for individual values in the values array",
+    "span": {
+      "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+      "begin": [
+        95,
+        5
+      ],
+      "end": [
+        103,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "keys_capacity",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "value_capacity",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "byte_width",
+              {
+                "primitive": "i32"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeBinaryDictionaryBuilder",
+          "id": "arrow_array::builder::fixed_size_binary_dictionary_builder::FixedSizeBinaryDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/fixed_size_binary_dictionary_builder.rs",
+        "begin": [
+          73,
+          1
+        ],
+        "end": [
+          169,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2478",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.json",
+    "anchor": "op-e451fad2e4c665adce47e701",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

@@ -33,6 +33,9 @@ fn num_containers(&self) -> usize
 fn row_counts(&self) -> Option<ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.pruning.CompositePruningStatistics.md).
+
+
 Combine multiple [`PruningStatistics`] into a single
 [`CompositePruningStatistics`].
 This can be used to combine statistics from different sources,
@@ -79,6 +82,9 @@ fn num_containers(&self) -> usize
 fn row_counts(&self) -> Option<ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.pruning.PartitionPruningStatistics.md).
+
+
 Prune files based on their partition values.
 
 This is used both at planning time and execution time to prune
@@ -117,6 +123,9 @@ fn null_counts(&self, column: &Column) -> Option<ArrayRef>
 fn num_containers(&self) -> usize
 fn row_counts(&self) -> Option<ArrayRef>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.pruning.PrunableStatistics.md).
+
 
 Prune a set of containers represented by their statistics.
 
@@ -159,6 +168,9 @@ fn null_counts(&self, column: &Column) -> Option<ArrayRef>
 fn num_containers(&self) -> usize
 fn row_counts(&self) -> Option<ArrayRef>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.pruning.PruningStatistics.md).
+
 
 A source of runtime statistical information to [`PruningPredicate`]s.
 

@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 2 public items · structured records in [`model/data
 fn spark_abs(args: &[datafusion_expr::ColumnarValue], enable_ansi_mode: bool) -> datafusion_common::Result<datafusion_expr::ColumnarValue, datafusion_common::DataFusionError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.abs.spark_abs.md).
+
+
 ---
 
 ## SparkAbs
@@ -39,6 +42,9 @@ fn return_field_from_args(&self, args: ReturnFieldArgs<'_>) -> Result<FieldRef>
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.abs.SparkAbs.md).
+
 
 Spark-compatible `abs` expression
 <https://spark.apache.org/docs/latest/api/sql/index.html#abs>

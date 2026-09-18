@@ -33,6 +33,9 @@ fn scale(&self) -> i32
 fn as_bytes(&self) -> &[u8]
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.Decimal.md).
+
+
 Rust representation for Decimal values.
 
 This is not a representation of Parquet physical type, but rather a wrapper for
@@ -62,6 +65,9 @@ fn get_column_writer_mut<'a, 'b: 'a>(column_writer: &'a mut ColumnWriter<'b>) ->
 fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Option<&'a ColumnWriterImpl<'b, Self>>
 fn get_type_size() -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.BoolType.md).
+
 
 Parquet physical type: BoolType
 
@@ -134,6 +140,9 @@ fn max_values_iter(colidx: &ColumnIndexMetaData) -> impl Iterator<Item = Option<
 fn min_values_iter(colidx: &ColumnIndexMetaData) -> impl Iterator<Item = Option<Self::Item>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.ByteArray.md).
+
+
 Rust representation for BYTE_ARRAY and FIXED_LEN_BYTE_ARRAY Parquet physical types.
 Value is backed by a byte buffer.
 
@@ -161,6 +170,9 @@ fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Opt
 fn get_type_size() -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.ByteArrayType.md).
+
+
 Parquet physical type: ByteArrayType
 
 ---
@@ -186,6 +198,9 @@ fn get_column_writer_mut<'a, 'b: 'a>(column_writer: &'a mut ColumnWriter<'b>) ->
 fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Option<&'a ColumnWriterImpl<'b, Self>>
 fn get_type_size() -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.DoubleType.md).
+
 
 Parquet physical type: DoubleType
 
@@ -254,6 +269,9 @@ fn max_values_iter(colidx: &ColumnIndexMetaData) -> impl Iterator<Item = Option<
 fn min_values_iter(colidx: &ColumnIndexMetaData) -> impl Iterator<Item = Option<Self::Item>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.FixedLenByteArray.md).
+
+
 Wrapper type for performance reasons, this represents `FIXED_LEN_BYTE_ARRAY` but in all other
 considerations behaves the same as `ByteArray`
 
@@ -293,6 +311,9 @@ fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Opt
 fn get_type_size() -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.FixedLenByteArrayType.md).
+
+
 Parquet physical type: FixedLenByteArrayType
 
 ---
@@ -318,6 +339,9 @@ fn get_column_writer_mut<'a, 'b: 'a>(column_writer: &'a mut ColumnWriter<'b>) ->
 fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Option<&'a ColumnWriterImpl<'b, Self>>
 fn get_type_size() -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.FloatType.md).
+
 
 Parquet physical type: FloatType
 
@@ -345,6 +369,9 @@ fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Opt
 fn get_type_size() -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.Int32Type.md).
+
+
 Parquet physical type: Int32Type
 
 ---
@@ -370,6 +397,9 @@ fn get_column_writer_mut<'a, 'b: 'a>(column_writer: &'a mut ColumnWriter<'b>) ->
 fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Option<&'a ColumnWriterImpl<'b, Self>>
 fn get_type_size() -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.Int64Type.md).
+
 
 Parquet physical type: Int64Type
 
@@ -431,6 +461,9 @@ fn max_values_iter(colidx: &ColumnIndexMetaData) -> impl Iterator<Item = Option<
 fn min_values_iter(colidx: &ColumnIndexMetaData) -> impl Iterator<Item = Option<Self::Item>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.Int96.md).
+
+
 Rust representation for logical type INT96, value is backed by an array of `u32`.
 The type only takes 12 bytes, without extra padding.
 
@@ -458,6 +491,9 @@ fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Opt
 fn get_type_size() -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.Int96Type.md).
+
+
 Parquet physical type: Int96Type
 
 ---
@@ -483,6 +519,9 @@ trait AsBytes
 ```rust
 fn as_bytes(&self) -> &[u8]
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.AsBytes.md).
+
 
 Converts an instance of data type to a slice of bytes as `u8`.
 
@@ -518,6 +557,9 @@ fn get_physical_type() -> Type
 fn get_type_size() -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.DataType.md).
+
+
 Contains the Parquet physical type information as well as the Rust primitive type
 presentation.
 
@@ -543,6 +585,9 @@ trait SliceAsBytes: Sized
 fn slice_as_bytes(self_: &[Self]) -> &[u8]
 unsafe fn slice_as_bytes_mut(self_: &mut [Self]) -> &mut [u8]
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.SliceAsBytes.md).
+
 
 Converts an slice of a data type to a slice of bytes.
 

@@ -12,6 +12,9 @@ enum Error
 
 **Variants**: `Unrecognised`, `Path`
 
+[Full member, field, variant and typed contracts](../operations/object_store.parse.Error.md).
+
+
 ---
 
 ## ObjectStoreScheme
@@ -33,6 +36,9 @@ enum ObjectStoreScheme
 ```rust
 fn parse(url: &Url) -> Result<(Self, Path), Error>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.parse.ObjectStoreScheme.md).
+
 
 Recognizes various URL formats, identifying the relevant [`ObjectStore`]
 
@@ -64,6 +70,9 @@ Also reachable as `datafusion::object_store::parse_url`, `object_store::parse_ur
 fn parse_url(url: &url::Url) -> Result<(Box<dyn ObjectStore>, path::Path), super::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.parse.parse_url.md).
+
+
 Create an [`ObjectStore`] based on the provided `url`
 
 Returns
@@ -81,6 +90,9 @@ Also reachable as `datafusion::object_store::parse_url_opts`, `object_store::par
 ```rust
 fn parse_url_opts<I, K, V>(url: &url::Url, options: I) -> Result<(Box<dyn ObjectStore>, path::Path), super::Error> where I: IntoIterator<Item = (K, V)>, K: AsRef<str>, V: Into<String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.parse.parse_url_opts.md).
+
 
 Create an [`ObjectStore`] based on the provided `url` and options
 

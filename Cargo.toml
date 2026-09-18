@@ -31,12 +31,14 @@ publish = false
 [workspace.dependencies]
 datafusion = "=55.1.0"
 datafusion-proto = "=55.1.0"
+datafusion-execution = { version = "=55.1.0", features = ["arrow_buffer_pool"] }
 deltalake = { version = "1.0.0", git = "https://github.com/delta-io/delta-rs.git", rev = "58f07cd62bfbce3649a7e1c87c696288068ae184", default-features = false, features = ["datafusion", "rustls"] }
 # Use Delta's exact Cargo source identity; Cargo.lock pins both packages at 8ba063f8.
 # A second rev source here would produce a second, incompatible kernel type universe.
 delta_kernel = { package = "buoyant_kernel", git = "https://github.com/buoyant-data/delta-kernel-rs", branch = "buoyant/main", features = ["arrow-59", "internal-api"] }
 delta_kernel_default_engine = { package = "buoyant_kernel_engine", git = "https://github.com/buoyant-data/delta-kernel-rs", branch = "buoyant/main", default-features = false, features = ["arrow-59", "rustls"] }
-arrow = { version = "59.3.0", features = ["canonical_extension_types"] }
+arrow = { version = "59.3.0", features = ["canonical_extension_types", "pool"] }
+arrow-buffer = { version = "59.3.0", features = ["pool"] }
 arrow-schema = { version = "59.3.0", features = ["canonical_extension_types"] }
 parquet = { version = "59.3.0", features = ["arrow_canonical_extension_types"] }
 object_store = "=0.13.2"
@@ -54,7 +56,7 @@ serde = { version = "1", features = ["derive"] }
 # `unbounded_depth` exposes `Deserializer::disable_recursion_limit`, which rustdoc JSON needs:
 # nested types in real crates exceed serde_json's default depth of 128. public-api already
 # enables it, so this changes nothing in the graph; it makes the dependency explicit.
-serde_json = { version = "1", features = ["unbounded_depth"] }
+serde_json = { version = "1", features = ["unbounded_depth", "raw_value"] }
 
 # JSON Schema generation from the authoritative Rust wire types (blueprint §6.3). The
 # `emit-schemas` binary is the only consumer; schemas/generated/ is never hand-edited.

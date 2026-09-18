@@ -1,0 +1,19 @@
+id: native-static-worker-launch
+language: Rust
+severity: error
+message: The static extractor consumes the native worker grant and its owned child driver.
+files:
+  - crates/enrichment-daemon/src/ops/python.rs
+rule:
+  kind: call_expression
+  has:
+    field: function
+    regex: '(^|::)(Command::new|spawn_blocking|remove_dir_all)$'
+  not:
+    inside:
+      kind: mod_item
+      has:
+        field: name
+        regex: '(^tests$|_tests$)'
+      stopBy: end
+note: Handler-selected commands bypass retained producer policy and physical child ownership. This syntax guard does not resolve renamed imports.

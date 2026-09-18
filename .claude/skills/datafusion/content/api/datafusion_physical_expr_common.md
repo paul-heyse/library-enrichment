@@ -12,6 +12,9 @@ Also reachable as `datafusion::physical_expr_common::expect_expr_variant`, `data
 macro_rules! expect_expr_variant
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.expect_expr_variant.md).
+
+
 Open the outer [`PhysicalExprNode`] and assert it carries the expected
 `ExprType` variant, returning the inner payload (auto-derefs through
 `Box`) or bailing with an `Internal` error.

@@ -10,6 +10,9 @@ Crate `arrow-flight` · 3 public items · structured records in [`model/arrow_fl
 fn batches_to_flight_data(schema: &arrow_schema::Schema, batches: Vec<arrow_array::RecordBatch>) -> Result<Vec<FlightData>, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.utils.batches_to_flight_data.md).
+
+
 Convert `RecordBatch`es to wire protocol `FlightData`s
 
 ---
@@ -22,6 +25,9 @@ Convert `RecordBatch`es to wire protocol `FlightData`s
 fn flight_data_to_arrow_batch(data: &FlightData, schema: arrow_schema::SchemaRef, dictionaries_by_id: &std::collections::HashMap<i64, arrow_array::ArrayRef>) -> Result<arrow_array::RecordBatch, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.utils.flight_data_to_arrow_batch.md).
+
+
 Convert `FlightData` (with supplied schema and dictionaries) to an arrow `RecordBatch`.
 
 ---
@@ -33,6 +39,9 @@ Convert `FlightData` (with supplied schema and dictionaries) to an arrow `Record
 ```rust
 fn flight_data_to_batches(flight_data: &[FlightData]) -> Result<Vec<arrow_array::RecordBatch>, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.utils.flight_data_to_batches.md).
+
 
 Convert a slice of wire protocol `FlightData`s into a vector of `RecordBatch`es
 

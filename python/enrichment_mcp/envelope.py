@@ -173,7 +173,7 @@ def _envelope(
             status, error_detail = Status.error, detail
 
     envelope = LibraryEnrichmentResponseEnvelope(
-        schema_version=SchemaVersion.field_5_0,
+        schema_version=next(iter(SchemaVersion)),
         request_id=new_request_id(),
         status=status,
         summary=summary,

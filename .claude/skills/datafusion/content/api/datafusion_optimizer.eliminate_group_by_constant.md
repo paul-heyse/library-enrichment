@@ -29,6 +29,9 @@ fn rewrite(&self, plan: LogicalPlan, _config: &dyn OptimizerConfig) -> Result<Tr
 fn supports_rewrite(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.eliminate_group_by_constant.EliminateGroupByConstant.md).
+
+
 Optimizer rule that removes constant expressions from `GROUP BY` clause
 and places additional projection on top of aggregation, to preserve
 original schema

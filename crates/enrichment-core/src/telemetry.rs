@@ -143,35 +143,6 @@ pub struct Label {
 }
 }
 
-crate::native_struct! {
-/// The recovery payload is an opaque MCP wire value. Cause, scope and bounds are native fields.
-pub struct Failure {
-    cause: crate::wire::DiagnosticCause => Rule::Text,
-    stage: String => Rule::Text,
-    affected_ids: Vec<String> => Rule::Set,
-    rule: Option<String> => Rule::Text,
-    observed: Option<u64> => Rule::Text,
-    allowed: Option<u64> => Rule::Text,
-    correlation_id: Option<String> => Rule::Text,
-    recovery_payload: String => Rule::Json,
-}
-}
-impl TryFrom<crate::wire::Diagnostic> for Failure {
-    type Error = serde_json::Error;
-    fn try_from(d: crate::wire::Diagnostic) -> Result<Self, Self::Error> {
-        Ok(Self {
-            cause: d.cause,
-            stage: d.stage,
-            affected_ids: d.affected_ids,
-            rule: d.rule,
-            observed: d.observed,
-            allowed: d.allowed,
-            correlation_id: d.correlation_id,
-            recovery_payload: serde_json::to_string(&d.actions)?,
-        })
-    }
-}
-
 crate::native_vocabulary! {
     pub enum CacheOutcome { Hit = "hit", Revalidated = "revalidated", Miss = "miss" }
 }
@@ -227,7 +198,7 @@ crate::native_union! {
     pub enum EventPayload {
         Query = "query" { value: Box<QueryDiagnostics> => Rule::Text },
         Operation = "operation" { value: OperationEnd => Rule::Text },
-        Failure = "failure" { value: Failure => Rule::Text },
+        Failure = "failure" { value: crate::wire::Diagnostic => Rule::Text },
         Materialization = "materialization" { value: MaterializationObservation => Rule::Text },
         Service = "service" { value: ServiceObservation => Rule::Text },
         Kernel = "kernel" { value: kernel::Observation => Rule::Text },
@@ -261,5 +232,47 @@ pub mod schema {
     }
     pub fn events() -> SchemaRef {
         Arc::new(Schema::new(Event::fields()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn failure_events_reuse_native_diagnostics_without_a_json_payload() {
+        let mut diagnostic = crate::wire::Diagnostic::for_error(
+            crate::wire::ErrorCode::PolicyDenied,
+            "Configure the execution profile.".into(),
+        );
+        diagnostic.affected_ids = vec!["same-row".into(), "same-row".into()];
+        let event = Event {
+            runtime_id: "runtime_fixture".into(),
+            sequence: 1,
+            recorded_at: crate::native_time::EventTime::from_micros(1).unwrap(),
+            operation_id: None,
+            payload: EventPayload::Failure {
+                value: diagnostic.clone(),
+            },
+        };
+        let batch = Event::batch(std::slice::from_ref(&event)).unwrap();
+        let rows = crate::evidence::arrow_model::cells::RowSet::batch(&batch).unwrap();
+        assert_eq!(<Event as NativeStruct>::decode(rows.row(0)).unwrap(), event);
+        let array = <crate::wire::Diagnostic as Cell>::encode(&[Some(&diagnostic)]).unwrap();
+        let field = std::sync::Arc::new(crate::native_union::field::<crate::wire::Diagnostic>(
+            "diagnostic",
+            Rule::Text,
+        ));
+        let mut bytes = Vec::new();
+        crate::native_json::write_value(&mut bytes, 65536, &field, array.as_ref(), 0).unwrap();
+        assert_eq!(
+            serde_json::from_slice::<crate::wire::Diagnostic>(&bytes).unwrap(),
+            diagnostic
+        );
+        assert!(
+            !std::str::from_utf8(&bytes)
+                .unwrap()
+                .contains("recovery_payload")
+        );
     }
 }

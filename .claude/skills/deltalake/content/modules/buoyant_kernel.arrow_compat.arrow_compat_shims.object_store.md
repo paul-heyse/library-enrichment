@@ -1,0 +1,20 @@
+# `buoyant_kernel::arrow_compat::arrow_compat_shims::object_store`
+
+Full upstream contracts; raw type trees and source locators in [structured records](buoyant_kernel.arrow_compat.arrow_compat_shims.object_store.json).
+
+<a id="op-e0d64d61a46f44c82985eae6"></a>
+## object_store
+
+`module` · `buoyant_kernel::arrow_compat::arrow_compat_shims::object_store` · buoyant_kernel 1.0.0+58f07cd6
+
+Access: **internal_module**. Canonical source location is not automatically a valid import path.
+
+```rust
+mod object_store
+```
+
+[Exact source](https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/arrow_compat.rs#L8).
+
+Source: `/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/arrow_compat.rs:8`. [Exact documentation build](https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675).
+
+No upstream documentation on this item; consult its owner/trait contract.

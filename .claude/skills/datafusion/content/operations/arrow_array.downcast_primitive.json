@@ -1,0 +1,60 @@
+[
+  {
+    "id": "844ab4ae2906bafc1ae05583",
+    "path": "arrow_array::downcast_primitive",
+    "name": "downcast_primitive",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "macro",
+    "signature": "macro_rules! downcast_primitive",
+    "docs": "Given one or more expressions evaluating to primitive [`DataType`] invokes the provided macro\n`m` with the corresponding [`ArrowPrimitiveType`], followed by any additional arguments\n\n```\n# use arrow_array::{downcast_primitive, ArrowPrimitiveType};\n# use arrow_schema::DataType;\n\nmacro_rules! primitive_size_helper {\n  ($t:ty, $o:ty) => {\n      std::mem::size_of::<<$t as ArrowPrimitiveType>::Native>() as $o\n  };\n}\n\nfn primitive_size(t: &DataType) -> u8 {\n    downcast_primitive! {\n        t => (primitive_size_helper, u8),\n        // You can also add a guard to the pattern\n        DataType::LargeUtf8 if true => u8::MAX,\n        _ => u8::MAX\n    }\n}\n\nassert_eq!(primitive_size(&DataType::Int32), 4);\nassert_eq!(primitive_size(&DataType::Int64), 8);\nassert_eq!(primitive_size(&DataType::Float16), 2);\nassert_eq!(primitive_size(&DataType::Decimal128(38, 10)), 16);\nassert_eq!(primitive_size(&DataType::Decimal256(76, 20)), 32);\n```\n\n[`DataType`]: arrow_schema::DataType",
+    "span": {
+      "filename": "src/cast.rs",
+      "begin": [
+        361,
+        1
+      ],
+      "end": [
+        415,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      "macro_export"
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "macro": "macro_rules! downcast_primitive {\n    ($($data_type:expr),+ => ($m:path $(, $args:tt)*), $($p:pat $(if $pred:expr)? => $fallback:expr $(,)?)*) => { ... };\n}"
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "arrow_schema::DataType": 126,
+      "`ArrowPrimitiveType`": 307
+    },
+    "link_paths": {
+      "arrow_schema::DataType": "arrow_schema::datatype::DataType",
+      "`ArrowPrimitiveType`": "arrow_array::types::ArrowPrimitiveType"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "4653",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.downcast_primitive.md",
+    "record_file": "operations/arrow_array.downcast_primitive.json",
+    "anchor": "op-844ab4ae2906bafc1ae05583",
+    "aliases": [
+      "arrow::array::downcast_primitive"
+    ],
+    "resolved_doc_links": {
+      "arrow_schema::DataType": "../operations/arrow_schema.datatype.DataType.md#op-bf69df5b14436e006d3a531c",
+      "`ArrowPrimitiveType`": "../operations/arrow_array.types.ArrowPrimitiveType.md#op-ddd581d2aed24174207ba803"
+    }
+  }
+]

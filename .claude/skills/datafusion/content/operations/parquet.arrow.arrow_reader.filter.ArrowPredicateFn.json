@@ -1,0 +1,803 @@
+[
+  {
+    "id": "6817a0a6bc2078986ae8a2d4",
+    "path": "parquet::arrow::arrow_reader::filter::ArrowPredicateFn",
+    "name": "ArrowPredicateFn",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct ArrowPredicateFn<F>",
+    "docs": "An [`ArrowPredicate`] created from an [`FnMut`] and a [`ProjectionMask`]\n\nSee [`RowFilter`] for more information on applying filters during the\nParquet decoding process.\n\nThe function is passed `RecordBatch`es with only the columns specified in\nthe [`ProjectionMask`].\n\nThe function must return a [`BooleanArray`] that has the same length as the\ninput `batch` where each row indicates whether the row should be returned:\n* `true`: the row should be returned\n* `false` or `null`: the row should not be returned\n\n# Example:\n\nGiven an input schema: `\"a:int64\", \"b:int64\"`, you can create a predicate that\nevaluates `b > 0` like this:\n\n```\n# use std::sync::Arc;\n# use arrow::compute::kernels::cmp::gt;\n# use arrow_array::{BooleanArray, Int64Array, RecordBatch};\n# use arrow_array::cast::AsArray;\n# use arrow_array::types::Int64Type;\n# use parquet::arrow::arrow_reader::ArrowPredicateFn;\n# use parquet::arrow::ProjectionMask;\n# use parquet::schema::types::{SchemaDescriptor, Type};\n# use parquet::basic; // note there are two `Type`s that are different\n# // Schema for a table with one columns: \"a\" (int64) and \"b\" (int64)\n# let descriptor = SchemaDescriptor::new(\n#  Arc::new(\n#    Type::group_type_builder(\"my_schema\")\n#      .with_fields(vec![\n#        Arc::new(\n#         Type::primitive_type_builder(\"a\", basic::Type::INT64)\n#          .build().unwrap()\n#        ),\n#        Arc::new(\n#         Type::primitive_type_builder(\"b\", basic::Type::INT64)\n#          .build().unwrap()\n#        ),\n#     ])\n#     .build().unwrap()\n#  )\n# );\n// Create a mask for selecting only the second column \"b\" (index 1)\nlet projection_mask = ProjectionMask::leaves(&descriptor, [1]);\n// Closure that evaluates \"b > 0\"\nlet predicate = |batch: RecordBatch| {\n   let scalar_0 = Int64Array::new_scalar(0);\n   let column = batch.column(0).as_primitive::<Int64Type>();\n   // call the gt kernel to compute `>` which returns a BooleanArray\n   gt(column, &scalar_0)\n };\n// Create ArrowPredicateFn that can be passed to RowFilter\nlet arrow_predicate = ArrowPredicateFn::new(projection_mask, predicate);\n```",
+    "span": {
+      "filename": "src/arrow/arrow_reader/filter.rs",
+      "begin": [
+        106,
+        1
+      ],
+      "end": [
+        109,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          2536,
+          2537,
+          2538,
+          2539,
+          2540,
+          2541,
+          2542,
+          2543,
+          2544,
+          2545,
+          2546,
+          2547,
+          2548,
+          2549,
+          2550,
+          2551,
+          2531
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`RowFilter`": 2526,
+      "`ProjectionMask`": 2521,
+      "`BooleanArray`": 2525,
+      "`ArrowPredicate`": 2528,
+      "`FnMut`": 2532
+    },
+    "link_paths": {
+      "`RowFilter`": "parquet::arrow::arrow_reader::filter::RowFilter",
+      "`ProjectionMask`": "parquet::arrow::ProjectionMask",
+      "`BooleanArray`": "arrow_array::array::boolean_array::BooleanArray",
+      "`ArrowPredicate`": "parquet::arrow::arrow_reader::filter::ArrowPredicate",
+      "`FnMut`": "core::ops::function::FnMut"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "2527",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.filter.ArrowPredicateFn.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.filter.ArrowPredicateFn.json",
+    "anchor": "op-6817a0a6bc2078986ae8a2d4",
+    "aliases": [
+      "parquet::arrow::arrow_reader::ArrowPredicateFn"
+    ],
+    "resolved_doc_links": {
+      "`RowFilter`": "../operations/parquet.arrow.arrow_reader.filter.RowFilter.md#op-a310d73e2b8ee5aca56c0c1f",
+      "`ProjectionMask`": "../operations/parquet.arrow.ProjectionMask.md#op-28a259558ea082dc20ece1ec",
+      "`BooleanArray`": "../operations/arrow_array.array.boolean_array.BooleanArray.md#op-da9041df4f2e5d0ab93f8505",
+      "`ArrowPredicate`": "../operations/parquet.arrow.arrow_reader.filter.ArrowPredicate.md#op-bf093cc5f111fb8b2d44eb01"
+    }
+  },
+  {
+    "id": "f23b4b4df3d5c609827f9aad",
+    "path": "parquet::arrow::arrow_reader::filter::ArrowPredicateFn::evaluate",
+    "name": "evaluate",
+    "owner": "parquet::arrow::arrow_reader::filter::ArrowPredicateFn",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn evaluate(&mut self, batch: RecordBatch) -> Result<BooleanArray, ArrowError>",
+    "docs": "",
+    "span": {
+      "filename": "src/arrow/arrow_reader/filter.rs",
+      "begin": [
+        130,
+        5
+      ],
+      "end": [
+        132,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch",
+              {
+                "resolved_path": {
+                  "path": "RecordBatch",
+                  "id": 2524,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 52,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "BooleanArray",
+                          "id": 2525,
+                          "args": null
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 95,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2524": "arrow_array::record_batch::RecordBatch",
+      "52": "core::result::Result",
+      "2525": "arrow_array::array::boolean_array::BooleanArray",
+      "95": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowPredicateFn",
+          "id": "parquet::arrow::arrow_reader::filter::ArrowPredicateFn",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "F"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrowPredicate",
+        "id": "parquet::arrow::arrow_reader::filter::ArrowPredicate",
+        "args": null
+      },
+      "trait_path": "parquet::arrow::arrow_reader::filter::ArrowPredicate",
+      "generics": {
+        "params": [
+          {
+            "name": "F",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "F"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "FnMut",
+                      "id": "core::ops::function::FnMut",
+                      "args": {
+                        "parenthesized": {
+                          "inputs": [
+                            {
+                              "resolved_path": {
+                                "path": "arrow_array::RecordBatch",
+                                "id": "arrow_array::record_batch::RecordBatch",
+                                "args": null
+                              }
+                            }
+                          ],
+                          "output": {
+                            "resolved_path": {
+                              "path": "Result",
+                              "id": "core::result::Result",
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "arrow_array::BooleanArray",
+                                          "id": "arrow_array::array::boolean_array::BooleanArray",
+                                          "args": null
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "arrow_schema::ArrowError",
+                                          "id": "arrow_schema::error::ArrowError",
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Send",
+                      "id": "core::marker::Send",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "outlives": "'static"
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/filter.rs",
+        "begin": [
+          122,
+          1
+        ],
+        "end": [
+          133,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "2530",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.filter.ArrowPredicateFn.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.filter.ArrowPredicateFn.json",
+    "anchor": "op-f23b4b4df3d5c609827f9aad",
+    "aliases": [
+      "parquet::arrow::arrow_reader::ArrowPredicateFn::evaluate"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "240a5d1e05483ba588116277",
+    "path": "parquet::arrow::arrow_reader::filter::ArrowPredicateFn::new",
+    "name": "new",
+    "owner": "parquet::arrow::arrow_reader::filter::ArrowPredicateFn",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(projection: ProjectionMask, f: F) -> Self",
+    "docs": "Create a new [`ArrowPredicateFn`] that invokes `f` on the columns\nspecified in `projection`.",
+    "span": {
+      "filename": "src/arrow/arrow_reader/filter.rs",
+      "begin": [
+        117,
+        5
+      ],
+      "end": [
+        119,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "projection",
+              {
+                "resolved_path": {
+                  "path": "ProjectionMask",
+                  "id": 2521,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2521": "parquet::arrow::ProjectionMask"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowPredicateFn",
+          "id": "parquet::arrow::arrow_reader::filter::ArrowPredicateFn",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "F"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "F",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "F"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "FnMut",
+                      "id": "core::ops::function::FnMut",
+                      "args": {
+                        "parenthesized": {
+                          "inputs": [
+                            {
+                              "resolved_path": {
+                                "path": "arrow_array::RecordBatch",
+                                "id": "arrow_array::record_batch::RecordBatch",
+                                "args": null
+                              }
+                            }
+                          ],
+                          "output": {
+                            "resolved_path": {
+                              "path": "Result",
+                              "id": "core::result::Result",
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "arrow_array::BooleanArray",
+                                          "id": "arrow_array::array::boolean_array::BooleanArray",
+                                          "args": null
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "arrow_schema::ArrowError",
+                                          "id": "arrow_schema::error::ArrowError",
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Send",
+                      "id": "core::marker::Send",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "outlives": "'static"
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/filter.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          120,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrowPredicateFn`": 2527
+    },
+    "link_paths": {
+      "`ArrowPredicateFn`": "parquet::arrow::arrow_reader::filter::ArrowPredicateFn"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "2535",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.filter.ArrowPredicateFn.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.filter.ArrowPredicateFn.json",
+    "anchor": "op-240a5d1e05483ba588116277",
+    "aliases": [
+      "parquet::arrow::arrow_reader::ArrowPredicateFn::new"
+    ],
+    "resolved_doc_links": {
+      "`ArrowPredicateFn`": "../operations/parquet.arrow.arrow_reader.filter.ArrowPredicateFn.md#op-6817a0a6bc2078986ae8a2d4"
+    }
+  },
+  {
+    "id": "d9a6579704ab31651db471da",
+    "path": "parquet::arrow::arrow_reader::filter::ArrowPredicateFn::projection",
+    "name": "projection",
+    "owner": "parquet::arrow::arrow_reader::filter::ArrowPredicateFn",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn projection(&self) -> &ProjectionMask",
+    "docs": "",
+    "span": {
+      "filename": "src/arrow/arrow_reader/filter.rs",
+      "begin": [
+        126,
+        5
+      ],
+      "end": [
+        128,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ProjectionMask",
+                  "id": 2521,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2521": "parquet::arrow::ProjectionMask"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowPredicateFn",
+          "id": "parquet::arrow::arrow_reader::filter::ArrowPredicateFn",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "F"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrowPredicate",
+        "id": "parquet::arrow::arrow_reader::filter::ArrowPredicate",
+        "args": null
+      },
+      "trait_path": "parquet::arrow::arrow_reader::filter::ArrowPredicate",
+      "generics": {
+        "params": [
+          {
+            "name": "F",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "F"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "FnMut",
+                      "id": "core::ops::function::FnMut",
+                      "args": {
+                        "parenthesized": {
+                          "inputs": [
+                            {
+                              "resolved_path": {
+                                "path": "arrow_array::RecordBatch",
+                                "id": "arrow_array::record_batch::RecordBatch",
+                                "args": null
+                              }
+                            }
+                          ],
+                          "output": {
+                            "resolved_path": {
+                              "path": "Result",
+                              "id": "core::result::Result",
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "arrow_array::BooleanArray",
+                                          "id": "arrow_array::array::boolean_array::BooleanArray",
+                                          "args": null
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "arrow_schema::ArrowError",
+                                          "id": "arrow_schema::error::ArrowError",
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Send",
+                      "id": "core::marker::Send",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "outlives": "'static"
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/filter.rs",
+        "begin": [
+          122,
+          1
+        ],
+        "end": [
+          133,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "2529",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.filter.ArrowPredicateFn.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.filter.ArrowPredicateFn.json",
+    "anchor": "op-d9a6579704ab31651db471da",
+    "aliases": [
+      "parquet::arrow::arrow_reader::ArrowPredicateFn::projection"
+    ],
+    "resolved_doc_links": {}
+  }
+]

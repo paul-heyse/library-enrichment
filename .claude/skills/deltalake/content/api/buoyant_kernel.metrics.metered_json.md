@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## MeteredJsonHandler
 
 `struct` · `buoyant_kernel::metrics::metered_json::MeteredJsonHandler`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.metered_json.MeteredJsonHandler.md)
 
 Also reachable as `buoyant_kernel::metrics::MeteredJsonHandler`, `delta_kernel::metrics::metered_json::MeteredJsonHandler`
 

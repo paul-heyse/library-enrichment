@@ -21,6 +21,27 @@ pub enum Domain {
     Snapshot,
     Artifact,
     ProducerBinding,
+    Interest,
+    Job,
+    Attempt,
+    EffectGrant,
+    OperationPolicy,
+    ProcessOperation,
+    ProcessEffect,
+    StaticWorkerEffect,
+    RustdocDecoderEffect,
+    SemanticConversation,
+    RegistryCapture,
+    RevisionCapture,
+    RetentionPolicy,
+    RetentionLease,
+    CleanupObligation,
+    MaintenanceRun,
+    PrivateDirectory,
+    PhysicalOwner,
+    StorageReservation,
+    Cohort,
+    SchemaContract,
 }
 
 impl Domain {
@@ -36,6 +57,27 @@ impl Domain {
             Self::Snapshot => Key::Snapshot.prefix(),
             Self::Artifact => "art",
             Self::ProducerBinding => Key::ProducerBinding.prefix(),
+            Self::Interest => "interest",
+            Self::Job => "job",
+            Self::Attempt => "attempt",
+            Self::EffectGrant => Key::EffectGrant.prefix(),
+            Self::OperationPolicy => Key::OperationPolicy.prefix(),
+            Self::ProcessOperation => Key::ProcessOperation.prefix(),
+            Self::ProcessEffect => Key::ProcessEffect.prefix(),
+            Self::StaticWorkerEffect => Key::StaticWorkerEffect.prefix(),
+            Self::RustdocDecoderEffect => Key::RustdocDecoderEffect.prefix(),
+            Self::SemanticConversation => Key::SemanticConversation.prefix(),
+            Self::RegistryCapture => Key::RegistryCapture.prefix(),
+            Self::RevisionCapture => Key::RevisionCapture.prefix(),
+            Self::RetentionPolicy => Key::RetentionPolicy.prefix(),
+            Self::RetentionLease => "retention_lease",
+            Self::CleanupObligation => "cleanup_obligation",
+            Self::MaintenanceRun => "maintenance_run",
+            Self::PrivateDirectory => "private_directory",
+            Self::PhysicalOwner => "physical_owner",
+            Self::StorageReservation => "storage_reservation",
+            Self::Cohort => "cohort",
+            Self::SchemaContract => Key::SchemaContract.prefix(),
         }
     }
     /// The exact release is bound by the admitted snapshot; other domains name evidence keys.
@@ -45,7 +87,47 @@ impl Domain {
             Self::Definition => Some(("definitions", "definition_id")),
             Self::Artifact => Some(("input_artifacts", "artifact_id")),
             Self::ProducerBinding => Some(("producer_runs", "producer_binding_id")),
-            Self::Release | Self::Environment | Self::Context | Self::Snapshot => None,
+            Self::Release
+            | Self::Environment
+            | Self::Context
+            | Self::Snapshot
+            | Self::Interest
+            | Self::Job
+            | Self::Attempt
+            | Self::EffectGrant
+            | Self::OperationPolicy
+            | Self::ProcessOperation
+            | Self::ProcessEffect
+            | Self::StaticWorkerEffect
+            | Self::RustdocDecoderEffect
+            | Self::SemanticConversation
+            | Self::RegistryCapture
+            | Self::RevisionCapture
+            | Self::RetentionPolicy
+            | Self::RetentionLease
+            | Self::CleanupObligation
+            | Self::MaintenanceRun
+            | Self::PrivateDirectory
+            | Self::PhysicalOwner
+            | Self::StorageReservation
+            | Self::Cohort
+            | Self::SchemaContract => None,
+        }
+    }
+    /// Identity width is part of its domain, never inferred from a supplied value.
+    pub fn byte_width(self) -> i32 {
+        match self {
+            Self::Interest
+            | Self::Job
+            | Self::Attempt
+            | Self::RetentionLease
+            | Self::CleanupObligation
+            | Self::MaintenanceRun
+            | Self::PrivateDirectory
+            | Self::PhysicalOwner
+            | Self::StorageReservation
+            | Self::Cohort => 16,
+            _ => 32,
         }
     }
 }
@@ -203,6 +285,13 @@ pub enum Rule {
         domain: Domain,
         scope: Vec<ScopeKey>,
     },
+    /// A key in the same bound catalog/schema. Its declaration travels with the field;
+    /// the caller supplies the immutable namespace, never an ambient search path.
+    ForeignKey {
+        table: String,
+        field: Vec<String>,
+        scope: Vec<ScopeKey>,
+    },
     Coordinate(Unit),
     RangeEnd {
         unit: Unit,
@@ -217,13 +306,51 @@ pub enum Rule {
         min: u64,
         max: u64,
     },
+    BinaryBytes {
+        max: u64,
+    },
     UnsignedRange {
         min: u64,
         max: u64,
     },
+    /// Order is immaterial; repeated values, including repeated NULLs, are invalid.
+    /// Canonical hashing normalizes order but never substitutes for admission.
     Set,
     Vocabulary(Vec<String>),
     Map,
+}
+
+/// One reference descriptor drives native joins and catalog discovery.
+pub enum ReferenceTarget {
+    Evidence(Domain),
+    Relation { table: String, field: Vec<String> },
+}
+
+impl Rule {
+    #[must_use]
+    pub fn foreign_key(table: &str, field: &str) -> Self {
+        Self::ForeignKey {
+            table: table.into(),
+            field: vec![field.into()],
+            scope: Vec::new(),
+        }
+    }
+
+    #[must_use]
+    pub fn reference(self) -> Option<(ReferenceTarget, Vec<ScopeKey>)> {
+        match self {
+            Self::Reference(domain) => Some((ReferenceTarget::Evidence(domain), Vec::new())),
+            Self::ScopedReference { domain, scope } => {
+                Some((ReferenceTarget::Evidence(domain), scope))
+            }
+            Self::ForeignKey {
+                table,
+                field,
+                scope,
+            } => Some((ReferenceTarget::Relation { table, field }, scope)),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -233,6 +360,17 @@ pub struct ScopeKey {
     pub source: Vec<String>,
     pub target: Vec<String>,
     pub null: ScopeNull,
+}
+
+impl ScopeKey {
+    #[must_use]
+    pub fn exact(source: &[&str], target: &[&str]) -> Self {
+        Self {
+            source: source.iter().map(|part| (*part).into()).collect(),
+            target: target.iter().map(|part| (*part).into()).collect(),
+            null: ScopeNull::Exact,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
@@ -256,7 +394,7 @@ macro_rules! native_vocabulary {
         impl $crate::native_union::Cell for $name {
             fn data_type() -> arrow::datatypes::DataType { arrow::datatypes::DataType::Utf8 }
             fn metadata() -> std::collections::HashMap<String, String> {
-                std::collections::HashMap::from([("enrichment.rule".into(), serde_json::to_string(&$crate::native_union::Rule::Vocabulary(Self::VALUES.iter().map(|value| (*value).into()).collect())).expect("finite vocabulary"))])
+                std::collections::HashMap::from([("enrichment.vocabulary".into(), serde_json::to_string(Self::VALUES).expect("finite vocabulary"))])
             }
             fn encode(values: &[Option<&Self>]) -> Result<arrow::array::ArrayRef, arrow::error::ArrowError> {
                 Ok($crate::evidence::arrow_model::cells::optional(values.iter().map(|value| value.map(|value| value.as_str()))))
@@ -471,8 +609,15 @@ impl<T: Cell + Ord + Clone> Cell for std::collections::BTreeSet<T> {
     fn deserialize_wire<'de, D: serde::Deserializer<'de>>(
         deserializer: D,
     ) -> Result<Self, D::Error> {
-        Vec::<crate::native_wire::Owned<T>>::deserialize(deserializer)
-            .map(|values| values.into_iter().map(|value| value.0).collect())
+        let values = Vec::<crate::native_wire::Owned<T>>::deserialize(deserializer)?;
+        let size = values.len();
+        let set: Self = values.into_iter().map(|value| value.0).collect();
+        if set.len() != size {
+            return Err(serde::de::Error::custom(
+                "native set contains repeated values",
+            ));
+        }
+        Ok(set)
     }
     fn data_type() -> DataType {
         Vec::<T>::data_type()

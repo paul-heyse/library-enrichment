@@ -12,6 +12,9 @@ Also reachable as `arrow::datatypes::DECIMAL128_MAX_PRECISION`, `arrow_data::dec
 const DECIMAL128_MAX_PRECISION: u8 = 38
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.DECIMAL128_MAX_PRECISION.md).
+
+
 The maximum precision for [DataType::Decimal128] values
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `arrow::datatypes::DECIMAL128_MAX_SCALE`, `arrow_data::decimal
 ```rust
 const DECIMAL128_MAX_SCALE: i8 = 38
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.DECIMAL128_MAX_SCALE.md).
+
 
 The maximum scale for [DataType::Decimal128] values
 
@@ -40,6 +46,9 @@ Also reachable as `arrow::datatypes::DECIMAL256_MAX_PRECISION`, `arrow_data::dec
 const DECIMAL256_MAX_PRECISION: u8 = 76
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.DECIMAL256_MAX_PRECISION.md).
+
+
 The maximum precision for [DataType::Decimal256] values
 
 ---
@@ -53,6 +62,9 @@ Also reachable as `arrow::datatypes::DECIMAL256_MAX_SCALE`, `arrow_data::decimal
 ```rust
 const DECIMAL256_MAX_SCALE: i8 = 76
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.DECIMAL256_MAX_SCALE.md).
+
 
 The maximum scale for [DataType::Decimal256] values
 
@@ -68,6 +80,9 @@ Also reachable as `arrow::datatypes::DECIMAL32_DEFAULT_SCALE`, `arrow_data::deci
 const DECIMAL32_DEFAULT_SCALE: i8 = 2
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.DECIMAL32_DEFAULT_SCALE.md).
+
+
 The default scale for [DataType::Decimal32] values
 
 ---
@@ -81,6 +96,9 @@ Also reachable as `arrow::datatypes::DECIMAL32_MAX_PRECISION`, `arrow_data::deci
 ```rust
 const DECIMAL32_MAX_PRECISION: u8 = 9
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.DECIMAL32_MAX_PRECISION.md).
+
 
 The maximum precision for [DataType::Decimal32] values
 
@@ -96,6 +114,9 @@ Also reachable as `arrow::datatypes::DECIMAL32_MAX_SCALE`, `arrow_data::decimal:
 const DECIMAL32_MAX_SCALE: i8 = 9
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.DECIMAL32_MAX_SCALE.md).
+
+
 The maximum scale for [DataType::Decimal32] values
 
 ---
@@ -109,6 +130,9 @@ Also reachable as `arrow::datatypes::DECIMAL64_DEFAULT_SCALE`, `arrow_data::deci
 ```rust
 const DECIMAL64_DEFAULT_SCALE: i8 = 6
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.DECIMAL64_DEFAULT_SCALE.md).
+
 
 The default scale for [DataType::Decimal64] values
 
@@ -124,6 +148,9 @@ Also reachable as `arrow::datatypes::DECIMAL64_MAX_PRECISION`, `arrow_data::deci
 const DECIMAL64_MAX_PRECISION: u8 = 18
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.DECIMAL64_MAX_PRECISION.md).
+
+
 The maximum precision for [DataType::Decimal64] values
 
 ---
@@ -138,6 +165,9 @@ Also reachable as `arrow::datatypes::DECIMAL64_MAX_SCALE`, `arrow_data::decimal:
 const DECIMAL64_MAX_SCALE: i8 = 18
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.DECIMAL64_MAX_SCALE.md).
+
+
 The maximum scale for [DataType::Decimal64] values
 
 ---
@@ -151,6 +181,9 @@ Also reachable as `arrow::datatypes::DECIMAL_DEFAULT_SCALE`, `arrow_data::decima
 ```rust
 const DECIMAL_DEFAULT_SCALE: i8 = 10
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.DECIMAL_DEFAULT_SCALE.md).
+
 
 The default scale for [DataType::Decimal128] and [DataType::Decimal256]
 values
@@ -230,6 +263,9 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 ```rust
 fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.DataType.md).
+
 
  Datatypes supported by this implementation of Apache Arrow.
 
@@ -333,6 +369,9 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.IntervalUnit.md).
+
+
 YEAR_MONTH, DAY_TIME, MONTH_DAY_NANO interval in SQL style.
 
 ---
@@ -371,6 +410,9 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.TimeUnit.md).
+
+
 An absolute length of time in seconds, milliseconds, microseconds or nanoseconds.
 
 ---
@@ -402,6 +444,9 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 ```rust
 fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.datatype.UnionMode.md).
+
 
 Sparse or Dense union layouts
 

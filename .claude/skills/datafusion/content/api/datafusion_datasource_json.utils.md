@@ -24,6 +24,9 @@ fn new(rx: tokio::sync::mpsc::Receiver<Bytes>) -> Self
 fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_json.utils.ChannelReader.md).
+
+
 A synchronous `Read` implementation that receives bytes from an async channel.
 
 This enables true streaming between async and sync contexts without
@@ -63,6 +66,9 @@ fn fill_buf(&mut self) -> std::io::Result<&[u8]>
 ```rust
 fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_json.utils.JsonArrayToNdjsonReader.md).
+
 
 A streaming reader that converts JSON array format to NDJSON format.
 

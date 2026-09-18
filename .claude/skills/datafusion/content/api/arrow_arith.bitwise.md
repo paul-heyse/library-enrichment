@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::bitwise::bitwise_and`
 fn bitwise_and<T>(left: &PrimitiveArray<T>, right: &PrimitiveArray<T>) -> Result<PrimitiveArray<T>, arrow_schema::ArrowError> where T: ArrowNumericType, T::Native: BitAnd<Output = T::Native>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.bitwise.bitwise_and.md).
+
+
 Perform `left & right` operation on two arrays. If either left or right value is null
 then the result is also null.
 
@@ -26,6 +29,9 @@ Also reachable as `arrow::compute::kernels::bitwise::bitwise_and_not`
 ```rust
 fn bitwise_and_not<T>(left: &PrimitiveArray<T>, right: &PrimitiveArray<T>) -> Result<PrimitiveArray<T>, arrow_schema::ArrowError> where T: ArrowNumericType, T::Native: BitAnd<Output = T::Native> + Not<Output = T::Native>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.bitwise.bitwise_and_not.md).
+
 
 Perform `left & !right` operation on two arrays. If either left or right value is null
 then the result is also null.
@@ -42,6 +48,9 @@ Also reachable as `arrow::compute::kernels::bitwise::bitwise_and_scalar`
 fn bitwise_and_scalar<T>(array: &PrimitiveArray<T>, scalar: T::Native) -> Result<PrimitiveArray<T>, arrow_schema::ArrowError> where T: ArrowNumericType, T::Native: BitAnd<Output = T::Native>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.bitwise.bitwise_and_scalar.md).
+
+
 Perform bitwise `and` every value in an array with the scalar. If any value in the array is null then the
 result is also null.
 
@@ -56,6 +65,9 @@ Also reachable as `arrow::compute::kernels::bitwise::bitwise_not`
 ```rust
 fn bitwise_not<T>(array: &PrimitiveArray<T>) -> Result<PrimitiveArray<T>, arrow_schema::ArrowError> where T: ArrowNumericType, T::Native: Not<Output = T::Native>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.bitwise.bitwise_not.md).
+
 
 Perform `!array` operation on array. If array value is null
 then the result is also null.
@@ -72,6 +84,9 @@ Also reachable as `arrow::compute::kernels::bitwise::bitwise_or`
 fn bitwise_or<T>(left: &PrimitiveArray<T>, right: &PrimitiveArray<T>) -> Result<PrimitiveArray<T>, arrow_schema::ArrowError> where T: ArrowNumericType, T::Native: BitOr<Output = T::Native>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.bitwise.bitwise_or.md).
+
+
 Perform `left | right` operation on two arrays. If either left or right value is null
 then the result is also null.
 
@@ -86,6 +101,9 @@ Also reachable as `arrow::compute::kernels::bitwise::bitwise_or_scalar`
 ```rust
 fn bitwise_or_scalar<T>(array: &PrimitiveArray<T>, scalar: T::Native) -> Result<PrimitiveArray<T>, arrow_schema::ArrowError> where T: ArrowNumericType, T::Native: BitOr<Output = T::Native>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.bitwise.bitwise_or_scalar.md).
+
 
 Perform bitwise `or` every value in an array with the scalar. If any value in the array is null then the
 result is also null.
@@ -102,6 +120,9 @@ Also reachable as `arrow::compute::kernels::bitwise::bitwise_shift_left`
 fn bitwise_shift_left<T>(left: &PrimitiveArray<T>, right: &PrimitiveArray<T>) -> Result<PrimitiveArray<T>, arrow_schema::ArrowError> where T: ArrowNumericType, T::Native: WrappingShl<Output = T::Native>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.bitwise.bitwise_shift_left.md).
+
+
 Perform bitwise `left << right` operation on two arrays. If either left or right value is null
 then the result is also null.
 
@@ -116,6 +137,9 @@ Also reachable as `arrow::compute::kernels::bitwise::bitwise_shift_left_scalar`
 ```rust
 fn bitwise_shift_left_scalar<T>(array: &PrimitiveArray<T>, scalar: T::Native) -> Result<PrimitiveArray<T>, arrow_schema::ArrowError> where T: ArrowNumericType, T::Native: WrappingShl<Output = T::Native>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.bitwise.bitwise_shift_left_scalar.md).
+
 
 Perform bitwise `left << right` every value in an array with the scalar. If any value in the array is null then the
 result is also null.
@@ -132,6 +156,9 @@ Also reachable as `arrow::compute::kernels::bitwise::bitwise_shift_right`
 fn bitwise_shift_right<T>(left: &PrimitiveArray<T>, right: &PrimitiveArray<T>) -> Result<PrimitiveArray<T>, arrow_schema::ArrowError> where T: ArrowNumericType, T::Native: WrappingShr<Output = T::Native>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.bitwise.bitwise_shift_right.md).
+
+
 Perform bitwise `left >> right` operation on two arrays. If either left or right value is null
 then the result is also null.
 
@@ -146,6 +173,9 @@ Also reachable as `arrow::compute::kernels::bitwise::bitwise_shift_right_scalar`
 ```rust
 fn bitwise_shift_right_scalar<T>(array: &PrimitiveArray<T>, scalar: T::Native) -> Result<PrimitiveArray<T>, arrow_schema::ArrowError> where T: ArrowNumericType, T::Native: WrappingShr<Output = T::Native>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.bitwise.bitwise_shift_right_scalar.md).
+
 
 Perform bitwise `left >> right` every value in an array with the scalar. If any value in the array is null then the
 result is also null.
@@ -162,6 +192,9 @@ Also reachable as `arrow::compute::kernels::bitwise::bitwise_xor`
 fn bitwise_xor<T>(left: &PrimitiveArray<T>, right: &PrimitiveArray<T>) -> Result<PrimitiveArray<T>, arrow_schema::ArrowError> where T: ArrowNumericType, T::Native: BitXor<Output = T::Native>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.bitwise.bitwise_xor.md).
+
+
 Perform `left ^ right` operation on two arrays. If either left or right value is null
 then the result is also null.
 
@@ -176,6 +209,9 @@ Also reachable as `arrow::compute::kernels::bitwise::bitwise_xor_scalar`
 ```rust
 fn bitwise_xor_scalar<T>(array: &PrimitiveArray<T>, scalar: T::Native) -> Result<PrimitiveArray<T>, arrow_schema::ArrowError> where T: ArrowNumericType, T::Native: BitXor<Output = T::Native>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.bitwise.bitwise_xor_scalar.md).
+
 
 Perform bitwise `xor` every value in an array with the scalar. If any value in the array is null then the
 result is also null.

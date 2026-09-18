@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## LogHistoryError
 
 `enum` · `buoyant_kernel::history_manager::error::LogHistoryError`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.history_manager.error.LogHistoryError.md)
 
 Also reachable as `delta_kernel::history_manager::error::LogHistoryError`
 
@@ -37,6 +38,7 @@ Represents errors that can occur when converting commit timestamps to versions.
 ## NearestTimestamp
 
 `enum` · `buoyant_kernel::history_manager::error::NearestTimestamp`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.history_manager.error.NearestTimestamp.md)
 
 Also reachable as `delta_kernel::history_manager::error::NearestTimestamp`
 

@@ -22,6 +22,9 @@ struct FFI_SortOptions
 fn from(value: &SortOptions) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udwf.FFI_SortOptions.md).
+
+
 ---
 
 ## FFI_WindowUDF
@@ -49,6 +52,9 @@ fn from(udf: Arc<WindowUDF>) -> Self
 ```rust
 fn drop(&mut self)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udwf.FFI_WindowUDF.md).
+
 
 A stable struct for sharing a [`WindowUDF`] across FFI boundaries.
 
@@ -79,6 +85,9 @@ fn signature(&self) -> &Signature
 fn sort_options(&self) -> Option<SortOptions>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udwf.ForeignWindowUDF.md).
+
+
 This struct is used to access an UDF provided by a foreign
 library across a FFI boundary.
 
@@ -97,5 +106,8 @@ struct WindowUDFPrivateData
 ```
 
 **Fields**: `udf`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udwf.WindowUDFPrivateData.md).
+
 
 ---

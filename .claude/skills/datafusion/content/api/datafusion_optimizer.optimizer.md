@@ -16,6 +16,9 @@ enum ApplyOrder
 
 **Derives**: Clone, Copy, Debug, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.optimizer.ApplyOrder.md).
+
+
 Specifies how recursion for an `OptimizerRule` should be handled.
 
 * `Some(apply_order)`: The Optimizer will recursively apply the rule to the plan.
@@ -44,6 +47,9 @@ fn new() -> Self
 fn optimize<F>(&self, plan: LogicalPlan, config: &dyn OptimizerConfig, observer: F) -> Result<LogicalPlan> where F: FnMut(&LogicalPlan, &dyn OptimizerRule)
 fn with_rules(rules: Vec<Arc<dyn OptimizerRule + Send + Sync>>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.optimizer.Optimizer.md).
+
 
 A rule-based optimizer.
 
@@ -83,6 +89,9 @@ fn options(&self) -> Arc<ConfigOptions>
 fn query_execution_start_time(&self) -> Option<DateTime<Utc>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.optimizer.OptimizerContext.md).
+
+
 A standalone [`OptimizerConfig`] that can be used independently
 of DataFusion's config management
 
@@ -111,6 +120,9 @@ fn function_registry(&self) -> Option<&dyn FunctionRegistry>
 fn options(&self) -> Arc<ConfigOptions>
 fn query_execution_start_time(&self) -> Option<DateTime<Utc>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.optimizer.OptimizerConfig.md).
+
 
 Options to control the DataFusion Optimizer.
 
@@ -162,6 +174,9 @@ fn name(&self) -> &str
 fn rewrite(&self, _plan: LogicalPlan, _config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>, DataFusionError>
 fn supports_rewrite(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.optimizer.OptimizerRule.md).
+
 
 Transforms one [`LogicalPlan`] into another which computes the same results,
 but in a potentially more efficient way.

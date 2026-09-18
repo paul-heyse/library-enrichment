@@ -5,6 +5,7 @@ Crate `deltalake-aws` · 48 public items · structured records in [`model/deltal
 ## ATTR_COMPLETE
 
 `constant` · `deltalake_aws::constants::ATTR_COMPLETE`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.ATTR_COMPLETE.md)
 
 ```rust
 const ATTR_COMPLETE: &str = "complete"
@@ -15,6 +16,7 @@ const ATTR_COMPLETE: &str = "complete"
 ## ATTR_EXPIRE_TIME
 
 `constant` · `deltalake_aws::constants::ATTR_EXPIRE_TIME`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.ATTR_EXPIRE_TIME.md)
 
 ```rust
 const ATTR_EXPIRE_TIME: &str = "expireTime"
@@ -25,6 +27,7 @@ const ATTR_EXPIRE_TIME: &str = "expireTime"
 ## ATTR_FILE_NAME
 
 `constant` · `deltalake_aws::constants::ATTR_FILE_NAME`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.ATTR_FILE_NAME.md)
 
 ```rust
 const ATTR_FILE_NAME: &str = "fileName"
@@ -35,6 +38,7 @@ const ATTR_FILE_NAME: &str = "fileName"
 ## ATTR_TABLE_PATH
 
 `constant` · `deltalake_aws::constants::ATTR_TABLE_PATH`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.ATTR_TABLE_PATH.md)
 
 ```rust
 const ATTR_TABLE_PATH: &str = "tablePath"
@@ -45,6 +49,7 @@ const ATTR_TABLE_PATH: &str = "tablePath"
 ## ATTR_TEMP_PATH
 
 `constant` · `deltalake_aws::constants::ATTR_TEMP_PATH`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.ATTR_TEMP_PATH.md)
 
 ```rust
 const ATTR_TEMP_PATH: &str = "tempPath"
@@ -55,6 +60,7 @@ const ATTR_TEMP_PATH: &str = "tempPath"
 ## AWS_ACCESS_KEY_ID
 
 `constant` · `deltalake_aws::constants::AWS_ACCESS_KEY_ID`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_ACCESS_KEY_ID.md)
 
 ```rust
 const AWS_ACCESS_KEY_ID: &str = "AWS_ACCESS_KEY_ID"
@@ -67,6 +73,7 @@ The AWS_ACCESS_KEY_ID to use for S3.
 ## AWS_ACCESS_KEY_ID_DYNAMODB
 
 `constant` · `deltalake_aws::constants::AWS_ACCESS_KEY_ID_DYNAMODB`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_ACCESS_KEY_ID_DYNAMODB.md)
 
 ```rust
 const AWS_ACCESS_KEY_ID_DYNAMODB: &str = "AWS_ACCESS_KEY_ID_DYNAMODB"
@@ -80,6 +87,7 @@ If it is supplied, this access key takes precedence over the global access key s
 ## AWS_ALLOW_HTTP
 
 `constant` · `deltalake_aws::constants::AWS_ALLOW_HTTP`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_ALLOW_HTTP.md)
 
 ```rust
 const AWS_ALLOW_HTTP: &str = "AWS_ALLOW_HTTP"
@@ -92,6 +100,7 @@ Allow http connections - mainly useful for integration tests
 ## AWS_EC2_METADATA_DISABLED
 
 `constant` · `deltalake_aws::constants::AWS_EC2_METADATA_DISABLED`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_EC2_METADATA_DISABLED.md)
 
 ```rust
 const AWS_EC2_METADATA_DISABLED: &str = "AWS_EC2_METADATA_DISABLED"
@@ -105,6 +114,7 @@ Defaults to "true"
 ## AWS_EC2_METADATA_TIMEOUT
 
 `constant` · `deltalake_aws::constants::AWS_EC2_METADATA_TIMEOUT`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_EC2_METADATA_TIMEOUT.md)
 
 ```rust
 const AWS_EC2_METADATA_TIMEOUT: &str = "AWS_EC2_METADATA_TIMEOUT"
@@ -118,6 +128,7 @@ Defaults to 100
 ## AWS_ENDPOINT_URL
 
 `constant` · `deltalake_aws::constants::AWS_ENDPOINT_URL`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_ENDPOINT_URL.md)
 
 ```rust
 const AWS_ENDPOINT_URL: &str = "AWS_ENDPOINT_URL"
@@ -130,6 +141,7 @@ Custom S3 endpoint.
 ## AWS_ENDPOINT_URL_DYNAMODB
 
 `constant` · `deltalake_aws::constants::AWS_ENDPOINT_URL_DYNAMODB`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_ENDPOINT_URL_DYNAMODB.md)
 
 ```rust
 const AWS_ENDPOINT_URL_DYNAMODB: &str = "AWS_ENDPOINT_URL_DYNAMODB"
@@ -145,6 +157,7 @@ If it is supplied, this endpoint takes precedence over the global endpoint set i
 ## AWS_FORCE_CREDENTIAL_LOAD
 
 `constant` · `deltalake_aws::constants::AWS_FORCE_CREDENTIAL_LOAD`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_FORCE_CREDENTIAL_LOAD.md)
 
 ```rust
 const AWS_FORCE_CREDENTIAL_LOAD: &str = "AWS_FORCE_CREDENTIAL_LOAD"
@@ -157,6 +170,7 @@ Force the delta-rs to attempt to load AWS credentials
 ## AWS_IAM_ROLE_ARN
 
 `constant` · `deltalake_aws::constants::AWS_IAM_ROLE_ARN`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_IAM_ROLE_ARN.md)
 
 ```rust
 const AWS_IAM_ROLE_ARN: &str = "AWS_IAM_ROLE_ARN"
@@ -169,6 +183,7 @@ The role to assume for S3 writes.
 ## AWS_IAM_ROLE_SESSION_NAME
 
 `constant` · `deltalake_aws::constants::AWS_IAM_ROLE_SESSION_NAME`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_IAM_ROLE_SESSION_NAME.md)
 
 ```rust
 const AWS_IAM_ROLE_SESSION_NAME: &str = "AWS_IAM_ROLE_SESSION_NAME"
@@ -181,6 +196,7 @@ The role session name to use when a role is assumed. If not provided a random se
 ## AWS_PROFILE
 
 `constant` · `deltalake_aws::constants::AWS_PROFILE`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_PROFILE.md)
 
 ```rust
 const AWS_PROFILE: &str = "AWS_PROFILE"
@@ -193,6 +209,7 @@ The AWS profile.
 ## AWS_REGION
 
 `constant` · `deltalake_aws::constants::AWS_REGION`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_REGION.md)
 
 ```rust
 const AWS_REGION: &str = "AWS_REGION"
@@ -205,6 +222,7 @@ The AWS region.
 ## AWS_REGION_DYNAMODB
 
 `constant` · `deltalake_aws::constants::AWS_REGION_DYNAMODB`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_REGION_DYNAMODB.md)
 
 ```rust
 const AWS_REGION_DYNAMODB: &str = "AWS_REGION_DYNAMODB"
@@ -218,6 +236,7 @@ If it is supplied, this region takes precedence over the global region set in AW
 ## AWS_ROLE_ARN
 
 `constant` · `deltalake_aws::constants::AWS_ROLE_ARN`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_ROLE_ARN.md)
 
 ```rust
 const AWS_ROLE_ARN: &str = "AWS_ROLE_ARN"
@@ -234,6 +253,7 @@ See also <https://docs.rs/rusoto_sts/0.47.0/rusoto_sts/struct.WebIdentityProvide
 ## AWS_ROLE_SESSION_NAME
 
 `constant` · `deltalake_aws::constants::AWS_ROLE_SESSION_NAME`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_ROLE_SESSION_NAME.md)
 
 ```rust
 const AWS_ROLE_SESSION_NAME: &str = "AWS_ROLE_SESSION_NAME"
@@ -250,6 +270,7 @@ See also <https://docs.rs/rusoto_sts/0.47.0/rusoto_sts/struct.WebIdentityProvide
 ## AWS_S3_ADDRESSING_STYLE
 
 `constant` · `deltalake_aws::constants::AWS_S3_ADDRESSING_STYLE`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_S3_ADDRESSING_STYLE.md)
 
 ```rust
 const AWS_S3_ADDRESSING_STYLE: &str = "AWS_S3_ADDRESSING_STYLE"
@@ -263,6 +284,7 @@ Uses either "path" (the default) or "virtual", which turns on
 ## AWS_S3_ALLOW_UNSAFE_RENAME
 
 `constant` · `deltalake_aws::constants::AWS_S3_ALLOW_UNSAFE_RENAME`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_S3_ALLOW_UNSAFE_RENAME.md)
 
 ```rust
 const AWS_S3_ALLOW_UNSAFE_RENAME: &str = "AWS_S3_ALLOW_UNSAFE_RENAME"
@@ -276,6 +298,7 @@ Only safe if there is one writer to a given table.
 ## AWS_S3_ASSUME_ROLE_ARN
 
 `constant` · `deltalake_aws::constants::AWS_S3_ASSUME_ROLE_ARN`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_S3_ASSUME_ROLE_ARN.md)
 
 > **Deprecated** — since 0.20.0: Please use AWS_IAM_ROLE_ARN instead
 
@@ -290,6 +313,7 @@ The role to assume. Please use [AWS_IAM_ROLE_ARN] instead
 ## AWS_S3_GET_INTERNAL_SERVER_ERROR_RETRIES
 
 `constant` · `deltalake_aws::constants::AWS_S3_GET_INTERNAL_SERVER_ERROR_RETRIES`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_S3_GET_INTERNAL_SERVER_ERROR_RETRIES.md)
 
 ```rust
 const AWS_S3_GET_INTERNAL_SERVER_ERROR_RETRIES: &str = "AWS_S3_GET_INTERNAL_SERVER_ERROR_RETRIES"
@@ -302,6 +326,7 @@ The number of retries for S3 GET requests failed with 500 Internal Server Error.
 ## AWS_S3_LOCKING_PROVIDER
 
 `constant` · `deltalake_aws::constants::AWS_S3_LOCKING_PROVIDER`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_S3_LOCKING_PROVIDER.md)
 
 ```rust
 const AWS_S3_LOCKING_PROVIDER: &str = "AWS_S3_LOCKING_PROVIDER"
@@ -316,6 +341,7 @@ If not set, safe atomic rename is not available.
 ## AWS_S3_POOL_IDLE_TIMEOUT_SECONDS
 
 `constant` · `deltalake_aws::constants::AWS_S3_POOL_IDLE_TIMEOUT_SECONDS`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_S3_POOL_IDLE_TIMEOUT_SECONDS.md)
 
 ```rust
 const AWS_S3_POOL_IDLE_TIMEOUT_SECONDS: &str = "AWS_S3_POOL_IDLE_TIMEOUT_SECONDS"
@@ -335,6 +361,7 @@ To avoid that, the default value of this setting is 15 seconds if it's not set o
 ## AWS_S3_ROLE_SESSION_NAME
 
 `constant` · `deltalake_aws::constants::AWS_S3_ROLE_SESSION_NAME`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_S3_ROLE_SESSION_NAME.md)
 
 > **Deprecated** — since 0.20.0: Please use AWS_IAM_ROLE_SESSION_NAME instead
 
@@ -349,6 +376,7 @@ The role session name to use when a role is assumed. If not provided a random se
 ## AWS_SECRET_ACCESS_KEY
 
 `constant` · `deltalake_aws::constants::AWS_SECRET_ACCESS_KEY`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_SECRET_ACCESS_KEY.md)
 
 ```rust
 const AWS_SECRET_ACCESS_KEY: &str = "AWS_SECRET_ACCESS_KEY"
@@ -361,6 +389,7 @@ The AWS_SECRET_ACCESS_KEY to use for S3.
 ## AWS_SECRET_ACCESS_KEY_DYNAMODB
 
 `constant` · `deltalake_aws::constants::AWS_SECRET_ACCESS_KEY_DYNAMODB`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_SECRET_ACCESS_KEY_DYNAMODB.md)
 
 ```rust
 const AWS_SECRET_ACCESS_KEY_DYNAMODB: &str = "AWS_SECRET_ACCESS_KEY_DYNAMODB"
@@ -374,6 +403,7 @@ If it is supplied, this secret key takes precedence over the global secret key s
 ## AWS_SESSION_TOKEN
 
 `constant` · `deltalake_aws::constants::AWS_SESSION_TOKEN`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_SESSION_TOKEN.md)
 
 ```rust
 const AWS_SESSION_TOKEN: &str = "AWS_SESSION_TOKEN"
@@ -386,6 +416,7 @@ The AWS_SESSION_TOKEN to use for S3.
 ## AWS_SESSION_TOKEN_DYNAMODB
 
 `constant` · `deltalake_aws::constants::AWS_SESSION_TOKEN_DYNAMODB`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_SESSION_TOKEN_DYNAMODB.md)
 
 ```rust
 const AWS_SESSION_TOKEN_DYNAMODB: &str = "AWS_SESSION_TOKEN_DYNAMODB"
@@ -399,6 +430,7 @@ If it is supplied, this session token takes precedence over the global session t
 ## AWS_STS_POOL_IDLE_TIMEOUT_SECONDS
 
 `constant` · `deltalake_aws::constants::AWS_STS_POOL_IDLE_TIMEOUT_SECONDS`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_STS_POOL_IDLE_TIMEOUT_SECONDS.md)
 
 ```rust
 const AWS_STS_POOL_IDLE_TIMEOUT_SECONDS: &str = "AWS_STS_POOL_IDLE_TIMEOUT_SECONDS"
@@ -412,6 +444,7 @@ the reasoning in `AWS_S3_POOL_IDLE_TIMEOUT_SECONDS`.
 ## AWS_WEB_IDENTITY_TOKEN_FILE
 
 `constant` · `deltalake_aws::constants::AWS_WEB_IDENTITY_TOKEN_FILE`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.AWS_WEB_IDENTITY_TOKEN_FILE.md)
 
 ```rust
 const AWS_WEB_IDENTITY_TOKEN_FILE: &str = "AWS_WEB_IDENTITY_TOKEN_FILE"
@@ -428,6 +461,7 @@ See also <https://docs.rs/rusoto_sts/0.47.0/rusoto_sts/struct.WebIdentityProvide
 ## BILLING_MODE_KEY_NAME
 
 `constant` · `deltalake_aws::constants::BILLING_MODE_KEY_NAME`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.BILLING_MODE_KEY_NAME.md)
 
 ```rust
 const BILLING_MODE_KEY_NAME: &str = "DELTA_DYNAMO_BILLING_MODE"
@@ -438,6 +472,7 @@ const BILLING_MODE_KEY_NAME: &str = "DELTA_DYNAMO_BILLING_MODE"
 ## CONDITION_UPDATE_INCOMPLETE
 
 `constant` · `deltalake_aws::constants::CONDITION_UPDATE_INCOMPLETE`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.CONDITION_UPDATE_INCOMPLETE.md)
 
 ```rust
 const CONDITION_UPDATE_INCOMPLETE: &str = "complete = :f"
@@ -448,6 +483,7 @@ const CONDITION_UPDATE_INCOMPLETE: &str = "complete = :f"
 ## DEFAULT_COMMIT_ENTRY_EXPIRATION_DELAY
 
 `constant` · `deltalake_aws::constants::DEFAULT_COMMIT_ENTRY_EXPIRATION_DELAY`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.DEFAULT_COMMIT_ENTRY_EXPIRATION_DELAY.md)
 
 ```rust
 const DEFAULT_COMMIT_ENTRY_EXPIRATION_DELAY: std::time::Duration = _
@@ -458,6 +494,7 @@ const DEFAULT_COMMIT_ENTRY_EXPIRATION_DELAY: std::time::Duration = _
 ## DEFAULT_LOCK_TABLE_NAME
 
 `constant` · `deltalake_aws::constants::DEFAULT_LOCK_TABLE_NAME`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.DEFAULT_LOCK_TABLE_NAME.md)
 
 ```rust
 const DEFAULT_LOCK_TABLE_NAME: &str = "delta_log"
@@ -468,6 +505,7 @@ const DEFAULT_LOCK_TABLE_NAME: &str = "delta_log"
 ## DEFAULT_S3_GET_INTERNAL_SERVER_ERROR_RETRIES
 
 `constant` · `deltalake_aws::constants::DEFAULT_S3_GET_INTERNAL_SERVER_ERROR_RETRIES`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.DEFAULT_S3_GET_INTERNAL_SERVER_ERROR_RETRIES.md)
 
 ```rust
 const DEFAULT_S3_GET_INTERNAL_SERVER_ERROR_RETRIES: usize = 10
@@ -478,6 +516,7 @@ const DEFAULT_S3_GET_INTERNAL_SERVER_ERROR_RETRIES: usize = 10
 ## DEFAULT_S3_POOL_IDLE_TIMEOUT_SECONDS
 
 `constant` · `deltalake_aws::constants::DEFAULT_S3_POOL_IDLE_TIMEOUT_SECONDS`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.DEFAULT_S3_POOL_IDLE_TIMEOUT_SECONDS.md)
 
 ```rust
 const DEFAULT_S3_POOL_IDLE_TIMEOUT_SECONDS: u64 = 15
@@ -488,6 +527,7 @@ const DEFAULT_S3_POOL_IDLE_TIMEOUT_SECONDS: u64 = 15
 ## DEFAULT_STS_POOL_IDLE_TIMEOUT_SECONDS
 
 `constant` · `deltalake_aws::constants::DEFAULT_STS_POOL_IDLE_TIMEOUT_SECONDS`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.DEFAULT_STS_POOL_IDLE_TIMEOUT_SECONDS.md)
 
 ```rust
 const DEFAULT_STS_POOL_IDLE_TIMEOUT_SECONDS: u64 = 10
@@ -498,6 +538,7 @@ const DEFAULT_STS_POOL_IDLE_TIMEOUT_SECONDS: u64 = 10
 ## KEY_TYPE_HASH
 
 `constant` · `deltalake_aws::constants::KEY_TYPE_HASH`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.KEY_TYPE_HASH.md)
 
 ```rust
 const KEY_TYPE_HASH: &str = "HASH"
@@ -508,6 +549,7 @@ const KEY_TYPE_HASH: &str = "HASH"
 ## KEY_TYPE_RANGE
 
 `constant` · `deltalake_aws::constants::KEY_TYPE_RANGE`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.KEY_TYPE_RANGE.md)
 
 ```rust
 const KEY_TYPE_RANGE: &str = "RANGE"
@@ -518,6 +560,7 @@ const KEY_TYPE_RANGE: &str = "RANGE"
 ## LOCK_TABLE_KEY_NAME
 
 `constant` · `deltalake_aws::constants::LOCK_TABLE_KEY_NAME`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.LOCK_TABLE_KEY_NAME.md)
 
 ```rust
 const LOCK_TABLE_KEY_NAME: &str = "DELTA_DYNAMO_TABLE_NAME"
@@ -528,6 +571,7 @@ const LOCK_TABLE_KEY_NAME: &str = "DELTA_DYNAMO_TABLE_NAME"
 ## MAX_ELAPSED_REQUEST_TIME_KEY_NAME
 
 `constant` · `deltalake_aws::constants::MAX_ELAPSED_REQUEST_TIME_KEY_NAME`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.MAX_ELAPSED_REQUEST_TIME_KEY_NAME.md)
 
 ```rust
 const MAX_ELAPSED_REQUEST_TIME_KEY_NAME: &str = "DELTA_DYNAMO_MAX_ELAPSED_REQUEST_TIME"
@@ -538,6 +582,7 @@ const MAX_ELAPSED_REQUEST_TIME_KEY_NAME: &str = "DELTA_DYNAMO_MAX_ELAPSED_REQUES
 ## S3_OPTS
 
 `constant` · `deltalake_aws::constants::S3_OPTS`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.S3_OPTS.md)
 
 ```rust
 const S3_OPTS: &[&str] = _
@@ -552,6 +597,7 @@ field of [S3StorageOptions](crate::storage::S3StorageOptions).
 ## STRING_TYPE
 
 `constant` · `deltalake_aws::constants::STRING_TYPE`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.STRING_TYPE.md)
 
 ```rust
 const STRING_TYPE: &str = "S"
@@ -562,6 +608,7 @@ const STRING_TYPE: &str = "S"
 ## CONDITION_DELETE_INCOMPLETE
 
 `static` · `deltalake_aws::constants::CONDITION_DELETE_INCOMPLETE`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.CONDITION_DELETE_INCOMPLETE.md)
 
 ```rust
 static CONDITION_DELETE_INCOMPLETE: std::sync::LazyLock<String>
@@ -572,6 +619,7 @@ static CONDITION_DELETE_INCOMPLETE: std::sync::LazyLock<String>
 ## CONDITION_EXPR_CREATE
 
 `static` · `deltalake_aws::constants::CONDITION_EXPR_CREATE`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.constants.CONDITION_EXPR_CREATE.md)
 
 ```rust
 static CONDITION_EXPR_CREATE: std::sync::LazyLock<String>

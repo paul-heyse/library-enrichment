@@ -12,6 +12,9 @@ Also reachable as `datafusion::common::DEFAULT_ARROW_EXTENSION`, `datafusion_com
 const DEFAULT_ARROW_EXTENSION: &str = ".arrow"
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.file_options.file_type.DEFAULT_ARROW_EXTENSION.md).
+
+
 The default file extension of arrow files
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `datafusion::common::DEFAULT_AVRO_EXTENSION`, `datafusion_comm
 ```rust
 const DEFAULT_AVRO_EXTENSION: &str = ".avro"
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.file_options.file_type.DEFAULT_AVRO_EXTENSION.md).
+
 
 The default file extension of avro files
 
@@ -40,6 +46,9 @@ Also reachable as `datafusion::common::DEFAULT_CSV_EXTENSION`, `datafusion_commo
 const DEFAULT_CSV_EXTENSION: &str = ".csv"
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.file_options.file_type.DEFAULT_CSV_EXTENSION.md).
+
+
 The default file extension of csv files
 
 ---
@@ -54,6 +63,9 @@ Also reachable as `datafusion::common::DEFAULT_JSON_EXTENSION`, `datafusion_comm
 const DEFAULT_JSON_EXTENSION: &str = ".json"
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.file_options.file_type.DEFAULT_JSON_EXTENSION.md).
+
+
 The default file extension of json files
 
 ---
@@ -67,6 +79,9 @@ Also reachable as `datafusion::common::DEFAULT_PARQUET_EXTENSION`, `datafusion_c
 ```rust
 const DEFAULT_PARQUET_EXTENSION: &str = ".parquet"
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.file_options.file_type.DEFAULT_PARQUET_EXTENSION.md).
+
 
 The default file extension of parquet files
 
@@ -89,6 +104,9 @@ trait FileType: GetExt + Display + Send + Sync
 ```rust
 fn as_any(&self) -> &dyn Any
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.file_options.file_type.FileType.md).
+
 
 Defines the functionality needed for logical planning for
 a type of file which will be read or written to storage.
@@ -120,6 +138,9 @@ trait GetExt
 ```rust
 fn get_ext(&self) -> String
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.file_options.file_type.GetExt.md).
+
 
 Define each `FileType`/`FileCompressionType`'s extension
 

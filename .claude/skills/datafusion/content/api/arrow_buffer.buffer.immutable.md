@@ -71,6 +71,9 @@ fn from_iter<I>(iter: I) -> Self where I: IntoIterator<Item = bool>
 fn deref(&self) -> &[u8]
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.immutable.Buffer.md).
+
+
  A contiguous memory region that can be shared with other buffers and across
  thread boundaries that stores Arrow data.
 

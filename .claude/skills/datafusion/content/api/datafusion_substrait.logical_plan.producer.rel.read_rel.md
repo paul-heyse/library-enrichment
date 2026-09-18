@@ -10,6 +10,9 @@ Crate `datafusion-substrait` · 3 public items · structured records in [`model/
 fn from_empty_relation(producer: &mut impl SubstraitProducer, e: &datafusion::logical_expr::EmptyRelation) -> datafusion::common::Result<Box<substrait::proto::Rel>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.rel.read_rel.from_empty_relation.md).
+
+
 Encodes an EmptyRelation as a Substrait VirtualTable.
 
 EmptyRelation represents a relation with no input data. When `produce_one_row` is true,
@@ -30,6 +33,9 @@ used in optimizations or as a placeholder.
 fn from_table_scan(producer: &mut impl SubstraitProducer, scan: &datafusion::logical_expr::TableScan) -> datafusion::common::Result<Box<substrait::proto::Rel>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.rel.read_rel.from_table_scan.md).
+
+
 ---
 
 ## from_values
@@ -39,5 +45,8 @@ fn from_table_scan(producer: &mut impl SubstraitProducer, scan: &datafusion::log
 ```rust
 fn from_values(producer: &mut impl SubstraitProducer, v: &datafusion::logical_expr::Values) -> datafusion::common::Result<Box<substrait::proto::Rel>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.rel.read_rel.from_values.md).
+
 
 ---

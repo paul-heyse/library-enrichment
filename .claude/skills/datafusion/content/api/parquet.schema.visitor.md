@@ -21,6 +21,9 @@ fn visit_primitive(&mut self, primitive_type: TypePtr, context: C) -> Result<R>
 fn visit_struct(&mut self, struct_type: TypePtr, context: C) -> Result<R>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.schema.visitor.TypeVisitor.md).
+
+
 A utility trait to help user to traverse against parquet type.
 
 ---

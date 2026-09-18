@@ -79,6 +79,9 @@ fn from_iter<I: IntoIterator<Item = &'a Option<Ptr>>>(iter: I) -> Self
 fn from_iter<I: IntoIterator<Item = Option<Ptr>>>(iter: I) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.byte_view_array.GenericByteViewArray.md).
+
+
 [Variable-size Binary View Layout]: An array of variable length bytes views.
 
 This array type is used to store variable length byte data (e.g. Strings, Binary)
@@ -218,6 +221,9 @@ view. In this case, the same bytes for "Fish" are used to store both strings.
 type BinaryViewArray = GenericByteViewArray<types::BinaryViewType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.byte_view_array.BinaryViewArray.md).
+
+
 A [`GenericByteViewArray`] of `[u8]`
 
 See [`GenericByteViewArray`] for format and layout details.
@@ -239,6 +245,9 @@ assert_eq!(array.value(3), b"large payload over 12 bytes");
 ```rust
 type StringViewArray = GenericByteViewArray<types::StringViewType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.byte_view_array.StringViewArray.md).
+
 
 A [`GenericByteViewArray`] that stores utf8 data
 

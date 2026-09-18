@@ -1,0 +1,5693 @@
+[
+  {
+    "id": "c6098a137f542fbc611c6673",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "name": "MutableBuffer",
+    "owner": null,
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct MutableBuffer",
+    "docs": "A [`MutableBuffer`] is a wrapper over memory regions, used to build\n[`Buffer`]s out of items or slices of items.\n\n[`Buffer`]s created from [`MutableBuffer`] (via `into`) are guaranteed to be\naligned along cache lines and in multiples of 64 bytes.\n\nUse [MutableBuffer::push] to insert an item, [MutableBuffer::extend_from_slice]\nto insert many items, and `into` to convert it to [`Buffer`]. For typed data,\nit is often more efficient to use [`Vec`] and convert it to [`Buffer`] rather\nthan using [`MutableBuffer`] (see examples below).\n\n# See Also\n* For a safe, strongly typed API consider using [`Vec`] and [`ScalarBuffer`](crate::ScalarBuffer)\n* To apply bitwise operations, see [`apply_bitwise_binary_op`] and [`apply_bitwise_unary_op`]\n\n[`apply_bitwise_binary_op`]: crate::bit_util::apply_bitwise_binary_op\n[`apply_bitwise_unary_op`]: crate::bit_util::apply_bitwise_unary_op\n\n# Example: Creating a [`Buffer`] from a [`MutableBuffer`]\n```\n# use arrow_buffer::buffer::{Buffer, MutableBuffer};\nlet mut buffer = MutableBuffer::new(0);\nbuffer.push(256u32);\nbuffer.extend_from_slice(&[1u32]);\nlet buffer = Buffer::from(buffer);\nassert_eq!(buffer.as_slice(), &[0u8, 1, 0, 0, 1, 0, 0, 0])\n```\n\nThe same can be achieved more efficiently by using a `Vec<u32>`\n```\n# use arrow_buffer::buffer::Buffer;\nlet mut vec = Vec::new();\nvec.push(256u32);\nvec.extend_from_slice(&[1u32]);\nlet buffer = Buffer::from(vec);\nassert_eq!(buffer.as_slice(), &[0u8, 1, 0, 0, 1, 0, 0, 0]);\n```\n\n# Example: Creating a [`MutableBuffer`] from a `Vec<T>`\n```\n# use arrow_buffer::buffer::MutableBuffer;\nlet vec = vec![1u32, 2, 3];\nlet mutable_buffer = MutableBuffer::from(vec); // reuses the allocation from vec\nassert_eq!(mutable_buffer.len(), 12); // 3 * 4 bytes\n```\n\n# Example: Creating a [`MutableBuffer`] from a [`Buffer`]\n```\n# use arrow_buffer::buffer::{Buffer, MutableBuffer};\nlet buffer: Buffer = Buffer::from(&[1u8, 2, 3, 4][..]);\n// Only possible to convert a Buffer into a MutableBuffer if uniquely owned\n// (i.e., there are no other references to it).\nlet mut mutable_buffer = match buffer.into_mutable() {\n   Ok(mutable) => mutable,\n   Err(orig_buffer) => {\n     panic!(\"buffer was not uniquely owned\");\n   }\n};\nmutable_buffer.push(5u8);\nlet buffer = Buffer::from(mutable_buffer);\nassert_eq!(buffer.as_slice(), &[1u8, 2, 3, 4, 5])\n```",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        99,
+        1
+      ],
+      "end": [
+        109,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          255,
+          259,
+          260,
+          261,
+          262,
+          263,
+          264,
+          265,
+          266,
+          267,
+          268,
+          269,
+          270,
+          271,
+          272,
+          273,
+          206,
+          275,
+          277,
+          280,
+          282,
+          285,
+          287,
+          290,
+          292,
+          295,
+          296,
+          297,
+          299,
+          301,
+          303
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "crate::bit_util::apply_bitwise_binary_op": 224,
+      "MutableBuffer::extend_from_slice": 223,
+      "`Vec`": 128,
+      "`MutableBuffer`": 147,
+      "crate::bit_util::apply_bitwise_unary_op": 225,
+      "MutableBuffer::push": 222,
+      "crate::ScalarBuffer": 12,
+      "`Buffer`": 123
+    },
+    "link_paths": {
+      "crate::bit_util::apply_bitwise_binary_op": "arrow_buffer::util::bit_util::apply_bitwise_binary_op",
+      "MutableBuffer::extend_from_slice": "arrow_buffer::buffer::mutable::MutableBuffer::extend_from_slice",
+      "`Vec`": "alloc::vec::Vec",
+      "`MutableBuffer`": "arrow_buffer::buffer::mutable::MutableBuffer",
+      "crate::bit_util::apply_bitwise_unary_op": "arrow_buffer::util::bit_util::apply_bitwise_unary_op",
+      "MutableBuffer::push": "arrow_buffer::buffer::mutable::MutableBuffer::push",
+      "crate::ScalarBuffer": "arrow_buffer::buffer::scalar::ScalarBuffer",
+      "`Buffer`": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "147",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-c6098a137f542fbc611c6673",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::bit_util::apply_bitwise_binary_op": "../operations/arrow_buffer.util.bit_util.apply_bitwise_binary_op.md#op-1e28964b08a51187f1e0918f",
+      "MutableBuffer::extend_from_slice": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-1bae38d324b1bfa17cf919f8",
+      "`MutableBuffer`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-c6098a137f542fbc611c6673",
+      "crate::bit_util::apply_bitwise_unary_op": "../operations/arrow_buffer.util.bit_util.apply_bitwise_unary_op.md#op-61b160ab902fd849eb53361c",
+      "MutableBuffer::push": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-6cb8939ad5dae53225639f18",
+      "crate::ScalarBuffer": "../operations/arrow_buffer.buffer.scalar.ScalarBuffer.md#op-3edbfa8eafafb64c0414f247",
+      "`Buffer`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b"
+    }
+  },
+  {
+    "id": "888e47afbfc08bac0d7bf9f2",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::Target",
+    "name": "Target",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "assoc_type",
+    "signature": "Target",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        1076,
+        5
+      ],
+      "end": [
+        1076,
+        24
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "type": {
+          "slice": {
+            "primitive": "u8"
+          }
+        },
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Deref",
+        "id": "core::ops::deref::Deref",
+        "args": null
+      },
+      "trait_path": "core::ops::deref::Deref",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          1075,
+          1
+        ],
+        "end": [
+          1081,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "283",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-888e47afbfc08bac0d7bf9f2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4a59c8912645405299e49e35",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::as_mut_ptr",
+    "name": "as_mut_ptr",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_mut_ptr(&mut self) -> *mut u8",
+    "docs": "Returns a mutable raw pointer to this buffer's internal memory\nThis pointer is guaranteed to be aligned along cache-lines.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        532,
+        5
+      ],
+      "end": [
+        534,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "raw_pointer": {
+              "is_mutable": true,
+              "type": {
+                "primitive": "u8"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "244",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-4a59c8912645405299e49e35",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1536c27dfd6ea46f27de6665",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::as_ptr",
+    "name": "as_ptr",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "const fn as_ptr(&self) -> *const u8",
+    "docs": "Returns a raw pointer to this buffer's internal memory\nThis pointer is guaranteed to be aligned along cache-lines.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        525,
+        5
+      ],
+      "end": [
+        527,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "raw_pointer": {
+              "is_mutable": false,
+              "type": {
+                "primitive": "u8"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": true,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "243",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-1536c27dfd6ea46f27de6665",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6a3d543f1cba6ff705d14390",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::as_slice",
+    "name": "as_slice",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_slice(&self) -> &[u8]",
+    "docs": "Returns the data stored in this buffer as a slice.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        513,
+        5
+      ],
+      "end": [
+        515,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "primitive": "u8"
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "241",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-6a3d543f1cba6ff705d14390",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7ec815665c1fdb2c9c90aece",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::as_slice_mut",
+    "name": "as_slice_mut",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_slice_mut(&mut self) -> &mut [u8]",
+    "docs": "Returns the data stored in this buffer as a mutable slice.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        518,
+        5
+      ],
+      "end": [
+        520,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "slice": {
+                  "primitive": "u8"
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "242",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-7ec815665c1fdb2c9c90aece",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "afcb557e0852d146b38f94e1",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::capacity",
+    "name": "capacity",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "const fn capacity(&self) -> usize",
+    "docs": "Returns the total capacity in this buffer, in bytes.\n\nThe invariant `buffer.len() <= buffer.capacity()` is always upheld.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        497,
+        5
+      ],
+      "end": [
+        499,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": true,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "239",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-afcb557e0852d146b38f94e1",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8f6d5215132ef4e817ba6464",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::claim",
+    "name": "claim",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn claim(&self, pool: &dyn MemoryPool)",
+    "docs": "Register this [`MutableBuffer`] with the provided [`MemoryPool`]\n\nThis claims the memory used by this buffer in the pool, allowing for\naccurate accounting of memory usage. Any prior reservation will be\nreleased so this works well when the buffer is being shared among\nmultiple arrays.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        847,
+        5
+      ],
+      "end": [
+        849,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"pool\"), span: src/buffer/mutable.rs:846:11: 846:27 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "pool",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "MemoryPool",
+                            "id": 26,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "26": "arrow_buffer::pool::MemoryPool"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MutableBuffer`": 147,
+      "`MemoryPool`": 26
+    },
+    "link_paths": {
+      "`MutableBuffer`": "arrow_buffer::buffer::mutable::MutableBuffer",
+      "`MemoryPool`": "arrow_buffer::pool::MemoryPool"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "254",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-8f6d5215132ef4e817ba6464",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MutableBuffer`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-c6098a137f542fbc611c6673",
+      "`MemoryPool`": "../operations/arrow_buffer.pool.MemoryPool.md#op-ed45519ea8493e8aed943b0a"
+    }
+  },
+  {
+    "id": "4cd59d82e29a08de62a62c90",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::clear",
+    "name": "clear",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn clear(&mut self)",
+    "docs": "Clear all existing data from this buffer.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        502,
+        5
+      ],
+      "end": [
+        510,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "240",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-4cd59d82e29a08de62a62c90",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9f53082ce994192253fc2416",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::collect_bool",
+    "name": "collect_bool",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn collect_bool<F: FnMut(usize) -> bool>(len: usize, f: F) -> Self",
+    "docs": "Invokes `f` with values `0..len` collecting the boolean results into a new `MutableBuffer`\n\nThis is similar to `from_trusted_len_iter_bool`, however, can be significantly faster\nas it eliminates the conditional `Iterator::next`",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        675,
+        5
+      ],
+      "end": [
+        703,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "f",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "FnMut",
+                          "id": 252,
+                          "args": {
+                            "parenthesized": {
+                              "inputs": [
+                                {
+                                  "primitive": "usize"
+                                }
+                              ],
+                              "output": {
+                                "primitive": "bool"
+                              }
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "252": "core::ops::function::FnMut"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "251",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-9f53082ce994192253fc2416",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0ed4dc0be69cab288dee1853",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::default",
+    "name": "default",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn default() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        1070,
+        5
+      ],
+      "end": [
+        1072,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          1069,
+          1
+        ],
+        "end": [
+          1073,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "281",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-0ed4dc0be69cab288dee1853",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "83b64cbd2d0742e22383103c",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::deref",
+    "name": "deref",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn deref(&self) -> &[u8]",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        1078,
+        5
+      ],
+      "end": [
+        1080,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "primitive": "u8"
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Deref",
+        "id": "core::ops::deref::Deref",
+        "args": null
+      },
+      "trait_path": "core::ops::deref::Deref",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          1075,
+          1
+        ],
+        "end": [
+          1081,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "284",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-83b64cbd2d0742e22383103c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0a5386c79926c80155c6b380",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::deref_mut",
+    "name": "deref_mut",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn deref_mut(&mut self) -> &mut [u8]",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        1084,
+        5
+      ],
+      "end": [
+        1086,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "slice": {
+                  "primitive": "u8"
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "DerefMut",
+        "id": "core::ops::deref::DerefMut",
+        "args": null
+      },
+      "trait_path": "core::ops::deref::DerefMut",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          1083,
+          1
+        ],
+        "end": [
+          1087,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "286",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-0a5386c79926c80155c6b380",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a32383c739aad4b0b4fdd721",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::drop",
+    "name": "drop",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn drop(&mut self)",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        1096,
+        5
+      ],
+      "end": [
+        1101,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Drop",
+        "id": "core::ops::drop::Drop",
+        "args": null
+      },
+      "trait_path": "core::ops::drop::Drop",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          1095,
+          1
+        ],
+        "end": [
+          1102,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "291",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-a32383c739aad4b0b4fdd721",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ed9bf8f8fb517306c8995726",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::eq",
+    "name": "eq",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &MutableBuffer) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        1105,
+        5
+      ],
+      "end": [
+        1113,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "MutableBuffer",
+                      "id": 147,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "147": "arrow_buffer::buffer::mutable::MutableBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          1104,
+          1
+        ],
+        "end": [
+          1114,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "294",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-ed9bf8f8fb517306c8995726",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "177d224ffb14d28630099297",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::extend",
+    "name": "extend",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn extend<T: IntoIterator<Item = A>>(&mut self, iter: T)",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        873,
+        5
+      ],
+      "end": [
+        876,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "iter",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "IntoIterator",
+                          "id": 19,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "generic": "A"
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "19": "core::iter::traits::collect::IntoIterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Extend",
+        "id": "core::iter::traits::collect::Extend",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "generic": "A"
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::iter::traits::collect::Extend",
+      "generics": {
+        "params": [
+          {
+            "name": "A",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          871,
+          1
+        ],
+        "end": [
+          877,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "276",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-177d224ffb14d28630099297",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "db6ea15f12a090e6d6e86875",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::extend_bool_trusted_len",
+    "name": "extend_bool_trusted_len",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn extend_bool_trusted_len<I: Iterator<Item = bool>>(&mut self, iter: I, offset: usize)",
+    "docs": "Extends this buffer with boolean values.\n\nThis requires `iter` to report an exact size via `size_hint`.\n`offset` indicates the starting offset in bits in this buffer to begin writing to\nand must be less than or equal to the current length of this buffer.\nAll bits not written to (but readable due to byte alignment) will be zeroed out.\n\n# Panics\n\nPanics if `iter` does not report an exact size via `size_hint`, or if it yields fewer\nitems than reported, or if extending the buffer requires reserving a capacity that fails\nfor the same reasons as [`MutableBuffer::reserve`].\n\n# Safety\nCallers must ensure that `iter` reports an exact size via `size_hint`.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        721,
+        5
+      ],
+      "end": [
+        838,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "iter",
+              {
+                "generic": "I"
+              }
+            ],
+            [
+              "offset",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "I",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Iterator",
+                          "id": 153,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "primitive": "bool"
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "153": "core::iter::traits::iterator::Iterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MutableBuffer::reserve`": 232
+    },
+    "link_paths": {
+      "`MutableBuffer::reserve`": "arrow_buffer::buffer::mutable::MutableBuffer::reserve"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "253",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-db6ea15f12a090e6d6e86875",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MutableBuffer::reserve`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-18a37c4ca2f74d77b509cc10"
+    }
+  },
+  {
+    "id": "1bae38d324b1bfa17cf919f8",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::extend_from_slice",
+    "name": "extend_from_slice",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn extend_from_slice<T: ArrowNativeType>(&mut self, items: &[T])",
+    "docs": "Extends this buffer from a slice of items that can be represented in bytes, increasing its capacity if needed.\n# Example\n```\n# use arrow_buffer::buffer::MutableBuffer;\nlet mut buffer = MutableBuffer::new(0);\nbuffer.extend_from_slice(&[2u32, 0]);\nassert_eq!(buffer.len(), 8) // u32 has 4 bytes\n```\n\n# Panics\n\nPanics if extending the buffer requires reserving a capacity that fails for the same\nreasons as [`MutableBuffer::reserve`].",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        592,
+        5
+      ],
+      "end": [
+        604,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "items",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "generic": "T"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ArrowNativeType",
+                          "id": 11,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "11": "arrow_buffer::native::ArrowNativeType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MutableBuffer::reserve`": 232
+    },
+    "link_paths": {
+      "`MutableBuffer::reserve`": "arrow_buffer::buffer::mutable::MutableBuffer::reserve"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "223",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-1bae38d324b1bfa17cf919f8",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MutableBuffer::reserve`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-18a37c4ca2f74d77b509cc10"
+    }
+  },
+  {
+    "id": "6efed1b1c08e8ae4ec0d20fe",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::extend_zeros",
+    "name": "extend_zeros",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn extend_zeros(&mut self, additional: usize)",
+    "docs": "Extends the buffer by `additional` bytes equal to `0u8`, incrementing its capacity if needed.\n\n# Panics\n\nPanics if `self.len + additional` overflows `usize`, or if growing the buffer requires\nreserving a capacity that fails for the same reasons as [`MutableBuffer::reserve`].",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        650,
+        5
+      ],
+      "end": [
+        656,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "additional",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MutableBuffer::reserve`": 232
+    },
+    "link_paths": {
+      "`MutableBuffer::reserve`": "arrow_buffer::buffer::mutable::MutableBuffer::reserve"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "249",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-6efed1b1c08e8ae4ec0d20fe",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MutableBuffer::reserve`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-18a37c4ca2f74d77b509cc10"
+    }
+  },
+  {
+    "id": "44398c7394c94ff95ad88932",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::fmt",
+    "name": "fmt",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        98,
+        10
+      ],
+      "end": [
+        98,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 89,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 90,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "89": "core::fmt::Formatter",
+      "90": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          98,
+          10
+        ],
+        "end": [
+          98,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "274",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-44398c7394c94ff95ad88932",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6e50fed50cbac31115b5f10e",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::from",
+    "name": "from",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from(value: Vec<T>) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        880,
+        5
+      ],
+      "end": [
+        897,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 128,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "T"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "Vec",
+                    "id": "alloc::vec::Vec",
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "generic": "T"
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          879,
+          1
+        ],
+        "end": [
+          898,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "279",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-6e50fed50cbac31115b5f10e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "341e336c2cbd563deb63e279",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::from_iter",
+    "name": "from_iter",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from_iter<I>(iter: I) -> Self where I: IntoIterator<Item = bool>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        1143,
+        5
+      ],
+      "end": [
+        1193,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "iter",
+              {
+                "generic": "I"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "I",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "I"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "IntoIterator",
+                        "id": 19,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [],
+                            "constraints": [
+                              {
+                                "name": "Item",
+                                "args": null,
+                                "binding": {
+                                  "equality": {
+                                    "type": {
+                                      "primitive": "bool"
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "19": "core::iter::traits::collect::IntoIterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FromIterator",
+        "id": "core::iter::traits::collect::FromIterator",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "primitive": "bool"
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::iter::traits::collect::FromIterator",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          1142,
+          1
+        ],
+        "end": [
+          1194,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "298",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-341e336c2cbd563deb63e279",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "66d4e7268f837adf5766b385",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::from_iter",
+    "name": "from_iter",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        1197,
+        5
+      ],
+      "end": [
+        1201,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "iter",
+              {
+                "generic": "I"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "I",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "IntoIterator",
+                          "id": 19,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "generic": "T"
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "19": "core::iter::traits::collect::IntoIterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FromIterator",
+        "id": "core::iter::traits::collect::FromIterator",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "generic": "T"
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::iter::traits::collect::FromIterator",
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          1196,
+          1
+        ],
+        "end": [
+          1202,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "300",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-66d4e7268f837adf5766b385",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d6554b5089720e400767dded",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::from_len_zeroed",
+    "name": "from_len_zeroed",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from_len_zeroed(len: usize) -> Self",
+    "docs": "Allocates a new [MutableBuffer] with `len` and capacity to be at least `len` where\nall bytes are guaranteed to be `0u8`.\n# Example\n```\n# use arrow_buffer::buffer::{Buffer, MutableBuffer};\nlet mut buffer = MutableBuffer::from_len_zeroed(127);\nassert_eq!(buffer.len(), 127);\nassert!(buffer.capacity() >= 127);\nlet data = buffer.as_slice_mut();\nassert_eq!(data[126], 0u8);\n```\n\n# Panics\n\nPanics if `len` is too large to construct a valid allocation [`Layout`]",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        167,
+        5
+      ],
+      "end": [
+        184,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {
+      "MutableBuffer": 147,
+      "`Layout`": 149
+    },
+    "link_paths": {
+      "MutableBuffer": "arrow_buffer::buffer::mutable::MutableBuffer",
+      "`Layout`": "core::alloc::layout::Layout"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "228",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-d6554b5089720e400767dded",
+    "aliases": [],
+    "resolved_doc_links": {
+      "MutableBuffer": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-c6098a137f542fbc611c6673"
+    }
+  },
+  {
+    "id": "80c2c56890ecf1eedaa66f47",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::from_trusted_len_iter",
+    "name": "from_trusted_len_iter",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn from_trusted_len_iter<T: ArrowNativeType, I: Iterator<Item = T>>(iterator: I) -> Self",
+    "docs": "Creates a [`MutableBuffer`] from an [`Iterator`] with a trusted (upper) length.\nPrefer this to `collect` whenever possible, as it is faster ~60% faster.\n# Example\n```\n# use arrow_buffer::buffer::MutableBuffer;\nlet v = vec![1u32];\nlet iter = v.iter().map(|x| x * 2);\nlet buffer = unsafe { MutableBuffer::from_trusted_len_iter(iter) };\nassert_eq!(buffer.len(), 4) // u32 has 4 bytes\n```\n\n# Panics\n\nPanics if the iterator does not report an upper bound via `size_hint`, or if the\nreported length does not match the number of items produced, or if allocating the\nrequired buffer fails for the same reasons as [`MutableBuffer::new`].\n\n# Safety\nThis method assumes that the iterator's size is correct and is undefined behavior\nto use it on an iterator that reports an incorrect length.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        958,
+        5
+      ],
+      "end": [
+        982,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "iterator",
+              {
+                "generic": "I"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ArrowNativeType",
+                          "id": 11,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "I",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Iterator",
+                          "id": 153,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "generic": "T"
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "11": "arrow_buffer::native::ArrowNativeType",
+      "153": "core::iter::traits::iterator::Iterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          900,
+          1
+        ],
+        "end": [
+          1067,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Iterator`": 153,
+      "`MutableBuffer::new`": 227,
+      "`MutableBuffer`": 147
+    },
+    "link_paths": {
+      "`Iterator`": "core::iter::traits::iterator::Iterator",
+      "`MutableBuffer::new`": "arrow_buffer::buffer::mutable::MutableBuffer::new",
+      "`MutableBuffer`": "arrow_buffer::buffer::mutable::MutableBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "256",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-80c2c56890ecf1eedaa66f47",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MutableBuffer::new`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-f5811bd4323fb6c5ed369c24",
+      "`MutableBuffer`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-c6098a137f542fbc611c6673"
+    }
+  },
+  {
+    "id": "09ff5e524424bf68a48fb8f9",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::from_trusted_len_iter_bool",
+    "name": "from_trusted_len_iter_bool",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn from_trusted_len_iter_bool<I: Iterator<Item = bool>>(iterator: I) -> Self",
+    "docs": "Creates a [`MutableBuffer`] from a boolean [`Iterator`] with a trusted (upper) length.\n# use arrow_buffer::buffer::MutableBuffer;\n# Example\n```\n# use arrow_buffer::buffer::MutableBuffer;\nlet v = vec![false, true, false];\nlet iter = v.iter().map(|x| *x || true);\nlet buffer = unsafe { MutableBuffer::from_trusted_len_iter_bool(iter) };\nassert_eq!(buffer.len(), 1) // 3 booleans have 1 byte\n```\n\n# Panics\n\nPanics if the iterator does not report an upper bound via `size_hint`, or if it yields\nfewer items than reported.\n\n# Safety\nThis method assumes that the iterator's size is correct and is undefined behavior\nto use it on an iterator that reports an incorrect length.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        1008,
+        5
+      ],
+      "end": [
+        1013,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "iterator",
+              {
+                "generic": "I"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "I",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Iterator",
+                          "id": 153,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "primitive": "bool"
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "153": "core::iter::traits::iterator::Iterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          900,
+          1
+        ],
+        "end": [
+          1067,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Iterator`": 153,
+      "`MutableBuffer`": 147
+    },
+    "link_paths": {
+      "`Iterator`": "core::iter::traits::iterator::Iterator",
+      "`MutableBuffer`": "arrow_buffer::buffer::mutable::MutableBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "257",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-09ff5e524424bf68a48fb8f9",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MutableBuffer`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-c6098a137f542fbc611c6673"
+    }
+  },
+  {
+    "id": "fb444a4424d17a5bd80dc95b",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::is_empty",
+    "name": "is_empty",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "const fn is_empty(&self) -> bool",
+    "docs": "Returns whether this buffer is empty or not.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        482,
+        5
+      ],
+      "end": [
+        484,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": true,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "237",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-fb444a4424d17a5bd80dc95b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "380ce5b10d2d1caf5e031284",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::len",
+    "name": "len",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "const fn len(&self) -> usize",
+    "docs": "Returns the length (the number of bytes written) in this buffer.\nThe invariant `buffer.len() <= buffer.capacity()` is always upheld.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        489,
+        5
+      ],
+      "end": [
+        491,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": true,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "238",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-380ce5b10d2d1caf5e031284",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f5811bd4323fb6c5ed369c24",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::new",
+    "name": "new",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(capacity: usize) -> Self",
+    "docs": "Allocate a new [MutableBuffer] with initial capacity to be at least `capacity`.\n\nSee [`MutableBuffer::with_capacity`].\n\n# Panics\n\nSee [`MutableBuffer::with_capacity`].",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        120,
+        5
+      ],
+      "end": [
+        122,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "capacity",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {
+      "MutableBuffer": 147,
+      "`MutableBuffer::with_capacity`": 226
+    },
+    "link_paths": {
+      "MutableBuffer": "arrow_buffer::buffer::mutable::MutableBuffer",
+      "`MutableBuffer::with_capacity`": "arrow_buffer::buffer::mutable::MutableBuffer::with_capacity"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "227",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-f5811bd4323fb6c5ed369c24",
+    "aliases": [],
+    "resolved_doc_links": {
+      "MutableBuffer": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-c6098a137f542fbc611c6673",
+      "`MutableBuffer::with_capacity`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-3a7b4a5c65c7b3ed5f3c4942"
+    }
+  },
+  {
+    "id": "3eac369752237659ad18ed17",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::new_null",
+    "name": "new_null",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_null(len: usize) -> Self",
+    "docs": "creates a new [MutableBuffer] with capacity and length capable of holding `len` bits.\nThis is useful to create a buffer for packed bitmaps.\n\n# Panics\n\nSee [`MutableBuffer::from_len_zeroed`].",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        214,
+        5
+      ],
+      "end": [
+        217,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {
+      "MutableBuffer": 147,
+      "`MutableBuffer::from_len_zeroed`": 228
+    },
+    "link_paths": {
+      "MutableBuffer": "arrow_buffer::buffer::mutable::MutableBuffer",
+      "`MutableBuffer::from_len_zeroed`": "arrow_buffer::buffer::mutable::MutableBuffer::from_len_zeroed"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "229",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-3eac369752237659ad18ed17",
+    "aliases": [],
+    "resolved_doc_links": {
+      "MutableBuffer": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-c6098a137f542fbc611c6673",
+      "`MutableBuffer::from_len_zeroed`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-d6554b5089720e400767dded"
+    }
+  },
+  {
+    "id": "6cb8939ad5dae53225639f18",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::push",
+    "name": "push",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn push<T: ToByteSlice>(&mut self, item: T)",
+    "docs": "Extends the buffer with a new item, increasing its capacity if needed.\n# Example\n```\n# use arrow_buffer::buffer::MutableBuffer;\nlet mut buffer = MutableBuffer::new(0);\nbuffer.push(256u32);\nassert_eq!(buffer.len(), 4) // u32 has 4 bytes\n```\n\n# Panics\n\nPanics if extending the buffer requires reserving a capacity that fails for the same\nreasons as [`MutableBuffer::reserve`].",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        620,
+        5
+      ],
+      "end": [
+        629,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "item",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ToByteSlice",
+                          "id": 247,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "247": "arrow_buffer::native::ToByteSlice"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MutableBuffer::reserve`": 232
+    },
+    "link_paths": {
+      "`MutableBuffer::reserve`": "arrow_buffer::buffer::mutable::MutableBuffer::reserve"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "222",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-6cb8939ad5dae53225639f18",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MutableBuffer::reserve`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-18a37c4ca2f74d77b509cc10"
+    }
+  },
+  {
+    "id": "8cbfacfd8e4e575feba3f267",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::push_unchecked",
+    "name": "push_unchecked",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn push_unchecked<T: ToByteSlice>(&mut self, item: T)",
+    "docs": "Extends the buffer with a new item, without checking for sufficient capacity\n# Safety\nCaller must ensure that the capacity()-len()>=`size_of<T>`()",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        635,
+        5
+      ],
+      "end": [
+        641,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "item",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ToByteSlice",
+                          "id": 247,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "247": "arrow_buffer::native::ToByteSlice"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "248",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-8cbfacfd8e4e575feba3f267",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3f6b9e306fee01491a76ec62",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::repeat_slice_n_times",
+    "name": "repeat_slice_n_times",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn repeat_slice_n_times<T: ArrowNativeType>(&mut self, slice_to_repeat: &[T], repeat_count: usize)",
+    "docs": "Adding to this mutable buffer `slice_to_repeat` repeated `repeat_count` times.\n\n# Example\n\n## Repeat the same string bytes multiple times\n```\n# use arrow_buffer::buffer::MutableBuffer;\nlet mut buffer = MutableBuffer::new(0);\nlet bytes_to_repeat = b\"ab\";\nbuffer.repeat_slice_n_times(bytes_to_repeat, 3);\nassert_eq!(buffer.as_slice(), b\"ababab\");\n```\n\n# Panics\n\nPanics if the repeated slice byte length overflows `usize`, if the resulting buffer\nlength overflows `usize`, or if reserving the required capacity fails for the same\nreasons as [`MutableBuffer::reserve`].",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        311,
+        5
+      ],
+      "end": [
+        372,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "slice_to_repeat",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "generic": "T"
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "repeat_count",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ArrowNativeType",
+                          "id": 11,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "11": "arrow_buffer::native::ArrowNativeType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MutableBuffer::reserve`": 232
+    },
+    "link_paths": {
+      "`MutableBuffer::reserve`": "arrow_buffer::buffer::mutable::MutableBuffer::reserve"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "233",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-3f6b9e306fee01491a76ec62",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MutableBuffer::reserve`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-18a37c4ca2f74d77b509cc10"
+    }
+  },
+  {
+    "id": "18a37c4ca2f74d77b509cc10",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::reserve",
+    "name": "reserve",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn reserve(&mut self, additional: usize)",
+    "docs": "Ensures that this buffer has at least `self.len + additional` bytes. This re-allocates iff\n`self.len + additional > capacity`.\n# Example\n```\n# use arrow_buffer::buffer::{Buffer, MutableBuffer};\nlet mut buffer = MutableBuffer::new(0);\nbuffer.reserve(253); // allocates for the first time\n(0..253u8).for_each(|i| buffer.push(i)); // no reallocation\nlet buffer: Buffer = buffer.into();\nassert_eq!(buffer.len(), 253);\n```\n\n# Panics\n\nPanics if `self.len + additional` overflows `usize`, or if the required capacity is too\nlarge to round up to the next 64-byte boundary and construct a valid allocation layout.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        281,
+        5
+      ],
+      "end": [
+        291,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Always)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "additional",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "232",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-18a37c4ca2f74d77b509cc10",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "54e5aef3d0c0441e7d081e8a",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::resize",
+    "name": "resize",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn resize(&mut self, new_len: usize, value: u8)",
+    "docs": "Resizes the buffer, either truncating its contents (with no change in capacity), or\ngrowing it (potentially reallocating it) and writing `value` in the newly available bytes.\n# Example\n```\n# use arrow_buffer::buffer::{Buffer, MutableBuffer};\nlet mut buffer = MutableBuffer::new(0);\nbuffer.resize(253, 2); // allocates for the first time\nassert_eq!(buffer.as_slice()[252], 2u8);\n```\n\n# Panics\n\nPanics if growing the buffer requires reserving a capacity that fails for the same\nreasons as [`MutableBuffer::reserve`].",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        436,
+        5
+      ],
+      "end": [
+        451,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Always)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "new_len",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "value",
+              {
+                "primitive": "u8"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MutableBuffer::reserve`": 232
+    },
+    "link_paths": {
+      "`MutableBuffer::reserve`": "arrow_buffer::buffer::mutable::MutableBuffer::reserve"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "235",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-54e5aef3d0c0441e7d081e8a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MutableBuffer::reserve`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-18a37c4ca2f74d77b509cc10"
+    }
+  },
+  {
+    "id": "efe3de972a2df35f08aee960",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::set_len",
+    "name": "set_len",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn set_len(&mut self, len: usize)",
+    "docs": "# Safety\nThe caller must ensure that the buffer was properly initialized up to `len`.\n\n# Panics\n\nPanics if `len` exceeds the buffer capacity.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        665,
+        5
+      ],
+      "end": [
+        668,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "250",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-efe3de972a2df35f08aee960",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d07a7d41c04ac800036baf0c",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::set_null_bits",
+    "name": "set_null_bits",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn set_null_bits(&mut self, start: usize, count: usize)",
+    "docs": "Ensure that `count` bytes from `start` contain zero bits\n\nThis is used to initialize the bits in a buffer, however, it has no impact on the\n`len` of the buffer and so can be used to initialize the memory region from\n`len` to `capacity`.\n\n# Panics\n\nPanics if the byte range `start..start + count` exceeds the buffer capacity.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        248,
+        5
+      ],
+      "end": [
+        260,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "start",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "count",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "231",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-d07a7d41c04ac800036baf0c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c3db2f9fbcca75abefe06175",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::shrink_to_fit",
+    "name": "shrink_to_fit",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn shrink_to_fit(&mut self)",
+    "docs": "Shrinks the capacity of the buffer as much as possible.\nThe new capacity will aligned to the nearest 64 bit alignment.\n\n# Example\n```\n# use arrow_buffer::buffer::{Buffer, MutableBuffer};\n// 2 cache lines\nlet mut buffer = MutableBuffer::new(128);\nassert_eq!(buffer.capacity(), 128);\nbuffer.push(1);\nbuffer.push(2);\n\nbuffer.shrink_to_fit();\nassert!(buffer.capacity() >= 64 && buffer.capacity() < 128);\n```\n\n# Panics\n\nPanics if the current length is too large to round up to the next 64-byte boundary and\nconstruct a valid allocation layout.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        473,
+        5
+      ],
+      "end": [
+        478,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "236",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-c3db2f9fbcca75abefe06175",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8ddc062666e8c5f13c4c14d3",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::truncate",
+    "name": "truncate",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn truncate(&mut self, len: usize)",
+    "docs": "Truncates this buffer to `len` bytes\n\nIf `len` is greater than the buffer's current length, this has no effect",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        406,
+        5
+      ],
+      "end": [
+        417,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Always)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "234",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-8ddc062666e8c5f13c4c14d3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9dd9f9cc31007da5d8292572",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::try_from_trusted_len_iter",
+    "name": "try_from_trusted_len_iter",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn try_from_trusted_len_iter<E, T: ArrowNativeType, I: Iterator<Item = Result<T, E>>>(iterator: I) -> Result<Self, E>",
+    "docs": "Creates a [`MutableBuffer`] from an [`Iterator`] with a trusted (upper) length or errors\nif any of the items of the iterator is an error.\nPrefer this to `collect` whenever possible, as it is faster ~60% faster.\n\n# Panics\n\nPanics if the iterator does not report an upper bound via `size_hint`, or if the\nreported length does not match the number of items produced before an error-free finish,\nor if allocating the required buffer fails for the same reasons as\n[`MutableBuffer::new`].\n\n# Safety\nThis method assumes that the iterator's size is correct and is undefined behavior\nto use it on an iterator that reports an incorrect length.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        1030,
+        5
+      ],
+      "end": [
+        1066,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "iterator",
+              {
+                "generic": "I"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 69,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "generic": "E"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "E",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ArrowNativeType",
+                          "id": 11,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "I",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Iterator",
+                          "id": 153,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Result",
+                                          "id": 69,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "generic": "T"
+                                                  }
+                                                },
+                                                {
+                                                  "type": {
+                                                    "generic": "E"
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "69": "core::result::Result",
+      "11": "arrow_buffer::native::ArrowNativeType",
+      "153": "core::iter::traits::iterator::Iterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          900,
+          1
+        ],
+        "end": [
+          1067,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Iterator`": 153,
+      "`MutableBuffer::new`": 227,
+      "`MutableBuffer`": 147
+    },
+    "link_paths": {
+      "`Iterator`": "core::iter::traits::iterator::Iterator",
+      "`MutableBuffer::new`": "arrow_buffer::buffer::mutable::MutableBuffer::new",
+      "`MutableBuffer`": "arrow_buffer::buffer::mutable::MutableBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "258",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-9dd9f9cc31007da5d8292572",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MutableBuffer::new`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-f5811bd4323fb6c5ed369c24",
+      "`MutableBuffer`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-c6098a137f542fbc611c6673"
+    }
+  },
+  {
+    "id": "e37013c4d072f16d8eed0b5e",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::typed_data",
+    "name": "typed_data",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn typed_data<T: ArrowNativeType>(&self) -> &[T]",
+    "docs": "View buffer as a immutable slice of a specific type.\n\n# Panics\n\nThis function panics if the underlying buffer is not aligned correctly for type `T`, or\nif its length is not a multiple of `size_of::<T>()`.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        569,
+        5
+      ],
+      "end": [
+        576,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "generic": "T"
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ArrowNativeType",
+                          "id": 11,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "11": "arrow_buffer::native::ArrowNativeType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "246",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-e37013c4d072f16d8eed0b5e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "dacbfb9541c99f877bf561d6",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::typed_data_mut",
+    "name": "typed_data_mut",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn typed_data_mut<T: ArrowNativeType>(&mut self) -> &mut [T]",
+    "docs": "View this buffer as a mutable slice of a specific type.\n\n# Panics\n\nThis function panics if the underlying buffer is not aligned correctly for type `T`, or\nif its length is not a multiple of `size_of::<T>()`.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        554,
+        5
+      ],
+      "end": [
+        561,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "slice": {
+                  "generic": "T"
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ArrowNativeType",
+                          "id": 11,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "11": "arrow_buffer::native::ArrowNativeType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "245",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-dacbfb9541c99f877bf561d6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "211baba3a63e106a4d1ac880",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::with_bitset",
+    "name": "with_bitset",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_bitset(self, end: usize, val: bool) -> Self",
+    "docs": "Set the bits in the range of `[0, end)` to 0 (if `val` is false), or 1 (if `val`\nis true). Also extend the length of this buffer to be `end`.\n\nThis is useful when one wants to clear (or set) the bits and then manipulate\nthe buffer directly (e.g., modifying the buffer by holding a mutable reference\nfrom `data_mut()`).\n\n# Panics\n\nPanics if `end` exceeds the buffer capacity.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        229,
+        5
+      ],
+      "end": [
+        237,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "end",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "val",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "230",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-211baba3a63e106a4d1ac880",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3a7b4a5c65c7b3ed5f3c4942",
+    "path": "arrow_buffer::buffer::mutable::MutableBuffer::with_capacity",
+    "name": "with_capacity",
+    "owner": "arrow_buffer::buffer::mutable::MutableBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_capacity(capacity: usize) -> Self",
+    "docs": "Allocate a new [MutableBuffer] with initial capacity to be at least `capacity`.\n\n# Panics\n\nIf `capacity`, when rounded up to the nearest multiple of [`ALIGNMENT`], is greater\nthen `isize::MAX`, then this function will panic.",
+    "span": {
+      "filename": "src/buffer/mutable.rs",
+      "begin": [
+        131,
+        5
+      ],
+      "end": [
+        150,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "capacity",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableBuffer",
+          "id": "arrow_buffer::buffer::mutable::MutableBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/mutable.rs",
+        "begin": [
+          111,
+          1
+        ],
+        "end": [
+          850,
+          2
+        ]
+      }
+    },
+    "links": {
+      "MutableBuffer": 147,
+      "`ALIGNMENT`": 0
+    },
+    "link_paths": {
+      "MutableBuffer": "arrow_buffer::buffer::mutable::MutableBuffer",
+      "`ALIGNMENT`": "arrow_buffer::alloc::alignment::ALIGNMENT"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "226",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.mutable.MutableBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.mutable.MutableBuffer.json",
+    "anchor": "op-3a7b4a5c65c7b3ed5f3c4942",
+    "aliases": [],
+    "resolved_doc_links": {
+      "MutableBuffer": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-c6098a137f542fbc611c6673",
+      "`ALIGNMENT`": "../operations/arrow_buffer.alloc.alignment.ALIGNMENT.md#op-8f396fad8ebb4580d9689e9f"
+    }
+  }
+]

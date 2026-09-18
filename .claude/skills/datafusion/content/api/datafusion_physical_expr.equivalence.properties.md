@@ -60,6 +60,9 @@ fn with_new_schema(self, schema: SchemaRef) -> Result<Self>
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.equivalence.properties.EquivalenceProperties.md).
+
+
 `EquivalenceProperties` stores information about the output of a plan node
 that can be used to optimize the plan. Currently, it keeps track of:
 - Sort expressions (orderings),

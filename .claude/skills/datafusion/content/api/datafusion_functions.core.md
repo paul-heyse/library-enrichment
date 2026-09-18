@@ -10,6 +10,9 @@ Crate `datafusion-functions` · 24 public items · structured records in [`model
 fn arrow_cast() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.arrow_cast.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of arrow_cast
 
 ---
@@ -21,6 +24,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of arrow_cast
 ```rust
 fn arrow_field() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.arrow_field.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of arrow_field
 
@@ -34,6 +40,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of arrow_field
 fn arrow_metadata() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.arrow_metadata.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of arrow_metadata
 
 ---
@@ -45,6 +54,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of arrow_metad
 ```rust
 fn arrow_try_cast() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.arrow_try_cast.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of arrow_try_cast
 
@@ -58,6 +70,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of arrow_try_c
 fn arrow_typeof() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.arrow_typeof.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of arrow_typeof
 
 ---
@@ -69,6 +84,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of arrow_typeo
 ```rust
 fn cast_to_type() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.cast_to_type.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of cast_to_type
 
@@ -82,6 +100,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of cast_to_typ
 fn coalesce() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.coalesce.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of coalesce
 
 ---
@@ -93,6 +114,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of coalesce
 ```rust
 fn file_row_index() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.file_row_index.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of file_row_index
 
@@ -106,6 +130,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of file_row_in
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.functions.md).
+
+
 Returns all DataFusion functions defined in this package
 
 ---
@@ -117,6 +144,9 @@ Returns all DataFusion functions defined in this package
 ```rust
 fn get_field() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.get_field.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of get_field
 
@@ -130,6 +160,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of get_field
 fn greatest() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.greatest.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of greatest
 
 ---
@@ -141,6 +174,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of greatest
 ```rust
 fn input_file_name() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.input_file_name.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of input_file_name
 
@@ -154,6 +190,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of input_file_
 fn least() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.least.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of least
 
 ---
@@ -165,6 +204,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of least
 ```rust
 fn named_struct() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.named_struct.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of named_struct
 
@@ -178,6 +220,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of named_struc
 fn nullif() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.nullif.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of nullif
 
 ---
@@ -189,6 +234,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of nullif
 ```rust
 fn nvl() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.nvl.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of nvl
 
@@ -202,6 +250,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of nvl
 fn nvl2() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.nvl2.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of nvl2
 
 ---
@@ -213,6 +264,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of nvl2
 ```rust
 fn overlay() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.overlay.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of overlay
 
@@ -226,6 +280,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of overlay
 fn struct() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.struct.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of r#struct
 
 ---
@@ -237,6 +294,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of r#struct
 ```rust
 fn try_cast_to_type() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.try_cast_to_type.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of try_cast_to_type
 
@@ -250,6 +310,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of try_cast_to
 fn union_extract() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.union_extract.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of union_extract
 
 ---
@@ -261,6 +324,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of union_extra
 ```rust
 fn union_tag() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.union_tag.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of union_tag
 
@@ -274,6 +340,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of union_tag
 fn version() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.version.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of version
 
 ---
@@ -285,6 +354,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of version
 ```rust
 fn with_metadata() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.with_metadata.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of with_metadata
 

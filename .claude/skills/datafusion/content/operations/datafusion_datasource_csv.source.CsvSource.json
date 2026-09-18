@@ -1,0 +1,3980 @@
+[
+  {
+    "id": "6bce2d9b2687e195f4c66c00",
+    "path": "datafusion_datasource_csv::source::CsvSource",
+    "name": "CsvSource",
+    "owner": null,
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct CsvSource",
+    "docs": "A Config for [`CsvOpener`]\n\n# Example: create a `DataSourceExec` for CSV\n```\n# use std::sync::Arc;\n# use arrow::datatypes::Schema;\n# use datafusion_datasource::file_scan_config::{FileScanConfig, FileScanConfigBuilder};\n# use datafusion_datasource::PartitionedFile;\n# use datafusion_datasource_csv::source::CsvSource;\n# use datafusion_execution::object_store::ObjectStoreUrl;\n# use datafusion_datasource::source::DataSourceExec;\n# use datafusion_common::config::CsvOptions;\n\n# let object_store_url = ObjectStoreUrl::local_filesystem();\n# let file_schema = Arc::new(Schema::empty());\n\nlet options = CsvOptions {\n    has_header: Some(true),\n    delimiter: b',',\n    quote: b'\"',\n    newlines_in_values: Some(true), // The file contains newlines in values\n    ..Default::default()\n};\nlet source = Arc::new(CsvSource::new(file_schema.clone())\n    .with_csv_options(options)\n    .with_terminator(Some(b'#'))\n);\n// Create a DataSourceExec for reading the first 100MB of `file1.csv`\nlet config = FileScanConfigBuilder::new(object_store_url, source)\n    .with_file(PartitionedFile::new(\"file1.csv\", 100*1024*1024))\n    .build();\nlet exec = (DataSourceExec::from_data_source(config));\n```",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        87,
+        1
+      ],
+      "end": [
+        93,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          292,
+          294,
+          295,
+          296,
+          297,
+          298,
+          299,
+          300,
+          301,
+          302,
+          303,
+          305,
+          308,
+          309,
+          310,
+          311,
+          312,
+          316,
+          318,
+          319,
+          321,
+          323,
+          325,
+          343
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`CsvOpener`": 276
+    },
+    "link_paths": {
+      "`CsvOpener`": "datafusion_datasource_csv::source::CsvOpener"
+    },
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "277",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-6bce2d9b2687e195f4c66c00",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource",
+      "datafusion::datasource::physical_plan::csv::CsvSource"
+    ],
+    "resolved_doc_links": {
+      "`CsvOpener`": "../operations/datafusion_datasource_csv.source.CsvOpener.md#op-7aec00729af8c1d605c18193"
+    }
+  },
+  {
+    "id": "a59e7daf0d734d7584db80e9",
+    "path": "datafusion_datasource_csv::source::CsvSource::apply_expressions",
+    "name": "apply_expressions",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn datafusion_physical_plan::PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        313,
+        5
+      ],
+      "end": [
+        320,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "FnMut",
+                            "id": 339,
+                            "args": {
+                              "parenthesized": {
+                                "inputs": [
+                                  {
+                                    "borrowed_ref": {
+                                      "lifetime": null,
+                                      "is_mutable": false,
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Arc",
+                                          "id": 69,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "dyn_trait": {
+                                                      "traits": [
+                                                        {
+                                                          "trait": {
+                                                            "path": "datafusion_physical_plan::PhysicalExpr",
+                                                            "id": 340,
+                                                            "args": null
+                                                          },
+                                                          "generic_params": []
+                                                        }
+                                                      ],
+                                                      "lifetime": null
+                                                    }
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                "output": {
+                                  "resolved_path": {
+                                    "path": "Result",
+                                    "id": 68,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "TreeNodeRecursion",
+                                                "id": 341,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 68,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "TreeNodeRecursion",
+                          "id": 341,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "339": "core::ops::function::FnMut",
+      "69": "alloc::sync::Arc",
+      "340": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "68": "datafusion_common::error::Result",
+      "341": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          243,
+          1
+        ],
+        "end": [
+          364,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "338",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-a59e7daf0d734d7584db80e9",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::apply_expressions",
+      "datafusion::datasource::physical_plan::csv::CsvSource::apply_expressions"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b89351e4ae7abaf2c081100e",
+    "path": "datafusion_datasource_csv::source::CsvSource::clone",
+    "name": "clone",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> CsvSource",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        86,
+        17
+      ],
+      "end": [
+        86,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "CsvSource",
+              "id": 277,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "277": "datafusion_datasource_csv::source::CsvSource"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          86,
+          17
+        ],
+        "end": [
+          86,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "322",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-b89351e4ae7abaf2c081100e",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::clone",
+      "datafusion::datasource::physical_plan::csv::CsvSource::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0a3a9713dcf8a91648e6c056",
+    "path": "datafusion_datasource_csv::source::CsvSource::comment",
+    "name": "comment",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn comment(&self) -> Option<u8>",
+    "docs": "Lines beginning with this byte are ignored.",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        139,
+        5
+      ],
+      "end": [
+        141,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 1,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "u8"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          180,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "285",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-0a3a9713dcf8a91648e6c056",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::comment",
+      "datafusion::datasource::physical_plan::csv::CsvSource::comment"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "97cd386fddfb6c65304a7251",
+    "path": "datafusion_datasource_csv::source::CsvSource::create_file_opener",
+    "name": "create_file_opener",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn create_file_opener(&self, object_store: Arc<dyn ObjectStore>, base_config: &FileScanConfig, partition_index: usize) -> Result<Arc<dyn FileOpener>>",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        244,
+        5
+      ],
+      "end": [
+        262,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "object_store",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 69,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ObjectStore",
+                                    "id": 133,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "base_config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "FileScanConfig",
+                      "id": 142,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "partition_index",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 68,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 69,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "FileOpener",
+                                            "id": 327,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "69": "alloc::sync::Arc",
+      "133": "object_store::ObjectStore",
+      "142": "datafusion_datasource::file_scan_config::FileScanConfig",
+      "68": "datafusion_common::error::Result",
+      "327": "datafusion_datasource::file_stream::FileOpener"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          243,
+          1
+        ],
+        "end": [
+          364,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "326",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-97cd386fddfb6c65304a7251",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::create_file_opener",
+      "datafusion::datasource::physical_plan::csv::CsvSource::create_file_opener"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6225d1c243cc6aa5d44e1b91",
+    "path": "datafusion_datasource_csv::source::CsvSource::delimiter",
+    "name": "delimiter",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn delimiter(&self) -> u8",
+    "docs": "A column delimiter",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        124,
+        5
+      ],
+      "end": [
+        126,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "u8"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          180,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "282",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-6225d1c243cc6aa5d44e1b91",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::delimiter",
+      "datafusion::datasource::physical_plan::csv::CsvSource::delimiter"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ce9cc476a069224ec2ab6023",
+    "path": "datafusion_datasource_csv::source::CsvSource::escape",
+    "name": "escape",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn escape(&self) -> Option<u8>",
+    "docs": "The escape character",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        144,
+        5
+      ],
+      "end": [
+        146,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 1,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "u8"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          180,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "286",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-ce9cc476a069224ec2ab6023",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::escape",
+      "datafusion::datasource::physical_plan::csv::CsvSource::escape"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "58c19814ef08fc6b16116aae",
+    "path": "datafusion_datasource_csv::source::CsvSource::file_type",
+    "name": "file_type",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn file_type(&self) -> &str",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        294,
+        5
+      ],
+      "end": [
+        296,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          243,
+          1
+        ],
+        "end": [
+          364,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "335",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-58c19814ef08fc6b16116aae",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::file_type",
+      "datafusion::datasource::physical_plan::csv::CsvSource::file_type"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3e86e0122b59a301ac05f29d",
+    "path": "datafusion_datasource_csv::source::CsvSource::fmt",
+    "name": "fmt",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        86,
+        10
+      ],
+      "end": [
+        86,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 60,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 61,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "60": "core::fmt::Formatter",
+      "61": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          86,
+          10
+        ],
+        "end": [
+          86,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "320",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-3e86e0122b59a301ac05f29d",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::fmt",
+      "datafusion::datasource::physical_plan::csv::CsvSource::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bf8910ead1a36e28b8641862",
+    "path": "datafusion_datasource_csv::source::CsvSource::fmt_extra",
+    "name": "fmt_extra",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt_extra(&self, t: DisplayFormatType, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        304,
+        5
+      ],
+      "end": [
+        311,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "t",
+              {
+                "resolved_path": {
+                  "path": "DisplayFormatType",
+                  "id": 246,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "fmt::Formatter",
+                      "id": 60,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "fmt::Result",
+              "id": 61,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "246": "datafusion_physical_plan::display::DisplayFormatType",
+      "60": "core::fmt::Formatter",
+      "61": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          243,
+          1
+        ],
+        "end": [
+          364,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "337",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-bf8910ead1a36e28b8641862",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::fmt_extra",
+      "datafusion::datasource::physical_plan::csv::CsvSource::fmt_extra"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "798cb1990d287f644ff8f2eb",
+    "path": "datafusion_datasource_csv::source::CsvSource::has_header",
+    "name": "has_header",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn has_header(&self) -> bool",
+    "docs": "true if the first line of each file is a header",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        115,
+        5
+      ],
+      "end": [
+        117,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          180,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "280",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-798cb1990d287f644ff8f2eb",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::has_header",
+      "datafusion::datasource::physical_plan::csv::CsvSource::has_header"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "90fa63ef5c950ad24bd094ec",
+    "path": "datafusion_datasource_csv::source::CsvSource::metrics",
+    "name": "metrics",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn metrics(&self) -> &ExecutionPlanMetricsSet",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        290,
+        5
+      ],
+      "end": [
+        292,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ExecutionPlanMetricsSet",
+                  "id": 334,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "334": "datafusion_physical_expr_common::metrics::ExecutionPlanMetricsSet"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          243,
+          1
+        ],
+        "end": [
+          364,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "333",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-90fa63ef5c950ad24bd094ec",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::metrics",
+      "datafusion::datasource::physical_plan::csv::CsvSource::metrics"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "243fd1f05ee65dfb763f6d81",
+    "path": "datafusion_datasource_csv::source::CsvSource::new",
+    "name": "new",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(table_schema: impl Into<TableSchema>) -> Self",
+    "docs": "Returns a [`CsvSource`]",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        97,
+        5
+      ],
+      "end": [
+        106,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "table_schema",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 32,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "TableSchema",
+                                    "id": 148,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Into<TableSchema>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 32,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "TableSchema",
+                                      "id": 148,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "32": "core::convert::Into",
+      "148": "datafusion_datasource::table_schema::TableSchema"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          180,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`CsvSource`": 277
+    },
+    "link_paths": {
+      "`CsvSource`": "datafusion_datasource_csv::source::CsvSource"
+    },
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "278",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-243fd1f05ee65dfb763f6d81",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::new",
+      "datafusion::datasource::physical_plan::csv::CsvSource::new"
+    ],
+    "resolved_doc_links": {
+      "`CsvSource`": "../operations/datafusion_datasource_csv.source.CsvSource.md#op-6bce2d9b2687e195f4c66c00"
+    }
+  },
+  {
+    "id": "7a753393915a9a001ddebedb",
+    "path": "datafusion_datasource_csv::source::CsvSource::newlines_in_values",
+    "name": "newlines_in_values",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn newlines_in_values(&self) -> bool",
+    "docs": "Whether values may contain newline characters",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        177,
+        5
+      ],
+      "end": [
+        179,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          180,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "291",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-7a753393915a9a001ddebedb",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::newlines_in_values",
+      "datafusion::datasource::physical_plan::csv::CsvSource::newlines_in_values"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "63e522ac1daf6cccb6aaf095",
+    "path": "datafusion_datasource_csv::source::CsvSource::projection",
+    "name": "projection",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn projection(&self) -> Option<&ProjectionExprs>",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        286,
+        5
+      ],
+      "end": [
+        288,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 1,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "ProjectionExprs",
+                              "id": 331,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "core::option::Option",
+      "331": "datafusion_physical_expr::projection::ProjectionExprs"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          243,
+          1
+        ],
+        "end": [
+          364,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "332",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-63e522ac1daf6cccb6aaf095",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::projection",
+      "datafusion::datasource::physical_plan::csv::CsvSource::projection"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5e67f85e54e013cb28adc0a5",
+    "path": "datafusion_datasource_csv::source::CsvSource::quote",
+    "name": "quote",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn quote(&self) -> u8",
+    "docs": "The quote character",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        129,
+        5
+      ],
+      "end": [
+        131,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "u8"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          180,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "283",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-5e67f85e54e013cb28adc0a5",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::quote",
+      "datafusion::datasource::physical_plan::csv::CsvSource::quote"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4b4397a6b36832927ce24df4",
+    "path": "datafusion_datasource_csv::source::CsvSource::supports_repartitioning",
+    "name": "supports_repartitioning",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_repartitioning(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        298,
+        5
+      ],
+      "end": [
+        302,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          243,
+          1
+        ],
+        "end": [
+          364,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "336",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-4b4397a6b36832927ce24df4",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::supports_repartitioning",
+      "datafusion::datasource::physical_plan::csv::CsvSource::supports_repartitioning"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "dd096e62388acc16dffa9ec7",
+    "path": "datafusion_datasource_csv::source::CsvSource::table_schema",
+    "name": "table_schema",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn table_schema(&self) -> &TableSchema",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        264,
+        5
+      ],
+      "end": [
+        266,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "TableSchema",
+                  "id": 148,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "148": "datafusion_datasource::table_schema::TableSchema"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          243,
+          1
+        ],
+        "end": [
+          364,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "328",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-dd096e62388acc16dffa9ec7",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::table_schema",
+      "datafusion::datasource::physical_plan::csv::CsvSource::table_schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ddae998942eb3b4ddaa367b6",
+    "path": "datafusion_datasource_csv::source::CsvSource::terminator",
+    "name": "terminator",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn terminator(&self) -> Option<u8>",
+    "docs": "The line terminator",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        134,
+        5
+      ],
+      "end": [
+        136,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 1,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "u8"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          180,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "284",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-ddae998942eb3b4ddaa367b6",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::terminator",
+      "datafusion::datasource::physical_plan::csv::CsvSource::terminator"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8531d74e1f45111258a84295",
+    "path": "datafusion_datasource_csv::source::CsvSource::truncate_rows",
+    "name": "truncate_rows",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn truncate_rows(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        120,
+        5
+      ],
+      "end": [
+        122,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          180,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "281",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-8531d74e1f45111258a84295",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::truncate_rows",
+      "datafusion::datasource::physical_plan::csv::CsvSource::truncate_rows"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c82000efe83d56c841dcaa69",
+    "path": "datafusion_datasource_csv::source::CsvSource::try_from_proto",
+    "name": "try_from_proto",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &datafusion_physical_plan::proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "Reconstructs a `DataSourceExec` from a protobuf `CsvScan`.\n\nCustom line terminators are not represented in the wire format.",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        584,
+        5
+      ],
+      "end": [
+        649,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "node",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                      "id": 224,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_physical_plan::proto::ExecutionPlanDecodeCtx",
+                      "id": 225,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 68,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 69,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 143,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "224": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode",
+      "225": "datafusion_physical_plan::proto::ExecutionPlanDecodeCtx",
+      "68": "datafusion_common::error::Result",
+      "69": "alloc::sync::Arc",
+      "143": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          580,
+          1
+        ],
+        "end": [
+          650,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "293",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-c82000efe83d56c841dcaa69",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::try_from_proto",
+      "datafusion::datasource::physical_plan::csv::CsvSource::try_from_proto"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f5d02a383e78cfc6e39f4c54",
+    "path": "datafusion_datasource_csv::source::CsvSource::try_pushdown_projection",
+    "name": "try_pushdown_projection",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_pushdown_projection(&self, projection: &ProjectionExprs) -> Result<Option<Arc<dyn FileSource>>>",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        274,
+        5
+      ],
+      "end": [
+        284,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "projection",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ProjectionExprs",
+                      "id": 331,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 68,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 1,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 69,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "FileSource",
+                                                        "id": 149,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "331": "datafusion_physical_expr::projection::ProjectionExprs",
+      "68": "datafusion_common::error::Result",
+      "1": "core::option::Option",
+      "69": "alloc::sync::Arc",
+      "149": "datafusion_datasource::file::FileSource"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          243,
+          1
+        ],
+        "end": [
+          364,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "330",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-f5d02a383e78cfc6e39f4c54",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::try_pushdown_projection",
+      "datafusion::datasource::physical_plan::csv::CsvSource::try_pushdown_projection"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2a259f61f8fab930b0693524",
+    "path": "datafusion_datasource_csv::source::CsvSource::try_to_proto",
+    "name": "try_to_proto",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_to_proto(&self, base: &FileScanConfig, ctx: &datafusion_physical_plan::proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+    "docs": "Emit a `CsvScan` node wrapping the shared base config and CSV options.",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        324,
+        5
+      ],
+      "end": [
+        363,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"proto\"), span: src/source.rs:323:11: 323:28 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "base",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "FileScanConfig",
+                      "id": 142,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx",
+                      "id": 260,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 68,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 1,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                                      "id": 224,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "142": "datafusion_datasource::file_scan_config::FileScanConfig",
+      "260": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx",
+      "68": "datafusion_common::error::Result",
+      "1": "core::option::Option",
+      "224": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          243,
+          1
+        ],
+        "end": [
+          364,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "342",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-2a259f61f8fab930b0693524",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::try_to_proto",
+      "datafusion::datasource::physical_plan::csv::CsvSource::try_to_proto"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "22a6c8eecf93228cb8a9b99a",
+    "path": "datafusion_datasource_csv::source::CsvSource::with_batch_size",
+    "name": "with_batch_size",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_batch_size(&self, batch_size: usize) -> Arc<dyn FileSource>",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        268,
+        5
+      ],
+      "end": [
+        272,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch_size",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Arc",
+              "id": 69,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "FileSource",
+                                "id": 149,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "69": "alloc::sync::Arc",
+      "149": "datafusion_datasource::file::FileSource"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          243,
+          1
+        ],
+        "end": [
+          364,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "329",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-22a6c8eecf93228cb8a9b99a",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::with_batch_size",
+      "datafusion::datasource::physical_plan::csv::CsvSource::with_batch_size"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "91e2bdbdd5c8b5ddbcab06f1",
+    "path": "datafusion_datasource_csv::source::CsvSource::with_comment",
+    "name": "with_comment",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_comment(&self, comment: Option<u8>) -> Self",
+    "docs": "Initialize a CsvSource with comment",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        163,
+        5
+      ],
+      "end": [
+        167,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "comment",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 1,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "u8"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          180,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "289",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-91e2bdbdd5c8b5ddbcab06f1",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::with_comment",
+      "datafusion::datasource::physical_plan::csv::CsvSource::with_comment"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7fd6ebae534d521b2053f3fc",
+    "path": "datafusion_datasource_csv::source::CsvSource::with_csv_options",
+    "name": "with_csv_options",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_csv_options(self, options: CsvOptions) -> Self",
+    "docs": "Sets the CSV options",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        109,
+        5
+      ],
+      "end": [
+        112,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "CsvOptions",
+                  "id": 2,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "datafusion_common::config::CsvOptions"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          180,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "279",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-7fd6ebae534d521b2053f3fc",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::with_csv_options",
+      "datafusion::datasource::physical_plan::csv::CsvSource::with_csv_options"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5d5934cbbded2b626d036e80",
+    "path": "datafusion_datasource_csv::source::CsvSource::with_escape",
+    "name": "with_escape",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_escape(&self, escape: Option<u8>) -> Self",
+    "docs": "Initialize a CsvSource with escape",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        149,
+        5
+      ],
+      "end": [
+        153,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "escape",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 1,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "u8"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          180,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "287",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-5d5934cbbded2b626d036e80",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::with_escape",
+      "datafusion::datasource::physical_plan::csv::CsvSource::with_escape"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1c103938bfc2be7e310f716c",
+    "path": "datafusion_datasource_csv::source::CsvSource::with_terminator",
+    "name": "with_terminator",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_terminator(&self, terminator: Option<u8>) -> Self",
+    "docs": "Initialize a CsvSource with terminator",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        156,
+        5
+      ],
+      "end": [
+        160,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "terminator",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 1,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "u8"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          180,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "288",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-1c103938bfc2be7e310f716c",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::with_terminator",
+      "datafusion::datasource::physical_plan::csv::CsvSource::with_terminator"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b374622d10c466d35a3a1177",
+    "path": "datafusion_datasource_csv::source::CsvSource::with_truncate_rows",
+    "name": "with_truncate_rows",
+    "owner": "datafusion_datasource_csv::source::CsvSource",
+    "crate": "datafusion-datasource-csv",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_truncate_rows(&self, truncate_rows: bool) -> Self",
+    "docs": "Whether to support truncate rows when read csv file",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        170,
+        5
+      ],
+      "end": [
+        174,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "truncate_rows",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CsvSource",
+          "id": "datafusion_datasource_csv::source::CsvSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          180,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "de3ea9108be933b56f71d2fda00f0bcb6e626209107860c8204f00c8caa40b53",
+      "format_version": 61,
+      "item_id": "290",
+      "origin": "https://docs.rs/crate/datafusion-datasource-csv/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_csv.source.CsvSource.md",
+    "record_file": "operations/datafusion_datasource_csv.source.CsvSource.json",
+    "anchor": "op-b374622d10c466d35a3a1177",
+    "aliases": [
+      "datafusion::datasource::physical_plan::CsvSource::with_truncate_rows",
+      "datafusion::datasource::physical_plan::csv::CsvSource::with_truncate_rows"
+    ],
+    "resolved_doc_links": {}
+  }
+]

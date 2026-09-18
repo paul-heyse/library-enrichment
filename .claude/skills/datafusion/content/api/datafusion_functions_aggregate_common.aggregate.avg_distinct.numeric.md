@@ -26,6 +26,9 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.avg_distinct.numeric.Float64DistinctAvgAccumulator.md).
+
+
 Specialized implementation of `AVG DISTINCT` for Float64 values, leveraging
 the existing DistinctSumAccumulator implementation.
 

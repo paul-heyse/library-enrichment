@@ -1,0 +1,158 @@
+{
+  "id": "delta.write",
+  "title": "Write batches or a logical plan; distinguish staging from publication",
+  "reviewed": "2026-09-18",
+  "brief": "Prefer WriteBuilder for a complete append/replacement operation. RecordBatchWriter provides staged file production with an explicit commit boundary. At this commit, Ignore on an existing WriteBuilder path appended rows in the retained probe.",
+  "task_aliases": [
+    "append data",
+    "write plan",
+    "stream writer",
+    "flush commit",
+    "save mode ignore",
+    "target file size"
+  ],
+  "crates": [
+    "deltalake-core"
+  ],
+  "input": [
+    "Vec<RecordBatch>",
+    "LogicalPlan",
+    "RecordBatchWriter"
+  ],
+  "output": [
+    "DeltaTable",
+    "Add actions",
+    "committed version"
+  ],
+  "properties": [
+    "append data",
+    "write plan",
+    "stream writer",
+    "flush commit",
+    "save mode ignore",
+    "target file size"
+  ],
+  "operations": [
+    "deltalake_core::table::DeltaTable::write",
+    "deltalake_core::operations::write::WriteBuilder::with_input_plan",
+    "deltalake_core::operations::write::WriteBuilder::with_save_mode",
+    "deltalake_core::operations::write::WriteBuilder::Output",
+    "deltalake_core::writer::record_batch::RecordBatchWriter::for_table",
+    "deltalake_core::writer::DeltaWriter::flush_and_commit"
+  ],
+  "choices": [
+    {
+      "candidate": "DeltaTable::write(batches)",
+      "choose_when": "An operation should write data and publish a Delta commit",
+      "tradeoff": "Builder consumes the table value and returns an updated DeltaTable"
+    },
+    {
+      "candidate": "with_input_plan(LogicalPlan)",
+      "choose_when": "DataFusion produces the source relation",
+      "tradeoff": "The supplied operation session must support Delta's custom planning nodes"
+    },
+    {
+      "candidate": "RecordBatchWriter",
+      "choose_when": "You need incremental batch ingestion and explicit flush/publication control",
+      "tradeoff": "flush creates actions/files; flush_and_commit publishes them"
+    }
+  ],
+  "claims": [
+    {
+      "id": "delta.write.1",
+      "aspect": "types",
+      "statement": "with_input_plan accepts LogicalPlan. The deprecated with_input_execution_plan spelling accepts Arc<LogicalPlan>, despite its name; it is not an ExecutionPlan adapter.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.write.2",
+      "aspect": "visibility",
+      "statement": "Rows buffered by RecordBatchWriter were invisible to a reloaded observer until flush_and_commit completed.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "logical_plan_write_and_staged_writer_visibility"
+    },
+    {
+      "id": "delta.write.3",
+      "aspect": "save mode",
+      "statement": "Append is the default. ErrorIfExists rejected an existing table; SaveMode::Ignore on this existing-table write path committed additional rows. Do not use Ignore as a skip or dedup guarantee at this pin.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "save_modes_replace_where_and_validation_before_commit"
+    },
+    {
+      "id": "delta.write.4",
+      "aspect": "resources",
+      "statement": "Target file size and write batch size are tuning inputs, not exact output size or process-memory caps. A plan/stream input alone proves no bounded-memory property.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.write.5",
+      "aspect": "staging boundary",
+      "statement": "write/write_with_mode can perform object I/O and finalize files before explicit flush when target size or schema rotation is reached. flush returns staged Add actions; Delta visibility requires log publication. reset can leave finalized unreferenced files for cleanup. The target-size probe waits for the background upload to finish before explicit flush and confirms Delta rows remain unchanged until commit.",
+      "kind": "source_observation",
+      "evidence": [
+        "writer_source",
+        "runtime"
+      ],
+      "assertion_test": "logical_plan_write_and_staged_writer_visibility"
+    }
+  ],
+  "implementation": [
+    "Select save mode from the tested operation path; CreateBuilder's behavior must not be assumed to match WriteBuilder.",
+    "Use file actions and version/metrics to observe publication; coordinate low-level writer retries with the commit contract.",
+    "For a logical plan, provide a Delta-configured SessionState that contains required source/UDF context."
+  ],
+  "effects": [
+    "write data files",
+    "publish log version",
+    "may leave unreferenced files after failure"
+  ],
+  "errors": [
+    "Validation or planning can fail before log publication. A later hook failure can occur after a visible commit; see delta.commit."
+  ],
+  "unknowns": [
+    "Exact file-size targets, throughput and memory/spill behavior require workload-specific measurement."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "scope": "Exact git-capture full contracts for the selected operations"
+    },
+    {
+      "id": "source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/write/mod.rs",
+      "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+    },
+    {
+      "id": "runtime",
+      "kind": "runtime_observation",
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Named local assertions only; see profile, fixtures and source digests",
+      "tests": [
+        "logical_plan_write_and_staged_writer_visibility",
+        "save_modes_replace_where_and_validation_before_commit"
+      ]
+    },
+    {
+      "id": "writer_source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/writer/record_batch.rs",
+      "scope": "write_with_mode, reset and target-size rolling at pinned commit"
+    }
+  ]
+}

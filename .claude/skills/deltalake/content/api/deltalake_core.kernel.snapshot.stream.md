@@ -5,6 +5,7 @@ Crate `deltalake-core` · 3 public items · structured records in [`model/deltal
 ## RecordBatchStream
 
 `trait` · `deltalake_core::kernel::snapshot::stream::RecordBatchStream`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.snapshot.stream.RecordBatchStream.md)
 
 Also reachable as `deltalake::kernel::RecordBatchStream`, `deltalake_core::kernel::RecordBatchStream`
 
@@ -27,6 +28,7 @@ See [`SendableRecordBatchStream`] for more details.
 ## SendableRBStream
 
 `type_alias` · `deltalake_core::kernel::snapshot::stream::SendableRBStream`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.snapshot.stream.SendableRBStream.md)
 
 Also reachable as `deltalake::kernel::SendableRBStream`, `deltalake_core::kernel::SendableRBStream`
 
@@ -42,6 +44,7 @@ A boxed, `Send`able stream of [`RecordBatch`] results, without the schema guaran
 ## SendableRecordBatchStream
 
 `type_alias` · `deltalake_core::kernel::snapshot::stream::SendableRecordBatchStream`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.snapshot.stream.SendableRecordBatchStream.md)
 
 Also reachable as `deltalake::kernel::SendableRecordBatchStream`, `deltalake_core::kernel::SendableRecordBatchStream`
 

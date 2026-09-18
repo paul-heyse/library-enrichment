@@ -12,6 +12,9 @@ Also reachable as `datafusion_physical_optimizer::enforce_distribution::adjust_i
 fn adjust_input_keys_ordering(requirements: PlanWithKeyRequirements) -> datafusion_common::error::Result<datafusion_common::tree_node::Transformed<PlanWithKeyRequirements>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_distribution.adjust_input_keys_ordering.md).
+
+
 When the physical planner creates the Joins, the ordering of join keys is from the original query.
 That might not match with the output partitioning of the join node's children
 A Top-Down process will use this method to adjust children's output partitioning based on the parent key reordering requirements:
@@ -66,6 +69,9 @@ Also reachable as `datafusion_physical_optimizer::enforce_distribution::ensure_d
 fn ensure_distribution(dist_context: DistributionContext, config: &datafusion_common::config::ConfigOptions) -> datafusion_common::error::Result<datafusion_common::tree_node::Transformed<DistributionContext>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_distribution.ensure_distribution.md).
+
+
 This function checks whether we need to add additional data exchange
 operators to satisfy distribution requirements. Since this function
 takes care of such requirements, we should avoid manually adding data
@@ -87,6 +93,9 @@ Also reachable as `datafusion_physical_optimizer::enforce_distribution::reorder_
 fn reorder_aggregate_keys(agg_node: PlanWithKeyRequirements, agg_exec: &datafusion_physical_plan::aggregates::AggregateExec) -> datafusion_common::error::Result<PlanWithKeyRequirements>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_distribution.reorder_aggregate_keys.md).
+
+
 ---
 
 ## reorder_join_keys_to_inputs
@@ -98,6 +107,9 @@ Also reachable as `datafusion_physical_optimizer::enforce_distribution::reorder_
 ```rust
 fn reorder_join_keys_to_inputs(plan: std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::error::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_distribution.reorder_join_keys_to_inputs.md).
+
 
 When the physical planner creates the Joins, the ordering of join keys is from the original query.
 That might not match with the output partitioning of the join node's children
@@ -132,6 +144,9 @@ Also reachable as `datafusion_physical_optimizer::enforce_distribution::reorder_
 fn reorder_partitioned_join_keys<F>(join_plan: PlanWithKeyRequirements, on: &[(datafusion_physical_expr::PhysicalExprRef, datafusion_physical_expr::PhysicalExprRef)], sort_options: &[arrow::compute::SortOptions], join_constructor: &F) -> datafusion_common::error::Result<PlanWithKeyRequirements> where F: Fn((Vec<(datafusion_physical_expr::PhysicalExprRef, datafusion_physical_expr::PhysicalExprRef)>, Vec<arrow::compute::SortOptions>)) -> datafusion_common::error::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_distribution.reorder_partitioned_join_keys.md).
+
+
 ---
 
 ## replace_order_preserving_variants
@@ -143,6 +158,9 @@ Also reachable as `datafusion_physical_optimizer::enforce_distribution::replace_
 ```rust
 fn replace_order_preserving_variants(context: DistributionContext) -> datafusion_common::error::Result<DistributionContext>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_distribution.replace_order_preserving_variants.md).
+
 
 Updates the [`DistributionContext`] if preserving ordering while changing partitioning is not helpful or desirable.
 
@@ -175,6 +193,9 @@ Also reachable as `datafusion_physical_optimizer::enforce_distribution::Distribu
 type DistributionContext = datafusion_physical_plan::tree_node::PlanContext<bool>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_distribution.DistributionContext.md).
+
+
 Keeps track of distribution changing operators (like `RepartitionExec`,
 `SortPreservingMergeExec`, `CoalescePartitionsExec`) and their ancestors.
 Using this information, we can optimize distribution of the plan if/when
@@ -191,6 +212,9 @@ Also reachable as `datafusion_physical_optimizer::enforce_distribution::PlanWith
 ```rust
 type PlanWithKeyRequirements = datafusion_physical_plan::tree_node::PlanContext<Vec<std::sync::Arc<dyn PhysicalExpr>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_distribution.PlanWithKeyRequirements.md).
+
 
 Keeps track of parent required key orderings.
 

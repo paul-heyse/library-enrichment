@@ -12,6 +12,9 @@ Also reachable as `arrow::array::as_boolean_array`
 fn as_boolean_array(arr: &dyn Array) -> &BooleanArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_boolean_array.md).
+
+
 Force downcast of an [`Array`], such as an [`ArrayRef`] to
 [`BooleanArray`], panicking on failure.
 
@@ -37,6 +40,9 @@ Also reachable as `arrow::array::as_dictionary_array`
 ```rust
 fn as_dictionary_array<T>(arr: &dyn Array) -> &DictionaryArray<T> where T: ArrowDictionaryKeyType
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_dictionary_array.md).
+
 
 Force downcast of an [`Array`], such as an [`ArrayRef`] to
 [`DictionaryArray<T>`], panic'ing on failure.
@@ -65,6 +71,9 @@ Also reachable as `arrow::array::as_fixed_size_list_array`
 fn as_fixed_size_list_array(arr: &dyn Array) -> &FixedSizeListArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_fixed_size_list_array.md).
+
+
 Force downcast of an [`Array`], such as an [`ArrayRef`] to
 [`FixedSizeListArray`], panicking on failure.
 
@@ -79,6 +88,9 @@ Also reachable as `arrow::array::as_generic_binary_array`
 ```rust
 fn as_generic_binary_array<S: OffsetSizeTrait>(arr: &dyn Array) -> &GenericBinaryArray<S>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_generic_binary_array.md).
+
 
 Force downcast of an [`Array`], such as an [`ArrayRef`] to
 [`GenericBinaryArray<S>`], panicking on failure.
@@ -95,6 +107,9 @@ Also reachable as `arrow::array::as_generic_list_array`
 fn as_generic_list_array<S: OffsetSizeTrait>(arr: &dyn Array) -> &GenericListArray<S>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_generic_list_array.md).
+
+
 Force downcast of an [`Array`], such as an [`ArrayRef`] to
 [`GenericListArray<T>`], panicking on failure.
 
@@ -109,6 +124,9 @@ Also reachable as `arrow::array::as_large_list_array`
 ```rust
 fn as_large_list_array(arr: &dyn Array) -> &LargeListArray
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_large_list_array.md).
+
 
 Force downcast of an [`Array`], such as an [`ArrayRef`] to
 [`LargeListArray`], panicking on failure.
@@ -125,6 +143,9 @@ Also reachable as `arrow::array::as_largestring_array`
 fn as_largestring_array(arr: &dyn Array) -> &LargeStringArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_largestring_array.md).
+
+
 Force downcast of an [`Array`], such as an [`ArrayRef`] to 
 [`LargeStringArray`], panicking on failure.
 
@@ -139,6 +160,9 @@ Also reachable as `arrow::array::as_list_array`
 ```rust
 fn as_list_array(arr: &dyn Array) -> &ListArray
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_list_array.md).
+
 
 Force downcast of an [`Array`], such as an [`ArrayRef`] to
 [`ListArray`], panicking on failure.
@@ -155,6 +179,9 @@ Also reachable as `arrow::array::as_map_array`
 fn as_map_array(arr: &dyn Array) -> &MapArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_map_array.md).
+
+
 Force downcast of an [`Array`], such as an [`ArrayRef`] to 
 [`MapArray`], panicking on failure.
 
@@ -170,6 +197,9 @@ Also reachable as `arrow::array::as_null_array`
 fn as_null_array(arr: &dyn Array) -> &NullArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_null_array.md).
+
+
 Force downcast of an [`Array`], such as an [`ArrayRef`] to 
 [`NullArray`], panicking on failure.
 
@@ -184,6 +214,9 @@ Also reachable as `arrow::array::as_primitive_array`
 ```rust
 fn as_primitive_array<T>(arr: &dyn Array) -> &PrimitiveArray<T> where T: ArrowPrimitiveType
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_primitive_array.md).
+
 
 Force downcast of an [`Array`], such as an [`ArrayRef`], to
 [`PrimitiveArray<T>`], panic'ing on failure.
@@ -223,6 +256,9 @@ Also reachable as `arrow::array::as_run_array`
 fn as_run_array<T>(arr: &dyn Array) -> &RunArray<T> where T: RunEndIndexType
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_run_array.md).
+
+
 Force downcast of an [`Array`], such as an [`ArrayRef`] to
 [`RunArray<T>`], panic'ing on failure.
 
@@ -250,6 +286,9 @@ Also reachable as `arrow::array::as_string_array`
 fn as_string_array(arr: &dyn Array) -> &StringArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_string_array.md).
+
+
 Force downcast of an [`Array`], such as an [`ArrayRef`] to
 [`StringArray`], panicking on failure.
 
@@ -276,6 +315,9 @@ Also reachable as `arrow::array::as_struct_array`
 fn as_struct_array(arr: &dyn Array) -> &StructArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_struct_array.md).
+
+
 Force downcast of an [`Array`], such as an [`ArrayRef`] to 
 [`StructArray`], panicking on failure.
 
@@ -291,6 +333,9 @@ Also reachable as `arrow::array::as_union_array`
 fn as_union_array(arr: &dyn Array) -> &UnionArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.as_union_array.md).
+
+
 Force downcast of an [`Array`], such as an [`ArrayRef`] to 
 [`UnionArray`], panicking on failure.
 
@@ -305,6 +350,9 @@ Also reachable as `arrow::array::downcast_array`
 ```rust
 fn downcast_array<T>(array: &dyn Array) -> T where T: From<arrow_data::ArrayData>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.downcast_array.md).
+
 
 Downcasts a `dyn Array` to a concrete type
 
@@ -390,6 +438,9 @@ fn as_struct_opt(&self) -> Option<&StructArray>
 fn as_union(&self) -> &UnionArray
 fn as_union_opt(&self) -> Option<&UnionArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.cast.AsArray.md).
+
 
 An extension trait for `dyn Array` that provides ergonomic downcasting
 

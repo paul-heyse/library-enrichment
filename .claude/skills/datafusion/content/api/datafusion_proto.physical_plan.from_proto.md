@@ -10,6 +10,9 @@ Crate `datafusion-proto` · 12 public items · structured records in [`model/dat
 fn parse_physical_expr(proto: &protobuf::PhysicalExprNode, ctx: &datafusion_execution::TaskContext, input_schema: &arrow::datatypes::Schema, codec: &dyn PhysicalExtensionCodec) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.from_proto.parse_physical_expr.md).
+
+
 Parses a physical expression from a protobuf.
 
 # Arguments
@@ -30,6 +33,9 @@ Parses a physical expression from a protobuf.
 ```rust
 fn parse_physical_expr_with_converter(proto: &protobuf::PhysicalExprNode, input_schema: &arrow::datatypes::Schema, ctx: &super::PhysicalPlanDecodeContext<'_>, proto_converter: &dyn PhysicalProtoConverterExtension) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.from_proto.parse_physical_expr_with_converter.md).
+
 
 Parses a physical expression from a protobuf.
 
@@ -53,6 +59,9 @@ Parses a physical expression from a protobuf.
 fn parse_physical_exprs<'a, I>(protos: I, ctx: &super::PhysicalPlanDecodeContext<'_>, input_schema: &arrow::datatypes::Schema, proto_converter: &dyn PhysicalProtoConverterExtension) -> datafusion_common::Result<Vec<std::sync::Arc<dyn PhysicalExpr>>> where I: IntoIterator<Item = &'a protobuf::PhysicalExprNode>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.from_proto.parse_physical_exprs.md).
+
+
 ---
 
 ## parse_physical_sort_expr
@@ -62,6 +71,9 @@ fn parse_physical_exprs<'a, I>(protos: I, ctx: &super::PhysicalPlanDecodeContext
 ```rust
 fn parse_physical_sort_expr(proto: &protobuf::PhysicalSortExprNode, ctx: &super::PhysicalPlanDecodeContext<'_>, input_schema: &arrow::datatypes::Schema, proto_converter: &dyn PhysicalProtoConverterExtension) -> datafusion_common::Result<datafusion_physical_expr::PhysicalSortExpr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.from_proto.parse_physical_sort_expr.md).
+
 
 Parses a physical sort expression from a protobuf.
 
@@ -85,6 +97,9 @@ Parses a physical sort expression from a protobuf.
 fn parse_physical_sort_exprs(proto: &[protobuf::PhysicalSortExprNode], ctx: &super::PhysicalPlanDecodeContext<'_>, input_schema: &arrow::datatypes::Schema, proto_converter: &dyn PhysicalProtoConverterExtension) -> datafusion_common::Result<Vec<datafusion_physical_expr::PhysicalSortExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.from_proto.parse_physical_sort_exprs.md).
+
+
 Parses a physical sort expressions from a protobuf.
 
 # Arguments
@@ -106,6 +121,9 @@ Parses a physical sort expressions from a protobuf.
 ```rust
 fn parse_physical_window_expr(proto: &protobuf::PhysicalWindowExprNode, ctx: &super::PhysicalPlanDecodeContext<'_>, input_schema: &arrow::datatypes::Schema, proto_converter: &dyn PhysicalProtoConverterExtension) -> datafusion_common::Result<std::sync::Arc<dyn WindowExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.from_proto.parse_physical_window_expr.md).
+
 
 Parses a physical window expr from a protobuf.
 
@@ -130,6 +148,9 @@ Parses a physical window expr from a protobuf.
 fn parse_protobuf_file_scan_config(proto: &protobuf::FileScanExecConf, ctx: &super::PhysicalPlanDecodeContext<'_>, proto_converter: &dyn PhysicalProtoConverterExtension, file_source: std::sync::Arc<dyn FileSource>) -> datafusion_common::Result<datafusion_datasource::file_scan_config::FileScanConfig>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.from_proto.parse_protobuf_file_scan_config.md).
+
+
 ---
 
 ## parse_protobuf_file_scan_schema
@@ -142,6 +163,9 @@ fn parse_protobuf_file_scan_config(proto: &protobuf::FileScanExecConf, ctx: &sup
 fn parse_protobuf_file_scan_schema(proto: &protobuf::FileScanExecConf) -> datafusion_common::Result<std::sync::Arc<arrow::datatypes::Schema>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.from_proto.parse_protobuf_file_scan_schema.md).
+
+
 ---
 
 ## parse_protobuf_hash_partitioning
@@ -152,6 +176,9 @@ fn parse_protobuf_file_scan_schema(proto: &protobuf::FileScanExecConf) -> datafu
 fn parse_protobuf_hash_partitioning(partitioning: Option<&protobuf::PhysicalHashRepartition>, ctx: &super::PhysicalPlanDecodeContext<'_>, input_schema: &arrow::datatypes::Schema, proto_converter: &dyn PhysicalProtoConverterExtension) -> datafusion_common::Result<Option<datafusion_physical_plan::Partitioning>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.from_proto.parse_protobuf_hash_partitioning.md).
+
+
 ---
 
 ## parse_protobuf_partitioning
@@ -161,6 +188,9 @@ fn parse_protobuf_hash_partitioning(partitioning: Option<&protobuf::PhysicalHash
 ```rust
 fn parse_protobuf_partitioning(partitioning: Option<&protobuf::Partitioning>, ctx: &super::PhysicalPlanDecodeContext<'_>, input_schema: &arrow::datatypes::Schema, proto_converter: &dyn PhysicalProtoConverterExtension) -> datafusion_common::Result<Option<datafusion_physical_plan::Partitioning>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.from_proto.parse_protobuf_partitioning.md).
+
 
 ---
 
@@ -174,6 +204,9 @@ fn parse_protobuf_partitioning(partitioning: Option<&protobuf::Partitioning>, ct
 fn parse_record_batches(buf: &[u8]) -> datafusion_common::Result<Vec<arrow::array::RecordBatch>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.from_proto.parse_record_batches.md).
+
+
 ---
 
 ## parse_table_schema_from_proto
@@ -183,6 +216,9 @@ fn parse_record_batches(buf: &[u8]) -> datafusion_common::Result<Vec<arrow::arra
 ```rust
 fn parse_table_schema_from_proto(proto: &protobuf::FileScanExecConf) -> datafusion_common::Result<datafusion_datasource::TableSchema>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.from_proto.parse_table_schema_from_proto.md).
+
 
 Parses a TableSchema from protobuf, extracting the file schema and partition columns
 

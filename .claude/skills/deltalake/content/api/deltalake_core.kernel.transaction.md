@@ -5,6 +5,7 @@ Crate `deltalake-core` · 14 public items · structured records in [`model/delta
 ## CommitBuilderError
 
 `enum` · `deltalake_core::kernel::transaction::CommitBuilderError`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.CommitBuilderError.md)
 
 Also reachable as `deltalake::kernel::transaction::CommitBuilderError`
 
@@ -29,6 +30,7 @@ Error raised while commititng transaction
 ## TransactionError
 
 `enum` · `deltalake_core::kernel::transaction::TransactionError`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.TransactionError.md)
 
 Also reachable as `deltalake::kernel::transaction::TransactionError`
 
@@ -68,6 +70,7 @@ Error raised while commititng transaction
 ## CommitBuilder
 
 `struct` · `deltalake_core::kernel::transaction::CommitBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.CommitBuilder.md)
 
 Also reachable as `deltalake::kernel::transaction::CommitBuilder`
 
@@ -104,6 +107,7 @@ Prepare data to be committed to the Delta log and control how the commit is perf
 ## CommitData
 
 `struct` · `deltalake_core::kernel::transaction::CommitData`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.CommitData.md)
 
 Also reachable as `deltalake::kernel::transaction::CommitData`
 
@@ -130,6 +134,7 @@ Data that was actually written to the log store.
 ## CommitMetrics
 
 `struct` · `deltalake_core::kernel::transaction::CommitMetrics`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.CommitMetrics.md)
 
 Also reachable as `deltalake::kernel::transaction::CommitMetrics`
 
@@ -162,6 +167,7 @@ Metrics describing the work performed to land a single commit.
 ## CommitProperties
 
 `struct` · `deltalake_core::kernel::transaction::CommitProperties`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.CommitProperties.md)
 
 Also reachable as `deltalake::kernel::transaction::CommitProperties`
 
@@ -190,6 +196,7 @@ Enable controlling commit behaviour and modifying metadata that is written durin
 ## FinalizedCommit
 
 `struct` · `deltalake_core::kernel::transaction::FinalizedCommit`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.FinalizedCommit.md)
 
 Also reachable as `deltalake::kernel::transaction::FinalizedCommit`
 
@@ -215,6 +222,7 @@ A commit that successfully completed
 ## Metrics
 
 `struct` · `deltalake_core::kernel::transaction::Metrics`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.Metrics.md)
 
 Also reachable as `deltalake::kernel::transaction::Metrics`
 
@@ -247,6 +255,7 @@ Aggregate metrics for a commit, combining commit-time and post-commit measuremen
 ## PostCommit
 
 `struct` · `deltalake_core::kernel::transaction::PostCommit`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.PostCommit.md)
 
 Also reachable as `deltalake::kernel::transaction::PostCommit`
 
@@ -271,6 +280,7 @@ Represents items for the post commit hook
 ## PostCommitHookProperties
 
 `struct` · `deltalake_core::kernel::transaction::PostCommitHookProperties`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.PostCommitHookProperties.md)
 
 Also reachable as `deltalake::kernel::transaction::PostCommitHookProperties`
 
@@ -287,6 +297,7 @@ Properties for post commit hook.
 ## PostCommitMetrics
 
 `struct` · `deltalake_core::kernel::transaction::PostCommitMetrics`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.PostCommitMetrics.md)
 
 Also reachable as `deltalake::kernel::transaction::PostCommitMetrics`
 
@@ -319,6 +330,7 @@ Metrics describing work performed by post-commit hooks (checkpointing, log clean
 ## PreCommit
 
 `struct` · `deltalake_core::kernel::transaction::PreCommit`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.PreCommit.md)
 
 Also reachable as `deltalake::kernel::transaction::PreCommit`
 
@@ -347,6 +359,7 @@ Represents a commit that has not yet started but all details are finalized
 ## PreparedCommit
 
 `struct` · `deltalake_core::kernel::transaction::PreparedCommit`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.PreparedCommit.md)
 
 Also reachable as `deltalake::kernel::transaction::PreparedCommit`
 
@@ -375,6 +388,7 @@ Represents a inflight commit
 ## TableReference
 
 `trait` · `deltalake_core::kernel::transaction::TableReference`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.TableReference.md)
 
 Also reachable as `deltalake::kernel::transaction::TableReference`
 

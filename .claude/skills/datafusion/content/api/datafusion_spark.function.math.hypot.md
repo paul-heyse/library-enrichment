@@ -29,6 +29,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.hypot.SparkHypot.md).
+
+
 Spark-compatible `hypot` function.
 
 <https://spark.apache.org/docs/latest/api/sql/index.html#hypot>

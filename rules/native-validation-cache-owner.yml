@@ -1,0 +1,12 @@
+id: native-validation-cache-owner
+language: Rust
+severity: error
+message: Positive storage and evidence proofs share the native contract cache and its memory policy.
+files:
+  - crates/enrichment-store/src/repository.rs
+rule:
+  kind: field_declaration
+  has:
+    field: name
+    regex: '^verified_(blobs|manifests|attempts)$'
+note: Repository declarations must not restore these local maps. This is a focused syntactic removal guard, not proof of runtime cache authority.

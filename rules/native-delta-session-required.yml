@@ -1,0 +1,24 @@
+id: native-delta-session-required
+language: Rust
+severity: error
+message: Native Delta operations require the bound SessionState and composed application planner.
+files:
+  - crates/enrichment-store/src/**
+  - crates/enrichment-daemon/src/**
+ignores:
+  - "**/tests.rs"
+  - "**/tests/**"
+rule:
+  any:
+    - all:
+        - any:
+            - kind: type_identifier
+            - kind: identifier
+        - regex: '^DeltaSessionContext$'
+    - pattern: 'SessionFallbackPolicy::InternalDefaults'
+    - pattern: 'SessionFallbackPolicy::DeriveFromTrait'
+  not:
+    inside:
+      pattern: 'mod tests { $$$BODY }'
+      stopBy: end
+note: Session fallback can discard application analyzer, function, resource and extension-planner policy. This complements builder admission tests; it does not prove that every builder was given a session.

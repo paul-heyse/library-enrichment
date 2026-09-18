@@ -4,23 +4,17 @@ use crate::{execution::capsule, jobs, service::Service};
 use enrichment_core::{
     canonical,
     evidence::{
-        Artifact, ArtifactKind, SymbolHeader,
-        catalog::{JobPublication, PublishedJobKind},
-        execution::*,
-        relational::{FactSource, Locator, SubjectRef},
-        snapshot::SnapshotMetadata,
+        Artifact, ArtifactKind, SymbolHeader, catalog::PublishedJobKind, execution::*,
+        relational::SubjectRef, snapshot::SnapshotMetadata,
     },
     identity::{Ecosystem, Environment},
     policy::ExecutionProfile,
-    producer::{ProducerRun, RunOutcome},
+    producer::ProducerRun,
     request::{InspectRequest, InspectionIntent, InspectionOptions},
-    wire::{
-        Coverage, Envelope, ErrorCode, EvidenceClass, JobState, SourceVersionMatch,
-        data::InspectData,
-    },
+    wire::{Envelope, ErrorCode, EvidenceClass, JobState},
 };
 use enrichment_store::{SnapshotReader, query::ExecutionSelection};
-use std::{collections::BTreeMap, io, io::Read, path::Path, sync::atomic::Ordering};
+use std::{io, io::Read, path::Path, sync::atomic::Ordering};
 
 pub struct Produced {
     pub environment: Environment,
@@ -37,18 +31,7 @@ pub struct Produced {
     pub transcript: serde_json::Value,
 }
 
-pub fn methods(options: &InspectionOptions) -> Vec<SemanticMethod> {
-    if options.methods.is_empty() {
-        vec![
-            SemanticMethod::Hover,
-            SemanticMethod::Definition,
-            SemanticMethod::References,
-            SemanticMethod::Diagnostics,
-        ]
-    } else {
-        options.methods.clone()
-    }
-}
+pub use enrichment_core::native_semantics::methods;
 
 /// Exact source/query selection is lowered before result hydration and alternatives bounds.
 pub async fn retained_page(
@@ -65,68 +48,21 @@ pub async fn retained_page(
 
 /// Producer implementation identity is separate from the immutable container identity.
 pub(super) fn producer_identity(runtime: bool) -> io::Result<(&'static str, String)> {
-    let (name, source) = if runtime {
-        (
-            "runtime-object",
-            vec![
-                ("runtime-object", include_str!("runtime_object.rs")),
-                (
-                    "runtime-worker",
-                    include_str!("../execution/runtime_object.py"),
-                ),
-            ],
-        )
+    let name = if runtime {
+        "runtime-object"
     } else {
-        (
-            "semantic-inspection",
-            vec![
-                ("semantics", include_str!("semantics.rs")),
-                ("lsp-document", include_str!("../lsp/document.rs")),
-                ("lsp-client", include_str!("../lsp/client.rs")),
-                ("lsp-diagnostics", include_str!("../lsp/diagnostics.rs")),
-                ("lsp-notifications", include_str!("../lsp/notifications.rs")),
-                ("lsp-framing", include_str!("../lsp/framing.rs")),
-                ("lsp-settings", include_str!("../lsp/settings.rs")),
-                ("lsp", include_str!("../lsp/mod.rs")),
-            ],
-        )
+        "semantic-inspection"
     };
-    let mut components = source
-        .into_iter()
-        .chain([
-            ("inspection", include_str!("inspect_execution.rs")),
-            ("documents", include_str!("source_documents.rs")),
-            ("source-tree", include_str!("source_tree.rs")),
-            ("capsule", include_str!("../execution/capsule.rs")),
-            (
-                "python-closure",
-                include_str!("../execution/python_closure.rs"),
-            ),
-            ("inventory", include_str!("../execution/inventory.rs")),
-            (
-                "execution-contract",
-                include_str!("../../../enrichment-core/src/evidence/execution.rs"),
-            ),
-            (
-                "text-contract",
-                include_str!("../../../enrichment-core/src/evidence/text.rs"),
-            ),
-            (
-                "key-contract",
-                include_str!("../../../enrichment-core/src/native_key.rs"),
-            ),
-            (
-                "identity-contract",
-                include_str!("../../../enrichment-core/src/native_identity.rs"),
-            ),
-            ("dependencies", include_str!("../../../../Cargo.lock")),
-        ])
-        .map(|(name, source)| (name.into(), canonical::sha256_hex(source.as_bytes())))
-        .collect::<std::collections::BTreeMap<String, String>>();
-    components.insert(
-        "semantic-scope".into(),
-        enrichment_store::semantic_scope::identity().map_err(io::Error::other)?,
-    );
+    let components = std::collections::BTreeMap::from([
+        (
+            "native-definition".into(),
+            enrichment_store::runtime::DEFINITION_REVISION.into(),
+        ),
+        (
+            "semantic-scope".into(),
+            enrichment_store::semantic_scope::identity().map_err(io::Error::other)?,
+        ),
+    ]);
     let digest = enrichment_core::native_key::Key::ProducerImplementation
         .hex_digest(
             &enrichment_core::operation::identities::ProducerImplementation {
@@ -135,7 +71,7 @@ pub(super) fn producer_identity(runtime: bool) -> io::Result<(&'static str, Stri
             },
         )
         .map_err(io::Error::other)?;
-    Ok((name, format!("4+{digest}")))
+    Ok((name, format!("5+{digest}")))
 }
 
 async fn retained_matching(
@@ -152,11 +88,13 @@ async fn retained_matching(
     let is_runtime = runtime;
     let consumer = if !is_runtime {
         Some(
-            crate::lsp::document::Consumer::new(
+            enrichment_store::semantic_grants::consumer(
+                reader.runtime(),
                 symbol,
                 reader.manifest().metadata.ecosystem,
                 options,
             )
+            .await
             .map_err(io::Error::other)?,
         )
     } else {
@@ -196,14 +134,6 @@ async fn retained_matching(
     }
 }
 
-fn sufficient(facts: &[ExecutionObservation], options: &InspectionOptions) -> bool {
-    if options.runtime.is_some() {
-        facts.iter().any(|o| matches!(&o.payload, ExecutionPayload::RuntimeObject(r) if matches!(r.outcome, ExecutionOutcome::Results | ExecutionOutcome::Empty | ExecutionOutcome::Unsupported)))
-    } else {
-        methods(options).iter().all(|method| facts.iter().any(|o| matches!(&o.payload, ExecutionPayload::SemanticQuery(q) if q.method == *method && matches!(q.outcome, ExecutionOutcome::Results | ExecutionOutcome::Empty | ExecutionOutcome::Unsupported))))
-    }
-}
-
 /// Only explicit ExecuteOnMiss can discover a directly derived context. Retained reads
 /// continue to mean exactly the supplied context, even if another environment is richer.
 async fn retained_child(
@@ -214,19 +144,26 @@ async fn retained_child(
     options: &InspectionOptions,
 ) -> Result<Option<Envelope>, Box<Envelope>> {
     let catalog = std::sync::Arc::clone(&opened.reader.pinned().catalog);
-    let children = catalog
-        .children(&service.repository.runtime, &opened.context)
-        .await
-        .map_err(|e| Box::new(common::operation_error(&e, "inspection_execution")))?;
-    if children.is_empty() {
-        return Ok(None);
-    }
     let Some(image) = (match opened.release.key.ecosystem {
         Ecosystem::Rust => service.config.execution.rust_image.as_deref(),
         Ecosystem::Python => service.config.execution.python_image.as_deref(),
     }) else {
         return Ok(None);
     };
+    let children = enrichment_store::environment_plan::children(
+        &service.repository.runtime,
+        &catalog,
+        &opened.context,
+        &opened.environment,
+        opened.release.key.ecosystem,
+        image,
+        &opened.reader.manifest().normalizer_version,
+    )
+    .await
+    .map_err(|error| Box::new(common::operation_error(&error, "inspection_execution")))?;
+    if children.is_empty() {
+        return Ok(None);
+    }
     let containment =
         match crate::execution::description::containment_identity(&service.config.execution) {
             Ok(id) => id,
@@ -234,11 +171,6 @@ async fn retained_child(
         };
     let (producer, version) = producer_identity(options.runtime.is_some())
         .map_err(|e| Box::new(common::operation_error(&e, "inspection_execution")))?;
-    let inputs = opened
-        .reader
-        .static_inputs()
-        .await
-        .map_err(|e| Box::new(common::query_error(&e)))?;
     let mut candidates = Vec::new();
     for child in children {
         let child = common::open_context_at(
@@ -248,35 +180,11 @@ async fn retained_child(
             None,
         )
         .await?;
-        let declared = &opened.environment;
-        let matches_environment = if opened.release.key.ecosystem == Ecosystem::Python {
-            capsule::python_toolchain_accepted(declared.toolchain.as_deref(), image)
-                && capsule::python_target_accepted(declared.target.as_deref())
-                && child.environment.toolchain.as_deref()
-                    == Some(format!("python-3.14.7;{image}").as_str())
-                && child.environment.target.as_deref() == Some("linux-x86_64")
-        } else {
-            declared
-                .toolchain
-                .as_ref()
-                .is_none_or(|v| child.environment.toolchain.as_ref() == Some(v))
-                && declared
-                    .target
-                    .as_ref()
-                    .is_none_or(|v| child.environment.target.as_ref() == Some(v))
-        };
-        if child.reader.manifest().normalizer_version != opened.reader.manifest().normalizer_version
-            || !matches_environment
-            || (declared.features.is_some() && declared.features != child.environment.features)
-            || declared
-                .default_features
-                .is_some_and(|v| child.environment.default_features != Some(v))
-            || child
-                .reader
-                .static_inputs()
-                .await
-                .map_err(|e| Box::new(common::query_error(&e)))?
-                != inputs
+        if !opened
+            .reader
+            .same_static_inputs(&child.reader)
+            .await
+            .map_err(|error| Box::new(common::query_error(&error)))?
         {
             continue;
         }
@@ -290,11 +198,30 @@ async fn retained_child(
         )
         .await
         .map_err(|e| Box::new(common::query_error(&e)))?;
-        if sufficient(&facts.items, options) {
-            candidates.push((child.context.context_id.clone(), child.snapshot_id.clone()));
+        if enrichment_store::inspection_execution_plan::sufficient(
+            &service.repository.runtime,
+            request,
+            &facts.items,
+        )
+        .await
+        .map_err(|error| Box::new(common::operation_error(&error, "inspection_reuse")))?
+        {
+            candidates.push(
+                enrichment_store::inspection_execution_plan::RetainedCandidate {
+                    context_id: child.context.context_id.clone(),
+                    snapshot_id: child.snapshot_id.clone(),
+                },
+            );
         }
     }
-    if candidates.len() > 1 {
+    let selected = enrichment_store::inspection_execution_plan::retained_choice(
+        &service.repository.runtime,
+        request,
+        &candidates,
+    )
+    .await
+    .map_err(|error| Box::new(common::operation_error(&error, "inspection_reuse")))?;
+    if !selected.actions.is_empty() {
         let mut result = crate::envelope::error(
             ErrorCode::UnsupportedFormat,
             "More than one exactly qualified derived context has retained observations.",
@@ -305,35 +232,16 @@ async fn retained_child(
             .error_mut()
             .expect("typed ambiguity")
             .diagnostic
-            .actions = candidates
-            .into_iter()
-            .map(|(context_id, snapshot_id)| {
-                let mut selected = request.clone();
-                selected.context_id = context_id;
-                selected.snapshot_id = Some(snapshot_id);
-                if let Some(execution) = &mut selected.execution {
-                    execution.intent = InspectionIntent::Retained;
-                }
-                enrichment_core::wire::RecoveryAction::CallTool {
-                    request: Box::new(enrichment_core::request::ResearchRequest::Inspect(selected)),
-                }
-            })
-            .collect();
+            .actions = selected.actions;
         return Ok(Some(result));
     }
-    let Some((context_id, snapshot_id)) = candidates.pop() else {
+    let Some(selected) = selected.request else {
         return Ok(None);
     };
-    let mut selected = request.clone();
-    selected.context_id = context_id;
-    selected.snapshot_id = Some(snapshot_id);
-    if let Some(execution) = &mut selected.execution {
-        execution.intent = InspectionIntent::Retained;
-    }
     Ok(Some(inspect::read(service, selected).await))
 }
 
-pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope {
+pub async fn submit(service: &Service, request: InspectRequest) -> Envelope {
     let options = request.execution.clone().unwrap_or_default();
     let initial = inspect::read(service, request.clone()).await;
     let enrichment_core::wire::data::ToolData::InspectSymbol(data) = initial.data.clone() else {
@@ -342,10 +250,18 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
     let Some(symbol) = data.symbol else {
         return initial;
     };
-    if options.intent == InspectionIntent::ExecuteOnMiss
-        && sufficient(&data.execution_observations, &options)
-    {
-        return initial;
+    if options.intent == InspectionIntent::ExecuteOnMiss {
+        match enrichment_store::inspection_execution_plan::sufficient(
+            &service.repository.runtime,
+            &request,
+            &data.execution_observations,
+        )
+        .await
+        {
+            Ok(true) => return initial,
+            Ok(false) => {}
+            Err(error) => return common::operation_error(&error, "inspection_reuse"),
+        }
     }
     let opened = match common::open_context(
         service,
@@ -357,34 +273,26 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
         Ok(opened) => opened,
         Err(e) => return *e,
     };
-    if options.runtime.is_some() && opened.release.key.ecosystem != Ecosystem::Python {
-        return denied("Runtime object inspection is a Python producer.");
-    }
-    if let Some(selection) = &options.runtime {
-        let selected_path = std::iter::once(selection.module.as_str())
-            .chain(selection.attributes.iter().map(String::as_str))
-            .collect::<Vec<_>>()
-            .join(".");
-        if selected_path != symbol.path {
-            return denied(
-                "The runtime import and attribute selection must name the selected public binding exactly.",
-            );
-        }
-    }
-    let profile = if options.runtime.is_some() {
-        ExecutionProfile::Runtime
-    } else {
-        ExecutionProfile::Build
+    let admitted = match enrichment_store::inspection_execution_plan::admit_execution(
+        &service.repository.runtime,
+        &request,
+        &symbol,
+        opened.release.key.ecosystem,
+        &opened.snapshot_id,
+    )
+    .await
+    {
+        Ok(admitted) => admitted,
+        Err(error) => return common::operation_error(&error, "inspection_execution_scope"),
     };
+    let request = admitted.request;
+    let profile = admitted.profile;
     if options.intent == InspectionIntent::ExecuteOnMiss {
         match retained_child(service, &request, &opened, &symbol, &options).await {
             Ok(Some(result)) => return result,
             Ok(None) => {}
             Err(result) => return *result,
         }
-    }
-    if options.profile != Some(profile) {
-        return denied("Select the explicit build or runtime profile required by this inspection.");
     }
     let readiness =
         match crate::execution::readiness::assess(service, opened.release.key.ecosystem, profile)
@@ -396,9 +304,6 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
     if !readiness.available {
         return crate::execution::readiness::refusal(&readiness);
     }
-    request.snapshot_id = Some(opened.snapshot_id.clone());
-    request.symbol_path = symbol.path.clone();
-    request.definition_id = Some(symbol.definition_id.clone());
     let (record, token, new) = match service
         .jobs
         .submit(jobs::Arguments::Inspect {
@@ -411,15 +316,15 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
     };
     if new {
         let service = service.clone();
-        let id = record.job_id.clone();
+        let id = record.job_id;
         let jobs = std::sync::Arc::clone(&service.jobs);
         let runtime = service.repository.runtime.clone();
-        if let Err(error) = jobs.spawn(&runtime, id.clone(), async move {
+        if let Err(error) = jobs.spawn(&runtime, id, async move {
             let result = service
                 .repository
                 .runtime
                 .job_operation(
-                    id.clone(),
+                    id.to_string(),
                     service.operation_descriptor(&request.clone().into()),
                     std::time::Duration::from_secs(service.config.execution.deadline_seconds),
                     run(&service, &id, &opened, &symbol, &request),
@@ -474,7 +379,7 @@ fn denied(message: &str) -> Envelope {
 
 async fn run(
     service: &Service,
-    job: &str,
+    job: &enrichment_core::identity::JobId,
     opened: &common::Opened,
     symbol: &SymbolHeader,
     request: &InspectRequest,
@@ -538,15 +443,18 @@ pub fn read_input(root: &Path, relative: &Path, limit: u64) -> io::Result<Vec<u8
             return Err(io::Error::other("input path contains a symlink"));
         }
     }
-    let file = std::fs::File::open(path)?;
+    let mut file = std::fs::File::open(path)?;
     let metadata = file.metadata()?;
     if !metadata.is_file() || metadata.len() > limit {
         return Err(io::Error::other("input file exceeds its read bound"));
     }
-    let mut bytes = Vec::new();
-    file.take(limit + 1).read_to_end(&mut bytes)?;
-    if bytes.len() as u64 > limit {
-        return Err(io::Error::other("input grew beyond its read bound"));
+    let length = usize::try_from(metadata.len()).map_err(io::Error::other)?;
+    let mut bytes = vec![0; length];
+    file.read_exact(&mut bytes)?;
+    if file.read(&mut [0u8])? != 0 {
+        return Err(io::Error::other(
+            "input changed after its bounded metadata read",
+        ));
     }
     Ok(bytes)
 }
@@ -564,107 +472,65 @@ pub async fn capsule_inputs(
         .await
         .map_err(io::Error::other)?
         .ok_or_else(|| io::Error::other("selected snapshot lacks its source acquisition"))?;
-    let ecosystem = opened.release.key.ecosystem;
+    let selected = enrichment_store::capsule_input_plan::select(
+        &service.repository.runtime,
+        &prepared.prepared,
+    )
+    .await
+    .map_err(io::Error::other)?;
+    let owner = prepared.input_reader()?;
     let root = prepared.root.clone();
     service
         .repository
         .runtime
-        .blocking(move || capture_inputs(&owned, source, ecosystem, &root))
+        .blocking(move || {
+            let _reader = owner;
+            capture_inputs(&owned, source, &root, &selected)
+        })
         .await
         .map_err(io::Error::other)?
-}
-
-fn dependency_paths(root: &Path) -> io::Result<Vec<std::path::PathBuf>> {
-    let mut directories = vec![std::path::PathBuf::new()];
-    let mut files = Vec::new();
-    let mut entries = 0usize;
-    while let Some(directory) = directories.pop() {
-        if directory.components().count() > 32 {
-            return Err(io::Error::other("dependency path depth exceeds 32"));
-        }
-        for entry in std::fs::read_dir(root.join(&directory))? {
-            entries += 1;
-            if entries > 8192 {
-                return Err(io::Error::other(
-                    "dependency inventory exceeds 8192 entries",
-                ));
-            }
-            let entry = entry?;
-            let path = directory.join(entry.file_name());
-            let kind = entry.file_type()?;
-            if kind.is_dir() {
-                directories.push(path);
-            } else if kind.is_file() {
-                if matches!(
-                    path.extension().and_then(|s| s.to_str()),
-                    Some("whl" | "crate")
-                ) {
-                    files.push(path);
-                    if files.len() > 4096 {
-                        return Err(io::Error::other("dependency archive count exceeds 4096"));
-                    }
-                }
-            } else {
-                return Err(io::Error::other(
-                    "dependency inventory contains a link or non-file",
-                ));
-            }
-        }
-    }
-    files.sort();
-    Ok(files)
 }
 
 fn capture_inputs(
     service: &Service,
     source: Artifact,
-    ecosystem: Ecosystem,
     capsule_root: &Path,
+    captures: &[enrichment_store::capsule_input_plan::Capture],
 ) -> io::Result<Vec<Artifact>> {
-    let mut artifacts = BTreeMap::from([(source.sha256.clone(), source)]);
-    let directory = match ecosystem {
-        Ecosystem::Python => "wheelhouse",
-        Ecosystem::Rust => "cargo-home/registry/cache",
-    };
-    let root = capsule_root.join(directory);
-    let mut total = 0u64;
-    if root.is_dir() {
-        for path in dependency_paths(&root)? {
-            let bytes = read_input(&root, &path, 256 * 1024 * 1024)?;
-            total = total
-                .checked_add(bytes.len() as u64)
-                .filter(|n| *n <= 512 * 1024 * 1024)
-                .ok_or_else(|| io::Error::other("dependency closure exceeds byte budget"))?;
-            let digest = canonical::sha256_hex(&bytes);
-            if let std::collections::btree_map::Entry::Vacant(entry) =
-                artifacts.entry(digest.clone())
-            {
-                let artifact = store(
-                    service,
-                    &bytes,
-                    &format!("consumer-dependency://archive/{digest}"),
-                    "application/octet-stream",
-                )?;
-                entry.insert(artifact);
-            }
+    let mut artifacts = vec![source];
+    let pool = service
+        .repository
+        .runtime
+        .session()
+        .runtime_env()
+        .memory_pool
+        .clone();
+    for capture in captures {
+        let reservation =
+            datafusion::execution::memory_pool::MemoryConsumer::new("consumer-input-capture")
+                .register(&pool);
+        reservation
+            .try_grow(usize::try_from(capture.bytes).map_err(io::Error::other)?)
+            .map_err(io::Error::other)?;
+        let bytes = read_input(capsule_root, Path::new(&capture.path), capture.bytes)?;
+        if bytes.len() as u64 != capture.bytes || canonical::sha256_hex(&bytes) != capture.sha256 {
+            return Err(io::Error::other(
+                "consumer input differs from the admitted prepared inventory",
+            ));
         }
-    }
-    if capsule_root.join("Cargo.toml").is_file() {
-        let bytes = read_input(capsule_root, Path::new("Cargo.toml"), 1024 * 1024)?;
-        let a = store(
+        artifacts.push(store(
             service,
             &bytes,
-            "consumer://manifest/cargo",
-            "application/toml",
-        )?;
-        artifacts.insert(a.sha256.clone(), a);
+            &capture.source_uri,
+            &capture.media_type,
+        )?);
     }
-    Ok(artifacts.into_values().collect())
+    Ok(artifacts)
 }
 
 async fn publish(
     service: &Service,
-    job: &str,
+    job: &enrichment_core::identity::JobId,
     request: &InspectRequest,
     opened: &common::Opened,
     symbol: &SymbolHeader,
@@ -675,27 +541,42 @@ async fn publish(
     {
         return Err(io::Error::other("containment changed during inspection"));
     }
-    let mut artifacts: BTreeMap<_, _> = produced
-        .inputs
-        .into_iter()
-        .map(|a| (a.sha256.clone(), a))
-        .collect();
+    let mut artifacts = produced.inputs;
     let lock = store(
         service,
         &produced.lock,
         &format!("consumer://lock/{}", canonical::sha256_hex(&produced.lock)),
         "text/plain",
     )?;
-    artifacts.insert(lock.sha256.clone(), lock.clone());
-    let mut inputs: BTreeMap<_, _> = artifacts
-        .values()
-        .map(|a| (format!("input:{}", a.artifact_id), a.sha256.clone()))
+    artifacts.push(lock.clone());
+    use enrichment_store::producer_run_plan::{Attempt, ReceiptInput, Role};
+    let mut inputs: Vec<_> = artifacts
+        .iter()
+        .cloned()
+        .map(|artifact| ReceiptInput {
+            role: Role::Input,
+            artifact,
+        })
         .collect();
-    inputs.insert("dependency-lock".into(), lock.sha256.clone());
+    inputs.push(ReceiptInput {
+        role: Role::Named {
+            name: "dependency-lock".into(),
+        },
+        artifact: lock,
+    });
     let mut results = Vec::new();
     let mut ids = Vec::new();
-    let mut complete = true;
-    let mut gaps = Vec::new();
+    let summary = enrichment_store::inspection_execution_plan::summarize(
+        &service.repository.runtime,
+        request,
+        produced
+            .facts
+            .iter()
+            .map(|(_, payload, _)| payload.clone())
+            .collect(),
+    )
+    .await
+    .map_err(io::Error::other)?;
     for (subject, payload, class) in produced.facts {
         let bytes = payload.canonical_bytes().map_err(io::Error::other)?;
         let artifact = store(
@@ -704,61 +585,18 @@ async fn publish(
             "producer-result://inspection/3",
             "application/vnd.library-enrichment.canonical-arrow",
         )?;
-        match &payload {
-            ExecutionPayload::SemanticQuery(q) => {
-                complete &= matches!(
-                    q.outcome,
-                    ExecutionOutcome::Results | ExecutionOutcome::Empty
-                )
-            }
-            ExecutionPayload::RuntimeObject(q) => {
-                complete &= matches!(
-                    q.outcome,
-                    ExecutionOutcome::Results | ExecutionOutcome::Empty
-                )
-            }
-            ExecutionPayload::UsageProbe(_) => {
-                return Err(io::Error::other("wrong producer payload"));
-            }
-        }
-        let (kind, outcome, detail) = match &payload {
-            ExecutionPayload::SemanticQuery(q) => (
-                enrichment_core::evidence::EvidenceKind::SemanticQueries,
-                q.outcome,
-                format!("{}: {}", q.method.as_str(), q.limitations.join(" ")),
-            ),
-            ExecutionPayload::RuntimeObject(q) => (
-                enrichment_core::evidence::EvidenceKind::RuntimeApi,
-                q.outcome,
-                q.limitations.join(" "),
-            ),
-            ExecutionPayload::UsageProbe(_) => {
-                return Err(io::Error::other("wrong inspection payload"));
-            }
-        };
-        if !matches!(outcome, ExecutionOutcome::Results | ExecutionOutcome::Empty) {
-            gaps.push(enrichment_core::evidence::Gap {
-                kind,
-                reason: match outcome {
-                    ExecutionOutcome::Failed => {
-                        enrichment_core::evidence::GapReason::ExtractionFailed
-                    }
-                    ExecutionOutcome::Unresolved => {
-                        enrichment_core::evidence::GapReason::UpstreamUnavailable
-                    }
-                    _ => enrichment_core::evidence::GapReason::NotAttempted,
-                },
-                detail,
-                planned_fallback: None,
-            });
-        }
-        inputs.insert(
-            format!("result:{}", artifact.artifact_id),
-            artifact.sha256.clone(),
-        );
+        inputs.push(ReceiptInput {
+            role: Role::Result,
+            artifact: artifact.clone(),
+        });
         ids.push(artifact.artifact_id.clone());
-        artifacts.insert(artifact.sha256.clone(), artifact.clone());
-        results.push((subject, payload, class, artifact));
+        artifacts.push(artifact.clone());
+        results.push(enrichment_store::execution_fact_plan::Observed {
+            subject,
+            payload,
+            evidence_class: class,
+            artifact,
+        });
     }
     let receipt = store(
         service,
@@ -769,58 +607,52 @@ async fn publish(
         &format!("service://jobs/{job}/inspection-attempt"),
         "application/json",
     )?;
-    artifacts.insert(receipt.sha256.clone(), receipt.clone());
-    let run = ProducerRun {
-        attempt_id: job.into(),
-        producer: produced.producer,
-        producer_version: produced.version,
-        config_digest: enrichment_core::native_key::Key::InspectionConfiguration
-            .hex_digest(
-                &enrichment_core::operation::identities::InspectionConfiguration {
-                    release_id: opened.release.release_id.clone(),
-                    environment: produced.environment.clone(),
-                    image: produced.image.clone(),
-                    containment: produced.containment.clone(),
-                },
-            )
-            .map_err(io::Error::other)?,
-        inputs,
-        profile: produced.profile,
-        started_at: produced.started_at,
-        finished_at: produced.finished_at,
-        outcome: if complete {
-            RunOutcome::Succeeded
-        } else {
-            RunOutcome::Partial
+    artifacts.push(receipt.clone());
+    let inputs =
+        enrichment_store::producer_run_plan::receipt_inputs(&service.repository.runtime, &inputs)
+            .await
+            .map_err(io::Error::other)?;
+    let run = enrichment_store::producer_run_plan::compose(
+        &service.repository.runtime,
+        Attempt {
+            attempt_id: enrichment_core::identity::AttemptId::new(),
+            producer: produced.producer,
+            producer_version: produced.version,
+            config_digest: enrichment_core::native_key::Key::InspectionConfiguration
+                .hex_digest(
+                    &enrichment_core::operation::identities::InspectionConfiguration {
+                        release_id: opened.release.release_id.clone(),
+                        environment: produced.environment.clone(),
+                        image: produced.image.clone(),
+                        containment: produced.containment.clone(),
+                    },
+                )
+                .map_err(io::Error::other)?,
+            profile: produced.profile,
+            started_at: produced.started_at,
+            finished_at: produced.finished_at,
+            outcome: summary.run_outcome,
+            gaps: summary.gaps,
+            log: Some(receipt.artifact_id),
         },
-        gaps,
-        log: Some(receipt.artifact_id),
-    };
-    let facts = results
-        .into_iter()
-        .map(|(subject, payload, class, artifact)| {
-            ExecutionObservation::new(
-                subject,
-                produced.environment.environment_id.clone(),
-                produced.image.clone(),
-                produced.containment.clone(),
-                payload,
-                FactSource {
-                    producer_binding_id: run.semantic_binding_id(),
-                    extractor: run.producer.clone(),
-                    extractor_version: run.producer_version.clone(),
-                    artifact_id: artifact.artifact_id,
-                    source_uri: Some(artifact.source_uri),
-                    source_version_match: SourceVersionMatch::Exact,
-                    locator: Locator::Artifact,
-                    evidence_class: class,
-                },
-            )
-        })
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(io::Error::other)?;
+        &inputs,
+    )
+    .await
+    .map_err(io::Error::other)?;
+    let facts = enrichment_store::execution_fact_plan::lower(
+        &service.repository.runtime,
+        &enrichment_store::execution_fact_plan::Producer {
+            environment_id: produced.environment.environment_id.clone(),
+            image_id: produced.image.clone(),
+            containment_identity: produced.containment.clone(),
+            run: run.clone(),
+        },
+        &results,
+    )
+    .await
+    .map_err(io::Error::other)?;
     let publication_facts = facts.clone();
-    let publication_artifacts = artifacts.values().cloned().collect();
+    let publication_artifacts = artifacts.clone();
     let context = if produced.environment.environment_id == opened.environment.environment_id {
         opened.context.clone()
     } else {
@@ -839,24 +671,17 @@ async fn publish(
         context
     };
     let parent = opened.reader.manifest();
-    let state = if complete {
-        JobState::Succeeded
-    } else {
-        JobState::Partial
-    };
     // Rendering and journal-size admission precede the catalog commit. No fallible result
     // read after commit can relabel a published success as a failed producer attempt.
     let result = render(
+        &service.repository.runtime,
         request,
         symbol.clone(),
         facts,
         run.clone(),
-        artifacts
-            .into_values()
-            .filter(|a| ids.contains(&a.artifact_id) || run.log.as_ref() == Some(&a.artifact_id))
-            .collect(),
-        state,
-    )?;
+        artifacts,
+    )
+    .await?;
     crate::delivery::size(&result, crate::delivery::MAX_RESULT_BYTES)?;
     let result = enrichment_core::operation::results::ResultRecord::from_envelope(&result)
         .map_err(io::Error::other)?;
@@ -879,10 +704,10 @@ async fn publish(
             publication_artifacts,
             enrichment_store::repository::JobCompletion {
                 publication_fence: service.jobs.publication_fence(job)?,
-                job_id: job.into(),
+                job_id: *job,
                 kind: PublishedJobKind::Inspect,
 
-                attempt_id: run.attempt_id.clone(),
+                attempt_id: run.attempt_id,
                 result_artifact_ids: ids.clone(),
                 result,
             },
@@ -900,191 +725,40 @@ async fn publish(
     ))
 }
 
-async fn deliver(
-    repository: &enrichment_store::repository::EvidenceRepository,
-    blobs: &enrichment_store::BlobStore,
-    publication: &JobPublication,
-    request: &InspectRequest,
-) -> io::Result<Envelope> {
-    let catalog = repository.catalog.pin().await?;
-    let reader = SnapshotReader::open(repository, catalog, &publication.snapshot_id)
-        .await
-        .map_err(io::Error::other)?;
-    let attempt = reader
-        .attempt(&publication.attempt_id)
-        .await
-        .map_err(io::Error::other)?;
-    let log = attempt
-        .run
-        .log
-        .clone()
-        .ok_or_else(|| io::Error::other("inspection attempt log missing"))?;
-    let artifact = attempt
-        .artifacts
-        .iter()
-        .find(|a| a.artifact_id == log)
-        .ok_or_else(|| io::Error::other("inspection log outside attempt"))?;
-    if artifact.size_bytes > 2 * 1024 * 1024 {
-        return Err(io::Error::other("inspection log exceeds replay budget"));
-    }
-    let receipt: serde_json::Value = blobs.read_json(artifact, 2 * 1024 * 1024)?;
-    if receipt["job_id"].as_str() != Some(&publication.job_id)
-        || receipt["request"] != serde_json::to_value(request)?
-    {
-        return Err(io::Error::other(
-            "inspection receipt differs from durable job specification",
-        ));
-    }
-    for id in &publication.result_artifact_ids {
-        if !attempt.artifacts.iter().any(|a| {
-            &a.artifact_id == id
-                && attempt
-                    .run
-                    .inputs
-                    .values()
-                    .any(|digest| digest == &a.sha256)
-        }) {
-            return Err(io::Error::other(
-                "inspection result outside exact attempt closure",
-            ));
-        }
-    }
-    repository
-        .validate_delivery(publication)
-        .await
-        .map_err(io::Error::other)?;
-    crate::delivery::recover_job(
-        blobs,
-        &repository.runtime,
-        repository
-            .catalog
-            .pin()
-            .await
-            .map_err(io::Error::other)?
-            .as_ref(),
-        publication,
-    )
-    .await
-}
-
-fn render(
+async fn render(
+    runtime: &enrichment_store::runtime::QueryRuntime,
     request: &InspectRequest,
     symbol: SymbolHeader,
-    mut facts: Vec<ExecutionObservation>,
+    facts: Vec<ExecutionObservation>,
     run: ProducerRun,
-    mut artifacts: Vec<Artifact>,
-    state: JobState,
+    artifacts: Vec<Artifact>,
 ) -> io::Result<Envelope> {
-    facts.sort_by(|a, b| a.observation_id.cmp(&b.observation_id));
-    artifacts.sort_by(|a, b| a.artifact_id.cmp(&b.artifact_id));
-    let mut limitations = Vec::new();
-    for fact in &facts {
-        match &fact.payload {
-            ExecutionPayload::SemanticQuery(q) => limitations.extend(q.limitations.clone()),
-            ExecutionPayload::RuntimeObject(q) => limitations.extend(q.limitations.clone()),
-            ExecutionPayload::UsageProbe(_) => {
-                return Err(io::Error::other("unexpected probe in inspection result"));
-            }
-        }
-    }
-    let runtime = request
-        .execution
-        .as_ref()
-        .is_some_and(|o| o.runtime.is_some());
-    let data = InspectData {
-        children: Vec::new(),
-        members: Vec::new(),
-        aspect_outcomes: Vec::new(),
-        symbol: Some(symbol),
-        docs_truncated: false,
-        also_at: Vec::new(),
-        candidates: Vec::new(),
-        aspects: vec![if runtime { "runtime" } else { "semantics" }.into()],
-        availability: None,
-        relationships: Vec::new(),
-        observations: Vec::new(),
-        fragments: Vec::new(),
-        source: None,
-        execution_observations: facts,
-        producer_runs: vec![run],
-    };
-    let mut result = crate::envelope::Research {
-        summary: format!(
-            "Retained {} inspection of `{}` in its resolved environment.",
-            if runtime { "runtime" } else { "semantic" },
-            request.symbol_path
-        ),
-        data: common::payload(&data),
+    let selected = enrichment_store::inspection_execution_plan::render(
+        runtime, request, symbol, facts, run, artifacts,
+    )
+    .await
+    .map_err(io::Error::other)?;
+    let result = crate::envelope::Research {
+        summary: selected.summary,
+        data: common::payload(&selected.data),
         context_id: None,
         snapshot_id: None,
-        coverage: Coverage {
-            details: None,
-            assessments: Vec::new(),
-            scope: "selected consumer queries; no complete-library execution claim".into(),
-            indexed: [if runtime {
-                "runtime_api"
-            } else {
-                "semantic_queries"
-            }
-            .into()]
-            .into(),
-            missing: if state == JobState::Succeeded {
-                Default::default()
-            } else {
-                [if runtime {
-                    "runtime_api"
-                } else {
-                    "semantic_queries"
-                }
-                .into()]
-                .into()
-            },
-            limitations,
-        },
+        coverage: selected.coverage,
         freshness: crate::envelope::unverified_freshness(),
         evidence: Vec::new(),
-        artifacts: Vec::new(),
+        artifacts: selected.artifacts,
     };
-    result.artifacts = artifacts
-        .iter()
-        .filter_map(|a| {
-            common::handle_for(a, "Retained execution result or actual attempt log".into())
-        })
-        .collect();
-    Ok(if state == JobState::Succeeded {
+    Ok(if selected.state == JobState::Succeeded {
         result.ok()
     } else {
         result.partial()
     })
 }
 
-pub async fn recover(
-    repository: &enrichment_store::repository::EvidenceRepository,
-    blobs: &enrichment_store::BlobStore,
-    record: &jobs::JobRecord,
-) -> io::Result<Option<(JobState, Envelope)>> {
-    let jobs::Arguments::Inspect { request } = &record.specification else {
-        return Err(io::Error::other("wrong inspection journal variant"));
-    };
-    let catalog = repository.catalog.pin().await?;
-    let Some(publication) = catalog
-        .job_publication(&repository.runtime, &record.job_id)
-        .await?
-    else {
-        return Ok(None);
-    };
-    if publication.kind != PublishedJobKind::Inspect {
-        return Err(io::Error::other("published job kind mismatch"));
-    }
-    Ok(Some((
-        publication.state,
-        deliver(repository, blobs, &publication, request).await?,
-    )))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use enrichment_core::producer::RunOutcome;
     use enrichment_core::{
         config::Config,
         evidence::{
@@ -1093,6 +767,10 @@ mod tests {
             relational::{Definition, PublicBinding},
         },
         identity::{Context, Release, ReleaseKey, ResearchMode},
+    };
+    use enrichment_core::{
+        evidence::relational::{FactSource, Locator},
+        wire::SourceVersionMatch,
     };
 
     #[tokio::test]
@@ -1261,7 +939,8 @@ mod tests {
             snapshot_id: Some(base.snapshot_id.clone()),
             symbol_path: "fixture.f".into(),
             execution: Some(options),
-            ..Default::default()
+            definition_id: None,
+            max_bytes: None,
         };
         let (record, _, _) = service
             .jobs
@@ -1307,7 +986,7 @@ mod tests {
         )
         .unwrap();
         let run = ProducerRun {
-            attempt_id: record.job_id.clone(),
+            attempt_id: enrichment_core::identity::AttemptId::new(),
             producer: producer_identity(false).unwrap().0.into(),
             producer_version: producer_identity(false).unwrap().1,
             config_digest: "fixture".into(),
@@ -1365,13 +1044,14 @@ mod tests {
             .pop()
             .unwrap();
         let mut fixture_reply = render(
+            &service.repository.runtime,
             &request,
             fixture_symbol,
             vec![fact.clone()],
             run.clone(),
             vec![result.clone(), receipt.clone()],
-            JobState::Succeeded,
         )
+        .await
         .unwrap();
         if large_delivery {
             fixture_reply
@@ -1392,7 +1072,7 @@ mod tests {
                 publication_artifacts,
                 enrichment_store::repository::JobCompletion {
                     publication_fence: service.jobs.publication_fence(&record.job_id).unwrap(),
-                    job_id: record.job_id.clone(),
+                    job_id: record.job_id,
                     kind: PublishedJobKind::Inspect,
 
                     attempt_id: run.attempt_id,
@@ -1407,7 +1087,7 @@ mod tests {
             service.jobs.get(&record.job_id).await.unwrap().state,
             JobState::Succeeded
         );
-        let expected = recover(&service.repository, &service.blobs, &record)
+        let expected = verify::recover(&service.repository, &service.blobs, &record)
             .await
             .unwrap()
             .unwrap();
@@ -1424,7 +1104,7 @@ mod tests {
         let answer = inspect::inspect(&service, read.clone()).await;
         assert_eq!(
             answer.context_id.as_ref(),
-            Some(context.context_id.clone()),
+            Some(&context.context_id),
             "{answer:?}"
         );
         let enrichment_core::wire::data::ToolData::InspectSymbol(data) = answer.data else {

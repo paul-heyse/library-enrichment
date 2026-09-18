@@ -10,6 +10,9 @@ Crate `arrow-array` · 3 public items · structured records in [`model/arrow_arr
 type BinaryArray = GenericBinaryArray<i32>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.binary_array.BinaryArray.md).
+
+
 A [`GenericBinaryArray`] of `[u8]` using `i32` offsets
 
 The byte length of each element is represented by an i32.
@@ -70,6 +73,9 @@ fn from(v: GenericListArray<T>) -> Self
 fn from(value: GenericStringArray<OffsetSize>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.binary_array.GenericBinaryArray.md).
+
+
 A [`GenericByteArray`] for storing `[u8]`
 
 ---
@@ -81,6 +87,9 @@ A [`GenericByteArray`] for storing `[u8]`
 ```rust
 type LargeBinaryArray = GenericBinaryArray<i64>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.binary_array.LargeBinaryArray.md).
+
 
 A [`GenericBinaryArray`] of `[u8]` using `i64` offsets
 

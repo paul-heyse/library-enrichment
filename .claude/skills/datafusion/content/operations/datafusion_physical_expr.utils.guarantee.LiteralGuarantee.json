@@ -1,0 +1,986 @@
+[
+  {
+    "id": "c6447f3f77c11eaea6c2ddd0",
+    "path": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+    "name": "LiteralGuarantee",
+    "owner": null,
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct LiteralGuarantee",
+    "docs": "Represents a guarantee that must be true for a boolean expression to\nevaluate to `true`.\n\nThe guarantee takes the form of a column and a set of literal (constant)\n[`ScalarValue`]s. For the expression to evaluate to `true`, the column *must\nsatisfy* the guarantee(s).\n\nTo satisfy the guarantee, depending on [`Guarantee`], the values in the\ncolumn must either:\n\n1. be ONLY one of that set\n2. NOT be ANY of that set\n\n# Uses `LiteralGuarantee`s\n\n`LiteralGuarantee`s can be used to simplify filter expressions and skip data\nfiles (e.g. row groups in parquet files) by proving expressions can not\npossibly evaluate to `true`. For example, if we have a guarantee that `a`\nmust be in (`1`) for a filter to evaluate to `true`, then we can skip any\npartition where we know that `a` never has the value of `1`.\n\n**Important**: If a `LiteralGuarantee` is not satisfied, the relevant\nexpression is *guaranteed* to evaluate to `false` or `null`. **However**,\nthe opposite does not hold. Even if all `LiteralGuarantee`s are satisfied,\nthat does **not** guarantee that the predicate will actually evaluate to\n`true`: it may still evaluate to `true`, `false` or `null`.\n\n# Creating `LiteralGuarantee`s\n\nUse [`LiteralGuarantee::analyze`] to extract literal guarantees from a\nfilter predicate.\n\n# Details\nA guarantee can be one of two forms:\n\n1. The column must be one the values for the predicate to be `true`. If the\n   column takes on any other value, the predicate can not evaluate to `true`.\n   For example,\n   `(a = 1)`, `(a = 1 OR a = 2)` or `a IN (1, 2, 3)`\n\n2. The column must NOT be one of the values for the predicate to be `true`.\n   If the column can ONLY take one of these values, the predicate can not\n   evaluate to `true`. For example,\n   `(a != 1)`, `(a != 1 AND a != 2)` or `a NOT IN (1, 2, 3)`",
+    "span": {
+      "filename": "src/utils/guarantee.rs",
+      "begin": [
+        74,
+        1
+      ],
+      "end": [
+        78,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [
+              2555,
+              2557,
+              2559
+            ],
+            "has_stripped_fields": false
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          2563,
+          2564,
+          2565,
+          2566,
+          2567,
+          2568,
+          2569,
+          2570,
+          2571,
+          2572,
+          2573,
+          2574,
+          2575,
+          2576,
+          2577,
+          2578,
+          2579,
+          2580,
+          2581,
+          2583,
+          2585,
+          2586,
+          2588,
+          2590
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`ScalarValue`": 217,
+      "`Guarantee`": 2558,
+      "`LiteralGuarantee::analyze`": 2561
+    },
+    "link_paths": {
+      "`ScalarValue`": "datafusion_common::scalar::ScalarValue",
+      "`Guarantee`": "datafusion_physical_expr::utils::guarantee::Guarantee",
+      "`LiteralGuarantee::analyze`": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee::analyze"
+    },
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2562",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.md",
+    "record_file": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.json",
+    "anchor": "op-c6447f3f77c11eaea6c2ddd0",
+    "aliases": [
+      "datafusion_physical_expr::utils::LiteralGuarantee"
+    ],
+    "resolved_doc_links": {
+      "`ScalarValue`": "../operations/datafusion_common.scalar.ScalarValue.md#op-360b267c379d0a7a93dce87b",
+      "`Guarantee`": "../operations/datafusion_physical_expr.utils.guarantee.Guarantee.md#op-2f7eb0649ae818e53b368cc3",
+      "`LiteralGuarantee::analyze`": "../operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.md#op-91c0e8e784ae63d2e6f306e6"
+    }
+  },
+  {
+    "id": "91c0e8e784ae63d2e6f306e6",
+    "path": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee::analyze",
+    "name": "analyze",
+    "owner": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn analyze(expr: &Arc<dyn PhysicalExpr>) -> Vec<LiteralGuarantee>",
+    "docs": "Return a list of [`LiteralGuarantee`]s that must be satisfied for `expr`\nto evaluate to `true`.\n\nIf more than one `LiteralGuarantee` is returned, they must **all** hold\nfor the expression to possibly be `true`. If any is not satisfied, the\nexpression is guaranteed to be `null` or `false`.\n\n# Notes:\n1. `expr` must be a boolean expression or inlist expression.\n2. `expr` is not simplified prior to analysis.",
+    "span": {
+      "filename": "src/utils/guarantee.rs",
+      "begin": [
+        121,
+        5
+      ],
+      "end": [
+        245,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "expr",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Arc",
+                      "id": 35,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "dyn_trait": {
+                                  "traits": [
+                                    {
+                                      "trait": {
+                                        "path": "PhysicalExpr",
+                                        "id": 38,
+                                        "args": null
+                                      },
+                                      "generic_params": []
+                                    }
+                                  ],
+                                  "lifetime": null
+                                }
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 37,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "LiteralGuarantee",
+                          "id": 2562,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "35": "alloc::sync::Arc",
+      "38": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "37": "alloc::vec::Vec",
+      "2562": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LiteralGuarantee",
+          "id": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/utils/guarantee.rs",
+        "begin": [
+          92,
+          1
+        ],
+        "end": [
+          246,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`LiteralGuarantee`": 2562
+    },
+    "link_paths": {
+      "`LiteralGuarantee`": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee"
+    },
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2561",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.md",
+    "record_file": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.json",
+    "anchor": "op-91c0e8e784ae63d2e6f306e6",
+    "aliases": [
+      "datafusion_physical_expr::utils::LiteralGuarantee::analyze"
+    ],
+    "resolved_doc_links": {
+      "`LiteralGuarantee`": "../operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.md#op-c6447f3f77c11eaea6c2ddd0"
+    }
+  },
+  {
+    "id": "973ac25cf864c7e98068cf2c",
+    "path": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee::clone",
+    "name": "clone",
+    "owner": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> LiteralGuarantee",
+    "docs": "",
+    "span": {
+      "filename": "src/utils/guarantee.rs",
+      "begin": [
+        73,
+        17
+      ],
+      "end": [
+        73,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "LiteralGuarantee",
+              "id": 2562,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2562": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LiteralGuarantee",
+          "id": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/utils/guarantee.rs",
+        "begin": [
+          73,
+          17
+        ],
+        "end": [
+          73,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2584",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.md",
+    "record_file": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.json",
+    "anchor": "op-973ac25cf864c7e98068cf2c",
+    "aliases": [
+      "datafusion_physical_expr::utils::LiteralGuarantee::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9398e0966b256d8b7803288f",
+    "path": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee::column",
+    "name": "column",
+    "owner": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "column: datafusion_common::Column",
+    "docs": "",
+    "span": {
+      "filename": "src/utils/guarantee.rs",
+      "begin": [
+        75,
+        5
+      ],
+      "end": [
+        75,
+        23
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "datafusion_common::Column",
+          "id": 2556,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "2556": "datafusion_common::column::Column"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2555",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.md",
+    "record_file": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.json",
+    "anchor": "op-9398e0966b256d8b7803288f",
+    "aliases": [
+      "datafusion_physical_expr::utils::LiteralGuarantee::column"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2ac6c647164792b447433d04",
+    "path": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee::eq",
+    "name": "eq",
+    "owner": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &LiteralGuarantee) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/utils/guarantee.rs",
+      "begin": [
+        73,
+        24
+      ],
+      "end": [
+        73,
+        33
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "LiteralGuarantee",
+                      "id": 2562,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2562": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LiteralGuarantee",
+          "id": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/utils/guarantee.rs",
+        "begin": [
+          73,
+          24
+        ],
+        "end": [
+          73,
+          33
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2587",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.md",
+    "record_file": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.json",
+    "anchor": "op-2ac6c647164792b447433d04",
+    "aliases": [
+      "datafusion_physical_expr::utils::LiteralGuarantee::eq"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "040500df3911321f1213565c",
+    "path": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/utils/guarantee.rs",
+      "begin": [
+        73,
+        10
+      ],
+      "end": [
+        73,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 107,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 108,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "core::fmt::Formatter",
+      "108": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LiteralGuarantee",
+          "id": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/utils/guarantee.rs",
+        "begin": [
+          73,
+          10
+        ],
+        "end": [
+          73,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2582",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.md",
+    "record_file": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.json",
+    "anchor": "op-040500df3911321f1213565c",
+    "aliases": [
+      "datafusion_physical_expr::utils::LiteralGuarantee::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "975a12cb7e869bc93fde81ea",
+    "path": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/utils/guarantee.rs",
+      "begin": [
+        249,
+        5
+      ],
+      "end": [
+        267,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Formatter",
+                      "id": 107,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "fmt::Result",
+              "id": 108,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "core::fmt::Formatter",
+      "108": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LiteralGuarantee",
+          "id": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Display",
+        "id": "core::fmt::Display",
+        "args": null
+      },
+      "trait_path": "core::fmt::Display",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/utils/guarantee.rs",
+        "begin": [
+          248,
+          1
+        ],
+        "end": [
+          268,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2589",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.md",
+    "record_file": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.json",
+    "anchor": "op-975a12cb7e869bc93fde81ea",
+    "aliases": [
+      "datafusion_physical_expr::utils::LiteralGuarantee::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "450e8f53ce4e33d4c93a673e",
+    "path": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee::guarantee",
+    "name": "guarantee",
+    "owner": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "guarantee: Guarantee",
+    "docs": "",
+    "span": {
+      "filename": "src/utils/guarantee.rs",
+      "begin": [
+        76,
+        5
+      ],
+      "end": [
+        76,
+        29
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "Guarantee",
+          "id": 2558,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "2558": "datafusion_physical_expr::utils::guarantee::Guarantee"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2557",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.md",
+    "record_file": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.json",
+    "anchor": "op-450e8f53ce4e33d4c93a673e",
+    "aliases": [
+      "datafusion_physical_expr::utils::LiteralGuarantee::guarantee"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "945c0e7267a61d5f3372a63d",
+    "path": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee::literals",
+    "name": "literals",
+    "owner": "datafusion_physical_expr::utils::guarantee::LiteralGuarantee",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "literals: std::collections::HashSet<datafusion_common::ScalarValue>",
+    "docs": "",
+    "span": {
+      "filename": "src/utils/guarantee.rs",
+      "begin": [
+        77,
+        5
+      ],
+      "end": [
+        77,
+        39
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "std::collections::HashSet",
+          "id": 2560,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_common::ScalarValue",
+                      "id": 217,
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "2560": "std::collections::hash::set::HashSet",
+      "217": "datafusion_common::scalar::ScalarValue"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2559",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.md",
+    "record_file": "operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.json",
+    "anchor": "op-945c0e7267a61d5f3372a63d",
+    "aliases": [
+      "datafusion_physical_expr::utils::LiteralGuarantee::literals"
+    ],
+    "resolved_doc_links": {}
+  }
+]

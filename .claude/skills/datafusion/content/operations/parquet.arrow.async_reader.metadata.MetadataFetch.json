@@ -1,0 +1,219 @@
+[
+  {
+    "id": "2f1a6adade5c3e921474d943",
+    "path": "parquet::arrow::async_reader::metadata::MetadataFetch",
+    "name": "MetadataFetch",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "trait",
+    "signature": "trait MetadataFetch",
+    "docs": " A data source that can be used with [`ParquetMetaDataReader`] to load [`ParquetMetaData`]\n\n Note that implementation is provided for [`AsyncFileReader`].\n\n # Example `MetadataFetch` for a custom async data source\n\n ```rust\n # use parquet::errors::Result;\n # use parquet::arrow::async_reader::MetadataFetch;\n # use bytes::Bytes;\n # use std::ops::Range;\n # use std::io::SeekFrom;\n # use futures::future::BoxFuture;\n # use futures::FutureExt;\n # use tokio::io::{AsyncReadExt, AsyncSeekExt};\n // Adapter that implements the API for reading bytes from an async source (in\n // this case a tokio::fs::File)\n struct TokioFileMetadata {\n     file: tokio::fs::File,\n }\n impl MetadataFetch for TokioFileMetadata {\n     fn fetch(&mut self, range: Range<u64>) -> BoxFuture<'_, Result<Bytes>> {\n         // return a future that fetches data in range\n         async move {\n             let len = (range.end - range.start).try_into().unwrap();\n             let mut buf = vec![0; len]; // target buffer\n             // seek to the start of the range and read the data\n             self.file.seek(SeekFrom::Start(range.start)).await?;\n             self.file.read_exact(&mut buf).await?;\n             Ok(Bytes::from(buf)) // convert to Bytes\n         }\n             .boxed() // turn into BoxedFuture, using FutureExt::boxed\n     }\n }\n```\n\n [`ParquetMetaDataReader`]: crate::file::metadata::reader::ParquetMetaDataReader\n [`ParquetMetaData`]: crate::file::metadata::ParquetMetaData",
+    "span": {
+      "filename": "src/arrow/async_reader/metadata.rs",
+      "begin": [
+        62,
+        1
+      ],
+      "end": [
+        70,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          3397
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "implementations": [
+          3402
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "crate::file::metadata::ParquetMetaData": 3004,
+      "`AsyncFileReader`": 3034,
+      "crate::file::metadata::reader::ParquetMetaDataReader": 3399
+    },
+    "link_paths": {
+      "crate::file::metadata::ParquetMetaData": "parquet::file::metadata::ParquetMetaData",
+      "`AsyncFileReader`": "parquet::arrow::async_reader::AsyncFileReader",
+      "crate::file::metadata::reader::ParquetMetaDataReader": "parquet::file::metadata::reader::ParquetMetaDataReader"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3400",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_reader.metadata.MetadataFetch.md",
+    "record_file": "operations/parquet.arrow.async_reader.metadata.MetadataFetch.json",
+    "anchor": "op-2f1a6adade5c3e921474d943",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::file::metadata::ParquetMetaData": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b",
+      "`AsyncFileReader`": "../operations/parquet.arrow.async_reader.AsyncFileReader.md#op-69c2992a81570b27e07fe176",
+      "crate::file::metadata::reader::ParquetMetaDataReader": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-ecb8df4cd7e741eec25c5144"
+    }
+  },
+  {
+    "id": "df816694ef4933bd3a55671a",
+    "path": "parquet::arrow::async_reader::metadata::MetadataFetch::fetch",
+    "name": "fetch",
+    "owner": "parquet::arrow::async_reader::metadata::MetadataFetch",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fetch(&mut self, range: Range<u64>) -> BoxFuture<'_, Result<Bytes>>",
+    "docs": "Return a future that fetches the specified range of bytes asynchronously\n\nNote the returned type is a boxed future, often created by\n[`FutureExt::boxed`]. See the trait documentation for an example\n\n[`FutureExt::boxed`]: futures::FutureExt::boxed",
+    "span": {
+      "filename": "src/arrow/async_reader/metadata.rs",
+      "begin": [
+        69,
+        5
+      ],
+      "end": [
+        69,
+        76
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "range",
+              {
+                "resolved_path": {
+                  "path": "Range",
+                  "id": 21,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "u64"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BoxFuture",
+              "id": 3398,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'_"
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Result",
+                          "id": 107,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Bytes",
+                                      "id": 1105,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "21": "core::ops::range::Range",
+      "3398": "futures_core::future::BoxFuture",
+      "107": "parquet::errors::Result",
+      "1105": "bytes::bytes::Bytes"
+    },
+    "impl_context": null,
+    "links": {
+      "futures::FutureExt::boxed": 3396
+    },
+    "link_paths": {
+      "futures::FutureExt::boxed": "futures_util::future::future::FutureExt::boxed"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3397",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_reader.metadata.MetadataFetch.md",
+    "record_file": "operations/parquet.arrow.async_reader.metadata.MetadataFetch.json",
+    "anchor": "op-df816694ef4933bd3a55671a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

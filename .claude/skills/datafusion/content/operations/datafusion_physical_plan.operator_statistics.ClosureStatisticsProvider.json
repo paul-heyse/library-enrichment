@@ -1,0 +1,719 @@
+[
+  {
+    "id": "449c59e5780d9a76484bd83b",
+    "path": "datafusion_physical_plan::operator_statistics::ClosureStatisticsProvider",
+    "name": "ClosureStatisticsProvider",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct ClosureStatisticsProvider",
+    "docs": "A [`StatisticsProvider`] backed by a user-supplied closure.\n\nUseful for injecting custom statistics in tests or for cardinality feedback\npipelines where real runtime statistics need to override plan estimates.\nThe closure receives the current plan node and its children's enhanced\nstatistics, returning a [`StatisticsResult`].\n\nTo distinguish between multiple nodes of the same type (e.g., two\n`FilterExec` nodes), match on structural properties like the input schema's\ncolumn names, number of columns, or child row counts.\n\n# Example\n\n```rust,ignore (requires crate-internal imports)\nlet provider = ClosureStatisticsProvider::new(|plan, child_stats| {\n    if plan.downcast_ref::<FilterExec>().is_some() {\n        Ok(StatisticsResult::Computed(ExtendedStatistics::from(Statistics {\n            num_rows: Precision::Inexact(42),\n            ..Statistics::new_unknown(plan.schema().as_ref())\n        })))\n    } else {\n        Ok(StatisticsResult::Delegate)\n    }\n});\n```",
+    "span": {
+      "filename": "src/operator_statistics/mod.rs",
+      "begin": [
+        992,
+        1
+      ],
+      "end": [
+        994,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          4455,
+          4456,
+          4457,
+          4458,
+          4459,
+          4460,
+          4461,
+          4462,
+          4463,
+          4464,
+          4465,
+          4466,
+          4467,
+          4468,
+          4469,
+          4470,
+          4471,
+          4473,
+          4246
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`StatisticsResult`": 4201,
+      "`StatisticsProvider`": 4200
+    },
+    "link_paths": {
+      "`StatisticsResult`": "datafusion_physical_plan::operator_statistics::StatisticsResult",
+      "`StatisticsProvider`": "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4247",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.operator_statistics.ClosureStatisticsProvider.md",
+    "record_file": "operations/datafusion_physical_plan.operator_statistics.ClosureStatisticsProvider.json",
+    "anchor": "op-449c59e5780d9a76484bd83b",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`StatisticsResult`": "../operations/datafusion_physical_plan.operator_statistics.StatisticsResult.md#op-e76cdd29b31ac6aaf7341110",
+      "`StatisticsProvider`": "../operations/datafusion_physical_plan.operator_statistics.StatisticsProvider.md#op-b3050eb3d6b996dd9e336fb5"
+    }
+  },
+  {
+    "id": "627ba0b377cbcf6b5f9b3047",
+    "path": "datafusion_physical_plan::operator_statistics::ClosureStatisticsProvider::compute_statistics",
+    "name": "compute_statistics",
+    "owner": "datafusion_physical_plan::operator_statistics::ClosureStatisticsProvider",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>",
+    "docs": "",
+    "span": {
+      "filename": "src/operator_statistics/mod.rs",
+      "begin": [
+        1015,
+        5
+      ],
+      "end": [
+        1021,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "plan",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "ExecutionPlan",
+                            "id": 126,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "child_stats",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ExtendedStatistics",
+                        "id": 4157,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "StatisticsResult",
+                          "id": 4201,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "4157": "datafusion_physical_plan::operator_statistics::ExtendedStatistics",
+      "99": "datafusion_common::error::Result",
+      "4201": "datafusion_physical_plan::operator_statistics::StatisticsResult"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ClosureStatisticsProvider",
+          "id": "datafusion_physical_plan::operator_statistics::ClosureStatisticsProvider",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "StatisticsProvider",
+        "id": "datafusion_physical_plan::operator_statistics::StatisticsProvider",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::operator_statistics::StatisticsProvider",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/operator_statistics/mod.rs",
+        "begin": [
+          1014,
+          1
+        ],
+        "end": [
+          1022,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4245",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.operator_statistics.ClosureStatisticsProvider.md",
+    "record_file": "operations/datafusion_physical_plan.operator_statistics.ClosureStatisticsProvider.json",
+    "anchor": "op-627ba0b377cbcf6b5f9b3047",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3e04338e590a6eb991d8e1aa",
+    "path": "datafusion_physical_plan::operator_statistics::ClosureStatisticsProvider::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_plan::operator_statistics::ClosureStatisticsProvider",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/operator_statistics/mod.rs",
+      "begin": [
+        1009,
+        5
+      ],
+      "end": [
+        1011,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ClosureStatisticsProvider",
+          "id": "datafusion_physical_plan::operator_statistics::ClosureStatisticsProvider",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/operator_statistics/mod.rs",
+        "begin": [
+          1008,
+          1
+        ],
+        "end": [
+          1012,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4472",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.operator_statistics.ClosureStatisticsProvider.md",
+    "record_file": "operations/datafusion_physical_plan.operator_statistics.ClosureStatisticsProvider.json",
+    "anchor": "op-3e04338e590a6eb991d8e1aa",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bbc865337dd69c8367e86357",
+    "path": "datafusion_physical_plan::operator_statistics::ClosureStatisticsProvider::new",
+    "name": "new",
+    "owner": "datafusion_physical_plan::operator_statistics::ClosureStatisticsProvider",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(f: impl Fn(&dyn ExecutionPlan, &[ExtendedStatistics]) -> Result<StatisticsResult> + Send + Sync + 'static) -> Self",
+    "docs": "Create a new provider from a closure.",
+    "span": {
+      "filename": "src/operator_statistics/mod.rs",
+      "begin": [
+        998,
+        5
+      ],
+      "end": [
+        1005,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "f",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Fn",
+                        "id": 4454,
+                        "args": {
+                          "parenthesized": {
+                            "inputs": [
+                              {
+                                "borrowed_ref": {
+                                  "lifetime": null,
+                                  "is_mutable": false,
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              },
+                              {
+                                "borrowed_ref": {
+                                  "lifetime": null,
+                                  "is_mutable": false,
+                                  "type": {
+                                    "slice": {
+                                      "resolved_path": {
+                                        "path": "ExtendedStatistics",
+                                        "id": 4157,
+                                        "args": null
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "output": {
+                              "resolved_path": {
+                                "path": "Result",
+                                "id": 99,
+                                "args": {
+                                  "angle_bracketed": {
+                                    "args": [
+                                      {
+                                        "type": {
+                                          "resolved_path": {
+                                            "path": "StatisticsResult",
+                                            "id": 4201,
+                                            "args": null
+                                          }
+                                        }
+                                      }
+                                    ],
+                                    "constraints": []
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": 7,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Sync",
+                        "id": 9,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Fn(&dyn ExecutionPlan, &[ExtendedStatistics]) -> Result<StatisticsResult> + Send + Sync + 'static",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Fn",
+                          "id": 4454,
+                          "args": {
+                            "parenthesized": {
+                              "inputs": [
+                                {
+                                  "borrowed_ref": {
+                                    "lifetime": null,
+                                    "is_mutable": false,
+                                    "type": {
+                                      "dyn_trait": {
+                                        "traits": [
+                                          {
+                                            "trait": {
+                                              "path": "ExecutionPlan",
+                                              "id": 126,
+                                              "args": null
+                                            },
+                                            "generic_params": []
+                                          }
+                                        ],
+                                        "lifetime": null
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "borrowed_ref": {
+                                    "lifetime": null,
+                                    "is_mutable": false,
+                                    "type": {
+                                      "slice": {
+                                        "resolved_path": {
+                                          "path": "ExtendedStatistics",
+                                          "id": 4157,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "output": {
+                                "resolved_path": {
+                                  "path": "Result",
+                                  "id": 99,
+                                  "args": {
+                                    "angle_bracketed": {
+                                      "args": [
+                                        {
+                                          "type": {
+                                            "resolved_path": {
+                                              "path": "StatisticsResult",
+                                              "id": 4201,
+                                              "args": null
+                                            }
+                                          }
+                                        }
+                                      ],
+                                      "constraints": []
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    },
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Send",
+                          "id": 7,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    },
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Sync",
+                          "id": 9,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    },
+                    {
+                      "outlives": "'static"
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4454": "core::ops::function::Fn",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "4157": "datafusion_physical_plan::operator_statistics::ExtendedStatistics",
+      "99": "datafusion_common::error::Result",
+      "4201": "datafusion_physical_plan::operator_statistics::StatisticsResult",
+      "7": "core::marker::Send",
+      "9": "core::marker::Sync"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ClosureStatisticsProvider",
+          "id": "datafusion_physical_plan::operator_statistics::ClosureStatisticsProvider",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/operator_statistics/mod.rs",
+        "begin": [
+          996,
+          1
+        ],
+        "end": [
+          1006,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4453",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.operator_statistics.ClosureStatisticsProvider.md",
+    "record_file": "operations/datafusion_physical_plan.operator_statistics.ClosureStatisticsProvider.json",
+    "anchor": "op-bbc865337dd69c8367e86357",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

@@ -29,6 +29,9 @@ fn remaining_row_group_count(&self) -> usize
 fn row_group_indexes(&self) -> impl Iterator<Item = usize> + '_
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.row_group_filter.RowGroupAccessPlanFilter.md).
+
+
 Reduces the [`ParquetAccessPlan`] based on row group level metadata.
 
 This struct implements the various types of pruning that are applied to a

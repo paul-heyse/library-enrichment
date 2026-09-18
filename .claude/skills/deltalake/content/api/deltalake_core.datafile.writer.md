@@ -5,6 +5,7 @@ Crate `deltalake-core` · 4 public items · structured records in [`model/deltal
 ## DeltaWriter
 
 `struct` · `deltalake_core::datafile::writer::DeltaWriter`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.writer.DeltaWriter.md)
 
 Also reachable as `deltalake::datafile::writer::DeltaWriter`, `deltalake::operations::write::writer::DeltaWriter`, `deltalake_core::operations::write::writer::DeltaWriter`
 
@@ -44,6 +45,7 @@ A parquet writer implementation tailored to the needs of writing data to a delta
 ## PartitionWriter
 
 `struct` · `deltalake_core::datafile::writer::PartitionWriter`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.writer.PartitionWriter.md)
 
 Also reachable as `deltalake::datafile::writer::PartitionWriter`, `deltalake::operations::write::writer::PartitionWriter`, `deltalake_core::operations::write::writer::PartitionWriter`
 
@@ -80,6 +82,7 @@ When you complete writing you get back a list of Add actions that can be used to
 ## PartitionWriterConfig
 
 `struct` · `deltalake_core::datafile::writer::PartitionWriterConfig`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.writer.PartitionWriterConfig.md)
 
 Also reachable as `deltalake::datafile::writer::PartitionWriterConfig`, `deltalake::operations::write::writer::PartitionWriterConfig`, `deltalake_core::operations::write::writer::PartitionWriterConfig`
 
@@ -103,6 +106,7 @@ Write configuration for partition writers
 ## WriterConfig
 
 `struct` · `deltalake_core::datafile::writer::WriterConfig`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.writer.WriterConfig.md)
 
 Also reachable as `deltalake::datafile::writer::WriterConfig`, `deltalake::operations::write::writer::WriterConfig`, `deltalake_core::operations::write::writer::WriterConfig`
 

@@ -20,6 +20,9 @@ fn next(&self, prefix: &str) -> String
 fn update_min_id(&self, min_id: usize)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.alias.AliasGenerator.md).
+
+
 A utility struct that can be used to generate unique aliases when optimizing queries
 
 ---

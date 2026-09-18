@@ -64,6 +64,9 @@ fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn Execut
 fn with_projection(&self, projection: Option<Vec<usize>>) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md).
+
+
 NestedLoopJoinExec is a build-probe join operator designed for joins that
 do not have equijoin keys in their `ON` clause.
 
@@ -200,6 +203,9 @@ fn with_projection_ref(self, projection: Option<ProjectionRef>) -> Self
 ```rust
 fn from(exec: &NestedLoopJoinExec) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExecBuilder.md).
+
 
 Helps to build [`NestedLoopJoinExec`].
 

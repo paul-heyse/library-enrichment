@@ -1,0 +1,220 @@
+[
+  {
+    "id": "5aea00478f8cd79b07e7eac1",
+    "path": "sqlparser::ast::visitor::visit_expressions_mut",
+    "name": "visit_expressions_mut",
+    "owner": null,
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn visit_expressions_mut<V, E, F>(v: &mut V, f: F) -> core::ops::ControlFlow<E> where V: VisitMut, F: FnMut(&mut ast::Expr) -> core::ops::ControlFlow<E>",
+    "docs": "Invokes the provided closure iteratively with a mutable reference to all expressions\npresent in `v`.\n\nThis performs a depth-first search, so if the closure mutates the expression\n\n# Example\n\n## Remove all select limits in sub-queries\n```\n# use sqlparser::parser::Parser;\n# use sqlparser::dialect::GenericDialect;\n# use sqlparser::ast::{Expr, visit_expressions_mut, visit_statements_mut};\n# use core::ops::ControlFlow;\nlet sql = \"SELECT (SELECT y FROM z LIMIT 9) FROM t LIMIT 3\";\nlet mut statements = Parser::parse_sql(&GenericDialect{}, sql).unwrap();\n\n// Remove all select limits in sub-queries\nvisit_expressions_mut(&mut statements, |expr| {\n  if let Expr::Subquery(q) = expr {\n     q.limit_clause = None;\n  }\n  ControlFlow::<()>::Continue(())\n});\n\nassert_eq!(statements[0].to_string(), \"SELECT (SELECT y FROM z) FROM t LIMIT 3\");\n```\n\n## Wrap column name in function call\n\nThis demonstrates how to effectively replace an expression with another more complicated one\nthat references the original. This example avoids unnecessary allocations by using the\n[`std::mem`] family of functions.\n\n```\n# use sqlparser::parser::Parser;\n# use sqlparser::dialect::GenericDialect;\n# use sqlparser::ast::*;\n# use core::ops::ControlFlow;\nlet sql = \"SELECT x, y FROM t\";\nlet mut statements = Parser::parse_sql(&GenericDialect{}, sql).unwrap();\n\nvisit_expressions_mut(&mut statements, |expr| {\n  if matches!(expr, Expr::Identifier(col_name) if col_name.value == \"x\") {\n    let old_expr = std::mem::replace(expr, Expr::value(Value::Null));\n    *expr = Expr::Function(Function {\n          name: ObjectName::from(vec![Ident::new(\"f\")]),\n          uses_odbc_syntax: false,\n          args: FunctionArguments::List(FunctionArgumentList {\n              duplicate_treatment: None,\n              args: vec![FunctionArg::Unnamed(FunctionArgExpr::Expr(old_expr))],\n              clauses: vec![],\n          }),\n          null_treatment: None,\n          filter: None,\n          over: None,\n          parameters: FunctionArguments::None,\n          within_group: vec![],\n     });\n  }\n  ControlFlow::<()>::Continue(())\n});\n\nassert_eq!(statements[0].to_string(), \"SELECT f(x), y FROM t\");\n```",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        608,
+        1
+      ],
+      "end": [
+        615,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "v",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "core::ops::ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "E"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "V",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "E",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "V"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "VisitMut",
+                        "id": 69,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "F"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "FnMut",
+                        "id": 16068,
+                        "args": {
+                          "parenthesized": {
+                            "inputs": [
+                              {
+                                "borrowed_ref": {
+                                  "lifetime": null,
+                                  "is_mutable": true,
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "crate::ast::Expr",
+                                      "id": 5,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "output": {
+                              "resolved_path": {
+                                "path": "core::ops::ControlFlow",
+                                "id": 62,
+                                "args": {
+                                  "angle_bracketed": {
+                                    "args": [
+                                      {
+                                        "type": {
+                                          "generic": "E"
+                                        }
+                                      }
+                                    ],
+                                    "constraints": []
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "62": "core::ops::control_flow::ControlFlow",
+      "69": "sqlparser::ast::visitor::VisitMut",
+      "16068": "core::ops::function::FnMut",
+      "5": "sqlparser::ast::Expr"
+    },
+    "impl_context": null,
+    "links": {
+      "`std::mem`": 16069
+    },
+    "link_paths": {
+      "`std::mem`": "core::mem"
+    },
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16066",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.visit_expressions_mut.md",
+    "record_file": "operations/sqlparser.ast.visitor.visit_expressions_mut.json",
+    "anchor": "op-5aea00478f8cd79b07e7eac1",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

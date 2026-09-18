@@ -1,0 +1,1587 @@
+[
+  {
+    "id": "e2b205ded2fa04ff480d51c9",
+    "path": "datafusion_expr::udwf::WindowUDFImpl",
+    "name": "WindowUDFImpl",
+    "owner": null,
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait WindowUDFImpl: Debug + DynEq + DynHash + Send + Sync + Any",
+    "docs": "Trait for implementing [`WindowUDF`].\n\nThis trait exposes the full API for implementing user defined window functions and\ncan be used to implement any function.\n\nWhile the trait depends on [`DynEq`] and [`DynHash`] traits, these should not be\nimplemented directly. Instead, implement [`Eq`] and [`Hash`] and leverage the\nblanket implementations of [`DynEq`] and [`DynHash`].\n\nSee [`advanced_udwf.rs`] for a full example with complete implementation and\n[`WindowUDF`] for other available options.\n\n\n[`advanced_udwf.rs`]: https://github.com/apache/datafusion/blob/main/datafusion-examples/examples/udf/advanced_udwf.rs\n# Basic Example\n```\n# use std::sync::LazyLock;\n# use arrow::datatypes::{DataType, Field, FieldRef};\n# use datafusion_common::{DataFusionError, plan_err, Result};\n# use datafusion_expr::{col, Signature, Volatility, PartitionEvaluator, WindowFrame, ExprFunctionExt, Documentation, LimitEffect};\n# use datafusion_expr::{WindowUDFImpl, WindowUDF};\n# use datafusion_functions_window_common::field::WindowUDFFieldArgs;\n# use datafusion_functions_window_common::partition::PartitionEvaluatorArgs;\n# use datafusion_expr::window_doc_sections::DOC_SECTION_ANALYTICAL;\n# use datafusion_physical_expr_common::physical_expr;\n# use std::sync::Arc;\n\n#[derive(Debug, Clone, PartialEq, Eq, Hash)]\nstruct SmoothIt {\n  signature: Signature,\n}\n\nimpl SmoothIt {\n  fn new() -> Self {\n    Self {\n      signature: Signature::uniform(1, vec![DataType::Int32], Volatility::Immutable),\n     }\n  }\n}\n\nstatic DOCUMENTATION: LazyLock<Documentation> = LazyLock::new(|| {\n    Documentation::builder(DOC_SECTION_ANALYTICAL, \"smooths the windows\", \"smooth_it(2)\")\n        .with_argument(\"arg1\", \"The int32 number to smooth by\")\n        .build()\n});\n\nfn get_doc() -> &'static Documentation {\n    &DOCUMENTATION\n}\n\n/// Implement the WindowUDFImpl trait for SmoothIt\nimpl WindowUDFImpl for SmoothIt {\n   fn name(&self) -> &str { \"smooth_it\" }\n   fn signature(&self) -> &Signature { &self.signature }\n   // The actual implementation would smooth the window\n   fn partition_evaluator(\n       &self,\n       _partition_evaluator_args: PartitionEvaluatorArgs,\n   ) -> Result<Box<dyn PartitionEvaluator>> {\n       unimplemented!()\n   }\n   fn field(&self, field_args: WindowUDFFieldArgs) -> Result<FieldRef> {\n     if let Some(DataType::Int32) = field_args.get_input_field(0).map(|f| f.data_type().clone()) {\n       Ok(Field::new(field_args.name(), DataType::Int32, false).into())\n     } else {\n       plan_err!(\"smooth_it only accepts Int32 arguments\")\n     }\n   }\n   fn documentation(&self) -> Option<&Documentation> {\n     Some(get_doc())\n   }\n    fn limit_effect(&self, _args: &[Arc<dyn physical_expr::PhysicalExpr>]) -> LimitEffect {\n        LimitEffect::Unknown\n    }\n}\n\n// Create a new WindowUDF from the implementation\nlet smooth_it = WindowUDF::from(SmoothIt::new());\n\n// Call the function `add_one(col)`\n// smooth_it(speed) OVER (PARTITION BY car ORDER BY time ASC)\nlet expr = smooth_it.call(vec![col(\"speed\")])\n    .partition_by(vec![col(\"car\")])\n    .order_by(vec![col(\"time\").sort(true, true)])\n    .window_frame(WindowFrame::new(None))\n    .build()\n    .unwrap();\n```",
+    "span": {
+      "filename": "src/udwf.rs",
+      "begin": [
+        315,
+        1
+      ],
+      "end": [
+        432,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          1020,
+          1086,
+          1023,
+          1028,
+          1087,
+          1025,
+          1033,
+          1036,
+          1039,
+          1041,
+          1089,
+          1090
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Debug",
+                "id": 81,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "DynEq",
+                "id": 71,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "DynHash",
+                "id": 76,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 13,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 15,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Any",
+                "id": 55,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": [
+          1097
+        ]
+      }
+    },
+    "type_references": {
+      "81": "core::fmt::Debug",
+      "71": "datafusion_expr_common::dyn_eq::DynEq",
+      "76": "datafusion_expr_common::dyn_eq::DynHash",
+      "13": "core::marker::Send",
+      "15": "core::marker::Sync",
+      "55": "core::any::Any"
+    },
+    "impl_context": null,
+    "links": {
+      "`DynEq`": 71,
+      "`Hash`": 75,
+      "`DynHash`": 76,
+      "`WindowUDF`": 1013,
+      "`Eq`": 65
+    },
+    "link_paths": {
+      "`DynEq`": "datafusion_expr_common::dyn_eq::DynEq",
+      "`Hash`": "core::hash::Hash",
+      "`DynHash`": "datafusion_expr_common::dyn_eq::DynHash",
+      "`WindowUDF`": "datafusion_expr::udwf::WindowUDF",
+      "`Eq`": "core::cmp::Eq"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "1012",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udwf.WindowUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udwf.WindowUDFImpl.json",
+    "anchor": "op-e2b205ded2fa04ff480d51c9",
+    "aliases": [
+      "datafusion::logical_expr::WindowUDFImpl",
+      "datafusion_expr::WindowUDFImpl"
+    ],
+    "resolved_doc_links": {
+      "`DynEq`": "../operations/datafusion_expr_common.dyn_eq.DynEq.md#op-ee2f7a30a4c03e9d5680ea5a",
+      "`DynHash`": "../operations/datafusion_expr_common.dyn_eq.DynHash.md#op-b1cd12827f1210014f9301ab",
+      "`WindowUDF`": "../operations/datafusion_expr.udwf.WindowUDF.md#op-42e8216e20a1c833692a7e65"
+    }
+  },
+  {
+    "id": "b7c1c067ea1bc71f9338cbc0",
+    "path": "datafusion_expr::udwf::WindowUDFImpl::aliases",
+    "name": "aliases",
+    "owner": "datafusion_expr::udwf::WindowUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn aliases(&self) -> &[String]",
+    "docs": "Returns any aliases (alternate names) for this function.\n\nNote: `aliases` should only include names other than [`Self::name`].\nDefaults to `[]` (no aliases)",
+    "span": {
+      "filename": "src/udwf.rs",
+      "begin": [
+        323,
+        5
+      ],
+      "end": [
+        325,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "String",
+                    "id": 298,
+                    "args": null
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "298": "alloc::string::String"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::name`": 1020
+    },
+    "link_paths": {
+      "`Self::name`": "datafusion_expr::udwf::WindowUDFImpl::name"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "1086",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udwf.WindowUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udwf.WindowUDFImpl.json",
+    "anchor": "op-b7c1c067ea1bc71f9338cbc0",
+    "aliases": [
+      "datafusion::logical_expr::WindowUDFImpl::aliases",
+      "datafusion_expr::WindowUDFImpl::aliases"
+    ],
+    "resolved_doc_links": {
+      "`Self::name`": "../operations/datafusion_expr.udwf.WindowUDFImpl.md#op-f86aece97efcb21e917ad2c3"
+    }
+  },
+  {
+    "id": "3341d214a6980a9b1a692bb2",
+    "path": "datafusion_expr::udwf::WindowUDFImpl::coerce_types",
+    "name": "coerce_types",
+    "owner": "datafusion_expr::udwf::WindowUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn coerce_types(&self, _arg_types: &[DataType]) -> Result<Vec<DataType>>",
+    "docs": "Coerce arguments of a function call to types that the function can evaluate.\n\nThis function is only called if [`WindowUDFImpl::signature`] returns [`crate::TypeSignature::UserDefined`]. Most\nUDWFs should return one of the other variants of `TypeSignature` which handle common\ncases\n\nSee the [type coercion module](crate::type_coercion)\ndocumentation for more details on type coercion\n\nFor example, if your function requires a floating point arguments, but the user calls\nit like `my_func(1::int)` (aka with `1` as an integer), coerce_types could return `[DataType::Float64]`\nto ensure the argument was cast to `1::double`\n\n# Parameters\n* `arg_types`: The argument types of the arguments  this function with\n\n# Return value\nA Vec the same length as `arg_types`. DataFusion will `CAST` the function call\narguments to these specific types.",
+    "span": {
+      "filename": "src/udwf.rs",
+      "begin": [
+        410,
+        5
+      ],
+      "end": [
+        412,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_arg_types",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "DataType",
+                        "id": 10,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 6,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "DataType",
+                                      "id": 10,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "arrow_schema::datatype::DataType",
+      "188": "datafusion_common::error::Result",
+      "6": "alloc::vec::Vec"
+    },
+    "impl_context": null,
+    "links": {
+      "`WindowUDFImpl::signature`": 1023,
+      "crate::type_coercion": 11,
+      "`crate::TypeSignature::UserDefined`": 699
+    },
+    "link_paths": {
+      "`WindowUDFImpl::signature`": "datafusion_expr::udwf::WindowUDFImpl::signature",
+      "crate::type_coercion": "datafusion_expr::type_coercion",
+      "`crate::TypeSignature::UserDefined`": "datafusion_expr_common::signature::TypeSignature::UserDefined"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "1039",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udwf.WindowUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udwf.WindowUDFImpl.json",
+    "anchor": "op-3341d214a6980a9b1a692bb2",
+    "aliases": [
+      "datafusion::logical_expr::WindowUDFImpl::coerce_types",
+      "datafusion_expr::WindowUDFImpl::coerce_types"
+    ],
+    "resolved_doc_links": {
+      "`WindowUDFImpl::signature`": "../operations/datafusion_expr.udwf.WindowUDFImpl.md#op-e6be77ee117b0a6e4428320a",
+      "crate::type_coercion": "../modules/datafusion_expr.type_coercion.md#op-e9f5403bd846ccf38493f864",
+      "`crate::TypeSignature::UserDefined`": "../operations/datafusion_expr_common.signature.TypeSignature.md#op-9a54792c384e19dbdaacb169"
+    }
+  },
+  {
+    "id": "35018f0efcf158c90bc26345",
+    "path": "datafusion_expr::udwf::WindowUDFImpl::documentation",
+    "name": "documentation",
+    "owner": "datafusion_expr::udwf::WindowUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn documentation(&self) -> Option<&Documentation>",
+    "docs": "Returns the documentation for this Window UDF.\n\nDocumentation can be accessed programmatically as well as\ngenerating publicly facing documentation.",
+    "span": {
+      "filename": "src/udwf.rs",
+      "begin": [
+        424,
+        5
+      ],
+      "end": [
+        426,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 91,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Documentation",
+                              "id": 313,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "91": "core::option::Option",
+      "313": "datafusion_doc::Documentation"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "1089",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udwf.WindowUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udwf.WindowUDFImpl.json",
+    "anchor": "op-35018f0efcf158c90bc26345",
+    "aliases": [
+      "datafusion::logical_expr::WindowUDFImpl::documentation",
+      "datafusion_expr::WindowUDFImpl::documentation"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0205929e53cdea9de9084167",
+    "path": "datafusion_expr::udwf::WindowUDFImpl::expressions",
+    "name": "expressions",
+    "owner": "datafusion_expr::udwf::WindowUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn expressions(&self, expr_args: ExpressionArgs<'_>) -> Vec<Arc<dyn PhysicalExpr>>",
+    "docs": "Returns the expressions that are passed to the [`PartitionEvaluator`].",
+    "span": {
+      "filename": "src/udwf.rs",
+      "begin": [
+        332,
+        5
+      ],
+      "end": [
+        334,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "expr_args",
+              {
+                "resolved_path": {
+                  "path": "ExpressionArgs",
+                  "id": 1030,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'_"
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 6,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 151,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "PhysicalExpr",
+                                            "id": 184,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1030": "datafusion_functions_window_common::expr::ExpressionArgs",
+      "6": "alloc::vec::Vec",
+      "151": "alloc::sync::Arc",
+      "184": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+    },
+    "impl_context": null,
+    "links": {
+      "`PartitionEvaluator`": 460
+    },
+    "link_paths": {
+      "`PartitionEvaluator`": "datafusion_expr::partition_evaluator::PartitionEvaluator"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "1028",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udwf.WindowUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udwf.WindowUDFImpl.json",
+    "anchor": "op-0205929e53cdea9de9084167",
+    "aliases": [
+      "datafusion::logical_expr::WindowUDFImpl::expressions",
+      "datafusion_expr::WindowUDFImpl::expressions"
+    ],
+    "resolved_doc_links": {
+      "`PartitionEvaluator`": "../operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md#op-28021de2fba820ec392e9ef2"
+    }
+  },
+  {
+    "id": "86a60fcc397a3ec0b61ba3fa",
+    "path": "datafusion_expr::udwf::WindowUDFImpl::field",
+    "name": "field",
+    "owner": "datafusion_expr::udwf::WindowUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn field(&self, field_args: WindowUDFFieldArgs<'_>) -> Result<FieldRef>",
+    "docs": "The [`FieldRef`] of the final result of evaluating this window function.\n\nCall `field_args.name()` to get the fully qualified name for defining\nthe [`FieldRef`]. For a complete example see the implementation in the\n[Basic Example](WindowUDFImpl#basic-example) section.",
+    "span": {
+      "filename": "src/udwf.rs",
+      "begin": [
+        380,
+        5
+      ],
+      "end": [
+        380,
+        73
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "field_args",
+              {
+                "resolved_path": {
+                  "path": "WindowUDFFieldArgs",
+                  "id": 1035,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'_"
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "FieldRef",
+                          "id": 147,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1035": "datafusion_functions_window_common::field::WindowUDFFieldArgs",
+      "188": "datafusion_common::error::Result",
+      "147": "arrow_schema::field::FieldRef"
+    },
+    "impl_context": null,
+    "links": {
+      "WindowUDFImpl#basic-example": 1012,
+      "`FieldRef`": 147
+    },
+    "link_paths": {
+      "WindowUDFImpl#basic-example": "datafusion_expr::udwf::WindowUDFImpl",
+      "`FieldRef`": "arrow_schema::field::FieldRef"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "1033",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udwf.WindowUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udwf.WindowUDFImpl.json",
+    "anchor": "op-86a60fcc397a3ec0b61ba3fa",
+    "aliases": [
+      "datafusion::logical_expr::WindowUDFImpl::field",
+      "datafusion_expr::WindowUDFImpl::field"
+    ],
+    "resolved_doc_links": {
+      "WindowUDFImpl#basic-example": "../operations/datafusion_expr.udwf.WindowUDFImpl.md#op-e2b205ded2fa04ff480d51c9",
+      "`FieldRef`": "../operations/arrow_schema.field.FieldRef.md#op-a0fdaf7a91a3563923566542"
+    }
+  },
+  {
+    "id": "957cd43c1fe93d411e201c0d",
+    "path": "datafusion_expr::udwf::WindowUDFImpl::limit_effect",
+    "name": "limit_effect",
+    "owner": "datafusion_expr::udwf::WindowUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn limit_effect(&self, _args: &[Arc<dyn PhysicalExpr>]) -> LimitEffect",
+    "docs": "If not causal, returns the effect this function will have on the window",
+    "span": {
+      "filename": "src/udwf.rs",
+      "begin": [
+        429,
+        5
+      ],
+      "end": [
+        431,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Arc",
+                        "id": 151,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "dyn_trait": {
+                                    "traits": [
+                                      {
+                                        "trait": {
+                                          "path": "PhysicalExpr",
+                                          "id": 184,
+                                          "args": null
+                                        },
+                                        "generic_params": []
+                                      }
+                                    ],
+                                    "lifetime": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "LimitEffect",
+              "id": 1091,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "151": "alloc::sync::Arc",
+      "184": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "1091": "datafusion_expr::udwf::LimitEffect"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "1090",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udwf.WindowUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udwf.WindowUDFImpl.json",
+    "anchor": "op-957cd43c1fe93d411e201c0d",
+    "aliases": [
+      "datafusion::logical_expr::WindowUDFImpl::limit_effect",
+      "datafusion_expr::WindowUDFImpl::limit_effect"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f86aece97efcb21e917ad2c3",
+    "path": "datafusion_expr::udwf::WindowUDFImpl::name",
+    "name": "name",
+    "owner": "datafusion_expr::udwf::WindowUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &str",
+    "docs": "Returns this function's name",
+    "span": {
+      "filename": "src/udwf.rs",
+      "begin": [
+        317,
+        5
+      ],
+      "end": [
+        317,
+        28
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "1020",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udwf.WindowUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udwf.WindowUDFImpl.json",
+    "anchor": "op-f86aece97efcb21e917ad2c3",
+    "aliases": [
+      "datafusion::logical_expr::WindowUDFImpl::name",
+      "datafusion_expr::WindowUDFImpl::name"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7f0d4a74641bee694f2223f1",
+    "path": "datafusion_expr::udwf::WindowUDFImpl::partition_evaluator",
+    "name": "partition_evaluator",
+    "owner": "datafusion_expr::udwf::WindowUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn partition_evaluator(&self, partition_evaluator_args: PartitionEvaluatorArgs<'_>) -> Result<Box<dyn PartitionEvaluator>>",
+    "docs": "Invoke the function, returning the [`PartitionEvaluator`] instance",
+    "span": {
+      "filename": "src/udwf.rs",
+      "begin": [
+        337,
+        5
+      ],
+      "end": [
+        340,
+        46
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition_evaluator_args",
+              {
+                "resolved_path": {
+                  "path": "PartitionEvaluatorArgs",
+                  "id": 1032,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'_"
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 587,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "PartitionEvaluator",
+                                            "id": 460,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1032": "datafusion_functions_window_common::partition::PartitionEvaluatorArgs",
+      "188": "datafusion_common::error::Result",
+      "587": "alloc::boxed::Box",
+      "460": "datafusion_expr::partition_evaluator::PartitionEvaluator"
+    },
+    "impl_context": null,
+    "links": {
+      "`PartitionEvaluator`": 460
+    },
+    "link_paths": {
+      "`PartitionEvaluator`": "datafusion_expr::partition_evaluator::PartitionEvaluator"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "1087",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udwf.WindowUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udwf.WindowUDFImpl.json",
+    "anchor": "op-7f0d4a74641bee694f2223f1",
+    "aliases": [
+      "datafusion::logical_expr::WindowUDFImpl::partition_evaluator",
+      "datafusion_expr::WindowUDFImpl::partition_evaluator"
+    ],
+    "resolved_doc_links": {
+      "`PartitionEvaluator`": "../operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md#op-28021de2fba820ec392e9ef2"
+    }
+  },
+  {
+    "id": "8cac07a32e8db1c7df4ea370",
+    "path": "datafusion_expr::udwf::WindowUDFImpl::reverse_expr",
+    "name": "reverse_expr",
+    "owner": "datafusion_expr::udwf::WindowUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn reverse_expr(&self) -> ReversedUDWF",
+    "docs": "Allows customizing the behavior of the user-defined window\nfunction when it is evaluated in reverse order.",
+    "span": {
+      "filename": "src/udwf.rs",
+      "begin": [
+        416,
+        5
+      ],
+      "end": [
+        418,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ReversedUDWF",
+              "id": 1043,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1043": "datafusion_expr::udwf::ReversedUDWF"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "1041",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udwf.WindowUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udwf.WindowUDFImpl.json",
+    "anchor": "op-8cac07a32e8db1c7df4ea370",
+    "aliases": [
+      "datafusion::logical_expr::WindowUDFImpl::reverse_expr",
+      "datafusion_expr::WindowUDFImpl::reverse_expr"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e6be77ee117b0a6e4428320a",
+    "path": "datafusion_expr::udwf::WindowUDFImpl::signature",
+    "name": "signature",
+    "owner": "datafusion_expr::udwf::WindowUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn signature(&self) -> &Signature",
+    "docs": "Returns the function's [`Signature`] for information about what input\ntypes are accepted and the function's Volatility.",
+    "span": {
+      "filename": "src/udwf.rs",
+      "begin": [
+        329,
+        5
+      ],
+      "end": [
+        329,
+        39
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Signature",
+                  "id": 580,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "580": "datafusion_expr_common::signature::Signature"
+    },
+    "impl_context": null,
+    "links": {
+      "`Signature`": 580
+    },
+    "link_paths": {
+      "`Signature`": "datafusion_expr_common::signature::Signature"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "1023",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udwf.WindowUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udwf.WindowUDFImpl.json",
+    "anchor": "op-e6be77ee117b0a6e4428320a",
+    "aliases": [
+      "datafusion::logical_expr::WindowUDFImpl::signature",
+      "datafusion_expr::WindowUDFImpl::signature"
+    ],
+    "resolved_doc_links": {
+      "`Signature`": "../operations/datafusion_expr_common.signature.Signature.md#op-3501f77593554c0ab3e03e9e"
+    }
+  },
+  {
+    "id": "c1739b18874ddfb371d89fe5",
+    "path": "datafusion_expr::udwf::WindowUDFImpl::simplify",
+    "name": "simplify",
+    "owner": "datafusion_expr::udwf::WindowUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn simplify(&self) -> Option<WindowFunctionSimplification>",
+    "docs": "Returns an optional hook for simplifying this user-defined window\nfunction.\n\nUse this hook to apply function-specific rewrites during optimization.\nThe default implementation returns `None`.\n\nDataFusion already simplifies arguments and performs constant folding\n(for example, `my_add(1, 2) -> 3`), so there is usually no need to\nimplement those optimizations manually for specific UDFs.\n\nExample:\n`advanced_udwf.rs`: <https://github.com/apache/datafusion/blob/main/datafusion-examples/examples/udf/advanced_udwf.rs>\n\n# Returns\n`None` if simplify is not defined.\n\nOr, a closure ([`WindowFunctionSimplification`]) invoked with:\n* `window_function`: [WindowFunction] with already simplified\n  arguments\n* `info`: [crate::simplify::SimplifyContext]\n\nThe closure returns a simplified [Expr] or an error.\n\n# Notes\nThe returned expression must have the same schema as the original\nexpression, including both the data type and nullability. For example,\nif the original expression is nullable, the returned expression must\nalso be nullable, otherwise it may lead to schema verification errors\nlater in query planning.",
+    "span": {
+      "filename": "src/udwf.rs",
+      "begin": [
+        371,
+        5
+      ],
+      "end": [
+        373,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 91,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "WindowFunctionSimplification",
+                          "id": 1027,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "91": "core::option::Option",
+      "1027": "datafusion_expr::function::WindowFunctionSimplification"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::simplify::SimplifyContext": 697,
+      "WindowFunction": 1088,
+      "Expr": 301,
+      "`WindowFunctionSimplification`": 1027
+    },
+    "link_paths": {
+      "crate::simplify::SimplifyContext": "datafusion_expr::simplify::SimplifyContext",
+      "WindowFunction": "datafusion_expr::expr::WindowFunction",
+      "Expr": "datafusion_expr::expr::Expr",
+      "`WindowFunctionSimplification`": "datafusion_expr::function::WindowFunctionSimplification"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "1025",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udwf.WindowUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udwf.WindowUDFImpl.json",
+    "anchor": "op-c1739b18874ddfb371d89fe5",
+    "aliases": [
+      "datafusion::logical_expr::WindowUDFImpl::simplify",
+      "datafusion_expr::WindowUDFImpl::simplify"
+    ],
+    "resolved_doc_links": {
+      "crate::simplify::SimplifyContext": "../operations/datafusion_expr.simplify.SimplifyContext.md#op-7b5998cee70553815ef2a10a",
+      "WindowFunction": "../operations/datafusion_expr.expr.WindowFunction.md#op-8f5e8e8a659430c3e7448f3a",
+      "Expr": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc",
+      "`WindowFunctionSimplification`": "../operations/datafusion_expr.function.WindowFunctionSimplification.md#op-4e3825e9eb717b05a23f2e0d"
+    }
+  },
+  {
+    "id": "d88f2961b6232b5741dffeaf",
+    "path": "datafusion_expr::udwf::WindowUDFImpl::sort_options",
+    "name": "sort_options",
+    "owner": "datafusion_expr::udwf::WindowUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn sort_options(&self) -> Option<SortOptions>",
+    "docs": "Allows the window UDF to define a custom result ordering.\n\nBy default, a window UDF doesn't introduce an ordering.\nBut when specified by a window UDF this is used to update\nordering equivalences.",
+    "span": {
+      "filename": "src/udwf.rs",
+      "begin": [
+        387,
+        5
+      ],
+      "end": [
+        389,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 91,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SortOptions",
+                          "id": 1038,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "91": "core::option::Option",
+      "1038": "arrow_schema::SortOptions"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "1036",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udwf.WindowUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udwf.WindowUDFImpl.json",
+    "anchor": "op-d88f2961b6232b5741dffeaf",
+    "aliases": [
+      "datafusion::logical_expr::WindowUDFImpl::sort_options",
+      "datafusion_expr::WindowUDFImpl::sort_options"
+    ],
+    "resolved_doc_links": {}
+  }
+]

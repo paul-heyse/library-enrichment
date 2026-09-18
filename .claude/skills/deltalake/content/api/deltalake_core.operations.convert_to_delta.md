@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## PartitionStrategy
 
 `enum` · `deltalake_core::operations::convert_to_delta::PartitionStrategy`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.convert_to_delta.PartitionStrategy.md)
 
 Also reachable as `deltalake::operations::convert_to_delta::PartitionStrategy`
 
@@ -32,6 +33,7 @@ Currently only hive-partitioning is supported for Parquet paths
 ## ConvertToDeltaBuilder
 
 `struct` · `deltalake_core::operations::convert_to_delta::ConvertToDeltaBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.convert_to_delta.ConvertToDeltaBuilder.md)
 
 Also reachable as `deltalake::operations::convert_to_delta::ConvertToDeltaBuilder`
 
@@ -65,13 +67,6 @@ fn with_table_name(self, name: impl Into<String>) -> Self
 
 ```rust
 fn into_future(self) -> Self::IntoFuture
-```
-
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
 ```
 
 Build an operation to convert a Parquet table to a [`DeltaTable`] in place

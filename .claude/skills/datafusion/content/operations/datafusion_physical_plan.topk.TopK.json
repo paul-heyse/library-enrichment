@@ -1,0 +1,626 @@
+[
+  {
+    "id": "2fcd59ff29c9103fa9939e7b",
+    "path": "datafusion_physical_plan::topk::TopK",
+    "name": "TopK",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct TopK",
+    "docs": "TopK\n\n# Background\n\n\"Top K\" is a common query optimization used for queries such as\n\"find the top 3 customers by revenue\". The (simplified) SQL for\nsuch a query might be:\n\n```sql\nSELECT customer_id, revenue FROM 'sales.csv' ORDER BY revenue DESC limit 3;\n```\n\nThe simple plan would be:\n\n```sql\n> explain SELECT customer_id, revenue FROM sales ORDER BY revenue DESC limit 3;\n+--------------+----------------------------------------+\n| plan_type    | plan                                   |\n+--------------+----------------------------------------+\n| logical_plan | Limit: 3                               |\n|              |   Sort: revenue DESC NULLS FIRST       |\n|              |     Projection: customer_id, revenue   |\n|              |       TableScan: sales                 |\n+--------------+----------------------------------------+\n```\n\nWhile this plan produces the correct answer, it will fully sorts the\ninput before discarding everything other than the top 3 elements.\n\nThe same answer can be produced by simply keeping track of the top\nK=3 elements, reducing the total amount of required buffer memory.\n\n# Partial Sort Optimization\n\nThis implementation additionally optimizes queries where the input is already\npartially sorted by a common prefix of the requested ordering. If subsequent\nrows are guaranteed to be strictly greater (in sort order) than a known TopK\nboundary on this prefix, the operator safely terminates early.\n\nFor a local TopK, that boundary comes from the local heap once it has K rows.\nFor a partitioned `SortExec`, a shared dynamic-filter threshold can provide\nthe same prefix boundary before a lagging partition has filled its local heap.\n\n## Example\n\nFor input sorted by `(day DESC)`, but not by `timestamp`, a query such as:\n\n```sql\nSELECT day, timestamp FROM sensor ORDER BY day DESC, timestamp DESC LIMIT 10;\n```\n\ncan terminate scanning early once sufficient rows from the latest days have been\ncollected, skipping older data.\n\n# Structure\n\nThis operator tracks the top K items using a `TopKHeap`.",
+    "span": {
+      "filename": "src/topk/mod.rs",
+      "begin": [
+        113,
+        1
+      ],
+      "end": [
+        140,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          104,
+          105,
+          106,
+          107,
+          108,
+          109,
+          110,
+          111,
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "89",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.topk.TopK.md",
+    "record_file": "operations/datafusion_physical_plan.topk.TopK.json",
+    "anchor": "op-2fcd59ff29c9103fa9939e7b",
+    "aliases": [
+      "datafusion::physical_plan::TopK",
+      "datafusion_physical_plan::TopK"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5c26825bbf28ba49f68678b5",
+    "path": "datafusion_physical_plan::topk::TopK::emit",
+    "name": "emit",
+    "owner": "datafusion_physical_plan::topk::TopK",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn emit(self) -> Result<SendableRecordBatchStream>",
+    "docs": "Returns the top k results broken into `batch_size` [`RecordBatch`]es, consuming the heap",
+    "span": {
+      "filename": "src/topk/mod.rs",
+      "begin": [
+        789,
+        5
+      ],
+      "end": [
+        830,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SendableRecordBatchStream",
+                          "id": 103,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "99": "datafusion_common::error::Result",
+      "103": "datafusion_execution::stream::SendableRecordBatchStream"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TopK",
+          "id": "datafusion_physical_plan::topk::TopK",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/topk/mod.rs",
+        "begin": [
+          343,
+          1
+        ],
+        "end": [
+          839,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RecordBatch`": 101
+    },
+    "link_paths": {
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "102",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.topk.TopK.md",
+    "record_file": "operations/datafusion_physical_plan.topk.TopK.json",
+    "anchor": "op-5c26825bbf28ba49f68678b5",
+    "aliases": [
+      "datafusion::physical_plan::TopK::emit",
+      "datafusion_physical_plan::TopK::emit"
+    ],
+    "resolved_doc_links": {
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "be998f60f887f5438e70969d",
+    "path": "datafusion_physical_plan::topk::TopK::insert_batch",
+    "name": "insert_batch",
+    "owner": "datafusion_physical_plan::topk::TopK",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn insert_batch(&mut self, batch: RecordBatch) -> Result<()>",
+    "docs": "Insert `batch`, remembering if any of its values are among\nthe top k seen so far.",
+    "span": {
+      "filename": "src/topk/mod.rs",
+      "begin": [
+        397,
+        5
+      ],
+      "end": [
+        486,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[expect(clippy::needless_pass_by_value)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch",
+              {
+                "resolved_path": {
+                  "path": "RecordBatch",
+                  "id": 101,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "101": "arrow_array::record_batch::RecordBatch",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TopK",
+          "id": "datafusion_physical_plan::topk::TopK",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/topk/mod.rs",
+        "begin": [
+          343,
+          1
+        ],
+        "end": [
+          839,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "100",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.topk.TopK.md",
+    "record_file": "operations/datafusion_physical_plan.topk.TopK.json",
+    "anchor": "op-be998f60f887f5438e70969d",
+    "aliases": [
+      "datafusion::physical_plan::TopK::insert_batch",
+      "datafusion_physical_plan::TopK::insert_batch"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7cf88481704dc3e54e58d9f8",
+    "path": "datafusion_physical_plan::topk::TopK::try_new",
+    "name": "try_new",
+    "owner": "datafusion_physical_plan::topk::TopK",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_new(partition_id: usize, schema: SchemaRef, common_sort_prefix: Vec<PhysicalSortExpr>, expr: LexOrdering, k: usize, batch_size: usize, runtime: Arc<RuntimeEnv>, metrics: &ExecutionPlanMetricsSet, filter: Arc<RwLock<TopKDynamicFilters>>) -> Result<Self>",
+    "docs": "Create a new [`TopK`] that stores the top `k` values, as\ndefined by the sort expressions in `expr`.",
+    "span": {
+      "filename": "src/topk/mod.rs",
+      "begin": [
+        349,
+        5
+      ],
+      "end": [
+        392,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[expect(clippy::too_many_arguments)]"
+      },
+      {
+        "other": "#[expect(clippy::needless_pass_by_value)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "partition_id",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 91,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "common_sort_prefix",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "PhysicalSortExpr",
+                              "id": 92,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "expr",
+              {
+                "resolved_path": {
+                  "path": "LexOrdering",
+                  "id": 93,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "k",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "batch_size",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "runtime",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "RuntimeEnv",
+                              "id": 95,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "metrics",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ExecutionPlanMetricsSet",
+                      "id": 96,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "filter",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "RwLock",
+                              "id": 97,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "TopKDynamicFilters",
+                                          "id": 98,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "91": "arrow_schema::schema::SchemaRef",
+      "2": "alloc::vec::Vec",
+      "92": "datafusion_physical_expr_common::sort_expr::PhysicalSortExpr",
+      "93": "datafusion_physical_expr_common::sort_expr::LexOrdering",
+      "94": "alloc::sync::Arc",
+      "95": "datafusion_execution::runtime_env::RuntimeEnv",
+      "96": "datafusion_physical_expr_common::metrics::ExecutionPlanMetricsSet",
+      "97": "parking_lot::rwlock::RwLock",
+      "98": "datafusion_physical_plan::topk::TopKDynamicFilters",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TopK",
+          "id": "datafusion_physical_plan::topk::TopK",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/topk/mod.rs",
+        "begin": [
+          343,
+          1
+        ],
+        "end": [
+          839,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TopK`": 89
+    },
+    "link_paths": {
+      "`TopK`": "datafusion_physical_plan::topk::TopK"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "90",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.topk.TopK.md",
+    "record_file": "operations/datafusion_physical_plan.topk.TopK.json",
+    "anchor": "op-7cf88481704dc3e54e58d9f8",
+    "aliases": [
+      "datafusion::physical_plan::TopK::try_new",
+      "datafusion_physical_plan::TopK::try_new"
+    ],
+    "resolved_doc_links": {
+      "`TopK`": "../operations/datafusion_physical_plan.topk.TopK.md#op-2fcd59ff29c9103fa9939e7b"
+    }
+  }
+]

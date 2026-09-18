@@ -35,6 +35,9 @@ fn push_outer_schema(&self, schema: Arc<DFSchema>)
 async fn resolve_table_ref(&self, table_ref: &TableReference) -> datafusion::common::Result<Option<Arc<dyn TableProvider>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.substrait_consumer.DefaultSubstraitConsumer.md).
+
+
 Default SubstraitConsumer for converting standard Substrait without user-defined extensions.
 
 Used as the consumer in [crate::logical_plan::consumer::from_substrait_plan]
@@ -59,6 +62,9 @@ fn new() -> Self
 fn pop_lambda_parameters(&self)
 fn push_lambda_parameters(&self, consumer: &impl SubstraitConsumer, lambda_parameters: &[Type], input_schema: &DFSchema) -> datafusion::common::Result<Vec<String>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.substrait_consumer.DefaultSubstraitLambdaConsumer.md).
+
 
 Default implementation of lambda related methods of the [SubstraitConsumer] trait
 
@@ -123,6 +129,9 @@ fn push_lambda_parameters(&self, _lambda_parameters: &[Type], _input_schema: &DF
 fn push_outer_schema(&self, _schema: Arc<DFSchema>)
 async fn resolve_table_ref(&self, table_ref: &TableReference) -> datafusion::common::Result<Option<Arc<dyn TableProvider>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.substrait_consumer.SubstraitConsumer.md).
+
 
 This trait is used to consume Substrait plans, converting them into DataFusion Logical Plans.
 It can be implemented by users to allow for custom handling of relations, expressions, etc.

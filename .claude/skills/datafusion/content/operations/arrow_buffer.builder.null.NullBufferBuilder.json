@@ -1,0 +1,2711 @@
+[
+  {
+    "id": "f629e701548be729fb00ab9e",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder",
+    "name": "NullBufferBuilder",
+    "owner": null,
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct NullBufferBuilder",
+    "docs": "Builder for creating [`NullBuffer`]s (bitmaps indicating validity/nulls).\n\n# See also\n* [`BooleanBufferBuilder`] for a lower-level bitmap builder.\n* [`Self::allocated_size`] for the current memory allocated by the builder.\n\n# Performance\n\nThis builder only materializes the buffer when null values (`false`) are\nappended. If you only append non-null, (`true`) to the builder, no buffer is\nallocated and [`build`](#method.build) or [`finish`](#method.finish) return\n`None`.\n\nThis optimization is **very** important for the performance as it avoids\nallocating memory for the null buffer when there are no nulls.\n\n# Example\n```\n# use arrow_buffer::NullBufferBuilder;\nlet mut builder = NullBufferBuilder::new(8);\nbuilder.append_n_non_nulls(8);\n// If no non null values are appended, the null buffer is not created\nlet buffer = builder.finish();\nassert!(buffer.is_none());\n// however, if a null value is appended, the null buffer is created\nlet mut builder = NullBufferBuilder::new(8);\nbuilder.append_n_non_nulls(7);\nbuilder.append_null();\nlet buffer = builder.finish().unwrap();\nassert_eq!(buffer.len(), 8);\nassert_eq!(buffer.iter().collect::<Vec<_>>(), vec![true, true, true, true, true, true, true, false]);\n```",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        53,
+        1
+      ],
+      "end": [
+        64,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          675,
+          676,
+          677,
+          678,
+          679,
+          680,
+          681,
+          682,
+          683,
+          684,
+          685,
+          686,
+          687,
+          688,
+          689,
+          690,
+          692
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`NullBuffer`": 31,
+      "`BooleanBufferBuilder`": 215,
+      "`Self::allocated_size`": 654
+    },
+    "link_paths": {
+      "`NullBuffer`": "arrow_buffer::buffer::null::NullBuffer",
+      "`BooleanBufferBuilder`": "arrow_buffer::builder::boolean::BooleanBufferBuilder",
+      "`Self::allocated_size`": "arrow_buffer::builder::null::NullBufferBuilder::allocated_size"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "485",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-f629e701548be729fb00ab9e",
+    "aliases": [
+      "arrow::array::NullBufferBuilder",
+      "arrow_array::builder::NullBufferBuilder"
+    ],
+    "resolved_doc_links": {
+      "`NullBuffer`": "../operations/arrow_buffer.buffer.null.NullBuffer.md#op-d8209d291b86c5deb0050e48",
+      "`BooleanBufferBuilder`": "../operations/arrow_buffer.builder.boolean.BooleanBufferBuilder.md#op-3b603b0bd38714441734f47c",
+      "`Self::allocated_size`": "../operations/arrow_buffer.builder.null.NullBufferBuilder.md#op-1b9cedac41ad9759d35b01b3"
+    }
+  },
+  {
+    "id": "1b9cedac41ad9759d35b01b3",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::allocated_size",
+    "name": "allocated_size",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn allocated_size(&self) -> usize",
+    "docs": "Return the allocated size of this builder, in bytes, useful for memory accounting.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        254,
+        5
+      ],
+      "end": [
+        259,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "654",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-1b9cedac41ad9759d35b01b3",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::allocated_size",
+      "arrow_array::builder::NullBufferBuilder::allocated_size"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c3577c179ee68c34b4592798",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::append",
+    "name": "append",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append(&mut self, not_null: bool)",
+    "docs": "Appends a boolean value into the builder.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        142,
+        5
+      ],
+      "end": [
+        148,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "not_null",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "662",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-c3577c179ee68c34b4592798",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::append",
+      "arrow_array::builder::NullBufferBuilder::append"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3f7252c21cb797fb07e72224",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::append_buffer",
+    "name": "append_buffer",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_buffer(&mut self, buffer: &NullBuffer)",
+    "docs": "Append [`NullBuffer`] to this [`NullBufferBuilder`]\n\nThis is useful when you want to concatenate two null buffers.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        195,
+        5
+      ],
+      "end": [
+        204,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "buffer",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "NullBuffer",
+                      "id": 31,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "31": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`NullBuffer`": 31,
+      "`NullBufferBuilder`": 485
+    },
+    "link_paths": {
+      "`NullBuffer`": "arrow_buffer::buffer::null::NullBuffer",
+      "`NullBufferBuilder`": "arrow_buffer::builder::null::NullBufferBuilder"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "667",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-3f7252c21cb797fb07e72224",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::append_buffer",
+      "arrow_array::builder::NullBufferBuilder::append_buffer"
+    ],
+    "resolved_doc_links": {
+      "`NullBuffer`": "../operations/arrow_buffer.buffer.null.NullBuffer.md#op-d8209d291b86c5deb0050e48",
+      "`NullBufferBuilder`": "../operations/arrow_buffer.builder.null.NullBufferBuilder.md#op-f629e701548be729fb00ab9e"
+    }
+  },
+  {
+    "id": "da4a719229d1d1986bcf35c9",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::append_n_non_nulls",
+    "name": "append_n_non_nulls",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_n_non_nulls(&mut self, n: usize)",
+    "docs": "Appends `n` `true`s into the builder\nto indicate that these `n` items are not nulls.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        105,
+        5
+      ],
+      "end": [
+        111,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "658",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-da4a719229d1d1986bcf35c9",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::append_n_non_nulls",
+      "arrow_array::builder::NullBufferBuilder::append_n_non_nulls"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d5666b32067599d8ec411d8b",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::append_n_nulls",
+    "name": "append_n_nulls",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_n_nulls(&mut self, n: usize)",
+    "docs": "Appends `n` `false`s into the builder\nto indicate that these `n` items are nulls.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        127,
+        5
+      ],
+      "end": [
+        130,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "660",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-d5666b32067599d8ec411d8b",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::append_n_nulls",
+      "arrow_array::builder::NullBufferBuilder::append_n_nulls"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "87e13cccaf1068f1ef561f70",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::append_non_null",
+    "name": "append_non_null",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_non_null(&mut self)",
+    "docs": "Appends a `true` into the builder\nto indicate that this item is not null.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        116,
+        5
+      ],
+      "end": [
+        122,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "659",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-87e13cccaf1068f1ef561f70",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::append_non_null",
+      "arrow_array::builder::NullBufferBuilder::append_non_null"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f6522503aa0fc1313795c2bd",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::append_null",
+    "name": "append_null",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_null(&mut self)",
+    "docs": "Appends a `false` into the builder\nto indicate that this item is null.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        135,
+        5
+      ],
+      "end": [
+        138,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "661",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-f6522503aa0fc1313795c2bd",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::append_null",
+      "arrow_array::builder::NullBufferBuilder::append_null"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a5f1ee744c569bf636fdee84",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::append_slice",
+    "name": "append_slice",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_slice(&mut self, slice: &[bool])",
+    "docs": "Appends a boolean slice into the builder\nto indicate the validations of these items.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        181,
+        5
+      ],
+      "end": [
+        190,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "slice",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "bool"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "666",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-a5f1ee744c569bf636fdee84",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::append_slice",
+      "arrow_array::builder::NullBufferBuilder::append_slice"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9282568b2275120081b03f06",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::as_slice",
+    "name": "as_slice",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_slice(&self) -> Option<&[u8]>",
+    "docs": "Returns the inner bitmap builder as slice",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        229,
+        5
+      ],
+      "end": [
+        231,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 30,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "slice": {
+                              "primitive": "u8"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "30": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "671",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-9282568b2275120081b03f06",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::as_slice",
+      "arrow_array::builder::NullBufferBuilder::as_slice"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "549e51c60c794c29fe4e1554",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::as_slice_mut",
+    "name": "as_slice_mut",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_slice_mut(&mut self) -> Option<&mut [u8]>",
+    "docs": "Return a mutable reference to the inner bitmap slice.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        249,
+        5
+      ],
+      "end": [
+        251,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 30,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": true,
+                          "type": {
+                            "slice": {
+                              "primitive": "u8"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "30": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "672",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-549e51c60c794c29fe4e1554",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::as_slice_mut",
+      "arrow_array::builder::NullBufferBuilder::as_slice_mut"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fa097313492e355cfccfe8f9",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::build",
+    "name": "build",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn build(self) -> Option<NullBuffer>",
+    "docs": "Builds the [`NullBuffer`] without resetting the builder.\n\nThis consumes the builder. Use [`Self::finish`] to reuse it.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        218,
+        5
+      ],
+      "end": [
+        220,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 30,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "NullBuffer",
+                          "id": 31,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "30": "core::option::Option",
+      "31": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`NullBuffer`": 31,
+      "`Self::finish`": 669
+    },
+    "link_paths": {
+      "`NullBuffer`": "arrow_buffer::buffer::null::NullBuffer",
+      "`Self::finish`": "arrow_buffer::builder::null::NullBufferBuilder::finish"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "668",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-fa097313492e355cfccfe8f9",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::build",
+      "arrow_array::builder::NullBufferBuilder::build"
+    ],
+    "resolved_doc_links": {
+      "`NullBuffer`": "../operations/arrow_buffer.buffer.null.NullBuffer.md#op-d8209d291b86c5deb0050e48",
+      "`Self::finish`": "../operations/arrow_buffer.builder.null.NullBufferBuilder.md#op-c552a9fcb1e7294309604c53"
+    }
+  },
+  {
+    "id": "c552a9fcb1e7294309604c53",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> Option<NullBuffer>",
+    "docs": "Builds the [`NullBuffer`] and resets the builder.\n\nReturns `None` if the builder only contains `true`s. Use [`Self::build`]\nwhen you don't need to reuse this builder.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        210,
+        5
+      ],
+      "end": [
+        213,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 30,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "NullBuffer",
+                          "id": 31,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "30": "core::option::Option",
+      "31": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`NullBuffer`": 31,
+      "`Self::build`": 668
+    },
+    "link_paths": {
+      "`NullBuffer`": "arrow_buffer::buffer::null::NullBuffer",
+      "`Self::build`": "arrow_buffer::builder::null::NullBufferBuilder::build"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "669",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-c552a9fcb1e7294309604c53",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::finish",
+      "arrow_array::builder::NullBufferBuilder::finish"
+    ],
+    "resolved_doc_links": {
+      "`NullBuffer`": "../operations/arrow_buffer.buffer.null.NullBuffer.md#op-d8209d291b86c5deb0050e48",
+      "`Self::build`": "../operations/arrow_buffer.builder.null.NullBufferBuilder.md#op-fa097313492e355cfccfe8f9"
+    }
+  },
+  {
+    "id": "39b847ef14320c3f8a9f0b49",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> Option<NullBuffer>",
+    "docs": "Builds the [NullBuffer] without resetting the builder.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        223,
+        5
+      ],
+      "end": [
+        226,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 30,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "NullBuffer",
+                          "id": 31,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "30": "core::option::Option",
+      "31": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {
+      "NullBuffer": 31
+    },
+    "link_paths": {
+      "NullBuffer": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "670",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-39b847ef14320c3f8a9f0b49",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::finish_cloned",
+      "arrow_array::builder::NullBufferBuilder::finish_cloned"
+    ],
+    "resolved_doc_links": {
+      "NullBuffer": "../operations/arrow_buffer.buffer.null.NullBuffer.md#op-d8209d291b86c5deb0050e48"
+    }
+  },
+  {
+    "id": "01b46166bd61a7cd87b4749a",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::fmt",
+    "name": "fmt",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        52,
+        10
+      ],
+      "end": [
+        52,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 89,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 90,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "89": "core::fmt::Formatter",
+      "90": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          52,
+          10
+        ],
+        "end": [
+          52,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "691",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-01b46166bd61a7cd87b4749a",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::fmt",
+      "arrow_array::builder::NullBufferBuilder::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "511c50be7710fd2c63c1d2c8",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::is_empty",
+    "name": "is_empty",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "Check if the builder is empty.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        267,
+        5
+      ],
+      "end": [
+        269,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "674",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-511c50be7710fd2c63c1d2c8",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::is_empty",
+      "arrow_array::builder::NullBufferBuilder::is_empty"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bae0292f9ee8613cdc3d65e4",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::is_valid",
+    "name": "is_valid",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_valid(&self, index: usize) -> bool",
+    "docs": "Gets a bit in the buffer at `index`",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        159,
+        5
+      ],
+      "end": [
+        165,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "index",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "664",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-bae0292f9ee8613cdc3d65e4",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::is_valid",
+      "arrow_array::builder::NullBufferBuilder::is_valid"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "158d413a952caab6e192bf1d",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::len",
+    "name": "len",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Return the number of bits in the buffer.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        262,
+        5
+      ],
+      "end": [
+        264,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "673",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-158d413a952caab6e192bf1d",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::len",
+      "arrow_array::builder::NullBufferBuilder::len"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0bf1fc4a6aa0b0ee8baca7fe",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::new",
+    "name": "new",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(capacity: usize) -> Self",
+    "docs": "Creates a new empty builder.\n\nNote that this method does not allocate any memory, regardless of the\n`capacity` parameter. If an allocation is required, `capacity` is the\nsize in bits (not bytes) that will be allocated at minimum.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        72,
+        5
+      ],
+      "end": [
+        78,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "capacity",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "655",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-0bf1fc4a6aa0b0ee8baca7fe",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::new",
+      "arrow_array::builder::NullBufferBuilder::new"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e473780c16854be5ab8d5c43",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::new_from_buffer",
+    "name": "new_from_buffer",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_from_buffer(buffer: MutableBuffer, len: usize) -> Self",
+    "docs": "Creates a new builder from a `MutableBuffer`.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        90,
+        5
+      ],
+      "end": [
+        100,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "buffer",
+              {
+                "resolved_path": {
+                  "path": "MutableBuffer",
+                  "id": 147,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "147": "arrow_buffer::buffer::mutable::MutableBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "657",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-e473780c16854be5ab8d5c43",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::new_from_buffer",
+      "arrow_array::builder::NullBufferBuilder::new_from_buffer"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7bdc04f7e09e24877f99f67d",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::new_with_len",
+    "name": "new_with_len",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_with_len(len: usize) -> Self",
+    "docs": "Creates a new builder with given length.",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        81,
+        5
+      ],
+      "end": [
+        87,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "656",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-7bdc04f7e09e24877f99f67d",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::new_with_len",
+      "arrow_array::builder::NullBufferBuilder::new_with_len"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "52ef42889f8cc0e15e5933d4",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::set_bit",
+    "name": "set_bit",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn set_bit(&mut self, index: usize, v: bool)",
+    "docs": "Sets a bit in the builder at `index`",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        152,
+        5
+      ],
+      "end": [
+        155,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "index",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "v",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "663",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-52ef42889f8cc0e15e5933d4",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::set_bit",
+      "arrow_array::builder::NullBufferBuilder::set_bit"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f527dc879b72beb8dfb770b6",
+    "path": "arrow_buffer::builder::null::NullBufferBuilder::truncate",
+    "name": "truncate",
+    "owner": "arrow_buffer::builder::null::NullBufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn truncate(&mut self, len: usize)",
+    "docs": "Truncates the builder to the given length\n\nIf `len` is greater than the buffer's current length, this has no effect",
+    "span": {
+      "filename": "src/builder/null.rs",
+      "begin": [
+        171,
+        5
+      ],
+      "end": [
+        177,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NullBufferBuilder",
+          "id": "arrow_buffer::builder::null::NullBufferBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/null.rs",
+        "begin": [
+          66,
+          1
+        ],
+        "end": [
+          270,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "665",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.null.NullBufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.null.NullBufferBuilder.json",
+    "anchor": "op-f527dc879b72beb8dfb770b6",
+    "aliases": [
+      "arrow::array::NullBufferBuilder::truncate",
+      "arrow_array::builder::NullBufferBuilder::truncate"
+    ],
+    "resolved_doc_links": {}
+  }
+]

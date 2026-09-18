@@ -56,6 +56,9 @@ fn into_iter(self) -> Self::IntoIter
 fn deref(&self) -> &Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.equivalence.ordering.OrderingEquivalenceClass.md).
+
+
 An `OrderingEquivalenceClass` keeps track of distinct alternative orderings
 than can describe a table. For example, consider the following table:
 

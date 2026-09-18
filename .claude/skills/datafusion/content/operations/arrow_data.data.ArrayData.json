@@ -1,0 +1,4553 @@
+[
+  {
+    "id": "5666976474a0e5276141ce78",
+    "path": "arrow_data::data::ArrayData",
+    "name": "ArrayData",
+    "owner": null,
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct ArrayData",
+    "docs": "A generic representation of Arrow array data which encapsulates common attributes\nand operations for Arrow array.\n\nSpecific operations for different arrays types (e.g., primitive, list, struct)\nare implemented in `Array`.\n\n# Memory Layout\n\n`ArrayData` has references to one or more underlying data buffers\nand optional child ArrayData, depending on type as illustrated\nbelow. Bitmaps are not shown for simplicity but they are stored\nsimilarly to the buffers.\n\n```text\n                       offset\n                      points to\n┌───────────────────┐ start of  ┌───────┐       Different\n│                   │   data    │       │     ArrayData may\n│ArrayData {        │           │....   │     also refers to\n│  data_type: ...   │   ─ ─ ─ ─▶│1234   │  ┌ ─  the same\n│  offset: ... ─ ─ ─│─ ┘        │4372   │      underlying\n│  len: ...    ─ ─ ─│─ ┐        │4888   │  │     buffer with different offset/len\n│  buffers: [       │           │5882   │◀─\n│    ...            │  │        │4323   │\n│  ]                │   ─ ─ ─ ─▶│4859   │\n│  child_data: [    │           │....   │\n│    ...            │           │       │\n│  ]                │           └───────┘\n│}                  │\n│                   │            Shared Buffer uses\n│               │   │            bytes::Bytes to hold\n└───────────────────┘            actual data values\n          ┌ ─ ─ ┘\n\n          ▼\n┌───────────────────┐\n│ArrayData {        │\n│  ...              │\n│}                  │\n│                   │\n└───────────────────┘\n\nChild ArrayData may also have its own buffers and children\n```",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        208,
+        1
+      ],
+      "end": [
+        254,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          48,
+          49,
+          51,
+          53,
+          55,
+          57,
+          59,
+          61,
+          64,
+          68,
+          71,
+          76,
+          79,
+          83,
+          87,
+          90,
+          95,
+          97,
+          102,
+          105,
+          107,
+          110
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "6",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-5666976474a0e5276141ce78",
+    "aliases": [
+      "arrow::array::ArrayData"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5ed5dad6435e96951ca1aa72",
+    "path": "arrow_data::data::ArrayData::align_buffers",
+    "name": "align_buffers",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn align_buffers(&mut self)",
+    "docs": "Verifies that the buffers meet the minimum alignment requirements for the data type\n\nBuffers that are not adequately aligned will be copied to a new aligned allocation\n\nThis can be useful for when interacting with data sent over IPC or FFI, that may\nnot meet the minimum alignment requirements\n\nThis also aligns buffers of children data",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        847,
+        5
+      ],
+      "end": [
+        860,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "39",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-5ed5dad6435e96951ca1aa72",
+    "aliases": [
+      "arrow::array::ArrayData::align_buffers"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0feaa310f1f7cdd45f101360",
+    "path": "arrow_data::data::ArrayData::buffer",
+    "name": "buffer",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn buffer<T: ArrowNativeType>(&self, buffer: usize) -> &[T]",
+    "docs": "Returns the `buffer` as a slice of type `T` starting at self.offset\n\n# Panics\nThis function panics if:\n* the buffer is not byte-aligned with type T, or\n* the datatype is `Boolean` (it corresponds to a bit-packed buffer where the offset is not applicable)",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        663,
+        5
+      ],
+      "end": [
+        665,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "buffer",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "generic": "T"
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ArrowNativeType",
+                          "id": 36,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "36": "arrow_buffer::native::ArrowNativeType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "35",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-0feaa310f1f7cdd45f101360",
+    "aliases": [
+      "arrow::array::ArrayData::buffer"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bc163067fd7278cb5e95cae1",
+    "path": "arrow_data::data::ArrayData::buffers",
+    "name": "buffers",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn buffers(&self) -> &[Buffer]",
+    "docs": "Returns the [`Buffer`] storing data for this [`ArrayData`]",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        429,
+        5
+      ],
+      "end": [
+        431,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "Buffer",
+                    "id": 10,
+                    "args": null
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrayData`": 6,
+      "`Buffer`": 10
+    },
+    "link_paths": {
+      "`ArrayData`": "arrow_data::data::ArrayData",
+      "`Buffer`": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "21",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-bc163067fd7278cb5e95cae1",
+    "aliases": [
+      "arrow::array::ArrayData::buffers"
+    ],
+    "resolved_doc_links": {
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78",
+      "`Buffer`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b"
+    }
+  },
+  {
+    "id": "c22efa19480d0d3d69b41196",
+    "path": "arrow_data::data::ArrayData::builder",
+    "name": "builder",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "const fn builder(data_type: DataType) -> ArrayDataBuilder",
+    "docs": "Returns a builder to construct a [`ArrayData`] instance of the same [`DataType`]",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        418,
+        5
+      ],
+      "end": [
+        420,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data_type",
+              {
+                "resolved_path": {
+                  "path": "DataType",
+                  "id": 8,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayDataBuilder",
+              "id": 13,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": true,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8": "arrow_schema::datatype::DataType",
+      "13": "arrow_data::data::ArrayDataBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`DataType`": 8,
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`DataType`": "arrow_schema::datatype::DataType",
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "19",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-c22efa19480d0d3d69b41196",
+    "aliases": [
+      "arrow::array::ArrayData::builder"
+    ],
+    "resolved_doc_links": {
+      "`DataType`": "../operations/arrow_schema.datatype.DataType.md#op-bf69df5b14436e006d3a531c",
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "feeb89ed63791699897df841",
+    "path": "arrow_data::data::ArrayData::child_data",
+    "name": "child_data",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn child_data(&self) -> &[ArrayData]",
+    "docs": "Returns a slice of children [`ArrayData`]. This will be non\nempty for type such as lists and structs.",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        435,
+        5
+      ],
+      "end": [
+        437,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "ArrayData",
+                    "id": 6,
+                    "args": null
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "22",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-feeb89ed63791699897df841",
+    "aliases": [
+      "arrow::array::ArrayData::child_data"
+    ],
+    "resolved_doc_links": {
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "a6b4a9f9fde8600b7c120a22",
+    "path": "arrow_data::data::ArrayData::claim",
+    "name": "claim",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn claim(&self, pool: &dyn arrow_buffer::MemoryPool)",
+    "docs": "Claim memory used by this ArrayData in the provided memory pool.\n\nThis claims memory for:\n- All buffers in self.buffers\n- All child ArrayData recursively\n- The null buffer if present",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        1767,
+        5
+      ],
+      "end": [
+        1782,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"pool\"), span: src/data.rs:1766:11: 1766:27 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "pool",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "arrow_buffer::MemoryPool",
+                            "id": 47,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "47": "arrow_buffer::pool::MemoryPool"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "46",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-a6b4a9f9fde8600b7c120a22",
+    "aliases": [
+      "arrow::array::ArrayData::claim"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e2c3c7a6375b69038033dc17",
+    "path": "arrow_data::data::ArrayData::clone",
+    "name": "clone",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> ArrayData",
+    "docs": "",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        207,
+        17
+      ],
+      "end": [
+        207,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayData",
+              "id": 6,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          207,
+          17
+        ],
+        "end": [
+          207,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "104",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-e2c3c7a6375b69038033dc17",
+    "aliases": [
+      "arrow::array::ArrayData::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "41f4143d44c0d9de3262a431",
+    "path": "arrow_data::data::ArrayData::data_type",
+    "name": "data_type",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "const fn data_type(&self) -> &DataType",
+    "docs": "Returns a reference to the [`DataType`] of this [`ArrayData`]",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        424,
+        5
+      ],
+      "end": [
+        426,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "DataType",
+                  "id": 8,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": true,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8": "arrow_schema::datatype::DataType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`DataType`": 8,
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`DataType`": "arrow_schema::datatype::DataType",
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "20",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-41f4143d44c0d9de3262a431",
+    "aliases": [
+      "arrow::array::ArrayData::data_type"
+    ],
+    "resolved_doc_links": {
+      "`DataType`": "../operations/arrow_schema.datatype.DataType.md#op-bf69df5b14436e006d3a531c",
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "cada56aa894877e0ec802734",
+    "path": "arrow_data::data::ArrayData::eq",
+    "name": "eq",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &Self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        2015,
+        5
+      ],
+      "end": [
+        2017,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          2014,
+          1
+        ],
+        "end": [
+          2018,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "106",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-cada56aa894877e0ec802734",
+    "aliases": [
+      "arrow::array::ArrayData::eq"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "67f3b17a10155e816a062dfc",
+    "path": "arrow_data::data::ArrayData::fmt",
+    "name": "fmt",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        207,
+        10
+      ],
+      "end": [
+        207,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 100,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 101,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "100": "core::fmt::Formatter",
+      "101": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          207,
+          10
+        ],
+        "end": [
+          207,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "99",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-67f3b17a10155e816a062dfc",
+    "aliases": [
+      "arrow::array::ArrayData::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c876041a7600ad2f320a9484",
+    "path": "arrow_data::data::ArrayData::get_array_memory_size",
+    "name": "get_array_memory_size",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_array_memory_size(&self) -> usize",
+    "docs": "Returns the total number of bytes of memory occupied\nphysically by this [`ArrayData`] and all its [`Buffer`]s and\nchildren. (See also diagram on [`ArrayData`]).\n\nEquivalent to:\n `size_of_val(self)` +\n [`Self::get_buffer_memory_size`] +\n `size_of_val(child)` for all children",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        599,
+        5
+      ],
+      "end": [
+        615,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Buffer`": 10,
+      "`Self::get_buffer_memory_size`": 30,
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`Buffer`": "arrow_buffer::buffer::immutable::Buffer",
+      "`Self::get_buffer_memory_size`": "arrow_data::data::ArrayData::get_buffer_memory_size",
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "34",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-c876041a7600ad2f320a9484",
+    "aliases": [
+      "arrow::array::ArrayData::get_array_memory_size"
+    ],
+    "resolved_doc_links": {
+      "`Buffer`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b",
+      "`Self::get_buffer_memory_size`": "../operations/arrow_data.data.ArrayData.md#op-304dc8b6ef115a2de3a78588",
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "304dc8b6ef115a2de3a78588",
+    "path": "arrow_data::data::ArrayData::get_buffer_memory_size",
+    "name": "get_buffer_memory_size",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_buffer_memory_size(&self) -> usize",
+    "docs": "Returns the total number of bytes of memory occupied by the\nbuffers owned by this [`ArrayData`] and all of its\nchildren. (See also diagram on [`ArrayData`]).\n\nNote that this [`ArrayData`] may only refer to a subset of the\ndata in the underlying [`Buffer`]s (due to `offset` and\n`length`), but the size returned includes the entire size of\nthe buffers.\n\nIf multiple [`ArrayData`]s refer to the same underlying\n[`Buffer`]s they will both report the same size.",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        500,
+        5
+      ],
+      "end": [
+        512,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Buffer`": 10,
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`Buffer`": "arrow_buffer::buffer::immutable::Buffer",
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "30",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-304dc8b6ef115a2de3a78588",
+    "aliases": [
+      "arrow::array::ArrayData::get_buffer_memory_size"
+    ],
+    "resolved_doc_links": {
+      "`Buffer`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b",
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "158c61f3d160ef3e6f1bc42d",
+    "path": "arrow_data::data::ArrayData::get_slice_memory_size",
+    "name": "get_slice_memory_size",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_slice_memory_size(&self) -> Result<usize, ArrowError>",
+    "docs": "Returns the total number of the bytes of memory occupied by\nthe buffers by this slice of [`ArrayData`] (See also diagram on [`ArrayData`]).\n\nThis is approximately the number of bytes if a new\n[`ArrayData`] was formed by creating new [`Buffer`]s with\nexactly the data needed.\n\nFor example, a [`DataType::Int64`] with `100` elements,\n[`Self::get_slice_memory_size`] would return `100 * 8 = 800`. If\nthe [`ArrayData`] was then [`Self::slice`]ed to refer to its\nfirst `20` elements, then [`Self::get_slice_memory_size`] on the\nsliced [`ArrayData`] would return `20 * 8 = 160`.",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        526,
+        5
+      ],
+      "end": [
+        589,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 16,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 17,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "16": "core::result::Result",
+      "17": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::slice`": 33,
+      "`ArrayData`": 6,
+      "`DataType::Int64`": 31,
+      "`Self::get_slice_memory_size`": 32,
+      "`Buffer`": 10
+    },
+    "link_paths": {
+      "`Self::slice`": "arrow_data::data::ArrayData::slice",
+      "`ArrayData`": "arrow_data::data::ArrayData",
+      "`DataType::Int64`": "arrow_schema::datatype::DataType::Int64",
+      "`Self::get_slice_memory_size`": "arrow_data::data::ArrayData::get_slice_memory_size",
+      "`Buffer`": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "32",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-158c61f3d160ef3e6f1bc42d",
+    "aliases": [
+      "arrow::array::ArrayData::get_slice_memory_size"
+    ],
+    "resolved_doc_links": {
+      "`Self::slice`": "../operations/arrow_data.data.ArrayData.md#op-dbef994babb47a15c02ddfa4",
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78",
+      "`DataType::Int64`": "../operations/arrow_schema.datatype.DataType.md#op-b5e46464bd4cab7092efa1ed",
+      "`Self::get_slice_memory_size`": "../operations/arrow_data.data.ArrayData.md#op-158c61f3d160ef3e6f1bc42d",
+      "`Buffer`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b"
+    }
+  },
+  {
+    "id": "1d76cb8a52dc671af6ed2274",
+    "path": "arrow_data::data::ArrayData::into_builder",
+    "name": "into_builder",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_builder(self) -> ArrayDataBuilder",
+    "docs": "Converts this [`ArrayData`] into an [`ArrayDataBuilder`]",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        1756,
+        5
+      ],
+      "end": [
+        1758,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayDataBuilder",
+              "id": 13,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "13": "arrow_data::data::ArrayDataBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrayDataBuilder`": 13,
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`ArrayDataBuilder`": "arrow_data::data::ArrayDataBuilder",
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "45",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-1d76cb8a52dc671af6ed2274",
+    "aliases": [
+      "arrow::array::ArrayData::into_builder"
+    ],
+    "resolved_doc_links": {
+      "`ArrayDataBuilder`": "../operations/arrow_data.data.ArrayDataBuilder.md#op-0a0f2a3a6b77674c3513d310",
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "e10e8ad2af4d3f2e6e50eca9",
+    "path": "arrow_data::data::ArrayData::into_parts",
+    "name": "into_parts",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_parts(self) -> (DataType, usize, Option<NullBuffer>, usize, Vec<Buffer>, Vec<ArrayData>)",
+    "docs": "Return the constituent parts of this ArrayData\n\nThis is the inverse of [`ArrayData::try_new`].\n\nReturns `(data_type, len, nulls, offset, buffers, child_data)`",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        394,
+        5
+      ],
+      "end": [
+        414,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "tuple": [
+              {
+                "resolved_path": {
+                  "path": "DataType",
+                  "id": 8,
+                  "args": null
+                }
+              },
+              {
+                "primitive": "usize"
+              },
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 9,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 18,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              },
+              {
+                "primitive": "usize"
+              },
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 11,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Buffer",
+                              "id": 10,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              },
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 11,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayData",
+                              "id": 6,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8": "arrow_schema::datatype::DataType",
+      "9": "core::option::Option",
+      "18": "arrow_buffer::buffer::null::NullBuffer",
+      "11": "alloc::vec::Vec",
+      "10": "arrow_buffer::buffer::immutable::Buffer",
+      "6": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrayData::try_new`": 15
+    },
+    "link_paths": {
+      "`ArrayData::try_new`": "arrow_data::data::ArrayData::try_new"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "14",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-e10e8ad2af4d3f2e6e50eca9",
+    "aliases": [
+      "arrow::array::ArrayData::into_parts"
+    ],
+    "resolved_doc_links": {
+      "`ArrayData::try_new`": "../operations/arrow_data.data.ArrayData.md#op-99b200b063542608c0189bd6"
+    }
+  },
+  {
+    "id": "b203ca66184c24083f5e917f",
+    "path": "arrow_data::data::ArrayData::is_empty",
+    "name": "is_empty",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "const fn is_empty(&self) -> bool",
+    "docs": "Returns whether this [`ArrayData`] is empty",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        470,
+        5
+      ],
+      "end": [
+        472,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": true,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "28",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-b203ca66184c24083f5e917f",
+    "aliases": [
+      "arrow::array::ArrayData::is_empty"
+    ],
+    "resolved_doc_links": {
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "3abcbde591515671ad340e08",
+    "path": "arrow_data::data::ArrayData::is_null",
+    "name": "is_null",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_null(&self, i: usize) -> bool",
+    "docs": "Returns whether the element at index `i` is null",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        441,
+        5
+      ],
+      "end": [
+        446,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "i",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "23",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-3abcbde591515671ad340e08",
+    "aliases": [
+      "arrow::array::ArrayData::is_null"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ef0a4cacc4fb6a9f50aa0d25",
+    "path": "arrow_data::data::ArrayData::is_valid",
+    "name": "is_valid",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_valid(&self, i: usize) -> bool",
+    "docs": "Returns whether the element at index `i` is not null",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        458,
+        5
+      ],
+      "end": [
+        460,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "i",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "26",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-ef0a4cacc4fb6a9f50aa0d25",
+    "aliases": [
+      "arrow::array::ArrayData::is_valid"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3a302998aa67b6a07fba1472",
+    "path": "arrow_data::data::ArrayData::len",
+    "name": "len",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "const fn len(&self) -> usize",
+    "docs": "Returns the length (i.e., number of elements) of this [`ArrayData`].",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        464,
+        5
+      ],
+      "end": [
+        466,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": true,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "27",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-3a302998aa67b6a07fba1472",
+    "aliases": [
+      "arrow::array::ArrayData::len"
+    ],
+    "resolved_doc_links": {
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "5365c99fce9e18c354697cd7",
+    "path": "arrow_data::data::ArrayData::new_empty",
+    "name": "new_empty",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_empty(data_type: &DataType) -> Self",
+    "docs": "Returns a new empty [ArrayData] valid for `data_type`.",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        835,
+        5
+      ],
+      "end": [
+        837,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DataType",
+                      "id": 8,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8": "arrow_schema::datatype::DataType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "ArrayData": 6
+    },
+    "link_paths": {
+      "ArrayData": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "38",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-5365c99fce9e18c354697cd7",
+    "aliases": [
+      "arrow::array::ArrayData::new_empty"
+    ],
+    "resolved_doc_links": {
+      "ArrayData": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "f87d1dcb540a8be70b5f6406",
+    "path": "arrow_data::data::ArrayData::new_null",
+    "name": "new_null",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_null(data_type: &DataType, len: usize) -> Self",
+    "docs": "Returns a new [`ArrayData`] valid for `data_type` containing `len` null values\n\n# Panics\nThis function panics if:\n* the datatype `data_type` has incorrect layout",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        672,
+        5
+      ],
+      "end": [
+        832,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DataType",
+                      "id": 8,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8": "arrow_schema::datatype::DataType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "37",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-f87d1dcb540a8be70b5f6406",
+    "aliases": [
+      "arrow::array::ArrayData::new_null"
+    ],
+    "resolved_doc_links": {
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "58db8f9c56a83105ec11830c",
+    "path": "arrow_data::data::ArrayData::new_unchecked",
+    "name": "new_unchecked",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn new_unchecked(data_type: DataType, len: usize, null_count: Option<usize>, null_bit_buffer: Option<Buffer>, offset: usize, buffers: Vec<Buffer>, child_data: Vec<ArrayData>) -> Self",
+    "docs": "Create a new ArrayData instance;\n\nIf `null_count` is not specified, the number of nulls in\nnull_bit_buffer is calculated.\n\nIf the number of nulls is 0 then the null_bit_buffer\nis set to `None`.\n\n# Safety\n\nThe input values *must* form a valid Arrow array for\n`data_type`, or undefined behavior can result.\n\nNote: This is a low level API and most users of the arrow\ncrate should create arrays using the methods in the `array`\nmodule.",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        288,
+        5
+      ],
+      "end": [
+        309,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data_type",
+              {
+                "resolved_path": {
+                  "path": "DataType",
+                  "id": 8,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "null_count",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 9,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "null_bit_buffer",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 9,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Buffer",
+                              "id": 10,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "buffers",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 11,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Buffer",
+                              "id": 10,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "child_data",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 11,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayData",
+                              "id": 6,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8": "arrow_schema::datatype::DataType",
+      "9": "core::option::Option",
+      "10": "arrow_buffer::buffer::immutable::Buffer",
+      "11": "alloc::vec::Vec",
+      "6": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "7",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-58db8f9c56a83105ec11830c",
+    "aliases": [
+      "arrow::array::ArrayData::new_unchecked"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a2a1080fb3d5d433f7910365",
+    "path": "arrow_data::data::ArrayData::null_count",
+    "name": "null_count",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn null_count(&self) -> usize",
+    "docs": "Returns the total number of nulls in this array",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        482,
+        5
+      ],
+      "end": [
+        487,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "29",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-a2a1080fb3d5d433f7910365",
+    "aliases": [
+      "arrow::array::ArrayData::null_count"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c68baf36217560d054504010",
+    "path": "arrow_data::data::ArrayData::nulls",
+    "name": "nulls",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn nulls(&self) -> Option<&NullBuffer>",
+    "docs": "Returns a reference to the null buffer of this [`ArrayData`] if any\n\nNote: [`ArrayData::offset`] does NOT apply to the returned [`NullBuffer`]",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        452,
+        5
+      ],
+      "end": [
+        454,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 9,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 18,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "9": "core::option::Option",
+      "18": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrayData::offset`": 24,
+      "`NullBuffer`": 18,
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`ArrayData::offset`": "arrow_data::data::ArrayData::offset",
+      "`NullBuffer`": "arrow_buffer::buffer::null::NullBuffer",
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "25",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-c68baf36217560d054504010",
+    "aliases": [
+      "arrow::array::ArrayData::nulls"
+    ],
+    "resolved_doc_links": {
+      "`ArrayData::offset`": "../operations/arrow_data.data.ArrayData.md#op-f8a3b841ade62c547b838c05",
+      "`NullBuffer`": "../operations/arrow_buffer.buffer.null.NullBuffer.md#op-d8209d291b86c5deb0050e48",
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "f8a3b841ade62c547b838c05",
+    "path": "arrow_data::data::ArrayData::offset",
+    "name": "offset",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "const fn offset(&self) -> usize",
+    "docs": "Returns the offset of this [`ArrayData`]",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        476,
+        5
+      ],
+      "end": [
+        478,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": true,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "24",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-f8a3b841ade62c547b838c05",
+    "aliases": [
+      "arrow::array::ArrayData::offset"
+    ],
+    "resolved_doc_links": {
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "2c1809ccd51cb86a0d6bb5fc",
+    "path": "arrow_data::data::ArrayData::ptr_eq",
+    "name": "ptr_eq",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn ptr_eq(&self, other: &Self) -> bool",
+    "docs": "Returns true if this `ArrayData` is equal to `other`, using pointer comparisons\nto determine buffer equality. This is cheaper than `PartialEq::eq` but may\nreturn false when the arrays are logically equal",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        1724,
+        5
+      ],
+      "end": [
+        1753,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "44",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-2c1809ccd51cb86a0d6bb5fc",
+    "aliases": [
+      "arrow::array::ArrayData::ptr_eq"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "dbef994babb47a15c02ddfa4",
+    "path": "arrow_data::data::ArrayData::slice",
+    "name": "slice",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn slice(&self, offset: usize, length: usize) -> ArrayData",
+    "docs": "Creates a zero-copy slice of itself. This creates a new\n[`ArrayData`] pointing at the same underlying [`Buffer`]s with a\ndifferent offset and len\n\n# Panics\n\nPanics if `offset + length` overflows or is greater than `self.len()`.",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        624,
+        5
+      ],
+      "end": [
+        655,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "length",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayData",
+              "id": 6,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Buffer`": 10,
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`Buffer`": "arrow_buffer::buffer::immutable::Buffer",
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "33",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-dbef994babb47a15c02ddfa4",
+    "aliases": [
+      "arrow::array::ArrayData::slice"
+    ],
+    "resolved_doc_links": {
+      "`Buffer`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b",
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "99b200b063542608c0189bd6",
+    "path": "arrow_data::data::ArrayData::try_new",
+    "name": "try_new",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new(data_type: DataType, len: usize, null_bit_buffer: Option<Buffer>, offset: usize, buffers: Vec<Buffer>, child_data: Vec<ArrayData>) -> Result<Self, ArrowError>",
+    "docs": "Create a new ArrayData, validating that the provided buffers form a valid\nArrow array of the specified data type.\n\nIf the number of nulls in `null_bit_buffer` is 0 then the null_bit_buffer\nis set to `None`.\n\nInternally this calls through to [`Self::validate_data`]\n\nNote: This is a low level API and most users of the arrow crate should create\narrays using the builders found in [arrow_array](https://docs.rs/arrow-array)\nor [`ArrayDataBuilder`].\n\nSee also [`Self::into_parts`] to recover the fields",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        324,
+        5
+      ],
+      "end": [
+        364,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data_type",
+              {
+                "resolved_path": {
+                  "path": "DataType",
+                  "id": 8,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "null_bit_buffer",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 9,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Buffer",
+                              "id": 10,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "buffers",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 11,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Buffer",
+                              "id": 10,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "child_data",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 11,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayData",
+                              "id": 6,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 16,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 17,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8": "arrow_schema::datatype::DataType",
+      "9": "core::option::Option",
+      "10": "arrow_buffer::buffer::immutable::Buffer",
+      "11": "alloc::vec::Vec",
+      "6": "arrow_data::data::ArrayData",
+      "16": "core::result::Result",
+      "17": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::validate_data`": 12,
+      "`Self::into_parts`": 14,
+      "`ArrayDataBuilder`": 13
+    },
+    "link_paths": {
+      "`Self::validate_data`": "arrow_data::data::ArrayData::validate_data",
+      "`Self::into_parts`": "arrow_data::data::ArrayData::into_parts",
+      "`ArrayDataBuilder`": "arrow_data::data::ArrayDataBuilder"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "15",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-99b200b063542608c0189bd6",
+    "aliases": [
+      "arrow::array::ArrayData::try_new"
+    ],
+    "resolved_doc_links": {
+      "`Self::validate_data`": "../operations/arrow_data.data.ArrayData.md#op-d7715b55aa96799db7ab8fc9",
+      "`Self::into_parts`": "../operations/arrow_data.data.ArrayData.md#op-e10e8ad2af4d3f2e6e50eca9",
+      "`ArrayDataBuilder`": "../operations/arrow_data.data.ArrayDataBuilder.md#op-0a0f2a3a6b77674c3513d310"
+    }
+  },
+  {
+    "id": "519d22b78f14fab70c684476",
+    "path": "arrow_data::data::ArrayData::validate",
+    "name": "validate",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn validate(&self) -> Result<(), ArrowError>",
+    "docs": "\"cheap\" validation of an `ArrayData`. Ensures buffers are\nsufficiently sized to store `len` + `offset` total elements of\n`data_type` and performs other inexpensive consistency checks.\n\nThis check is \"cheap\" in the sense that it does not validate the\ncontents of the buffers (e.g. that all offsets for UTF8 arrays\nare within the bounds of the values buffer).\n\nSee [ArrayData::validate_data] to validate fully the offset content\nand the validity of utf8 data",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        872,
+        5
+      ],
+      "end": [
+        1015,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 16,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 17,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "16": "core::result::Result",
+      "17": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "ArrayData::validate_data": 12
+    },
+    "link_paths": {
+      "ArrayData::validate_data": "arrow_data::data::ArrayData::validate_data"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "40",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-519d22b78f14fab70c684476",
+    "aliases": [
+      "arrow::array::ArrayData::validate"
+    ],
+    "resolved_doc_links": {
+      "ArrayData::validate_data": "../operations/arrow_data.data.ArrayData.md#op-d7715b55aa96799db7ab8fc9"
+    }
+  },
+  {
+    "id": "d7715b55aa96799db7ab8fc9",
+    "path": "arrow_data::data::ArrayData::validate_data",
+    "name": "validate_data",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn validate_data(&self) -> Result<(), ArrowError>",
+    "docs": "Validate that the data contained within this [`ArrayData`] is valid\n\n1. Null count is correct\n2. All offsets are valid\n3. All String data is valid UTF-8\n4. All dictionary offsets are valid\n\nInternally this calls:\n\n* [`Self::validate`]\n* [`Self::validate_nulls`]\n* [`Self::validate_values`]\n\nNote: this does not recurse into children, for a recursive variant\nsee [`Self::validate_full`]",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        1367,
+        5
+      ],
+      "end": [
+        1373,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 16,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 17,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "16": "core::result::Result",
+      "17": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::validate_nulls`": 41,
+      "`Self::validate_values`": 42,
+      "`Self::validate_full`": 43,
+      "`ArrayData`": 6,
+      "`Self::validate`": 40
+    },
+    "link_paths": {
+      "`Self::validate_nulls`": "arrow_data::data::ArrayData::validate_nulls",
+      "`Self::validate_values`": "arrow_data::data::ArrayData::validate_values",
+      "`Self::validate_full`": "arrow_data::data::ArrayData::validate_full",
+      "`ArrayData`": "arrow_data::data::ArrayData",
+      "`Self::validate`": "arrow_data::data::ArrayData::validate"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "12",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-d7715b55aa96799db7ab8fc9",
+    "aliases": [
+      "arrow::array::ArrayData::validate_data"
+    ],
+    "resolved_doc_links": {
+      "`Self::validate_nulls`": "../operations/arrow_data.data.ArrayData.md#op-5d7e546f125f4fd18c858eaf",
+      "`Self::validate_values`": "../operations/arrow_data.data.ArrayData.md#op-5969aa148375ad230a164a06",
+      "`Self::validate_full`": "../operations/arrow_data.data.ArrayData.md#op-63536abaf605137241d35aff",
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78",
+      "`Self::validate`": "../operations/arrow_data.data.ArrayData.md#op-519d22b78f14fab70c684476"
+    }
+  },
+  {
+    "id": "63536abaf605137241d35aff",
+    "path": "arrow_data::data::ArrayData::validate_full",
+    "name": "validate_full",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn validate_full(&self) -> Result<(), ArrowError>",
+    "docs": "Performs a full recursive validation of this [`ArrayData`] and all its children\n\nThis is equivalent to calling [`Self::validate_data`] on this [`ArrayData`]\nand all its children recursively",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        1379,
+        5
+      ],
+      "end": [
+        1394,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 16,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 17,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "16": "core::result::Result",
+      "17": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::validate_data`": 12,
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`Self::validate_data`": "arrow_data::data::ArrayData::validate_data",
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "43",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-63536abaf605137241d35aff",
+    "aliases": [
+      "arrow::array::ArrayData::validate_full"
+    ],
+    "resolved_doc_links": {
+      "`Self::validate_data`": "../operations/arrow_data.data.ArrayData.md#op-d7715b55aa96799db7ab8fc9",
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "5d7e546f125f4fd18c858eaf",
+    "path": "arrow_data::data::ArrayData::validate_nulls",
+    "name": "validate_nulls",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn validate_nulls(&self) -> Result<(), ArrowError>",
+    "docs": "Validates the values stored within this [`ArrayData`] are valid\nwithout recursing into child [`ArrayData`]\n\nDoes not (yet) check\n1. Union type_ids are valid see [#85](https://github.com/apache/arrow-rs/issues/85)\n2. the the null count is correct and that any\n3. nullability requirements of its children are correct\n\n[#85]: https://github.com/apache/arrow-rs/issues/85",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        1405,
+        5
+      ],
+      "end": [
+        1451,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 16,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 17,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "16": "core::result::Result",
+      "17": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "41",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-5d7e546f125f4fd18c858eaf",
+    "aliases": [
+      "arrow::array::ArrayData::validate_nulls"
+    ],
+    "resolved_doc_links": {
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "5969aa148375ad230a164a06",
+    "path": "arrow_data::data::ArrayData::validate_values",
+    "name": "validate_values",
+    "owner": "arrow_data::data::ArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn validate_values(&self) -> Result<(), ArrowError>",
+    "docs": "Validates the values stored within this [`ArrayData`] are valid\nwithout recursing into child [`ArrayData`]\n\nDoes not (yet) check\n1. Union type_ids are valid see [#85](https://github.com/apache/arrow-rs/issues/85)",
+    "span": {
+      "filename": "src/data.rs",
+      "begin": [
+        1486,
+        5
+      ],
+      "end": [
+        1545,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 16,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 17,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "16": "core::result::Result",
+      "17": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayData",
+          "id": "arrow_data::data::ArrayData",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/data.rs",
+        "begin": [
+          271,
+          1
+        ],
+        "end": [
+          1783,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrayData`": 6
+    },
+    "link_paths": {
+      "`ArrayData`": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "42",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.data.ArrayData.md",
+    "record_file": "operations/arrow_data.data.ArrayData.json",
+    "anchor": "op-5969aa148375ad230a164a06",
+    "aliases": [
+      "arrow::array::ArrayData::validate_values"
+    ],
+    "resolved_doc_links": {
+      "`ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  }
+]

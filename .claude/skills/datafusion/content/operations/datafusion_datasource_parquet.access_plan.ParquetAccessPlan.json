@@ -1,0 +1,2473 @@
+[
+  {
+    "id": "2786e9792f5bf477380471b9",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "name": "ParquetAccessPlan",
+    "owner": null,
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct ParquetAccessPlan",
+    "docs": "A selection of rows and row groups within a ParquetFile to decode.\n\nA `ParquetAccessPlan` is used to limit the row groups and data pages a `DataSourceExec`\nwill read and decode to improve performance.\n\nNote that page level pruning based on ArrowPredicate is applied after all of\nthese selections\n\n# Example\n\nFor example, given a Parquet file with 4 row groups, a `ParquetAccessPlan`\ncan be used to specify skipping row group 0 and 2, scanning a range of rows\nin row group 1, and scanning all rows in row group 3 as follows:\n\n```rust\n# use parquet::arrow::arrow_reader::{RowSelection, RowSelector};\n# use datafusion_datasource_parquet::ParquetAccessPlan;\n// Default to scan all row groups\nlet mut access_plan = ParquetAccessPlan::new_all(4);\naccess_plan.skip(0); // skip row group\n// Use parquet reader RowSelector to specify scanning rows 100-200 and 350-400\n// in a row group that has 1000 rows\nlet row_selection = RowSelection::from(vec![\n   RowSelector::skip(100),\n   RowSelector::select(100),\n   RowSelector::skip(150),\n   RowSelector::select(50),\n   RowSelector::skip(600),  // skip last 600 rows\n]);\naccess_plan.scan_selection(1, row_selection);\naccess_plan.skip(2); // skip row group 2\n// row group 3 is scanned by default\n```\n\nThe resulting plan would look like:\n\n```text\n┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐\n\n│                   │  SKIP\n\n└ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘\n Row Group 0\n┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐\n ┌────────────────┐    SCAN ONLY ROWS\n│└────────────────┘ │  100-200\n ┌────────────────┐    350-400\n│└────────────────┘ │\n ─ ─ ─ ─ ─ ─ ─ ─ ─ ─\n Row Group 1\n┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐\n                       SKIP\n│                   │\n\n└ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘\n Row Group 2\n┌───────────────────┐\n│                   │  SCAN ALL ROWS\n│                   │\n│                   │\n└───────────────────┘\n Row Group 3\n```\n\nFor more background, please also see the [Embedding User-Defined Indexes in Apache Parquet Files blog]\n\n[Embedding User-Defined Indexes in Apache Parquet Files blog]: https://datafusion.apache.org/blog/2025/07/14/user-defined-parquet-indexes",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        96,
+        1
+      ],
+      "end": [
+        105,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          30,
+          31,
+          33,
+          35,
+          37,
+          39,
+          41,
+          43,
+          46,
+          50,
+          53,
+          58,
+          61,
+          66,
+          70,
+          73,
+          78,
+          80,
+          82,
+          85,
+          91,
+          94,
+          95,
+          98
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "2",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-2786e9792f5bf477380471b9",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan",
+      "datafusion_datasource_parquet::ParquetAccessPlan"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e8424e4327f9abe00e5d5070",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::clone",
+    "name": "clone",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> ParquetAccessPlan",
+    "docs": "",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        95,
+        17
+      ],
+      "end": [
+        95,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ParquetAccessPlan",
+              "id": 2,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          95,
+          17
+        ],
+        "end": [
+          95,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "93",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-e8424e4327f9abe00e5d5070",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::clone",
+      "datafusion_datasource_parquet::ParquetAccessPlan::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "11ca32d74a2540f88238056e",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::eq",
+    "name": "eq",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &ParquetAccessPlan) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        95,
+        24
+      ],
+      "end": [
+        95,
+        33
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ParquetAccessPlan",
+                      "id": 2,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          95,
+          24
+        ],
+        "end": [
+          95,
+          33
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "97",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-11ca32d74a2540f88238056e",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::eq",
+      "datafusion_datasource_parquet::ParquetAccessPlan::eq"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d51f362e2f6d2c7674644bf0",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::fmt",
+    "name": "fmt",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        95,
+        10
+      ],
+      "end": [
+        95,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 89,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 90,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "89": "core::fmt::Formatter",
+      "90": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          95,
+          10
+        ],
+        "end": [
+          95,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "88",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-d51f362e2f6d2c7674644bf0",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::fmt",
+      "datafusion_datasource_parquet::ParquetAccessPlan::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9bf2a1d9b32fb0aa82192b30",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::inner",
+    "name": "inner",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn inner(&self) -> &[RowGroupAccess]",
+    "docs": "Get a reference to the inner accesses",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        559,
+        5
+      ],
+      "end": [
+        561,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "RowGroupAccess",
+                    "id": 5,
+                    "args": null
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "5": "datafusion_datasource_parquet::access_plan::RowGroupAccess"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "28",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-9bf2a1d9b32fb0aa82192b30",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::inner",
+      "datafusion_datasource_parquet::ParquetAccessPlan::inner"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6591177afcef207560a0563d",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::into_inner",
+    "name": "into_inner",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn into_inner(self) -> Vec<RowGroupAccess>",
+    "docs": "Covert into the inner row group accesses",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        564,
+        5
+      ],
+      "end": [
+        566,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 7,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "RowGroupAccess",
+                          "id": 5,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "7": "alloc::vec::Vec",
+      "5": "datafusion_datasource_parquet::access_plan::RowGroupAccess"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "29",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-6591177afcef207560a0563d",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::into_inner",
+      "datafusion_datasource_parquet::ParquetAccessPlan::into_inner"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "79be63fad7daf68c25627524",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::into_overall_row_selection",
+    "name": "into_overall_row_selection",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn into_overall_row_selection(self, row_group_meta_data: &[RowGroupMetaData]) -> Result<Option<RowSelection>>",
+    "docs": "Return an overall `RowSelection`, if needed\n\nThis is used to compute the row selection for the parquet reader. See\n[`ArrowReaderBuilder::with_row_selection`] for more details.\n\nReturns\n* `None` if there are no  [`RowGroupAccess::Selection`]\n* `Some(selection)` if there are [`RowGroupAccess::Selection`]s\n\nThe returned selection represents which rows to scan across any row\nrow groups which are not skipped.\n\n# Notes\n\nIf there are no [`RowGroupAccess::Selection`]s, the overall row\nselection is `None` because each row group is either entirely skipped or\nscanned, which is covered by [`Self::row_group_indexes`].\n\nIf there are any [`RowGroupAccess::Selection`], an overall row selection\nis returned for *all* the rows in the row groups that are not skipped.\nThus it includes a `Select` selection for any [`RowGroupAccess::Scan`].\n\n# Errors\n\nReturns an error if any specified row selection does not specify\nthe same number of rows as in it's corresponding `row_group_metadata`.\n\n# Example: No Selections\n\nGiven an access plan like this\n\n```text\n  RowGroupAccess::Scan (scan all row group 0)\n  RowGroupAccess::Skip (skip row group 1)\n  RowGroupAccess::Scan (scan all row group 2)\n  RowGroupAccess::Scan (scan all row group 3)\n```\n\nThe overall row selection would be `None` because there are no\n[`RowGroupAccess::Selection`]s. The row group indexes\nreturned by [`Self::row_group_indexes`] would be `0, 2, 3` .\n\n# Example: With Selections\n\nGiven an access plan like this:\n\n```text\n  RowGroupAccess::Scan (scan all row group 0)\n  RowGroupAccess::Skip (skip row group 1)\n  RowGroupAccess::Select (skip 50, scan 50, skip 900) (scan rows 50-100 in row group 2)\n  RowGroupAccess::Scan (scan all row group 3)\n```\n\nAssuming each row group has 1000 rows, the resulting row selection would\nbe the rows to scan in row group 0, 2 and 4:\n\n```text\n RowSelection::Select(1000) (scan all rows in row group 0)\n RowSelection::Skip(50)     (skip first 50 rows in row group 2)\n RowSelection::Select(50)   (scan rows 50-100 in row group 2)\n RowSelection::Skip(900)    (skip last 900 rows in row group 2)\n RowSelection::Select(1000) (scan all rows in row group 3)\n```\n\nNote there is no entry for the (entirely) skipped row group 1.\n\nThe row group indexes returned by [`Self::row_group_indexes`] would\nstill be `0, 2, 3` .\n\n[`ArrowReaderBuilder::with_row_selection`]: parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        470,
+        5
+      ],
+      "end": [
+        532,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "row_group_meta_data",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "RowGroupMetaData",
+                        "id": 13,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 14,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 23,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "RowSelection",
+                                      "id": 8,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "13": "parquet::file::metadata::RowGroupMetaData",
+      "14": "datafusion_common::error::Result",
+      "23": "core::option::Option",
+      "8": "parquet::arrow::arrow_reader::selection::RowSelection"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RowGroupAccess::Selection`": 11,
+      "`Self::row_group_indexes`": 21,
+      "`RowGroupAccess::Scan`": 10,
+      "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection": 20
+    },
+    "link_paths": {
+      "`RowGroupAccess::Selection`": "datafusion_datasource_parquet::access_plan::RowGroupAccess::Selection",
+      "`Self::row_group_indexes`": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::row_group_indexes",
+      "`RowGroupAccess::Scan`": "datafusion_datasource_parquet::access_plan::RowGroupAccess::Scan",
+      "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection"
+    },
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "22",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-79be63fad7daf68c25627524",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::into_overall_row_selection",
+      "datafusion_datasource_parquet::ParquetAccessPlan::into_overall_row_selection"
+    ],
+    "resolved_doc_links": {
+      "`RowGroupAccess::Selection`": "../operations/datafusion_datasource_parquet.access_plan.RowGroupAccess.md#op-9dc55412f081ee8c5854d131",
+      "`Self::row_group_indexes`": "../operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md#op-fdf7eab13e10c54059bf6896",
+      "`RowGroupAccess::Scan`": "../operations/datafusion_datasource_parquet.access_plan.RowGroupAccess.md#op-ac7b3116c91c00b620d74af7"
+    }
+  },
+  {
+    "id": "1ecf5bfef162ccb16c1af45c",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::is_empty",
+    "name": "is_empty",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "Return true if there are no row groups",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        554,
+        5
+      ],
+      "end": [
+        556,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "27",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-1ecf5bfef162ccb16c1af45c",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::is_empty",
+      "datafusion_datasource_parquet::ParquetAccessPlan::is_empty"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "78530d0abcfbf5af52e7e8fd",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::len",
+    "name": "len",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Return the total number of row groups (not the total number or groups to\nscan)",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        549,
+        5
+      ],
+      "end": [
+        551,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "26",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-78530d0abcfbf5af52e7e8fd",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::len",
+      "datafusion_datasource_parquet::ParquetAccessPlan::len"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6672c74d6b9f894e27401a16",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::new",
+    "name": "new",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(row_groups: Vec<RowGroupAccess>) -> Self",
+    "docs": "Create a new `ParquetAccessPlan` from the specified [`RowGroupAccess`]es",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        277,
+        5
+      ],
+      "end": [
+        283,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "row_groups",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 7,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "RowGroupAccess",
+                              "id": 5,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "7": "alloc::vec::Vec",
+      "5": "datafusion_datasource_parquet::access_plan::RowGroupAccess"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RowGroupAccess`": 5
+    },
+    "link_paths": {
+      "`RowGroupAccess`": "datafusion_datasource_parquet::access_plan::RowGroupAccess"
+    },
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "6",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-6672c74d6b9f894e27401a16",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::new",
+      "datafusion_datasource_parquet::ParquetAccessPlan::new"
+    ],
+    "resolved_doc_links": {
+      "`RowGroupAccess`": "../operations/datafusion_datasource_parquet.access_plan.RowGroupAccess.md#op-78e2484ee2017bec500ea3e7"
+    }
+  },
+  {
+    "id": "73550c794a12978be21c7295",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::new_all",
+    "name": "new_all",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new_all(row_group_count: usize) -> Self",
+    "docs": "Create a new `ParquetAccessPlan` that scans all row groups",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        261,
+        5
+      ],
+      "end": [
+        266,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "row_group_count",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "3",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-73550c794a12978be21c7295",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::new_all",
+      "datafusion_datasource_parquet::ParquetAccessPlan::new_all"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "06c8841266f90ea9fcea5d99",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::new_none",
+    "name": "new_none",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new_none(row_group_count: usize) -> Self",
+    "docs": "Create a new `ParquetAccessPlan` that scans no row groups",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        269,
+        5
+      ],
+      "end": [
+        274,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "row_group_count",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "4",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-06c8841266f90ea9fcea5d99",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::new_none",
+      "datafusion_datasource_parquet::ParquetAccessPlan::new_none"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bb9ca96f28b8cbe8f45d4e84",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::row_group_index_iter",
+    "name": "row_group_index_iter",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn row_group_index_iter(&self) -> impl Iterator<Item = usize> + '_",
+    "docs": "Return an iterator over the row group indexes that should be scanned",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        535,
+        5
+      ],
+      "end": [
+        540,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "impl_trait": [
+              {
+                "trait_bound": {
+                  "trait": {
+                    "path": "Iterator",
+                    "id": 25,
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [],
+                        "constraints": [
+                          {
+                            "name": "Item",
+                            "args": null,
+                            "binding": {
+                              "equality": {
+                                "type": {
+                                  "primitive": "usize"
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "generic_params": [],
+                  "modifier": "none"
+                }
+              },
+              {
+                "outlives": "'_"
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "25": "core::iter::traits::iterator::Iterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "24",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-bb9ca96f28b8cbe8f45d4e84",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::row_group_index_iter",
+      "datafusion_datasource_parquet::ParquetAccessPlan::row_group_index_iter"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fdf7eab13e10c54059bf6896",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::row_group_indexes",
+    "name": "row_group_indexes",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn row_group_indexes(&self) -> Vec<usize>",
+    "docs": "Return a vec of all row group indexes to scan",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        543,
+        5
+      ],
+      "end": [
+        545,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 7,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "7": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "21",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-fdf7eab13e10c54059bf6896",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::row_group_indexes",
+      "datafusion_datasource_parquet::ParquetAccessPlan::row_group_indexes"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "11b86ad0b78556eca6aeee63",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::scan",
+    "name": "scan",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn scan(&mut self, idx: usize)",
+    "docs": "scan the i-th row group",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        354,
+        5
+      ],
+      "end": [
+        356,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "idx",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "17",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-11b86ad0b78556eca6aeee63",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::scan",
+      "datafusion_datasource_parquet::ParquetAccessPlan::scan"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4911843e003ccf55f6d7f783",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::scan_selection",
+    "name": "scan_selection",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn scan_selection(&mut self, idx: usize, selection: RowSelection)",
+    "docs": "Set to scan only the [`RowSelection`] in the specified row group.\n\nBehavior is different depending on the existing access\n* [`RowGroupAccess::Skip`]: does nothing\n* [`RowGroupAccess::Scan`]: Updates to scan only the rows in the `RowSelection`\n* [`RowGroupAccess::Selection`]: Updates to scan only the intersection of the existing selection and the new selection",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        389,
+        5
+      ],
+      "end": [
+        398,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "idx",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "selection",
+              {
+                "resolved_path": {
+                  "path": "RowSelection",
+                  "id": 8,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8": "parquet::arrow::arrow_reader::selection::RowSelection"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RowGroupAccess::Scan`": 10,
+      "`RowGroupAccess::Selection`": 11,
+      "`RowGroupAccess::Skip`": 9,
+      "`RowSelection`": 8
+    },
+    "link_paths": {
+      "`RowGroupAccess::Scan`": "datafusion_datasource_parquet::access_plan::RowGroupAccess::Scan",
+      "`RowGroupAccess::Selection`": "datafusion_datasource_parquet::access_plan::RowGroupAccess::Selection",
+      "`RowGroupAccess::Skip`": "datafusion_datasource_parquet::access_plan::RowGroupAccess::Skip",
+      "`RowSelection`": "parquet::arrow::arrow_reader::selection::RowSelection"
+    },
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "19",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-4911843e003ccf55f6d7f783",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::scan_selection",
+      "datafusion_datasource_parquet::ParquetAccessPlan::scan_selection"
+    ],
+    "resolved_doc_links": {
+      "`RowGroupAccess::Scan`": "../operations/datafusion_datasource_parquet.access_plan.RowGroupAccess.md#op-ac7b3116c91c00b620d74af7",
+      "`RowGroupAccess::Selection`": "../operations/datafusion_datasource_parquet.access_plan.RowGroupAccess.md#op-9dc55412f081ee8c5854d131",
+      "`RowGroupAccess::Skip`": "../operations/datafusion_datasource_parquet.access_plan.RowGroupAccess.md#op-43889f9fbbe5544a160eab6f",
+      "`RowSelection`": "../operations/parquet.arrow.arrow_reader.selection.RowSelection.md#op-42015b29e86ada83b6a84ed5"
+    }
+  },
+  {
+    "id": "dafb56ac9b062181ae8873a6",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::set",
+    "name": "set",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn set(&mut self, idx: usize, access: RowGroupAccess)",
+    "docs": "Set the i-th row group to the specified [`RowGroupAccess`]",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        340,
+        5
+      ],
+      "end": [
+        346,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "idx",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "access",
+              {
+                "resolved_path": {
+                  "path": "RowGroupAccess",
+                  "id": 5,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "5": "datafusion_datasource_parquet::access_plan::RowGroupAccess"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RowGroupAccess`": 5
+    },
+    "link_paths": {
+      "`RowGroupAccess`": "datafusion_datasource_parquet::access_plan::RowGroupAccess"
+    },
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "15",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-dafb56ac9b062181ae8873a6",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::set",
+      "datafusion_datasource_parquet::ParquetAccessPlan::set"
+    ],
+    "resolved_doc_links": {
+      "`RowGroupAccess`": "../operations/datafusion_datasource_parquet.access_plan.RowGroupAccess.md#op-78e2484ee2017bec500ea3e7"
+    }
+  },
+  {
+    "id": "6be0d4b0b970882d0e517bdd",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::should_scan",
+    "name": "should_scan",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn should_scan(&self, idx: usize) -> bool",
+    "docs": "Return true if the i-th row group should be scanned",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        359,
+        5
+      ],
+      "end": [
+        361,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "idx",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "18",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-6be0d4b0b970882d0e517bdd",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::should_scan",
+      "datafusion_datasource_parquet::ParquetAccessPlan::should_scan"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9c6ab9d21db3f6fdf62b76bd",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::skip",
+    "name": "skip",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn skip(&mut self, idx: usize)",
+    "docs": "skips the i-th row group (should not be scanned)",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        349,
+        5
+      ],
+      "end": [
+        351,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "idx",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "16",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-9c6ab9d21db3f6fdf62b76bd",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::skip",
+      "datafusion_datasource_parquet::ParquetAccessPlan::skip"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9692220602ae45f7d95e0908",
+    "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan::try_new_from_overall_row_selection",
+    "name": "try_new_from_overall_row_selection",
+    "owner": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_new_from_overall_row_selection(selection: RowSelection, row_group_meta_data: &[RowGroupMetaData]) -> Result<Self>",
+    "docs": "Create a new `ParquetAccessPlan` from a file-level [`RowSelection`].\n\nThe selection is interpreted across all rows in the file, in row group\norder, and is split into row-group level access using `row_group_meta_data`.\nFully skipped row groups become [`RowGroupAccess::Skip`], fully selected\nrow groups become [`RowGroupAccess::Scan`], and partially selected row\ngroups become [`RowGroupAccess::Selection`].\n\n# Errors\n\nReturns an error if the selection does not specify exactly the same\nnumber of rows as the file metadata.",
+    "span": {
+      "filename": "src/access_plan.rs",
+      "begin": [
+        297,
+        5
+      ],
+      "end": [
+        337,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "selection",
+              {
+                "resolved_path": {
+                  "path": "RowSelection",
+                  "id": 8,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "row_group_meta_data",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "RowGroupMetaData",
+                        "id": 13,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 14,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8": "parquet::arrow::arrow_reader::selection::RowSelection",
+      "13": "parquet::file::metadata::RowGroupMetaData",
+      "14": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetAccessPlan",
+          "id": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/access_plan.rs",
+        "begin": [
+          259,
+          1
+        ],
+        "end": [
+          578,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RowGroupAccess::Scan`": 10,
+      "`RowGroupAccess::Selection`": 11,
+      "`RowGroupAccess::Skip`": 9,
+      "`RowSelection`": 8
+    },
+    "link_paths": {
+      "`RowGroupAccess::Scan`": "datafusion_datasource_parquet::access_plan::RowGroupAccess::Scan",
+      "`RowGroupAccess::Selection`": "datafusion_datasource_parquet::access_plan::RowGroupAccess::Selection",
+      "`RowGroupAccess::Skip`": "datafusion_datasource_parquet::access_plan::RowGroupAccess::Skip",
+      "`RowSelection`": "parquet::arrow::arrow_reader::selection::RowSelection"
+    },
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "12",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md",
+    "record_file": "operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.json",
+    "anchor": "op-9692220602ae45f7d95e0908",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan::try_new_from_overall_row_selection",
+      "datafusion_datasource_parquet::ParquetAccessPlan::try_new_from_overall_row_selection"
+    ],
+    "resolved_doc_links": {
+      "`RowGroupAccess::Scan`": "../operations/datafusion_datasource_parquet.access_plan.RowGroupAccess.md#op-ac7b3116c91c00b620d74af7",
+      "`RowGroupAccess::Selection`": "../operations/datafusion_datasource_parquet.access_plan.RowGroupAccess.md#op-9dc55412f081ee8c5854d131",
+      "`RowGroupAccess::Skip`": "../operations/datafusion_datasource_parquet.access_plan.RowGroupAccess.md#op-43889f9fbbe5544a160eab6f",
+      "`RowSelection`": "../operations/parquet.arrow.arrow_reader.selection.RowSelection.md#op-42015b29e86ada83b6a84ed5"
+    }
+  }
+]

@@ -10,6 +10,9 @@ Crate `parquet-variant` · 3 public items · structured records in [`model/parqu
 const EMPTY_VARIANT_METADATA: VariantMetadata<'_> = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant.variant.metadata.EMPTY_VARIANT_METADATA.md).
+
+
 The empty metadata dictionary.
 
 ```
@@ -30,6 +33,9 @@ assert_eq!(empty_metadata, EMPTY_VARIANT_METADATA);
 ```rust
 const EMPTY_VARIANT_METADATA_BYTES: &[u8] = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant.variant.metadata.EMPTY_VARIANT_METADATA_BYTES.md).
+
 
 The canonical byte slice corresponding to an empty metadata dictionary.
 
@@ -78,6 +84,9 @@ fn with_full_validation(self) -> Result<Self, ArrowError>
 ```rust
 fn index(&self, i: usize) -> &str
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant.variant.metadata.VariantMetadata.md).
+
 
 [`Variant`] Metadata
 

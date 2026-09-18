@@ -26,6 +26,9 @@ fn register_parquet_encryption_factory(&self, id: &str, encryption_factory: Arc<
 fn spilling_progress(&self) -> SpillingProgress
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.runtime_env.RuntimeEnv.md).
+
+
 Execution runtime environment that manages system resources such
 as memory, disk, cache and storage.
 
@@ -92,6 +95,9 @@ fn with_object_list_cache_ttl(self, ttl: Option<Duration>) -> Self
 fn with_object_store_registry(self, object_store_registry: Arc<dyn ObjectStoreRegistry>) -> Self
 fn with_temp_file_path(self, path: impl Into<PathBuf>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.runtime_env.RuntimeEnvBuilder.md).
+
 
 Execution runtime configuration builder.
 

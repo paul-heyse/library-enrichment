@@ -12,6 +12,9 @@ Also reachable as `arrow::array::MAX_INLINE_VIEW_LEN`
 const MAX_INLINE_VIEW_LEN: u32 = 12
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.byte_view.MAX_INLINE_VIEW_LEN.md).
+
+
 The maximum number of bytes that can be stored inline in a byte view.
 
 See [`ByteView`] and [`GenericByteViewArray`] for more information on the
@@ -29,6 +32,9 @@ layout of the views.
 fn validate_binary_view(views: &[u128], buffers: &[arrow_buffer::Buffer]) -> Result<(), arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.byte_view.validate_binary_view.md).
+
+
 Validates the combination of `views` and `buffers` is a valid BinaryView
 
 ---
@@ -40,6 +46,9 @@ Validates the combination of `views` and `buffers` is a valid BinaryView
 ```rust
 fn validate_string_view(views: &[u128], buffers: &[arrow_buffer::Buffer]) -> Result<(), arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_data.byte_view.validate_string_view.md).
+
 
 Validates the combination of `views` and `buffers` is a valid StringView
 
@@ -75,6 +84,9 @@ fn with_offset(self, offset: u32) -> Self
 ```rust
 fn from(value: u128) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_data.byte_view.ByteView.md).
+
 
 Helper to access views of [`GenericByteViewArray`] (`StringViewArray` and
 `BinaryViewArray`) where the length is greater than 12 bytes.

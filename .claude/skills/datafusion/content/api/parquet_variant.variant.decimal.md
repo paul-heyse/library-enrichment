@@ -50,6 +50,9 @@ fn try_new(integer: i128, scale: u8) -> Result<Self, ArrowError>
 fn try_new_with_signed_scale(integer: i128, scale: i8) -> Result<Self, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant.variant.decimal.VariantDecimal16.md).
+
+
 Represents an 16-byte decimal value in the Variant format.
 
 This struct stores a decimal number using a 128-bit signed integer for the coefficient
@@ -110,6 +113,9 @@ fn scale(&self) -> u8
 fn try_new(integer: i32, scale: u8) -> Result<Self, ArrowError>
 fn try_new_with_signed_scale(integer: i32, scale: i8) -> Result<Self, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant.variant.decimal.VariantDecimal4.md).
+
 
 Represents a 4-byte decimal value in the Variant format.
 
@@ -176,6 +182,9 @@ fn try_new(integer: i64, scale: u8) -> Result<Self, ArrowError>
 fn try_new_with_signed_scale(integer: i64, scale: i8) -> Result<Self, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant.variant.decimal.VariantDecimal8.md).
+
+
 Represents an 8-byte decimal value in the Variant format.
 
 This struct stores a decimal number using a 64-bit signed integer for the coefficient
@@ -217,6 +226,9 @@ fn scale(&self) -> u8
 fn try_new(integer: Self::Native, scale: u8) -> Result<Self, ArrowError>
 fn try_new_with_signed_scale(integer: Self::Native, scale: i8) -> Result<Self, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant.variant.decimal.VariantDecimalType.md).
+
 
 Trait for variant decimal types, enabling generic code across Decimal4/8/16
 

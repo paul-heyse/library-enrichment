@@ -35,6 +35,9 @@ fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError>
 fn try_new(data_type: &DataType, metadata: Self::Metadata) -> Result<Self, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.extension.canonical.variable_shape_tensor.VariableShapeTensor.md).
+
+
 The extension type for `VariableShapeTensor`.
 
 Extension name: `arrow.variable_shape_tensor`.
@@ -116,6 +119,9 @@ fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializ
 ```rust
 fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.extension.canonical.variable_shape_tensor.VariableShapeTensorMetadata.md).
+
 
 Extension type metadata for [`VariableShapeTensor`].
 

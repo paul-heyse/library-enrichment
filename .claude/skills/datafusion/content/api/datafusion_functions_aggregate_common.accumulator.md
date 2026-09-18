@@ -22,6 +22,9 @@ struct AccumulatorArgs<'a>
 fn return_type(&self) -> &DataType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.accumulator.AccumulatorArgs.md).
+
+
 [`AccumulatorArgs`] contains information about how an aggregate
 function was called, including the types of its arguments and any optional
 ordering expressions.
@@ -46,6 +49,9 @@ struct StateFieldsArgs<'a>
 fn return_type(&self) -> &DataType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.accumulator.StateFieldsArgs.md).
+
+
 [`StateFieldsArgs`] contains information about the fields that an
 aggregate function's accumulator should have. Used for `AggregateUDFImpl::state_fields`.
 
@@ -60,6 +66,9 @@ Also reachable as `datafusion::logical_expr::AccumulatorFactoryFunction`, `dataf
 ```rust
 type AccumulatorFactoryFunction = std::sync::Arc<dyn Fn(AccumulatorArgs<'_>) -> datafusion_common::Result<Box<dyn Accumulator>> + Send + Sync>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.accumulator.AccumulatorFactoryFunction.md).
+
 
 Factory that returns an accumulator for the given aggregate function.
 

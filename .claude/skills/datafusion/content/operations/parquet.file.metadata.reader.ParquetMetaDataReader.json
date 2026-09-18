@@ -1,0 +1,4049 @@
+[
+  {
+    "id": "ecb8df4cd7e741eec25c5144",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "name": "ParquetMetaDataReader",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct ParquetMetaDataReader",
+    "docs": "Reads [`ParquetMetaData`] from a byte stream, with either synchronous or\nasynchronous I/O.\n\nThere are two flavors of APIs:\n* Synchronous: [`Self::try_parse()`], [`Self::try_parse_sized()`], [`Self::parse_and_finish()`], etc.\n* Asynchronous (requires `async` and `arrow` features): [`Self::try_load()`], etc\n\n See the [`ParquetMetaDataPushDecoder`] for an API that does not require I/O.\n\n# Format Notes\n\nParquet metadata is not necessarily contiguous in a Parquet file: a portion is stored\nin the footer (the last bytes of the file), but other portions (such as the\nPageIndex) can be stored elsewhere.\nSee [`crate::file::metadata::ParquetMetaDataWriter#output-format`] for more details of\nParquet metadata.\n\nThis reader handles reading the footer as well as the non contiguous parts\nof the metadata (`PageIndex` and `ColumnIndex`). It does not handle reading Bloom Filters.\n\n# Example\n```no_run\n# use parquet::file::metadata::{PageIndexPolicy, ParquetMetaDataReader};\n# fn open_parquet_file(path: &str) -> std::fs::File { unimplemented!(); }\n// read parquet metadata including page indexes from a file\nlet file = open_parquet_file(\"some_path.parquet\");\nlet mut reader = ParquetMetaDataReader::new()\n    .with_page_index_policy(PageIndexPolicy::Required);\nreader.try_parse(&file).unwrap();\nlet metadata = reader.finish().unwrap();\nassert!(metadata.column_index().is_some());\nassert!(metadata.offset_index().is_some());\n```",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        71,
+        1
+      ],
+      "end": [
+        82,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          5335,
+          5355,
+          5356,
+          5357,
+          5358,
+          5359,
+          5360,
+          5361,
+          5362,
+          5363,
+          5364,
+          5365,
+          5366,
+          5367,
+          5368,
+          5369,
+          5371,
+          5373
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Self::parse_and_finish()`": 5332,
+      "`crate::file::metadata::ParquetMetaDataWriter#output-format`": 5334,
+      "`Self::try_parse()`": 5330,
+      "`Self::try_load()`": 5333,
+      "`ParquetMetaData`": 3004,
+      "`Self::try_parse_sized()`": 5331,
+      "`ParquetMetaDataPushDecoder`": 3036
+    },
+    "link_paths": {
+      "`Self::parse_and_finish()`": "parquet::file::metadata::reader::ParquetMetaDataReader::parse_and_finish",
+      "`crate::file::metadata::ParquetMetaDataWriter#output-format`": "parquet::file::metadata::writer::ParquetMetaDataWriter",
+      "`Self::try_parse()`": "parquet::file::metadata::reader::ParquetMetaDataReader::try_parse",
+      "`Self::try_load()`": "parquet::file::metadata::reader::ParquetMetaDataReader::try_load",
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData",
+      "`Self::try_parse_sized()`": "parquet::file::metadata::reader::ParquetMetaDataReader::try_parse_sized",
+      "`ParquetMetaDataPushDecoder`": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3399",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-ecb8df4cd7e741eec25c5144",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader"
+    ],
+    "resolved_doc_links": {
+      "`Self::parse_and_finish()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-4f0cd835edd69be7ad4f1989",
+      "`crate::file::metadata::ParquetMetaDataWriter#output-format`": "../operations/parquet.file.metadata.writer.ParquetMetaDataWriter.md#op-897397dc43ac19f9d052fbd0",
+      "`Self::try_parse()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-bb655a6ce4ae9d13280d95a4",
+      "`Self::try_load()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-ef050ff47f5643d64fa174b3",
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b",
+      "`Self::try_parse_sized()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-003cc47f634427f8b2d4ef50",
+      "`ParquetMetaDataPushDecoder`": "../operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md#op-e00d43ab5b4fd446b342b085"
+    }
+  },
+  {
+    "id": "4be6d0bc5c84e52764e44773",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::decode_metadata",
+    "name": "decode_metadata",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn decode_metadata(buf: &[u8]) -> Result<ParquetMetaData>",
+    "docs": "Decodes [`ParquetMetaData`] from the provided bytes.\n\nTypically this is used to decode the metadata from the end of a parquet\nfile. The format of `buf` is the Thrift compact binary protocol, as specified\nby the [Parquet Spec].\n\n[Parquet Spec]: https://github.com/apache/parquet-format#metadata",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        783,
+        5
+      ],
+      "end": [
+        785,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "buf",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "u8"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetMetaData",
+                          "id": 3004,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3004": "parquet::file::metadata::ParquetMetaData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetMetaData`": 3004
+    },
+    "link_paths": {
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5352",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-4be6d0bc5c84e52764e44773",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::decode_metadata"
+    ],
+    "resolved_doc_links": {
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b"
+    }
+  },
+  {
+    "id": "a2d935813595f41cec3b601c",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::decode_metadata_with_options",
+    "name": "decode_metadata_with_options",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn decode_metadata_with_options(buf: &[u8], options: Option<&ParquetMetaDataOptions>) -> Result<ParquetMetaData>",
+    "docs": "Decodes [`ParquetMetaData`] from the provided bytes.\n\nLike [`Self::decode_metadata`] but this also accepts\nmetadata parsing options.",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        791,
+        5
+      ],
+      "end": [
+        796,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "buf",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "u8"
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 74,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "ParquetMetaDataOptions",
+                                  "id": 3096,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetMetaData",
+                          "id": 3004,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "74": "core::option::Option",
+      "3096": "parquet::file::metadata::options::ParquetMetaDataOptions",
+      "107": "parquet::errors::Result",
+      "3004": "parquet::file::metadata::ParquetMetaData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::decode_metadata`": 5352,
+      "`ParquetMetaData`": 3004
+    },
+    "link_paths": {
+      "`Self::decode_metadata`": "parquet::file::metadata::reader::ParquetMetaDataReader::decode_metadata",
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5353",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-a2d935813595f41cec3b601c",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::decode_metadata_with_options"
+    ],
+    "resolved_doc_links": {
+      "`Self::decode_metadata`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-4be6d0bc5c84e52764e44773",
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b"
+    }
+  },
+  {
+    "id": "4b1e597fd8dbf7707af6ab5e",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::decode_schema",
+    "name": "decode_schema",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn decode_schema(buf: &[u8]) -> Result<Arc<SchemaDescriptor>>",
+    "docs": "Decodes the schema from the Parquet footer in `buf`. Returned as\na [`SchemaDescriptor`].",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        800,
+        5
+      ],
+      "end": [
+        802,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "buf",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "u8"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 2578,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "SchemaDescriptor",
+                                      "id": 2937,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "2578": "alloc::sync::Arc",
+      "2937": "parquet::schema::types::SchemaDescriptor"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`SchemaDescriptor`": 2937
+    },
+    "link_paths": {
+      "`SchemaDescriptor`": "parquet::schema::types::SchemaDescriptor"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5354",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-4b1e597fd8dbf7707af6ab5e",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::decode_schema"
+    ],
+    "resolved_doc_links": {
+      "`SchemaDescriptor`": "../operations/parquet.schema.types.SchemaDescriptor.md#op-cb960d451851ace5640135f7"
+    }
+  },
+  {
+    "id": "a10e570552369877331eaed8",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::default",
+    "name": "default",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn default() -> ParquetMetaDataReader",
+    "docs": "",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        70,
+        10
+      ],
+      "end": [
+        70,
+        17
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "resolved_path": {
+              "path": "ParquetMetaDataReader",
+              "id": 3399,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3399": "parquet::file::metadata::reader::ParquetMetaDataReader"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          70,
+          10
+        ],
+        "end": [
+          70,
+          17
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5370",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-a10e570552369877331eaed8",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::default"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2c2f4bd1415d16c65d178e69",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::finish",
+    "name": "finish",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> Result<ParquetMetaData>",
+    "docs": "Return the parsed [`ParquetMetaData`] struct, leaving `None` in its place.",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        178,
+        5
+      ],
+      "end": [
+        182,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetMetaData",
+                          "id": 3004,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3004": "parquet::file::metadata::ParquetMetaData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetMetaData`": 3004
+    },
+    "link_paths": {
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5344",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-2c2f4bd1415d16c65d178e69",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::finish"
+    ],
+    "resolved_doc_links": {
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b"
+    }
+  },
+  {
+    "id": "f7f90d0bf4228ecba61f9843",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::fmt",
+    "name": "fmt",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        70,
+        19
+      ],
+      "end": [
+        70,
+        24
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 67,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 68,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "67": "core::fmt::Formatter",
+      "68": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          70,
+          19
+        ],
+        "end": [
+          70,
+          24
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5372",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-f7f90d0bf4228ecba61f9843",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d63281a8392ebd7994f34aba",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::has_metadata",
+    "name": "has_metadata",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn has_metadata(&self) -> bool",
+    "docs": "Indicates whether this reader has a [`ParquetMetaData`] internally.",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        173,
+        5
+      ],
+      "end": [
+        175,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetMetaData`": 3004
+    },
+    "link_paths": {
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5343",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-d63281a8392ebd7994f34aba",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::has_metadata"
+    ],
+    "resolved_doc_links": {
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b"
+    }
+  },
+  {
+    "id": "489a96f669d014070c870931",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::load_and_finish",
+    "name": "load_and_finish",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "async fn load_and_finish<F: MetadataFetch>(self, fetch: F, file_size: u64) -> Result<ParquetMetaData>",
+    "docs": "Given a [`MetadataFetch`], parse and return the [`ParquetMetaData`] in a single pass.\n\nThis call will consume `self`.\n\nSee [`Self::with_prefetch_hint`] for a discussion of how to reduce the number of fetches\nperformed by this function.",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        400,
+        5
+      ],
+      "end": [
+        407,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([All([NameValue { name: \"feature\", value: Some(\"async\"), span: src/file/metadata/reader.rs:399:15: 399:32 (#0) }, NameValue { name: \"feature\", value: Some(\"arrow\"), span: src/file/metadata/reader.rs:399:34: 399:51 (#0) }], src/file/metadata/reader.rs:399:14: 399:52 (#0))])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "fetch",
+              {
+                "generic": "F"
+              }
+            ],
+            [
+              "file_size",
+              {
+                "primitive": "u64"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetMetaData",
+                          "id": 3004,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "MetadataFetch",
+                          "id": 3400,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": true,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3004": "parquet::file::metadata::ParquetMetaData",
+      "3400": "parquet::arrow::async_reader::metadata::MetadataFetch"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MetadataFetch`": 3400,
+      "`ParquetMetaData`": 3004,
+      "`Self::with_prefetch_hint`": 3459
+    },
+    "link_paths": {
+      "`MetadataFetch`": "parquet::arrow::async_reader::metadata::MetadataFetch",
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData",
+      "`Self::with_prefetch_hint`": "parquet::file::metadata::reader::ParquetMetaDataReader::with_prefetch_hint"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5347",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-489a96f669d014070c870931",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::load_and_finish"
+    ],
+    "resolved_doc_links": {
+      "`MetadataFetch`": "../operations/parquet.arrow.async_reader.metadata.MetadataFetch.md#op-2f1a6adade5c3e921474d943",
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b",
+      "`Self::with_prefetch_hint`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-836e78360f27ee2a739d1678"
+    }
+  },
+  {
+    "id": "792bd4100e87f1c306b05f53",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::load_page_index",
+    "name": "load_page_index",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "async fn load_page_index<F: MetadataFetch>(&mut self, fetch: F) -> Result<()>",
+    "docs": "Asynchronously fetch the page index structures when a [`ParquetMetaData`] has already\nbeen obtained. See [`Self::new_with_metadata()`].",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        469,
+        5
+      ],
+      "end": [
+        471,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([All([NameValue { name: \"feature\", value: Some(\"async\"), span: src/file/metadata/reader.rs:468:15: 468:32 (#0) }, NameValue { name: \"feature\", value: Some(\"arrow\"), span: src/file/metadata/reader.rs:468:34: 468:51 (#0) }], src/file/metadata/reader.rs:468:14: 468:52 (#0))])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "fetch",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "MetadataFetch",
+                          "id": 3400,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": true,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3400": "parquet::arrow::async_reader::metadata::MetadataFetch"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetMetaData`": 3004,
+      "`Self::new_with_metadata()`": 5337
+    },
+    "link_paths": {
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData",
+      "`Self::new_with_metadata()`": "parquet::file::metadata::reader::ParquetMetaDataReader::new_with_metadata"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5350",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-792bd4100e87f1c306b05f53",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::load_page_index"
+    ],
+    "resolved_doc_links": {
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b",
+      "`Self::new_with_metadata()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-1f621eeddad4ffb14049ae38"
+    }
+  },
+  {
+    "id": "576c2093ced257900b258135",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::load_via_suffix_and_finish",
+    "name": "load_via_suffix_and_finish",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "async fn load_via_suffix_and_finish<F: MetadataSuffixFetch>(self, fetch: F) -> Result<ParquetMetaData>",
+    "docs": "Given a [`MetadataSuffixFetch`], parse and return the [`ParquetMetaData`] in a single pass.\n\nThis call will consume `self`.\n\nSee [`Self::with_prefetch_hint`] for a discussion of how to reduce the number of fetches\nperformed by this function.",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        416,
+        5
+      ],
+      "end": [
+        422,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([All([NameValue { name: \"feature\", value: Some(\"async\"), span: src/file/metadata/reader.rs:415:15: 415:32 (#0) }, NameValue { name: \"feature\", value: Some(\"arrow\"), span: src/file/metadata/reader.rs:415:34: 415:51 (#0) }], src/file/metadata/reader.rs:415:14: 415:52 (#0))])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "fetch",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetMetaData",
+                          "id": 3004,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "MetadataSuffixFetch",
+                          "id": 3404,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": true,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3004": "parquet::file::metadata::ParquetMetaData",
+      "3404": "parquet::arrow::async_reader::metadata::MetadataSuffixFetch"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::with_prefetch_hint`": 3459,
+      "`MetadataSuffixFetch`": 3404,
+      "`ParquetMetaData`": 3004
+    },
+    "link_paths": {
+      "`Self::with_prefetch_hint`": "parquet::file::metadata::reader::ParquetMetaDataReader::with_prefetch_hint",
+      "`MetadataSuffixFetch`": "parquet::arrow::async_reader::metadata::MetadataSuffixFetch",
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5348",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-576c2093ced257900b258135",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::load_via_suffix_and_finish"
+    ],
+    "resolved_doc_links": {
+      "`Self::with_prefetch_hint`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-836e78360f27ee2a739d1678",
+      "`MetadataSuffixFetch`": "../operations/parquet.arrow.async_reader.metadata.MetadataSuffixFetch.md#op-02be94b084ca684a67294ee4",
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b"
+    }
+  },
+  {
+    "id": "bc20117e0e5af81ec7506755",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::metadata_size",
+    "name": "metadata_size",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn metadata_size(&self) -> Option<usize>",
+    "docs": "Size of the serialized thrift metadata plus the 8 byte footer. Only set if\n`self.parse_metadata` is called.",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        563,
+        5
+      ],
+      "end": [
+        565,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 74,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "74": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5351",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-bc20117e0e5af81ec7506755",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::metadata_size"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e801454c744c6743ff0120a5",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::new",
+    "name": "new",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "Create a new [`ParquetMetaDataReader`]",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        107,
+        5
+      ],
+      "end": [
+        109,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetMetaDataReader`": 3399
+    },
+    "link_paths": {
+      "`ParquetMetaDataReader`": "parquet::file::metadata::reader::ParquetMetaDataReader"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5336",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-e801454c744c6743ff0120a5",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::new"
+    ],
+    "resolved_doc_links": {
+      "`ParquetMetaDataReader`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-ecb8df4cd7e741eec25c5144"
+    }
+  },
+  {
+    "id": "1f621eeddad4ffb14049ae38",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::new_with_metadata",
+    "name": "new_with_metadata",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_with_metadata(metadata: ParquetMetaData) -> Self",
+    "docs": "Create a new [`ParquetMetaDataReader`] populated with a [`ParquetMetaData`] struct\nobtained via other means.",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        113,
+        5
+      ],
+      "end": [
+        118,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "metadata",
+              {
+                "resolved_path": {
+                  "path": "ParquetMetaData",
+                  "id": 3004,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3004": "parquet::file::metadata::ParquetMetaData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetMetaDataReader`": 3399,
+      "`ParquetMetaData`": 3004
+    },
+    "link_paths": {
+      "`ParquetMetaDataReader`": "parquet::file::metadata::reader::ParquetMetaDataReader",
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5337",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-1f621eeddad4ffb14049ae38",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::new_with_metadata"
+    ],
+    "resolved_doc_links": {
+      "`ParquetMetaDataReader`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-ecb8df4cd7e741eec25c5144",
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b"
+    }
+  },
+  {
+    "id": "4f0cd835edd69be7ad4f1989",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::parse_and_finish",
+    "name": "parse_and_finish",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn parse_and_finish<R: ChunkReader>(self, reader: &R) -> Result<ParquetMetaData>",
+    "docs": "Given a [`ChunkReader`], parse and return the [`ParquetMetaData`] in a single pass.\n\nIf `reader` is [`Bytes`] based, then the buffer must contain sufficient bytes to complete\nthe request, and must include the Parquet footer. If page indexes are desired, the buffer\nmust contain the entire file, or [`Self::try_parse_sized()`] should be used.\n\nThis call will consume `self`.\n\n# Example\n```no_run\n# use parquet::file::metadata::{PageIndexPolicy, ParquetMetaDataReader};\n# fn open_parquet_file(path: &str) -> std::fs::File { unimplemented!(); }\n// read parquet metadata including page indexes\nlet file = open_parquet_file(\"some_path.parquet\");\nlet metadata = ParquetMetaDataReader::new()\n    .with_page_index_policy(PageIndexPolicy::Required)\n    .parse_and_finish(&file).unwrap();\n```",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        202,
+        5
+      ],
+      "end": [
+        205,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "reader",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetMetaData",
+                          "id": 3004,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "R",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ChunkReader",
+                          "id": 3024,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3004": "parquet::file::metadata::ParquetMetaData",
+      "3024": "parquet::file::reader::ChunkReader"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ChunkReader`": 3024,
+      "`ParquetMetaData`": 3004,
+      "`Bytes`": 1105,
+      "`Self::try_parse_sized()`": 5331
+    },
+    "link_paths": {
+      "`ChunkReader`": "parquet::file::reader::ChunkReader",
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData",
+      "`Bytes`": "bytes::bytes::Bytes",
+      "`Self::try_parse_sized()`": "parquet::file::metadata::reader::ParquetMetaDataReader::try_parse_sized"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5332",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-4f0cd835edd69be7ad4f1989",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::parse_and_finish"
+    ],
+    "resolved_doc_links": {
+      "`ChunkReader`": "../operations/parquet.file.reader.ChunkReader.md#op-8eae425b3b94361396eb9d94",
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b",
+      "`Self::try_parse_sized()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-003cc47f634427f8b2d4ef50"
+    }
+  },
+  {
+    "id": "e394b09b915f1f587c31a4ab",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::read_page_indexes",
+    "name": "read_page_indexes",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn read_page_indexes<R: ChunkReader>(&mut self, reader: &R) -> Result<()>",
+    "docs": "Read the page index structures when a [`ParquetMetaData`] has already been obtained.\nSee [`Self::new_with_metadata()`] and [`Self::has_metadata()`].",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        319,
+        5
+      ],
+      "end": [
+        321,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "reader",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "R",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ChunkReader",
+                          "id": 3024,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3024": "parquet::file::reader::ChunkReader"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::has_metadata()`": 5343,
+      "`ParquetMetaData`": 3004,
+      "`Self::new_with_metadata()`": 5337
+    },
+    "link_paths": {
+      "`Self::has_metadata()`": "parquet::file::metadata::reader::ParquetMetaDataReader::has_metadata",
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData",
+      "`Self::new_with_metadata()`": "parquet::file::metadata::reader::ParquetMetaDataReader::new_with_metadata"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5346",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-e394b09b915f1f587c31a4ab",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::read_page_indexes"
+    ],
+    "resolved_doc_links": {
+      "`Self::has_metadata()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-d63281a8392ebd7994f34aba",
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b",
+      "`Self::new_with_metadata()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-1f621eeddad4ffb14049ae38"
+    }
+  },
+  {
+    "id": "de01d4e5bdbd02b4d60cd4f9",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::read_page_indexes_sized",
+    "name": "read_page_indexes_sized",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn read_page_indexes_sized<R: ChunkReader>(&mut self, reader: &R, file_size: u64) -> Result<()>",
+    "docs": "Read the page index structures when a [`ParquetMetaData`] has already been obtained.\nThis variant is used when `reader` cannot access the entire Parquet file (e.g. it is\na [`Bytes`] struct containing the tail of the file).\nSee [`Self::new_with_metadata()`] and [`Self::has_metadata()`]. Like\n[`Self::try_parse_sized()`] this function may return [`ParquetError::NeedMoreData`].",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        328,
+        5
+      ],
+      "end": [
+        391,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "reader",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              }
+            ],
+            [
+              "file_size",
+              {
+                "primitive": "u64"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "R",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ChunkReader",
+                          "id": 3024,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3024": "parquet::file::reader::ChunkReader"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetError::NeedMoreData`": 19,
+      "`Self::new_with_metadata()`": 5337,
+      "`Self::has_metadata()`": 5343,
+      "`ParquetMetaData`": 3004,
+      "`Bytes`": 1105,
+      "`Self::try_parse_sized()`": 5331
+    },
+    "link_paths": {
+      "`ParquetError::NeedMoreData`": "parquet::errors::ParquetError::NeedMoreData",
+      "`Self::new_with_metadata()`": "parquet::file::metadata::reader::ParquetMetaDataReader::new_with_metadata",
+      "`Self::has_metadata()`": "parquet::file::metadata::reader::ParquetMetaDataReader::has_metadata",
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData",
+      "`Bytes`": "bytes::bytes::Bytes",
+      "`Self::try_parse_sized()`": "parquet::file::metadata::reader::ParquetMetaDataReader::try_parse_sized"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5345",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-de01d4e5bdbd02b4d60cd4f9",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::read_page_indexes_sized"
+    ],
+    "resolved_doc_links": {
+      "`ParquetError::NeedMoreData`": "../operations/parquet.errors.ParquetError.md#op-4738b9ae6e77ab1806f3cac9",
+      "`Self::new_with_metadata()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-1f621eeddad4ffb14049ae38",
+      "`Self::has_metadata()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-d63281a8392ebd7994f34aba",
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b",
+      "`Self::try_parse_sized()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-003cc47f634427f8b2d4ef50"
+    }
+  },
+  {
+    "id": "ef050ff47f5643d64fa174b3",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::try_load",
+    "name": "try_load",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "async fn try_load<F: MetadataFetch>(&mut self, fetch: F, file_size: u64) -> Result<()>",
+    "docs": "Attempts to (asynchronously) parse the footer metadata (and optionally page indexes)\ngiven a [`MetadataFetch`].\n\nSee [`Self::with_prefetch_hint`] for a discussion of how to reduce the number of fetches\nperformed by this function.",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        429,
+        5
+      ],
+      "end": [
+        441,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([All([NameValue { name: \"feature\", value: Some(\"async\"), span: src/file/metadata/reader.rs:428:15: 428:32 (#0) }, NameValue { name: \"feature\", value: Some(\"arrow\"), span: src/file/metadata/reader.rs:428:34: 428:51 (#0) }], src/file/metadata/reader.rs:428:14: 428:52 (#0))])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "fetch",
+              {
+                "generic": "F"
+              }
+            ],
+            [
+              "file_size",
+              {
+                "primitive": "u64"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "MetadataFetch",
+                          "id": 3400,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": true,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3400": "parquet::arrow::async_reader::metadata::MetadataFetch"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MetadataFetch`": 3400,
+      "`Self::with_prefetch_hint`": 3459
+    },
+    "link_paths": {
+      "`MetadataFetch`": "parquet::arrow::async_reader::metadata::MetadataFetch",
+      "`Self::with_prefetch_hint`": "parquet::file::metadata::reader::ParquetMetaDataReader::with_prefetch_hint"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5333",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-ef050ff47f5643d64fa174b3",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::try_load"
+    ],
+    "resolved_doc_links": {
+      "`MetadataFetch`": "../operations/parquet.arrow.async_reader.metadata.MetadataFetch.md#op-2f1a6adade5c3e921474d943",
+      "`Self::with_prefetch_hint`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-836e78360f27ee2a739d1678"
+    }
+  },
+  {
+    "id": "05a0b562c73536c5ad8c4afe",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::try_load_via_suffix",
+    "name": "try_load_via_suffix",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "async fn try_load_via_suffix<F: MetadataSuffixFetch>(&mut self, fetch: F) -> Result<()>",
+    "docs": "Attempts to (asynchronously) parse the footer metadata (and optionally page indexes)\ngiven a [`MetadataSuffixFetch`].\n\nSee [`Self::with_prefetch_hint`] for a discussion of how to reduce the number of fetches\nperformed by this function.",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        449,
+        5
+      ],
+      "end": [
+        464,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([All([NameValue { name: \"feature\", value: Some(\"async\"), span: src/file/metadata/reader.rs:448:15: 448:32 (#0) }, NameValue { name: \"feature\", value: Some(\"arrow\"), span: src/file/metadata/reader.rs:448:34: 448:51 (#0) }], src/file/metadata/reader.rs:448:14: 448:52 (#0))])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "fetch",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "MetadataSuffixFetch",
+                          "id": 3404,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": true,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3404": "parquet::arrow::async_reader::metadata::MetadataSuffixFetch"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::with_prefetch_hint`": 3459,
+      "`MetadataSuffixFetch`": 3404
+    },
+    "link_paths": {
+      "`Self::with_prefetch_hint`": "parquet::file::metadata::reader::ParquetMetaDataReader::with_prefetch_hint",
+      "`MetadataSuffixFetch`": "parquet::arrow::async_reader::metadata::MetadataSuffixFetch"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5349",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-05a0b562c73536c5ad8c4afe",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::try_load_via_suffix"
+    ],
+    "resolved_doc_links": {
+      "`Self::with_prefetch_hint`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-836e78360f27ee2a739d1678",
+      "`MetadataSuffixFetch`": "../operations/parquet.arrow.async_reader.metadata.MetadataSuffixFetch.md#op-02be94b084ca684a67294ee4"
+    }
+  },
+  {
+    "id": "bb655a6ce4ae9d13280d95a4",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::try_parse",
+    "name": "try_parse",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_parse<R: ChunkReader>(&mut self, reader: &R) -> Result<()>",
+    "docs": "Attempts to parse the footer metadata (and optionally page indexes) given a [`ChunkReader`].\n\nIf `reader` is [`Bytes`] based, then the buffer must contain sufficient bytes to complete\nthe request, and must include the Parquet footer. If page indexes are desired, the buffer\nmust contain the entire file, or [`Self::try_parse_sized()`] should be used.",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        212,
+        5
+      ],
+      "end": [
+        214,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "reader",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "R",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ChunkReader",
+                          "id": 3024,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3024": "parquet::file::reader::ChunkReader"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::try_parse_sized()`": 5331,
+      "`ChunkReader`": 3024,
+      "`Bytes`": 1105
+    },
+    "link_paths": {
+      "`Self::try_parse_sized()`": "parquet::file::metadata::reader::ParquetMetaDataReader::try_parse_sized",
+      "`ChunkReader`": "parquet::file::reader::ChunkReader",
+      "`Bytes`": "bytes::bytes::Bytes"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5330",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-bb655a6ce4ae9d13280d95a4",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::try_parse"
+    ],
+    "resolved_doc_links": {
+      "`Self::try_parse_sized()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-003cc47f634427f8b2d4ef50",
+      "`ChunkReader`": "../operations/parquet.file.reader.ChunkReader.md#op-8eae425b3b94361396eb9d94"
+    }
+  },
+  {
+    "id": "003cc47f634427f8b2d4ef50",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::try_parse_sized",
+    "name": "try_parse_sized",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_parse_sized<R: ChunkReader>(&mut self, reader: &R, file_size: u64) -> Result<()>",
+    "docs": "Same as [`Self::try_parse()`], but provide the original file size in the case that `reader`\nis a [`Bytes`] struct that does not contain the entire file. This information is necessary\nwhen the page indexes are desired. `reader` must have access to the Parquet footer.\n\nUsing this function also allows for retrying with a larger buffer.\n\n# Errors\n\nThis function will return [`ParquetError::NeedMoreData`] in the event `reader` does not\nprovide enough data to fully parse the metadata (see example below). The returned error\nwill be populated with a `usize` field indicating the number of bytes required from the\ntail of the file to completely parse the requested metadata.\n\nOther errors returned include [`ParquetError::General`] and [`ParquetError::EOF`].\n\n# Example\n```no_run\n# use parquet::file::metadata::{PageIndexPolicy, ParquetMetaDataReader};\n# use parquet::errors::ParquetError;\n# use crate::parquet::file::reader::Length;\n# fn get_bytes(file: &std::fs::File, range: std::ops::Range<u64>) -> bytes::Bytes { unimplemented!(); }\n# fn open_parquet_file(path: &str) -> std::fs::File { unimplemented!(); }\nlet file = open_parquet_file(\"some_path.parquet\");\nlet len = file.len();\n// Speculatively read 1 kilobyte from the end of the file\nlet bytes = get_bytes(&file, len - 1024..len);\nlet mut reader = ParquetMetaDataReader::new().with_page_index_policy(PageIndexPolicy::Required);\nmatch reader.try_parse_sized(&bytes, len) {\n    Ok(_) => (),\n    Err(ParquetError::NeedMoreData(needed)) => {\n        // Read the needed number of bytes from the end of the file\n        let bytes = get_bytes(&file, len - needed as u64..len);\n        reader.try_parse_sized(&bytes, len).unwrap();\n    }\n    _ => panic!(\"unexpected error\")\n}\nlet metadata = reader.finish().unwrap();\n```\n\nNote that it is possible for the file metadata to be completely read, but there are\ninsufficient bytes available to read the page indexes. [`Self::has_metadata()`] can be used\nto test for this. In the event the file metadata is present, re-parsing of the file\nmetadata can be skipped by using [`Self::read_page_indexes_sized()`], as shown below.\n```no_run\n# use parquet::file::metadata::{PageIndexPolicy, ParquetMetaDataReader};\n# use parquet::errors::ParquetError;\n# use crate::parquet::file::reader::Length;\n# fn get_bytes(file: &std::fs::File, range: std::ops::Range<u64>) -> bytes::Bytes { unimplemented!(); }\n# fn open_parquet_file(path: &str) -> std::fs::File { unimplemented!(); }\nlet file = open_parquet_file(\"some_path.parquet\");\nlet len = file.len();\n// Speculatively read 1 kilobyte from the end of the file\nlet mut bytes = get_bytes(&file, len - 1024..len);\nlet mut reader = ParquetMetaDataReader::new().with_page_index_policy(PageIndexPolicy::Required);\n// Loop until `bytes` is large enough\nloop {\n    match reader.try_parse_sized(&bytes, len) {\n        Ok(_) => break,\n        Err(ParquetError::NeedMoreData(needed)) => {\n            // Read the needed number of bytes from the end of the file\n            bytes = get_bytes(&file, len - needed as u64..len);\n            // If file metadata was read only read page indexes, otherwise continue loop\n            if reader.has_metadata() {\n                reader.read_page_indexes_sized(&bytes, len).unwrap();\n                break;\n            }\n        }\n        _ => panic!(\"unexpected error\")\n    }\n}\nlet metadata = reader.finish().unwrap();\n```",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        288,
+        5
+      ],
+      "end": [
+        315,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "reader",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              }
+            ],
+            [
+              "file_size",
+              {
+                "primitive": "u64"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "R",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ChunkReader",
+                          "id": 3024,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3024": "parquet::file::reader::ChunkReader"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetError::General`": 2,
+      "`ParquetError::EOF`": 6,
+      "`Self::try_parse()`": 5330,
+      "`Self::has_metadata()`": 5343,
+      "`Self::read_page_indexes_sized()`": 5345,
+      "`ParquetError::NeedMoreData`": 19,
+      "`Bytes`": 1105
+    },
+    "link_paths": {
+      "`ParquetError::General`": "parquet::errors::ParquetError::General",
+      "`ParquetError::EOF`": "parquet::errors::ParquetError::EOF",
+      "`Self::try_parse()`": "parquet::file::metadata::reader::ParquetMetaDataReader::try_parse",
+      "`Self::has_metadata()`": "parquet::file::metadata::reader::ParquetMetaDataReader::has_metadata",
+      "`Self::read_page_indexes_sized()`": "parquet::file::metadata::reader::ParquetMetaDataReader::read_page_indexes_sized",
+      "`ParquetError::NeedMoreData`": "parquet::errors::ParquetError::NeedMoreData",
+      "`Bytes`": "bytes::bytes::Bytes"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5331",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-003cc47f634427f8b2d4ef50",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::try_parse_sized"
+    ],
+    "resolved_doc_links": {
+      "`ParquetError::General`": "../operations/parquet.errors.ParquetError.md#op-aba3bc6a5e60d075362ac1d8",
+      "`ParquetError::EOF`": "../operations/parquet.errors.ParquetError.md#op-2830373c06954b892e473eff",
+      "`Self::try_parse()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-bb655a6ce4ae9d13280d95a4",
+      "`Self::has_metadata()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-d63281a8392ebd7994f34aba",
+      "`Self::read_page_indexes_sized()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-de01d4e5bdbd02b4d60cd4f9",
+      "`ParquetError::NeedMoreData`": "../operations/parquet.errors.ParquetError.md#op-4738b9ae6e77ab1806f3cac9"
+    }
+  },
+  {
+    "id": "1ea653d76c2956ec0d501f43",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::with_arrow_reader_options",
+    "name": "with_arrow_reader_options",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_arrow_reader_options(self, options: Option<&ArrowReaderOptions>) -> Self",
+    "docs": "Applies the metadata related settings from [`ArrowReaderOptions`],\nsuch as the [`ParquetMetaDataOptions`], decryption properties, and\n[`PageIndexPolicy`] to this reader.\n\nThe page index policies are only applied if at least one of them is not\n[`PageIndexPolicy::Skip`], so policies previously configured on this\nreader (e.g. from a preload setting) are preserved when the options do\nnot request the page index.\n\nThis encodes the canonical way to construct a `ParquetMetaDataReader`\ninside `AsyncFileReader::get_metadata` (available with the `async`\nfeature), so implementations outside this crate do not need to\nduplicate it.",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        862,
+        5
+      ],
+      "end": [
+        883,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 74,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "ArrowReaderOptions",
+                                  "id": 3016,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "74": "core::option::Option",
+      "3016": "parquet::arrow::arrow_reader::ArrowReaderOptions"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "crate::file::metadata::ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          848,
+          1
+        ],
+        "end": [
+          884,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrowReaderOptions`": 3016,
+      "`ParquetMetaDataOptions`": 3096,
+      "`PageIndexPolicy`": 3076,
+      "`PageIndexPolicy::Skip`": 3091
+    },
+    "link_paths": {
+      "`ArrowReaderOptions`": "parquet::arrow::arrow_reader::ArrowReaderOptions",
+      "`ParquetMetaDataOptions`": "parquet::file::metadata::options::ParquetMetaDataOptions",
+      "`PageIndexPolicy`": "parquet::file::metadata::reader::PageIndexPolicy",
+      "`PageIndexPolicy::Skip`": "parquet::file::metadata::reader::PageIndexPolicy::Skip"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3497",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-1ea653d76c2956ec0d501f43",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::with_arrow_reader_options"
+    ],
+    "resolved_doc_links": {
+      "`ArrowReaderOptions`": "../operations/parquet.arrow.arrow_reader.ArrowReaderOptions.md#op-d1d83f9f3dc4572b085ef8a4",
+      "`ParquetMetaDataOptions`": "../operations/parquet.file.metadata.options.ParquetMetaDataOptions.md#op-4261537800a4fe33ff35b722",
+      "`PageIndexPolicy`": "../operations/parquet.file.metadata.reader.PageIndexPolicy.md#op-7dc5da782b207c53dc34d37c",
+      "`PageIndexPolicy::Skip`": "../operations/parquet.file.metadata.reader.PageIndexPolicy.md#op-6f2d1d654ecec39294ec7a53"
+    }
+  },
+  {
+    "id": "ee7dfaea0fe66c38becb72fe",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::with_column_index_policy",
+    "name": "with_column_index_policy",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_column_index_policy(self, policy: PageIndexPolicy) -> Self",
+    "docs": "Sets the [`PageIndexPolicy`] for the column index",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        127,
+        5
+      ],
+      "end": [
+        130,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "policy",
+              {
+                "resolved_path": {
+                  "path": "PageIndexPolicy",
+                  "id": 3076,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3076": "parquet::file::metadata::reader::PageIndexPolicy"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`PageIndexPolicy`": 3076
+    },
+    "link_paths": {
+      "`PageIndexPolicy`": "parquet::file::metadata::reader::PageIndexPolicy"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5339",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-ee7dfaea0fe66c38becb72fe",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::with_column_index_policy"
+    ],
+    "resolved_doc_links": {
+      "`PageIndexPolicy`": "../operations/parquet.file.metadata.reader.PageIndexPolicy.md#op-7dc5da782b207c53dc34d37c"
+    }
+  },
+  {
+    "id": "dcd64cec3c21252d3af6aa30",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::with_decryption_properties",
+    "name": "with_decryption_properties",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_decryption_properties(self, properties: Option<std::sync::Arc<FileDecryptionProperties>>) -> Self",
+    "docs": "Provide the FileDecryptionProperties to use when decrypting the file.\n\nThis is only necessary when the file is encrypted.",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        164,
+        5
+      ],
+      "end": [
+        170,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"encryption\"), span: src/file/metadata/reader.rs:163:11: 163:33 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "properties",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 74,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "std::sync::Arc",
+                              "id": 2578,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "FileDecryptionProperties",
+                                          "id": 3088,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "74": "core::option::Option",
+      "2578": "alloc::sync::Arc",
+      "3088": null
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5342",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-dcd64cec3c21252d3af6aa30",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::with_decryption_properties"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "217a4be87447e6e2f25fcda9",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::with_metadata_options",
+    "name": "with_metadata_options",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_metadata_options(self, options: Option<ParquetMetaDataOptions>) -> Self",
+    "docs": "Sets the [`ParquetMetaDataOptions`] to use when decoding",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        139,
+        5
+      ],
+      "end": [
+        142,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 74,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ParquetMetaDataOptions",
+                              "id": 3096,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "74": "core::option::Option",
+      "3096": "parquet::file::metadata::options::ParquetMetaDataOptions"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetMetaDataOptions`": 3096
+    },
+    "link_paths": {
+      "`ParquetMetaDataOptions`": "parquet::file::metadata::options::ParquetMetaDataOptions"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5341",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-217a4be87447e6e2f25fcda9",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::with_metadata_options"
+    ],
+    "resolved_doc_links": {
+      "`ParquetMetaDataOptions`": "../operations/parquet.file.metadata.options.ParquetMetaDataOptions.md#op-4261537800a4fe33ff35b722"
+    }
+  },
+  {
+    "id": "4f598d4e2509b33b275d347e",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::with_offset_index_policy",
+    "name": "with_offset_index_policy",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_offset_index_policy(self, policy: PageIndexPolicy) -> Self",
+    "docs": "Sets the [`PageIndexPolicy`] for the offset index",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        133,
+        5
+      ],
+      "end": [
+        136,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "policy",
+              {
+                "resolved_path": {
+                  "path": "PageIndexPolicy",
+                  "id": 3076,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3076": "parquet::file::metadata::reader::PageIndexPolicy"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`PageIndexPolicy`": 3076
+    },
+    "link_paths": {
+      "`PageIndexPolicy`": "parquet::file::metadata::reader::PageIndexPolicy"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5340",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-4f598d4e2509b33b275d347e",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::with_offset_index_policy"
+    ],
+    "resolved_doc_links": {
+      "`PageIndexPolicy`": "../operations/parquet.file.metadata.reader.PageIndexPolicy.md#op-7dc5da782b207c53dc34d37c"
+    }
+  },
+  {
+    "id": "93b48192a6764f852675521b",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::with_page_index_policy",
+    "name": "with_page_index_policy",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_page_index_policy(self, policy: PageIndexPolicy) -> Self",
+    "docs": "Sets the [`PageIndexPolicy`] for the column and offset indexes",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        121,
+        5
+      ],
+      "end": [
+        124,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "policy",
+              {
+                "resolved_path": {
+                  "path": "PageIndexPolicy",
+                  "id": 3076,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3076": "parquet::file::metadata::reader::PageIndexPolicy"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`PageIndexPolicy`": 3076
+    },
+    "link_paths": {
+      "`PageIndexPolicy`": "parquet::file::metadata::reader::PageIndexPolicy"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5338",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-93b48192a6764f852675521b",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::with_page_index_policy"
+    ],
+    "resolved_doc_links": {
+      "`PageIndexPolicy`": "../operations/parquet.file.metadata.reader.PageIndexPolicy.md#op-7dc5da782b207c53dc34d37c"
+    }
+  },
+  {
+    "id": "836e78360f27ee2a739d1678",
+    "path": "parquet::file::metadata::reader::ParquetMetaDataReader::with_prefetch_hint",
+    "name": "with_prefetch_hint",
+    "owner": "parquet::file::metadata::reader::ParquetMetaDataReader",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_prefetch_hint(self, prefetch: Option<usize>) -> Self",
+    "docs": "Provide a hint as to the number of bytes needed to fully parse the [`ParquetMetaData`].\nOnly used for the asynchronous [`Self::try_load()`] method.\n\nBy default, the reader will first fetch the last 8 bytes of the input file to obtain the\nsize of the footer metadata. A second fetch will be performed to obtain the needed bytes.\nAfter parsing the footer metadata, a third fetch will be performed to obtain the bytes\nneeded to decode the page index structures, if they have been requested. To avoid\nunnecessary fetches, `prefetch` can be set to an estimate of the number of bytes needed\nto fully decode the [`ParquetMetaData`], which can reduce the number of fetch requests and\nreduce latency. Setting `prefetch` too small will not trigger an error, but will result\nin extra fetches being performed.",
+    "span": {
+      "filename": "src/file/metadata/reader.rs",
+      "begin": [
+        155,
+        5
+      ],
+      "end": [
+        158,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "prefetch",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 74,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "74": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataReader",
+          "id": "parquet::file::metadata::reader::ParquetMetaDataReader",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/reader.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          803,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetMetaData`": 3004,
+      "`Self::try_load()`": 5333
+    },
+    "link_paths": {
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData",
+      "`Self::try_load()`": "parquet::file::metadata::reader::ParquetMetaDataReader::try_load"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3459",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.md",
+    "record_file": "operations/parquet.file.metadata.reader.ParquetMetaDataReader.json",
+    "anchor": "op-836e78360f27ee2a739d1678",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataReader::with_prefetch_hint"
+    ],
+    "resolved_doc_links": {
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b",
+      "`Self::try_load()`": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-ef050ff47f5643d64fa174b3"
+    }
+  }
+]

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 3 public items · structured records in [`model/buoyan
 ## try_parse_uri
 
 `function` · `buoyant_kernel::utils::try_parse_uri`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.utils.try_parse_uri.md)
 
 Also reachable as `buoyant_kernel::try_parse_uri`, `delta_kernel::utils::try_parse_uri`
 
@@ -20,6 +21,7 @@ like `/local/paths`, and even `../relative/paths`.
 ## CollectInto
 
 `trait` · `buoyant_kernel::utils::CollectInto`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.utils.CollectInto.md)
 
 Also reachable as `buoyant_kernel::CollectInto`, `delta_kernel::utils::CollectInto`
 
@@ -63,6 +65,7 @@ where
 ## FoldWithOption
 
 `trait` · `buoyant_kernel::utils::FoldWithOption`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.utils.FoldWithOption.md)
 
 Also reachable as `delta_kernel::utils::FoldWithOption`
 

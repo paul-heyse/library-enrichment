@@ -24,6 +24,9 @@ INPUT_DIRS = (
     "scripts",
     "rules",
     "rule-tests",
+    "vendor",
+    ".config",
+    ".claude/rules",
 )
 INPUT_FILES = (
     "Cargo.toml",
@@ -34,6 +37,9 @@ INPUT_FILES = (
     "justfile",
     "deny.toml",
     ".python-version",
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".claude/settings.json",
 )
 
 #: Environment variables a recorded command needs in order to run the same way again.

@@ -26,6 +26,9 @@ fn supports_bounded_execution(&self) -> bool
 fn uses_window_frame(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md).
+
+
 Partition evaluator for Window Functions
 
 # Background

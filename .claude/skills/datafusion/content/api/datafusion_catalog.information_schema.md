@@ -10,6 +10,9 @@ Crate `datafusion-catalog` · 5 public items · structured records in [`model/da
 const INFORMATION_SCHEMA: &str = "information_schema"
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.information_schema.INFORMATION_SCHEMA.md).
+
+
 ---
 
 ## INFORMATION_SCHEMA_TABLES
@@ -19,6 +22,9 @@ const INFORMATION_SCHEMA: &str = "information_schema"
 ```rust
 const INFORMATION_SCHEMA_TABLES: &[&str] = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.information_schema.INFORMATION_SCHEMA_TABLES.md).
+
 
 All information schema tables
 
@@ -31,6 +37,9 @@ All information schema tables
 ```rust
 fn schemata_schema() -> arrow::datatypes::SchemaRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.information_schema.schemata_schema.md).
+
 
 The Arrow schema of [`information_schema.schemata`] rows.
 
@@ -72,6 +81,9 @@ fn table_exist(&self, name: &str) -> bool
 fn table_names(&self) -> Vec<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.information_schema.InformationSchemaProvider.md).
+
+
 Implements the `information_schema` virtual schema and tables
 
 The underlying tables in the `information_schema` are created on
@@ -98,6 +110,9 @@ fn add_schemata(&mut self, catalog_name: &str, schema_name: &str, schema_owner: 
 fn finish(&mut self) -> Result<RecordBatch>
 fn new() -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.information_schema.InformationSchemataBuilder.md).
+
 
 Builder that produces [`RecordBatch`] values matching the schema of
 `information_schema.schemata` (see [`schemata_schema`]).

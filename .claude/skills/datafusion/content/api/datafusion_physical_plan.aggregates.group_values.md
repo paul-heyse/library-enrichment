@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 2 public items · structured records in [`mo
 fn new_group_values(schema: arrow::datatypes::SchemaRef, group_ordering: &aggregates::order::GroupOrdering) -> datafusion_common::Result<Box<dyn GroupValues>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.group_values.new_group_values.md).
+
+
 Return a specialized implementation of [`GroupValues`] for the given schema.
 
 [`GroupValues`] implementations choosing logic:
@@ -52,6 +55,9 @@ fn is_empty(&self) -> bool
 fn len(&self) -> usize
 fn size(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.group_values.GroupValues.md).
+
 
 Stores the group values during hash aggregation.
 

@@ -10,6 +10,9 @@ Crate `datafusion-functions` · 3 public items · structured records in [`model/
 fn decode() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.encoding.decode.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of decode
 
 ---
@@ -22,6 +25,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of decode
 fn encode() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.encoding.encode.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of encode
 
 ---
@@ -33,6 +39,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of encode
 ```rust
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.encoding.functions.md).
+
 
 Returns all DataFusion functions defined in this package
 

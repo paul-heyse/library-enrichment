@@ -1,0 +1,51 @@
+[
+  {
+    "id": "387069f0c8c7cfb3748cd186",
+    "path": "datafusion_functions::export_functions",
+    "name": "export_functions",
+    "owner": null,
+    "crate": "datafusion-functions",
+    "version": "55.1.0",
+    "kind": "macro",
+    "signature": "macro_rules! export_functions",
+    "docs": "macro that exports a list of function names as:\n1. individual functions in an `expr_fn` module\n2. a single function that returns a list of all functions\n\nEquivalent to\n```text\npub mod expr_fn {\n    use super::*;\n    /// Return encode(arg)\n    pub fn encode(args: Vec<Expr>) -> Expr {\n        super::encode().call(args)\n    }\n ...\n/// Return a list of all functions in this package\npub(crate) fn functions() -> Vec<Arc<ScalarUDF>> {\n    vec![\n      encode(),\n      decode()\n   ]\n}\n```\n\nExported functions accept:\n- `Vec<Expr>` argument (single argument followed by a comma)\n- Variable number of `Expr` arguments (zero or more arguments, must be without commas)\n- Functions that require config (marked with `@config` prefix)\n\nNote on configuration construction paths:\n- The convenience wrappers generated for `@config` functions call the inner\n  constructor with `ConfigOptions::default()`. These wrappers are intended\n  primarily for programmatic `Expr` construction and convenience usage.\n- When functions are registered in a session, DataFusion will call\n  `with_updated_config()` to create a `ScalarUDF` instance using the session's\n  actual `ConfigOptions`. This also happens when configuration changes at runtime\n  (e.g., via `SET` statements). In short: the macro uses the default config for\n  convenience constructors; the session config is applied when functions are\n  registered or when configuration is updated.",
+    "span": {
+      "filename": "src/macros.rs",
+      "begin": [
+        56,
+        1
+      ],
+      "end": [
+        106,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      "macro_export"
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "macro": "macro_rules! export_functions {\n    ($(($FUNC:ident, $DOC:expr, $($arg:tt)*)),*) => { ... };\n    (single $FUNC:ident, $DOC:expr, @config) => { ... };\n    (single $FUNC:ident, $DOC:expr, @config $arg:ident,) => { ... };\n    (single $FUNC:ident, $DOC:expr, @config $($arg:ident)*) => { ... };\n    (single $FUNC:ident, $DOC:expr, $arg:ident,) => { ... };\n    (single $FUNC:ident, $DOC:expr, $($arg:ident)*) => { ... };\n}"
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e1d096725359f4276d6acc8757f0e9612b0b148678410a03da37509b2bdba1ac",
+      "format_version": 61,
+      "item_id": "4994",
+      "origin": "https://docs.rs/crate/datafusion-functions/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_functions.export_functions.md",
+    "record_file": "operations/datafusion_functions.export_functions.json",
+    "anchor": "op-387069f0c8c7cfb3748cd186",
+    "aliases": [
+      "datafusion::functions::export_functions"
+    ],
+    "resolved_doc_links": {}
+  }
+]

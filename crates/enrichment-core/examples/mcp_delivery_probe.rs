@@ -1,7 +1,7 @@
 //! Isolated cross-language wire oracle inputs; no daemon, table, job or MCP session is opened.
 use enrichment_core::{
     execution::{JobData, JobResult},
-    mcp_delivery::{DeliveryProfile, ProtocolEra, project},
+    mcp_delivery::{DeliveryProfile, ProtocolEra},
     wire::{DeliveryDescriptor, DeliveryLimits, Envelope, JobState, data::ToolData},
 };
 
@@ -42,13 +42,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut outer: Envelope =
                 serde_json::from_str(include_str!("../../../tests/fixtures/wire/ok.fixture.json"))?;
             outer.data = ToolData::from(JobData {
-                job_id: "job_fixture".into(),
+                job_id: "job_00112233445566778899aabbccddeeff".to_owned().try_into().unwrap(),
                 state: JobState::Failed,
                 stage: "complete".into(),
                 interest_token: None,
                 active_interests: 0,
-                submitted_at: "2026-09-17T00:00:00Z".into(),
-                updated_at: "2026-09-17T00:00:00Z".into(),
+                submitted_at: "2026-09-17T00:00:00.000000Z".to_owned().try_into().unwrap(),
+                updated_at: "2026-09-17T00:00:00.000000Z".to_owned().try_into().unwrap(),
                 result: Some(terminal),
             });
             emit("terminal_job_error", &outer)?;
@@ -58,6 +58,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn emit(name: &str, value: &Envelope) -> Result<(), Box<dyn std::error::Error>> {
+    let pool = std::sync::Arc::new(datafusion::execution::memory_pool::GreedyMemoryPool::new(
+        1024 * 1024,
+    )) as std::sync::Arc<dyn datafusion::execution::memory_pool::MemoryPool>;
     for (protocol, era) in [
         ("2025-11-25", ProtocolEra::Classic),
         ("2026-07-28", ProtocolEra::Modern),
@@ -70,7 +73,7 @@ fn emit(name: &str, value: &Envelope) -> Result<(), Box<dyn std::error::Error>> 
         println!(
             "{}",
             serde_json::to_string(&serde_json::json!({
-                "case": name, "protocol": protocol, "method": "tools/call", "result": project(value, &era)?,
+                "case": name, "protocol": protocol, "method": "tools/call", "result": profile.project(value, &pool)?,
                 "delivery_bytes": profile.measure(value)?,
             }))?
         );
@@ -84,7 +87,7 @@ fn emit(name: &str, value: &Envelope) -> Result<(), Box<dyn std::error::Error>> 
             "{}",
             serde_json::to_string(&serde_json::json!({
                 "case": name, "protocol": protocol, "method": "resources/read", "uri": uri,
-                "result": enrichment_core::mcp_delivery::project_resource(value, &era, uri)?,
+                "result": profile.project(value, &pool)?,
                 "delivery_bytes": profile.measure(value)?,
             }))?
         );

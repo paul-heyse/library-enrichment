@@ -21,6 +21,9 @@ fn should_prune(&mut self) -> Result<bool>
 fn try_new(predicate: Arc<dyn PhysicalExpr>, file_schema: &SchemaRef, partitioned_file: &PartitionedFile, predicate_creation_errors: Count) -> Option<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_pruning.file_pruner.FilePruner.md).
+
+
 Prune based on file-level statistics.
 
 Note: Partition column pruning is handled earlier via `replace_columns_with_literals`

@@ -201,7 +201,7 @@ test-execution:
     libenr_execution_environment=$(bash "{{ root }}/scripts/execution-env.sh")
     eval "$libenr_execution_environment"
     : "${LIBENR_EXECUTION_TEST_ROOT:?qualify and select the execution root first}"
-    NEXTEST_EXPERIMENTAL_LIBTEST_JSON=1 python3 scripts/evidence_run.py --log "{{ root }}/docs/reports/logs/nextest-execution.json" --stdout -- cargo nextest run --locked -p enrichment-daemon --test execution_boundary --test execution_cleanup --run-ignored only --message-format libtest-json-plus
+    NEXTEST_EXPERIMENTAL_LIBTEST_JSON=1 python3 scripts/evidence_run.py --log "{{ root }}/docs/reports/logs/nextest-execution.json" --stdout -- cargo nextest run --locked -p enrichment-daemon --lib -E 'test(execution::qualification_tests::)' --run-ignored only --message-format libtest-json-plus
 
 [doc("Assert dependency policy: banned classes, one Arrow/DataFusion type universe, licenses.")]
 [group('gate')]

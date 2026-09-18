@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## DeltaTableState
 
 `struct` · `deltalake_core::table::state::DeltaTableState`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.state.DeltaTableState.md)
 
 Also reachable as `deltalake::table::state::DeltaTableState`
 

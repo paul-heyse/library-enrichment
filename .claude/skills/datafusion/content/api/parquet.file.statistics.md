@@ -51,6 +51,9 @@ fn from(t: ValueStatistics<T>) -> Self
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.statistics.Statistics.md).
+
+
 Strongly typed statistics for a column chunk within a row group.
 
 This structure is a natively typed, in memory representation of the thrift
@@ -100,6 +103,9 @@ fn with_min_is_exact(self, is_min_value_exact: bool) -> Self
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.statistics.ValueStatistics.md).
+
+
 Typed statistics for one column chunk
 
 See [`Statistics`] for more details
@@ -113,6 +119,9 @@ See [`Statistics`] for more details
 ```rust
 type TypedStatistics<T> = ValueStatistics<<T as DataType>::T>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.statistics.TypedStatistics.md).
+
 
 Typed implementation for [`Statistics`].
 

@@ -21,6 +21,9 @@ fn start_stream<W: Write>(&mut self, _writer: &mut W, _schema: &Schema, compress
 fn sync_marker(&self) -> Option<&[u8; 16]>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.writer.format.AvroBinaryFormat.md).
+
+
 Unframed Avro binary streaming format ("raw Avro record body bytes (no prefix, no OCF header)").
 
 Each record written by the stream writer contains only the raw Avro
@@ -52,6 +55,9 @@ fn start_stream<W: Write>(&mut self, writer: &mut W, schema: &Schema, compressio
 fn sync_marker(&self) -> Option<&[u8; 16]>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.writer.format.AvroOcfFormat.md).
+
+
 Avro Object Container File (OCF) format writer.
 
 ---
@@ -74,6 +80,9 @@ struct AvroSoeFormat
 fn start_stream<W: Write>(&mut self, _writer: &mut W, _schema: &Schema, compression: Option<CompressionCodec>) -> Result<(), AvroError>
 fn sync_marker(&self) -> Option<&[u8; 16]>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.writer.format.AvroSoeFormat.md).
+
 
 Raw Avro binary streaming format using **Single-Object Encoding** per record.
 
@@ -105,6 +114,9 @@ trait AvroFormat: Debug + Default
 fn start_stream<W: Write>(&mut self, writer: &mut W, schema: &Schema, compression: Option<CompressionCodec>) -> Result<(), AvroError>
 fn sync_marker(&self) -> Option<&[u8; 16]>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.writer.format.AvroFormat.md).
+
 
 Format abstraction implemented by each container‐level writer.
 

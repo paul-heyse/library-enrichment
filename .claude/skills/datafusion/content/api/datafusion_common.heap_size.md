@@ -12,6 +12,9 @@ struct DFHeapSizeCtx
 
 **Derives**: Default
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.heap_size.DFHeapSizeCtx.md).
+
+
 ---
 
 ## DFHeapSize
@@ -63,6 +66,9 @@ trait DFHeapSize
 ```rust
 fn heap_size(&self, ctx: &mut DFHeapSizeCtx) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.heap_size.DFHeapSize.md).
+
 
 Trait for computing how many bytes a value has allocated on the heap.
 

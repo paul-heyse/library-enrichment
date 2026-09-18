@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::digest`, `datafusion_functions::expr_fn:
 fn digest(input_arg1: datafusion_expr::Expr, input_arg2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.crypto.expr_fn.digest.md).
+
+
 Computes the binary hash of an expression using the specified algorithm.
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `datafusion::prelude::md5`, `datafusion_functions::expr_fn::md
 ```rust
 fn md5(input_arg: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.crypto.expr_fn.md5.md).
+
 
 Computes an MD5 128-bit checksum for a string expression.
 
@@ -40,6 +46,9 @@ Also reachable as `datafusion::prelude::sha224`, `datafusion_functions::expr_fn:
 fn sha224(input_arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.crypto.expr_fn.sha224.md).
+
+
 Computes the SHA-224 hash of a binary string.
 
 ---
@@ -53,6 +62,9 @@ Also reachable as `datafusion::prelude::sha256`, `datafusion_functions::expr_fn:
 ```rust
 fn sha256(input_arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.crypto.expr_fn.sha256.md).
+
 
 Computes the SHA-256 hash of a binary string.
 
@@ -68,6 +80,9 @@ Also reachable as `datafusion::prelude::sha384`, `datafusion_functions::expr_fn:
 fn sha384(input_arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.crypto.expr_fn.sha384.md).
+
+
 Computes the SHA-384 hash of a binary string.
 
 ---
@@ -81,6 +96,9 @@ Also reachable as `datafusion::prelude::sha512`, `datafusion_functions::expr_fn:
 ```rust
 fn sha512(input_arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.crypto.expr_fn.sha512.md).
+
 
 Computes the SHA-512 hash of a binary string.
 

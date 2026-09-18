@@ -52,6 +52,9 @@ fn supports_struct_literal(&self) -> bool
 fn supports_values_as_table_factor(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.spark.SparkSqlDialect.md).
+
+
 A [`Dialect`] for [Apache Spark SQL](https://spark.apache.org/docs/latest/sql-ref.html).
 
 See <https://spark.apache.org/docs/latest/sql-ref-syntax.html>.

@@ -12,6 +12,9 @@ Also reachable as `arrow_json::writer::make_encoder`
 fn make_encoder<'a>(field: &'a arrow_schema::FieldRef, array: &'a dyn Array, options: &'a EncoderOptions) -> Result<NullableEncoder<'a>, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.writer.encoder.make_encoder.md).
+
+
 Creates an encoder for the given array and field.
 
 This first calls the EncoderFactory if one is provided, and then falls back to the default encoders.
@@ -51,6 +54,9 @@ fn with_timestamp_format(self, format: String) -> Self
 fn with_timestamp_tz_format(self, tz_format: String) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.writer.encoder.EncoderOptions.md).
+
+
 Configuration options for the JSON encoder.
 
 ---
@@ -82,6 +88,9 @@ fn new(encoder: Box<dyn Encoder + 'a>, nulls: Option<NullBuffer>) -> Self
 fn encode(&mut self, idx: usize, out: &mut Vec<u8>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.writer.encoder.NullableEncoder.md).
+
+
 An encoder + a null buffer.
 This is packaged together into a wrapper struct to minimize dynamic dispatch for null checks.
 
@@ -107,6 +116,9 @@ trait Encoder
 fn encode(&mut self, idx: usize, out: &mut Vec<u8>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.writer.encoder.Encoder.md).
+
+
 A trait to format array values as JSON values
 
 Nullability is handled by the caller to allow encoding nulls implicitly, i.e. `{}` instead of `{"a": null}`
@@ -128,6 +140,9 @@ trait EncoderFactory: std::fmt::Debug + Send + Sync
 ```rust
 fn make_default_encoder<'a>(&self, _field: &'a FieldRef, _array: &'a dyn Array, _options: &'a EncoderOptions) -> Result<Option<NullableEncoder<'a>>, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_json.writer.encoder.EncoderFactory.md).
+
 
 A trait to create custom encoders for specific data types.
 

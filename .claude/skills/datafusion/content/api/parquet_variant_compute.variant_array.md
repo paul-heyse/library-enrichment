@@ -10,6 +10,9 @@ Crate `parquet-variant-compute` · 5 public items · structured records in [`mod
 struct ShreddedVariantFieldArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.variant_array.ShreddedVariantFieldArray.md).
+
+
 One shredded field of a partially or perfectly shredded variant. For example, suppose the
 shredding schema for variant `v` treats it as an object with a single field `a`, where `a` is
 itself a struct with the single field `b` of type INT. Then the physical layout of the column
@@ -75,6 +78,9 @@ fn value_column(&self) -> &ArrayRef
 ```rust
 fn try_from(inner_struct: &StructArray) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.variant_array.ShreddingState.md).
+
 
 Represents the shredding state of a [`VariantArray`]
 
@@ -158,6 +164,9 @@ fn value_column(&self) -> &ArrayRef
 fn from_iter<T: IntoIterator<Item = Variant<'m, 'v>>>(iter: T) -> Self
 fn from_iter<T: IntoIterator<Item = Option<Variant<'m, 'v>>>>(iter: T) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.variant_array.VariantArray.md).
+
 
 An array of Parquet [`Variant`] values
 
@@ -299,6 +308,9 @@ assert_eq!(variant_array.value(0), Variant::from("such wow"));
 struct VariantArrayIter<'a>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.variant_array.VariantArrayIter.md).
+
+
 An iterator over [`VariantArray`]
 
 This iterator returns `Option<Option<Variant<'a, 'a>>>` where:
@@ -348,6 +360,9 @@ fn supports_data_type(&self, data_type: &DataType) -> Result<()>
 fn try_new(data_type: &DataType, _metadata: Self::Metadata) -> Result<Self>
 fn validate(data_type: &DataType, _metadata: Self::Metadata) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.variant_array.VariantType.md).
+
 
 Arrow Variant [`ExtensionType`].
 

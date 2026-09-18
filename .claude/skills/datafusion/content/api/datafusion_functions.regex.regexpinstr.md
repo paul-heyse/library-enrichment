@@ -10,6 +10,9 @@ Crate `datafusion-functions` · 2 public items · structured records in [`model/
 fn regexp_instr_func(args: &[arrow::array::ArrayRef]) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.regex.regexpinstr.regexp_instr_func.md).
+
+
 ---
 
 ## RegexpInstrFunc
@@ -39,5 +42,8 @@ fn name(&self) -> &str
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.regex.regexpinstr.RegexpInstrFunc.md).
+
 
 ---

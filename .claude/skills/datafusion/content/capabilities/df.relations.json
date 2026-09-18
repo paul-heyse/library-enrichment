@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "id": "df.relations",
+  "title": "Choose relational cardinality, null-key and ordering semantics",
+  "task_aliases": [
+    "join duplicates",
+    "null keys join",
+    "union all distinct",
+    "set bag operations",
+    "sort limit top k",
+    "unnest list"
+  ],
+  "crates": [
+    "datafusion",
+    "datafusion-expr",
+    "datafusion-physical-plan",
+    "datafusion-functions-nested"
+  ],
+  "input": [
+    "DataFrame",
+    "Expr"
+  ],
+  "output": [
+    "DataFrame",
+    "LogicalPlan"
+  ],
+  "properties": [
+    "cardinality",
+    "duplicates",
+    "nulls",
+    "order",
+    "partitioning"
+  ],
+  "operations": [
+    "datafusion::dataframe::DataFrame::join",
+    "datafusion::dataframe::DataFrame::join_on",
+    "datafusion::dataframe::DataFrame::union",
+    "datafusion::dataframe::DataFrame::union_distinct",
+    "datafusion::dataframe::DataFrame::intersect",
+    "datafusion::dataframe::DataFrame::except",
+    "datafusion::dataframe::DataFrame::unnest_columns"
+  ],
+  "brief": "Join keys can multiply rows; equality and null-safe equality differ. Bag/set operations differ on duplicates, and neither partitioning nor streaming promises global result order.",
+  "choices": [
+    {
+      "candidate": "join / join_on",
+      "choose_when": "Combine matching rows with chosen join type/predicate",
+      "tradeoff": "Check multiplicity and null-safe versus ordinary equality.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "union / UNION ALL",
+      "choose_when": "Concatenate bags",
+      "tradeoff": "Preserves duplicate multiplicity, subject to compatible schemas.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "union_distinct / UNION",
+      "choose_when": "Set-like duplicate elimination",
+      "tradeoff": "Adds equality/dedup work; output order is unspecified without sort.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "unnest",
+      "choose_when": "Expand nested values into rows",
+      "tradeoff": "Row cardinality and null/empty-list options require explicit review.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "df.relations.cardinality",
+      "aspect": "cardinality",
+      "statement": "Many-to-many key matches multiply rows. Ordinary SQL equality does not match null keys; IS NOT DISTINCT FROM has different null equality. Select the join predicate deliberately.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.relations.sets",
+      "aspect": "sets",
+      "statement": "DataFrame union keeps duplicates; union_distinct removes them. Intersect/except expose distinct/all semantics via their APIs; inspect their flag and schema requirements rather than assuming SQL default multiplicities.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.relations.ordering",
+      "aspect": "ordering",
+      "statement": "Explicit ORDER BY establishes requested ordering. LIMIT without a total ordering does not identify deterministic rows among ties; partitioned execution changes arrival order.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.relations.schema",
+      "aspect": "schema",
+      "statement": "Align widths, types, column identity and metadata before relational combination. Compatible logical schema does not establish every physical metadata propagation path.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Write down expected multiplicity, null equality and tie behavior.",
+    "Use duplicate/null/empty inputs in a differential fixture.",
+    "Inspect explain output for sort/top-k and cardinality effects; validate values independently of plan shape."
+  ],
+  "unknowns": [
+    "The SQL probe covers ordinary/null-safe inner joins and distinct UNION/INTERSECT/EXCEPT plus UNION ALL; all join types and DataFrame all-flags are not runtime-qualified."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "datafusion::dataframe::DataFrame::join",
+        "datafusion::dataframe::DataFrame::join_on",
+        "datafusion::dataframe::DataFrame::union",
+        "datafusion::dataframe::DataFrame::union_distinct",
+        "datafusion::dataframe::DataFrame::intersect",
+        "datafusion::dataframe::DataFrame::except",
+        "datafusion::dataframe::DataFrame::unnest_columns"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    },
+    {
+      "id": "probe",
+      "kind": "runtime_observation",
+      "tests": [
+        "joins_sets_and_window_frames_have_distinct_cardinality"
+      ],
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Only the named assertions in the recorded Cargo profile."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "datafusion::dataframe::DataFrame::join",
+      "datafusion::dataframe::DataFrame::join_on",
+      "datafusion::dataframe::DataFrame::union",
+      "datafusion::dataframe::DataFrame::union_distinct",
+      "datafusion::dataframe::DataFrame::intersect",
+      "datafusion::dataframe::DataFrame::except",
+      "datafusion::dataframe::DataFrame::unnest_columns"
+    ],
+    "candidate_set": [
+      "join / join_on",
+      "union / UNION ALL",
+      "union_distinct / UNION",
+      "unnest"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  },
+  "resolved_operations": [
+    {
+      "path": "datafusion::dataframe::DataFrame::join",
+      "id": "8991ac8bbaecfd6a6972ed32",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-8991ac8bbaecfd6a6972ed32",
+      "signature": "fn join(self, right: DataFrame, join_type: JoinType, left_cols: &[&str], right_cols: &[&str], filter: Option<Expr>) -> Result<DataFrame>"
+    },
+    {
+      "path": "datafusion::dataframe::DataFrame::join_on",
+      "id": "bf2e40975b5857c34b3f7997",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-bf2e40975b5857c34b3f7997",
+      "signature": "fn join_on(self, right: DataFrame, join_type: JoinType, on_exprs: impl IntoIterator<Item = Expr>) -> Result<DataFrame>"
+    },
+    {
+      "path": "datafusion::dataframe::DataFrame::union",
+      "id": "ef61c631381b9b5946811db6",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-ef61c631381b9b5946811db6",
+      "signature": "fn union(self, dataframe: DataFrame) -> Result<DataFrame>"
+    },
+    {
+      "path": "datafusion::dataframe::DataFrame::union_distinct",
+      "id": "26f79a38ddbe6096a2d66b5b",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-26f79a38ddbe6096a2d66b5b",
+      "signature": "fn union_distinct(self, dataframe: DataFrame) -> Result<DataFrame>"
+    },
+    {
+      "path": "datafusion::dataframe::DataFrame::intersect",
+      "id": "6711a3af98d7542d1cec7903",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-6711a3af98d7542d1cec7903",
+      "signature": "fn intersect(self, dataframe: DataFrame) -> Result<DataFrame>"
+    },
+    {
+      "path": "datafusion::dataframe::DataFrame::except",
+      "id": "dbd92e8ee9b929d68d189748",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-dbd92e8ee9b929d68d189748",
+      "signature": "fn except(self, dataframe: DataFrame) -> Result<DataFrame>"
+    },
+    {
+      "path": "datafusion::dataframe::DataFrame::unnest_columns",
+      "id": "a62714b7d02a6f39683e377c",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-a62714b7d02a6f39683e377c",
+      "signature": "fn unnest_columns(self, columns: &[&str]) -> Result<DataFrame>"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/df.relations.json"
+}

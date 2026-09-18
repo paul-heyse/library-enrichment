@@ -68,6 +68,9 @@ fn from(data: ArrayData) -> Self
 fn from(value: FixedSizeListArray) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.list_array.GenericListArray.md).
+
+
 An array of [variable length lists], similar to JSON arrays
 (e.g. `["A", "B", "C"]`). This struct specifically represents
 the [list layout]. Refer to [`GenericListViewArray`] for the
@@ -187,6 +190,9 @@ would result in the following. Note
 trait OffsetSizeTrait: ArrowNativeType + std::ops::AddAssign + Integer + num_traits::CheckedAdd + num_traits::CheckedSub
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.list_array.OffsetSizeTrait.md).
+
+
 A type that can be used within a variable-size array to encode offset information
 
 See [`ListArray`], [`LargeListArray`], [`BinaryArray`], [`LargeBinaryArray`],
@@ -209,6 +215,9 @@ type LargeListArray = GenericListArray<i64>
 
 **Implements**: `datafusion_common::heap_size::DFHeapSize`
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.list_array.LargeListArray.md).
+
+
 A [`GenericListArray`] of variable size lists, storing offsets as `i64`.
 
 See [`LargeListBuilder`](crate::builder::LargeListBuilder) for how to construct a [`LargeListArray`]
@@ -230,6 +239,9 @@ type ListArray = GenericListArray<i32>
 ```rust
 fn from(value: MapArray) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.list_array.ListArray.md).
+
 
 A [`GenericListArray`] of variable size lists, storing offsets as `i32`.
 

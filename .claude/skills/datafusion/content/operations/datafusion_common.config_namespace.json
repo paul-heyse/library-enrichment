@@ -1,0 +1,62 @@
+[
+  {
+    "id": "1012b502781667e7c6f2e912",
+    "path": "datafusion_common::config_namespace",
+    "name": "config_namespace",
+    "owner": null,
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "macro",
+    "signature": "macro_rules! config_namespace",
+    "docs": "A macro that wraps a configuration struct and automatically derives\n[`Default`] and [`ConfigField`] for it, allowing it to be used\nin the [`ConfigOptions`] configuration tree.\n\n`transform` is used to normalize values before parsing.\n\nFor example,\n\n```ignore\nconfig_namespace! {\n   /// Amazing config\n   pub struct MyConfig {\n       /// Field 1 doc\n       field1: String, transform = str::to_lowercase, default = \"\".to_string()\n\n       /// Field 2 doc\n       field2: usize, default = 232\n\n       /// Field 3 doc\n       field3: Option<usize>, default = None\n   }\n}\n```\n\nWill generate\n\n```ignore\n/// Amazing config\n#[derive(Debug, Clone)]\n#[non_exhaustive]\npub struct MyConfig {\n    /// Field 1 doc\n    field1: String,\n    /// Field 2 doc\n    field2: usize,\n    /// Field 3 doc\n    field3: Option<usize>,\n}\nimpl ConfigField for MyConfig {\n    fn set(&mut self, key: &str, value: &str) -> Result<()> {\n        let (key, rem) = key.split_once('.').unwrap_or((key, \"\"));\n        match key {\n            \"field1\" => {\n                let value = str::to_lowercase(value);\n                self.field1.set(rem, value.as_ref())\n            },\n            \"field2\" => self.field2.set(rem, value.as_ref()),\n            \"field3\" => self.field3.set(rem, value.as_ref()),\n            _ => _internal_err!(\n                \"Config value \\\"{}\\\" not found on MyConfig\",\n                key\n            ),\n        }\n    }\n\n    fn visit<V: Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str) {\n        let key = format!(\"{}.field1\", key_prefix);\n        let desc = \"Field 1 doc\";\n        self.field1.visit(v, key.as_str(), desc);\n        let key = format!(\"{}.field2\", key_prefix);\n        let desc = \"Field 2 doc\";\n        self.field2.visit(v, key.as_str(), desc);\n        let key = format!(\"{}.field3\", key_prefix);\n        let desc = \"Field 3 doc\";\n        self.field3.visit(v, key.as_str(), desc);\n    }\n}\n\nimpl Default for MyConfig {\n    fn default() -> Self {\n        Self {\n            field1: \"\".to_string(),\n            field2: 232,\n            field3: None,\n        }\n    }\n}\n```\n\nNB: Misplaced commas may result in nonsensical errors",
+    "span": {
+      "filename": "src/config.rs",
+      "begin": [
+        122,
+        1
+      ],
+      "end": [
+        220,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      "macro_export"
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "macro": "macro_rules! config_namespace {\n    (\n        $(#[doc = $struct_d:tt])* // Struct-level documentation attributes\n        $(#[deprecated($($struct_depr:tt)*)])? // Optional struct-level deprecated attribute\n        $(#[allow($($struct_de:tt)*)])?\n        $vis:vis struct $struct_name:ident {\n            $(\n                $(#[doc = $d:tt])* // Field-level documentation attributes\n                $(#[deprecated($($field_depr:tt)*)])? // Optional field-level deprecated attribute\n                $(#[allow($($field_de:tt)*)])?\n                $field_vis:vis $field_name:ident : $field_type:ty,\n                $(warn = $warn:expr,)?\n                $(transform = $transform:expr,)?\n                default = $default:expr\n            )*$(,)*\n        }\n    ) => { ... };\n}"
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Default`": 340,
+      "`ConfigField`": 1125,
+      "`ConfigOptions`": 1937
+    },
+    "link_paths": {
+      "`Default`": "core::default::Default",
+      "`ConfigField`": "datafusion_common::config::ConfigField",
+      "`ConfigOptions`": "datafusion_common::config::ConfigOptions"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5954",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.config_namespace.md",
+    "record_file": "operations/datafusion_common.config_namespace.json",
+    "anchor": "op-1012b502781667e7c6f2e912",
+    "aliases": [
+      "datafusion::common::config_namespace"
+    ],
+    "resolved_doc_links": {
+      "`ConfigField`": "../operations/datafusion_common.config.ConfigField.md#op-679f6f8b2eea5f3367d79f93",
+      "`ConfigOptions`": "../operations/datafusion_common.config.ConfigOptions.md#op-0fede8afa640e38e337e0cc4"
+    }
+  }
+]

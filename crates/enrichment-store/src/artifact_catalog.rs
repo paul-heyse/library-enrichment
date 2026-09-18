@@ -81,6 +81,7 @@ impl ControlSnapshot {
             vec![crate::retention::Dependency::Artifact {
                 artifact_id: artifact.artifact_id.clone(),
             }],
+            &[],
         )
         .await
         .map(ArtifactProtection)
@@ -148,6 +149,46 @@ pub(crate) fn flatten(frame: DataFrame) -> Result<DataFrame> {
     )
 }
 
+fn receipt_roots(input: DataFrame, sequence: u64) -> Result<DataFrame> {
+    use crate::retention::{Dependency, RetentionRoot};
+    use datafusion::functions::core::expr_ext::FieldAccessor;
+    use enrichment_core::{
+        evidence::arrow_model::expressions::{child, record},
+        native_union::Cell,
+    };
+    let dependency = record(
+        &Dependency::data_type(),
+        &[
+            ("kind", lit("artifact")),
+            (
+                "artifact",
+                record(
+                    &child(&Dependency::data_type(), "artifact")?,
+                    &[("artifact_id", col("artifact").field("artifact_id"))],
+                )?,
+            ),
+        ],
+    )?;
+    let root = record(
+        &RetentionRoot::data_type(),
+        &[
+            ("root_id", col("receipt_id")),
+            (
+                "dependencies",
+                datafusion::functions_nested::expr_fn::make_array(vec![dependency]),
+            ),
+            ("removed", lit(false)),
+            ("sequence", lit(sequence)),
+        ],
+    )?;
+    input.select(vec![root.alias("root")])?.select(
+        RetentionRoot::fields()
+            .iter()
+            .map(|field| col("root").field(field.name()).alias(field.name()))
+            .collect::<Vec<_>>(),
+    )
+}
+
 impl ControlStore {
     /// Retain standalone issued artifacts before returning their handles. Publication-owned
     /// acquisition receipts are already selected atomically in their attempt records.
@@ -164,10 +205,12 @@ impl ControlStore {
                 "artifact receipt input bound".into(),
             ));
         }
-        let frame = runtime
-            .session()
-            .read_batch(encode(artifacts)?)?
-            .select(vec![col("artifact")])?;
+        let frame = crate::native_catalog::batch(
+            &runtime.session(),
+            "artifact_catalog",
+            encode(artifacts)?,
+        )?
+        .select(vec![col("artifact")])?;
         self.retain_artifact_plan(runtime, frame).await
     }
 
@@ -191,39 +234,101 @@ impl ControlStore {
         runtime.require_empty(bounded.sql("SELECT 'artifact_receipts' AS witness FROM artifact_receipt_input HAVING count(*)>1024").await?, "artifact_receipt_input_count", "artifact_retention").await?;
         for _ in 0..16 {
             let pin = self.pin().await?;
-            let session = pin.session(runtime).await?;
+            let session = pin.transition_session(runtime).await?;
             let input = input.clone().alias("incoming")?;
             let selected = session
                 .table("state.records.artifact_receipts")
                 .await?
                 .alias("selected")?;
             let additions = runtime
-                .execute(input.join(
-                    selected,
-                    JoinType::LeftAnti,
-                    &["receipt_id"],
-                    &["receipt_id"],
-                    None,
-                )?)
+                .execute(
+                    input
+                        .clone()
+                        .join(
+                            selected,
+                            JoinType::LeftAnti,
+                            &["receipt_id"],
+                            &["receipt_id"],
+                            None,
+                        )?
+                        .limit(0, Some(512))?,
+                )
                 .await?;
-            if additions.rows == 0 {
+            let roots = receipt_roots(input.clone(), pin.generation() + 1)?;
+            crate::native_catalog::work(&session, "receipt_roots", roots.clone().into_view())?;
+            runtime.require_empty(session.sql("SELECT n.root_id AS witness FROM receipt_roots n JOIN state.records.retention_roots r ON n.root_id=r.root_id WHERE r.removed OR n.dependencies<>r.dependencies").await?,"artifact_receipt_root_immutable","artifact_retention").await?;
+            let new_roots = runtime.execute(session.sql("SELECT n.* FROM receipt_roots n LEFT ANTI JOIN state.records.retention_roots r ON n.root_id=r.root_id LIMIT 512").await?).await?;
+            if additions.rows == 0 && new_roots.rows == 0 {
                 return Ok(());
             }
-            let records = additions
+            let mut records: Vec<_> = additions
                 .batches
                 .into_iter()
                 .map(|batch| (Table::ArtifactReceipts, batch))
                 .collect();
+            records.extend(
+                new_roots
+                    .batches
+                    .into_iter()
+                    .map(|batch| (Table::RetentionRoots, batch)),
+            );
             if self
                 .commit_native(pin.generation(), records, vec!["artifact_receipts".into()])
                 .await?
                 .is_some()
             {
-                return Ok(());
+                continue;
             }
         }
         Err(DataFusionError::Execution(
             "artifact receipt conflict bound exceeded".into(),
         ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[tokio::test]
+    async fn plan19_receipt_roots_derive_exact_artifact_dependencies() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let runtime = QueryRuntime::new(&directory.path().join("spill"), Default::default())?;
+        let artifact = Artifact::describe(
+            b"fixture",
+            enrichment_core::evidence::ArtifactKind::Other,
+            "text/plain",
+            "fixture",
+            enrichment_core::native_time::AcquisitionTime::from_micros(0)?,
+        );
+        let batch = encode(std::slice::from_ref(&artifact))?;
+        let receipt = batch
+            .column(0)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap()
+            .value(0)
+            .to_owned();
+        let rows = runtime
+            .records::<crate::retention::RetentionRoot>(
+                receipt_roots(
+                    crate::native_catalog::batch(&runtime.session(), "artifact_catalog", batch)?,
+                    7,
+                )?,
+                2,
+            )
+            .await?;
+        assert_eq!(
+            rows,
+            vec![crate::retention::RetentionRoot {
+                root_id: receipt,
+                dependencies: vec![crate::retention::Dependency::Artifact {
+                    artifact_id: artifact.artifact_id
+                }],
+                removed: false,
+                sequence: 7
+            }]
+        );
+        runtime.close_diagnostics().await?;
+        Ok(())
     }
 }

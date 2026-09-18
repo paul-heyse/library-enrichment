@@ -1,0 +1,85 @@
+{
+  "evaluation": "blind_baseline",
+  "completed_at": "2026-09-18T21:24:39.420625+00:00",
+  "task_count": 38,
+  "decision_responses": 38,
+  "code_required_count": 8,
+  "consumer_runtime": {
+    "passed": 8,
+    "failed": 0,
+    "blocked": 0,
+    "not_run": 0
+  },
+  "non_code_decisions": {
+    "count": 30,
+    "runtime_status": "not_run",
+    "support": "source inspection and bounded inferences; not behavioral certification"
+  },
+  "cargo_attempts": 3,
+  "cargo_total_elapsed_seconds": 4.157971151988022,
+  "first_instrumented_event": "2026-09-18T21:15:23.984095+00:00",
+  "elapsed_seconds_from_first_instrumented_event": 555.43653,
+  "elapsed_seconds_total": null,
+  "elapsed_time_note": "Initial reference reading was not timestamped; parent confirmed spawn time was not recorded. The measured interval is a lower bound on total evaluation elapsed time, not a substitute estimate.",
+  "context_tokens": null,
+  "context_tokens_note": "No trustworthy context-token instrumentation was available; none invented.",
+  "observed_tool_calls": {
+    "functions_exec_wrappers": 25,
+    "nested_exec_command": 24,
+    "nested_write_stdin": 2,
+    "collaboration_send_message": 1,
+    "count_scope": "This independent agent through the finalization command, manually tallied from visible tool calls."
+  },
+  "no_network": true,
+  "live_cloud_changes": false,
+  "runtime_storage": "Disposable in-memory Delta tables only",
+  "cache_source_usage": true,
+  "cache_source_note": "Exact delta-rs Cargo checkout 58f07cd and DataFusion 55.1.0 registry source inspected; detailed paths/digests in materials.json.",
+  "final_source_sha256": "4c6307dcbdd229799b532e3efb1962317f4e990d9689583a47db16d0fb47c8a6",
+  "final_log_sha256": "ba7bb38135ae02e2952ef3a3894a0df826cba89173d7e7c8a3ac3920263e9745",
+  "failure_history": [
+    {
+      "attempt": 1,
+      "stage": "compile",
+      "exit_code": 101,
+      "observations": [
+        "Private LogStoreExt import rejected",
+        "Awaited provider already returns Arc<dyn TableProvider>; extra Arc layer rejected"
+      ],
+      "repair": "Removed private trait import and redundant Arc wrappers; runtime assertions unchanged."
+    },
+    {
+      "attempt": 2,
+      "stage": "runtime",
+      "exit_code": 101,
+      "passed": 6,
+      "failed": 2,
+      "observations": [
+        "Caller ordinary DataFusion planner cannot lower Delta MetricObserver",
+        "CDF commit-version output was not an Int64Array; direct downcast panicked"
+      ],
+      "repair": "Kept the ordinary-planner failure as an explicit negative assertion; cloned caller SessionState and installed DeltaPlanner while preserving runtime/config/UDF. Decoded displayed commit-version scalar to i64 and kept exact expected version/value/change-type assertions."
+    },
+    {
+      "attempt": 3,
+      "stage": "runtime",
+      "exit_code": 0,
+      "passed": 8,
+      "failed": 0,
+      "note": "All eight required task tests ran; no test was removed or ignored."
+    }
+  ],
+  "capability_gap_scan": {
+    "exit_code": 0,
+    "findings": {
+      "project-write-without-schema-mode": 18,
+      "project-write-without-commit-properties": 18
+    },
+    "interpretation": "Help-level syntax suggestions on deliberate fixed-schema/non-retried fixtures, including false-positive method chains. No DeltaOps use. These findings are not semantic defects or evidence of replay safety."
+  },
+  "baseline_guidance_corrections": [
+    "Application transaction markers do not automatically suppress sequential replay: verified by runtime test.",
+    "Baseline DML topic says duplicate source matches never error; exact-pin MergeBuilder source has a duplicate relevant WHEN MATCHED validation failure test. Source normalization is still required.",
+    "Concrete session preservation must also supply Delta extension planning: plain planner runtime failure retained and compatible planner path executed."
+  ]
+}

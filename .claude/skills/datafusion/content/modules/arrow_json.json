@@ -1,0 +1,96 @@
+[
+  {
+    "id": "9cfc2f2ebe48fa33164bfd99",
+    "path": "arrow_json",
+    "name": "arrow_json",
+    "owner": null,
+    "crate": "arrow-json",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod arrow_json",
+    "docs": "Transfer data between the Arrow memory format and JSON line-delimited records.\n\nSee the module level documentation for the\n[`reader`] and [`writer`] for usage examples.\n\n# Binary Data uses `Base16` Encoding\n\nAs per [RFC7159] JSON cannot encode arbitrary binary data. This crate works around that\nlimitation by encoding/decoding binary data as a [hexadecimal] string (i.e.\n[`Base16` encoding]).\n\nNote that `Base16` only has 50% space efficiency (i.e., the encoded data is twice as large\nas the original). If that is an issue, we recommend to convert binary data to/from a different\nencoding format such as `Base64` instead. See the following example for details.\n\n## `Base64` Encoding Example\n\n[`Base64`] is a common [binary-to-text encoding] scheme with a space efficiency of 75%. The\nfollowing example shows how to use the [`arrow_cast`] crate to encode binary data to `Base64`\nbefore converting it to JSON and how to decode it back.\n\n```\n# use std::io::Cursor;\n# use std::sync::Arc;\n# use arrow_array::{BinaryArray, RecordBatch, StringArray};\n# use arrow_array::cast::AsArray;\nuse arrow_cast::base64::{b64_decode, b64_encode, BASE64_STANDARD};\n# use arrow_json::{LineDelimitedWriter, ReaderBuilder};\n#\n// The data we want to write\nlet input = BinaryArray::from(vec![b\"\\xDE\\x00\\xFF\".as_ref()]);\n\n// Base64 encode it to a string\nlet encoded: StringArray = b64_encode(&BASE64_STANDARD, &input);\n\n// Write the StringArray to JSON\nlet batch = RecordBatch::try_from_iter([(\"col\", Arc::new(encoded) as _)]).unwrap();\nlet mut buf = Vec::with_capacity(1024);\nlet mut writer = LineDelimitedWriter::new(&mut buf);\nwriter.write(&batch).unwrap();\nwriter.finish().unwrap();\n\n// Read the JSON data\nlet cursor = Cursor::new(buf);\nlet mut reader = ReaderBuilder::new(batch.schema()).build(cursor).unwrap();\nlet batch = reader.next().unwrap().unwrap();\n\n// Reverse the base64 encoding\nlet col: BinaryArray = batch.column(0).as_string::<i32>().clone().into();\nlet output = b64_decode(&BASE64_STANDARD, &col).unwrap();\n\nassert_eq!(input, output);\n```\n\n[RFC7159]: https://datatracker.ietf.org/doc/html/rfc7159#section-8.1\n[binary-to-text encoding]: https://en.wikipedia.org/wiki/Binary-to-text_encoding\n[hexadecimal]: https://en.wikipedia.org/wiki/Hexadecimal\n[`Base16` encoding]: https://en.wikipedia.org/wiki/Base16#Base16\n[`Base64`]: https://en.wikipedia.org/wiki/Base64",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        431,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[deny(rustdoc::broken_intra_doc_links)]"
+      },
+      {
+        "other": "#[warn(missing_docs)]"
+      },
+      {
+        "other": "#[attr = CfgAttrTrace([NameValue { name: \"docsrs\", value: None, span: src/lib.rs:82:13: 82:19 (#0) }])]"
+      },
+      {
+        "other": "#[doc(html_favicon_url = \"https://arrow.apache.org/img/arrow-logo_chevrons_black-txt_transparent-bg.svg\")]"
+      },
+      {
+        "other": "#[doc(html_logo_url = \"https://arrow.apache.org/img/arrow-logo_chevrons_black-txt_white-bg.svg\")]"
+      },
+      {
+        "other": "#[attr = Feature([doc_cfg#0])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": true,
+        "items": [
+          22,
+          471,
+          472,
+          473,
+          474,
+          475,
+          476,
+          477,
+          478,
+          479,
+          480,
+          144,
+          522
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`reader`": 22,
+      "`writer`": 471,
+      "`arrow_cast`": 550
+    },
+    "link_paths": {
+      "`reader`": "arrow_json::reader",
+      "`writer`": "arrow_json::writer",
+      "`arrow_cast`": "arrow_cast"
+    },
+    "artifact": {
+      "id": "dd4cd3d73c7a2495b6756e2be8c5f04e18225bd265f764ae397c35bc0edac616",
+      "format_version": 61,
+      "item_id": "551",
+      "origin": "https://docs.rs/crate/arrow-json/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/arrow_json.md",
+    "record_file": "modules/arrow_json.json",
+    "anchor": "op-9cfc2f2ebe48fa33164bfd99",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`reader`": "../modules/arrow_json.reader.md#op-53dfc6a8d86f7f7c1bf482e7",
+      "`writer`": "../modules/arrow_json.writer.md#op-3211eef7ff6c9c882d353606",
+      "`arrow_cast`": "../modules/arrow_cast.md#op-c44ca9952f804b390ba02fcf"
+    }
+  }
+]

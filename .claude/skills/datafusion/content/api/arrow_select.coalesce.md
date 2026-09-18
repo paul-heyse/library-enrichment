@@ -33,6 +33,9 @@ fn size(&self) -> usize
 fn with_biggest_coalesce_batch_size(self, limit: Option<usize>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.coalesce.BatchCoalescer.md).
+
+
 Concatenate multiple [`RecordBatch`]es
 
 Implements the common pattern of incrementally creating output

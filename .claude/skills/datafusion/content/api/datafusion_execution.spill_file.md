@@ -25,6 +25,9 @@ fn read_stream(&self) -> Result<Pin<Box<dyn Stream<Item = Result<Bytes>> + Send>
 fn size(&self) -> Option<u64>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.spill_file.SpillFile.md).
+
+
 Abstraction over a spill file backend.
 Implementations handle their own quota enforcement and blocking concerns.
 
@@ -50,6 +53,9 @@ trait SpillWriter: std::io::Write + Send
 fn finish(&mut self) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.spill_file.SpillWriter.md).
+
+
 Writer for spill file backends.
 
 ---
@@ -69,6 +75,9 @@ trait TempFileFactory: Send + Sync
 ```rust
 fn create_temp_file(&self, description: &str) -> Result<Arc<dyn SpillFile>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.spill_file.TempFileFactory.md).
+
 
 Factory for creating spill files.
 

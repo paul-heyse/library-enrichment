@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## get_num_idx_cols_and_stats_columns
 
 `function` · `deltalake_core::operations::get_num_idx_cols_and_stats_columns`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.get_num_idx_cols_and_stats_columns.md)
 
 Also reachable as `deltalake::operations::get_num_idx_cols_and_stats_columns`
 
@@ -21,6 +22,7 @@ the configuration that was passed to the writerBuilder.
 ## CustomExecuteHandler
 
 `trait` · `deltalake_core::operations::CustomExecuteHandler`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.CustomExecuteHandler.md)
 
 Also reachable as `deltalake::operations::CustomExecuteHandler`
 

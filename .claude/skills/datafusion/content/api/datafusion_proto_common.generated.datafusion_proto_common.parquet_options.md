@@ -22,6 +22,9 @@ fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<BloomFilterFppOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.parquet_options.BloomFilterFppOpt.md).
+
+
 ---
 
 ## BloomFilterNdvOpt
@@ -43,6 +46,9 @@ fn encode(&self, buf: &mut impl ::prost::bytes::BufMut)
 fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<BloomFilterNdvOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.parquet_options.BloomFilterNdvOpt.md).
+
 
 ---
 
@@ -66,6 +72,9 @@ fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<CoerceInt96Opt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.parquet_options.CoerceInt96Opt.md).
+
+
 ---
 
 ## CoerceInt96TzOpt
@@ -87,6 +96,9 @@ fn encode(&self, buf: &mut impl ::prost::bytes::BufMut)
 fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<CoerceInt96TzOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.parquet_options.CoerceInt96TzOpt.md).
+
 
 Optional timezone applied to INT96-coerced timestamps when `coerce_int96`
 is set. When `Some`, INT96 columns coerce to
@@ -115,6 +127,9 @@ fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<ColumnIndexTruncateLengthOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.parquet_options.ColumnIndexTruncateLengthOpt.md).
+
+
 ---
 
 ## CompressionOpt
@@ -136,6 +151,9 @@ fn encode(&self, buf: &mut impl ::prost::bytes::BufMut)
 fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<CompressionOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.parquet_options.CompressionOpt.md).
+
 
 ---
 
@@ -159,6 +177,9 @@ fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<DictionaryEnabledOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.parquet_options.DictionaryEnabledOpt.md).
+
+
 ---
 
 ## EncodingOpt
@@ -180,6 +201,9 @@ fn encode(&self, buf: &mut impl ::prost::bytes::BufMut)
 fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<EncodingOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.parquet_options.EncodingOpt.md).
+
 
 ---
 
@@ -203,6 +227,9 @@ fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<MaxPredicateCacheSizeOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.parquet_options.MaxPredicateCacheSizeOpt.md).
+
+
 ---
 
 ## MaxRowGroupBytesOpt
@@ -224,6 +251,9 @@ fn encode(&self, buf: &mut impl ::prost::bytes::BufMut)
 fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<MaxRowGroupBytesOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.parquet_options.MaxRowGroupBytesOpt.md).
+
 
 ---
 
@@ -247,6 +277,9 @@ fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<MetadataSizeHintOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.parquet_options.MetadataSizeHintOpt.md).
+
+
 ---
 
 ## StatisticsEnabledOpt
@@ -269,6 +302,9 @@ fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<StatisticsEnabledOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.parquet_options.StatisticsEnabledOpt.md).
+
+
 ---
 
 ## StatisticsTruncateLengthOpt
@@ -290,5 +326,8 @@ fn encode(&self, buf: &mut impl ::prost::bytes::BufMut)
 fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<StatisticsTruncateLengthOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.parquet_options.StatisticsTruncateLengthOpt.md).
+
 
 ---

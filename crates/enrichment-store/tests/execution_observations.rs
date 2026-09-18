@@ -163,7 +163,7 @@ fn evidence_with_position(
             &format!("attempt://fixture/{index}"),
         );
         let run = ProducerRun {
-            attempt_id: format!("attempt-{index}"),
+            attempt_id: enrichment_core::identity::AttemptId::new(),
             producer: "execution-fixture".into(),
             producer_version: "1".into(),
             config_digest: enrichment_core::canonical::sha256_hex(b"fixture"),
@@ -202,7 +202,7 @@ fn evidence_with_position(
                     artifact_id: input.artifact_id.clone(),
                     heading: "consumer".into(),
                 },
-                metadata.environment.environment_id.to_string(),
+                metadata.environment.environment_id.clone(),
                 format!("sha256:{}", "a".repeat(64)),
                 "b".repeat(64),
                 payload,
@@ -224,7 +224,7 @@ fn evidence_with_position(
             .unwrap(),
         );
         evidence.attempt_artifacts.insert(
-            run.attempt_id.clone(),
+            run.attempt_id,
             vec![input.clone(), lock.clone(), result, receipt],
         );
         evidence.producer_runs.push(run);
@@ -378,9 +378,13 @@ async fn typed_execution_roundtrip_reuse_native_queries_and_complete_export() {
         .unwrap();
     assert_eq!(again.snapshot_id, manifest.snapshot_id);
     let bundle = dir.path().join("bundle");
-    enrichment_store::bundle::export(&paths, metadata.context.context_id.as_str(), &bundle)
-        .await
-        .unwrap();
+    enrichment_store::bundle::export(
+        &paths,
+        metadata.context.context_id.to_string().as_str(),
+        &bundle,
+    )
+    .await
+    .unwrap();
     enrichment_store::bundle::verify(&bundle).await.unwrap();
     drop(reader);
     drop(repository);
@@ -456,7 +460,8 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
         AdmissionLimits::default(),
     )
     .unwrap();
-    let job_id = format!("job_{}", "1".repeat(32));
+    let job_id: enrichment_core::identity::JobId =
+        format!("job_{}", "1".repeat(32)).try_into().unwrap();
     let dependency_bytes = br#"{"observed":"complete indivisible value","optional":null}"#;
     let dependency = blobs
         .put(dependency_bytes, |_| {
@@ -500,7 +505,7 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
         &job_id,
         enrichment_store::control_jobs::Arguments::Verify {
             request: enrichment_core::execution::VerifyRequest {
-                context_id: metadata.context.context_id.to_string(),
+                context_id: metadata.context.context_id.clone(),
                 snapshot_id: None,
                 snippet: "print(1)".into(),
                 mode: enrichment_core::execution::ProbeMode::Runtime,
@@ -513,11 +518,11 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
     .await;
     let completion = JobCompletion {
         publication_fence,
-        job_id: job_id.clone(),
+        job_id,
         result,
         kind: PublishedJobKind::Verify,
 
-        attempt_id: evidence.producer_runs[3].attempt_id.clone(),
+        attempt_id: evidence.producer_runs[3].attempt_id,
         result_artifact_ids: vec![
             evidence.execution_observations[3]
                 .source
@@ -580,9 +585,13 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
     assert_eq!(publication.state, enrichment_core::wire::JobState::Failed);
     if export_delivery {
         let bundle = dir.path().join("bundle");
-        enrichment_store::bundle::export(&paths, metadata.context.context_id.as_str(), &bundle)
-            .await
-            .unwrap();
+        enrichment_store::bundle::export(
+            &paths,
+            metadata.context.context_id.to_string().as_str(),
+            &bundle,
+        )
+        .await
+        .unwrap();
         assert!(
             enrichment_store::bundle::verify(&bundle)
                 .await
@@ -602,8 +611,8 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
             "bundle verification is read-only"
         );
         let offline = BlobStore::read_only(&bundle.join("data")).unwrap();
-        let native = enrichment_store::control::ControlStore::read_only(
-            &bundle.join("data"),
+        let native = enrichment_store::control::ControlStore::immutable(
+            enrichment_store::immutable_root::ImmutableRoot::open(&bundle.join("data")).unwrap(),
             runtime.clone(),
         )
         .unwrap()
@@ -615,7 +624,17 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
             .await
             .unwrap()
             .unwrap();
-        assert_eq!(offline.read(&copied.sha256).unwrap(), dependency_bytes);
+        assert_eq!(
+            offline
+                .read_owned(
+                    &copied,
+                    268_435_456,
+                    &runtime.session().runtime_env().memory_pool
+                )
+                .unwrap()
+                .as_ref(),
+            dependency_bytes
+        );
         assert_eq!(
             native
                 .result_dependencies(&runtime, &offline, &publication.delivery)
@@ -659,7 +678,7 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
         Some(publication)
     );
     let mut invalid = completion;
-    invalid.job_id = format!("job_{}", "2".repeat(32));
+    invalid.job_id = format!("job_{}", "2".repeat(32)).try_into().unwrap();
     invalid.result_artifact_ids = vec![enrichment_core::evidence::artifact_id_for(&"e".repeat(64))];
     assert!(
         native_ingest::publish_rows(&reopened, metadata, evidence, None, Some(invalid.clone()))
@@ -866,9 +885,17 @@ async fn execution_coverage_does_not_borrow_a_different_query_on_the_same_subjec
     .await
     .unwrap();
     let successful = reader.assess_execution(&ids[..1]).await.unwrap();
-    assert!(successful.complete());
+    assert!(
+        enrichment_store::coverage::complete(reader.runtime(), &successful)
+            .await
+            .unwrap()
+    );
     let limited = reader.assess_execution(&ids[1..]).await.unwrap();
-    assert!(!limited.complete());
+    assert!(
+        !enrichment_store::coverage::complete(reader.runtime(), &limited)
+            .await
+            .unwrap()
+    );
     assert_eq!(
         limited.assessments[0].state,
         enrichment_core::wire::ScopeState::Partial
@@ -879,6 +906,10 @@ async fn execution_coverage_does_not_borrow_a_different_query_on_the_same_subjec
     );
     let both = reader.assess_execution(&ids).await.unwrap();
     assert_eq!(both.assessments.len(), 2);
-    assert!(!both.complete());
+    assert!(
+        !enrichment_store::coverage::complete(reader.runtime(), &both)
+            .await
+            .unwrap()
+    );
     assert!(both.indexed.is_empty());
 }

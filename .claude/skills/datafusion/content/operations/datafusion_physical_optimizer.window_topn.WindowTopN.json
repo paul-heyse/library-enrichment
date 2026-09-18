@@ -1,0 +1,969 @@
+[
+  {
+    "id": "d3e707f45dfad8feac4ca8f0",
+    "path": "datafusion_physical_optimizer::window_topn::WindowTopN",
+    "name": "WindowTopN",
+    "owner": null,
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct WindowTopN",
+    "docs": "Physical optimizer rule that converts per-partition `ROW_NUMBER` and\n`RANK` top-K queries into a more efficient plan using\n[`PartitionedTopKExec`].\n\n# Pattern Detected\n\n```text\nFilterExec(<ranking fn output> <= K)\n  [optional ProjectionExec]\n    BoundedWindowAggExec(<ranking fn> PARTITION BY ... ORDER BY ...)\n```\n\n# Replacement\n\n```text\n[optional ProjectionExec]\n  BoundedWindowAggExec(<ranking fn> PARTITION BY ... ORDER BY ...)\n    PartitionedTopKExec(fn=<row_number|rank>, partition_keys, order_keys, fetch=K)\n```\n\nThe `FilterExec` is removed entirely. The child of `BoundedWindowAggExec` is now\n`PartitionedTopKExec`, which maintains a per-partition top-K heap (and,\nfor `RANK`, a sibling ties `Vec`) instead of sorting the whole dataset.\n\n# Supported Predicates\n\n- `rn <= K` → fetch = K\n- `rn < K` → fetch = K - 1\n- `K >= rn` (flipped) → fetch = K\n- `K > rn` (flipped) → fetch = K - 1\n\n# When the Rule Fires\n\nAll of the following must be true:\n- Config flag `enable_window_topn` is `true`\n- The plan matches `FilterExec → [ProjectionExec] → BoundedWindowAggExec`\n- The window function is `ROW_NUMBER` or `RANK` (not `DENSE_RANK`)\n- The window function has a `PARTITION BY` clause (global top-K is\n  already handled by `SortExec` with `fetch`)\n- For `RANK`: a non-empty `ORDER BY` clause (otherwise all rows tie\n  at rank 1 — the optimization is useless and the boundary-tie storage\n  would be unbounded)\n- The filter predicate compares the window output column to an integer\n  literal using `<=`, `<`, `>=`, or `>`\n\n[`PartitionedTopKExec`]: datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "span": {
+      "filename": "src/window_topn.rs",
+      "begin": [
+        119,
+        1
+      ],
+      "end": [
+        119,
+        23
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": "unit",
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          813,
+          814,
+          815,
+          816,
+          817,
+          818,
+          819,
+          820,
+          821,
+          822,
+          823,
+          824,
+          825,
+          826,
+          827,
+          828,
+          829,
+          830,
+          831,
+          832,
+          834,
+          836,
+          838,
+          842
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec": 810
+    },
+    "link_paths": {
+      "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec"
+    },
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "811",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.md",
+    "record_file": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.json",
+    "anchor": "op-d3e707f45dfad8feac4ca8f0",
+    "aliases": [],
+    "resolved_doc_links": {
+      "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec": "../operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md#op-665d9b8c9f50ce696eacb602"
+    }
+  },
+  {
+    "id": "49a89e17df35a52976d523a9",
+    "path": "datafusion_physical_optimizer::window_topn::WindowTopN::clone",
+    "name": "clone",
+    "owner": "datafusion_physical_optimizer::window_topn::WindowTopN",
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> WindowTopN",
+    "docs": "",
+    "span": {
+      "filename": "src/window_topn.rs",
+      "begin": [
+        118,
+        19
+      ],
+      "end": [
+        118,
+        24
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "WindowTopN",
+              "id": 811,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "811": "datafusion_physical_optimizer::window_topn::WindowTopN"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "WindowTopN",
+          "id": "datafusion_physical_optimizer::window_topn::WindowTopN",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/window_topn.rs",
+        "begin": [
+          118,
+          19
+        ],
+        "end": [
+          118,
+          24
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "835",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.md",
+    "record_file": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.json",
+    "anchor": "op-49a89e17df35a52976d523a9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a732fdbf03a74e34b8b8511d",
+    "path": "datafusion_physical_optimizer::window_topn::WindowTopN::default",
+    "name": "default",
+    "owner": "datafusion_physical_optimizer::window_topn::WindowTopN",
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn default() -> WindowTopN",
+    "docs": "",
+    "span": {
+      "filename": "src/window_topn.rs",
+      "begin": [
+        118,
+        10
+      ],
+      "end": [
+        118,
+        17
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "resolved_path": {
+              "path": "WindowTopN",
+              "id": 811,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "811": "datafusion_physical_optimizer::window_topn::WindowTopN"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "WindowTopN",
+          "id": "datafusion_physical_optimizer::window_topn::WindowTopN",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/window_topn.rs",
+        "begin": [
+          118,
+          10
+        ],
+        "end": [
+          118,
+          17
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "833",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.md",
+    "record_file": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.json",
+    "anchor": "op-a732fdbf03a74e34b8b8511d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "534cb8c726a756b24df2a3e1",
+    "path": "datafusion_physical_optimizer::window_topn::WindowTopN::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_optimizer::window_topn::WindowTopN",
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/window_topn.rs",
+      "begin": [
+        118,
+        26
+      ],
+      "end": [
+        118,
+        31
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 55,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 56,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "55": "core::fmt::Formatter",
+      "56": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "WindowTopN",
+          "id": "datafusion_physical_optimizer::window_topn::WindowTopN",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/window_topn.rs",
+        "begin": [
+          118,
+          26
+        ],
+        "end": [
+          118,
+          31
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "837",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.md",
+    "record_file": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.json",
+    "anchor": "op-534cb8c726a756b24df2a3e1",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ae28d69d3f4a514f4b847b63",
+    "path": "datafusion_physical_optimizer::window_topn::WindowTopN::name",
+    "name": "name",
+    "owner": "datafusion_physical_optimizer::window_topn::WindowTopN",
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &str",
+    "docs": "",
+    "span": {
+      "filename": "src/window_topn.rs",
+      "begin": [
+        231,
+        5
+      ],
+      "end": [
+        233,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "WindowTopN",
+          "id": "datafusion_physical_optimizer::window_topn::WindowTopN",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PhysicalOptimizerRule",
+        "id": "datafusion_session::physical_optimizer::PhysicalOptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_session::physical_optimizer::PhysicalOptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/window_topn.rs",
+        "begin": [
+          209,
+          1
+        ],
+        "end": [
+          238,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "840",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.md",
+    "record_file": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.json",
+    "anchor": "op-ae28d69d3f4a514f4b847b63",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "dd5d7c628a631512765027cb",
+    "path": "datafusion_physical_optimizer::window_topn::WindowTopN::new",
+    "name": "new",
+    "owner": "datafusion_physical_optimizer::window_topn::WindowTopN",
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/window_topn.rs",
+      "begin": [
+        122,
+        5
+      ],
+      "end": [
+        124,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "WindowTopN",
+          "id": "datafusion_physical_optimizer::window_topn::WindowTopN",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/window_topn.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          207,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "812",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.md",
+    "record_file": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.json",
+    "anchor": "op-dd5d7c628a631512765027cb",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4d9754832f73cdf2d08a777d",
+    "path": "datafusion_physical_optimizer::window_topn::WindowTopN::optimize",
+    "name": "optimize",
+    "owner": "datafusion_physical_optimizer::window_topn::WindowTopN",
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/window_topn.rs",
+      "begin": [
+        210,
+        5
+      ],
+      "end": [
+        229,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "plan",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 60,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 61,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ConfigOptions",
+                      "id": 62,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 63,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 60,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 61,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "60": "alloc::sync::Arc",
+      "61": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "62": "datafusion_common::config::ConfigOptions",
+      "63": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "WindowTopN",
+          "id": "datafusion_physical_optimizer::window_topn::WindowTopN",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PhysicalOptimizerRule",
+        "id": "datafusion_session::physical_optimizer::PhysicalOptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_session::physical_optimizer::PhysicalOptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/window_topn.rs",
+        "begin": [
+          209,
+          1
+        ],
+        "end": [
+          238,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "839",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.md",
+    "record_file": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.json",
+    "anchor": "op-4d9754832f73cdf2d08a777d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ca97b4793cfa6beed3a87fd1",
+    "path": "datafusion_physical_optimizer::window_topn::WindowTopN::schema_check",
+    "name": "schema_check",
+    "owner": "datafusion_physical_optimizer::window_topn::WindowTopN",
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn schema_check(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/window_topn.rs",
+      "begin": [
+        235,
+        5
+      ],
+      "end": [
+        237,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "WindowTopN",
+          "id": "datafusion_physical_optimizer::window_topn::WindowTopN",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PhysicalOptimizerRule",
+        "id": "datafusion_session::physical_optimizer::PhysicalOptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_session::physical_optimizer::PhysicalOptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/window_topn.rs",
+        "begin": [
+          209,
+          1
+        ],
+        "end": [
+          238,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "841",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.md",
+    "record_file": "operations/datafusion_physical_optimizer.window_topn.WindowTopN.json",
+    "anchor": "op-ca97b4793cfa6beed3a87fd1",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

@@ -46,6 +46,9 @@ fn from_str(s: &str) -> Result<Self>
 fn get_ext(&self) -> String
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_compression_type.FileCompressionType.md).
+
+
 Readable file compression type
 
 ---
@@ -65,6 +68,9 @@ trait FileTypeExt
 ```rust
 fn get_ext_with_compression(&self, c: FileCompressionType) -> Result<String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_compression_type.FileTypeExt.md).
+
 
 Trait for extending the functionality of the `FileType` enum.
 

@@ -1,0 +1,1529 @@
+[
+  {
+    "id": "98dbbade94b8dcc444c33b0e",
+    "path": "buoyant_kernel::column_trie::ColumnTrie",
+    "name": "ColumnTrie",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct",
+    "signature": "struct ColumnTrie<'col>",
+    "docs": "A trie (prefix tree) for efficient column path matching.\n\nThe lifetime `'col` ties this trie to the column names it was built from,\nallowing it to borrow string slices instead of cloning.\n\nThe `Default` implementation creates an empty trie node with no children and\n`is_terminal = false`. This is used both for creating a new root trie and for\ncreating intermediate nodes during insertion (via `or_default()`).",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+      "begin": [
+        23,
+        1
+      ],
+      "end": [
+        29,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"internal-api\"), span: /home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs:22:1: 22:16 (#7736) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'col",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          9742,
+          9743,
+          9744,
+          9745,
+          9746,
+          9747,
+          9748,
+          9749,
+          9750,
+          9751,
+          9752,
+          9753,
+          9754,
+          9755,
+          9756,
+          9757,
+          9758,
+          9759,
+          9760,
+          9761,
+          9762,
+          9763,
+          9764,
+          9765,
+          9766,
+          9767,
+          9768,
+          9769,
+          9770,
+          9772,
+          9774
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9736",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/column_trie.rs#L23",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "8143",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.column_trie.ColumnTrie.md",
+    "record_file": "operations/buoyant_kernel.column_trie.ColumnTrie.json",
+    "anchor": "op-98dbbade94b8dcc444c33b0e",
+    "aliases": [
+      "delta_kernel::column_trie::ColumnTrie"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4a2433159bf000c4ef35bef0",
+    "path": "buoyant_kernel::column_trie::ColumnTrie::contains_prefix_of",
+    "name": "contains_prefix_of",
+    "owner": "buoyant_kernel::column_trie::ColumnTrie",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn contains_prefix_of(&self, path: &[String]) -> bool",
+    "docs": "Returns true if `path` equals or is a descendant of any inserted column.\n\nFor example, if the trie contains `[\"a\", \"b\"]`:\n- `[\"a\", \"b\"]` -> true (exact match)\n- `[\"a\", \"b\", \"c\"]` -> true (descendant)\n- `[\"a\"]` -> false (ancestor, not descendant)\n- `[\"a\", \"x\"]` -> false (divergent path)",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+      "begin": [
+        117,
+        5
+      ],
+      "end": [
+        132,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"internal-api\"), span: /home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs:116:5: 116:20 (#7751) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "path",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "String",
+                        "id": 179,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "179": "alloc::string::String"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnTrie",
+          "id": "buoyant_kernel::column_trie::ColumnTrie",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'col"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'col",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+        "begin": [
+          31,
+          1
+        ],
+        "end": [
+          133,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9740",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/column_trie.rs#L117",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "14952",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.column_trie.ColumnTrie.md",
+    "record_file": "operations/buoyant_kernel.column_trie.ColumnTrie.json",
+    "anchor": "op-4a2433159bf000c4ef35bef0",
+    "aliases": [
+      "delta_kernel::column_trie::ColumnTrie::contains_prefix_of"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f68d758acc0ed34a429baef0",
+    "path": "buoyant_kernel::column_trie::ColumnTrie::default",
+    "name": "default",
+    "owner": "buoyant_kernel::column_trie::ColumnTrie",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn default() -> ColumnTrie<'col>",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+      "begin": [
+        21,
+        17
+      ],
+      "end": [
+        21,
+        24
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "resolved_path": {
+              "path": "ColumnTrie",
+              "id": 9736,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'col"
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "9736": "buoyant_kernel::column_trie::ColumnTrie"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnTrie",
+          "id": "buoyant_kernel::column_trie::ColumnTrie",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'col"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [
+          {
+            "name": "'col",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+        "begin": [
+          21,
+          17
+        ],
+        "end": [
+          21,
+          24
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9773",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/column_trie.rs#L21",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "14985",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.column_trie.ColumnTrie.md",
+    "record_file": "operations/buoyant_kernel.column_trie.ColumnTrie.json",
+    "anchor": "op-f68d758acc0ed34a429baef0",
+    "aliases": [
+      "delta_kernel::column_trie::ColumnTrie::default"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bc6b4e92340091a76ae52a55",
+    "path": "buoyant_kernel::column_trie::ColumnTrie::fmt",
+    "name": "fmt",
+    "owner": "buoyant_kernel::column_trie::ColumnTrie",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+      "begin": [
+        21,
+        10
+      ],
+      "end": [
+        21,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 102,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 103,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "102": "core::fmt::Formatter",
+      "103": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnTrie",
+          "id": "buoyant_kernel::column_trie::ColumnTrie",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'col"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "'col",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+        "begin": [
+          21,
+          10
+        ],
+        "end": [
+          21,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9771",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/column_trie.rs#L21",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "14983",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.column_trie.ColumnTrie.md",
+    "record_file": "operations/buoyant_kernel.column_trie.ColumnTrie.json",
+    "anchor": "op-bc6b4e92340091a76ae52a55",
+    "aliases": [
+      "delta_kernel::column_trie::ColumnTrie::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3788e6953d9ef3bee2723df6",
+    "path": "buoyant_kernel::column_trie::ColumnTrie::from_columns",
+    "name": "from_columns",
+    "owner": "buoyant_kernel::column_trie::ColumnTrie",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn from_columns(columns: &'col [ColumnName]) -> Self",
+    "docs": "Builds a trie from a list of column names.\n\nFor example, `from_columns(&[column_name!(\"a.b\"), column_name!(\"a.c\")])` creates:\n```text\nroot (is_terminal=false)\n└── \"a\" (is_terminal=false)\n    ├── \"b\" (is_terminal=true)\n    └── \"c\" (is_terminal=true)\n```",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+      "begin": [
+        48,
+        5
+      ],
+      "end": [
+        54,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"internal-api\"), span: /home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs:47:5: 47:20 (#7742) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "columns",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'col",
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ColumnName",
+                        "id": 520,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "520": "buoyant_kernel::expressions::column_names::ColumnName"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnTrie",
+          "id": "buoyant_kernel::column_trie::ColumnTrie",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'col"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'col",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+        "begin": [
+          31,
+          1
+        ],
+        "end": [
+          133,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9738",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/column_trie.rs#L48",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "14950",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.column_trie.ColumnTrie.md",
+    "record_file": "operations/buoyant_kernel.column_trie.ColumnTrie.json",
+    "anchor": "op-3788e6953d9ef3bee2723df6",
+    "aliases": [
+      "delta_kernel::column_trie::ColumnTrie::from_columns"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6c02f95db0a599f4156dc2de",
+    "path": "buoyant_kernel::column_trie::ColumnTrie::insert",
+    "name": "insert",
+    "owner": "buoyant_kernel::column_trie::ColumnTrie",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn insert(&mut self, column: &'col ColumnName)",
+    "docs": "Inserts a column path into the trie.\n\nWalks down the trie for each path component, creating nodes as needed via `or_default()`\n(which initializes `is_terminal = false`). After the loop, only the final node is marked\nas terminal.\n\nFor example, inserting `a.b.c` creates:\n```text\nroot (is_terminal=false)\n└── \"a\" (is_terminal=false)\n    └── \"b\" (is_terminal=false)\n        └── \"c\" (is_terminal=true)\n```",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+      "begin": [
+        70,
+        5
+      ],
+      "end": [
+        76,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"internal-api\"), span: /home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs:69:5: 69:20 (#7745) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "column",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'col",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ColumnName",
+                      "id": 520,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "520": "buoyant_kernel::expressions::column_names::ColumnName"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnTrie",
+          "id": "buoyant_kernel::column_trie::ColumnTrie",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'col"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'col",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+        "begin": [
+          31,
+          1
+        ],
+        "end": [
+          133,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9739",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/column_trie.rs#L70",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "14951",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.column_trie.ColumnTrie.md",
+    "record_file": "operations/buoyant_kernel.column_trie.ColumnTrie.json",
+    "anchor": "op-6c02f95db0a599f4156dc2de",
+    "aliases": [
+      "delta_kernel::column_trie::ColumnTrie::insert"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1a89c2edd81200e3a200e746",
+    "path": "buoyant_kernel::column_trie::ColumnTrie::is_terminal",
+    "name": "is_terminal",
+    "owner": "buoyant_kernel::column_trie::ColumnTrie",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn is_terminal(&self, path: &[String]) -> bool",
+    "docs": "Returns true if `path` exactly matches a terminal (leaf) column in the trie.\n\nThis is used by stats collection to detect columns that are structs at the Arrow level\nbut should be treated as leaf columns for statistics (e.g. Variant, which is\n`Struct { metadata, value }` in Arrow but a single leaf in the stats schema). For such\ncolumns, stats collection computes nullCount at the struct level instead of recursing\ninto sub-fields.\n\nUnlike [`contains_prefix_of`], this does NOT match descendants. It returns true only\nwhen the path ends at a terminal node. `contains_prefix_of` would return true for both\na terminal column and its descendants, which can't distinguish a stats-leaf struct from\na regular struct whose children are stats columns.\n\nFor example, if the trie contains `[\"a\", \"b\"]`:\n- `[\"a\", \"b\"]` -> true (exact terminal match)\n- `[\"a\", \"b\", \"c\"]` -> false (descendant, not exact)\n- `[\"a\"]` -> false (not terminal)\n\n[`contains_prefix_of`]: Self::contains_prefix_of",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+      "begin": [
+        98,
+        5
+      ],
+      "end": [
+        107,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"internal-api\"), span: /home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs:97:5: 97:20 (#7748) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "path",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "String",
+                        "id": 179,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "179": "alloc::string::String"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnTrie",
+          "id": "buoyant_kernel::column_trie::ColumnTrie",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'col"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'col",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+        "begin": [
+          31,
+          1
+        ],
+        "end": [
+          133,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self::contains_prefix_of": 9740
+    },
+    "link_paths": {
+      "Self::contains_prefix_of": "buoyant_kernel::column_trie::ColumnTrie::contains_prefix_of"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9741",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/column_trie.rs#L98",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "14953",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.column_trie.ColumnTrie.md",
+    "record_file": "operations/buoyant_kernel.column_trie.ColumnTrie.json",
+    "anchor": "op-1a89c2edd81200e3a200e746",
+    "aliases": [
+      "delta_kernel::column_trie::ColumnTrie::is_terminal"
+    ],
+    "resolved_doc_links": {
+      "Self::contains_prefix_of": "../operations/buoyant_kernel.column_trie.ColumnTrie.md#op-4a2433159bf000c4ef35bef0"
+    }
+  },
+  {
+    "id": "cc5f27083afe84b8e8fd9b70",
+    "path": "buoyant_kernel::column_trie::ColumnTrie::new",
+    "name": "new",
+    "owner": "buoyant_kernel::column_trie::ColumnTrie",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "Creates an empty trie.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+      "begin": [
+        34,
+        5
+      ],
+      "end": [
+        36,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"internal-api\"), span: /home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs:33:5: 33:20 (#7739) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnTrie",
+          "id": "buoyant_kernel::column_trie::ColumnTrie",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'col"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'col",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+        "begin": [
+          31,
+          1
+        ],
+        "end": [
+          133,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9737",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/column_trie.rs#L34",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "14949",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.column_trie.ColumnTrie.md",
+    "record_file": "operations/buoyant_kernel.column_trie.ColumnTrie.json",
+    "anchor": "op-cc5f27083afe84b8e8fd9b70",
+    "aliases": [
+      "delta_kernel::column_trie::ColumnTrie::new"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ccfc1e3bddfd3c127bce52cf",
+    "path": "buoyant_kernel::column_trie::ColumnTrie::children",
+    "name": "children",
+    "owner": "buoyant_kernel::column_trie::ColumnTrie",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "children: std::collections::HashMap<&'col str, ColumnTrie<'col>>",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+      "begin": [
+        24,
+        5
+      ],
+      "end": [
+        24,
+        51
+      ]
+    },
+    "visibility": {
+      "restricted": {
+        "parent": 14947,
+        "path": "::column_trie"
+      }
+    },
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "std::collections::HashMap",
+          "id": 754,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "borrowed_ref": {
+                      "lifetime": "'col",
+                      "is_mutable": false,
+                      "type": {
+                        "primitive": "str"
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "ColumnTrie",
+                      "id": 8143,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'col"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "754": "std::collections::hash::map::HashMap",
+      "8143": "buoyant_kernel::column_trie::ColumnTrie"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "14946",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/column_trie.rs#L24",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.column_trie.ColumnTrie.md",
+    "record_file": "operations/buoyant_kernel.column_trie.ColumnTrie.json",
+    "anchor": "op-ccfc1e3bddfd3c127bce52cf",
+    "aliases": [
+      "delta_kernel::column_trie::ColumnTrie::children"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a1f4c5dba71f2953729ac1a0",
+    "path": "buoyant_kernel::column_trie::ColumnTrie::is_terminal",
+    "name": "is_terminal",
+    "owner": "buoyant_kernel::column_trie::ColumnTrie",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "is_terminal: bool",
+    "docs": "True if this node represents the end of a specified column path.\nIntermediate nodes have `is_terminal = false`; only the final node of\nan inserted column path has `is_terminal = true`.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/column_trie.rs",
+      "begin": [
+        28,
+        5
+      ],
+      "end": [
+        28,
+        22
+      ]
+    },
+    "visibility": {
+      "restricted": {
+        "parent": 14947,
+        "path": "::column_trie"
+      }
+    },
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "primitive": "bool"
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "14948",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/column_trie.rs#L28",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.column_trie.ColumnTrie.md",
+    "record_file": "operations/buoyant_kernel.column_trie.ColumnTrie.json",
+    "anchor": "op-a1f4c5dba71f2953729ac1a0",
+    "aliases": [
+      "delta_kernel::column_trie::ColumnTrie::is_terminal"
+    ],
+    "resolved_doc_links": {}
+  }
+]

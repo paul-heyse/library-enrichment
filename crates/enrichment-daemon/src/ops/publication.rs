@@ -9,7 +9,7 @@ use enrichment_core::{
         relational::{FactSource, Locator},
         snapshot::{EvidenceManifest, SnapshotMetadata},
     },
-    wire::{EvidenceClass, SourceVersionMatch},
+    wire::EvidenceClass,
 };
 use std::collections::BTreeMap;
 
@@ -78,15 +78,15 @@ pub(super) async fn publish(
     }
     let completion = super::resolve_job::prepare(acq, &metadata)?;
     let run = acq.runs.last().ok_or("normalization attempt disappeared")?;
-    let attempt = run.attempt_id.clone();
-    let source_version_match = if metadata.context.mode
-        == enrichment_core::identity::ResearchMode::Revision
-        || metadata.crate_version.as_deref() == Some(metadata.release.key.version.as_str())
-    {
-        SourceVersionMatch::Exact
-    } else {
-        SourceVersionMatch::Unknown
-    };
+    let attempt = run.attempt_id;
+    let source_version_match = enrichment_store::research_outcomes::source_version(
+        &service.repository.runtime,
+        metadata.context.mode,
+        metadata.crate_version.as_deref(),
+        &metadata.release.key.version,
+    )
+    .await
+    .map_err(|error| error.to_string())?;
     let detail_source = details.as_ref().map(|d| FactSource {
         producer_binding_id: run.semantic_binding_id(),
         extractor: run.producer.clone(),
@@ -111,25 +111,15 @@ pub(super) async fn publish(
         gaps: acq.gaps.clone(),
     };
     let native_plans = if let Some(native) = native {
-        let digest = run
-            .inputs
-            .get(native.input())
-            .ok_or("native producer input missing")?;
-        let mut artifacts = context.artifacts.iter().filter(|a| &a.sha256 == digest);
-        let artifact = artifacts.next().ok_or("native producer artifact missing")?;
-        if artifacts.any(|a| a.source_uri != artifact.source_uri) {
-            return Err("native producer acquisition provenance is ambiguous".into());
-        }
-        let source = FactSource {
-            producer_binding_id: run.semantic_binding_id(),
-            extractor: run.producer.clone(),
-            extractor_version: run.producer_version.clone(),
-            artifact_id: artifact.artifact_id.clone(),
-            source_uri: Some(artifact.source_uri.clone()),
+        let source = enrichment_store::producer_run_plan::fact_source(
+            &service.repository.runtime,
+            run,
+            native.input(),
+            &context.artifacts,
             source_version_match,
-            locator: Locator::Artifact,
-            evidence_class: EvidenceClass::StaticallyExtracted,
-        };
+        )
+        .await
+        .map_err(|error| error.to_string())?;
         native
             .evidence(&context, &source)
             .await

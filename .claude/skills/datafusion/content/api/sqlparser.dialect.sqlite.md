@@ -47,6 +47,9 @@ fn supports_notnull_operator(&self) -> bool
 fn supports_start_transaction_modifier(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.sqlite.SQLiteDialect.md).
+
+
 A [`Dialect`] for [SQLite](https://www.sqlite.org)
 
 This dialect allows columns in a

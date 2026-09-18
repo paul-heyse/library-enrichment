@@ -1,0 +1,164 @@
+[
+  {
+    "id": "a2c0d97eb9955a8482a25849",
+    "path": "datafusion_physical_optimizer::join_selection::hash_join_swap_subrule",
+    "name": "hash_join_swap_subrule",
+    "owner": null,
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn hash_join_swap_subrule(input: std::sync::Arc<dyn ExecutionPlan>, _config_options: &datafusion_common::config::ConfigOptions) -> datafusion_common::error::Result<std::sync::Arc<dyn ExecutionPlan>>",
+    "docs": "This subrule will swap build/probe sides of a hash join depending on whether\none of its inputs may produce an infinite stream of records. The rule ensures\nthat the left (build) side of the hash join always operates on an input stream\nthat will produce a finite set of records. If the left side can not be chosen\nto be \"finite\", the join sides stay the same as the original query.\n```text\nFor example, this rule makes the following transformation:\n\n\n\n          +--------------+              +--------------+\n          |              |  unbounded   |              |\n   Left   | Infinite     |    true      | Hash         |\\true\n          | Data source  |--------------| Repartition  | \\   +--------------+       +--------------+\n          |              |              |              |  \\  |              |       |              |\n          +--------------+              +--------------+   - |  Hash Join   |-------| Projection   |\n                                                           - |              |       |              |\n          +--------------+              +--------------+  /  +--------------+       +--------------+\n          |              |  unbounded   |              | /\n   Right  | Finite       |    false     | Hash         |/false\n          | Data Source  |--------------| Repartition  |\n          |              |              |              |\n          +--------------+              +--------------+\n\n\n\n          +--------------+              +--------------+\n          |              |  unbounded   |              |\n   Left   | Finite       |    false     | Hash         |\\false\n          | Data source  |--------------| Repartition  | \\   +--------------+       +--------------+\n          |              |              |              |  \\  |              | true  |              | true\n          +--------------+              +--------------+   - |  Hash Join   |-------| Projection   |-----\n                                                           - |              |       |              |\n          +--------------+              +--------------+  /  +--------------+       +--------------+\n          |              |  unbounded   |              | /\n   Right  | Infinite     |    true      | Hash         |/true\n          | Data Source  |--------------| Repartition  |\n          |              |              |              |\n          +--------------+              +--------------+\n```",
+    "span": {
+      "filename": "src/join_selection.rs",
+      "begin": [
+        535,
+        1
+      ],
+      "end": [
+        551,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "input",
+              {
+                "resolved_path": {
+                  "path": "std::sync::Arc",
+                  "id": 60,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 61,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_config_options",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_common::config::ConfigOptions",
+                      "id": 62,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::error::Result",
+              "id": 63,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "std::sync::Arc",
+                          "id": 60,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 61,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "60": "alloc::sync::Arc",
+      "61": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "62": "datafusion_common::config::ConfigOptions",
+      "63": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "303",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_optimizer.join_selection.hash_join_swap_subrule.md",
+    "record_file": "operations/datafusion_physical_optimizer.join_selection.hash_join_swap_subrule.json",
+    "anchor": "op-a2c0d97eb9955a8482a25849",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

@@ -5,6 +5,7 @@ Crate `buoyant_kernel_engine` · 2 public items · structured records in [`model
 ## DataFileMetadata
 
 `struct` · `buoyant_kernel_engine::parquet::DataFileMetadata`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.parquet.DataFileMetadata.md)
 
 Also reachable as `delta_kernel_default_engine::parquet::DataFileMetadata`
 
@@ -28,6 +29,7 @@ Metadata of a data file (typically a parquet file).
 ## DefaultParquetHandler
 
 `struct` · `buoyant_kernel_engine::parquet::DefaultParquetHandler`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.parquet.DefaultParquetHandler.md)
 
 Also reachable as `delta_kernel_default_engine::parquet::DefaultParquetHandler`
 

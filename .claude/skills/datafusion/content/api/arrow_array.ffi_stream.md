@@ -35,6 +35,9 @@ fn schema(&self) -> SchemaRef
 fn next(&mut self) -> Option<Self::Item>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.ffi_stream.ArrowArrayStreamReader.md).
+
+
 A `RecordBatchReader` which imports Arrays from `FFI_ArrowArrayStream`.
 
 Struct used to fetch `RecordBatch` from the C Stream Interface.
@@ -72,6 +75,9 @@ fn new(batch_reader: Box<dyn RecordBatchReader + Send>) -> Self
 ```rust
 fn drop(&mut self)
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.ffi_stream.FFI_ArrowArrayStream.md).
+
 
 ABI-compatible struct for `ArrayStream` from C Stream Interface
 See <https://arrow.apache.org/docs/format/CStreamInterface.html#structure-definitions>

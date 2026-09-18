@@ -52,6 +52,9 @@ fn try_to_proto(&self, ctx: &datafusion_physical_plan::proto::ExecutionPlanEncod
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.sink.DataSinkExec.md).
+
+
 Execution plan for writing record batches to a [`DataSink`]
 
 Returns a single row with the number of values written
@@ -83,6 +86,9 @@ fn schema(&self) -> &SchemaRef
 fn try_to_proto(&self, _exec: &DataSinkExec, _ctx: &datafusion_physical_plan::proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>
 async fn write_all(&self, data: SendableRecordBatchStream, context: &Arc<TaskContext>) -> Result<u64>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.sink.DataSink.md).
+
 
 `DataSink` implements writing streams of [`RecordBatch`]es to
 user defined destinations.

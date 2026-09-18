@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::cast_single_string_to_boolean_default`, `arro
 fn cast_single_string_to_boolean_default(value: &str) -> Option<bool>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.cast.string.cast_single_string_to_boolean_default.md).
+
+
 Cast a single string to boolean with default cast option(safe=true).
 
 ---

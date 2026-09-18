@@ -12,6 +12,9 @@ Also reachable as `datafusion_physical_optimizer::pruning::MAX_IN_LIST_SIZE`, `d
 const MAX_IN_LIST_SIZE: usize = 20
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_pruning.pruning_predicate.MAX_IN_LIST_SIZE.md).
+
+
 Default maximum number of entries in an `IN (...)` list that will be
 rewritten into a chain of per-value min/max checks by
 `build_predicate_expression`. Callers threading a [`PredicateRewriter`]
@@ -30,6 +33,9 @@ Also reachable as `datafusion_physical_optimizer::pruning::build_pruning_predica
 ```rust
 fn build_pruning_predicate(predicate: std::sync::Arc<dyn PhysicalExpr>, file_schema: &arrow::datatypes::SchemaRef, predicate_creation_errors: &datafusion_physical_plan::metrics::Count) -> Option<std::sync::Arc<PruningPredicate>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_pruning.pruning_predicate.build_pruning_predicate.md).
+
 
 Build a pruning predicate from an optional predicate expression.
 If the predicate is None or the predicate cannot be converted to a pruning
@@ -59,6 +65,9 @@ fn rewrite_predicate_to_statistics_predicate(&self, expr: &Arc<dyn PhysicalExpr>
 fn with_max_in_list_size(self, max_in_list_size: usize) -> Self
 fn with_unhandled_hook(self, unhandled_hook: Arc<dyn UnhandledPredicateHook>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_pruning.pruning_predicate.PredicateRewriter.md).
+
 
 Rewrite a predicate expression in terms of statistics (min/max/null_counts)
 for use as a [`PruningPredicate`].
@@ -90,6 +99,9 @@ fn required_columns(&self) -> &RequiredColumns
 fn schema(&self) -> &SchemaRef
 fn try_new(expr: Arc<dyn PhysicalExpr>, schema: SchemaRef) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_pruning.pruning_predicate.PruningPredicate.md).
+
 
 Used to prove that arbitrary predicates (boolean expression) can not
 possibly evaluate to `true` given information about a column provided by
@@ -428,6 +440,9 @@ fn with_file_schema(self, file_schema: SchemaRef) -> Self
 fn with_max_in_list_size(self, max_in_list_size: usize) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_pruning.pruning_predicate.PruningPredicateBuilder.md).
+
+
 Builder for a [`PruningPredicate`]. Groups optional configuration —
 `IN (...)` rewrite cap, error counter — so future additions do not
 churn the top-level API.
@@ -469,6 +484,9 @@ fn single_column(&self) -> Option<&phys_expr::Column>
 fn from(columns: Vec<(phys_expr::Column, StatisticsType, Field)>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_pruning.pruning_predicate.RequiredColumns.md).
+
+
 Describes which columns statistics are necessary to evaluate a
 [`PruningPredicate`].
 
@@ -496,6 +514,9 @@ trait UnhandledPredicateHook
 ```rust
 fn handle(&self, expr: &Arc<dyn PhysicalExpr>) -> Arc<dyn PhysicalExpr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_pruning.pruning_predicate.UnhandledPredicateHook.md).
+
 
 Rewrites predicates that [`PredicateRewriter`] can not handle, e.g. certain
 complex expressions or predicates that reference columns that are not in the

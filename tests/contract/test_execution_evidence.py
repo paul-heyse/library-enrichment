@@ -55,6 +55,29 @@ def test_source_fingerprint_includes_untracked_code_and_lockfiles(tmp_path):
     assert api["source_digest"](tmp_path) != changed
 
 
+def test_receipts_bind_vendor_selectors_and_installed_enforcement(tmp_path):
+    api = runpy.run_path(str(ROOT / "scripts/evidence_run.py"))
+    previous = api["source_digest"](tmp_path)
+    for relative in (
+        "vendor/delta-rs/crates/core/src/lib.rs",
+        ".config/nextest.toml",
+        ".claude/rules/execution-policy.md",
+        ".claude/settings.json",
+        "AGENTS.md",
+        "CLAUDE.md",
+    ):
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("original")
+        added = api["source_digest"](tmp_path)
+        assert added != previous, relative
+        path.write_text("changed")
+        changed = api["source_digest"](tmp_path)
+        assert changed != added, relative
+        path.unlink()
+        assert api["source_digest"](tmp_path) == previous, relative
+
+
 def test_failed_command_cannot_produce_pass_and_later_run_clears_skip(tmp_path, monkeypatch):
     monkeypatch.syspath_prepend(str(ROOT / "scripts"))
     api = runpy.run_path(str(ROOT / "scripts/acceptance-report.py"))

@@ -10,6 +10,9 @@ Crate `datafusion-physical-expr-common` · 5 public items · structured records 
 fn apply(lhs: &datafusion_expr_common::columnar_value::ColumnarValue, rhs: &datafusion_expr_common::columnar_value::ColumnarValue, f: impl Fn(&dyn Datum, &dyn Datum) -> datafusion_common::Result<arrow::array::ArrayRef, arrow::error::ArrowError>) -> datafusion_common::Result<datafusion_expr_common::columnar_value::ColumnarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.datum.apply.md).
+
+
 Applies a binary [`Datum`] kernel `f` to `lhs` and `rhs`
 
 This maps arrow-rs' [`Datum`] kernels to DataFusion's [`ColumnarValue`] abstraction
@@ -24,6 +27,9 @@ This maps arrow-rs' [`Datum`] kernels to DataFusion's [`ColumnarValue`] abstract
 fn apply_cmp(op: datafusion_expr_common::operator::Operator, lhs: &datafusion_expr_common::columnar_value::ColumnarValue, rhs: &datafusion_expr_common::columnar_value::ColumnarValue) -> datafusion_common::Result<datafusion_expr_common::columnar_value::ColumnarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.datum.apply_cmp.md).
+
+
 Applies a binary [`Datum`] comparison operator `op` to `lhs` and `rhs`
 
 ---
@@ -35,6 +41,9 @@ Applies a binary [`Datum`] comparison operator `op` to `lhs` and `rhs`
 ```rust
 fn apply_cmp_for_nested(op: datafusion_expr_common::operator::Operator, lhs: &datafusion_expr_common::columnar_value::ColumnarValue, rhs: &datafusion_expr_common::columnar_value::ColumnarValue) -> datafusion_common::Result<datafusion_expr_common::columnar_value::ColumnarValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.datum.apply_cmp_for_nested.md).
+
 
 Applies a binary [`Datum`] comparison operator `op` to `lhs` and `rhs` for nested type like
 List, FixedSizeList, LargeList, Struct, Union, Map, or a dictionary of a nested type
@@ -49,6 +58,9 @@ List, FixedSizeList, LargeList, Struct, Union, Map, or a dictionary of a nested 
 fn compare_op_for_nested(op: datafusion_expr_common::operator::Operator, lhs: &dyn Datum, rhs: &dyn Datum) -> datafusion_common::Result<arrow::array::BooleanArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.datum.compare_op_for_nested.md).
+
+
 Compare on nested type List, Struct, and so on
 
 ---
@@ -60,6 +72,9 @@ Compare on nested type List, Struct, and so on
 ```rust
 fn compare_with_eq(lhs: &dyn Datum, rhs: &dyn Datum, is_nested: bool) -> datafusion_common::Result<arrow::array::BooleanArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.datum.compare_with_eq.md).
+
 
 Compare with eq with either nested or non-nested
 

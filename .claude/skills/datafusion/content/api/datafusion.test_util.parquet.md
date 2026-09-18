@@ -20,6 +20,9 @@ struct ParquetScanOptions
 fn config(&self) -> SessionConfig
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.test_util.parquet.ParquetScanOptions.md).
+
+
 Options for how to create the parquet scan
 
 ---
@@ -41,6 +44,9 @@ fn path(&self) -> &std::path::Path
 fn schema(&self) -> SchemaRef
 fn try_new(path: PathBuf, props: WriterProperties, batches: impl IntoIterator<Item = RecordBatch>) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.test_util.parquet.TestParquetFile.md).
+
 
 a ParquetFile that has been created for testing.
 

@@ -1,0 +1,3301 @@
+[
+  {
+    "id": "delta.catalog",
+    "title": "Resolve table names separately from storage and provider freshness",
+    "reviewed": "2026-09-18",
+    "brief": "Use a catalog to resolve and discover table identities; use the resulting location/provider with the appropriate storage and snapshot policy. Catalog availability does not establish table-protocol support.",
+    "task_aliases": [
+      "Unity catalog",
+      "AWS Glue catalog",
+      "resolve table name",
+      "catalog provider",
+      "table discovery"
+    ],
+    "crates": [
+      "deltalake-core",
+      "deltalake-catalog-glue",
+      "deltalake-catalog-unity"
+    ],
+    "input": [
+      "catalog/schema/table identity",
+      "catalog client options"
+    ],
+    "output": [
+      "table storage location",
+      "DataFusion catalog/provider"
+    ],
+    "properties": [
+      "Unity catalog",
+      "AWS Glue catalog",
+      "resolve table name",
+      "catalog provider",
+      "table discovery"
+    ],
+    "operations": [
+      "deltalake_core::data_catalog::DataCatalog::get_table_storage_location",
+      "deltalake_catalog_unity::UnityCatalogBuilder",
+      "deltalake_catalog_unity::datafusion::UnityCatalogList",
+      "deltalake_catalog_unity::datafusion::UnityCatalogProvider"
+    ],
+    "choices": [
+      {
+        "candidate": "DataCatalog location resolution",
+        "choose_when": "The caller owns table loading and refresh",
+        "tradeoff": "A resolved URL still needs storage authentication and protocol admission"
+      },
+      {
+        "candidate": "Unity DataFusion catalog integration",
+        "choose_when": "SQL catalog/schema discovery should compose with DataFusion",
+        "tradeoff": "Inspect provider creation and freshness; catalog caching and table snapshots are distinct"
+      },
+      {
+        "candidate": "Direct table URL",
+        "choose_when": "Names are already resolved by the application",
+        "tradeoff": "Avoid an unnecessary catalog service dependency"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.catalog.1",
+        "aspect": "boundaries",
+        "statement": "DataCatalog resolves database/table identifiers to a storage location; DataFusion catalog traits expose schemas/tables. These are different output contracts.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.catalog.2",
+        "aspect": "identity",
+        "statement": "The Glue/Unity adapters and their dependencies/features belong to this exact git capture; published-version examples are discovery aids only.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.catalog.3",
+        "aspect": "state",
+        "statement": "A previously produced table provider can hold a snapshot even when a catalog resolves the same table name again. Define the refresh point in the caller.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      }
+    ],
+    "implementation": [
+      "Route location lookup, storage credentials and provider construction as distinct steps.",
+      "Inspect exact catalog config enums/builders for supported options; do not infer credentials from the storage URL alone."
+    ],
+    "effects": [
+      "catalog service lookup",
+      "produce table/provider handles"
+    ],
+    "errors": [
+      "Name not found, auth/service failure and later table-load/protocol errors should remain distinguishable."
+    ],
+    "unknowns": [
+      "Live Glue and Unity calls, caching/freshness under updates and cloud auth are not runtime-qualified."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/data_catalog/mod.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::data_catalog::DataCatalog::get_table_storage_location",
+        "id": "4f3ed3f9aa68017704ebfb8b",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.data_catalog.DataCatalog.json",
+        "page": "operations/deltalake_core.data_catalog.DataCatalog.md#op-4f3ed3f9aa68017704ebfb8b",
+        "signature": "async fn get_table_storage_location(&self, catalog_id: Option<String>, database_name: &str, table_name: &str) -> Result<String, Self::Error>"
+      },
+      {
+        "path": "deltalake_catalog_unity::UnityCatalogBuilder",
+        "id": "3d81dc09c647904bf0c3e078",
+        "kind": "struct",
+        "crate": "deltalake-catalog-unity",
+        "record": "operations/deltalake_catalog_unity.UnityCatalogBuilder.json",
+        "page": "operations/deltalake_catalog_unity.UnityCatalogBuilder.md#op-3d81dc09c647904bf0c3e078",
+        "signature": "struct UnityCatalogBuilder"
+      },
+      {
+        "path": "deltalake_catalog_unity::datafusion::UnityCatalogList",
+        "id": "b5fb770e3688040360406a3c",
+        "kind": "struct",
+        "crate": "deltalake-catalog-unity",
+        "record": "operations/deltalake_catalog_unity.datafusion.UnityCatalogList.json",
+        "page": "operations/deltalake_catalog_unity.datafusion.UnityCatalogList.md#op-b5fb770e3688040360406a3c",
+        "signature": "struct UnityCatalogList"
+      },
+      {
+        "path": "deltalake_catalog_unity::datafusion::UnityCatalogProvider",
+        "id": "bac5fd8289cfa7c7d2792633",
+        "kind": "struct",
+        "crate": "deltalake-catalog-unity",
+        "record": "operations/deltalake_catalog_unity.datafusion.UnityCatalogProvider.json",
+        "page": "operations/deltalake_catalog_unity.datafusion.UnityCatalogProvider.md#op-bac5fd8289cfa7c7d2792633",
+        "signature": "struct UnityCatalogProvider"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.catalog.json"
+  },
+  {
+    "id": "delta.cdf",
+    "title": "Read change data with explicit bounds, images and residual filtering",
+    "reviewed": "2026-09-18",
+    "brief": "CDF uses an explicit build path or DeltaCdfTableProvider rather than IntoFuture. Plan for inclusive version ranges, change images, retention and operation-specific feature restrictions.",
+    "task_aliases": [
+      "change data feed",
+      "CDC incremental",
+      "CDF resume checkpoint",
+      "starting ending version",
+      "update preimage",
+      "residual filter"
+    ],
+    "crates": [
+      "deltalake-core"
+    ],
+    "input": [
+      "loaded table",
+      "starting version or timestamp",
+      "optional ending bound"
+    ],
+    "output": [
+      "Arc<dyn ExecutionPlan>",
+      "DeltaCdfTableProvider",
+      "change rows and metadata columns"
+    ],
+    "properties": [
+      "change data feed",
+      "CDC incremental",
+      "CDF resume checkpoint",
+      "starting ending version",
+      "update preimage",
+      "residual filter"
+    ],
+    "operations": [
+      "deltalake_core::table::DeltaTable::scan_cdf",
+      "deltalake_core::operations::load_cdf::CdfLoadBuilder::build",
+      "deltalake_core::operations::load_cdf::CdfLoadBuilder::build_with_metrics",
+      "deltalake_core::operations::load_cdf::CdfLoadBuilder::with_allow_out_of_range",
+      "deltalake_core::delta_datafusion::cdf::scan::DeltaCdfTableProvider::try_new"
+    ],
+    "choices": [
+      {
+        "candidate": "DeltaCdfTableProvider",
+        "choose_when": "CDF should be queried as a DataFusion relation",
+        "tradeoff": "Its scan applies residual row filtering; register it in a compatible context"
+      },
+      {
+        "candidate": "CdfLoadBuilder::build",
+        "choose_when": "You need a physical plan directly",
+        "tradeoff": "Execute the returned plan with the appropriate TaskContext and preserve required residual filtering"
+      },
+      {
+        "candidate": "Snapshot comparison / application log",
+        "choose_when": "Required historical change data is unavailable",
+        "tradeoff": "Define a different recovery contract; do not invent missing CDF history"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.cdf.1",
+        "aspect": "bounds",
+        "statement": "Version start/end are inclusive. At this pin an ending version beyond head is clamped even without allow_out_of_range; an invalid beyond-head start is rejected unless the opt-in empty-range policy applies.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "cdf_bounds_images_and_residual_filter"
+      },
+      {
+        "id": "delta.cdf.2",
+        "aspect": "images",
+        "statement": "An update produced update_preimage and update_postimage rows with commit version metadata. Filtering id > 5 through the provider retained only the matching postimage.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "cdf_bounds_images_and_residual_filter"
+      },
+      {
+        "id": "delta.cdf.3",
+        "aspect": "features",
+        "statement": "The column-mapping fixture reads normally through Delta scan but CDF build rejects non-None column mapping.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "column_mapping_reads_logical_names_but_cdf_rejects_mapping"
+      },
+      {
+        "id": "delta.cdf.4",
+        "aspect": "resume",
+        "statement": "Checkpoint the processed commit interval only after downstream success. Explicitly distinguish a clamped end from the originally requested future version; do not advance a checkpoint over unobserved commits.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.cdf.5",
+        "aspect": "retention",
+        "statement": "Enablement, available log/data and requested interval jointly determine CDF availability. A table's current configuration alone does not prove historical changes were recorded.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.cdf.6",
+        "aspect": "historical enablement",
+        "statement": "After CDF was enabled on a previously written table, a read starting at the earlier disabled version failed, while an interval beginning at enablement returned the later insert.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "competing_marker_writers_conflict_and_cdf_enablement_is_historical"
+      },
+      {
+        "id": "delta.cdf.7",
+        "aspect": "Arrow metadata schema",
+        "statement": "The CDF base schema defines nullable _change_type as Utf8, _commit_version as UInt64 and _commit_timestamp as Timestamp(Millisecond, None). The direct query probe returns UInt64 commit versions. Inspect the actual result schema before downcasting, especially after further DataFusion expressions.",
+        "kind": "source_observation",
+        "evidence": [
+          "cdf_schema",
+          "runtime"
+        ]
+      }
+    ],
+    "implementation": [
+      "Pass a starting version or timestamp; use a bounded interval when reproducibility matters.",
+      "Preserve _change_type, _commit_version and _commit_timestamp in downstream semantics.",
+      "Partition pruning is a candidate reduction, not a substitute for a row-level residual predicate."
+    ],
+    "effects": [
+      "read log interval and data/change files",
+      "produce insert/delete/preimage/postimage rows"
+    ],
+    "errors": [
+      "Missing start, disabled/unrecorded CDF, invalid range, mapping restrictions, missing retained files and planning errors are distinct failure modes."
+    ],
+    "unknowns": [
+      "An ORDER BY id query over the tiny update fixture encountered DataFusion SinglePartition/UnknownPartitioning(0) planning failure; the unordered query followed by caller sorting succeeded. Timestamp boundary and all enablement-transition combinations are not exhaustively tested."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/load_cdf.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "cdf_bounds_images_and_residual_filter",
+          "column_mapping_reads_logical_names_but_cdf_rejects_mapping",
+          "competing_marker_writers_conflict_and_cdf_enablement_is_historical"
+        ]
+      },
+      {
+        "id": "cdf_schema",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/delta_datafusion/cdf/mod.rs",
+        "scope": "Exact CDF metadata field definitions"
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::table::DeltaTable::scan_cdf",
+        "id": "27518198c8dfbfd4c30b341f",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-27518198c8dfbfd4c30b341f",
+        "signature": "fn scan_cdf(self) -> CdfLoadBuilder"
+      },
+      {
+        "path": "deltalake_core::operations::load_cdf::CdfLoadBuilder::build",
+        "id": "c42fdd7acb1de4224cf941c2",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.load_cdf.CdfLoadBuilder.json",
+        "page": "operations/deltalake_core.operations.load_cdf.CdfLoadBuilder.md#op-c42fdd7acb1de4224cf941c2",
+        "signature": "async fn build(&self, session: &dyn Session, filters: Option<&Arc<dyn PhysicalExpr>>) -> DeltaResult<Arc<dyn ExecutionPlan>>"
+      },
+      {
+        "path": "deltalake_core::operations::load_cdf::CdfLoadBuilder::build_with_metrics",
+        "id": "52940ee116097799a600f742",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.load_cdf.CdfLoadBuilder.json",
+        "page": "operations/deltalake_core.operations.load_cdf.CdfLoadBuilder.md#op-52940ee116097799a600f742",
+        "signature": "async fn build_with_metrics(&self, session: &dyn Session, filters: Option<&Arc<dyn PhysicalExpr>>, metrics: Option<ExecutionPlanMetricsSet>) -> DeltaResult<Arc<dyn ExecutionPlan>>"
+      },
+      {
+        "path": "deltalake_core::operations::load_cdf::CdfLoadBuilder::with_allow_out_of_range",
+        "id": "ba2fd6c37af303a8f4036c61",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.load_cdf.CdfLoadBuilder.json",
+        "page": "operations/deltalake_core.operations.load_cdf.CdfLoadBuilder.md#op-ba2fd6c37af303a8f4036c61",
+        "signature": "fn with_allow_out_of_range(self) -> Self"
+      },
+      {
+        "path": "deltalake_core::delta_datafusion::cdf::scan::DeltaCdfTableProvider::try_new",
+        "id": "76590db94c2c43f9d137eeea",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.delta_datafusion.cdf.scan.DeltaCdfTableProvider.json",
+        "page": "operations/deltalake_core.delta_datafusion.cdf.scan.DeltaCdfTableProvider.md#op-76590db94c2c43f9d137eeea",
+        "signature": "fn try_new(cdf_builder: CdfLoadBuilder) -> DeltaResult<Self>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.cdf.json"
+  },
+  {
+    "id": "delta.commit",
+    "title": "Reason about optimistic commits and errors after publication",
+    "reviewed": "2026-09-18",
+    "brief": "Separate data preparation, optimistic log publication and post-commit work. An operation error does not establish that the table is unchanged.",
+    "task_aliases": [
+      "optimistic conflict",
+      "retry commit",
+      "post commit error",
+      "durable write failed",
+      "transaction recovery",
+      "max retries"
+    ],
+    "crates": [
+      "deltalake-core"
+    ],
+    "input": [
+      "actions",
+      "snapshot/read set",
+      "CommitProperties",
+      "execution hooks"
+    ],
+    "output": [
+      "committed version",
+      "updated snapshot",
+      "post-commit result"
+    ],
+    "properties": [
+      "optimistic conflict",
+      "retry commit",
+      "post commit error",
+      "durable write failed",
+      "transaction recovery",
+      "max retries"
+    ],
+    "operations": [
+      "deltalake_core::kernel::transaction::CommitBuilder::build",
+      "deltalake_core::kernel::transaction::CommitProperties::with_max_retries",
+      "deltalake_core::operations::write::WriteBuilder::with_custom_execute_handler",
+      "deltalake_core::kernel::transaction::CommitProperties::with_metadata"
+    ],
+    "choices": [
+      {
+        "candidate": "High-level operation with CommitProperties",
+        "choose_when": "Built-in operation already captures the needed read/write semantics",
+        "tradeoff": "Customize metadata and retry policy without reproducing actions"
+      },
+      {
+        "candidate": "CommitBuilder",
+        "choose_when": "You own valid protocol actions and their transactional meaning",
+        "tradeoff": "You must supply correct operation/read-set semantics and recovery"
+      },
+      {
+        "candidate": "Reload/reconcile after ambiguous error",
+        "choose_when": "The failure may have occurred after log publication",
+        "tradeoff": "Observe table state before retrying data production"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.commit.1",
+        "aspect": "failure phase",
+        "statement": "The injected before_post_commit_hook error returned failure while a fresh observer saw the new version and appended rows. This proves local log visibility, not power-loss durability.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "operation_error_can_follow_a_durable_commit"
+      },
+      {
+        "id": "delta.commit.2",
+        "aspect": "retry",
+        "statement": "A stale append with max_retries(0) failed after an intervening commit; the default retry path appended successfully. A stale whole-table update conflicted with an intervening update.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "optimistic_conflict_and_retry_budget"
+      },
+      {
+        "id": "delta.commit.3",
+        "aspect": "backend",
+        "statement": "The publication primitive is delegated to the chosen LogStore/backend. Do not assume every backend commits by the same atomic-rename protocol.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      }
+    ],
+    "implementation": [
+      "Record application/operation metadata sufficient for reconciliation and classify errors by the phase they can occur in.",
+      "Use the returned version/table on success; on an ambiguous error, independently reload and compare committed state.",
+      "Treat max_retries as a transaction policy, not a universal retry around arbitrary source side effects."
+    ],
+    "effects": [
+      "write files",
+      "publish log version",
+      "post-commit checkpoint/cleanup/hooks"
+    ],
+    "errors": [
+      "Precondition failure, optimistic conflict, publication failure and post-commit failure can imply different visible states."
+    ],
+    "unknowns": [
+      "Crash recovery, remote backend atomicity and distributed scheduling are not inferred from local-memory publication."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/kernel/transaction/mod.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "operation_error_can_follow_a_durable_commit",
+          "optimistic_conflict_and_retry_budget"
+        ]
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::kernel::transaction::CommitBuilder::build",
+        "id": "d53693381c75904ce089c98e",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.kernel.transaction.CommitBuilder.json",
+        "page": "operations/deltalake_core.kernel.transaction.CommitBuilder.md#op-d53693381c75904ce089c98e",
+        "signature": "fn build(self, table_data: Option<&'a dyn TableReference>, log_store: LogStoreRef, operation: DeltaOperation) -> PreCommit<'a>"
+      },
+      {
+        "path": "deltalake_core::kernel::transaction::CommitProperties::with_max_retries",
+        "id": "521f71362ddaf4ec207f580c",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.kernel.transaction.CommitProperties.json",
+        "page": "operations/deltalake_core.kernel.transaction.CommitProperties.md#op-521f71362ddaf4ec207f580c",
+        "signature": "fn with_max_retries(self, max_retries: usize) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::write::WriteBuilder::with_custom_execute_handler",
+        "id": "a2d7c2a33a0ad647e936c3cb",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+        "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-a2d7c2a33a0ad647e936c3cb",
+        "signature": "fn with_custom_execute_handler(self, handler: Arc<dyn CustomExecuteHandler>) -> Self"
+      },
+      {
+        "path": "deltalake_core::kernel::transaction::CommitProperties::with_metadata",
+        "id": "55f8ddb14dbf4d7449f3f2b1",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.kernel.transaction.CommitProperties.json",
+        "page": "operations/deltalake_core.kernel.transaction.CommitProperties.md#op-55f8ddb14dbf4d7449f3f2b1",
+        "signature": "fn with_metadata(self, metadata: impl IntoIterator<Item = (String, serde_json::Value)>) -> Self"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.commit.json"
+  },
+  {
+    "id": "delta.dml",
+    "title": "Update or delete through built-in Delta operations",
+    "reviewed": "2026-09-18",
+    "brief": "Use table.update or table.delete for target-only changes. Their builders and metrics differ from merge clause helpers, and an operation with no affected rows need not create a new version.",
+    "task_aliases": [
+      "update rows",
+      "delete predicate",
+      "no op version",
+      "DML metrics"
+    ],
+    "crates": [
+      "deltalake-core"
+    ],
+    "input": [
+      "DeltaTable",
+      "predicate",
+      "column expressions"
+    ],
+    "output": [
+      "(DeltaTable, UpdateMetrics)",
+      "(DeltaTable, DeleteMetrics)"
+    ],
+    "properties": [
+      "update rows",
+      "delete predicate",
+      "no op version",
+      "DML metrics"
+    ],
+    "operations": [
+      "deltalake_core::table::DeltaTable::update",
+      "deltalake_core::table::DeltaTable::delete",
+      "deltalake_core::operations::update::UpdateBuilder::with_update",
+      "deltalake_core::operations::update::UpdateBuilder::Output",
+      "deltalake_core::operations::delete::DeleteBuilder::Output"
+    ],
+    "choices": [
+      {
+        "candidate": "UpdateBuilder",
+        "choose_when": "New values derive from target expressions",
+        "tradeoff": "Set a predicate for a subset and choose cast/session policy"
+      },
+      {
+        "candidate": "DeleteBuilder",
+        "choose_when": "Rows should be removed from the logical table",
+        "tradeoff": "Physical file retention is handled separately"
+      },
+      {
+        "candidate": "MergeBuilder",
+        "choose_when": "Actions depend on another relation",
+        "tradeoff": "Requires source-target matching and clause rules"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.dml.1",
+        "aspect": "result",
+        "statement": "Update and delete return a new table value and metrics. DeleteMetrics::num_deleted_rows is optional; absence must not be interpreted as zero.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.dml.2",
+        "aspect": "no-op",
+        "statement": "Deleting a predicate that matched no rows preserved the version in the local probe. Updating id 1 and deleting a null row reported the expected counts and rows.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "dml_noop_and_update_delete_metrics"
+      },
+      {
+        "id": "delta.dml.3",
+        "aspect": "physical/logical",
+        "statement": "A logical delete need not delete the underlying Parquet file immediately. Delta-aware scans follow log actions/deletion vectors.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "delta_snapshot_excludes_removed_parquet_files"
+      }
+    ],
+    "implementation": [
+      "Keep standalone builder types separate from merge's closure types.",
+      "Read the result table after execution and handle optional metrics as optional evidence."
+    ],
+    "effects": [
+      "logical row update/delete",
+      "possible log commit"
+    ],
+    "errors": [
+      "A stale update can conflict with an intervening rewrite even if append retries are allowed."
+    ],
+    "unknowns": [
+      "Metrics availability and rewrite/DV strategy depend on the path and table features."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/delete.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "dml_noop_and_update_delete_metrics",
+          "delta_snapshot_excludes_removed_parquet_files"
+        ]
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::table::DeltaTable::update",
+        "id": "4da0a0df2c2c4c5389f518ca",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-4da0a0df2c2c4c5389f518ca",
+        "signature": "fn update(self) -> UpdateBuilder"
+      },
+      {
+        "path": "deltalake_core::table::DeltaTable::delete",
+        "id": "cc21a8977a893e16e9c6f12c",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-cc21a8977a893e16e9c6f12c",
+        "signature": "fn delete(self) -> DeleteBuilder"
+      },
+      {
+        "path": "deltalake_core::operations::update::UpdateBuilder::with_update",
+        "id": "4ce68114cef28f80c1ce94a7",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.update.UpdateBuilder.json",
+        "page": "operations/deltalake_core.operations.update.UpdateBuilder.md#op-4ce68114cef28f80c1ce94a7",
+        "signature": "fn with_update<S: Into<DeltaColumn>, E: Into<Expression>>(self, column: S, expression: E) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::update::UpdateBuilder::Output",
+        "id": "92fb88dd0cb8c29f60b9d8d9",
+        "kind": "assoc_type",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.update.UpdateBuilder.json",
+        "page": "operations/deltalake_core.operations.update.UpdateBuilder.md#op-92fb88dd0cb8c29f60b9d8d9",
+        "signature": "type Output = Result<(DeltaTable, UpdateMetrics), DeltaTableError>"
+      },
+      {
+        "path": "deltalake_core::operations::delete::DeleteBuilder::Output",
+        "id": "e74c7e65dd2b30f69a94a0bb",
+        "kind": "assoc_type",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.delete.DeleteBuilder.json",
+        "page": "operations/deltalake_core.operations.delete.DeleteBuilder.md#op-e74c7e65dd2b30f69a94a0bb",
+        "signature": "type Output = Result<(DeltaTable, DeleteMetrics), DeltaTableError>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.dml.json"
+  },
+  {
+    "id": "delta.features",
+    "title": "Separate feature vocabulary, protocol admission and operation support",
+    "reviewed": "2026-09-18",
+    "brief": "A recognized feature enum is not an operation-support guarantee. Join table protocol requirements, the consumer's resolved Cargo features, checker admission and the selected operation's restrictions.",
+    "task_aliases": [
+      "protocol support",
+      "reader writer features",
+      "timestamp nanos",
+      "feature flag",
+      "identity columns",
+      "column mapping support"
+    ],
+    "crates": [
+      "deltalake-core",
+      "buoyant_kernel"
+    ],
+    "input": [
+      "table protocol",
+      "Cargo feature profile",
+      "operation"
+    ],
+    "output": [
+      "admission result",
+      "operation-specific decision"
+    ],
+    "properties": [
+      "protocol support",
+      "reader writer features",
+      "timestamp nanos",
+      "feature flag",
+      "identity columns",
+      "column mapping support"
+    ],
+    "operations": [
+      "deltalake_core::kernel::transaction::protocol::ProtocolChecker::can_read_from_protocol",
+      "deltalake_core::kernel::transaction::protocol::ProtocolChecker::can_write_to",
+      "deltalake_core::kernel::transaction::protocol::ProtocolChecker::can_commit",
+      "deltalake_core::table::DeltaTable::add_feature"
+    ],
+    "choices": [
+      {
+        "candidate": "ProtocolChecker and operation preconditions",
+        "choose_when": "You need to decide whether this operation is admitted",
+        "tradeoff": "Checker acceptance still does not certify every semantic/performance path"
+      },
+      {
+        "candidate": "Feature/operation matrix",
+        "choose_when": "You are discovering potentially usable functionality",
+        "tradeoff": "Unknown cells remain unknown; follow evidence and profile"
+      },
+      {
+        "candidate": "Explicit table feature upgrade",
+        "choose_when": "An operation requires a new protocol capability",
+        "tradeoff": "Can affect other readers/writers; inspect the exact builder and table requirements"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.features.1",
+        "aspect": "profile",
+        "statement": "Documentation was captured with a broader feature envelope than the local runtime probe. The runtime profile excludes nanosecond-timestamps; its acceptance is tested separately from vocabulary.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.features.2",
+        "aspect": "admission",
+        "statement": "The protocol probe rejects recognized identityColumns and timestampNanos reader requirements in its profile, while accepting deletionVectors.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "recognized_feature_and_excluded_profile_are_not_reader_support"
+      },
+      {
+        "id": "delta.features.3",
+        "aspect": "operation",
+        "statement": "Deletion-vector scans, one delete and optimize are tested on the retained fixture; column mapping scan succeeds while CDF rejects it. These are separate cells, not universal support.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "column_mapping_reads_logical_names_but_cdf_rejects_mapping"
+      }
+    ],
+    "implementation": [
+      "Read content/profile.json and index/coverage.tsv before interpreting a missing symbol or a cfg-gated source insertion.",
+      "Use catalogs/protocol-matrix.json for discovery and then inspect the operation's preconditions and fixtures."
+    ],
+    "effects": [
+      "admit/reject access",
+      "possible protocol upgrade via mutation"
+    ],
+    "errors": [
+      "Recognized-but-unsupported, excluded Cargo feature, unsupported table protocol and operation restriction must not collapse into one boolean."
+    ],
+    "unknowns": [
+      "Variant, identity, generated-column and every cloud/profile combination are not runtime-qualified by this matrix."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/kernel/transaction/protocol.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "recognized_feature_and_excluded_profile_are_not_reader_support",
+          "column_mapping_reads_logical_names_but_cdf_rejects_mapping",
+          "deletion_vectors_filter_rows_and_optimize_keeps_logical_rows"
+        ]
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::kernel::transaction::protocol::ProtocolChecker::can_read_from_protocol",
+        "id": "9a65d13a01a3236a76050780",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.kernel.transaction.protocol.ProtocolChecker.json",
+        "page": "operations/deltalake_core.kernel.transaction.protocol.ProtocolChecker.md#op-9a65d13a01a3236a76050780",
+        "signature": "fn can_read_from_protocol(&self, protocol: &Protocol) -> Result<(), TransactionError>"
+      },
+      {
+        "path": "deltalake_core::kernel::transaction::protocol::ProtocolChecker::can_write_to",
+        "id": "9f087de5991d3e750d8260bd",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.kernel.transaction.protocol.ProtocolChecker.json",
+        "page": "operations/deltalake_core.kernel.transaction.protocol.ProtocolChecker.md#op-9f087de5991d3e750d8260bd",
+        "signature": "fn can_write_to(&self, snapshot: &dyn TableReference) -> Result<(), TransactionError>"
+      },
+      {
+        "path": "deltalake_core::kernel::transaction::protocol::ProtocolChecker::can_commit",
+        "id": "44ead6f0afa26e598fc49940",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.kernel.transaction.protocol.ProtocolChecker.json",
+        "page": "operations/deltalake_core.kernel.transaction.protocol.ProtocolChecker.md#op-44ead6f0afa26e598fc49940",
+        "signature": "fn can_commit(&self, snapshot: &dyn TableReference, actions: &[Action], operation: &DeltaOperation) -> Result<(), TransactionError>"
+      },
+      {
+        "path": "deltalake_core::table::DeltaTable::add_feature",
+        "id": "a1986b8a1a4acb7259034938",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-a1986b8a1a4acb7259034938",
+        "signature": "fn add_feature(self) -> AddTableFeatureBuilder"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.features.json"
+  },
+  {
+    "id": "delta.history",
+    "title": "Choose time travel, restore, checkpoints or log maintenance",
+    "reviewed": "2026-09-18",
+    "brief": "Time travel reads an old state, restore publishes a new state, and checkpoints accelerate state reconstruction. These operations solve different lifecycle tasks.",
+    "task_aliases": [
+      "restore version",
+      "time travel",
+      "checkpoint log",
+      "history metadata",
+      "recover historical"
+    ],
+    "crates": [
+      "deltalake-core"
+    ],
+    "input": [
+      "table version/history",
+      "restore target",
+      "loaded table"
+    ],
+    "output": [
+      "historical snapshot",
+      "new restored version",
+      "checkpoint artifacts"
+    ],
+    "properties": [
+      "restore version",
+      "time travel",
+      "checkpoint log",
+      "history metadata",
+      "recover historical"
+    ],
+    "operations": [
+      "deltalake_core::table::DeltaTable::history",
+      "deltalake_core::table::DeltaTable::restore",
+      "deltalake_core::table::DeltaTable::load_version",
+      "deltalake_core::operations::restore::RestoreBuilder::with_version_to_restore",
+      "deltalake_core::protocol::checkpoints::create_checkpoint"
+    ],
+    "choices": [
+      {
+        "candidate": "load_version",
+        "choose_when": "You want an historical read without changing head",
+        "tradeoff": "Referenced files must remain available"
+      },
+      {
+        "candidate": "restore",
+        "choose_when": "Current head should reflect an earlier state",
+        "tradeoff": "Creates a new commit; missing files and protocol constraints matter"
+      },
+      {
+        "candidate": "create_checkpoint",
+        "choose_when": "You need a checkpoint for log reconstruction",
+        "tradeoff": "Does not compact user data or restore removed bytes"
+      },
+      {
+        "candidate": "history",
+        "choose_when": "Inspect recorded commit metadata for diagnostics/recovery",
+        "tradeoff": "History availability is limited by retained log state"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.history.1",
+        "aspect": "restore",
+        "statement": "Restoring v0 from a table at v1 produced v2 with the original row; v1 still selected the two-row historical state in the fixture.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "restore_creates_new_version_and_checkpoint_preserves_rows"
+      },
+      {
+        "id": "delta.history.2",
+        "aspect": "checkpoint",
+        "statement": "Creating a checkpoint preserved the current relation in the local fixture.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "restore_creates_new_version_and_checkpoint_preserves_rows"
+      },
+      {
+        "id": "delta.history.3",
+        "aspect": "separation",
+        "statement": "Data compaction, log checkpointing, log cleanup and vacuum have different inputs and physical effects; select the intended layer.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      }
+    ],
+    "implementation": [
+      "Record version before/after restore, and test historical data availability independently.",
+      "Use history and application commit metadata for diagnosis without treating them as an indefinitely retained audit log."
+    ],
+    "effects": [
+      "select state",
+      "publish restore version",
+      "write checkpoint metadata"
+    ],
+    "errors": [
+      "An old version may have loadable metadata but unavailable files; restoration has its own missing-file policy."
+    ],
+    "unknowns": [
+      "Every checkpoint format and cleanup/retention combination is not covered by the fixture."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/restore.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "restore_creates_new_version_and_checkpoint_preserves_rows"
+        ]
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::table::DeltaTable::history",
+        "id": "80e9ed24a9f0a3008cd9a869",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-80e9ed24a9f0a3008cd9a869",
+        "signature": "async fn history(&self, limit: Option<usize>) -> Result<impl Iterator<Item = CommitInfo> + use<>, DeltaTableError>"
+      },
+      {
+        "path": "deltalake_core::table::DeltaTable::restore",
+        "id": "ccc2e63ad429a29aab780d31",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-ccc2e63ad429a29aab780d31",
+        "signature": "fn restore(self) -> RestoreBuilder"
+      },
+      {
+        "path": "deltalake_core::table::DeltaTable::load_version",
+        "id": "bd07223c753e46cf67ac2d8a",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-bd07223c753e46cf67ac2d8a",
+        "signature": "async fn load_version(&mut self, version: Version) -> Result<(), DeltaTableError>"
+      },
+      {
+        "path": "deltalake_core::operations::restore::RestoreBuilder::with_version_to_restore",
+        "id": "45dc160b98acde43d1355b28",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.restore.RestoreBuilder.json",
+        "page": "operations/deltalake_core.operations.restore.RestoreBuilder.md#op-45dc160b98acde43d1355b28",
+        "signature": "fn with_version_to_restore(self, version: Version) -> Self"
+      },
+      {
+        "path": "deltalake_core::protocol::checkpoints::create_checkpoint",
+        "id": "e2ce7c6abdadd100ddb3dbb1",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.protocol.checkpoints.create_checkpoint.json",
+        "page": "operations/deltalake_core.protocol.checkpoints.create_checkpoint.md#op-e2ce7c6abdadd100ddb3dbb1",
+        "signature": "async fn create_checkpoint(table: &DeltaTable, operation_id: Option<uuid::Uuid>) -> DeltaResult<()>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.history.json"
+  },
+  {
+    "id": "delta.kernel",
+    "title": "Use kernel snapshots, scans and engine interfaces at the correct layer",
+    "reviewed": "2026-09-18",
+    "brief": "Use high-level DeltaTable operations for normal table work. Use the kernel and engine interfaces when implementing a scan/engine boundary and when prepared to honor its selection, schema and protocol contracts.",
+    "task_aliases": [
+      "Delta kernel engine",
+      "low level scan",
+      "selection vector",
+      "Arrow engine data",
+      "kernel fork",
+      "custom engine"
+    ],
+    "crates": [
+      "buoyant_kernel",
+      "buoyant_kernel_engine",
+      "deltalake-core"
+    ],
+    "input": [
+      "kernel schema/snapshot",
+      "Engine",
+      "EngineData"
+    ],
+    "output": [
+      "scan metadata",
+      "filtered engine data",
+      "engine I/O results"
+    ],
+    "properties": [
+      "Delta kernel engine",
+      "low level scan",
+      "selection vector",
+      "Arrow engine data",
+      "kernel fork",
+      "custom engine"
+    ],
+    "operations": [
+      "buoyant_kernel::Engine",
+      "buoyant_kernel::engine_data::EngineData::apply_selection_vector",
+      "buoyant_kernel::engine_data::FilteredEngineData::apply_selection_vector",
+      "buoyant_kernel::engine::arrow_conversion::TryIntoArrow::try_into_arrow"
+    ],
+    "choices": [
+      {
+        "candidate": "DeltaTable/provider",
+        "choose_when": "The task is querying or mutating a Delta table",
+        "tradeoff": "Already integrates protocol, storage and DataFusion semantics"
+      },
+      {
+        "candidate": "Kernel Engine/EngineData",
+        "choose_when": "You are implementing engine evaluation/I/O or consuming kernel scan primitives",
+        "tradeoff": "Own the engine contract and apply selection/deletion semantics correctly"
+      },
+      {
+        "candidate": "buoyant_kernel_engine",
+        "choose_when": "The supplied engine implementation fits the integration",
+        "tradeoff": "Keep its fork/feature/version identity aligned with delta-rs"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.kernel.1",
+        "aspect": "identity",
+        "statement": "The package names are buoyant_kernel and buoyant_kernel_engine, used through delta_kernel/delta_kernel_default_engine aliases in delta-rs. The fork commit is part of API identity, not interchangeable with an arbitrary published delta_kernel.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.kernel.2",
+        "aspect": "representation",
+        "statement": "EngineData and FilteredEngineData carry engine-owned batches and selection semantics. A selection vector must be applied according to its contract before treating all physical rows as logical results.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.kernel.3",
+        "aspect": "scope",
+        "statement": "The capture includes internal-api-gated surfaces. Visibility under that profile does not promise stability or inclusion in a consumer with fewer features.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      }
+    ],
+    "implementation": [
+      "Start from the kernel trait's full member contracts and choose the narrowest engine seam needed.",
+      "Bind Arrow/kernel conversions and selection behavior to the actual package identities; use the DataFusion boundary notes when crossing engine representations."
+    ],
+    "effects": [
+      "engine evaluation and I/O",
+      "selection/filter application"
+    ],
+    "errors": [
+      "Kernel error and engine adapter error paths do not imply an already completed high-level table transaction."
+    ],
+    "unknowns": [
+      "Custom engine correctness and every internal-api surface are unreviewed beyond the selected contracts; no complete custom engine implementation is certified."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/kernel/mod.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "buoyant_kernel::Engine",
+        "id": "144f8dad57c79b7743fd1386",
+        "kind": "trait",
+        "crate": "buoyant_kernel",
+        "record": "operations/buoyant_kernel.Engine.json",
+        "page": "operations/buoyant_kernel.Engine.md#op-144f8dad57c79b7743fd1386",
+        "signature": "trait Engine: AsAny"
+      },
+      {
+        "path": "buoyant_kernel::engine_data::EngineData::apply_selection_vector",
+        "id": "1e67ac80541d2398db9da79f",
+        "kind": "function",
+        "crate": "buoyant_kernel",
+        "record": "operations/buoyant_kernel.engine_data.EngineData.json",
+        "page": "operations/buoyant_kernel.engine_data.EngineData.md#op-1e67ac80541d2398db9da79f",
+        "signature": "fn apply_selection_vector(Box<self>, selection_vector: Vec<bool>) -> DeltaResult<Box<dyn EngineData>>"
+      },
+      {
+        "path": "buoyant_kernel::engine_data::FilteredEngineData::apply_selection_vector",
+        "id": "c5e31214bf7fcdf905d25151",
+        "kind": "function",
+        "crate": "buoyant_kernel",
+        "record": "operations/buoyant_kernel.engine_data.FilteredEngineData.json",
+        "page": "operations/buoyant_kernel.engine_data.FilteredEngineData.md#op-c5e31214bf7fcdf905d25151",
+        "signature": "fn apply_selection_vector(self) -> DeltaResult<Box<dyn EngineData>>"
+      },
+      {
+        "path": "buoyant_kernel::engine::arrow_conversion::TryIntoArrow::try_into_arrow",
+        "id": "25b4a288393e65df0404d747",
+        "kind": "function",
+        "crate": "buoyant_kernel",
+        "record": "operations/buoyant_kernel.engine.arrow_conversion.TryIntoArrow.json",
+        "page": "operations/buoyant_kernel.engine.arrow_conversion.TryIntoArrow.md#op-25b4a288393e65df0404d747",
+        "signature": "fn try_into_arrow(self) -> Result<ArrowType, ArrowError>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.kernel.json"
+  },
+  {
+    "id": "delta.merge",
+    "title": "Merge with explicit key, null, clause and duplicate semantics",
+    "reviewed": "2026-09-18",
+    "brief": "Merge composes a source DataFrame, target snapshot and ordered conditional actions. Decide null-key and duplicate-source policy before treating it as an upsert.",
+    "task_aliases": [
+      "upsert merge",
+      "duplicate source keys",
+      "null keys",
+      "matched update",
+      "by source delete",
+      "merge aliases"
+    ],
+    "crates": [
+      "deltalake-core"
+    ],
+    "input": [
+      "DataFrame source",
+      "join predicate",
+      "ordered clauses"
+    ],
+    "output": [
+      "(DeltaTable, MergeMetrics)"
+    ],
+    "properties": [
+      "upsert merge",
+      "duplicate source keys",
+      "null keys",
+      "matched update",
+      "by source delete",
+      "merge aliases"
+    ],
+    "operations": [
+      "deltalake_core::table::DeltaTable::merge",
+      "deltalake_core::operations::merge::MergeBuilder::when_matched_update",
+      "deltalake_core::operations::merge::MergeBuilder::when_not_matched_insert",
+      "deltalake_core::operations::merge::MergeBuilder::when_not_matched_by_source_delete",
+      "deltalake_core::operations::merge::MergeBuilder::Output"
+    ],
+    "choices": [
+      {
+        "candidate": "MergeBuilder",
+        "choose_when": "Different matched/unmatched cases need different actions",
+        "tradeoff": "Aliases and ordered predicates define the semantics"
+      },
+      {
+        "candidate": "WriteBuilder append/replace_where",
+        "choose_when": "Source data is already a complete replacement slice or pure append",
+        "tradeoff": "Simpler input contract; no source-target action matrix"
+      },
+      {
+        "candidate": "Pre-aggregate/deduplicate source",
+        "choose_when": "Multiple source rows can match one target with conflicting updates",
+        "tradeoff": "Requires an application-defined tie-break rule; do not silently drop duplicates"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.merge.1",
+        "aspect": "clauses",
+        "statement": "The first applicable matched update won in the probe; source and target null keys did not match under ordinary equality. Unmatched insert and by-source delete contributed independently.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "merge_clause_order_null_keys_and_duplicate_updates"
+      },
+      {
+        "id": "delta.merge.2",
+        "aspect": "duplicates",
+        "statement": "Two matching source rows attempting to update one target produced an error and left the observed version unchanged in the tested case.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "merge_clause_order_null_keys_and_duplicate_updates"
+      },
+      {
+        "id": "delta.merge.3",
+        "aspect": "construction",
+        "statement": "when_* takes a closure configuring a merge clause builder. Its UpdateBuilder/DeleteBuilder types are not constructors for standalone table update/delete operations.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.merge.4",
+        "aspect": "result",
+        "statement": "Await returns updated table plus MergeMetrics; interpret inserted/updated/deleted counts in the context of source multiplicity and chosen clauses.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      }
+    ],
+    "implementation": [
+      "Use explicit source/target aliases and qualified columns.",
+      "Choose equality versus a deliberate null-safe condition and independently specify duplicate-source handling.",
+      "Assert rows, versions and per-action metrics; a completed merge is not evidence of an application-level unique key."
+    ],
+    "effects": [
+      "rewrite or add/remove data",
+      "publish transaction",
+      "return metrics"
+    ],
+    "errors": [
+      "Invalid expressions, ambiguous/multiple matches, protocol/schema restrictions and optimistic conflicts require distinct recovery."
+    ],
+    "unknowns": [
+      "Every schema-evolution/duplicate-delete combination and concurrency schedule is not certified by the selected fixture."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/merge/mod.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "merge_clause_order_null_keys_and_duplicate_updates"
+        ]
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::table::DeltaTable::merge",
+        "id": "6520d30123b98065a7c363a4",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-6520d30123b98065a7c363a4",
+        "signature": "fn merge<E: Into<Expression>>(self, source: datafusion::prelude::DataFrame, predicate: E) -> MergeBuilder"
+      },
+      {
+        "path": "deltalake_core::operations::merge::MergeBuilder::when_matched_update",
+        "id": "3b956eb522c0b07669f78099",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.merge.MergeBuilder.json",
+        "page": "operations/deltalake_core.operations.merge.MergeBuilder.md#op-3b956eb522c0b07669f78099",
+        "signature": "fn when_matched_update<F>(self, builder: F) -> DeltaResult<MergeBuilder> where F: FnOnce(UpdateBuilder) -> UpdateBuilder"
+      },
+      {
+        "path": "deltalake_core::operations::merge::MergeBuilder::when_not_matched_insert",
+        "id": "5df71d61188e1549d37abb11",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.merge.MergeBuilder.json",
+        "page": "operations/deltalake_core.operations.merge.MergeBuilder.md#op-5df71d61188e1549d37abb11",
+        "signature": "fn when_not_matched_insert<F>(self, builder: F) -> DeltaResult<MergeBuilder> where F: FnOnce(InsertBuilder) -> InsertBuilder"
+      },
+      {
+        "path": "deltalake_core::operations::merge::MergeBuilder::when_not_matched_by_source_delete",
+        "id": "c47b2f8a582c539f8251a343",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.merge.MergeBuilder.json",
+        "page": "operations/deltalake_core.operations.merge.MergeBuilder.md#op-c47b2f8a582c539f8251a343",
+        "signature": "fn when_not_matched_by_source_delete<F>(self, builder: F) -> DeltaResult<MergeBuilder> where F: FnOnce(DeleteBuilder) -> DeleteBuilder"
+      },
+      {
+        "path": "deltalake_core::operations::merge::MergeBuilder::Output",
+        "id": "246dbe6c66042a837a13c116",
+        "kind": "assoc_type",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.merge.MergeBuilder.json",
+        "page": "operations/deltalake_core.operations.merge.MergeBuilder.md#op-246dbe6c66042a837a13c116",
+        "signature": "type Output = Result<(DeltaTable, MergeMetrics), DeltaTableError>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.merge.json"
+  },
+  {
+    "id": "delta.open",
+    "title": "Open, load and select a table version",
+    "reviewed": "2026-09-18",
+    "brief": "Separate a table handle from its loaded snapshot. Select the required version before building a provider; a provider created from an already loaded table retains that snapshot.",
+    "task_aliases": [
+      "open table",
+      "time travel",
+      "load metadata",
+      "historical version",
+      "unloaded handle"
+    ],
+    "crates": [
+      "deltalake",
+      "deltalake-core"
+    ],
+    "input": [
+      "table URL",
+      "storage options",
+      "version or timestamp"
+    ],
+    "output": [
+      "DeltaTable",
+      "loaded snapshot"
+    ],
+    "properties": [
+      "open table",
+      "time travel",
+      "load metadata",
+      "historical version",
+      "unloaded handle"
+    ],
+    "operations": [
+      "deltalake_core::table::DeltaTable::try_from_url",
+      "deltalake_core::table::DeltaTable::load_version",
+      "deltalake_core::table::DeltaTable::load_with_datetime",
+      "deltalake_core::table::builder::DeltaTableBuilder::build",
+      "deltalake_core::table::builder::DeltaTableBuilder::load"
+    ],
+    "choices": [
+      {
+        "candidate": "DeltaTableBuilder::load / open helpers",
+        "choose_when": "You need an existing table snapshot",
+        "tradeoff": "Performs log access; protocol/storage errors remain possible"
+      },
+      {
+        "candidate": "DeltaTableBuilder::build",
+        "choose_when": "You need a configured handle before loading or creating",
+        "tradeoff": "The handle has no loaded version"
+      },
+      {
+        "candidate": "load_version / load_with_datetime",
+        "choose_when": "A reproducible historical view is required",
+        "tradeoff": "Historical data must still exist; loading log state alone does not prove files are readable"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.open.1",
+        "aspect": "state",
+        "statement": "A built unloaded handle has version None. A loaded snapshot is a specific version; refreshing one clone does not refresh an existing provider.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.open.2",
+        "aspect": "version",
+        "statement": "In the local probe, a provider built from an unloaded handle with table_version(0) selects v0. For a loaded handle, its snapshot takes precedence over the builder's version option.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "unloaded_handle_explicit_version_and_partition_reconstruction"
+      },
+      {
+        "id": "delta.open.3",
+        "aspect": "time travel",
+        "statement": "Time travel selects historical state without a new commit. Restore instead commits a new current version referencing historical state.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "restore_creates_new_version_and_checkpoint_preserves_rows"
+      }
+    ],
+    "implementation": [
+      "Choose URL, storage options and required version explicitly at the boundary where freshness is decided.",
+      "Check version() and snapshot state before producing a provider; rebuild the provider after refreshing if fresh results are required."
+    ],
+    "effects": [
+      "read log and metadata",
+      "select snapshot; no table commit"
+    ],
+    "errors": [
+      "Load errors concern URL, log, protocol or snapshot selection. Missing data can surface later while consuming a scan."
+    ],
+    "unknowns": [
+      "Timestamp selection at every retention/protocol boundary is not exhaustively tested."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/table/builder.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "unloaded_handle_explicit_version_and_partition_reconstruction",
+          "restore_creates_new_version_and_checkpoint_preserves_rows"
+        ]
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::table::DeltaTable::try_from_url",
+        "id": "f74e66012b666ef0fd0eb264",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-f74e66012b666ef0fd0eb264",
+        "signature": "async fn try_from_url(uri: Url) -> DeltaResult<Self>"
+      },
+      {
+        "path": "deltalake_core::table::DeltaTable::load_version",
+        "id": "bd07223c753e46cf67ac2d8a",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-bd07223c753e46cf67ac2d8a",
+        "signature": "async fn load_version(&mut self, version: Version) -> Result<(), DeltaTableError>"
+      },
+      {
+        "path": "deltalake_core::table::DeltaTable::load_with_datetime",
+        "id": "fbd40a4dc41d75936671eb6f",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-fbd40a4dc41d75936671eb6f",
+        "signature": "async fn load_with_datetime(&mut self, datetime: DateTime<Utc>) -> Result<(), DeltaTableError>"
+      },
+      {
+        "path": "deltalake_core::table::builder::DeltaTableBuilder::build",
+        "id": "ce34f4c8678c321fcc13b373",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.builder.DeltaTableBuilder.json",
+        "page": "operations/deltalake_core.table.builder.DeltaTableBuilder.md#op-ce34f4c8678c321fcc13b373",
+        "signature": "fn build(self) -> DeltaResult<DeltaTable>"
+      },
+      {
+        "path": "deltalake_core::table::builder::DeltaTableBuilder::load",
+        "id": "7e06e6511ff81a276fce5093",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.builder.DeltaTableBuilder.json",
+        "page": "operations/deltalake_core.table.builder.DeltaTableBuilder.md#op-7e06e6511ff81a276fce5093",
+        "signature": "async fn load(self) -> DeltaResult<DeltaTable>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.open.json"
+  },
+  {
+    "id": "delta.optimize",
+    "title": "Compact or Z-order while preserving logical data",
+    "reviewed": "2026-09-18",
+    "brief": "Use Compact to combine eligible files and ZOrder for selected-column clustering. Measure output file/scan behavior separately from logical-row preservation.",
+    "task_aliases": [
+      "compact small files",
+      "z order cluster",
+      "optimize metrics",
+      "no op optimize"
+    ],
+    "crates": [
+      "deltalake-core"
+    ],
+    "input": [
+      "DeltaTable",
+      "partition selection",
+      "target size",
+      "OptimizeType"
+    ],
+    "output": [
+      "(DeltaTable, Metrics)",
+      "rewritten files"
+    ],
+    "properties": [
+      "compact small files",
+      "z order cluster",
+      "optimize metrics",
+      "no op optimize"
+    ],
+    "operations": [
+      "deltalake_core::table::DeltaTable::optimize",
+      "deltalake_core::operations::optimize::OptimizeBuilder::with_type",
+      "deltalake_core::operations::optimize::OptimizeBuilder::with_target_size",
+      "deltalake_core::operations::optimize::OptimizeBuilder::Output"
+    ],
+    "choices": [
+      {
+        "candidate": "Compact",
+        "choose_when": "Small eligible files should be combined",
+        "tradeoff": "A repeated run may be a no-op"
+      },
+      {
+        "candidate": "ZOrder(columns)",
+        "choose_when": "Clustering by those columns may improve later data skipping",
+        "tradeoff": "Requires workload evidence; it is not a global result-order guarantee"
+      },
+      {
+        "candidate": "Leave layout unchanged",
+        "choose_when": "Rewrite cost exceeds demonstrated benefit",
+        "tradeoff": "Track file and scan metrics before introducing periodic maintenance"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.optimize.1",
+        "aspect": "rows",
+        "statement": "Compaction removed multiple small files and preserved all rows in the probe; repeating it did not advance the version. Z-order preserved the same logical rows.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "optimize_compact_and_zorder_preserve_rows"
+      },
+      {
+        "id": "delta.optimize.2",
+        "aspect": "features",
+        "statement": "The deletion-vector fixture preserved the eight live logical rows across optimize.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "deletion_vectors_filter_rows_and_optimize_keeps_logical_rows"
+      },
+      {
+        "id": "delta.optimize.3",
+        "aspect": "resources",
+        "statement": "Target size is an optimization input. Concurrency, buffering, memory pool and spill configuration jointly affect resources; no exact RSS or throughput bound follows from the API signature.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      }
+    ],
+    "implementation": [
+      "Compare file counts, bytes, operation metrics and query read metrics before/after representative workloads.",
+      "Keep Z-order columns aligned with actual filtering patterns and type support."
+    ],
+    "effects": [
+      "rewrite data files",
+      "publish layout changes or no-op"
+    ],
+    "errors": [
+      "Feature/protocol, data read, expression, resource and commit failures remain possible."
+    ],
+    "unknowns": [
+      "No workload-level speedup, exact file-size bound or resource envelope is claimed."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/optimize.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "optimize_compact_and_zorder_preserve_rows",
+          "deletion_vectors_filter_rows_and_optimize_keeps_logical_rows"
+        ]
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::table::DeltaTable::optimize",
+        "id": "30b3d3701758d0059efa4146",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-30b3d3701758d0059efa4146",
+        "signature": "fn optimize<'a>(self) -> OptimizeBuilder<'a>"
+      },
+      {
+        "path": "deltalake_core::operations::optimize::OptimizeBuilder::with_type",
+        "id": "7197eaf7da542a4421fa2def",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.optimize.OptimizeBuilder.json",
+        "page": "operations/deltalake_core.operations.optimize.OptimizeBuilder.md#op-7197eaf7da542a4421fa2def",
+        "signature": "fn with_type(self, optimize_type: OptimizeType) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::optimize::OptimizeBuilder::with_target_size",
+        "id": "17215fd88c454cd2ccdba9cf",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.optimize.OptimizeBuilder.json",
+        "page": "operations/deltalake_core.operations.optimize.OptimizeBuilder.md#op-17215fd88c454cd2ccdba9cf",
+        "signature": "fn with_target_size(self, target: NonZeroU64) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::optimize::OptimizeBuilder::Output",
+        "id": "bff0e9f1314e94985cdd4cdc",
+        "kind": "assoc_type",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.optimize.OptimizeBuilder.json",
+        "page": "operations/deltalake_core.operations.optimize.OptimizeBuilder.md#op-bff0e9f1314e94985cdd4cdc",
+        "signature": "type Output = Result<(DeltaTable, Metrics), DeltaTableError>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.optimize.json"
+  },
+  {
+    "id": "delta.read",
+    "title": "Choose a Delta-aware scan or table provider",
+    "reviewed": "2026-09-18",
+    "brief": "Use the Delta provider for query composition and reliable name-based projection; scan_table provides a direct batch stream. The retained partition-first fixture exposes a LoadBuilder projection-order defect. Raw Parquet reads a different physical relation.",
+    "task_aliases": [
+      "read delta rows",
+      "scan projection",
+      "raw parquet",
+      "deletion vectors",
+      "column mapping",
+      "provider freshness",
+      "dictionary partition"
+    ],
+    "crates": [
+      "deltalake-core"
+    ],
+    "input": [
+      "DeltaTable snapshot",
+      "projection",
+      "DataFusion filters"
+    ],
+    "output": [
+      "Arc<dyn TableProvider>",
+      "SendableRecordBatchStream",
+      "Arrow RecordBatch"
+    ],
+    "properties": [
+      "read delta rows",
+      "scan projection",
+      "raw parquet",
+      "deletion vectors",
+      "column mapping",
+      "provider freshness",
+      "dictionary partition"
+    ],
+    "operations": [
+      "deltalake_core::table::DeltaTable::table_provider",
+      "deltalake_core::table::DeltaTable::scan_table",
+      "deltalake_core::operations::load::LoadBuilder::with_columns",
+      "deltalake_core::operations::load::LoadBuilder::Output",
+      "deltalake_core::delta_datafusion::table_provider::TableProviderBuilder::with_table_version",
+      "deltalake_core::delta_datafusion::table_provider::TableProviderBuilder::with_session"
+    ],
+    "choices": [
+      {
+        "candidate": "table_provider",
+        "choose_when": "SQL, projection/filter planning or joins should compose with DataFusion",
+        "tradeoff": "The provider holds snapshot state; session-derived scan settings do not imply automatic freshness"
+      },
+      {
+        "candidate": "scan_table().with_columns(...)",
+        "choose_when": "You need a direct stream of selected logical columns",
+        "tradeoff": "LoadBuilder is callable by inference but its private canonical module is not an import path"
+      },
+      {
+        "candidate": "Raw Parquet scan",
+        "choose_when": "You intentionally inspect physical files independently of Delta semantics",
+        "tradeoff": "Removed rows/files, deletion vectors, partition reconstruction and physical names need separate treatment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.read.1",
+        "aspect": "input/output",
+        "statement": "LoadBuilder's IntoFuture::Output contains DeltaTable and SendableRecordBatchStream inside DeltaResult; keep streaming errors distinct from builder errors.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.read.2",
+        "aspect": "logical rows",
+        "statement": "The tombstone and deletion-vector fixtures return 0 vs 2 and 8 vs 10 rows respectively when compared with raw Parquet. Column-mapping scans expose logical field names.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "deletion_vectors_filter_rows_and_optimize_keeps_logical_rows"
+      },
+      {
+        "id": "delta.read.3",
+        "aspect": "schema",
+        "statement": "The partition-first schema fixture exposed a positional projection defect: scan_table().with_columns([\"id\"]) returned the label column. The full scan reconstructed id correctly, and projecting id by name through a DataFusion provider returned the requested values. Inspect returned field names and types; do not blindly downcast by position.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "unloaded_handle_explicit_version_and_partition_reconstruction"
+      },
+      {
+        "id": "delta.read.4",
+        "aspect": "snapshot",
+        "statement": "A retained provider continues reading its old snapshot after another table handle appends; rebuild from a refreshed table when current results are required.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "provider_snapshot_and_unnameable_load_builder"
+      }
+    ],
+    "implementation": [
+      "Resolve access paths through aliases; canonical paths document identity, not guaranteed public imports.",
+      "Preserve the stream schema and apply Arrow kernels that support the actual array representation.",
+      "Treat file pruning and row filtering as different promises; inspect TableProvider pushdown contracts.",
+      "At this pin prefer provider/DataFrame name-based projection for partitioned schemas; retain the LoadBuilder projection regression control."
+    ],
+    "effects": [
+      "read snapshot files",
+      "stream batches"
+    ],
+    "errors": [
+      "A constructed stream can fail during consumption, including after vacuum removed historical files."
+    ],
+    "unknowns": [
+      "Predicate pushdown efficiency, allocations and RSS are not measured by the row-correctness fixtures."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/delta_datafusion/table_provider.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "provider_snapshot_and_unnameable_load_builder",
+          "delta_snapshot_excludes_removed_parquet_files",
+          "deletion_vectors_filter_rows_and_optimize_keeps_logical_rows",
+          "unloaded_handle_explicit_version_and_partition_reconstruction"
+        ]
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::table::DeltaTable::table_provider",
+        "id": "e4d0e5daa6b84019197e3110",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-e4d0e5daa6b84019197e3110",
+        "signature": "fn table_provider(&self) -> TableProviderBuilder"
+      },
+      {
+        "path": "deltalake_core::table::DeltaTable::scan_table",
+        "id": "d8d9f3a456c209a46d18989d",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-d8d9f3a456c209a46d18989d",
+        "signature": "fn scan_table(&self) -> LoadBuilder"
+      },
+      {
+        "path": "deltalake_core::operations::load::LoadBuilder::with_columns",
+        "id": "3cbadb75441606b267067afa",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.load.LoadBuilder.json",
+        "page": "operations/deltalake_core.operations.load.LoadBuilder.md#op-3cbadb75441606b267067afa",
+        "signature": "fn with_columns(self, columns: impl IntoIterator<Item = impl Into<String>>) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::load::LoadBuilder::Output",
+        "id": "10d61fc5ea060fbd1511386d",
+        "kind": "assoc_type",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.load.LoadBuilder.json",
+        "page": "operations/deltalake_core.operations.load.LoadBuilder.md#op-10d61fc5ea060fbd1511386d",
+        "signature": "type Output = Result<(DeltaTable, Pin<Box<dyn RecordBatchStream<Item = Result<RecordBatch, DataFusionError>> + Send>>), DeltaTableError>"
+      },
+      {
+        "path": "deltalake_core::delta_datafusion::table_provider::TableProviderBuilder::with_table_version",
+        "id": "871e0b2228633a876325f515",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.delta_datafusion.table_provider.TableProviderBuilder.json",
+        "page": "operations/deltalake_core.delta_datafusion.table_provider.TableProviderBuilder.md#op-871e0b2228633a876325f515",
+        "signature": "fn with_table_version(self, version: impl Into<Option<Version>>) -> Self"
+      },
+      {
+        "path": "deltalake_core::delta_datafusion::table_provider::TableProviderBuilder::with_session",
+        "id": "0369e5839026aab638b06488",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.delta_datafusion.table_provider.TableProviderBuilder.json",
+        "page": "operations/deltalake_core.delta_datafusion.table_provider.TableProviderBuilder.md#op-0369e5839026aab638b06488",
+        "signature": "fn with_session<S>(self, session: Arc<S>) -> Self where S: Session + 'static"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.read.json"
+  },
+  {
+    "id": "delta.replace",
+    "title": "Choose full overwrite, predicate replacement or merge",
+    "reviewed": "2026-09-18",
+    "brief": "Use Overwrite plus replace_where for predicate-scoped replacement. Validate incoming rows against that predicate; use merge when changes depend on matching source and target keys.",
+    "task_aliases": [
+      "replace where",
+      "overwrite partition",
+      "predicate overwrite",
+      "replace subset"
+    ],
+    "crates": [
+      "deltalake-core"
+    ],
+    "input": [
+      "replacement batches",
+      "predicate Expr or SQL",
+      "loaded table"
+    ],
+    "output": [
+      "new DeltaTable version",
+      "preserved rows outside predicate"
+    ],
+    "properties": [
+      "replace where",
+      "overwrite partition",
+      "predicate overwrite",
+      "replace subset"
+    ],
+    "operations": [
+      "deltalake_core::operations::write::WriteBuilder::with_replace_where",
+      "deltalake_core::operations::write::WriteBuilder::with_save_mode",
+      "deltalake_core::operations::write::WriteBuilder::with_partition_columns",
+      "deltalake_core::operations::write::WriteBuilder::with_schema_mode"
+    ],
+    "choices": [
+      {
+        "candidate": "Overwrite + replace_where",
+        "choose_when": "Incoming data fully replaces the selected logical slice",
+        "tradeoff": "Incoming rows outside the predicate are invalid"
+      },
+      {
+        "candidate": "Full Overwrite",
+        "choose_when": "The entire current table relation is being replaced",
+        "tradeoff": "Old data files may remain physically present until retention cleanup"
+      },
+      {
+        "candidate": "Merge",
+        "choose_when": "Insert/update/delete decisions depend on source-target matching",
+        "tradeoff": "Requires explicit key/null/duplicate/clause semantics"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.replace.1",
+        "aspect": "predicate",
+        "statement": "The probe rejected an out-of-predicate row without advancing the observed version. Replacing id >= 2 with id 20 preserved id 1; full overwrite then left only id 9.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "save_modes_replace_where_and_validation_before_commit"
+      },
+      {
+        "id": "delta.replace.2",
+        "aspect": "schema",
+        "statement": "SchemaMode::Overwrite is allowed with SaveMode::Overwrite, not append. Existing column-mapped tables reject schema evolution on the examined write precondition path.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.replace.3",
+        "aspect": "partitions",
+        "statement": "Partition metadata is part of table layout; do not treat a new with_partition_columns value as an independent per-write reshuffle option. Inspect the existing partition schema and the exact overwrite path.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      }
+    ],
+    "implementation": [
+      "Express the logical slice in the replacement predicate and assert all incoming rows belong to it.",
+      "Test retained rows and resulting metadata/version, not only the number of new files."
+    ],
+    "effects": [
+      "remove existing logical data",
+      "add replacement files",
+      "publish log version"
+    ],
+    "errors": [
+      "Predicate, append-only/protocol, partition or schema validation can reject an operation before publication."
+    ],
+    "unknowns": [
+      "All partition-layout changes and every mapped-schema overwrite combination are not covered by the local probe."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/write/mod.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "save_modes_replace_where_and_validation_before_commit"
+        ]
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::operations::write::WriteBuilder::with_replace_where",
+        "id": "fe70b99393fab335b2454bd5",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+        "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-fe70b99393fab335b2454bd5",
+        "signature": "fn with_replace_where(self, predicate: impl Into<Expression>) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::write::WriteBuilder::with_save_mode",
+        "id": "a2d377816dc436cf1c93443b",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+        "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-a2d377816dc436cf1c93443b",
+        "signature": "fn with_save_mode(self, save_mode: SaveMode) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::write::WriteBuilder::with_partition_columns",
+        "id": "3c7a11e509dfe629ee2c3f13",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+        "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-3c7a11e509dfe629ee2c3f13",
+        "signature": "fn with_partition_columns(self, partition_columns: impl IntoIterator<Item = impl Into<String>>) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::write::WriteBuilder::with_schema_mode",
+        "id": "290b8fe3fd386ffca8f17f0b",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+        "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-290b8fe3fd386ffca8f17f0b",
+        "signature": "fn with_schema_mode(self, schema_mode: SchemaMode) -> Self"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.replace.json"
+  },
+  {
+    "id": "delta.replay",
+    "title": "Use transaction markers without assuming replay suppression",
+    "reviewed": "2026-09-18",
+    "brief": "Application transaction markers are useful persisted coordination metadata. At this pin, repeating the same marker on sequential appends does not automatically suppress the second write.",
+    "task_aliases": [
+      "idempotent ingestion",
+      "replay batch",
+      "transaction application version",
+      "deduplicate append",
+      "exactly once"
+    ],
+    "crates": [
+      "deltalake-core"
+    ],
+    "input": [
+      "application ID and version",
+      "CommitProperties",
+      "snapshot transaction state"
+    ],
+    "output": [
+      "txn action",
+      "transaction_version lookup"
+    ],
+    "properties": [
+      "idempotent ingestion",
+      "replay batch",
+      "transaction application version",
+      "deduplicate append",
+      "exactly once"
+    ],
+    "operations": [
+      "deltalake_core::kernel::transaction::CommitProperties::with_application_transaction",
+      "deltalake_core::kernel::transaction::CommitProperties::with_application_transactions",
+      "deltalake_core::kernel::snapshot::EagerSnapshot::transaction_version",
+      "deltalake_core::operations::write::WriteBuilder::with_commit_properties"
+    ],
+    "choices": [
+      {
+        "candidate": "Application transactions + explicit recovery check",
+        "choose_when": "An application coordinates checkpoints with committed table state",
+        "tradeoff": "Design race/retry handling; a pre-read alone is not atomic deduplication"
+      },
+      {
+        "candidate": "Plain append",
+        "choose_when": "Every invocation is intended to add records",
+        "tradeoff": "Repeated requests repeat data"
+      },
+      {
+        "candidate": "Domain-key merge or externally coordinated ingestion",
+        "choose_when": "You need a stronger uniqueness/replay policy",
+        "tradeoff": "Define key semantics and concurrent ownership explicitly"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.replay.1",
+        "aspect": "observed replay",
+        "statement": "Two sequential writes with the same application marker version 7 produced two rows and table version 1; transaction_version returned Some(7).",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "repeated_transaction_marker_does_not_suppress_sequential_append"
+      },
+      {
+        "id": "delta.replay.2",
+        "aspect": "coordination",
+        "statement": "A txn marker participates in transaction state and conflict logic, but the marker alone is not an exactly-once ingestion algorithm.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.replay.3",
+        "aspect": "recovery",
+        "statement": "After an ambiguous error, reload and inspect the application marker, commit metadata/history and data outcome before choosing whether to retry. Retention may limit the evidence available.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.replay.4",
+        "aspect": "controlled interleaving",
+        "statement": "A stale writer carrying the same application marker conflicted after the competing writer committed; this does not change the separately observed sequential replay behavior.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "competing_marker_writers_conflict_and_cdf_enablement_is_historical"
+      }
+    ],
+    "implementation": [
+      "Persist a meaningful application batch identity in commit properties and define how it maps to source offsets.",
+      "Specify concurrent ownership, conflict handling and reconciliation, then test duplicate delivery and failures after publication.",
+      "Do not advertise with_commit_properties(Default::default()) as idempotency."
+    ],
+    "effects": [
+      "persist coordination metadata",
+      "may append duplicate rows if retried"
+    ],
+    "errors": [
+      "A repeated marker and a retryable storage/transaction failure are different conditions."
+    ],
+    "unknowns": [
+      "No distributed exactly-once protocol or external checkpoint service is qualified by the local tests."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/kernel/transaction/mod.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "repeated_transaction_marker_does_not_suppress_sequential_append",
+          "competing_marker_writers_conflict_and_cdf_enablement_is_historical"
+        ]
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::kernel::transaction::CommitProperties::with_application_transaction",
+        "id": "98963111c785f5e16e3f10e0",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.kernel.transaction.CommitProperties.json",
+        "page": "operations/deltalake_core.kernel.transaction.CommitProperties.md#op-98963111c785f5e16e3f10e0",
+        "signature": "fn with_application_transaction(self, txn: Transaction) -> Self"
+      },
+      {
+        "path": "deltalake_core::kernel::transaction::CommitProperties::with_application_transactions",
+        "id": "5120171ce9751caba37fe1a8",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.kernel.transaction.CommitProperties.json",
+        "page": "operations/deltalake_core.kernel.transaction.CommitProperties.md#op-5120171ce9751caba37fe1a8",
+        "signature": "fn with_application_transactions(self, txn: Vec<Transaction>) -> Self"
+      },
+      {
+        "path": "deltalake_core::kernel::snapshot::EagerSnapshot::transaction_version",
+        "id": "3d21216ceac03842b7a8cbcd",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.kernel.snapshot.EagerSnapshot.json",
+        "page": "operations/deltalake_core.kernel.snapshot.EagerSnapshot.md#op-3d21216ceac03842b7a8cbcd",
+        "signature": "async fn transaction_version(&self, log_store: &dyn LogStore, app_id: impl ToString) -> DeltaResult<Option<i64>>"
+      },
+      {
+        "path": "deltalake_core::operations::write::WriteBuilder::with_commit_properties",
+        "id": "e9145ea9173ea093f8f03b9c",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+        "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-e9145ea9173ea093f8f03b9c",
+        "signature": "fn with_commit_properties(self, commit_properties: CommitProperties) -> Self"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.replay.json"
+  },
+  {
+    "id": "delta.retention",
+    "title": "Preview and execute vacuum with explicit historical-read consequences",
+    "reviewed": "2026-09-18",
+    "brief": "Vacuum removes physical files and can make historical snapshots unreadable. At this pin its default is Lite with dry_run=false and retention enforcement enabled; request preview explicitly.",
+    "task_aliases": [
+      "vacuum cleanup",
+      "dry run",
+      "full lite orphan files",
+      "retention historical reads",
+      "keep versions"
+    ],
+    "crates": [
+      "deltalake-core"
+    ],
+    "input": [
+      "DeltaTable",
+      "retention interval",
+      "VacuumMode",
+      "kept versions"
+    ],
+    "output": [
+      "(DeltaTable, VacuumMetrics)",
+      "deleted or candidate file paths"
+    ],
+    "properties": [
+      "vacuum cleanup",
+      "dry run",
+      "full lite orphan files",
+      "retention historical reads",
+      "keep versions"
+    ],
+    "operations": [
+      "deltalake_core::table::DeltaTable::vacuum",
+      "deltalake_core::operations::vacuum::VacuumBuilder::with_dry_run",
+      "deltalake_core::operations::vacuum::VacuumBuilder::with_mode",
+      "deltalake_core::operations::vacuum::VacuumBuilder::with_keep_versions",
+      "deltalake_core::operations::vacuum::VacuumBuilder::Output"
+    ],
+    "choices": [
+      {
+        "candidate": "with_dry_run(true)",
+        "choose_when": "You need candidate paths before removal",
+        "tradeoff": "Metrics naming does not mean preview actually deleted files"
+      },
+      {
+        "candidate": "Lite",
+        "choose_when": "Candidates should come from tracked tombstones",
+        "tradeoff": "Does not find every untracked orphan"
+      },
+      {
+        "candidate": "Full",
+        "choose_when": "Untracked eligible objects must also be considered",
+        "tradeoff": "Lists storage; path/age rules and backend costs matter"
+      },
+      {
+        "candidate": "with_keep_versions",
+        "choose_when": "Selected historical snapshots must retain required files",
+        "tradeoff": "Experimental option; does not create an unlimited history guarantee"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.retention.1",
+        "aspect": "modes",
+        "statement": "A controlled-clock orphan fixture was found by Full and not Lite. A kept historical version excluded its required file from the preview.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "vacuum_full_finds_orphan_lite_does_not"
+      },
+      {
+        "id": "delta.retention.2",
+        "aspect": "retention",
+        "statement": "Zero retention was rejected with enforcement enabled. Historical v0 remained readable before actual removal and failed when consuming data after vacuum removed its files.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "vacuum_preview_keep_versions_and_history_loss"
+      },
+      {
+        "id": "delta.retention.3",
+        "aspect": "effects",
+        "statement": "Loading an old log snapshot after vacuum can succeed while scanning its data fails. Restore cannot recreate bytes that are no longer present.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      }
+    ],
+    "implementation": [
+      "Specify preview/mode/retention deliberately and inspect candidate paths before choosing a production policy.",
+      "Account for active readers, CDF consumers and recovery requirements when selecting retention; validate the exact backend behavior."
+    ],
+    "effects": [
+      "delete physical objects",
+      "reduce historical/CDF recoverability"
+    ],
+    "errors": [
+      "Retention guard and missing history/files are material conditions, not proof the current logical table is corrupt."
+    ],
+    "unknowns": [
+      "Remote listing consistency, authorization and deletion behavior remain untested."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/vacuum.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "vacuum_preview_keep_versions_and_history_loss",
+          "vacuum_full_finds_orphan_lite_does_not"
+        ]
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::table::DeltaTable::vacuum",
+        "id": "f35c76fceb4dd387be47d4c5",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-f35c76fceb4dd387be47d4c5",
+        "signature": "fn vacuum(self) -> VacuumBuilder"
+      },
+      {
+        "path": "deltalake_core::operations::vacuum::VacuumBuilder::with_dry_run",
+        "id": "64b36ce2d7cda9e7d12d98d1",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.vacuum.VacuumBuilder.json",
+        "page": "operations/deltalake_core.operations.vacuum.VacuumBuilder.md#op-64b36ce2d7cda9e7d12d98d1",
+        "signature": "fn with_dry_run(self, dry_run: bool) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::vacuum::VacuumBuilder::with_mode",
+        "id": "1a50ecdb4534ce3068f563dc",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.vacuum.VacuumBuilder.json",
+        "page": "operations/deltalake_core.operations.vacuum.VacuumBuilder.md#op-1a50ecdb4534ce3068f563dc",
+        "signature": "fn with_mode(self, mode: VacuumMode) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::vacuum::VacuumBuilder::with_keep_versions",
+        "id": "972e70574d351c468cfb45c7",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.vacuum.VacuumBuilder.json",
+        "page": "operations/deltalake_core.operations.vacuum.VacuumBuilder.md#op-972e70574d351c468cfb45c7",
+        "signature": "fn with_keep_versions(self, versions: &[Version]) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::vacuum::VacuumBuilder::Output",
+        "id": "9efeffefd9cbc54190d5ac4a",
+        "kind": "assoc_type",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.vacuum.VacuumBuilder.json",
+        "page": "operations/deltalake_core.operations.vacuum.VacuumBuilder.md#op-9efeffefd9cbc54190d5ac4a",
+        "signature": "type Output = Result<(DeltaTable, VacuumMetrics), DeltaTableError>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.retention.json"
+  },
+  {
+    "id": "delta.schema",
+    "title": "Preserve schema meaning across Arrow, Delta and schema evolution",
+    "reviewed": "2026-09-18",
+    "brief": "Distinguish representation conversion, value casting, schema normalization and table evolution. A successful Arrow conversion does not by itself authorize a Delta write or preserve every Arrow datatype exactly.",
+    "task_aliases": [
+      "schema evolution",
+      "merge schema",
+      "safe cast null",
+      "timestamp timezone",
+      "unsigned decimal nested",
+      "column mapping metadata"
+    ],
+    "crates": [
+      "deltalake-core",
+      "buoyant_kernel"
+    ],
+    "input": [
+      "Arrow Schema",
+      "kernel StructType",
+      "nullable/nested arrays",
+      "SchemaMode"
+    ],
+    "output": [
+      "normalized Delta schema",
+      "Arrow Schema",
+      "evolved table metadata"
+    ],
+    "properties": [
+      "schema evolution",
+      "merge schema",
+      "safe cast null",
+      "timestamp timezone",
+      "unsigned decimal nested",
+      "column mapping metadata"
+    ],
+    "operations": [
+      "deltalake_core::operations::write::SchemaMode",
+      "deltalake_core::operations::write::WriteBuilder::with_cast_safety",
+      "deltalake_core::operations::merge::MergeBuilder::with_safe_cast",
+      "deltalake_core::kernel::schema::cast::normalize_for_delta",
+      "buoyant_kernel::engine::arrow_conversion::TryIntoKernel::try_into_kernel",
+      "buoyant_kernel::engine::arrow_conversion::TryIntoArrow::try_into_arrow"
+    ],
+    "choices": [
+      {
+        "candidate": "Existing compatible schema",
+        "choose_when": "Appending values without changing table metadata",
+        "tradeoff": "Check actual nullability, nested fields and protocol-dependent types"
+      },
+      {
+        "candidate": "SchemaMode::Merge",
+        "choose_when": "Additive source fields should evolve the table",
+        "tradeoff": "Existing rows need compatible missing-field/null behavior; mapped tables have extra restrictions"
+      },
+      {
+        "candidate": "SchemaMode::Overwrite",
+        "choose_when": "A full replacement also changes schema",
+        "tradeoff": "Requires overwrite mode and operation-specific validation"
+      },
+      {
+        "candidate": "Arrow/kernel conversion traits",
+        "choose_when": "You need a schema at the integration boundary",
+        "tradeoff": "Conversion errors and normalization are separate from row-value casting"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.schema.1",
+        "aspect": "cast policy",
+        "statement": "WriteBuilder::with_cast_safety(true) converted invalid string-to-integer values to null in the probe; false returned an error. Merge/update spell this policy with_safe_cast.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "schema_merge_and_cast_error_policy"
+      },
+      {
+        "id": "delta.schema.2",
+        "aspect": "evolution",
+        "statement": "A wider batch failed without schema mode, then SchemaMode::Merge added its field and supplied null for an old row.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "schema_merge_and_cast_error_policy"
+      },
+      {
+        "id": "delta.schema.3",
+        "aspect": "fidelity",
+        "statement": "Check nested child nullability, decimal precision/scale, signedness, timestamp units/timezone and mapping metadata explicitly. Normalized schema identity is not byte-identical Arrow schema preservation.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.schema.4",
+        "aspect": "fidelity",
+        "statement": "The nested decimal field retained precision/scale and nullability through normalized kernel/Arrow conversion. In the tested profile a nanosecond UTC schema normalized to microseconds, and UInt64 schema conversion round-tripped as Int64; successful conversion is not signedness or timestamp-unit preservation.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "nested_schema_and_timestamp_normalization_have_explicit_loss_boundaries"
+      }
+    ],
+    "implementation": [
+      "Inspect both schema and values after conversion; do not infer losslessness from trait names.",
+      "Choose cast failure behavior according to whether null substitution is acceptable to the application.",
+      "Keep the nanosecond Cargo feature and table protocol feature separate; compare the consumer profile with the documentation capture."
+    ],
+    "effects": [
+      "cast values",
+      "possibly update table schema/protocol"
+    ],
+    "errors": [
+      "Unsupported Arrow types, incompatible field changes, invalid values and missing protocol features fail at different boundaries."
+    ],
+    "unknowns": [
+      "The local controls cover additive nullable fields, string/integer casts, a nested decimal schema, unsigned schema conversion and timestamp normalization. Every value-range, timezone and nested evolution combination is not certified."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/write/mod.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "schema_merge_and_cast_error_policy",
+          "nested_schema_and_timestamp_normalization_have_explicit_loss_boundaries"
+        ]
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::operations::write::SchemaMode",
+        "id": "d1bf43766000f07558d3ef98",
+        "kind": "enum",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.write.SchemaMode.json",
+        "page": "operations/deltalake_core.operations.write.SchemaMode.md#op-d1bf43766000f07558d3ef98",
+        "signature": "enum SchemaMode"
+      },
+      {
+        "path": "deltalake_core::operations::write::WriteBuilder::with_cast_safety",
+        "id": "8c216c90e09068c23b8f3afa",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+        "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-8c216c90e09068c23b8f3afa",
+        "signature": "fn with_cast_safety(self, safe: bool) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::merge::MergeBuilder::with_safe_cast",
+        "id": "1e68915a42890152686e34b6",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.merge.MergeBuilder.json",
+        "page": "operations/deltalake_core.operations.merge.MergeBuilder.md#op-1e68915a42890152686e34b6",
+        "signature": "fn with_safe_cast(self, safe_cast: bool) -> Self"
+      },
+      {
+        "path": "deltalake_core::kernel::schema::cast::normalize_for_delta",
+        "id": "6601c2591b6129782f1a8b98",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.kernel.schema.cast.normalize_for_delta.json",
+        "page": "operations/deltalake_core.kernel.schema.cast.normalize_for_delta.md#op-6601c2591b6129782f1a8b98",
+        "signature": "fn normalize_for_delta(schema: &arrow_schema::SchemaRef) -> arrow_schema::SchemaRef"
+      },
+      {
+        "path": "buoyant_kernel::engine::arrow_conversion::TryIntoKernel::try_into_kernel",
+        "id": "4e6d33212c1e0b1131f6fa1a",
+        "kind": "function",
+        "crate": "buoyant_kernel",
+        "record": "operations/buoyant_kernel.engine.arrow_conversion.TryIntoKernel.json",
+        "page": "operations/buoyant_kernel.engine.arrow_conversion.TryIntoKernel.md#op-4e6d33212c1e0b1131f6fa1a",
+        "signature": "fn try_into_kernel(self) -> Result<KernelType, ArrowError>"
+      },
+      {
+        "path": "buoyant_kernel::engine::arrow_conversion::TryIntoArrow::try_into_arrow",
+        "id": "25b4a288393e65df0404d747",
+        "kind": "function",
+        "crate": "buoyant_kernel",
+        "record": "operations/buoyant_kernel.engine.arrow_conversion.TryIntoArrow.json",
+        "page": "operations/buoyant_kernel.engine.arrow_conversion.TryIntoArrow.md#op-25b4a288393e65df0404d747",
+        "signature": "fn try_into_arrow(self) -> Result<ArrowType, ArrowError>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.schema.json"
+  },
+  {
+    "id": "delta.session",
+    "title": "Preserve session capabilities and configure Delta planning",
+    "reviewed": "2026-09-18",
+    "brief": "Use a Delta-configured session for Delta operations. A concrete SessionState and an arbitrary Session trait wrapper follow different resolution paths; choose fallback policy when caller configuration matters.",
+    "task_aliases": [
+      "custom session",
+      "UDF lost",
+      "planner MetricObserver",
+      "runtime memory spill",
+      "session fallback"
+    ],
+    "crates": [
+      "deltalake-core"
+    ],
+    "input": [
+      "SessionState",
+      "Arc<dyn Session>",
+      "RuntimeEnv",
+      "UDF registry"
+    ],
+    "output": [
+      "DeltaSessionContext",
+      "resolved operation session"
+    ],
+    "properties": [
+      "custom session",
+      "UDF lost",
+      "planner MetricObserver",
+      "runtime memory spill",
+      "session fallback"
+    ],
+    "operations": [
+      "deltalake_core::delta_datafusion::session::create_session",
+      "deltalake_core::delta_datafusion::session::SessionFallbackPolicy",
+      "deltalake_core::delta_datafusion::session::DeltaRuntimeEnvBuilder::with_max_spill_size",
+      "deltalake_core::delta_datafusion::session::create_session_state_with_spill_config",
+      "deltalake_core::operations::write::WriteBuilder::with_session_state",
+      "deltalake_core::operations::write::WriteBuilder::with_session_fallback_policy"
+    ],
+    "choices": [
+      {
+        "candidate": "create_session / DeltaSessionContext",
+        "choose_when": "You want the supplied Delta planner and defaults",
+        "tradeoff": "Add caller functions/runtime settings to this state"
+      },
+      {
+        "candidate": "Concrete configured SessionState",
+        "choose_when": "Your existing state includes required Delta planning support",
+        "tradeoff": "Preserves the supplied state, including any incompatible planner"
+      },
+      {
+        "candidate": "DeriveFromTrait",
+        "choose_when": "A Session wrapper must contribute runtime/configuration/function registries",
+        "tradeoff": "Derived state is a documented subset; arbitrary custom planner/catalog behavior is not fully cloned"
+      },
+      {
+        "candidate": "RequireSessionState",
+        "choose_when": "Silently replacing a trait wrapper would violate caller requirements",
+        "tradeoff": "Rejects wrappers; make the desired concrete state explicit"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.session.1",
+        "aspect": "default",
+        "statement": "InternalDefaults is the default fallback for a non-SessionState wrapper. A caller UDF can disappear; DeriveFromTrait preserves the tested UDF while RequireSessionState rejects the wrapper.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "session_policies_preserve_discard_or_reject_wrapper_udf"
+      },
+      {
+        "id": "delta.session.2",
+        "aspect": "planner",
+        "statement": "A plain SessionContext state passed to the logical-plan write probe fails to plan MetricObserver. The same plan with create_session().state() writes successfully.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "logical_plan_write_and_staged_writer_visibility"
+      },
+      {
+        "id": "delta.session.3",
+        "aspect": "resources",
+        "statement": "create_session_state_with_spill_config(None,None) uses the default runtime. The named max_spill_size configures the FairSpillPool memory budget, while max_temp_directory_size bounds temporary disk; these are separate resources.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.session.4",
+        "aspect": "resource boundary",
+        "statement": "A configured 1024-byte FairSpillPool accepted a 512-byte reservation, rejected another 1024 bytes and released the reservation on drop. This tests pool configuration, not total operation/process RSS or automatic spilling.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "configured_memory_pool_enforces_reservation_budget"
+      }
+    ],
+    "implementation": [
+      "Choose policy based on required caller capabilities, then test with a distinguishing UDF/configuration rather than state type alone.",
+      "Do not reuse an arbitrary session solely to avoid construction cost; verify planner, store mappings and runtime sharing semantics.",
+      "Record runtime limits separately from batch/target-file-size options."
+    ],
+    "effects": [
+      "configure planner and runtime",
+      "share or derive session state"
+    ],
+    "errors": [
+      "Resolution rejection and missing functions/planner failures occur before a successful commit; verify table state when diagnosing a failed operation."
+    ],
+    "unknowns": [
+      "The probes establish UDF preservation, not equivalence of every Session implementation or process memory bounds."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/delta_datafusion/session.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "session_policies_preserve_discard_or_reject_wrapper_udf",
+          "logical_plan_write_and_staged_writer_visibility",
+          "configured_memory_pool_enforces_reservation_budget"
+        ]
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::delta_datafusion::session::create_session",
+        "id": "45c70950a9bc56476e6885e2",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.delta_datafusion.session.create_session.json",
+        "page": "operations/deltalake_core.delta_datafusion.session.create_session.md#op-45c70950a9bc56476e6885e2",
+        "signature": "fn create_session() -> DeltaSessionContext"
+      },
+      {
+        "path": "deltalake_core::delta_datafusion::session::SessionFallbackPolicy",
+        "id": "6763b79544161b4d7375c648",
+        "kind": "enum",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.delta_datafusion.session.SessionFallbackPolicy.json",
+        "page": "operations/deltalake_core.delta_datafusion.session.SessionFallbackPolicy.md#op-6763b79544161b4d7375c648",
+        "signature": "enum SessionFallbackPolicy"
+      },
+      {
+        "path": "deltalake_core::delta_datafusion::session::DeltaRuntimeEnvBuilder::with_max_spill_size",
+        "id": "5c3b599ea49399c9b847c098",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.delta_datafusion.session.DeltaRuntimeEnvBuilder.json",
+        "page": "operations/deltalake_core.delta_datafusion.session.DeltaRuntimeEnvBuilder.md#op-5c3b599ea49399c9b847c098",
+        "signature": "fn with_max_spill_size(self, size: usize) -> Self"
+      },
+      {
+        "path": "deltalake_core::delta_datafusion::session::create_session_state_with_spill_config",
+        "id": "6718e986726f6ba946bb0cd3",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.delta_datafusion.session.create_session_state_with_spill_config.json",
+        "page": "operations/deltalake_core.delta_datafusion.session.create_session_state_with_spill_config.md#op-6718e986726f6ba946bb0cd3",
+        "signature": "fn create_session_state_with_spill_config(max_spill_size: Option<usize>, max_temp_directory_size: Option<u64>) -> datafusion::execution::SessionState"
+      },
+      {
+        "path": "deltalake_core::operations::write::WriteBuilder::with_session_state",
+        "id": "c287ad75f18e28c8f06ebb86",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+        "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-c287ad75f18e28c8f06ebb86",
+        "signature": "fn with_session_state(self, session: Arc<dyn Session>) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::write::WriteBuilder::with_session_fallback_policy",
+        "id": "b97917aa9ff6c7d66ed99cbd",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+        "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-b97917aa9ff6c7d66ed99cbd",
+        "signature": "fn with_session_fallback_policy(self, policy: SessionFallbackPolicy) -> Self"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.session.json"
+  },
+  {
+    "id": "delta.storage",
+    "title": "Choose object storage and log publication adapters",
+    "reviewed": "2026-09-18",
+    "brief": "Storage configuration, object access and log publication are distinct seams. Route by URL/service and compiled features, then inspect the adapter's options and registration requirements.",
+    "task_aliases": [
+      "S3 Azure GCS HDFS LakeFS OpenDAL mount",
+      "object store registration",
+      "credentials",
+      "storage backend",
+      "atomic commit"
+    ],
+    "crates": [
+      "deltalake-core",
+      "deltalake-aws",
+      "deltalake-azure",
+      "deltalake-gcp",
+      "deltalake-hdfs",
+      "deltalake-lakefs",
+      "deltalake-mount",
+      "deltalake-opendal"
+    ],
+    "input": [
+      "URL scheme",
+      "StorageOptions",
+      "ObjectStore",
+      "LogStore"
+    ],
+    "output": [
+      "configured table storage",
+      "backend publication behavior"
+    ],
+    "properties": [
+      "S3 Azure GCS HDFS LakeFS OpenDAL mount",
+      "object store registration",
+      "credentials",
+      "storage backend",
+      "atomic commit"
+    ],
+    "operations": [
+      "deltalake_core::table::builder::DeltaTableBuilder::with_storage_options",
+      "deltalake_aws::register_handlers",
+      "deltalake_azure::register_handlers",
+      "deltalake_gcp::register_handlers",
+      "deltalake_opendal::register_handlers",
+      "deltalake_core::logstore::LogStore"
+    ],
+    "choices": [
+      {
+        "candidate": "Built-in backend crate",
+        "choose_when": "Its supported scheme/service matches deployment",
+        "tradeoff": "Credentials, handler registration and native environment remain prerequisites"
+      },
+      {
+        "candidate": "Explicit custom ObjectStore/LogStore integration",
+        "choose_when": "You have a concrete nonstandard storage need",
+        "tradeoff": "Match root URL/path scoping and transactional publication semantics"
+      },
+      {
+        "candidate": "OpenDAL adapter",
+        "choose_when": "An enabled OpenDAL service fits the required backend",
+        "tradeoff": "The opendal+ scheme and compiled service set prevent assuming every service is available"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.storage.1",
+        "aspect": "registration",
+        "statement": "Session store-registration helpers preserve an existing mapping rather than replacing it. A stale mapping requires an explicit RuntimeEnv::register_object_store override; check-and-register is not an atomic concurrency guarantee.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.storage.2",
+        "aspect": "backend",
+        "statement": "LogStore delegates commit publication to backend-specific behavior. Local-memory/filesystem probes do not prove S3/Azure/GCS atomicity, auth or listing semantics.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.storage.3",
+        "aspect": "features",
+        "statement": "Use the complete crate/feature routes for AWS, Azure, GCP, HDFS, LakeFS, mount and OpenDAL; documentation inclusion is separate from a successfully deployed backend.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.storage.4",
+        "aspect": "registration",
+        "statement": "An existing wrong runtime store mapping survived provider execution and caused a read error. Explicitly replacing it with the table root store restored the expected row.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "existing_object_store_mapping_needs_explicit_replacement"
+      }
+    ],
+    "implementation": [
+      "Resolve scheme, backend features, authentication and root-prefix behavior before constructing the table.",
+      "Keep secrets out of retained evidence; retain option names and sanitized outcomes.",
+      "Check object_store and DataFusion crate identities so trait objects belong to the same dependency graph."
+    ],
+    "effects": [
+      "remote or local object I/O",
+      "configure backend factories",
+      "publish log through selected backend"
+    ],
+    "errors": [
+      "Unsupported scheme, absent feature/handler, credentials, network/native dependency and conflict errors are separate prerequisites."
+    ],
+    "unknowns": [
+      "Cloud/native-service integration is not_run without its environment. No backend-wide durability or concurrency claim is made."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/delta_datafusion/session.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only",
+        "tests": [
+          "existing_object_store_mapping_needs_explicit_replacement"
+        ]
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::table::builder::DeltaTableBuilder::with_storage_options",
+        "id": "b1ea50678ecca859dcd514a2",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.builder.DeltaTableBuilder.json",
+        "page": "operations/deltalake_core.table.builder.DeltaTableBuilder.md#op-b1ea50678ecca859dcd514a2",
+        "signature": "fn with_storage_options(self, storage_options: HashMap<String, String>) -> Self"
+      },
+      {
+        "path": "deltalake_aws::register_handlers",
+        "id": "1bc1cda4486cb01abc5673f3",
+        "kind": "function",
+        "crate": "deltalake-aws",
+        "record": "operations/deltalake_aws.register_handlers.json",
+        "page": "operations/deltalake_aws.register_handlers.md#op-1bc1cda4486cb01abc5673f3",
+        "signature": "fn register_handlers(_additional_prefixes: Option<url::Url>)"
+      },
+      {
+        "path": "deltalake_azure::register_handlers",
+        "id": "85561ec0f6e032ca2cd5b0d2",
+        "kind": "function",
+        "crate": "deltalake-azure",
+        "record": "operations/deltalake_azure.register_handlers.json",
+        "page": "operations/deltalake_azure.register_handlers.md#op-85561ec0f6e032ca2cd5b0d2",
+        "signature": "fn register_handlers(_additional_prefixes: Option<url::Url>)"
+      },
+      {
+        "path": "deltalake_gcp::register_handlers",
+        "id": "26254cbad8b6bfbf79bded73",
+        "kind": "function",
+        "crate": "deltalake-gcp",
+        "record": "operations/deltalake_gcp.register_handlers.json",
+        "page": "operations/deltalake_gcp.register_handlers.md#op-26254cbad8b6bfbf79bded73",
+        "signature": "fn register_handlers(_additional_prefixes: Option<url::Url>)"
+      },
+      {
+        "path": "deltalake_opendal::register_handlers",
+        "id": "a3b6ac60139298c49c68eb4f",
+        "kind": "function",
+        "crate": "deltalake-opendal",
+        "record": "operations/deltalake_opendal.register_handlers.json",
+        "page": "operations/deltalake_opendal.register_handlers.md#op-a3b6ac60139298c49c68eb4f",
+        "signature": "fn register_handlers(_additional_prefixes: Option<url::Url>)"
+      },
+      {
+        "path": "deltalake_core::logstore::LogStore",
+        "id": "05065cf369d14ac5f8039639",
+        "kind": "trait",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.logstore.LogStore.json",
+        "page": "operations/deltalake_core.logstore.LogStore.md#op-05065cf369d14ac5f8039639",
+        "signature": "trait LogStore: Send + Sync + AsAny"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.storage.json"
+  },
+  {
+    "id": "delta.write",
+    "title": "Write batches or a logical plan; distinguish staging from publication",
+    "reviewed": "2026-09-18",
+    "brief": "Prefer WriteBuilder for a complete append/replacement operation. RecordBatchWriter provides staged file production with an explicit commit boundary. At this commit, Ignore on an existing WriteBuilder path appended rows in the retained probe.",
+    "task_aliases": [
+      "append data",
+      "write plan",
+      "stream writer",
+      "flush commit",
+      "save mode ignore",
+      "target file size"
+    ],
+    "crates": [
+      "deltalake-core"
+    ],
+    "input": [
+      "Vec<RecordBatch>",
+      "LogicalPlan",
+      "RecordBatchWriter"
+    ],
+    "output": [
+      "DeltaTable",
+      "Add actions",
+      "committed version"
+    ],
+    "properties": [
+      "append data",
+      "write plan",
+      "stream writer",
+      "flush commit",
+      "save mode ignore",
+      "target file size"
+    ],
+    "operations": [
+      "deltalake_core::table::DeltaTable::write",
+      "deltalake_core::operations::write::WriteBuilder::with_input_plan",
+      "deltalake_core::operations::write::WriteBuilder::with_save_mode",
+      "deltalake_core::operations::write::WriteBuilder::Output",
+      "deltalake_core::writer::record_batch::RecordBatchWriter::for_table",
+      "deltalake_core::writer::DeltaWriter::flush_and_commit"
+    ],
+    "choices": [
+      {
+        "candidate": "DeltaTable::write(batches)",
+        "choose_when": "An operation should write data and publish a Delta commit",
+        "tradeoff": "Builder consumes the table value and returns an updated DeltaTable"
+      },
+      {
+        "candidate": "with_input_plan(LogicalPlan)",
+        "choose_when": "DataFusion produces the source relation",
+        "tradeoff": "The supplied operation session must support Delta's custom planning nodes"
+      },
+      {
+        "candidate": "RecordBatchWriter",
+        "choose_when": "You need incremental batch ingestion and explicit flush/publication control",
+        "tradeoff": "flush creates actions/files; flush_and_commit publishes them"
+      }
+    ],
+    "claims": [
+      {
+        "id": "delta.write.1",
+        "aspect": "types",
+        "statement": "with_input_plan accepts LogicalPlan. The deprecated with_input_execution_plan spelling accepts Arc<LogicalPlan>, despite its name; it is not an ExecutionPlan adapter.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.write.2",
+        "aspect": "visibility",
+        "statement": "Rows buffered by RecordBatchWriter were invisible to a reloaded observer until flush_and_commit completed.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "logical_plan_write_and_staged_writer_visibility"
+      },
+      {
+        "id": "delta.write.3",
+        "aspect": "save mode",
+        "statement": "Append is the default. ErrorIfExists rejected an existing table; SaveMode::Ignore on this existing-table write path committed additional rows. Do not use Ignore as a skip or dedup guarantee at this pin.",
+        "kind": "runtime_observation",
+        "evidence": [
+          "runtime"
+        ],
+        "assertion_test": "save_modes_replace_where_and_validation_before_commit"
+      },
+      {
+        "id": "delta.write.4",
+        "aspect": "resources",
+        "statement": "Target file size and write batch size are tuning inputs, not exact output size or process-memory caps. A plan/stream input alone proves no bounded-memory property.",
+        "kind": "source_observation",
+        "evidence": [
+          "upstream",
+          "source"
+        ]
+      },
+      {
+        "id": "delta.write.5",
+        "aspect": "staging boundary",
+        "statement": "write/write_with_mode can perform object I/O and finalize files before explicit flush when target size or schema rotation is reached. flush returns staged Add actions; Delta visibility requires log publication. reset can leave finalized unreferenced files for cleanup. The target-size probe waits for the background upload to finish before explicit flush and confirms Delta rows remain unchanged until commit.",
+        "kind": "source_observation",
+        "evidence": [
+          "writer_source",
+          "runtime"
+        ],
+        "assertion_test": "logical_plan_write_and_staged_writer_visibility"
+      }
+    ],
+    "implementation": [
+      "Select save mode from the tested operation path; CreateBuilder's behavior must not be assumed to match WriteBuilder.",
+      "Use file actions and version/metrics to observe publication; coordinate low-level writer retries with the commit contract.",
+      "For a logical plan, provide a Delta-configured SessionState that contains required source/UDF context."
+    ],
+    "effects": [
+      "write data files",
+      "publish log version",
+      "may leave unreferenced files after failure"
+    ],
+    "errors": [
+      "Validation or planning can fail before log publication. A later hook failure can occur after a visible commit; see delta.commit."
+    ],
+    "unknowns": [
+      "Exact file-size targets, throughput and memory/spill behavior require workload-specific measurement."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "scope": "Exact git-capture full contracts for the selected operations"
+      },
+      {
+        "id": "source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/write/mod.rs",
+        "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+      },
+      {
+        "id": "runtime",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Named local assertions only; see profile, fixtures and source digests",
+        "tests": [
+          "logical_plan_write_and_staged_writer_visibility",
+          "save_modes_replace_where_and_validation_before_commit"
+        ]
+      },
+      {
+        "id": "writer_source",
+        "kind": "source_observation",
+        "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/writer/record_batch.rs",
+        "scope": "write_with_mode, reset and target-size rolling at pinned commit"
+      }
+    ],
+    "resolved_operations": [
+      {
+        "path": "deltalake_core::table::DeltaTable::write",
+        "id": "8c868b08ecd74ae0be1525f8",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.table.DeltaTable.json",
+        "page": "operations/deltalake_core.table.DeltaTable.md#op-8c868b08ecd74ae0be1525f8",
+        "signature": "fn write(self, batches: impl IntoIterator<Item = RecordBatch>) -> WriteBuilder"
+      },
+      {
+        "path": "deltalake_core::operations::write::WriteBuilder::with_input_plan",
+        "id": "96e3a149764f7356c388c2fc",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+        "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-96e3a149764f7356c388c2fc",
+        "signature": "fn with_input_plan(self, plan: LogicalPlan) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::write::WriteBuilder::with_save_mode",
+        "id": "a2d377816dc436cf1c93443b",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+        "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-a2d377816dc436cf1c93443b",
+        "signature": "fn with_save_mode(self, save_mode: SaveMode) -> Self"
+      },
+      {
+        "path": "deltalake_core::operations::write::WriteBuilder::Output",
+        "id": "3b3adb069c90d8711cc194f5",
+        "kind": "assoc_type",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+        "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-3b3adb069c90d8711cc194f5",
+        "signature": "type Output = Result<DeltaTable, DeltaTableError>"
+      },
+      {
+        "path": "deltalake_core::writer::record_batch::RecordBatchWriter::for_table",
+        "id": "ed1304f90217d8fc14f245c9",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.writer.record_batch.RecordBatchWriter.json",
+        "page": "operations/deltalake_core.writer.record_batch.RecordBatchWriter.md#op-ed1304f90217d8fc14f245c9",
+        "signature": "fn for_table(table: &DeltaTable) -> Result<Self, DeltaTableError>"
+      },
+      {
+        "path": "deltalake_core::writer::DeltaWriter::flush_and_commit",
+        "id": "85f06c0b7b6353f28c49881a",
+        "kind": "function",
+        "crate": "deltalake-core",
+        "record": "operations/deltalake_core.writer.DeltaWriter.json",
+        "page": "operations/deltalake_core.writer.DeltaWriter.md#op-85f06c0b7b6353f28c49881a",
+        "signature": "async fn flush_and_commit(&mut self, table: &mut DeltaTable) -> Result<Version, DeltaTableError>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/delta.write.json"
+  }
+]

@@ -26,6 +26,9 @@ fn new(sender: Sender<E>, fallible_stream: Pin<Box<dyn Stream<Item = std::result
 fn poll_next(std::pin::Pin<&mut self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.streams.FallibleRequestStream.md).
+
+
 Wrapper around a fallible stream (one that returns errors) that makes it infallible.
 
 Any errors encountered in the stream are ignored are sent to the provided

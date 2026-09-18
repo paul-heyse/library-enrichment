@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::cardinality`, `datafusion_functions_nest
 fn cardinality(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.cardinality.cardinality.md).
+
+
 returns the total number of elements in the array or map.
 
 ---
@@ -23,6 +26,9 @@ returns the total number of elements in the array or map.
 ```rust
 fn cardinality_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.cardinality.cardinality_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 Cardinality
@@ -56,5 +62,8 @@ fn name(&self) -> &str
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.cardinality.Cardinality.md).
+
 
 ---

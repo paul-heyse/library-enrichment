@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 4 public items · structured records in [`mo
 fn nulls_equal_to(lhs_null: bool, rhs_null: bool) -> Option<bool>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.nulls_equal_to.md).
+
+
 Determines if the nullability of the existing and new input array can be used
 to short-circuit the comparison of the two values.
 
@@ -26,6 +29,9 @@ done on the values themselves.
 ```rust
 fn supported_schema(schema: &arrow::datatypes::Schema) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.supported_schema.md).
+
 
 Returns true if [`GroupValuesColumn`] supported for the specified schema
 
@@ -57,6 +63,9 @@ fn is_empty(&self) -> bool
 fn len(&self) -> usize
 fn size(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.GroupValuesColumn.md).
+
 
 A [`GroupValues`] that stores multiple columns of group values,
 and supports vectorized operators for them
@@ -90,6 +99,9 @@ fn take_n(&mut self, n: usize) -> ArrayRef
 fn vectorized_append(&mut self, array: &ArrayRef, rows: &[usize]) -> Result<()>
 fn vectorized_equal_to(&self, lhs_rows: &[usize], array: &ArrayRef, rhs_rows: &[usize], equal_to_results: &mut BooleanBufferBuilder)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.GroupColumn.md).
+
 
 Trait for storing a single column of group values in [`GroupValuesColumn`]
 

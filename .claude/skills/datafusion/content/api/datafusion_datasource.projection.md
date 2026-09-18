@@ -16,6 +16,9 @@ struct PartitionColumnIndex
 
 **Derives**: Clone, Copy, Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.projection.PartitionColumnIndex.md).
+
+
 ---
 
 ## ProjectionOpener
@@ -41,6 +44,9 @@ fn try_new(projection: SplitProjection, inner: Arc<dyn FileOpener>, file_schema:
 ```rust
 fn open(&self, partitioned_file: PartitionedFile) -> Result<FileOpenFuture>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.projection.ProjectionOpener.md).
+
 
 A file opener that handles applying a projection on top of an inner opener.
 
@@ -75,6 +81,9 @@ struct SplitProjection
 fn new(logical_file_schema: &Schema, projection: &ProjectionExprs) -> Self
 fn unprojected(table_schema: &TableSchema) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.projection.SplitProjection.md).
+
 
 At a high level the goal of SplitProjection is to take a ProjectionExprs meant to be applied to the table schema
 and split that into:

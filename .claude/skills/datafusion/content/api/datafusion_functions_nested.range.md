@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::gen_series`, `datafusion_functions_neste
 fn gen_series(start: datafusion_expr::Expr, stop: datafusion_expr::Expr, step: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.range.gen_series.md).
+
+
 create a list of values in the range between start and stop, include upper bound
 
 ---
@@ -23,6 +26,9 @@ create a list of values in the range between start and stop, include upper bound
 ```rust
 fn gen_series_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.range.gen_series_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 GenSeries
@@ -39,6 +45,9 @@ Also reachable as `datafusion::prelude::range`, `datafusion_functions_nested::ex
 fn range(start: datafusion_expr::Expr, stop: datafusion_expr::Expr, step: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.range.range.md).
+
+
 create a list of values in the range between start and stop
 
 ---
@@ -50,6 +59,9 @@ create a list of values in the range between start and stop
 ```rust
 fn range_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.range.range_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 Range
@@ -83,5 +95,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.range.Range.md).
+
 
 ---

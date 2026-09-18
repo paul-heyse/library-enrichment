@@ -1,0 +1,2114 @@
+[
+  {
+    "id": "d5fec5b0e8fcb4446aea8c7f",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "name": "ColumnarValue",
+    "owner": null,
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "enum",
+    "signature": "enum ColumnarValue",
+    "docs": "The result of evaluating an expression.\n\n[`ColumnarValue::Scalar`] represents a single value repeated any number of\ntimes. This is an important performance optimization for handling values\nthat do not change across rows.\n\n[`ColumnarValue::Array`] represents a column of data, stored as an  Arrow\n[`ArrayRef`]\n\nA slice of `ColumnarValue`s logically represents a table, with each column\nhaving the same number of rows. This means that all `Array`s are the same\nlength.\n\n# Example\n\nA `ColumnarValue::Array` with an array of 5 elements and a\n`ColumnarValue::Scalar` with the value 100\n\n```text\n┌──────────────┐\n│ ┌──────────┐ │\n│ │   \"A\"    │ │\n│ ├──────────┤ │\n│ │   \"B\"    │ │\n│ ├──────────┤ │\n│ │   \"C\"    │ │\n│ ├──────────┤ │\n│ │   \"D\"    │ │        ┌──────────────┐\n│ ├──────────┤ │        │ ┌──────────┐ │\n│ │   \"E\"    │ │        │ │   100    │ │\n│ └──────────┘ │        │ └──────────┘ │\n└──────────────┘        └──────────────┘\n\n ColumnarValue::        ColumnarValue::\n      Array                 Scalar\n```\n\nLogically represents the following table:\n\n| Column 1| Column 2 |\n| ------- | -------- |\n| A | 100 |\n| B | 100 |\n| C | 100 |\n| D | 100 |\n| E | 100 |\n\n# Performance Notes\n\nWhen implementing functions or operators, it is important to consider the\nperformance implications of handling scalar values.\n\nBecause all functions must handle [`ArrayRef`], it is\nconvenient to convert [`ColumnarValue::Scalar`]s using\n[`Self::into_array`]. For example,  [`ColumnarValue::values_to_arrays`]\nconverts multiple columnar values into arrays of the same length.\n\nHowever, it is often much more performant to provide a different,\nimplementation that handles scalar values differently",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        102,
+        1
+      ],
+      "end": [
+        107,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "enum": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "has_stripped_variants": false,
+        "variants": [
+          27,
+          29
+        ],
+        "impls": [
+          40,
+          41,
+          42,
+          43,
+          45,
+          47,
+          49,
+          51,
+          54,
+          58,
+          61,
+          66,
+          69,
+          74,
+          78,
+          81,
+          85,
+          89,
+          92,
+          95,
+          99,
+          101,
+          105,
+          107
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`ColumnarValue::Array`": 27,
+      "`ColumnarValue::Scalar`": 29,
+      "`ArrayRef`": 1,
+      "`ColumnarValue::values_to_arrays`": 31,
+      "`Self::into_array`": 30
+    },
+    "link_paths": {
+      "`ColumnarValue::Array`": "datafusion_expr_common::columnar_value::ColumnarValue::Array",
+      "`ColumnarValue::Scalar`": "datafusion_expr_common::columnar_value::ColumnarValue::Scalar",
+      "`ArrayRef`": "arrow_array::array::ArrayRef",
+      "`ColumnarValue::values_to_arrays`": "datafusion_expr_common::columnar_value::ColumnarValue::values_to_arrays",
+      "`Self::into_array`": "datafusion_expr_common::columnar_value::ColumnarValue::into_array"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "32",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-d5fec5b0e8fcb4446aea8c7f",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue",
+      "datafusion::physical_plan::ColumnarValue",
+      "datafusion_expr::ColumnarValue",
+      "datafusion_physical_plan::ColumnarValue",
+      "datafusion_physical_plan::execution_plan::ColumnarValue"
+    ],
+    "resolved_doc_links": {
+      "`ColumnarValue::Array`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-dde33518db6b4654b48e85d4",
+      "`ColumnarValue::Scalar`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-d6c26dcb617515197f47859d",
+      "`ArrayRef`": "../operations/arrow_array.array.ArrayRef.md#op-657cc3ff3d24afcacda590e1",
+      "`ColumnarValue::values_to_arrays`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-ec4c901c17836f47ccf68670",
+      "`Self::into_array`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-6e86167b7e5d4ece961c8a83"
+    }
+  },
+  {
+    "id": "dde33518db6b4654b48e85d4",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::Array",
+    "name": "Array",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Array",
+    "docs": "Array of values",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        104,
+        5
+      ],
+      "end": [
+        104,
+        20
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            26
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "27",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-dde33518db6b4654b48e85d4",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::Array",
+      "datafusion::physical_plan::ColumnarValue::Array",
+      "datafusion_expr::ColumnarValue::Array",
+      "datafusion_physical_plan::ColumnarValue::Array",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::Array"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d6c26dcb617515197f47859d",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::Scalar",
+    "name": "Scalar",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Scalar",
+    "docs": "A single value",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        106,
+        5
+      ],
+      "end": [
+        106,
+        24
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            28
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "29",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-d6c26dcb617515197f47859d",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::Scalar",
+      "datafusion::physical_plan::ColumnarValue::Scalar",
+      "datafusion_expr::ColumnarValue::Scalar",
+      "datafusion_physical_plan::ColumnarValue::Scalar",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::Scalar"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "45343bf5101f2e9d49d814dc",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::cast_to",
+    "name": "cast_to",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn cast_to(&self, cast_type: &DataType, cast_options: Option<&CastOptions<'static>>) -> Result<ColumnarValue>",
+    "docs": "Cast this [ColumnarValue] to the specified `DataType`\n\n# Struct Casting Behavior\n\nWhen casting struct types, fields are matched **by name** rather than position:\n- Source fields are matched to target fields using case-sensitive name comparison\n- Fields are reordered to match the target schema\n- Missing target fields are filled with null arrays\n- Extra source fields are ignored\n\nFor non-struct types, uses Arrow's standard positional casting.",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        294,
+        5
+      ],
+      "end": [
+        309,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "cast_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DataType",
+                      "id": 20,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "cast_options",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 21,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "CastOptions",
+                                  "id": 39,
+                                  "args": {
+                                    "angle_bracketed": {
+                                      "args": [
+                                        {
+                                          "lifetime": "'static"
+                                        }
+                                      ],
+                                      "constraints": []
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ColumnarValue",
+                          "id": 32,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "arrow_schema::datatype::DataType",
+      "21": "core::option::Option",
+      "39": "arrow_cast::cast::CastOptions",
+      "2": "datafusion_common::error::Result",
+      "32": "datafusion_expr_common::columnar_value::ColumnarValue"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnarValue",
+          "id": "datafusion_expr_common::columnar_value::ColumnarValue",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/columnar_value.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          310,
+          2
+        ]
+      }
+    },
+    "links": {
+      "ColumnarValue": 32
+    },
+    "link_paths": {
+      "ColumnarValue": "datafusion_expr_common::columnar_value::ColumnarValue"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "38",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-45343bf5101f2e9d49d814dc",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::cast_to",
+      "datafusion::physical_plan::ColumnarValue::cast_to",
+      "datafusion_expr::ColumnarValue::cast_to",
+      "datafusion_physical_plan::ColumnarValue::cast_to",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::cast_to"
+    ],
+    "resolved_doc_links": {
+      "ColumnarValue": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-d5fec5b0e8fcb4446aea8c7f"
+    }
+  },
+  {
+    "id": "786fca7e590a1f884b521f47",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::clone",
+    "name": "clone",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> ColumnarValue",
+    "docs": "",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        101,
+        10
+      ],
+      "end": [
+        101,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ColumnarValue",
+              "id": 32,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "32": "datafusion_expr_common::columnar_value::ColumnarValue"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnarValue",
+          "id": "datafusion_expr_common::columnar_value::ColumnarValue",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/columnar_value.rs",
+        "begin": [
+          101,
+          10
+        ],
+        "end": [
+          101,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "94",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-786fca7e590a1f884b521f47",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::clone",
+      "datafusion::physical_plan::ColumnarValue::clone",
+      "datafusion_expr::ColumnarValue::clone",
+      "datafusion_physical_plan::ColumnarValue::clone",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "18884955685528c27eaaae19",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::create_null_array",
+    "name": "create_null_array",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn create_null_array(num_rows: usize) -> Self",
+    "docs": "Null columnar values are implemented as a null array in order to pass batch\nnum_rows",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        231,
+        5
+      ],
+      "end": [
+        233,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "num_rows",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnarValue",
+          "id": "datafusion_expr_common::columnar_value::ColumnarValue",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/columnar_value.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          310,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "37",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-18884955685528c27eaaae19",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::create_null_array",
+      "datafusion::physical_plan::ColumnarValue::create_null_array",
+      "datafusion_expr::ColumnarValue::create_null_array",
+      "datafusion_physical_plan::ColumnarValue::create_null_array",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::create_null_array"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f0488ef234358866deb9e4c5",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::data_type",
+    "name": "data_type",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn data_type(&self) -> DataType",
+    "docs": "",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        122,
+        5
+      ],
+      "end": [
+        127,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DataType",
+              "id": 20,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "arrow_schema::datatype::DataType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnarValue",
+          "id": "datafusion_expr_common::columnar_value::ColumnarValue",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/columnar_value.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          310,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "33",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-f0488ef234358866deb9e4c5",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::data_type",
+      "datafusion::physical_plan::ColumnarValue::data_type",
+      "datafusion_expr::ColumnarValue::data_type",
+      "datafusion_physical_plan::ColumnarValue::data_type",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::data_type"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "35425f8454650a5c3d8bd099",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::fmt",
+    "name": "fmt",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        101,
+        17
+      ],
+      "end": [
+        101,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 97,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 98,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "97": "core::fmt::Formatter",
+      "98": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnarValue",
+          "id": "datafusion_expr_common::columnar_value::ColumnarValue",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/columnar_value.rs",
+        "begin": [
+          101,
+          17
+        ],
+        "end": [
+          101,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "96",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-35425f8454650a5c3d8bd099",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::fmt",
+      "datafusion::physical_plan::ColumnarValue::fmt",
+      "datafusion_expr::ColumnarValue::fmt",
+      "datafusion_physical_plan::ColumnarValue::fmt",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3b4e0abb150c541863a9af8a",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::fmt",
+    "name": "fmt",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        444,
+        5
+      ],
+      "end": [
+        463,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "fmt::Formatter",
+                      "id": 97,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "fmt::Result",
+              "id": 98,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "97": "core::fmt::Formatter",
+      "98": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnarValue",
+          "id": "datafusion_expr_common::columnar_value::ColumnarValue",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Display",
+        "id": "core::fmt::Display",
+        "args": null
+      },
+      "trait_path": "core::fmt::Display",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/columnar_value.rs",
+        "begin": [
+          443,
+          1
+        ],
+        "end": [
+          464,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "106",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-3b4e0abb150c541863a9af8a",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::fmt",
+      "datafusion::physical_plan::ColumnarValue::fmt",
+      "datafusion_expr::ColumnarValue::fmt",
+      "datafusion_physical_plan::ColumnarValue::fmt",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bfc38f4a160a12ff037b04e3",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::from",
+    "name": "from",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn from(value: ScalarValue) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        116,
+        5
+      ],
+      "end": [
+        118,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "ScalarValue",
+                  "id": 5,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "5": "datafusion_common::scalar::ScalarValue"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnarValue",
+          "id": "datafusion_expr_common::columnar_value::ColumnarValue",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "ScalarValue",
+                    "id": "datafusion_common::scalar::ScalarValue",
+                    "args": null
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/columnar_value.rs",
+        "begin": [
+          115,
+          1
+        ],
+        "end": [
+          119,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "104",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-bfc38f4a160a12ff037b04e3",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::from",
+      "datafusion::physical_plan::ColumnarValue::from",
+      "datafusion_expr::ColumnarValue::from",
+      "datafusion_physical_plan::ColumnarValue::from",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::from"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c575347bc8643b3d317f7a58",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::from",
+    "name": "from",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn from(value: ArrayRef) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        110,
+        5
+      ],
+      "end": [
+        112,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "ArrayRef",
+                  "id": 1,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnarValue",
+          "id": "datafusion_expr_common::columnar_value::ColumnarValue",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "Arc",
+                    "id": "alloc::sync::Arc",
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "dyn_trait": {
+                                "traits": [
+                                  {
+                                    "trait": {
+                                      "path": "Array",
+                                      "id": "arrow_array::array::Array",
+                                      "args": null
+                                    },
+                                    "generic_params": []
+                                  }
+                                ],
+                                "lifetime": null
+                              }
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/columnar_value.rs",
+        "begin": [
+          109,
+          1
+        ],
+        "end": [
+          113,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "100",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-c575347bc8643b3d317f7a58",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::from",
+      "datafusion::physical_plan::ColumnarValue::from",
+      "datafusion_expr::ColumnarValue::from",
+      "datafusion_physical_plan::ColumnarValue::from",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::from"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6e86167b7e5d4ece961c8a83",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::into_array",
+    "name": "into_array",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn into_array(self, num_rows: usize) -> Result<ArrayRef>",
+    "docs": "Convert any [`Self::Scalar`] into an Arrow [`ArrayRef`] with the specified\nnumber of rows  by repeating the same scalar multiple times,\nwhich is not as efficient as handling the scalar directly.\n[`Self::Array`] will just be returned as is.\n\nSee [`Self::into_array_of_size`] if you need to validate the length of the output array.\n\nSee [`Self::values_to_arrays`] to convert multiple columnar values into\narrays of the same length.\n\n# Errors\n\nErrors if `self` is a Scalar that fails to be converted into an array of size",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        142,
+        5
+      ],
+      "end": [
+        147,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "num_rows",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrayRef",
+                          "id": 1,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "datafusion_common::error::Result",
+      "1": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnarValue",
+          "id": "datafusion_expr_common::columnar_value::ColumnarValue",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/columnar_value.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          310,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::Scalar`": 29,
+      "`Self::into_array_of_size`": 34,
+      "`Self::Array`": 27,
+      "`ArrayRef`": 1,
+      "`Self::values_to_arrays`": 31
+    },
+    "link_paths": {
+      "`Self::Scalar`": "datafusion_expr_common::columnar_value::ColumnarValue::Scalar",
+      "`Self::into_array_of_size`": "datafusion_expr_common::columnar_value::ColumnarValue::into_array_of_size",
+      "`Self::Array`": "datafusion_expr_common::columnar_value::ColumnarValue::Array",
+      "`ArrayRef`": "arrow_array::array::ArrayRef",
+      "`Self::values_to_arrays`": "datafusion_expr_common::columnar_value::ColumnarValue::values_to_arrays"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "30",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-6e86167b7e5d4ece961c8a83",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::into_array",
+      "datafusion::physical_plan::ColumnarValue::into_array",
+      "datafusion_expr::ColumnarValue::into_array",
+      "datafusion_physical_plan::ColumnarValue::into_array",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::into_array"
+    ],
+    "resolved_doc_links": {
+      "`Self::Scalar`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-d6c26dcb617515197f47859d",
+      "`Self::into_array_of_size`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-40e7599a5316a4a3fa567f4a",
+      "`Self::Array`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-dde33518db6b4654b48e85d4",
+      "`ArrayRef`": "../operations/arrow_array.array.ArrayRef.md#op-657cc3ff3d24afcacda590e1",
+      "`Self::values_to_arrays`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-ec4c901c17836f47ccf68670"
+    }
+  },
+  {
+    "id": "40e7599a5316a4a3fa567f4a",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::into_array_of_size",
+    "name": "into_array_of_size",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn into_array_of_size(self, num_rows: usize) -> Result<ArrayRef>",
+    "docs": "Convert a columnar value into an Arrow [`ArrayRef`] with the specified\nnumber of rows. [`Self::Scalar`] is converted by repeating the same\nscalar multiple times which is not as efficient as handling the scalar\ndirectly.\nThis validates that if this is [`Self::Array`], it has the expected length.\n\nSee [`Self::values_to_arrays`] to convert multiple columnar values into\narrays of the same length.\n\n# Errors\n\nErrors if `self` is a Scalar that fails to be converted into an array of size or\nif the array length does not match the expected length",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        162,
+        5
+      ],
+      "end": [
+        177,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "num_rows",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrayRef",
+                          "id": 1,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "datafusion_common::error::Result",
+      "1": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnarValue",
+          "id": "datafusion_expr_common::columnar_value::ColumnarValue",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/columnar_value.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          310,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::Scalar`": 29,
+      "`Self::Array`": 27,
+      "`ArrayRef`": 1,
+      "`Self::values_to_arrays`": 31
+    },
+    "link_paths": {
+      "`Self::Scalar`": "datafusion_expr_common::columnar_value::ColumnarValue::Scalar",
+      "`Self::Array`": "datafusion_expr_common::columnar_value::ColumnarValue::Array",
+      "`ArrayRef`": "arrow_array::array::ArrayRef",
+      "`Self::values_to_arrays`": "datafusion_expr_common::columnar_value::ColumnarValue::values_to_arrays"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "34",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-40e7599a5316a4a3fa567f4a",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::into_array_of_size",
+      "datafusion::physical_plan::ColumnarValue::into_array_of_size",
+      "datafusion_expr::ColumnarValue::into_array_of_size",
+      "datafusion_physical_plan::ColumnarValue::into_array_of_size",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::into_array_of_size"
+    ],
+    "resolved_doc_links": {
+      "`Self::Scalar`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-d6c26dcb617515197f47859d",
+      "`Self::Array`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-dde33518db6b4654b48e85d4",
+      "`ArrayRef`": "../operations/arrow_array.array.ArrayRef.md#op-657cc3ff3d24afcacda590e1",
+      "`Self::values_to_arrays`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-ec4c901c17836f47ccf68670"
+    }
+  },
+  {
+    "id": "c524cc0bd43fc1fc943c2310",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::to_array",
+    "name": "to_array",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn to_array(&self, num_rows: usize) -> Result<ArrayRef>",
+    "docs": "Convert any [`Self::Scalar`] into an Arrow [`ArrayRef`] with the specified\nnumber of rows  by repeating the same scalar multiple times,\nwhich is not as efficient as handling the scalar directly.\n[`Self::Array`] will just be returned as is.\n\nSee [`Self::to_array_of_size`] if you need to validate the length of the output array.\n\nSee [`Self::values_to_arrays`] to convert multiple columnar values into\narrays of the same length.\n\n# Errors\n\nErrors if `self` is a Scalar that fails to be converted into an array of size",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        192,
+        5
+      ],
+      "end": [
+        197,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "num_rows",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrayRef",
+                          "id": 1,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "datafusion_common::error::Result",
+      "1": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnarValue",
+          "id": "datafusion_expr_common::columnar_value::ColumnarValue",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/columnar_value.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          310,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::Scalar`": 29,
+      "`Self::to_array_of_size`": 35,
+      "`Self::Array`": 27,
+      "`ArrayRef`": 1,
+      "`Self::values_to_arrays`": 31
+    },
+    "link_paths": {
+      "`Self::Scalar`": "datafusion_expr_common::columnar_value::ColumnarValue::Scalar",
+      "`Self::to_array_of_size`": "datafusion_expr_common::columnar_value::ColumnarValue::to_array_of_size",
+      "`Self::Array`": "datafusion_expr_common::columnar_value::ColumnarValue::Array",
+      "`ArrayRef`": "arrow_array::array::ArrayRef",
+      "`Self::values_to_arrays`": "datafusion_expr_common::columnar_value::ColumnarValue::values_to_arrays"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "36",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-c524cc0bd43fc1fc943c2310",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::to_array",
+      "datafusion::physical_plan::ColumnarValue::to_array",
+      "datafusion_expr::ColumnarValue::to_array",
+      "datafusion_physical_plan::ColumnarValue::to_array",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::to_array"
+    ],
+    "resolved_doc_links": {
+      "`Self::Scalar`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-d6c26dcb617515197f47859d",
+      "`Self::to_array_of_size`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-27ce41647f6fa6ec7299abae",
+      "`Self::Array`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-dde33518db6b4654b48e85d4",
+      "`ArrayRef`": "../operations/arrow_array.array.ArrayRef.md#op-657cc3ff3d24afcacda590e1",
+      "`Self::values_to_arrays`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-ec4c901c17836f47ccf68670"
+    }
+  },
+  {
+    "id": "27ce41647f6fa6ec7299abae",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::to_array_of_size",
+    "name": "to_array_of_size",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn to_array_of_size(&self, num_rows: usize) -> Result<ArrayRef>",
+    "docs": "Convert a columnar value into an Arrow [`ArrayRef`] with the specified\nnumber of rows. [`Self::Scalar`] is converted by repeating the same\nscalar multiple times which is not as efficient as handling the scalar\ndirectly.\nThis validates that if this is [`Self::Array`], it has the expected length.\n\nSee [`Self::values_to_arrays`] to convert multiple columnar values into\narrays of the same length.\n\n# Errors\n\nErrors if `self` is a Scalar that fails to be converted into an array of size or\nif the array length does not match the expected length",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        212,
+        5
+      ],
+      "end": [
+        227,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "num_rows",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrayRef",
+                          "id": 1,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "datafusion_common::error::Result",
+      "1": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnarValue",
+          "id": "datafusion_expr_common::columnar_value::ColumnarValue",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/columnar_value.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          310,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::Scalar`": 29,
+      "`Self::Array`": 27,
+      "`ArrayRef`": 1,
+      "`Self::values_to_arrays`": 31
+    },
+    "link_paths": {
+      "`Self::Scalar`": "datafusion_expr_common::columnar_value::ColumnarValue::Scalar",
+      "`Self::Array`": "datafusion_expr_common::columnar_value::ColumnarValue::Array",
+      "`ArrayRef`": "arrow_array::array::ArrayRef",
+      "`Self::values_to_arrays`": "datafusion_expr_common::columnar_value::ColumnarValue::values_to_arrays"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "35",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-27ce41647f6fa6ec7299abae",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::to_array_of_size",
+      "datafusion::physical_plan::ColumnarValue::to_array_of_size",
+      "datafusion_expr::ColumnarValue::to_array_of_size",
+      "datafusion_physical_plan::ColumnarValue::to_array_of_size",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::to_array_of_size"
+    ],
+    "resolved_doc_links": {
+      "`Self::Scalar`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-d6c26dcb617515197f47859d",
+      "`Self::Array`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-dde33518db6b4654b48e85d4",
+      "`ArrayRef`": "../operations/arrow_array.array.ArrayRef.md#op-657cc3ff3d24afcacda590e1",
+      "`Self::values_to_arrays`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-ec4c901c17836f47ccf68670"
+    }
+  },
+  {
+    "id": "ec4c901c17836f47ccf68670",
+    "path": "datafusion_expr_common::columnar_value::ColumnarValue::values_to_arrays",
+    "name": "values_to_arrays",
+    "owner": "datafusion_expr_common::columnar_value::ColumnarValue",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn values_to_arrays(args: &[ColumnarValue]) -> Result<Vec<ArrayRef>>",
+    "docs": "Converts  [`ColumnarValue`]s to [`ArrayRef`]s with the same length.\n\n# Performance Note\n\nThis function expands any [`ScalarValue`] to an array. This expansion\npermits using a single function in terms of arrays, but it can be\ninefficient compared to handling the scalar value directly.\n\nThus, it is recommended to provide specialized implementations for\nscalar values if performance is a concern.\n\n# Errors\n\nIf there are multiple array arguments that have different lengths",
+    "span": {
+      "filename": "src/columnar_value.rs",
+      "begin": [
+        249,
+        5
+      ],
+      "end": [
+        281,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ColumnarValue",
+                        "id": 32,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 10,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "ArrayRef",
+                                      "id": 1,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "32": "datafusion_expr_common::columnar_value::ColumnarValue",
+      "2": "datafusion_common::error::Result",
+      "10": "alloc::vec::Vec",
+      "1": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ColumnarValue",
+          "id": "datafusion_expr_common::columnar_value::ColumnarValue",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/columnar_value.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          310,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ScalarValue`": 5,
+      "`ColumnarValue`": 32,
+      "`ArrayRef`": 1
+    },
+    "link_paths": {
+      "`ScalarValue`": "datafusion_common::scalar::ScalarValue",
+      "`ColumnarValue`": "datafusion_expr_common::columnar_value::ColumnarValue",
+      "`ArrayRef`": "arrow_array::array::ArrayRef"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "31",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.columnar_value.ColumnarValue.md",
+    "record_file": "operations/datafusion_expr_common.columnar_value.ColumnarValue.json",
+    "anchor": "op-ec4c901c17836f47ccf68670",
+    "aliases": [
+      "datafusion::logical_expr::ColumnarValue::values_to_arrays",
+      "datafusion::physical_plan::ColumnarValue::values_to_arrays",
+      "datafusion_expr::ColumnarValue::values_to_arrays",
+      "datafusion_physical_plan::ColumnarValue::values_to_arrays",
+      "datafusion_physical_plan::execution_plan::ColumnarValue::values_to_arrays"
+    ],
+    "resolved_doc_links": {
+      "`ScalarValue`": "../operations/datafusion_common.scalar.ScalarValue.md#op-360b267c379d0a7a93dce87b",
+      "`ColumnarValue`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-d5fec5b0e8fcb4446aea8c7f",
+      "`ArrayRef`": "../operations/arrow_array.array.ArrayRef.md#op-657cc3ff3d24afcacda590e1"
+    }
+  }
+]

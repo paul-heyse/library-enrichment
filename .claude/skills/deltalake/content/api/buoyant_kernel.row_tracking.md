@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## RowTrackingDomainMetadata
 
 `struct` · `buoyant_kernel::row_tracking::RowTrackingDomainMetadata`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.row_tracking.RowTrackingDomainMetadata.md)
 
 Also reachable as `delta_kernel::row_tracking::RowTrackingDomainMetadata`
 

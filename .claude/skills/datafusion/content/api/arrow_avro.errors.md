@@ -38,6 +38,9 @@ fn source(&self) -> Option<&dyn Error + 'static>
 fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.errors.AvroError.md).
+
+
 Avro error enumeration
 
 ---

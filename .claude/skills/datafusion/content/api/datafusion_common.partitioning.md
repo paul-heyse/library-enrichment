@@ -12,6 +12,9 @@ Also reachable as `datafusion::common::validate_range_split_points`, `datafusion
 fn validate_range_split_points(split_points: &[SplitPoint], sort_options: &[arrow::compute::SortOptions]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.partitioning.validate_range_split_points.md).
+
+
 Validates that split points match the ordering width and are strictly
 ordered according to the provided sort options.
 
@@ -43,6 +46,9 @@ fn values(&self) -> &[ScalarValue]
 ```rust
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.partitioning.SplitPoint.md).
+
 
 A boundary between adjacent range partitions.
 

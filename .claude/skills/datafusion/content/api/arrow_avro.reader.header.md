@@ -12,6 +12,9 @@ Also reachable as `arrow_avro::reader::read_header_info`
 fn read_header_info<R: BufRead>(reader: R) -> Result<HeaderInfo, errors::AvroError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.reader.header.read_header_info.md).
+
+
 Reads the Avro file header (magic, metadata, sync marker) from `reader`.
 
 On success, returns the parsed [`HeaderInfo`] containing the header and its length in bytes.
@@ -25,6 +28,9 @@ On success, returns the parsed [`HeaderInfo`] containing the header and its leng
 ```rust
 struct Header
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.reader.header.Header.md).
+
 
 A decoded header for an [Object Container File](https://avro.apache.org/docs/1.11.1/specification/#object-container-files)
 
@@ -50,6 +56,9 @@ fn header_len(&self) -> u64
 fn sync(&self) -> [u8; 16]
 fn writer_schema(&self) -> Result<AvroSchema, AvroError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.reader.header.HeaderInfo.md).
+
 
 Header information for an Avro OCF file.
 

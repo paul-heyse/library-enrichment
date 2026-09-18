@@ -1,0 +1,1984 @@
+[
+  {
+    "id": "8688b397937d9b1199c7c53f",
+    "path": "arrow_ipc::gen::Schema::Timestamp",
+    "name": "Timestamp",
+    "owner": null,
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct Timestamp<'a>",
+    "docs": "Timestamp is a 64-bit signed integer representing an elapsed time since a\nfixed epoch, stored in either of four units: seconds, milliseconds,\nmicroseconds or nanoseconds, and is optionally annotated with a timezone.\n\nTimestamp values do not include any leap seconds (in other words, all\ndays are considered 86400 seconds long).\n\nTimestamps with a non-empty timezone\n------------------------------------\n\nIf a Timestamp column has a non-empty timezone value, its epoch is\n1970-01-01 00:00:00 (January 1st 1970, midnight) in the *UTC* timezone\n(the Unix epoch), regardless of the Timestamp's own timezone.\n\nTherefore, timestamp values with a non-empty timezone correspond to\nphysical points in time together with some additional information about\nhow the data was obtained and/or how to display it (the timezone).\n\n  For example, the timestamp value 0 with the timezone string \"Europe/Paris\"\n  corresponds to \"January 1st 1970, 00h00\" in the UTC timezone, but the\n  application may prefer to display it as \"January 1st 1970, 01h00\" in\n  the Europe/Paris timezone (which is the same physical point in time).\n\nOne consequence is that timestamp values with a non-empty timezone\ncan be compared and ordered directly, since they all share the same\nwell-known point of reference (the Unix epoch).\n\nTimestamps with an unset / empty timezone\n-----------------------------------------\n\nIf a Timestamp column has no timezone value, its epoch is\n1970-01-01 00:00:00 (January 1st 1970, midnight) in an *unknown* timezone.\n\nTherefore, timestamp values without a timezone cannot be meaningfully\ninterpreted as physical points in time, but only as calendar / clock\nindications (\"wall clock time\") in an unspecified timezone.\n\n  For example, the timestamp value 0 with an empty timezone string\n  corresponds to \"January 1st 1970, 00h00\" in an unknown timezone: there\n  is not enough information to interpret it as a well-defined physical\n  point in time.\n\nOne consequence is that timestamp values without a timezone cannot\nbe reliably compared or ordered, since they may have different points of\nreference.  In particular, it is *not* possible to interpret an unset\nor empty timezone as the same as \"UTC\".\n\nConversion between timezones\n----------------------------\n\nIf a Timestamp column has a non-empty timezone, changing the timezone\nto a different non-empty value is a metadata-only operation:\nthe timestamp values need not change as their point of reference remains\nthe same (the Unix epoch).\n\nHowever, if a Timestamp column has no timezone value, changing it to a\nnon-empty value requires to think about the desired semantics.\nOne possibility is to assume that the original timestamp values are\nrelative to the epoch of the timezone being set; timestamp values should\nthen adjusted to the Unix epoch (for example, changing the timezone from\nempty to \"Europe/Paris\" would require converting the timestamp values\nfrom \"Europe/Paris\" to \"UTC\", which seems counter-intuitive but is\nnevertheless correct).\n\nGuidelines for encoding data from external libraries\n----------------------------------------------------\n\nDate & time libraries often have multiple different data types for temporal\ndata. In order to ease interoperability between different implementations the\nArrow project has some recommendations for encoding these types into a Timestamp\ncolumn.\n\nAn \"instant\" represents a physical point in time that has no relevant timezone\n(for example, astronomical data). To encode an instant, use a Timestamp with\nthe timezone string set to \"UTC\", and make sure the Timestamp values\nare relative to the UTC epoch (January 1st 1970, midnight).\n\nA \"zoned date-time\" represents a physical point in time annotated with an\ninformative timezone (for example, the timezone in which the data was\nrecorded).  To encode a zoned date-time, use a Timestamp with the timezone\nstring set to the name of the timezone, and make sure the Timestamp values\nare relative to the UTC epoch (January 1st 1970, midnight).\n\n (There is some ambiguity between an instant and a zoned date-time with the\n  UTC timezone.  Both of these are stored the same in Arrow.  Typically,\n  this distinction does not matter.  If it does, then an application should\n  use custom metadata or an extension type to distinguish between the two cases.)\n\nAn \"offset date-time\" represents a physical point in time combined with an\nexplicit offset from UTC.  To encode an offset date-time, use a Timestamp\nwith the timezone string set to the numeric timezone offset string\n(e.g. \"+03:00\"), and make sure the Timestamp values are relative to\nthe UTC epoch (January 1st 1970, midnight).\n\nA \"naive date-time\" (also called \"local date-time\" in some libraries)\nrepresents a wall clock time combined with a calendar date, but with\nno indication of how to map this information to a physical point in time.\nNaive date-times must be handled with care because of this missing\ninformation, and also because daylight saving time (DST) may make\nsome values ambiguous or nonexistent. A naive date-time may be\nstored as a struct with Date and Time fields. However, it may also be\nencoded into a Timestamp column with an empty timezone. The timestamp\nvalues should be computed \"as if\" the timezone of the date-time values\nwas UTC; for example, the naive date-time \"January 1st 1970, 00h00\" would\nbe encoded as timestamp value 0.",
+    "span": {
+      "filename": "src/gen/Schema.rs",
+      "begin": [
+        3601,
+        1
+      ],
+      "end": [
+        3603,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [
+              4362
+            ],
+            "has_stripped_fields": false
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          4371,
+          4372,
+          4373,
+          4374,
+          4375,
+          4376,
+          4377,
+          4378,
+          4379,
+          4380,
+          4381,
+          4382,
+          4383,
+          4384,
+          4385,
+          4386,
+          4387,
+          4388,
+          4389,
+          4391,
+          4392,
+          4394,
+          4397,
+          4399,
+          4401
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "4363",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.gen.Schema.Timestamp.md",
+    "record_file": "operations/arrow_ipc.gen.Schema.Timestamp.json",
+    "anchor": "op-8688b397937d9b1199c7c53f",
+    "aliases": [
+      "arrow::ipc::Timestamp",
+      "arrow_ipc::Timestamp"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "aa15e3fd250a59310b8c00b3",
+    "path": "arrow_ipc::gen::Schema::Timestamp::Inner",
+    "name": "Inner",
+    "owner": "arrow_ipc::gen::Schema::Timestamp",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "assoc_type",
+    "signature": "Inner",
+    "docs": "",
+    "span": {
+      "filename": "src/gen/Schema.rs",
+      "begin": [
+        3606,
+        5
+      ],
+      "end": [
+        3606,
+        32
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "type": {
+          "resolved_path": {
+            "path": "Timestamp",
+            "id": 4363,
+            "args": {
+              "angle_bracketed": {
+                "args": [
+                  {
+                    "lifetime": "'a"
+                  }
+                ],
+                "constraints": []
+              }
+            }
+          }
+        },
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4363": "arrow_ipc::gen::Schema::Timestamp"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Timestamp",
+          "id": "arrow_ipc::gen::Schema::Timestamp",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Follow",
+        "id": "flatbuffers::follow::Follow",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "lifetime": "'a"
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "flatbuffers::follow::Follow",
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/gen/Schema.rs",
+        "begin": [
+          3605,
+          1
+        ],
+        "end": [
+          3613,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "4395",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.gen.Schema.Timestamp.md",
+    "record_file": "operations/arrow_ipc.gen.Schema.Timestamp.json",
+    "anchor": "op-aa15e3fd250a59310b8c00b3",
+    "aliases": [
+      "arrow::ipc::Timestamp::Inner",
+      "arrow_ipc::Timestamp::Inner"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1e96fd1a211b855d8e215c9f",
+    "path": "arrow_ipc::gen::Schema::Timestamp::VT_TIMEZONE",
+    "name": "VT_TIMEZONE",
+    "owner": "arrow_ipc::gen::Schema::Timestamp",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "assoc_const",
+    "signature": "VT_TIMEZONE",
+    "docs": "",
+    "span": {
+      "filename": "src/gen/Schema.rs",
+      "begin": [
+        3617,
+        5
+      ],
+      "end": [
+        3617,
+        54
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_const": {
+        "type": {
+          "resolved_path": {
+            "path": "flatbuffers::VOffsetT",
+            "id": 735,
+            "args": null
+          }
+        },
+        "value": "6",
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "735": "flatbuffers::primitives::VOffsetT"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Timestamp",
+          "id": "arrow_ipc::gen::Schema::Timestamp",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/gen/Schema.rs",
+        "begin": [
+          3615,
+          1
+        ],
+        "end": [
+          3667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "4365",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.gen.Schema.Timestamp.md",
+    "record_file": "operations/arrow_ipc.gen.Schema.Timestamp.json",
+    "anchor": "op-1e96fd1a211b855d8e215c9f",
+    "aliases": [
+      "arrow::ipc::Timestamp::VT_TIMEZONE",
+      "arrow_ipc::Timestamp::VT_TIMEZONE"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8e7bd093c11ecfef192bac4d",
+    "path": "arrow_ipc::gen::Schema::Timestamp::VT_UNIT",
+    "name": "VT_UNIT",
+    "owner": "arrow_ipc::gen::Schema::Timestamp",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "assoc_const",
+    "signature": "VT_UNIT",
+    "docs": "",
+    "span": {
+      "filename": "src/gen/Schema.rs",
+      "begin": [
+        3616,
+        5
+      ],
+      "end": [
+        3616,
+        50
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_const": {
+        "type": {
+          "resolved_path": {
+            "path": "flatbuffers::VOffsetT",
+            "id": 735,
+            "args": null
+          }
+        },
+        "value": "4",
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "735": "flatbuffers::primitives::VOffsetT"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Timestamp",
+          "id": "arrow_ipc::gen::Schema::Timestamp",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/gen/Schema.rs",
+        "begin": [
+          3615,
+          1
+        ],
+        "end": [
+          3667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "4364",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.gen.Schema.Timestamp.md",
+    "record_file": "operations/arrow_ipc.gen.Schema.Timestamp.json",
+    "anchor": "op-8e7bd093c11ecfef192bac4d",
+    "aliases": [
+      "arrow::ipc::Timestamp::VT_UNIT",
+      "arrow_ipc::Timestamp::VT_UNIT"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "28f875dffd5f104eb1f14df3",
+    "path": "arrow_ipc::gen::Schema::Timestamp::_tab",
+    "name": "_tab",
+    "owner": "arrow_ipc::gen::Schema::Timestamp",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "struct_field",
+    "signature": "_tab: flatbuffers::Table<'a>",
+    "docs": "",
+    "span": {
+      "filename": "src/gen/Schema.rs",
+      "begin": [
+        3602,
+        5
+      ],
+      "end": [
+        3602,
+        37
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "flatbuffers::Table",
+          "id": 732,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "732": "flatbuffers::table::Table"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "4362",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.gen.Schema.Timestamp.md",
+    "record_file": "operations/arrow_ipc.gen.Schema.Timestamp.json",
+    "anchor": "op-28f875dffd5f104eb1f14df3",
+    "aliases": [
+      "arrow::ipc::Timestamp::_tab",
+      "arrow_ipc::Timestamp::_tab"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7d5961b55eef793cb7112dd7",
+    "path": "arrow_ipc::gen::Schema::Timestamp::clone",
+    "name": "clone",
+    "owner": "arrow_ipc::gen::Schema::Timestamp",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> Timestamp<'a>",
+    "docs": "",
+    "span": {
+      "filename": "src/gen/Schema.rs",
+      "begin": [
+        3494,
+        16
+      ],
+      "end": [
+        3494,
+        21
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Timestamp",
+              "id": 4363,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'a"
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4363": "arrow_ipc::gen::Schema::Timestamp"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Timestamp",
+          "id": "arrow_ipc::gen::Schema::Timestamp",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/gen/Schema.rs",
+        "begin": [
+          3494,
+          16
+        ],
+        "end": [
+          3494,
+          21
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "4390",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.gen.Schema.Timestamp.md",
+    "record_file": "operations/arrow_ipc.gen.Schema.Timestamp.json",
+    "anchor": "op-7d5961b55eef793cb7112dd7",
+    "aliases": [
+      "arrow::ipc::Timestamp::clone",
+      "arrow_ipc::Timestamp::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c1e53651e06cc3e959a74ff9",
+    "path": "arrow_ipc::gen::Schema::Timestamp::create",
+    "name": "create",
+    "owner": "arrow_ipc::gen::Schema::Timestamp",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(_fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>, args: &'args TimestampArgs<'args>) -> flatbuffers::WIPOffset<Timestamp<'bldr>>",
+    "docs": "",
+    "span": {
+      "filename": "src/gen/Schema.rs",
+      "begin": [
+        3624,
+        5
+      ],
+      "end": [
+        3634,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[allow(unused_mut)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "_fbb",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'mut_bldr",
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "flatbuffers::FlatBufferBuilder",
+                      "id": 7,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'bldr"
+                            },
+                            {
+                              "type": {
+                                "generic": "A"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "args",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'args",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "TimestampArgs",
+                      "id": 4368,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'args"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "flatbuffers::WIPOffset",
+              "id": 11,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Timestamp",
+                          "id": 4363,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "lifetime": "'bldr"
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'bldr",
+              "kind": {
+                "lifetime": {
+                  "outlives": [
+                    "'args"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "'args",
+              "kind": {
+                "lifetime": {
+                  "outlives": [
+                    "'mut_bldr"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "'mut_bldr",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "A",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "flatbuffers::Allocator",
+                          "id": 743,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    },
+                    {
+                      "outlives": "'bldr"
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "7": "flatbuffers::builder::FlatBufferBuilder",
+      "4368": "arrow_ipc::gen::Schema::TimestampArgs",
+      "11": "flatbuffers::primitives::WIPOffset",
+      "4363": "arrow_ipc::gen::Schema::Timestamp",
+      "743": "flatbuffers::builder::Allocator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Timestamp",
+          "id": "arrow_ipc::gen::Schema::Timestamp",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/gen/Schema.rs",
+        "begin": [
+          3615,
+          1
+        ],
+        "end": [
+          3667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "4367",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.gen.Schema.Timestamp.md",
+    "record_file": "operations/arrow_ipc.gen.Schema.Timestamp.json",
+    "anchor": "op-c1e53651e06cc3e959a74ff9",
+    "aliases": [
+      "arrow::ipc::Timestamp::create",
+      "arrow_ipc::Timestamp::create"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "52895c5912b1638f286fd1dc",
+    "path": "arrow_ipc::gen::Schema::Timestamp::eq",
+    "name": "eq",
+    "owner": "arrow_ipc::gen::Schema::Timestamp",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &Timestamp<'a>) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/gen/Schema.rs",
+      "begin": [
+        3494,
+        23
+      ],
+      "end": [
+        3494,
+        32
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Timestamp",
+                      "id": 4363,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'a"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4363": "arrow_ipc::gen::Schema::Timestamp"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Timestamp",
+          "id": "arrow_ipc::gen::Schema::Timestamp",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/gen/Schema.rs",
+        "begin": [
+          3494,
+          23
+        ],
+        "end": [
+          3494,
+          32
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "4393",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.gen.Schema.Timestamp.md",
+    "record_file": "operations/arrow_ipc.gen.Schema.Timestamp.json",
+    "anchor": "op-52895c5912b1638f286fd1dc",
+    "aliases": [
+      "arrow::ipc::Timestamp::eq",
+      "arrow_ipc::Timestamp::eq"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "47fbb0465f7a716b26c24e62",
+    "path": "arrow_ipc::gen::Schema::Timestamp::fmt",
+    "name": "fmt",
+    "owner": "arrow_ipc::gen::Schema::Timestamp",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/gen/Schema.rs",
+      "begin": [
+        3732,
+        5
+      ],
+      "end": [
+        3737,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "core::fmt::Formatter",
+                      "id": 57,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "core::fmt::Result",
+              "id": 58,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "57": "core::fmt::Formatter",
+      "58": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Timestamp",
+          "id": "arrow_ipc::gen::Schema::Timestamp",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'_"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/gen/Schema.rs",
+        "begin": [
+          3731,
+          1
+        ],
+        "end": [
+          3738,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "4400",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.gen.Schema.Timestamp.md",
+    "record_file": "operations/arrow_ipc.gen.Schema.Timestamp.json",
+    "anchor": "op-47fbb0465f7a716b26c24e62",
+    "aliases": [
+      "arrow::ipc::Timestamp::fmt",
+      "arrow_ipc::Timestamp::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "593a36753faf7a1477de4715",
+    "path": "arrow_ipc::gen::Schema::Timestamp::follow",
+    "name": "follow",
+    "owner": "arrow_ipc::gen::Schema::Timestamp",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner",
+    "docs": "",
+    "span": {
+      "filename": "src/gen/Schema.rs",
+      "begin": [
+        3608,
+        5
+      ],
+      "end": [
+        3612,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "buf",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'a",
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "u8"
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "loc",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "qualified_path": {
+              "name": "Inner",
+              "args": null,
+              "self_type": {
+                "generic": "Self"
+              },
+              "trait": {
+                "path": "",
+                "id": 700,
+                "args": null
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "700": "flatbuffers::follow::Follow"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Timestamp",
+          "id": "arrow_ipc::gen::Schema::Timestamp",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Follow",
+        "id": "flatbuffers::follow::Follow",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "lifetime": "'a"
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "flatbuffers::follow::Follow",
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/gen/Schema.rs",
+        "begin": [
+          3605,
+          1
+        ],
+        "end": [
+          3613,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "4396",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.gen.Schema.Timestamp.md",
+    "record_file": "operations/arrow_ipc.gen.Schema.Timestamp.json",
+    "anchor": "op-593a36753faf7a1477de4715",
+    "aliases": [
+      "arrow::ipc::Timestamp::follow",
+      "arrow_ipc::Timestamp::follow"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9c8d839b1f492b78d2e3d90b",
+    "path": "arrow_ipc::gen::Schema::Timestamp::init_from_table",
+    "name": "init_from_table",
+    "owner": "arrow_ipc::gen::Schema::Timestamp",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/gen/Schema.rs",
+      "begin": [
+        3620,
+        5
+      ],
+      "end": [
+        3622,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "table",
+              {
+                "resolved_path": {
+                  "path": "flatbuffers::Table",
+                  "id": 732,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'a"
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "732": "flatbuffers::table::Table"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Timestamp",
+          "id": "arrow_ipc::gen::Schema::Timestamp",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/gen/Schema.rs",
+        "begin": [
+          3615,
+          1
+        ],
+        "end": [
+          3667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "4366",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.gen.Schema.Timestamp.md",
+    "record_file": "operations/arrow_ipc.gen.Schema.Timestamp.json",
+    "anchor": "op-9c8d839b1f492b78d2e3d90b",
+    "aliases": [
+      "arrow::ipc::Timestamp::init_from_table",
+      "arrow_ipc::Timestamp::init_from_table"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fef024069fca8669025f5af7",
+    "path": "arrow_ipc::gen::Schema::Timestamp::run_verifier",
+    "name": "run_verifier",
+    "owner": "arrow_ipc::gen::Schema::Timestamp",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>",
+    "docs": "",
+    "span": {
+      "filename": "src/gen/Schema.rs",
+      "begin": [
+        3671,
+        5
+      ],
+      "end": [
+        3685,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "v",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "flatbuffers::Verifier",
+                      "id": 76,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            },
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "pos",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "flatbuffers::InvalidFlatbuffer",
+                          "id": 712,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "76": "flatbuffers::verifier::Verifier",
+      "44": "core::result::Result",
+      "712": "flatbuffers::verifier::InvalidFlatbuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Timestamp",
+          "id": "arrow_ipc::gen::Schema::Timestamp",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'_"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Verifiable",
+        "id": "flatbuffers::verifier::Verifiable",
+        "args": null
+      },
+      "trait_path": "flatbuffers::verifier::Verifiable",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/gen/Schema.rs",
+        "begin": [
+          3669,
+          1
+        ],
+        "end": [
+          3686,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "4398",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.gen.Schema.Timestamp.md",
+    "record_file": "operations/arrow_ipc.gen.Schema.Timestamp.json",
+    "anchor": "op-fef024069fca8669025f5af7",
+    "aliases": [
+      "arrow::ipc::Timestamp::run_verifier",
+      "arrow_ipc::Timestamp::run_verifier"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3035c3ae4ed0c70cc2ed6f64",
+    "path": "arrow_ipc::gen::Schema::Timestamp::timezone",
+    "name": "timezone",
+    "owner": "arrow_ipc::gen::Schema::Timestamp",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn timezone(&self) -> Option<&'a str>",
+    "docs": "The timezone is an optional string indicating the name of a timezone,\none of:\n\n* As used in the Olson timezone database (the \"tz database\" or\n  \"tzdata\"), such as \"America/New_York\".\n* An absolute timezone offset of the form \"+XX:XX\" or \"-XX:XX\",\n  such as \"+07:30\".\n\nWhether a timezone string is present indicates different semantics about\nthe data (see above).",
+    "span": {
+      "filename": "src/gen/Schema.rs",
+      "begin": [
+        3658,
+        5
+      ],
+      "end": [
+        3666,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 127,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": "'a",
+                          "is_mutable": false,
+                          "type": {
+                            "primitive": "str"
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "127": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Timestamp",
+          "id": "arrow_ipc::gen::Schema::Timestamp",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/gen/Schema.rs",
+        "begin": [
+          3615,
+          1
+        ],
+        "end": [
+          3667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "4370",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.gen.Schema.Timestamp.md",
+    "record_file": "operations/arrow_ipc.gen.Schema.Timestamp.json",
+    "anchor": "op-3035c3ae4ed0c70cc2ed6f64",
+    "aliases": [
+      "arrow::ipc::Timestamp::timezone",
+      "arrow_ipc::Timestamp::timezone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "53856511fb1e112859b06260",
+    "path": "arrow_ipc::gen::Schema::Timestamp::unit",
+    "name": "unit",
+    "owner": "arrow_ipc::gen::Schema::Timestamp",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn unit(&self) -> TimeUnit",
+    "docs": "",
+    "span": {
+      "filename": "src/gen/Schema.rs",
+      "begin": [
+        3637,
+        5
+      ],
+      "end": [
+        3646,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "TimeUnit",
+              "id": 1831,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1831": "arrow_ipc::gen::Schema::TimeUnit"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Timestamp",
+          "id": "arrow_ipc::gen::Schema::Timestamp",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/gen/Schema.rs",
+        "begin": [
+          3615,
+          1
+        ],
+        "end": [
+          3667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "4369",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.gen.Schema.Timestamp.md",
+    "record_file": "operations/arrow_ipc.gen.Schema.Timestamp.json",
+    "anchor": "op-53856511fb1e112859b06260",
+    "aliases": [
+      "arrow::ipc::Timestamp::unit",
+      "arrow_ipc::Timestamp::unit"
+    ],
+    "resolved_doc_links": {}
+  }
+]

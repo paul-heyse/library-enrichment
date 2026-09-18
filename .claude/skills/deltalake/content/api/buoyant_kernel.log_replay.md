@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 5 public items · structured records in [`model/buoyan
 ## ActionsBatch
 
 `struct` · `buoyant_kernel::log_replay::ActionsBatch`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.log_replay.ActionsBatch.md)
 
 Also reachable as `delta_kernel::log_replay::ActionsBatch`
 
@@ -25,6 +26,7 @@ fn actions(&self) -> &dyn EngineData
 ## FileActionKey
 
 `struct` · `buoyant_kernel::log_replay::FileActionKey`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.log_replay.FileActionKey.md)
 
 Also reachable as `delta_kernel::log_replay::FileActionKey`
 
@@ -64,6 +66,7 @@ of adds and removes during log replay.
 ## HasSelectionVector
 
 `trait` · `buoyant_kernel::log_replay::HasSelectionVector`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.log_replay.HasSelectionVector.md)
 
 Also reachable as `delta_kernel::log_replay::HasSelectionVector`
 
@@ -91,6 +94,7 @@ This is used to filter out batches with no selected rows from the log replay res
 ## LogReplayProcessor
 
 `trait` · `buoyant_kernel::log_replay::LogReplayProcessor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.log_replay.LogReplayProcessor.md)
 
 Also reachable as `delta_kernel::log_replay::LogReplayProcessor`
 
@@ -175,6 +179,7 @@ TODO: Refactor the Change Data Feed (CDF) processor to use this trait.
 ## ParallelLogReplayProcessor
 
 `trait` · `buoyant_kernel::log_replay::ParallelLogReplayProcessor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.log_replay.ParallelLogReplayProcessor.md)
 
 Also reachable as `delta_kernel::log_replay::ParallelLogReplayProcessor`
 

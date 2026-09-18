@@ -10,4 +10,7 @@ Crate `datafusion-substrait` · 1 public items · structured records in [`model/
 async fn from_project_rel<'async_recursion>(consumer: &impl SubstraitConsumer, p: &substrait::proto::ProjectRel) -> datafusion::common::Result<datafusion::logical_expr::LogicalPlan> where : 'async_recursion, : 'async_recursion
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.rel.project_rel.from_project_rel.md).
+
+
 ---

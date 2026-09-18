@@ -27,6 +27,9 @@ fn schema(&self) -> &SchemaRef
 fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.async_reader.ParquetRecordBatchStream.md).
+
+
 An asynchronous [`Stream`]of [`RecordBatch`] constructed using [`ParquetRecordBatchStreamBuilder`] to read parquet files.
 
 `ParquetRecordBatchStream` also provides [`ParquetRecordBatchStream::next_row_group`] for fetching row groups,
@@ -71,6 +74,9 @@ fn get_byte_ranges(&mut self, ranges: Vec<Range<u64>>) -> BoxFuture<'_, Result<V
 fn get_bytes(&mut self, range: Range<u64>) -> BoxFuture<'_, Result<Bytes>>
 fn get_metadata<'a>(&'a mut self, options: Option<&'a ArrowReaderOptions>) -> BoxFuture<'a, Result<Arc<ParquetMetaData>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.async_reader.AsyncFileReader.md).
+
 
 The asynchronous interface used by [`ParquetRecordBatchStream`] to read parquet files
 
@@ -181,6 +187,9 @@ Also reachable as `parquet::arrow::ParquetRecordBatchStreamBuilder`
 ```rust
 type ParquetRecordBatchStreamBuilder<T> = arrow::arrow_reader::ArrowReaderBuilder<AsyncReader<T>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.async_reader.ParquetRecordBatchStreamBuilder.md).
+
 
 A builder for reading parquet files from an `async` source as  [`ParquetRecordBatchStream`]
 

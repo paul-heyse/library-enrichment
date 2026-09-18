@@ -40,6 +40,9 @@ fn task_ctx(&self) -> Arc<TaskContext>
 fn window_functions(&self) -> &HashMap<String, Arc<WindowUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.session.ForeignSession.md).
+
+
 This wrapper struct exists on the receiver side of the FFI interface, so it has
 no guarantees about being able to access the data in `private_data`. Any functions
 defined on this struct must use only the stable function pointers in

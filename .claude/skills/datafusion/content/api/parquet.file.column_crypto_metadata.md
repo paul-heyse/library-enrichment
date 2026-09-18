@@ -14,6 +14,9 @@ enum ColumnCryptoMetaData
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.column_crypto_metadata.ColumnCryptoMetaData.md).
+
+
 ColumnCryptoMetadata for a column chunk
 
 ---
@@ -29,6 +32,9 @@ struct EncryptionWithColumnKey
 **Fields**: `path_in_schema`, `key_metadata`
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.column_crypto_metadata.EncryptionWithColumnKey.md).
+
 
 Encryption metadata for a column chunk encrypted with a column-specific key
 

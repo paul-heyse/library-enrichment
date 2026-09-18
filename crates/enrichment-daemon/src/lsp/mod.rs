@@ -12,7 +12,6 @@
 
 pub mod client;
 mod diagnostics;
-pub mod document;
 pub mod framing;
 mod notifications;
 pub mod settings;

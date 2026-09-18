@@ -32,6 +32,9 @@ fn try_new<'b>(column_name: &'b str, arrow_schema: &'a Schema, parquet_schema: &
 fn with_missing_null_counts_as_zero(self, missing_null_counts_as_zero: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.statistics.StatisticsConverter.md).
+
+
 Extracts Parquet statistics as Arrow arrays
 
 This is used to convert Parquet statistics to Arrow [`ArrayRef`], with

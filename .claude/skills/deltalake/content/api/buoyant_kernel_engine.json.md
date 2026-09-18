@@ -5,6 +5,7 @@ Crate `buoyant_kernel_engine` · 1 public items · structured records in [`model
 ## DefaultJsonHandler
 
 `struct` · `buoyant_kernel_engine::json::DefaultJsonHandler`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.json.DefaultJsonHandler.md)
 
 Also reachable as `delta_kernel_default_engine::json::DefaultJsonHandler`
 

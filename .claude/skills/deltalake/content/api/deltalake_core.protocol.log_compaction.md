@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## compact_logs
 
 `function` · `deltalake_core::protocol::log_compaction::compact_logs`
+[Full member contracts, output types and access classification](../operations/deltalake_core.protocol.log_compaction.compact_logs.md)
 
 Also reachable as `deltalake::protocol::log_compaction::compact_logs`
 

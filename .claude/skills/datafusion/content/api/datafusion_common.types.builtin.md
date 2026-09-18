@@ -10,6 +10,9 @@ Crate `datafusion-common` · 19 public items · structured records in [`model/da
 fn logical_binary() -> LogicalTypeRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_binary.md).
+
+
 Getter for singleton instance of a logical type representing
 [`NativeType::Binary`].
 
@@ -22,6 +25,9 @@ Getter for singleton instance of a logical type representing
 ```rust
 fn logical_boolean() -> LogicalTypeRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_boolean.md).
+
 
 Getter for singleton instance of a logical type representing
 [`NativeType::Boolean`].
@@ -36,6 +42,9 @@ Getter for singleton instance of a logical type representing
 fn logical_date() -> LogicalTypeRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_date.md).
+
+
 Getter for singleton instance of a logical type representing
 [`NativeType::Date`].
 
@@ -48,6 +57,9 @@ Getter for singleton instance of a logical type representing
 ```rust
 fn logical_duration_microsecond() -> LogicalTypeRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_duration_microsecond.md).
+
 
 Getter for singleton instance of a logical type representing
 [`NativeType::Duration`] of unit [`Microsecond`].`
@@ -62,6 +74,9 @@ Getter for singleton instance of a logical type representing
 fn logical_float16() -> LogicalTypeRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_float16.md).
+
+
 Getter for singleton instance of a logical type representing
 [`NativeType::Float16`].
 
@@ -74,6 +89,9 @@ Getter for singleton instance of a logical type representing
 ```rust
 fn logical_float32() -> LogicalTypeRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_float32.md).
+
 
 Getter for singleton instance of a logical type representing
 [`NativeType::Float32`].
@@ -88,6 +106,9 @@ Getter for singleton instance of a logical type representing
 fn logical_float64() -> LogicalTypeRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_float64.md).
+
+
 Getter for singleton instance of a logical type representing
 [`NativeType::Float64`].
 
@@ -100,6 +121,9 @@ Getter for singleton instance of a logical type representing
 ```rust
 fn logical_int16() -> LogicalTypeRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_int16.md).
+
 
 Getter for singleton instance of a logical type representing
 [`NativeType::Int16`].
@@ -114,6 +138,9 @@ Getter for singleton instance of a logical type representing
 fn logical_int32() -> LogicalTypeRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_int32.md).
+
+
 Getter for singleton instance of a logical type representing
 [`NativeType::Int32`].
 
@@ -126,6 +153,9 @@ Getter for singleton instance of a logical type representing
 ```rust
 fn logical_int64() -> LogicalTypeRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_int64.md).
+
 
 Getter for singleton instance of a logical type representing
 [`NativeType::Int64`].
@@ -140,6 +170,9 @@ Getter for singleton instance of a logical type representing
 fn logical_int8() -> LogicalTypeRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_int8.md).
+
+
 Getter for singleton instance of a logical type representing
 [`NativeType::Int8`].
 
@@ -152,6 +185,9 @@ Getter for singleton instance of a logical type representing
 ```rust
 fn logical_interval_mdn() -> LogicalTypeRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_interval_mdn.md).
+
 
 Getter for singleton instance of a logical type representing
 [`NativeType::Interval`] of unit [`MonthDayNano`].`
@@ -166,6 +202,9 @@ Getter for singleton instance of a logical type representing
 fn logical_interval_year_month() -> LogicalTypeRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_interval_year_month.md).
+
+
 Getter for singleton instance of a logical type representing
 [`NativeType::Interval`] of unit [`YearMonth`].`
 
@@ -178,6 +217,9 @@ Getter for singleton instance of a logical type representing
 ```rust
 fn logical_null() -> LogicalTypeRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_null.md).
+
 
 Getter for singleton instance of a logical type representing
 [`NativeType::Null`].
@@ -192,6 +234,9 @@ Getter for singleton instance of a logical type representing
 fn logical_string() -> LogicalTypeRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_string.md).
+
+
 Getter for singleton instance of a logical type representing
 [`NativeType::String`].
 
@@ -204,6 +249,9 @@ Getter for singleton instance of a logical type representing
 ```rust
 fn logical_uint16() -> LogicalTypeRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_uint16.md).
+
 
 Getter for singleton instance of a logical type representing
 [`NativeType::UInt16`].
@@ -218,6 +266,9 @@ Getter for singleton instance of a logical type representing
 fn logical_uint32() -> LogicalTypeRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_uint32.md).
+
+
 Getter for singleton instance of a logical type representing
 [`NativeType::UInt32`].
 
@@ -231,6 +282,9 @@ Getter for singleton instance of a logical type representing
 fn logical_uint64() -> LogicalTypeRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_uint64.md).
+
+
 Getter for singleton instance of a logical type representing
 [`NativeType::UInt64`].
 
@@ -243,6 +297,9 @@ Getter for singleton instance of a logical type representing
 ```rust
 fn logical_uint8() -> LogicalTypeRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.builtin.logical_uint8.md).
+
 
 Getter for singleton instance of a logical type representing
 [`NativeType::UInt8`].

@@ -22,6 +22,9 @@ struct LogicalField
 fn from(value: &Field) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.field.LogicalField.md).
+
+
 A record of a logical type, its name and its nullability.
 
 ---
@@ -55,6 +58,9 @@ fn from_iter<T: IntoIterator<Item = LogicalFieldRef>>(iter: T) -> Self
 ```rust
 fn deref(&self) -> &Self::Target
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.field.LogicalFields.md).
+
 
 A cheaply cloneable, owned collection of [`LogicalFieldRef`].
 
@@ -90,6 +96,9 @@ fn from_iter<T: IntoIterator<Item = (i8, LogicalFieldRef)>>(iter: T) -> Self
 fn deref(&self) -> &Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.field.LogicalUnionFields.md).
+
+
 A cheaply cloneable, owned collection of [`LogicalFieldRef`] and their
 corresponding type ids.
 
@@ -102,6 +111,9 @@ corresponding type ids.
 ```rust
 type LogicalFieldRef = std::sync::Arc<LogicalField>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.field.LogicalFieldRef.md).
+
 
 A reference counted [`LogicalField`].
 

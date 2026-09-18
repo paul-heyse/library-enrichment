@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## PartitionResult
 
 `struct` · `deltalake_core::writer::record_batch::PartitionResult`
+[Full member contracts, output types and access classification](../operations/deltalake_core.writer.record_batch.PartitionResult.md)
 
 Also reachable as `deltalake::writer::record_batch::PartitionResult`
 
@@ -23,6 +24,7 @@ Helper container for partitioned record batches
 ## RecordBatchWriter
 
 `struct` · `deltalake_core::writer::record_batch::RecordBatchWriter`
+[Full member contracts, output types and access classification](../operations/deltalake_core.writer.record_batch.RecordBatchWriter.md)
 
 Also reachable as `deltalake::writer::RecordBatchWriter`, `deltalake::writer::record_batch::RecordBatchWriter`, `deltalake_core::writer::RecordBatchWriter`
 

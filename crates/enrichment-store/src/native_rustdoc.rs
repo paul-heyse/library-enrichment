@@ -1,125 +1,94 @@
 //! Owned, externally bounded rustdoc syntax extraction into native Arrow fact inputs.
-use crate::{
-    native_worker::{self, Request},
-    provider::FileWitness,
-};
+use crate::{native_worker, provider::FileWitness};
 use arrow::ipc::{reader::StreamReader, writer::StreamWriter};
 use datafusion::error::{DataFusionError, Result};
 use enrichment_core::{
     canonical,
     evidence::Artifact,
+    execution::rustdoc_decoder::{Report, Request, StreamReceipt},
     producer::rustdoc::facts::{self, Fact},
 };
-use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
     fs::File,
-    io::{self, Read, Seek, SeekFrom, Write},
-    path::{Path, PathBuf},
-    sync::{Arc, atomic::AtomicBool},
+    io::{self, Read, Seek, SeekFrom},
+    path::Path,
+    sync::Arc,
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct Extraction {
-    artifact_id: String,
-    output: PathBuf,
-}
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-struct StreamReceipt {
-    digest: String,
-    bytes: u64,
-    rows: u64,
-}
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct Receipt {
-    streams: BTreeMap<Fact, StreamReceipt>,
-}
-
 pub(crate) struct Captured {
-    pub directory: Arc<tempfile::TempDir>,
-    pub retention: Arc<File>,
+    pub directory: Arc<crate::PrivateDirectory>,
     pub producer_revision: String,
 }
+pub(crate) use enrichment_core::execution::rustdoc_decoder::INPUT_FILE;
 
 /// The mandatory worker owns decoding and rendering allocations. Native admission and
 /// public reachability start only after its exact Arrow output and EOS receipts are checked.
 pub async fn from_artifact(
     runtime: &crate::runtime::QueryRuntime,
+    retention: crate::retention::RetentionStore,
     blobs: crate::BlobStore,
     artifact: Artifact,
     summary_chars: usize,
 ) -> Result<crate::rust_normalize::RustFacts> {
-    let captured = native_worker::run_blocking(move |cancelled| {
-        let retention = crate::leases::shared(
-            blobs
-                .root()
-                .parent()
-                .ok_or_else(|| invalid("blob store parent missing"))?,
-        )?;
-        let mut capture = blobs.capture(&artifact, facts::MAX_BYTES)?;
-        let mut json = tempfile::NamedTempFile::new_in(blobs.root().join(".staging"))?;
-        io::copy(&mut capture, &mut json)?;
-        json.flush()?;
-        let (directory, producer_revision) = prepare(json.path(), &artifact, &cancelled)?;
-        Ok(Captured {
-            directory: Arc::new(directory),
-            retention,
-            producer_revision,
-        })
-    })
+    let directory = crate::PrivateDirectory::create(
+        &retention,
+        runtime,
+        crate::private_directory::Kind::Rustdoc,
+    )
     .await?;
+    let protection = retention
+        .enroll(
+            format!("rustdoc-input/{}", uuid::Uuid::new_v4()),
+            crate::retention::ProtectionKind::Query,
+            vec![crate::retention::Dependency::Artifact {
+                artifact_id: artifact.artifact_id.clone(),
+            }],
+        )
+        .await?;
+    let held = directory.clone();
+    let input = artifact.clone();
+    runtime
+        .blocking(move || {
+            // Exact protection follows the callback through cancellation; subsequent parsing
+            // owns its independent, durably enrolled private bytes.
+            let _protection = protection;
+            let mut capture = blobs.capture(&input, facts::MAX_BYTES)?;
+            let mut output = File::options()
+                .write(true)
+                .create_new(true)
+                .open(held.path().join(INPUT_FILE))?;
+            io::copy(&mut capture, &mut output)?;
+            output.sync_all()?;
+            File::open(held.path())?.sync_all()?;
+            Ok::<_, DataFusionError>(())
+        })
+        .await??;
+    let report = native_worker::run_request(
+        runtime,
+        crate::rustdoc_decoder_plan::request(runtime, &artifact, directory.path()).await?,
+        directory.clone(),
+    )
+    .await?;
+    let held = directory.clone();
+    let producer_revision = report.producer_revision.clone();
+    runtime
+        .blocking(move || validate_receipt(held.path(), &report))
+        .await??;
     Box::pin(crate::rust_normalize::RustFacts::open(
         runtime,
-        captured,
+        Captured {
+            directory,
+            producer_revision,
+        },
         summary_chars,
     ))
     .await
 }
 
-fn prepare(
-    path: &Path,
-    artifact: &Artifact,
-    cancelled: &AtomicBool,
-) -> Result<(tempfile::TempDir, String)> {
-    let directory = tempfile::Builder::new()
-        .prefix("rustdoc-facts-")
-        .tempdir_in(
-            path.parent()
-                .ok_or_else(|| invalid("capture parent missing"))?,
-        )?;
-    let report = native_worker::run_request(
-        Request {
-            extraction: Extraction {
-                artifact_id: artifact.artifact_id.clone(),
-                output: directory.path().to_owned(),
-            },
-            path: path.to_owned(),
-            digest: artifact.sha256.clone(),
-            bytes: artifact.size_bytes,
-            deadline: std::time::Duration::from_secs(30),
-        },
-        cancelled,
-    )?;
-    validate_receipt(directory.path(), &report.rustdoc)?;
-    Ok((directory, report.producer_revision))
-}
-
-fn validate_receipt(directory: &Path, receipt: &Receipt) -> Result<()> {
-    if receipt.streams.len() != Fact::ALL.len() {
-        return Err(invalid("rustdoc fact inventory"));
-    }
-    for fact in Fact::ALL {
-        let stream = receipt
-            .streams
-            .get(&fact)
-            .ok_or_else(|| invalid("rustdoc fact missing"))?;
-        if !(8..=facts::MAX_BYTES).contains(&stream.bytes) || stream.rows > facts::MAX_ROWS {
-            return Err(invalid("rustdoc fact stream bound"));
-        }
-        let path = directory.join(fact.name()).with_extension("arrow");
+fn validate_receipt(directory: &Path, receipt: &Report) -> Result<()> {
+    for stream in &receipt.streams {
+        let path = directory.join(stream.fact.name()).with_extension("arrow");
         let witness = FileWitness::read(&path)?;
         let (digest, bytes) = canonical::sha256_reader(File::open(&path)?, facts::MAX_BYTES)?;
         if digest != stream.digest || bytes != stream.bytes {
@@ -134,7 +103,7 @@ fn validate_receipt(directory: &Path, receipt: &Receipt) -> Result<()> {
             return Err(invalid("rustdoc fact EOS missing"));
         }
         let mut reader = StreamReader::try_new(&mut file, None)?;
-        if reader.schema() != fact.schema() {
+        if reader.schema() != stream.fact.schema() {
             return Err(invalid("rustdoc fact schema mismatch"));
         }
         let mut rows = 0;
@@ -162,16 +131,7 @@ fn validate_receipt(directory: &Path, receipt: &Receipt) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn extract(
-    source: &mut File,
-    extraction: &Extraction,
-    request: &Request,
-) -> Result<Receipt> {
-    if !extraction.output.is_absolute()
-        || extraction.artifact_id != enrichment_core::evidence::artifact_id_for(&request.digest)
-    {
-        return Err(invalid("invalid native extraction identity or output"));
-    }
+pub(crate) fn extract(source: &mut File, request: &Request) -> Result<Vec<StreamReceipt>> {
     let mut payload = String::new();
     source
         .take(facts::MAX_BYTES + 1)
@@ -185,7 +145,7 @@ pub(crate) fn extract(
             file: File::options()
                 .write(true)
                 .create_new(true)
-                .open(extraction.output.join(fact.name()).with_extension("arrow"))?,
+                .open(request.root.join(fact.name()).with_extension("arrow"))?,
             bytes: 0,
             limit: facts::MAX_BYTES,
         };
@@ -194,31 +154,29 @@ pub(crate) fn extract(
             (StreamWriter::try_new(output, &fact.schema())?, 0_u64),
         );
     }
-    facts::extract(&request.path, &payload, &mut |fact, batch| {
+    facts::extract(&request.input(), &payload, &mut |fact, batch| {
         let (writer, rows) = outputs.get_mut(&fact).ok_or_else(|| {
             arrow::error::ArrowError::InvalidArgumentError("fact writer missing".into())
         })?;
         *rows += batch.num_rows() as u64;
         writer.write(&batch)
     })?;
-    let mut streams = BTreeMap::new();
+    let mut streams = Vec::with_capacity(Fact::ALL.len());
     for (fact, (mut writer, rows)) in outputs {
         writer.finish()?;
         writer.get_ref().file.sync_all()?;
         drop(writer);
-        let path = extraction.output.join(fact.name()).with_extension("arrow");
+        let path = request.root.join(fact.name()).with_extension("arrow");
         let (digest, bytes) = canonical::sha256_reader(File::open(path)?, facts::MAX_BYTES)?;
-        streams.insert(
+        streams.push(StreamReceipt {
             fact,
-            StreamReceipt {
-                digest,
-                bytes,
-                rows,
-            },
-        );
+            digest,
+            bytes,
+            rows,
+        });
     }
-    File::open(&extraction.output)?.sync_all()?;
-    Ok(Receipt { streams })
+    File::open(&request.root)?.sync_all()?;
+    Ok(streams)
 }
 fn invalid(message: impl Into<String>) -> DataFusionError {
     DataFusionError::Execution(message.into())

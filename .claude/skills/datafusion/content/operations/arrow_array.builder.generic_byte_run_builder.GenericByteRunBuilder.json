@@ -1,0 +1,3621 @@
+[
+  {
+    "id": "24a011c2948c766aabe58bb5",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "name": "GenericByteRunBuilder",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct GenericByteRunBuilder<R, V> where R: ArrowPrimitiveType, V: ByteArrayType",
+    "docs": "Builder for [`RunArray`] of [`GenericByteArray`](crate::array::GenericByteArray)\n\n# Example:\n\n```\n\n# use arrow_array::builder::GenericByteRunBuilder;\n# use arrow_array::{GenericByteArray, BinaryArray};\n# use arrow_array::types::{BinaryType, Int16Type};\n# use arrow_array::{Array, Int16Array};\n# use arrow_array::cast::AsArray;\n\nlet mut builder =\nGenericByteRunBuilder::<Int16Type, BinaryType>::new();\nbuilder.extend([Some(b\"abc\"), Some(b\"abc\"), None, Some(b\"def\")].into_iter());\nbuilder.append_value(b\"def\");\nbuilder.append_null();\nlet array = builder.finish();\n\nassert_eq!(array.run_ends().values(), &[2, 3, 5, 6]);\n\nlet av = array.values();\n\nassert!(!av.is_null(0));\nassert!(av.is_null(1));\nassert!(!av.is_null(2));\nassert!(av.is_null(3));\n\n// Values are polymorphic and so require a downcast.\nlet ava: &BinaryArray = av.as_binary();\n\nassert_eq!(ava.value(0), b\"abc\");\nassert_eq!(ava.value(2), b\"def\");\n```",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        65,
+        1
+      ],
+      "end": [
+        76,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "R",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "V",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "R"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowPrimitiveType",
+                        "id": 307,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "V"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ByteArrayType",
+                        "id": 174,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "impls": [
+          3078,
+          3084,
+          3085,
+          3086,
+          3087,
+          3088,
+          3089,
+          3090,
+          3091,
+          3092,
+          3093,
+          3094,
+          3095,
+          3096,
+          3097,
+          3098,
+          3099,
+          3101,
+          3103,
+          3110,
+          3112
+        ]
+      }
+    },
+    "type_references": {
+      "307": "arrow_array::types::ArrowPrimitiveType",
+      "174": "arrow_array::types::ByteArrayType"
+    },
+    "impl_context": null,
+    "links": {
+      "`RunArray`": 1375,
+      "crate::array::GenericByteArray": 0
+    },
+    "link_paths": {
+      "`RunArray`": "arrow_array::array::run_array::RunArray",
+      "crate::array::GenericByteArray": "arrow_array::array::byte_array::GenericByteArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3075",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-24a011c2948c766aabe58bb5",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RunArray`": "../operations/arrow_array.array.run_array.RunArray.md#op-f0742b2d9e045922a076478f",
+      "crate::array::GenericByteArray": "../operations/arrow_array.array.byte_array.GenericByteArray.md#op-e39e3ecbe5a4126397f47443"
+    }
+  },
+  {
+    "id": "0a0e1418b97f13973b48a8be",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::append_null",
+    "name": "append_null",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_null(&mut self)",
+    "docs": "Appends null to the logical array encoded by the RunArray.",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        187,
+        5
+      ],
+      "end": [
+        194,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          158,
+          1
+        ],
+        "end": [
+          287,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3081",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-0a0e1418b97f13973b48a8be",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4675b5404cbb7f50916e83ca",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::append_option",
+    "name": "append_option",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_option(&mut self, input_value: Option<impl AsRef<V::Native>>)",
+    "docs": "Appends optional value to the logical array encoded by the RunArray.",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        164,
+        5
+      ],
+      "end": [
+        169,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "input_value",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "impl_trait": [
+                              {
+                                "trait_bound": {
+                                  "trait": {
+                                    "path": "AsRef",
+                                    "id": 190,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "qualified_path": {
+                                                "name": "Native",
+                                                "args": null,
+                                                "self_type": {
+                                                  "generic": "V"
+                                                },
+                                                "trait": {
+                                                  "path": "",
+                                                  "id": 174,
+                                                  "args": null
+                                                }
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  },
+                                  "generic_params": [],
+                                  "modifier": "none"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl AsRef<V::Native>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "AsRef",
+                          "id": 190,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "qualified_path": {
+                                      "name": "Native",
+                                      "args": null,
+                                      "self_type": {
+                                        "generic": "V"
+                                      },
+                                      "trait": {
+                                        "path": "",
+                                        "id": 174,
+                                        "args": null
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "190": "core::convert::AsRef",
+      "174": "arrow_array::types::ByteArrayType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          158,
+          1
+        ],
+        "end": [
+          287,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3079",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-4675b5404cbb7f50916e83ca",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7f54c6510a7de2e2ffc83c8e",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::append_value",
+    "name": "append_value",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_value(&mut self, input_value: impl AsRef<V::Native>)",
+    "docs": "Appends value to the logical array encoded by the RunArray.",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        172,
+        5
+      ],
+      "end": [
+        184,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "input_value",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsRef",
+                        "id": 190,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "qualified_path": {
+                                    "name": "Native",
+                                    "args": null,
+                                    "self_type": {
+                                      "generic": "V"
+                                    },
+                                    "trait": {
+                                      "path": "",
+                                      "id": 174,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl AsRef<V::Native>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "AsRef",
+                          "id": 190,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "qualified_path": {
+                                      "name": "Native",
+                                      "args": null,
+                                      "self_type": {
+                                        "generic": "V"
+                                      },
+                                      "trait": {
+                                        "path": "",
+                                        "id": 174,
+                                        "args": null
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "190": "core::convert::AsRef",
+      "174": "arrow_array::types::ByteArrayType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          158,
+          1
+        ],
+        "end": [
+          287,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3080",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-7f54c6510a7de2e2ffc83c8e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3773cf9a93122a3f23b96e4f",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::as_any",
+    "name": "as_any",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any(&self) -> &dyn Any",
+    "docs": "Returns the builder as a non-mutable `Any` reference.",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        127,
+        5
+      ],
+      "end": [
+        129,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          156,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3104",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-3773cf9a93122a3f23b96e4f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c910e5d045370726c1c04cf3",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::as_any_mut",
+    "name": "as_any_mut",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any_mut(&mut self) -> &mut dyn Any",
+    "docs": "Returns the builder as a mutable `Any` reference.",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        132,
+        5
+      ],
+      "end": [
+        134,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          156,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3105",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-c910e5d045370726c1c04cf3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b0b9dff4b7eabdfef8967a31",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::default",
+    "name": "default",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn default() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        83,
+        5
+      ],
+      "end": [
+        85,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          78,
+          1
+        ],
+        "end": [
+          86,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3102",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-b0b9dff4b7eabdfef8967a31",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3397881d45a1a92ad6bc0994",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::extend",
+    "name": "extend",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn extend<T: IntoIterator<Item = Option<S>>>(&mut self, iter: T)",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        295,
+        5
+      ],
+      "end": [
+        299,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "iter",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "IntoIterator",
+                          "id": 157,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Option",
+                                          "id": 12,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "generic": "S"
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "157": "core::iter::traits::collect::IntoIterator",
+      "12": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Extend",
+        "id": "core::iter::traits::collect::Extend",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "Option",
+                    "id": "core::option::Option",
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "generic": "S"
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::iter::traits::collect::Extend",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "S",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "S"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "AsRef",
+                      "id": "core::convert::AsRef",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "qualified_path": {
+                                  "name": "Native",
+                                  "args": null,
+                                  "self_type": {
+                                    "generic": "V"
+                                  },
+                                  "trait": {
+                                    "path": "",
+                                    "id": "arrow_array::types::ByteArrayType",
+                                    "args": null
+                                  }
+                                }
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          289,
+          1
+        ],
+        "end": [
+          300,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3111",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-3397881d45a1a92ad6bc0994",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "633ee28695b3b5250292feec",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> RunArray<R>",
+    "docs": "Creates the RunArray and resets the builder.\nPanics if RunArray cannot be built.",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        198,
+        5
+      ],
+      "end": [
+        212,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "RunArray",
+              "id": 1375,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "R"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1375": "arrow_array::array::run_array::RunArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          158,
+          1
+        ],
+        "end": [
+          287,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3082",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-633ee28695b3b5250292feec",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b0d72ac4e6f3f93dc5dd35eb",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> ArrayRef",
+    "docs": "Builds the array and reset this builder.",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        148,
+        5
+      ],
+      "end": [
+        150,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          156,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3108",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-b0d72ac4e6f3f93dc5dd35eb",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "64d000c8f57a14a99433aa05",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> ArrayRef",
+    "docs": "Builds the array without resetting the builder.",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        153,
+        5
+      ],
+      "end": [
+        155,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          156,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3109",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-64d000c8f57a14a99433aa05",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e083060b6fa4a70fe13d482d",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> RunArray<R>",
+    "docs": "Creates the RunArray and without resetting the builder.\nPanics if RunArray cannot be built.",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        216,
+        5
+      ],
+      "end": [
+        230,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "RunArray",
+              "id": 1375,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "R"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1375": "arrow_array::array::run_array::RunArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          158,
+          1
+        ],
+        "end": [
+          287,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3083",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-e083060b6fa4a70fe13d482d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6a8879864dbb6e68a58c2c2a",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::fmt",
+    "name": "fmt",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        64,
+        10
+      ],
+      "end": [
+        64,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 117,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 118,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "117": "core::fmt::Formatter",
+      "118": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "$crate::fmt::Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "$crate::fmt::Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          64,
+          10
+        ],
+        "end": [
+          64,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3100",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-6a8879864dbb6e68a58c2c2a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "259042d18703da4b8ec9d450",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::into_box_any",
+    "name": "into_box_any",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_box_any(Box<self>) -> Box<dyn Any>",
+    "docs": "Returns the boxed builder as a box of `Any`.",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        137,
+        5
+      ],
+      "end": [
+        139,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Box",
+                  "id": 1788,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Box",
+              "id": 1788,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "Any",
+                                "id": 106,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1788": "alloc::boxed::Box",
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          156,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3106",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-259042d18703da4b8ec9d450",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6c9d6d86a2299f25e2f6f69b",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::len",
+    "name": "len",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Returns the length of logical array encoded by\nthe eventual runs array.",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        143,
+        5
+      ],
+      "end": [
+        145,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          121,
+          1
+        ],
+        "end": [
+          156,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3107",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-6c9d6d86a2299f25e2f6f69b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e541b14fa3f261618ab43551",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::new",
+    "name": "new",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "Creates a new `GenericByteRunBuilder`",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        94,
+        5
+      ],
+      "end": [
+        103,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          88,
+          1
+        ],
+        "end": [
+          119,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3076",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-e541b14fa3f261618ab43551",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "323892f4bad9029a12d1b56c",
+    "path": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder::with_capacity",
+    "name": "with_capacity",
+    "owner": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_capacity(capacity: usize, data_capacity: usize) -> Self",
+    "docs": "Creates a new `GenericByteRunBuilder` with the provided capacity\n\n`capacity`: the expected number of run-end encoded values.\n`data_capacity`: the expected number of bytes of run end encoded values",
+    "span": {
+      "filename": "src/builder/generic_byte_run_builder.rs",
+      "begin": [
+        109,
+        5
+      ],
+      "end": [
+        118,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "capacity",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "data_capacity",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericByteRunBuilder",
+          "id": "arrow_array::builder::generic_byte_run_builder::GenericByteRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ByteArrayType",
+                      "id": "arrow_array::types::ByteArrayType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_byte_run_builder.rs",
+        "begin": [
+          88,
+          1
+        ],
+        "end": [
+          119,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3077",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.json",
+    "anchor": "op-323892f4bad9029a12d1b56c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

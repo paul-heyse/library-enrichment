@@ -14,6 +14,9 @@ struct ListUnnest
 
 **Derives**: Clone, Copy, Debug, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.unnest.ListUnnest.md).
+
+
 ---
 
 ## UnnestExec
@@ -61,6 +64,9 @@ fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.unnest.UnnestExec.md).
+
 
 Unnest the given columns (either with type struct or list)
 For list unnesting, each row is vertically transformed into multiple rows

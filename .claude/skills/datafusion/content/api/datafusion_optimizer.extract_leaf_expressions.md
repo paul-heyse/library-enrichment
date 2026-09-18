@@ -27,6 +27,9 @@ fn name(&self) -> &str
 fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.md).
+
+
 Extracts `MoveTowardsLeafNodes` sub-expressions from non-projection nodes
 into **extraction projections** (pass 1 of 2).
 
@@ -97,6 +100,9 @@ fn apply_order(&self) -> Option<ApplyOrder>
 fn name(&self) -> &str
 fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.md).
+
 
 Pushes extraction projections down through schema-preserving nodes towards
 leaf nodes (pass 2 of 2, after [`ExtractLeafExpressions`]).

@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## record_batch_from_message
 
 `function` · `deltalake_core::writer::utils::record_batch_from_message`
+[Full member contracts, output types and access classification](../operations/deltalake_core.writer.utils.record_batch_from_message.md)
 
 Also reachable as `deltalake::writer::utils::record_batch_from_message`
 
@@ -19,6 +20,7 @@ Convert a vector of json values to a RecordBatch
 ## ShareableBuffer
 
 `struct` · `deltalake_core::writer::utils::ShareableBuffer`
+[Full member contracts, output types and access classification](../operations/deltalake_core.writer.utils.ShareableBuffer.md)
 
 Also reachable as `deltalake::writer::utils::ShareableBuffer`
 

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## ArrowEngineData
 
 `struct` · `buoyant_kernel::engine::arrow_data::ArrowEngineData`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_data.ArrowEngineData.md)
 
 Also reachable as `delta_kernel::engine::arrow_data::ArrowEngineData`
 
@@ -51,6 +52,7 @@ example. When in doubt, call [`fix_nested_null_masks`] first.
 ## EngineDataArrowExt
 
 `trait` · `buoyant_kernel::engine::arrow_data::EngineDataArrowExt`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_data.EngineDataArrowExt.md)
 
 Also reachable as `delta_kernel::engine::arrow_data::EngineDataArrowExt`
 

@@ -21,6 +21,9 @@ fn encoded(&self) -> &str
 fn push(&mut self, key: &str, value: &str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.tags.TagSet.md).
+
+
 A collection of key value pairs used to annotate objects
 
 <https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-tagging.html>

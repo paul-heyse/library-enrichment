@@ -21,6 +21,9 @@ fn new_with_tracked(buf: TrackedWrite<W>, metadata: &'a ParquetMetaData) -> Self
 fn with_write_path_in_schema(self, val: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.writer.ParquetMetaDataWriter.md).
+
+
 Writes [`ParquetMetaData`] to a byte stream
 
 This structure handles the details of writing the various parts of Parquet

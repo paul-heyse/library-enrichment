@@ -14,6 +14,9 @@ enum LimitEffect
 
 **Variants**: `None`, `Unknown`, `Relative`, `Absolute`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udwf.LimitEffect.md).
+
+
 the effect this function will have on the limit pushdown
 
 ---
@@ -29,6 +32,9 @@ enum ReversedUDWF
 ```
 
 **Variants**: `Identical`, `NotSupported`, `Reversed`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udwf.ReversedUDWF.md).
+
 
 ---
 
@@ -86,6 +92,9 @@ fn coerce_types(&self, arg_types: &[DataType]) -> Result<Vec<DataType>>
 fn name(&self) -> &str
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udwf.WindowUDF.md).
+
 
 Logical representation of a user-defined window function (UDWF).
 
@@ -154,6 +163,9 @@ fn signature(&self) -> &Signature
 fn simplify(&self) -> Option<WindowFunctionSimplification>
 fn sort_options(&self) -> Option<SortOptions>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udwf.WindowUDFImpl.md).
+
 
 Trait for implementing [`WindowUDF`].
 

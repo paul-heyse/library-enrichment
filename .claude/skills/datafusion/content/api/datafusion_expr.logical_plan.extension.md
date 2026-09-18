@@ -31,6 +31,9 @@ fn supports_limit_pushdown(&self) -> bool
 fn with_exprs_and_inputs(&self, exprs: Vec<Expr>, inputs: Vec<LogicalPlan>) -> Result<Arc<dyn UserDefinedLogicalNode>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.extension.UserDefinedLogicalNode.md).
+
+
 This defines the interface for [`LogicalPlan`] nodes that can be
 used to extend DataFusion with custom relational operators.
 
@@ -63,6 +66,9 @@ fn schema(&self) -> &DFSchemaRef
 fn supports_limit_pushdown(&self) -> bool
 fn with_exprs_and_inputs(&self, exprs: Vec<Expr>, inputs: Vec<LogicalPlan>) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.extension.UserDefinedLogicalNodeCore.md).
+
 
 This trait facilitates implementation of the [`UserDefinedLogicalNode`].
 

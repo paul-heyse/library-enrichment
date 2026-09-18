@@ -4,6 +4,14 @@
 //! traversal supplies native validation expressions and refuses lossy struct projections.
 use std::collections::HashSet;
 
+mod ipc;
+mod shape;
+pub use ipc::decode as decode_ipc;
+
+const MAX_DEPTH: usize = 64;
+const MAX_FIELDS: usize = 16_384;
+const MAX_METADATA_BYTES: usize = 1_048_576;
+
 use arrow::datatypes::{DataType, Field, FieldRef, Fields, Schema};
 use datafusion::{
     common::{Column, DataFusionError, Result},
@@ -205,49 +213,109 @@ pub fn required(field: &Field) -> bool {
 /// # Errors
 /// Duplicate names and excessive field depth/count/metadata are rejected.
 pub fn validate(schema: &Schema) -> Result<()> {
-    let mut count = 0;
-    let mut bytes = schema
-        .metadata()
-        .iter()
-        .map(|(k, v)| k.len() + v.len())
-        .sum();
-    validate_fields(schema.fields(), 0, &mut count, &mut bytes)
+    let mut budget = shape::Budget::default();
+    budget.metadata(schema.metadata().iter())?;
+    budget.fields(schema.fields(), false)?;
+    validate_fields(schema.fields(), 0)
 }
 
-fn validate_fields(
+pub(crate) fn validate_derived_fields(fields: &Fields) -> Result<()> {
+    shape::Budget::default().fields(fields, true)
+}
+
+fn validate_reference_path(path: &[String]) -> Result<()> {
+    if path.is_empty()
+        || path.len() > 64
+        || path
+            .iter()
+            .any(|part| part.is_empty() || part.len() > 256 || part.chars().any(char::is_control))
+    {
+        return datafusion::common::plan_err!("invalid bounded reference path");
+    }
+    Ok(())
+}
+
+fn validate_reference_scope(
     fields: &Fields,
-    depth: usize,
-    count: &mut usize,
-    bytes: &mut usize,
+    scope: &[crate::native_union::ScopeKey],
 ) -> Result<()> {
-    if depth > 64 {
+    if scope.len() > 16 {
+        return datafusion::common::plan_err!("reference scope exceeds bound");
+    }
+    for binding in scope {
+        validate_reference_path(&binding.source)?;
+        validate_reference_path(&binding.target)?;
+        let mut local = fields;
+        for (index, segment) in binding.source.iter().enumerate() {
+            let (_, member) = local
+                .find(segment)
+                .ok_or_else(|| DataFusionError::Plan("reference scope source is absent".into()))?;
+            if index + 1 < binding.source.len() {
+                let DataType::Struct(children) = member.data_type() else {
+                    return datafusion::common::plan_err!("reference scope traverses a non-record");
+                };
+                local = children;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn validate_vocabulary(values: &[String], kind: &DataType) -> Result<()> {
+    let unique: HashSet<_> = values.iter().collect();
+    if values.is_empty()
+        || values.len() > 4096
+        || unique.len() != values.len()
+        || values
+            .iter()
+            .any(|value| value.is_empty() || value.len() > 256)
+        || !matches!(
+            kind,
+            DataType::Utf8 | DataType::LargeUtf8 | DataType::Utf8View
+        )
+    {
+        return datafusion::common::plan_err!("invalid bounded vocabulary declaration");
+    }
+    Ok(())
+}
+
+fn validate_fields(fields: &Fields, depth: usize) -> Result<()> {
+    if depth > MAX_DEPTH {
         return Err(DataFusionError::ResourcesExhausted(
             "schema nesting exceeds 64".into(),
         ));
     }
-    let mut names = HashSet::new();
     let mut wire_names = HashSet::new();
     let mut sections = HashSet::new();
-    for field in fields {
-        *count += 1;
-        *bytes += field.name().len()
-            + field
-                .metadata()
-                .iter()
-                .map(|(k, v)| k.len() + v.len())
-                .sum::<usize>();
-        if *count > 16_384 || *bytes > 1_048_576 {
-            return Err(DataFusionError::ResourcesExhausted(
-                "schema declaration exceeds field/metadata bounds".into(),
-            ));
+    for declared in fields {
+        // Encodings do not invent a second semantic value. Validate the actual decoded
+        // declaration, including its vocabulary and physical rule requirements.
+        let mut field = declared.as_ref().clone();
+        let mut depth = depth;
+        while let Some(decoded) = crate::native_collections::decoded_field(&field) {
+            if let DataType::RunEndEncoded(ends, _) = field.data_type()
+                && (ends.metadata().keys().any(|key| {
+                    key.starts_with("enrichment.") || key.starts_with("ARROW:extension:")
+                }) || field.metadata().contains_key("enrichment.rule")
+                    || field.metadata().contains_key("enrichment.vocabulary"))
+            {
+                return datafusion::common::plan_err!(
+                    "run encoding rules belong to the value field"
+                );
+            }
+            field = decoded.with_name(declared.name());
+            depth += 1;
+            if depth > MAX_DEPTH {
+                return datafusion::common::plan_err!("encoded field nesting exceeds bound");
+            }
         }
-        if field.name().is_empty() || !names.insert(field.name()) {
-            return Err(DataFusionError::Plan(format!(
-                "empty or duplicate schema field {:?}",
-                field.name()
-            )));
+        let field = &field;
+        if let Some(encoded) = field.metadata().get("enrichment.vocabulary") {
+            let values: Vec<String> = serde_json::from_str(encoded).map_err(|error| {
+                DataFusionError::Plan(format!("invalid native vocabulary: {error}"))
+            })?;
+            validate_vocabulary(&values, field.data_type())?;
         }
-        crate::native_types::validate_field(field)?;
         let mut flattened = false;
         if let Some(encoded) = field.metadata().get("enrichment.rule") {
             use crate::native_union::Rule;
@@ -279,36 +347,22 @@ fn validate_fields(
                     }
                 }
                 Rule::ScopedReference { scope, .. } => {
-                    if scope.is_empty()
-                        || scope.len() > 16
-                        || scope.iter().any(|binding| {
-                            [&binding.source, &binding.target].into_iter().any(|path| {
-                                path.is_empty()
-                                    || path.len() > 64
-                                    || path.iter().any(|part| part.is_empty() || part.len() > 256)
-                            })
-                        })
+                    if scope.is_empty() {
+                        return datafusion::common::plan_err!("empty scoped reference");
+                    }
+                    validate_reference_scope(fields, &scope)?;
+                }
+                Rule::ForeignKey {
+                    table,
+                    field,
+                    scope,
+                } => {
+                    if table.is_empty() || table.len() > 256 || table.chars().any(char::is_control)
                     {
-                        return Err(DataFusionError::Plan(
-                            "invalid bounded reference scope".into(),
-                        ));
+                        return datafusion::common::plan_err!("invalid reference table name");
                     }
-                    for binding in scope {
-                        let mut local = fields.clone();
-                        for (index, segment) in binding.source.iter().enumerate() {
-                            let (_, member) = local.find(segment).ok_or_else(|| {
-                                DataFusionError::Plan("reference scope source is absent".into())
-                            })?;
-                            if index + 1 < binding.source.len() {
-                                let DataType::Struct(children) = member.data_type() else {
-                                    return Err(DataFusionError::Plan(
-                                        "reference scope traverses a non-record".into(),
-                                    ));
-                                };
-                                local = children.clone();
-                            }
-                        }
-                    }
+                    validate_reference_path(&field)?;
+                    validate_reference_scope(fields, &scope)?;
                 }
                 Rule::SequenceBounds { min, max } | Rule::UnsignedRange { min, max }
                     if min > max =>
@@ -322,6 +376,17 @@ fn validate_fields(
                     ) =>
                 {
                     return datafusion::common::plan_err!("unsigned bound requires unsigned value");
+                }
+                Rule::BinaryBytes { max }
+                    if max > crate::native_bytes::MAX_BYTES as u64
+                        || !matches!(
+                            field.data_type(),
+                            DataType::Binary | DataType::LargeBinary | DataType::BinaryView
+                        ) =>
+                {
+                    return datafusion::common::plan_err!(
+                        "binary byte bound requires a bounded binary representation"
+                    );
                 }
                 Rule::UnsignedRange { max, .. } => {
                     let largest = match field.data_type() {
@@ -337,20 +402,7 @@ fn validate_fields(
                         );
                     }
                 }
-                Rule::Vocabulary(values) => {
-                    let unique: HashSet<_> = values.iter().collect();
-                    if values.is_empty()
-                        || values.len() > 4096
-                        || unique.len() != values.len()
-                        || values
-                            .iter()
-                            .any(|value| value.is_empty() || value.len() > 256)
-                    {
-                        return Err(DataFusionError::Plan(
-                            "invalid bounded vocabulary declaration".into(),
-                        ));
-                    }
-                }
+                Rule::Vocabulary(values) => validate_vocabulary(&values, field.data_type())?,
                 Rule::RangeEnd { start, .. } | Rule::ArtifactIdentity { digest: start } => {
                     if !fields.iter().any(|other| {
                         other.name() == &start
@@ -364,7 +416,7 @@ fn validate_fields(
                 Rule::Sequence | Rule::Set | Rule::SequenceBounds { .. }
                     if !matches!(
                         field.data_type(),
-                        DataType::List(_) | DataType::LargeList(_)
+                        DataType::List(_) | DataType::LargeList(_) | DataType::FixedSizeList(_, _)
                     ) =>
                 {
                     return Err(DataFusionError::Plan(
@@ -398,12 +450,22 @@ fn validate_fields(
             }
         }
         match field.data_type() {
-            DataType::Struct(children) => validate_fields(children, depth + 1, count, bytes)?,
+            DataType::Struct(children) => validate_fields(children, depth + 1)?,
             DataType::List(item)
             | DataType::LargeList(item)
+            | DataType::ListView(item)
+            | DataType::LargeListView(item)
             | DataType::FixedSizeList(item, _)
-            | DataType::Map(item, _) => {
-                validate_fields(&vec![item.clone()].into(), depth + 1, count, bytes)?
+            | DataType::Map(item, _) => validate_fields(&vec![item.clone()].into(), depth + 1)?,
+            DataType::Union(fields, _) => {
+                let fields = fields
+                    .iter()
+                    .map(|(_, field)| field.clone())
+                    .collect::<Vec<_>>();
+                validate_fields(&fields.into(), depth + 1)?;
+            }
+            DataType::RunEndEncoded(ends, values) => {
+                validate_fields(&vec![ends.clone(), values.clone()].into(), depth + 1)?;
             }
             DataType::Dictionary(_, kind) => {
                 validate_fields(
@@ -414,8 +476,6 @@ fn validate_fields(
                     ))]
                     .into(),
                     depth + 1,
-                    count,
-                    bytes,
                 )?;
             }
             _ => {}
@@ -629,6 +689,29 @@ pub fn array_layout(
 pub fn check_input(actual: &Schema, expected: &Schema) -> Result<()> {
     validate(actual)?;
     validate(expected)?;
+    check_fields(actual, expected)
+}
+
+/// A native selection can project away a reference's sibling bindings or rename its
+/// key. Validate its bounded derived Fields and the complete destination declaration,
+/// without pretending the selection is a new source relation or granting reference authority.
+/// Source/provider admission and semantic operator checks remain independently mandatory.
+pub fn check_record_selection(actual: &Schema, expected: &Schema) -> Result<()> {
+    shape::Budget::default().metadata(actual.metadata().iter())?;
+    validate_derived_fields(actual.fields())?;
+    validate(expected)?;
+    check_fields(actual, expected)?;
+    for field in expected.fields() {
+        crate::native_analysis::compatible(
+            actual.field_with_name(field.name())?,
+            field,
+            "typed record decoder",
+        )?;
+    }
+    Ok(())
+}
+
+fn check_fields(actual: &Schema, expected: &Schema) -> Result<()> {
     if actual.fields().len() != expected.fields().len() {
         return Err(DataFusionError::Plan(
             "input schema field count differs".into(),
@@ -824,6 +907,21 @@ fn scalar_field(
 /// # Errors
 /// Invalid declarations or native planning failures refuse admission before any write.
 pub fn intrinsic_violations(frame: DataFrame, schema: &Schema) -> Result<Option<DataFrame>> {
+    intrinsic(frame, schema, None)
+}
+
+/// The same intrinsic compiler, retaining a declared row identity for diagnostics.
+/// # Errors
+/// Invalid declarations, missing keys or native planning failures refuse admission.
+pub fn intrinsic_witness(
+    frame: DataFrame,
+    schema: &Schema,
+    key: &str,
+) -> Result<Option<DataFrame>> {
+    intrinsic(frame, schema, Some(key))
+}
+
+fn intrinsic(frame: DataFrame, schema: &Schema, key: Option<&str>) -> Result<Option<DataFrame>> {
     validate(schema)?;
     let mut checks = Vec::new();
     let mut flags = Vec::new();
@@ -840,15 +938,15 @@ pub fn intrinsic_violations(frame: DataFrame, schema: &Schema) -> Result<Option<
             match rule {
                 Rule::RangeEnd { start, .. } => {
                     contextual = true;
-                    predicates.push(value.lt(datafusion::prelude::col(start)));
+                    predicates.push(value.lt(Expr::Column(Column::from_name(start))));
                 }
                 Rule::ArtifactIdentity { digest } => {
                     contextual = true;
                     predicates.push(value.not_eq(datafusion::functions::string::expr_fn::concat(
-                        vec![lit("art_"), datafusion::prelude::col(digest)],
+                        vec![lit("art_"), Expr::Column(Column::from_name(digest))],
                     )));
                 }
-                Rule::ScopedReference { .. } => contextual = true,
+                Rule::ScopedReference { .. } | Rule::ForeignKey { .. } => contextual = true,
                 _ => {}
             }
         }
@@ -886,9 +984,21 @@ pub fn intrinsic_violations(frame: DataFrame, schema: &Schema) -> Result<Option<
     let Some(invalid) = any_invalid(flags) else {
         return Ok(None);
     };
-    Ok(Some(
-        frame.select(checks)?.filter(invalid)?.limit(0, Some(1))?,
-    ))
+    let witness = key.map(|key| {
+        let name = (0..)
+            .map(|index| format!("native_witness_{index}"))
+            .find(|name| schema.field_with_name(name).is_err())
+            .expect("finite schema");
+        checks.push(Expr::Column(Column::from_name(key)).alias(&name));
+        (name, key)
+    });
+    let selected = frame.select(checks)?.filter(invalid)?;
+    Ok(Some(match witness {
+        Some((name, key)) => {
+            selected.select(vec![Expr::Column(Column::from_name(name)).alias(key)])?
+        }
+        None => selected.limit(0, Some(1))?,
+    }))
 }
 
 fn any_invalid(predicates: impl IntoIterator<Item = Expr>) -> Option<Expr> {
@@ -938,8 +1048,16 @@ fn collection_invalid(
     use datafusion::functions_nested::expr_fn::{
         array_distinct, array_length, map_keys, map_values,
     };
+    if let Some(decoded) = crate::native_collections::decoded_field(field) {
+        return collection_invalid(
+            &decoded,
+            crate::native_collections::decoded_values().call(vec![value]),
+            inside,
+            depth + 1,
+        );
+    }
     let mut invalid = Vec::new();
-    if inside && required(field) {
+    if inside && required(field) && !matches!(field.data_type(), DataType::Union(_, _)) {
         invalid.push(value.clone().is_null());
     }
     if let Some(predicate) =
@@ -1009,10 +1127,26 @@ fn collection_invalid(
             )?);
             any_invalid(predicates)
         }
+        DataType::Union(children, _) => {
+            let tag = datafusion::functions::core::expr_fn::union_tag(value.clone());
+            let mut predicates = Vec::new();
+            for (type_id, child) in children.iter() {
+                let member =
+                    crate::native_collections::union_member(type_id).call(vec![value.clone()]);
+                if let Some(invalid) = collection_invalid(child, member, inside, depth + 1)? {
+                    predicates.push(tag.clone().eq(lit(child.name())).and(invalid));
+                }
+            }
+            any_invalid(predicates)
+        }
         _ => None,
     };
     if let Some(nested) = nested {
-        invalid.push(value.is_not_null().and(nested));
+        invalid.push(if matches!(field.data_type(), DataType::Union(_, _)) {
+            nested
+        } else {
+            value.is_not_null().and(nested)
+        });
     }
     Ok(any_invalid(invalid))
 }
@@ -1021,6 +1155,43 @@ fn collection_invalid(
 mod layout_tests {
     use super::*;
     use std::sync::Arc;
+
+    #[test]
+    fn selected_record_preserves_domain_without_redeclaring_source_references() -> Result<()> {
+        use crate::{
+            identity::{ContextId, SnapshotId},
+            native_union::{Rule, ScopeKey, field},
+        };
+        let reference = field::<SnapshotId>(
+            "snapshot_id",
+            Rule::ForeignKey {
+                table: "snapshots".into(),
+                field: vec!["snapshot_id".into()],
+                scope: vec![ScopeKey::exact(&["context_id"], &["context_id"])],
+            },
+        );
+        let declaration = Schema::new(vec![
+            field::<ContextId>("context_id", Rule::Text),
+            reference.clone(),
+        ]);
+        validate(&declaration)?;
+        let selected = Schema::new(vec![reference.with_name("current")]);
+        let destination = Schema::new(vec![field::<SnapshotId>("current", Rule::Text)]);
+        assert!(
+            check_input(&selected, &destination).is_err(),
+            "source declaration cannot omit the reference scope"
+        );
+        check_record_selection(&selected, &destination)?;
+        let erased = Schema::new(vec![Field::new(
+            "current",
+            DataType::FixedSizeBinary(32),
+            true,
+        )]);
+        assert!(check_record_selection(&erased, &destination).is_err());
+        let other = Schema::new(vec![field::<ContextId>("current", Rule::Text)]);
+        assert!(check_record_selection(&other, &destination).is_err());
+        Ok(())
+    }
 
     #[test]
     fn metadata_restoration_never_relabels_record_slots_inside_containers() {

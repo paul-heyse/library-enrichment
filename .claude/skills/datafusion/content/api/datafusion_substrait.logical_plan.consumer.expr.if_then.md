@@ -10,4 +10,7 @@ Crate `datafusion-substrait` · 1 public items · structured records in [`model/
 async fn from_if_then(consumer: &impl SubstraitConsumer, if_then: &substrait::proto::expression::IfThen, input_schema: &datafusion::common::DFSchema) -> datafusion::common::Result<datafusion::logical_expr::Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.expr.if_then.from_if_then.md).
+
+
 ---

@@ -13,16 +13,8 @@ use enrichment_core::{
 use enrichment_store::{StatePaths, leases, state};
 use serde::Serialize;
 
-const CACHE_PAYLOADS: &[&str] = &[
-    "capsules",
-    "handoff",
-    "downloads",
-    "unpacked",
-    "http",
-    "workers",
-    "query-spill",
-];
-const EVIDENCE_PAYLOADS: &[&str] = &["blobs", "delta", "staging", "diagnostics"];
+const CACHE_PAYLOADS: &[&str] = &["capsules", "handoff", "downloads", "http", "query-spill"];
+const EVIDENCE_PAYLOADS: &[&str] = &["blobs", "delta", "private", "diagnostics"];
 const MAX_ENTRIES: usize = 100_000;
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -89,6 +81,91 @@ pub fn cleanup(
         ));
     }
     run(config, paths, scope, apply)
+}
+
+/// Operator-only native publication/result retirement. Preview is the default;
+/// applying changes authority and schedules cleanup, without claiming byte release.
+pub fn retire_roots(
+    config: &Config,
+    paths: &StatePaths,
+    roots: Vec<String>,
+    apply: bool,
+) -> io::Result<enrichment_core::operation::retention::RootRemoval> {
+    native_operation(config, paths, apply, move |control, _runtime| async move {
+        control.remove_roots(&roots, apply).await
+    })
+}
+
+/// Reclaim one registered table with the current native retention policy. This
+/// operator holds the daemon lock and joins all maintenance/release work before return.
+pub fn reclaim_table(
+    config: &Config,
+    paths: &StatePaths,
+    table: String,
+) -> io::Result<enrichment_core::operation::retention::Reclamation> {
+    native_operation(config, paths, true, move |control, runtime| async move {
+        let retention = enrichment_store::retention::RetentionStore::new(control.clone(), runtime);
+        retention.reconcile_processes().await?;
+        retention.reconcile_writers().await?;
+        control.reclaim_table(&table).await
+    })
+}
+
+pub fn reclaim_artifacts(
+    config: &Config,
+    paths: &StatePaths,
+) -> io::Result<enrichment_core::operation::retention::ArtifactReclamation> {
+    native_operation(config, paths, true, move |control, runtime| async move {
+        let retention = enrichment_store::retention::RetentionStore::new(control, runtime);
+        retention.reconcile_processes().await?;
+        retention.reclaim_artifacts().await
+    })
+}
+
+fn native_operation<T, F, Work>(
+    config: &Config,
+    paths: &StatePaths,
+    write: bool,
+    operation: F,
+) -> io::Result<T>
+where
+    T: Send + 'static,
+    F: FnOnce(
+        enrichment_store::control::ControlStore,
+        enrichment_store::runtime::QueryRuntime,
+    ) -> Work,
+    Work: std::future::Future<Output = datafusion::common::Result<T>> + Send + 'static,
+{
+    state::verify(paths)?;
+    let _guards = guards(paths)?;
+    let runtime = enrichment_store::runtime::QueryRuntime::new(
+        &paths.cache_root.join("maintenance-spill"),
+        (&config.arrow).into(),
+    )
+    .map_err(io::Error::other)?;
+    let result = (|| -> io::Result<_> {
+        let control = if write {
+            enrichment_store::control::ControlStore::open(&paths.data_root, runtime.clone())?
+        } else {
+            enrichment_store::control::ControlStore::inspect(&paths.data_root, runtime.clone())?
+        };
+        runtime
+            .bootstrap(operation(control, runtime.clone()))
+            .and_then(std::convert::identity)
+            .map_err(io::Error::other)
+    })();
+    let closing = runtime.clone();
+    let closed = runtime
+        .bootstrap(async move { closing.close_diagnostics().await })
+        .and_then(std::convert::identity)
+        .map_err(io::Error::other);
+    match (result, closed) {
+        (Ok(result), Ok(())) => Ok(result),
+        (Err(error), Ok(())) | (Ok(_), Err(error)) => Err(error),
+        (Err(error), Err(close)) => Err(io::Error::other(format!(
+            "{error}; native retirement drain also failed: {close}"
+        ))),
+    }
 }
 
 /// Hard cutover of only the known service payloads under this checkout's `.dev-state`.
@@ -215,8 +292,10 @@ fn prepare(config: &Config, paths: &StatePaths, apply: bool) -> io::Result<()> {
         let control = if apply {
             enrichment_store::control::ControlStore::open(&paths.data_root, runtime.clone())?
         } else {
-            enrichment_store::control::ControlStore::read_only(&paths.data_root, runtime.clone())?
+            enrichment_store::control::ControlStore::inspect(&paths.data_root, runtime.clone())?
         };
+        let retention =
+            enrichment_store::retention::RetentionStore::new(control.clone(), runtime.clone());
         let ownership = enrichment_store::physical_ownership::OwnershipStore::new(
             control,
             runtime.clone(),
@@ -229,6 +308,18 @@ fn prepare(config: &Config, paths: &StatePaths, apply: bool) -> io::Result<()> {
                 crate::execution::ownership::validate_for_state(&paths, &execution, &ownership)
                     .await?;
                 if apply {
+                    retention
+                        .reconcile_processes()
+                        .await
+                        .map_err(io::Error::other)?;
+                    retention
+                        .reconcile_writers()
+                        .await
+                        .map_err(io::Error::other)?;
+                    retention
+                        .recover_private_directories()
+                        .await
+                        .map_err(io::Error::other)?;
                     // Confirm every recorded container is absent before removing its mounts.
                     // Image storage stays outside this inventory.
                     let supervisor = crate::execution::cleanup::Supervisor::new(
@@ -245,6 +336,10 @@ fn prepare(config: &Config, paths: &StatePaths, apply: bool) -> io::Result<()> {
                     runner.recover_owned().await?;
                     crate::execution::budget::recover_orphans(&ownership).await?;
                 }
+                retention
+                    .require_quiescent()
+                    .await
+                    .map_err(io::Error::other)?;
                 Ok(())
             })
             .map_err(io::Error::other)?
@@ -467,17 +562,19 @@ mod tests {
                         broker: "/usr/bin/podman".into(),
                     })
                     .await?;
-                let name = format!("libenr-{}", "a".repeat(32));
+                let name = enrichment_core::identity::PhysicalOwnerId::new();
                 ownership
                     .reserve_owner(PhysicalOwner {
-                        name: name.clone(),
+                        owner_id: name,
                         root,
                         cache,
                         capsule: "/fixture".into(),
                         image: "fixture".into(),
-                        operation_id: "fixture".into(),
+                        operation_id: format!("process_{}", "1".repeat(64)).try_into().unwrap(),
                         authority: enrichment_core::execution::ProcessAuthority::Qualification {
-                            definition_id: "fixture".into(),
+                            definition_id: format!("process_{}", "1".repeat(64))
+                                .try_into()
+                                .unwrap(),
                         },
                         created_at: enrichment_core::native_time::ObservationTime::now().unwrap(),
                         state: PhysicalState::Reserved,

@@ -12,6 +12,9 @@ Crate `datafusion` · 6 public items · structured records in [`model/datafusion
 fn create_aggregate_expr_and_maybe_filter(e: &logical_expr::Expr, logical_input_schema: &datafusion_common::DFSchema, physical_input_schema: &arrow::datatypes::Schema, execution_props: &execution::context::ExecutionProps) -> error::Result<(std::sync::Arc<datafusion_physical_expr::aggregate::AggregateFunctionExpr>, Option<std::sync::Arc<dyn PhysicalExpr>>, Vec<datafusion_physical_expr::PhysicalSortExpr>)>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.physical_planner.create_aggregate_expr_and_maybe_filter.md).
+
+
 Create an aggregate expression from a logical expression or an alias
 
 ---
@@ -26,6 +29,9 @@ Create an aggregate expression from a logical expression or an alias
 fn create_aggregate_expr_with_name_and_maybe_filter(e: &logical_expr::Expr, name: Option<String>, human_display: String, logical_input_schema: &datafusion_common::DFSchema, physical_input_schema: &arrow::datatypes::Schema, execution_props: &execution::context::ExecutionProps) -> error::Result<(std::sync::Arc<datafusion_physical_expr::aggregate::AggregateFunctionExpr>, Option<std::sync::Arc<dyn PhysicalExpr>>, Vec<datafusion_physical_expr::PhysicalSortExpr>)>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.physical_planner.create_aggregate_expr_with_name_and_maybe_filter.md).
+
+
 Create an aggregate expression with a name from a logical expression
 
 ---
@@ -37,6 +43,9 @@ Create an aggregate expression with a name from a logical expression
 ```rust
 fn create_window_expr(e: &logical_expr::Expr, logical_schema: &datafusion_common::DFSchema, execution_props: &execution::context::ExecutionProps, planning_ctx: &datafusion_expr::physical_planning_context::PhysicalPlanningContext) -> error::Result<std::sync::Arc<dyn WindowExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.physical_planner.create_window_expr.md).
+
 
 Create a window expression from a logical expression or an alias
 
@@ -52,6 +61,9 @@ See [`create_physical_expr`] for details on the `planning_ctx` argument.
 fn create_window_expr_with_name(e: &logical_expr::Expr, name: impl Into<String>, logical_schema: &datafusion_common::DFSchema, execution_props: &execution::context::ExecutionProps, planning_ctx: &datafusion_expr::physical_planning_context::PhysicalPlanningContext) -> error::Result<std::sync::Arc<dyn WindowExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.physical_planner.create_window_expr_with_name.md).
+
+
 Create a window expression with a name from a logical expression
 
 See [`create_physical_expr`] for details on the `planning_ctx` argument.
@@ -65,6 +77,9 @@ See [`create_physical_expr`] for details on the `planning_ctx` argument.
 ```rust
 fn is_window_frame_bound_valid(window_frame: &datafusion_expr::WindowFrame) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.physical_planner.is_window_frame_bound_valid.md).
+
 
 Check if window bounds are valid after schema information is available, and
 window_frame bounds are casted to the corresponding column type.
@@ -99,6 +114,9 @@ fn with_extension_planners(extension_planners: Vec<Arc<dyn ExtensionPlanner + Se
 fn create_physical_expr(&self, expr: &Expr, input_dfschema: &DFSchema, session_state: &dyn Session, planning_ctx: &PhysicalPlanningContext) -> Result<Arc<dyn PhysicalExpr>>
 async fn create_physical_plan(&self, logical_plan: &LogicalPlan, session_state: &dyn Session) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.physical_planner.DefaultPhysicalPlanner.md).
+
 
 Default single node physical query planner that converts a
 `LogicalPlan` to an `ExecutionPlan` suitable for execution.

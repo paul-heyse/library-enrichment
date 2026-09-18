@@ -12,6 +12,9 @@ Also reachable as `datafusion_spark::expr_fn::size`
 fn size(arg: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.collection.expr_fn.size.md).
+
+
 Return the size of an array or map.
 
 ---

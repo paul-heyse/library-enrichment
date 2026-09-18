@@ -26,6 +26,9 @@ fn new(inner: T, runtime: Handle) -> Self
 async fn call(&self, req: HttpRequest) -> Result<HttpResponse, HttpError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.client.http.spawn.SpawnService.md).
+
+
 Wraps a provided [`HttpService`] and runs it on a separate tokio runtime
 
 See example on [`SpawnedReqwestConnector`]

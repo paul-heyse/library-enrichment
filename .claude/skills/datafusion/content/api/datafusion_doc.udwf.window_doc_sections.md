@@ -12,6 +12,9 @@ Also reachable as `datafusion_doc::window_doc_sections::DOC_SECTION_AGGREGATE`, 
 const DOC_SECTION_AGGREGATE: DocSection = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udwf.window_doc_sections.DOC_SECTION_AGGREGATE.md).
+
+
 ---
 
 ## DOC_SECTION_ANALYTICAL
@@ -23,6 +26,9 @@ Also reachable as `datafusion_doc::window_doc_sections::DOC_SECTION_ANALYTICAL`,
 ```rust
 const DOC_SECTION_ANALYTICAL: DocSection = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udwf.window_doc_sections.DOC_SECTION_ANALYTICAL.md).
+
 
 ---
 
@@ -36,6 +42,9 @@ Also reachable as `datafusion_doc::window_doc_sections::DOC_SECTION_RANKING`, `d
 const DOC_SECTION_RANKING: DocSection = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udwf.window_doc_sections.DOC_SECTION_RANKING.md).
+
+
 ---
 
 ## doc_sections
@@ -47,5 +56,8 @@ Also reachable as `datafusion_doc::window_doc_sections::doc_sections`, `datafusi
 ```rust
 fn doc_sections() -> Vec<DocSection>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udwf.window_doc_sections.doc_sections.md).
+
 
 ---

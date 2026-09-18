@@ -10,6 +10,9 @@ Crate `datafusion-functions` · 8 public items · structured records in [`model/
 fn compile_and_cache_regex<'strings, 'cache>(regex: &'strings str, flags: Option<&'strings str>, regex_cache: &'cache mut std::collections::HashMap<(&'strings str, Option<&'strings str>), regex::Regex>) -> Result<&'cache regex::Regex, arrow::error::ArrowError> where 'strings: 'cache
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.regex.compile_and_cache_regex.md).
+
+
 ---
 
 ## compile_regex
@@ -20,6 +23,9 @@ fn compile_and_cache_regex<'strings, 'cache>(regex: &'strings str, flags: Option
 fn compile_regex(regex: &str, flags: Option<&str>) -> Result<regex::Regex, arrow::error::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.regex.compile_regex.md).
+
+
 ---
 
 ## functions
@@ -29,6 +35,9 @@ fn compile_regex(regex: &str, flags: Option<&str>) -> Result<regex::Regex, arrow
 ```rust
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.regex.functions.md).
+
 
 Returns all DataFusion functions defined in this package
 
@@ -42,6 +51,9 @@ Returns all DataFusion functions defined in this package
 fn regexp_count() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.regex.regexp_count.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of regexp_count
 
 ---
@@ -53,6 +65,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of regexp_coun
 ```rust
 fn regexp_instr() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.regex.regexp_instr.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of regexp_instr
 
@@ -66,6 +81,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of regexp_inst
 fn regexp_like() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.regex.regexp_like.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of regexp_like
 
 ---
@@ -78,6 +96,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of regexp_like
 fn regexp_match() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.regex.regexp_match.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of regexp_match
 
 ---
@@ -89,6 +110,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of regexp_matc
 ```rust
 fn regexp_replace() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.regex.regexp_replace.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of regexp_replace
 

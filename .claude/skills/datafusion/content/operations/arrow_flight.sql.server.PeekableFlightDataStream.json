@@ -1,0 +1,837 @@
+[
+  {
+    "id": "6ac704d27e389b61fde39fce",
+    "path": "arrow_flight::sql::server::PeekableFlightDataStream",
+    "name": "PeekableFlightDataStream",
+    "owner": null,
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct PeekableFlightDataStream",
+    "docs": "A wrapper around [`Streaming<FlightData>`] that allows \"peeking\" at the\nmessage at the front of the stream without consuming it.\n\nThis is needed because sometimes the first message in the stream will contain\na [`FlightDescriptor`] in addition to potentially any data, and the dispatch logic\nmust inspect this information.\n\n# Example\n\n[`PeekableFlightDataStream::peek`] can be used to peek at the first message without\ndiscarding it; otherwise, `PeekableFlightDataStream` can be used as a regular stream.\nSee the following example:\n\n```no_run\nuse arrow_array::RecordBatch;\nuse arrow_flight::decode::FlightRecordBatchStream;\nuse arrow_flight::FlightDescriptor;\nuse arrow_flight::error::FlightError;\nuse arrow_flight::sql::server::PeekableFlightDataStream;\nuse tonic::{Request, Status};\nuse futures::TryStreamExt;\n\n#[tokio::main]\nasync fn main() -> Result<(), Status> {\n    let request: Request<PeekableFlightDataStream> = todo!();\n    let stream: PeekableFlightDataStream = request.into_inner();\n\n    // The first message contains the flight descriptor and the schema.\n    // Read the flight descriptor without discarding the schema:\n    let flight_descriptor: FlightDescriptor = stream\n        .peek()\n        .await\n        .cloned()\n        .transpose()?\n        .and_then(|data| data.flight_descriptor)\n        .expect(\"first message should contain flight descriptor\");\n\n    // Pass the stream through a decoder\n    let batches: Vec<RecordBatch> = FlightRecordBatchStream::new_from_flight_data(\n        request.into_inner().map_err(|e| e.into()),\n    )\n    .try_collect()\n    .await?;\n}\n```",
+    "span": {
+      "filename": "src/sql/server.rs",
+      "begin": [
+        1064,
+        1
+      ],
+      "end": [
+        1066,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          5250,
+          5251,
+          5252,
+          5253,
+          5254,
+          5255,
+          5256,
+          5257,
+          5258,
+          5259,
+          5260,
+          5261,
+          5262,
+          5263,
+          5264,
+          5265,
+          5266,
+          5267,
+          5268,
+          5269,
+          5270,
+          5271,
+          5272,
+          5273,
+          5275
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`FlightDescriptor`": 154,
+      "`Streaming<FlightData>`": 147,
+      "`PeekableFlightDataStream::peek`": 5245
+    },
+    "link_paths": {
+      "`FlightDescriptor`": "arrow_flight::gen::FlightDescriptor",
+      "`Streaming<FlightData>`": "tonic::codec::decode::Streaming",
+      "`PeekableFlightDataStream::peek`": "arrow_flight::sql::server::PeekableFlightDataStream::peek"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "5200",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.sql.server.PeekableFlightDataStream.md",
+    "record_file": "operations/arrow_flight.sql.server.PeekableFlightDataStream.json",
+    "anchor": "op-6ac704d27e389b61fde39fce",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FlightDescriptor`": "../operations/arrow_flight.gen.FlightDescriptor.md#op-87317d059af665e5e2fe8326",
+      "`PeekableFlightDataStream::peek`": "../operations/arrow_flight.sql.server.PeekableFlightDataStream.md#op-c6759869200f442a8f61de5b"
+    }
+  },
+  {
+    "id": "9c8f288a691aeb65705f9db1",
+    "path": "arrow_flight::sql::server::PeekableFlightDataStream::Item",
+    "name": "Item",
+    "owner": "arrow_flight::sql::server::PeekableFlightDataStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "assoc_type",
+    "signature": "Item",
+    "docs": "",
+    "span": {
+      "filename": "src/sql/server.rs",
+      "begin": [
+        1096,
+        5
+      ],
+      "end": [
+        1096,
+        44
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "type": {
+          "resolved_path": {
+            "path": "Result",
+            "id": 45,
+            "args": {
+              "angle_bracketed": {
+                "args": [
+                  {
+                    "type": {
+                      "resolved_path": {
+                        "path": "FlightData",
+                        "id": 161,
+                        "args": null
+                      }
+                    }
+                  },
+                  {
+                    "type": {
+                      "resolved_path": {
+                        "path": "Status",
+                        "id": 149,
+                        "args": null
+                      }
+                    }
+                  }
+                ],
+                "constraints": []
+              }
+            }
+          }
+        },
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "45": "core::result::Result",
+      "161": "arrow_flight::gen::FlightData",
+      "149": "tonic::status::Status"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeekableFlightDataStream",
+          "id": "arrow_flight::sql::server::PeekableFlightDataStream",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Stream",
+        "id": "futures_core::stream::Stream",
+        "args": null
+      },
+      "trait_path": "futures_core::stream::Stream",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sql/server.rs",
+        "begin": [
+          1095,
+          1
+        ],
+        "end": [
+          1104,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "5274",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.sql.server.PeekableFlightDataStream.md",
+    "record_file": "operations/arrow_flight.sql.server.PeekableFlightDataStream.json",
+    "anchor": "op-9c8f288a691aeb65705f9db1",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "16e8e82014174c50361baacd",
+    "path": "arrow_flight::sql::server::PeekableFlightDataStream::into_inner",
+    "name": "into_inner",
+    "owner": "arrow_flight::sql::server::PeekableFlightDataStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_inner(self) -> Streaming<FlightData>",
+    "docs": "Convert this stream into a `Streaming<FlightData>`.\nAny messages observed through [`Self::peek`] will be lost\nafter the conversion.",
+    "span": {
+      "filename": "src/sql/server.rs",
+      "begin": [
+        1078,
+        5
+      ],
+      "end": [
+        1080,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Streaming",
+              "id": 147,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "FlightData",
+                          "id": 161,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "147": "tonic::codec::decode::Streaming",
+      "161": "arrow_flight::gen::FlightData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeekableFlightDataStream",
+          "id": "arrow_flight::sql::server::PeekableFlightDataStream",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sql/server.rs",
+        "begin": [
+          1068,
+          1
+        ],
+        "end": [
+          1093,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::peek`": 5245
+    },
+    "link_paths": {
+      "`Self::peek`": "arrow_flight::sql::server::PeekableFlightDataStream::peek"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "5246",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.sql.server.PeekableFlightDataStream.md",
+    "record_file": "operations/arrow_flight.sql.server.PeekableFlightDataStream.json",
+    "anchor": "op-16e8e82014174c50361baacd",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::peek`": "../operations/arrow_flight.sql.server.PeekableFlightDataStream.md#op-c6759869200f442a8f61de5b"
+    }
+  },
+  {
+    "id": "1289581fc57c721b2b5bdd98",
+    "path": "arrow_flight::sql::server::PeekableFlightDataStream::into_peekable",
+    "name": "into_peekable",
+    "owner": "arrow_flight::sql::server::PeekableFlightDataStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_peekable(self) -> Peekable<Streaming<FlightData>>",
+    "docs": "Convert this stream into a `Peekable<Streaming<FlightData>>`.\nPreserves the state of the stream, so that calls to [`Self::peek`]\nand [`Self::poll_next`] are the same.",
+    "span": {
+      "filename": "src/sql/server.rs",
+      "begin": [
+        1085,
+        5
+      ],
+      "end": [
+        1087,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Peekable",
+              "id": 5249,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Streaming",
+                          "id": 147,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "FlightData",
+                                      "id": 161,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "5249": "futures_util::stream::stream::peek::Peekable",
+      "147": "tonic::codec::decode::Streaming",
+      "161": "arrow_flight::gen::FlightData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeekableFlightDataStream",
+          "id": "arrow_flight::sql::server::PeekableFlightDataStream",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sql/server.rs",
+        "begin": [
+          1068,
+          1
+        ],
+        "end": [
+          1093,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::poll_next`": 5247,
+      "`Self::peek`": 5245
+    },
+    "link_paths": {
+      "`Self::poll_next`": "arrow_flight::sql::server::PeekableFlightDataStream::poll_next",
+      "`Self::peek`": "arrow_flight::sql::server::PeekableFlightDataStream::peek"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "5248",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.sql.server.PeekableFlightDataStream.md",
+    "record_file": "operations/arrow_flight.sql.server.PeekableFlightDataStream.json",
+    "anchor": "op-1289581fc57c721b2b5bdd98",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::poll_next`": "../operations/arrow_flight.sql.server.PeekableFlightDataStream.md#op-29f410d20cfa84e15ec7726a",
+      "`Self::peek`": "../operations/arrow_flight.sql.server.PeekableFlightDataStream.md#op-c6759869200f442a8f61de5b"
+    }
+  },
+  {
+    "id": "c6759869200f442a8f61de5b",
+    "path": "arrow_flight::sql::server::PeekableFlightDataStream::peek",
+    "name": "peek",
+    "owner": "arrow_flight::sql::server::PeekableFlightDataStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "async fn peek(&mut self) -> Option<&Result<FlightData, Status>>",
+    "docs": "Peek at the head of this stream without advancing it.",
+    "span": {
+      "filename": "src/sql/server.rs",
+      "begin": [
+        1090,
+        5
+      ],
+      "end": [
+        1092,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 6,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Result",
+                              "id": 45,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "FlightData",
+                                          "id": 161,
+                                          "args": null
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Status",
+                                          "id": 149,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": true,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6": "core::option::Option",
+      "45": "core::result::Result",
+      "161": "arrow_flight::gen::FlightData",
+      "149": "tonic::status::Status"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeekableFlightDataStream",
+          "id": "arrow_flight::sql::server::PeekableFlightDataStream",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sql/server.rs",
+        "begin": [
+          1068,
+          1
+        ],
+        "end": [
+          1093,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "5245",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.sql.server.PeekableFlightDataStream.md",
+    "record_file": "operations/arrow_flight.sql.server.PeekableFlightDataStream.json",
+    "anchor": "op-c6759869200f442a8f61de5b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "29f410d20cfa84e15ec7726a",
+    "path": "arrow_flight::sql::server::PeekableFlightDataStream::poll_next",
+    "name": "poll_next",
+    "owner": "arrow_flight::sql::server::PeekableFlightDataStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn poll_next(Pin<&mut self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sql/server.rs",
+      "begin": [
+        1098,
+        5
+      ],
+      "end": [
+        1103,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Pin",
+                  "id": 205,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": true,
+                              "type": {
+                                "generic": "Self"
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "cx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::task::Context",
+                      "id": 279,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::task::Poll",
+              "id": 280,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 6,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "qualified_path": {
+                                      "name": "Item",
+                                      "args": null,
+                                      "self_type": {
+                                        "generic": "Self"
+                                      },
+                                      "trait": {
+                                        "path": "",
+                                        "id": 203,
+                                        "args": null
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "205": "core::pin::Pin",
+      "279": "core::task::wake::Context",
+      "280": "core::task::poll::Poll",
+      "6": "core::option::Option",
+      "203": "futures_core::stream::Stream"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeekableFlightDataStream",
+          "id": "arrow_flight::sql::server::PeekableFlightDataStream",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Stream",
+        "id": "futures_core::stream::Stream",
+        "args": null
+      },
+      "trait_path": "futures_core::stream::Stream",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sql/server.rs",
+        "begin": [
+          1095,
+          1
+        ],
+        "end": [
+          1104,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "5247",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.sql.server.PeekableFlightDataStream.md",
+    "record_file": "operations/arrow_flight.sql.server.PeekableFlightDataStream.json",
+    "anchor": "op-29f410d20cfa84e15ec7726a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

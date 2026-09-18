@@ -8,8 +8,8 @@ Five checks, in increasing order of what they can catch:
 4. navigation     -- the recipes documented in reference.md actually find the answers
 5. transferability -- nothing reaches outside the skill directory
 
-Check 4 is the one that matters most. The others prove the repository is internally consistent;
-only the probes prove it is *findable*, which is the whole point of shipping it.
+These are integrity and navigation checks, not proof of semantic decision quality.
+Contract/runtime checks and independent task evaluation provide separate evidence.
 
 Usage:
     python3 verify.py [--content ../content] [--skip-rebuild]
@@ -57,6 +57,9 @@ def check_determinism(content: Path, skip_rebuild: bool) -> str:
         )
         if done.returncode != 0:
             raise Failure(f"rebuild failed: {done.stderr.strip()[-400:]}")
+        regenerated = json.loads(content.joinpath("PROVENANCE.json").read_text())["files"]
+        if set(regenerated) != set(recorded):
+            raise Failure("rebuild changed the generated-file inventory")
 
     mismatched: list[str] = []
     missing: list[str] = []
@@ -71,7 +74,10 @@ def check_determinism(content: Path, skip_rebuild: bool) -> str:
         detail = f"{len(missing)} missing, {len(mismatched)} changed"
         sample = (missing + mismatched)[:5]
         raise Failure(f"rebuild was not reproducible: {detail}; e.g. {sample}")
-    return f"{len(recorded)} files reproduced byte for byte"
+    action = (
+        "match recorded digests (rebuild not run)" if skip_rebuild else "reproduced byte for byte"
+    )
+    return f"{len(recorded)} files {action}"
 
 
 def check_integrity(content: Path) -> str:

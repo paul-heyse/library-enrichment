@@ -5,6 +5,7 @@ Crate `deltalake-core` · 4 public items · structured records in [`model/deltal
 ## Invariant
 
 `struct` · `deltalake_core::kernel::schema::schema::Invariant`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.schema.Invariant.md)
 
 Also reachable as `deltalake::Invariant`, `deltalake::kernel::Invariant`, `deltalake::kernel::schema::Invariant`, `deltalake::schema::Invariant`, `deltalake_core::Invariant`, `deltalake_core::kernel::Invariant`, `deltalake_core::kernel::schema::Invariant`, `deltalake_core::schema::Invariant`
 
@@ -39,6 +40,7 @@ An invariant for a column that is enforced on all writes to a Delta table.
 ## StructTypeExt
 
 `trait` · `deltalake_core::kernel::schema::schema::StructTypeExt`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.schema.StructTypeExt.md)
 
 Also reachable as `deltalake::StructTypeExt`, `deltalake::kernel::StructTypeExt`, `deltalake::kernel::schema::StructTypeExt`, `deltalake::schema::StructTypeExt`, `deltalake_core::StructTypeExt`, `deltalake_core::kernel::StructTypeExt`, `deltalake_core::kernel::schema::StructTypeExt`, `deltalake_core::schema::StructTypeExt`
 
@@ -64,6 +66,7 @@ Trait to add convenience functions to struct type
 ## Schema
 
 `type_alias` · `deltalake_core::kernel::schema::schema::Schema`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.schema.Schema.md)
 
 Also reachable as `deltalake::Schema`, `deltalake::kernel::Schema`, `deltalake::kernel::schema::Schema`, `deltalake::schema::Schema`, `deltalake_core::Schema`, `deltalake_core::kernel::Schema`, `deltalake_core::kernel::schema::Schema`, `deltalake_core::schema::Schema`
 
@@ -78,6 +81,7 @@ Type alias for a top level schema
 ## SchemaRef
 
 `type_alias` · `deltalake_core::kernel::schema::schema::SchemaRef`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.schema.SchemaRef.md)
 
 Also reachable as `deltalake::SchemaRef`, `deltalake::kernel::SchemaRef`, `deltalake::kernel::schema::SchemaRef`, `deltalake::schema::SchemaRef`, `deltalake_core::SchemaRef`, `deltalake_core::kernel::SchemaRef`, `deltalake_core::kernel::schema::SchemaRef`, `deltalake_core::schema::SchemaRef`
 

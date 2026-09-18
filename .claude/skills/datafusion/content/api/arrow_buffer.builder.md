@@ -56,6 +56,9 @@ fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I)
 fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.builder.BufferBuilder.md).
+
+
 Builder for creating Arrow [`Buffer`] objects
 
 A [`Buffer`] is the underlying data structure of Arrow's Arrays.

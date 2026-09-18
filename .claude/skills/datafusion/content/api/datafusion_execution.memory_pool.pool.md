@@ -39,6 +39,9 @@ fn try_grow(&self, reservation: &MemoryReservation, additional: usize) -> Result
 fn unregister(&self, consumer: &MemoryConsumer)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.memory_pool.pool.FairSpillPool.md).
+
+
 A [`MemoryPool`] that prevents spillable reservations from using more than
 an even fraction of the available memory sans any unspillable reservations
 (i.e. `(pool_size - unspillable_memory) / num_spillable_reservations`)
@@ -99,6 +102,9 @@ fn shrink(&self, _reservation: &MemoryReservation, shrink: usize)
 fn try_grow(&self, reservation: &MemoryReservation, additional: usize) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.memory_pool.pool.GreedyMemoryPool.md).
+
+
 A [`MemoryPool`] that implements a greedy first-come first-serve limit.
 
 This pool works well for queries that do not need to spill or have
@@ -118,6 +124,9 @@ struct MemoryConsumerMetrics
 **Fields**: `name`, `can_spill`, `reserved`, `peak`
 
 **Derives**: Clone, Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.memory_pool.pool.MemoryConsumerMetrics.md).
+
 
 A point-in-time snapshot of a tracked memory consumer's state.
 
@@ -164,6 +173,9 @@ fn shrink(&self, reservation: &MemoryReservation, shrink: usize)
 fn try_grow(&self, reservation: &MemoryReservation, additional: usize) -> Result<()>
 fn unregister(&self, consumer: &MemoryConsumer)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.memory_pool.pool.TrackConsumersPool.md).
+
 
 A [`MemoryPool`] that tracks the consumers that have
 reserved memory within the inner memory pool.
@@ -220,6 +232,9 @@ fn reserved(&self) -> usize
 fn shrink(&self, _reservation: &MemoryReservation, shrink: usize)
 fn try_grow(&self, reservation: &MemoryReservation, additional: usize) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.memory_pool.pool.UnboundedMemoryPool.md).
+
 
 A [`MemoryPool`] that enforces no limit
 

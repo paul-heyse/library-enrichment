@@ -25,9 +25,10 @@ use url::Url;
 #[derive(Clone)]
 pub struct Fetcher {
     policy: FetchPolicy,
-    policy_id: String,
+    policy_id: enrichment_core::identity::OperationPolicyId,
     cache: enrichment_store::http_cache::HttpCache,
     admission: enrichment_store::network_policy::NetworkPolicy,
+    pool: std::sync::Arc<dyn datafusion::execution::memory_pool::MemoryPool>,
     /// Operational counters, when this fetcher belongs to a running service (§14.3).
     ///
     /// Optional because unit tests build a fetcher without one, and a counter nobody reads is
@@ -151,8 +152,7 @@ impl Fetcher {
     ) -> Result<Self, FetchError> {
         install_crypto_provider();
         let policy = FetchPolicy::from_config(config);
-        let policy_id = enrichment_core::native_key::Key::OperationPolicy
-            .record(config)
+        let policy_id = enrichment_core::identity::OperationPolicyId::try_from_record(config)
             .map_err(|e| FetchError::Client(e.to_string()))?;
         let cache = enrichment_store::http_cache::HttpCache::new(
             data_root,
@@ -168,6 +168,7 @@ impl Fetcher {
             policy_id,
             cache,
             admission,
+            pool: runtime.session().runtime_env().memory_pool.clone(),
             metrics: None,
         })
     }
@@ -381,7 +382,12 @@ impl Fetcher {
         let last_modified = header(reqwest::header::LAST_MODIFIED);
         let final_url = response.url().to_string();
 
-        let mut bytes = Vec::new();
+        let mut bytes = enrichment_store::owned_bytes::OwnedBuffer::new(
+            &self.pool,
+            limit,
+            "http-response-body",
+        )
+        .map_err(|e| self.cache_error(url, e))?;
         while let Some(chunk) = tokio::time::timeout_at(deadline, response.chunk())
             .await
             .map_err(|_| FetchError::Timeout {
@@ -393,19 +399,23 @@ impl Fetcher {
                 self.map_error(url, &e)
             })?
         {
-            if (bytes.len() + chunk.len()) as u64 > limit {
+            if bytes
+                .len()
+                .checked_add(chunk.len())
+                .is_none_or(|size| size as u64 > limit)
+            {
                 self.count_failure();
                 return Err(FetchError::TooLarge {
                     url: url.to_string(),
                     limit,
                 });
             }
-            bytes.extend_from_slice(&chunk);
+            bytes.extend(&chunk).map_err(|e| self.cache_error(url, e))?;
         }
 
         let mut fetched = Fetched {
             status,
-            bytes,
+            bytes: bytes.finish(),
             content_type,
             etag,
             last_modified,

@@ -10,6 +10,9 @@ Crate `datafusion-substrait` · 4 public items · structured records in [`model/
 async fn from_substrait_extended_expr(state: &datafusion::execution::SessionState, extended_expr: &substrait::proto::ExtendedExpression) -> datafusion::common::Result<ExprContainer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.expr.from_substrait_extended_expr.md).
+
+
 Convert Substrait ExtendedExpression to ExprContainer
 
 A Substrait ExtendedExpression message contains one or more expressions,
@@ -30,6 +33,9 @@ expressions need to be sent to remote systems.
 async fn from_substrait_rex(consumer: &impl SubstraitConsumer, expression: &substrait::proto::Expression, input_schema: &datafusion::common::DFSchema) -> datafusion::common::Result<datafusion::logical_expr::Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.expr.from_substrait_rex.md).
+
+
 Convert Substrait Rex to DataFusion Expr
 
 ---
@@ -41,6 +47,9 @@ Convert Substrait Rex to DataFusion Expr
 ```rust
 async fn from_substrait_rex_vec(consumer: &impl SubstraitConsumer, exprs: &Vec<substrait::proto::Expression>, input_schema: &datafusion::common::DFSchema) -> datafusion::common::Result<Vec<datafusion::logical_expr::Expr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.expr.from_substrait_rex_vec.md).
+
 
 Convert Substrait Expressions to DataFusion Exprs
 
@@ -55,6 +64,9 @@ struct ExprContainer
 ```
 
 **Fields**: `input_schema`, `exprs`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.expr.ExprContainer.md).
+
 
 An ExprContainer is a container for a collection of expressions with a common input schema
 

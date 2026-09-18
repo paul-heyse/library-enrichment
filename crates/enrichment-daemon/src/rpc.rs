@@ -52,14 +52,14 @@ fn empty_params() -> serde_json::Value {
 
 /// A response frame. Exactly one of `result`/`error` is present.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Response {
+pub struct Response<T = serde_json::Value> {
     /// Always `"2.0"`.
     pub jsonrpc: String,
     /// The correlated request id, or `null` when the request could not be parsed.
     pub id: Option<serde_json::Value>,
     /// Present on success.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub result: Option<serde_json::Value>,
+    pub result: Option<T>,
     /// Present on failure.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<RpcError>,
@@ -77,14 +77,33 @@ pub struct ResponseObservation {
     pub has_gap: bool,
 }
 
-impl Response {
+/// Administrative values are small control messages. Native research output is
+/// already formatted and retains its buffer reservation through the socket write.
+#[derive(Debug, Serialize)]
+#[serde(untagged)]
+pub enum Payload {
+    Native(enrichment_core::json_output::JsonOutput),
+    Administrative(serde_json::Value),
+}
+impl From<serde_json::Value> for Payload {
+    fn from(value: serde_json::Value) -> Self {
+        Self::Administrative(value)
+    }
+}
+impl From<enrichment_core::json_output::JsonOutput> for Payload {
+    fn from(value: enrichment_core::json_output::JsonOutput) -> Self {
+        Self::Native(value)
+    }
+}
+
+impl<T> Response<T> {
     /// A successful response.
     #[must_use]
-    pub fn ok(id: Option<serde_json::Value>, result: serde_json::Value) -> Self {
+    pub fn ok(id: Option<serde_json::Value>, result: impl Into<T>) -> Self {
         Self {
             jsonrpc: JSONRPC_VERSION.to_owned(),
             id,
-            result: Some(result),
+            result: Some(result.into()),
             error: None,
             delivery_bytes: None,
             observation: None,
@@ -241,17 +260,13 @@ fn decode(buf: Vec<u8>) -> Result<String, FrameError> {
     })
 }
 
-/// Serialize a response as one frame, newline included.
-///
-/// # Panics
-///
-/// Never in practice: `Response` is a plain data type with no map keys that can fail to
-/// serialize.
-#[must_use]
-pub fn write_frame(response: &Response) -> String {
-    let mut line = serde_json::to_string(response).expect("a Response always serializes");
-    line.push('\n');
-    line
+/// The returned owner charges the complete frame until the final socket write.
+/// The single newline delimiter is written separately and needs no owned buffer.
+pub fn encode_frame<T: Serialize>(
+    response: &Response<T>,
+    pool: &std::sync::Arc<dyn datafusion::execution::memory_pool::MemoryPool>,
+) -> std::io::Result<enrichment_core::json_output::JsonOutput> {
+    enrichment_core::json_output::JsonOutput::serialize(pool, response)
 }
 
 #[cfg(test)]
@@ -301,11 +316,14 @@ mod tests {
 
     #[test]
     fn embedded_newlines_are_escaped_so_the_delimiter_stays_unambiguous() {
-        let response = Response::ok(
+        let response: Response = Response::ok(
             Some(serde_json::json!(1)),
             serde_json::json!({ "summary": "line one\nline two" }),
         );
-        let frame = write_frame(&response);
+        let pool = std::sync::Arc::new(datafusion::execution::memory_pool::GreedyMemoryPool::new(
+            4096,
+        )) as std::sync::Arc<dyn datafusion::execution::memory_pool::MemoryPool>;
+        let frame = format!("{}\n", encode_frame(&response, &pool).unwrap().as_str());
         assert_eq!(frame.matches('\n').count(), 1, "only the terminator");
         assert!(frame.contains("\\n"), "the payload newline is escaped");
     }

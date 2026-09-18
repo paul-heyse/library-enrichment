@@ -10,4 +10,7 @@ Crate `arrow-buffer` · 1 public items · structured records in [`model/arrow_bu
 trait Sealed
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.native.private.Sealed.md).
+
+
 ---

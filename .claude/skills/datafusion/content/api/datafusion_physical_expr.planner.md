@@ -12,6 +12,9 @@ Also reachable as `datafusion::physical_expr::create_physical_expr`, `datafusion
 fn create_physical_expr(e: &datafusion_expr::Expr, input_dfschema: &datafusion_common::DFSchema, execution_props: &datafusion_expr::execution_props::ExecutionProps, planning_ctx: &datafusion_expr::physical_planning_context::PhysicalPlanningContext) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.planner.create_physical_expr.md).
+
+
 [PhysicalExpr] evaluate DataFusion expressions such as `A + 1`, or `CAST(c1
 AS int)`.
 
@@ -110,6 +113,9 @@ Also reachable as `datafusion::physical_expr::create_physical_exprs`, `datafusio
 fn create_physical_exprs<'a, I>(exprs: I, input_dfschema: &datafusion_common::DFSchema, execution_props: &datafusion_expr::execution_props::ExecutionProps, planning_ctx: &datafusion_expr::physical_planning_context::PhysicalPlanningContext) -> datafusion_common::Result<Vec<std::sync::Arc<dyn PhysicalExpr>>> where I: IntoIterator<Item = &'a datafusion_expr::Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.planner.create_physical_exprs.md).
+
+
 Create vector of Physical Expression from a vector of logical expression
 
 See [`create_physical_expr`] for details on the `planning_ctx` argument.
@@ -123,6 +129,9 @@ See [`create_physical_expr`] for details on the `planning_ctx` argument.
 ```rust
 fn logical2physical(expr: &datafusion_expr::Expr, schema: &arrow::datatypes::Schema) -> std::sync::Arc<dyn PhysicalExpr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.planner.logical2physical.md).
+
 
 Convert a logical expression to a physical expression (without any simplification, etc)
 

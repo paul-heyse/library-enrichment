@@ -32,6 +32,9 @@ fn state(&mut self) -> datafusion_common::Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> datafusion_common::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.count_distinct.native.Bitmap65536DistinctCountAccumulator.md).
+
+
 Optimized COUNT DISTINCT accumulator for u16 using a 65536-bit bitmap.
 Uses 8KB (1024 x u64) to track all possible u16 values.
 
@@ -66,6 +69,9 @@ fn size(&self) -> usize
 fn state(&mut self) -> datafusion_common::Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> datafusion_common::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.count_distinct.native.Bitmap65536DistinctCountAccumulatorI16.md).
+
 
 Optimized COUNT DISTINCT accumulator for i16 using a 65536-bit bitmap.
 Uses 8KB (1024 x u64) to track all possible i16 values (mapped to 0..65535).
@@ -102,6 +108,9 @@ fn state(&mut self) -> datafusion_common::Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> datafusion_common::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.count_distinct.native.BoolArray256DistinctCountAccumulator.md).
+
+
 Optimized COUNT DISTINCT accumulator for u8 using a bool array.
 Uses 256 bytes to track all possible u8 values.
 
@@ -137,6 +146,9 @@ fn state(&mut self) -> datafusion_common::Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> datafusion_common::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.count_distinct.native.BoolArray256DistinctCountAccumulatorI8.md).
+
+
 Optimized COUNT DISTINCT accumulator for i8 using a bool array.
 Uses 256 bytes to track all possible i8 values (mapped to 0..255).
 
@@ -171,6 +183,9 @@ fn size(&self) -> usize
 fn state(&mut self) -> datafusion_common::Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> datafusion_common::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.count_distinct.native.BooleanDistinctCountAccumulator.md).
+
 
 Optimized COUNT DISTINCT accumulator for `Boolean` using two flags.
 
@@ -209,6 +224,9 @@ fn state(&mut self) -> datafusion_common::Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> datafusion_common::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.count_distinct.native.FloatDistinctCountAccumulator.md).
+
+
 ---
 
 ## PrimitiveDistinctCountAccumulator
@@ -240,5 +258,8 @@ fn size(&self) -> usize
 fn state(&mut self) -> datafusion_common::Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> datafusion_common::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.count_distinct.native.PrimitiveDistinctCountAccumulator.md).
+
 
 ---

@@ -12,6 +12,9 @@ Also reachable as `datafusion::common::arrow_datafusion_err`
 macro_rules! arrow_datafusion_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.arrow_datafusion_err.md).
+
+
 ---
 
 ## arrow_err
@@ -24,6 +27,9 @@ Also reachable as `datafusion::common::arrow_err`
 macro_rules! arrow_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.arrow_err.md).
+
+
 ---
 
 ## assert_batches_eq
@@ -35,6 +41,9 @@ Also reachable as `datafusion::assert_batches_eq`, `datafusion::common::assert_b
 ```rust
 macro_rules! assert_batches_eq
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.assert_batches_eq.md).
+
 
 Compares formatted output of a record batch with an expected
 vector of strings, with the result of pretty formatting record
@@ -80,6 +89,9 @@ Also reachable as `datafusion::assert_batches_sorted_eq`, `datafusion::common::a
 macro_rules! assert_batches_sorted_eq
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.assert_batches_sorted_eq.md).
+
+
 Compares formatted output of a record batch with an expected
 vector of strings in a way that order does not matter.
 This is a macro so errors appear on the correct line
@@ -101,6 +113,9 @@ Also reachable as `datafusion::common::assert_contains`
 ```rust
 macro_rules! assert_contains
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.assert_contains.md).
+
 
 A macro to assert that one string is contained within another with
 a nice error message if they are not.
@@ -124,6 +139,9 @@ Also reachable as `datafusion::common::assert_eq_or_internal_err`
 macro_rules! assert_eq_or_internal_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.assert_eq_or_internal_err.md).
+
+
 Assert equality, returning `DataFusionError::Internal` on failure.
 
 # Examples
@@ -145,6 +163,9 @@ Also reachable as `datafusion::common::assert_ne_or_internal_err`
 ```rust
 macro_rules! assert_ne_or_internal_err
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.assert_ne_or_internal_err.md).
+
 
 Assert inequality, returning `DataFusionError::Internal` on failure.
 
@@ -168,6 +189,9 @@ Also reachable as `datafusion::common::assert_not_contains`
 macro_rules! assert_not_contains
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.assert_not_contains.md).
+
+
 A macro to assert that one string is NOT contained within another with
 a nice error message if they are.
 
@@ -189,6 +213,9 @@ Also reachable as `datafusion::common::assert_or_internal_err`
 ```rust
 macro_rules! assert_or_internal_err
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.assert_or_internal_err.md).
+
 
 Assert a condition, returning `DataFusionError::Internal` on failure.
 
@@ -212,6 +239,9 @@ Also reachable as `datafusion::common::config_datafusion_err`
 macro_rules! config_datafusion_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config_datafusion_err.md).
+
+
 Macro wraps `$ERR` to add backtrace feature
 
 ---
@@ -226,6 +256,9 @@ Also reachable as `datafusion::common::config_err`
 macro_rules! config_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config_err.md).
+
+
 Macro wraps Err(`$ERR`) to add backtrace feature
 
 ---
@@ -239,6 +272,9 @@ Also reachable as `datafusion::common::config_field`
 ```rust
 macro_rules! config_field
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config_field.md).
+
 
 Macro that generates [`ConfigField`] for a given type.
 
@@ -278,6 +314,9 @@ Also reachable as `datafusion::common::config_namespace`
 ```rust
 macro_rules! config_namespace
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config_namespace.md).
+
 
 A macro that wraps a configuration struct and automatically derives
 [`Default`] and [`ConfigField`] for it, allowing it to be used
@@ -372,6 +411,9 @@ Also reachable as `datafusion::common::context`
 macro_rules! context
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.context.md).
+
+
 ---
 
 ## create_array
@@ -384,6 +426,9 @@ Also reachable as `datafusion::common::create_array`
 macro_rules! create_array
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.create_array.md).
+
+
 ---
 
 ## downcast_value
@@ -395,6 +440,9 @@ Also reachable as `datafusion::common::downcast_value`
 ```rust
 macro_rules! downcast_value
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.downcast_value.md).
+
 
 Downcast an Arrow Array to a concrete type, return an `DataFusionError::Internal` if the cast is
 not possible. In normal usage of DataFusion the downcast should always succeed.
@@ -413,6 +461,9 @@ Also reachable as `datafusion::common::exec_datafusion_err`
 macro_rules! exec_datafusion_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.exec_datafusion_err.md).
+
+
 Macro wraps `$ERR` to add backtrace feature
 
 ---
@@ -427,6 +478,9 @@ Also reachable as `datafusion::common::exec_err`
 macro_rules! exec_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.exec_err.md).
+
+
 Macro wraps Err(`$ERR`) to add backtrace feature
 
 ---
@@ -440,6 +494,9 @@ Also reachable as `datafusion::common::extensions_options`
 ```rust
 macro_rules! extensions_options
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.extensions_options.md).
+
 
 Convenience macro to create [`ExtensionsOptions`].
 
@@ -506,6 +563,9 @@ Also reachable as `datafusion::common::ffi_datafusion_err`
 macro_rules! ffi_datafusion_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.ffi_datafusion_err.md).
+
+
 Macro wraps `$ERR` to add backtrace feature
 
 ---
@@ -519,6 +579,9 @@ Also reachable as `datafusion::common::ffi_err`
 ```rust
 macro_rules! ffi_err
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.ffi_err.md).
+
 
 Macro wraps Err(`$ERR`) to add backtrace feature
 
@@ -534,6 +597,9 @@ Also reachable as `datafusion::common::internal_datafusion_err`
 macro_rules! internal_datafusion_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.internal_datafusion_err.md).
+
+
 Macro wraps `$ERR` to add backtrace feature
 
 ---
@@ -547,6 +613,9 @@ Also reachable as `datafusion::common::internal_err`, `datafusion::physical_plan
 ```rust
 macro_rules! internal_err
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.internal_err.md).
+
 
 Macro wraps Err(`$ERR`) to add backtrace feature
 
@@ -562,6 +631,9 @@ Also reachable as `datafusion::common::not_impl_datafusion_err`
 macro_rules! not_impl_datafusion_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.not_impl_datafusion_err.md).
+
+
 Macro wraps `$ERR` to add backtrace feature
 
 ---
@@ -575,6 +647,9 @@ Also reachable as `datafusion::common::not_impl_err`
 ```rust
 macro_rules! not_impl_err
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.not_impl_err.md).
+
 
 Macro wraps Err(`$ERR`) to add backtrace feature
 
@@ -590,6 +665,9 @@ Also reachable as `datafusion::common::plan_datafusion_err`
 macro_rules! plan_datafusion_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.plan_datafusion_err.md).
+
+
 Macro wraps `$ERR` to add backtrace feature
 
 ---
@@ -603,6 +681,9 @@ Also reachable as `datafusion::common::plan_err`
 ```rust
 macro_rules! plan_err
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.plan_err.md).
+
 
 Macro wraps Err(`$ERR`) to add backtrace feature
 
@@ -619,6 +700,9 @@ Also reachable as `datafusion::common::record_batch`
 ```rust
 macro_rules! record_batch
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.record_batch.md).
+
 
 Creates a record batch from literal slice of values, suitable for rapid
 testing and development.
@@ -649,6 +733,9 @@ Also reachable as `datafusion::common::resources_datafusion_err`
 macro_rules! resources_datafusion_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.resources_datafusion_err.md).
+
+
 Macro wraps `$ERR` to add backtrace feature
 
 ---
@@ -662,6 +749,9 @@ Also reachable as `datafusion::common::resources_err`
 ```rust
 macro_rules! resources_err
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.resources_err.md).
+
 
 Macro wraps Err(`$ERR`) to add backtrace feature
 
@@ -677,6 +767,9 @@ Also reachable as `datafusion::common::schema_datafusion_err`
 macro_rules! schema_datafusion_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.schema_datafusion_err.md).
+
+
 ---
 
 ## schema_err
@@ -688,6 +781,9 @@ Also reachable as `datafusion::common::schema_err`, `datafusion_common::error::_
 ```rust
 macro_rules! schema_err
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.schema_err.md).
+
 
 ---
 
@@ -701,6 +797,9 @@ Also reachable as `datafusion::common::sql_datafusion_err`
 macro_rules! sql_datafusion_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.sql_datafusion_err.md).
+
+
 ---
 
 ## sql_err
@@ -713,6 +812,9 @@ Also reachable as `datafusion::common::sql_err`
 macro_rules! sql_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.sql_err.md).
+
+
 ---
 
 ## substrait_datafusion_err
@@ -724,6 +826,9 @@ Also reachable as `datafusion::common::substrait_datafusion_err`
 ```rust
 macro_rules! substrait_datafusion_err
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.substrait_datafusion_err.md).
+
 
 Macro wraps `$ERR` to add backtrace feature
 
@@ -739,6 +844,9 @@ Also reachable as `datafusion::common::substrait_err`
 macro_rules! substrait_err
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.substrait_err.md).
+
+
 Macro wraps Err(`$ERR`) to add backtrace feature
 
 ---
@@ -752,6 +860,9 @@ Also reachable as `datafusion::common::unwrap_or_internal_err`
 ```rust
 macro_rules! unwrap_or_internal_err
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.unwrap_or_internal_err.md).
+
 
 Unwrap an `Option` if possible. Otherwise return an `DataFusionError::Internal`.
 In normal usage of DataFusion the unwrap should always succeed.
@@ -770,6 +881,9 @@ Also reachable as `datafusion::common::HashMap`
 type HashMap<K, V, S = hashbrown::DefaultHashBuilder> = hashbrown::HashMap<K, V, S>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.HashMap.md).
+
+
 ---
 
 ## HashSet
@@ -781,5 +895,8 @@ Also reachable as `datafusion::common::HashSet`
 ```rust
 type HashSet<T, S = hashbrown::DefaultHashBuilder> = hashbrown::HashSet<T, S>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.HashSet.md).
+
 
 ---

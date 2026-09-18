@@ -12,6 +12,9 @@ Also reachable as `datafusion_datasource::compute_all_files_statistics`
 fn compute_all_files_statistics(file_groups: Vec<file_groups::FileGroup>, table_schema: arrow::datatypes::SchemaRef, collect_stats: bool, inexact_stats: bool) -> datafusion_common::Result<(Vec<file_groups::FileGroup>, datafusion_physical_plan::Statistics)>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.statistics.compute_all_files_statistics.md).
+
+
 Computes statistics for all files across multiple file groups.
 
 This function:

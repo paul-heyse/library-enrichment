@@ -1,0 +1,1976 @@
+[
+  {
+    "id": "60df62ca6d594410f7745e1c",
+    "path": "datafusion_sql::planner::SqlToRel",
+    "name": "SqlToRel",
+    "owner": null,
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct SqlToRel<'a, S: ContextProvider>",
+    "docs": "SQL query planner and binder\n\nThis struct is used to convert a SQL AST into a [`LogicalPlan`].\n\nYou can control the behavior of the planner by providing [`ParserOptions`].\n\nIt performs the following tasks:\n\n1. Name and type resolution (called \"binding\" in other systems). This\n   phase looks up table and column names using the [`ContextProvider`].\n2. Mechanical translation of the AST into a [`LogicalPlan`].\n\nIt does not perform type coercion, or perform optimization, which are done\nby subsequent passes.\n\nKey interfaces are:\n* [`Self::sql_statement_to_plan`]: Convert a statement\n  (e.g. `SELECT ...`) into a [`LogicalPlan`]\n* [`Self::sql_to_expr`]: Convert an expression (e.g. `1 + 2`) into an [`Expr`]",
+    "span": {
+      "filename": "src/planner.rs",
+      "begin": [
+        454,
+        1
+      ],
+      "end": [
+        459,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "S",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ContextProvider",
+                          "id": 425,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          608,
+          615,
+          621,
+          622,
+          623,
+          624,
+          625,
+          626,
+          627,
+          628,
+          629,
+          630,
+          631,
+          632,
+          633,
+          634,
+          635,
+          636,
+          637,
+          638
+        ]
+      }
+    },
+    "type_references": {
+      "425": "datafusion_expr::planner::ContextProvider"
+    },
+    "impl_context": null,
+    "links": {
+      "`ContextProvider`": 425,
+      "`LogicalPlan`": 567,
+      "`Self::sql_statement_to_plan`": 602,
+      "`ParserOptions`": 434,
+      "`Self::sql_to_expr`": 603,
+      "`Expr`": 604
+    },
+    "link_paths": {
+      "`ContextProvider`": "datafusion_expr::planner::ContextProvider",
+      "`LogicalPlan`": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "`Self::sql_statement_to_plan`": "datafusion_sql::planner::SqlToRel::sql_statement_to_plan",
+      "`ParserOptions`": "datafusion_sql::planner::ParserOptions",
+      "`Self::sql_to_expr`": "datafusion_sql::planner::SqlToRel::sql_to_expr",
+      "`Expr`": "datafusion_expr::expr::Expr"
+    },
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "605",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.planner.SqlToRel.md",
+    "record_file": "operations/datafusion_sql.planner.SqlToRel.json",
+    "anchor": "op-60df62ca6d594410f7745e1c",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ContextProvider`": "../operations/datafusion_expr.planner.ContextProvider.md#op-97af42065a69e4e56202d0d2",
+      "`LogicalPlan`": "../operations/datafusion_expr.logical_plan.plan.LogicalPlan.md#op-2f2092c4f87ff1cc0b33c3da",
+      "`Self::sql_statement_to_plan`": "../operations/datafusion_sql.planner.SqlToRel.md#op-50bf54bdf45fab8ca6c8d0ba",
+      "`ParserOptions`": "../operations/datafusion_sql.planner.ParserOptions.md#op-334a25f33d603162ddd6667c",
+      "`Self::sql_to_expr`": "../operations/datafusion_sql.planner.SqlToRel.md#op-8db68b37224ff29b99e7799b",
+      "`Expr`": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc"
+    }
+  },
+  {
+    "id": "dcf9f64990f3b26f6c536a0f",
+    "path": "datafusion_sql::planner::SqlToRel::build_schema",
+    "name": "build_schema",
+    "owner": "datafusion_sql::planner::SqlToRel",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn build_schema(&self, columns: Vec<SQLColumnDef>) -> Result<Schema>",
+    "docs": "",
+    "span": {
+      "filename": "src/planner.rs",
+      "begin": [
+        502,
+        5
+      ],
+      "end": [
+        521,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "columns",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 113,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "SQLColumnDef",
+                              "id": 195,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 507,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Schema",
+                          "id": 614,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "113": "alloc::vec::Vec",
+      "195": "sqlparser::ast::ddl::ColumnDef",
+      "507": "datafusion_common::error::Result",
+      "614": "arrow_schema::schema::Schema"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SqlToRel",
+          "id": "datafusion_sql::planner::SqlToRel",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                },
+                {
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "S",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ContextProvider",
+                        "id": "datafusion_expr::planner::ContextProvider",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/planner.rs",
+        "begin": [
+          461,
+          1
+        ],
+        "end": [
+          926,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "613",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.planner.SqlToRel.md",
+    "record_file": "operations/datafusion_sql.planner.SqlToRel.json",
+    "anchor": "op-dcf9f64990f3b26f6c536a0f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "77dd04fb58ebc47ebe079007",
+    "path": "datafusion_sql::planner::SqlToRel::new",
+    "name": "new",
+    "owner": "datafusion_sql::planner::SqlToRel",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(context_provider: &'a S) -> Self",
+    "docs": "Create a new query planner.\n\nThe query planner derives the parser options from the context provider.",
+    "span": {
+      "filename": "src/planner.rs",
+      "begin": [
+        465,
+        5
+      ],
+      "end": [
+        468,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "context_provider",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'a",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SqlToRel",
+          "id": "datafusion_sql::planner::SqlToRel",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                },
+                {
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "S",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ContextProvider",
+                        "id": "datafusion_expr::planner::ContextProvider",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/planner.rs",
+        "begin": [
+          461,
+          1
+        ],
+        "end": [
+          926,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "609",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.planner.SqlToRel.md",
+    "record_file": "operations/datafusion_sql.planner.SqlToRel.json",
+    "anchor": "op-77dd04fb58ebc47ebe079007",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5471738b769b5056aa2431f3",
+    "path": "datafusion_sql::planner::SqlToRel::new_constraint_from_table_constraints",
+    "name": "new_constraint_from_table_constraints",
+    "owner": "datafusion_sql::planner::SqlToRel",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new_constraint_from_table_constraints(&self, constraints: &[TableConstraint], df_schema: &DFSchemaRef) -> Result<Constraints>",
+    "docs": "Convert each [TableConstraint] to corresponding [Constraint]",
+    "span": {
+      "filename": "src/statement.rs",
+      "begin": [
+        1921,
+        5
+      ],
+      "end": [
+        1992,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "constraints",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "TableConstraint",
+                        "id": 207,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "df_schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DFSchemaRef",
+                      "id": 551,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 507,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Constraints",
+                          "id": 620,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "207": "sqlparser::ast::table_constraints::TableConstraint",
+      "551": "datafusion_common::dfschema::DFSchemaRef",
+      "507": "datafusion_common::error::Result",
+      "620": "datafusion_common::functional_dependencies::Constraints"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "crate::planner::SqlToRel",
+          "id": "datafusion_sql::planner::SqlToRel",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'_"
+                },
+                {
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "S",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ContextProvider",
+                        "id": "datafusion_expr::planner::ContextProvider",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/statement.rs",
+        "begin": [
+          227,
+          1
+        ],
+        "end": [
+          3190,
+          2
+        ]
+      }
+    },
+    "links": {
+      "TableConstraint": 207,
+      "Constraint": 618
+    },
+    "link_paths": {
+      "TableConstraint": "sqlparser::ast::table_constraints::TableConstraint",
+      "Constraint": "datafusion_common::functional_dependencies::Constraint"
+    },
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "619",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.planner.SqlToRel.md",
+    "record_file": "operations/datafusion_sql.planner.SqlToRel.json",
+    "anchor": "op-5471738b769b5056aa2431f3",
+    "aliases": [],
+    "resolved_doc_links": {
+      "TableConstraint": "../operations/sqlparser.ast.table_constraints.TableConstraint.md#op-6cf7ad3c767f63a7e0b2a59a",
+      "Constraint": "../operations/datafusion_common.functional_dependencies.Constraint.md#op-6a1d40180d911ee98e5b60ee"
+    }
+  },
+  {
+    "id": "b0c05c4f687db493489241ac",
+    "path": "datafusion_sql::planner::SqlToRel::new_with_options",
+    "name": "new_with_options",
+    "owner": "datafusion_sql::planner::SqlToRel",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new_with_options(context_provider: &'a S, options: ParserOptions) -> Self",
+    "docs": "Create a new query planner with the given parser options.\n\nThe query planner ignores the parser options from the context provider\nand uses the given parser options instead.",
+    "span": {
+      "filename": "src/planner.rs",
+      "begin": [
+        474,
+        5
+      ],
+      "end": [
+        483,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "context_provider",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'a",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "ParserOptions",
+                  "id": 434,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "434": "datafusion_sql::planner::ParserOptions"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SqlToRel",
+          "id": "datafusion_sql::planner::SqlToRel",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                },
+                {
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "S",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ContextProvider",
+                        "id": "datafusion_expr::planner::ContextProvider",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/planner.rs",
+        "begin": [
+          461,
+          1
+        ],
+        "end": [
+          926,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "610",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.planner.SqlToRel.md",
+    "record_file": "operations/datafusion_sql.planner.SqlToRel.json",
+    "anchor": "op-b0c05c4f687db493489241ac",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "50bf54bdf45fab8ca6c8d0ba",
+    "path": "datafusion_sql::planner::SqlToRel::sql_statement_to_plan",
+    "name": "sql_statement_to_plan",
+    "owner": "datafusion_sql::planner::SqlToRel",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn sql_statement_to_plan(&self, statement: Statement) -> Result<LogicalPlan>",
+    "docs": "Generate a logical plan from an SQL statement",
+    "span": {
+      "filename": "src/statement.rs",
+      "begin": [
+        242,
+        5
+      ],
+      "end": [
+        247,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "statement",
+              {
+                "resolved_path": {
+                  "path": "Statement",
+                  "id": 14,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 507,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "LogicalPlan",
+                          "id": 567,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "14": "sqlparser::ast::Statement",
+      "507": "datafusion_common::error::Result",
+      "567": "datafusion_expr::logical_plan::plan::LogicalPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "crate::planner::SqlToRel",
+          "id": "datafusion_sql::planner::SqlToRel",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'_"
+                },
+                {
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "S",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ContextProvider",
+                        "id": "datafusion_expr::planner::ContextProvider",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/statement.rs",
+        "begin": [
+          227,
+          1
+        ],
+        "end": [
+          3190,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "602",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.planner.SqlToRel.md",
+    "record_file": "operations/datafusion_sql.planner.SqlToRel.json",
+    "anchor": "op-50bf54bdf45fab8ca6c8d0ba",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f3722c6a740ee16dead8069f",
+    "path": "datafusion_sql::planner::SqlToRel::sql_statement_to_plan_with_context",
+    "name": "sql_statement_to_plan_with_context",
+    "owner": "datafusion_sql::planner::SqlToRel",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn sql_statement_to_plan_with_context(&self, statement: Statement, planner_context: &mut PlannerContext) -> Result<LogicalPlan>",
+    "docs": "Generate a logical plan from an SQL statement",
+    "span": {
+      "filename": "src/statement.rs",
+      "begin": [
+        250,
+        5
+      ],
+      "end": [
+        256,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "statement",
+              {
+                "resolved_path": {
+                  "path": "Statement",
+                  "id": 14,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "planner_context",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "PlannerContext",
+                      "id": 546,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 507,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "LogicalPlan",
+                          "id": 567,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "14": "sqlparser::ast::Statement",
+      "546": "datafusion_sql::planner::PlannerContext",
+      "507": "datafusion_common::error::Result",
+      "567": "datafusion_expr::logical_plan::plan::LogicalPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "crate::planner::SqlToRel",
+          "id": "datafusion_sql::planner::SqlToRel",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'_"
+                },
+                {
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "S",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ContextProvider",
+                        "id": "datafusion_expr::planner::ContextProvider",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/statement.rs",
+        "begin": [
+          227,
+          1
+        ],
+        "end": [
+          3190,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "617",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.planner.SqlToRel.md",
+    "record_file": "operations/datafusion_sql.planner.SqlToRel.json",
+    "anchor": "op-f3722c6a740ee16dead8069f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8db68b37224ff29b99e7799b",
+    "path": "datafusion_sql::planner::SqlToRel::sql_to_expr",
+    "name": "sql_to_expr",
+    "owner": "datafusion_sql::planner::SqlToRel",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn sql_to_expr(&self, sql: SQLExpr, schema: &DFSchema, planner_context: &mut PlannerContext) -> Result<Expr>",
+    "docs": "Generate a relational expression from a SQL expression",
+    "span": {
+      "filename": "src/expr/mod.rs",
+      "begin": [
+        245,
+        5
+      ],
+      "end": [
+        257,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "sql",
+              {
+                "resolved_path": {
+                  "path": "SQLExpr",
+                  "id": 607,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DFSchema",
+                      "id": 561,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "planner_context",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "PlannerContext",
+                      "id": 546,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 507,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Expr",
+                          "id": 604,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "607": "sqlparser::ast::Expr",
+      "561": "datafusion_common::dfschema::DFSchema",
+      "546": "datafusion_sql::planner::PlannerContext",
+      "507": "datafusion_common::error::Result",
+      "604": "datafusion_expr::expr::Expr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "crate::planner::SqlToRel",
+          "id": "datafusion_sql::planner::SqlToRel",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'_"
+                },
+                {
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "S",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ContextProvider",
+                        "id": "datafusion_expr::planner::ContextProvider",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/expr/mod.rs",
+        "begin": [
+          134,
+          1
+        ],
+        "end": [
+          1324,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "603",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.planner.SqlToRel.md",
+    "record_file": "operations/datafusion_sql.planner.SqlToRel.json",
+    "anchor": "op-8db68b37224ff29b99e7799b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c77fe4efc14627a8d978ba7b",
+    "path": "datafusion_sql::planner::SqlToRel::sql_to_expr_with_alias",
+    "name": "sql_to_expr_with_alias",
+    "owner": "datafusion_sql::planner::SqlToRel",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn sql_to_expr_with_alias(&self, sql: SQLExprWithAlias, schema: &DFSchema, planner_context: &mut PlannerContext) -> Result<Expr>",
+    "docs": "",
+    "span": {
+      "filename": "src/expr/mod.rs",
+      "begin": [
+        230,
+        5
+      ],
+      "end": [
+        242,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "sql",
+              {
+                "resolved_path": {
+                  "path": "SQLExprWithAlias",
+                  "id": 337,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DFSchema",
+                      "id": 561,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "planner_context",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "PlannerContext",
+                      "id": 546,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 507,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Expr",
+                          "id": 604,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "337": "sqlparser::ast::query::ExprWithAlias",
+      "561": "datafusion_common::dfschema::DFSchema",
+      "546": "datafusion_sql::planner::PlannerContext",
+      "507": "datafusion_common::error::Result",
+      "604": "datafusion_expr::expr::Expr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "crate::planner::SqlToRel",
+          "id": "datafusion_sql::planner::SqlToRel",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'_"
+                },
+                {
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "S",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ContextProvider",
+                        "id": "datafusion_expr::planner::ContextProvider",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/expr/mod.rs",
+        "begin": [
+          134,
+          1
+        ],
+        "end": [
+          1324,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "606",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.planner.SqlToRel.md",
+    "record_file": "operations/datafusion_sql.planner.SqlToRel.json",
+    "anchor": "op-c77fe4efc14627a8d978ba7b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "75b535c1ddc6f8e49db4cb83",
+    "path": "datafusion_sql::planner::SqlToRel::statement_to_plan",
+    "name": "statement_to_plan",
+    "owner": "datafusion_sql::planner::SqlToRel",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn statement_to_plan(&self, statement: DFStatement) -> Result<LogicalPlan>",
+    "docs": "Generate a logical plan from an DataFusion SQL statement",
+    "span": {
+      "filename": "src/statement.rs",
+      "begin": [
+        229,
+        5
+      ],
+      "end": [
+        239,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "statement",
+              {
+                "resolved_path": {
+                  "path": "DFStatement",
+                  "id": 13,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 507,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "LogicalPlan",
+                          "id": 567,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "13": "datafusion_sql::parser::Statement",
+      "507": "datafusion_common::error::Result",
+      "567": "datafusion_expr::logical_plan::plan::LogicalPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "crate::planner::SqlToRel",
+          "id": "datafusion_sql::planner::SqlToRel",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'_"
+                },
+                {
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "S",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ContextProvider",
+                        "id": "datafusion_expr::planner::ContextProvider",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/statement.rs",
+        "begin": [
+          227,
+          1
+        ],
+        "end": [
+          3190,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "616",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.planner.SqlToRel.md",
+    "record_file": "operations/datafusion_sql.planner.SqlToRel.json",
+    "anchor": "op-75b535c1ddc6f8e49db4cb83",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b089b788935eb700de099d47",
+    "path": "datafusion_sql::planner::SqlToRel::take_warnings",
+    "name": "take_warnings",
+    "owner": "datafusion_sql::planner::SqlToRel",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn take_warnings(&self) -> Vec<Diagnostic>",
+    "docs": "Drain and return non-fatal warnings collected during SQL planning.",
+    "span": {
+      "filename": "src/planner.rs",
+      "begin": [
+        493,
+        5
+      ],
+      "end": [
+        500,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 113,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Diagnostic",
+                          "id": 612,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "113": "alloc::vec::Vec",
+      "612": "datafusion_common::diagnostic::Diagnostic"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SqlToRel",
+          "id": "datafusion_sql::planner::SqlToRel",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                },
+                {
+                  "type": {
+                    "generic": "S"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "S",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ContextProvider",
+                        "id": "datafusion_expr::planner::ContextProvider",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/planner.rs",
+        "begin": [
+          461,
+          1
+        ],
+        "end": [
+          926,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "611",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.planner.SqlToRel.md",
+    "record_file": "operations/datafusion_sql.planner.SqlToRel.json",
+    "anchor": "op-b089b788935eb700de099d47",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

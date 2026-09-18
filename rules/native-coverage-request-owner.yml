@@ -1,0 +1,17 @@
+id: native-coverage-request-owner
+language: Rust
+severity: error
+message: Coverage request selection executes native scope and exact-reference plans.
+files:
+  - crates/enrichment-store/src/coverage.rs
+rule:
+  any:
+    - pattern: $OWNER.with_param_values($$$ARGS)
+    - pattern: $OWNER.iter().copied().collect()
+      inside:
+        kind: function_item
+        has:
+          field: name
+          regex: '^(assess|assess_execution|acquisition_kinds)$'
+        stopBy: end
+note: Typed scope inputs replace host-set selection and generated placeholder SQL. Native coverage facts remain the authority; cache membership cannot establish completeness.

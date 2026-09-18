@@ -1,0 +1,27 @@
+id: native-execution-fact-owner
+language: Rust
+severity: error
+message: Native execution_fact_plan owns corpus fact admission and identity; publication handlers supply typed observations.
+files:
+  - crates/enrichment-daemon/src/ops/inspect_execution.rs
+  - crates/enrichment-daemon/src/ops/verify.rs
+  - crates/enrichment-store/src/ingest.rs
+rule:
+  kind: function_item
+  has:
+    field: name
+    regex: '^(publish|publish_completed|execution)$'
+  any:
+    - has:
+        kind: call_expression
+        has:
+          field: function
+          regex: '(^|::)ExecutionObservation::new$|projection::execution::encode$'
+        stopBy: end
+    - has:
+        kind: call_expression
+        has:
+          field: function
+          regex: '\.semantic_binding_id$'
+        stopBy: end
+note: Bounded protocol constructors and independent unit expectations remain outside corpus publication. This is a syntax guard, not proof of callee identity.

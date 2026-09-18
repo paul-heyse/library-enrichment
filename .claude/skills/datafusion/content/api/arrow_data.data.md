@@ -16,6 +16,9 @@ enum BufferSpec
 
 **Derives**: Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.data.BufferSpec.md).
+
+
 Layout specification for a single data type buffer
 
 ---
@@ -29,6 +32,9 @@ Also reachable as `arrow::array::layout`
 ```rust
 fn layout(data_type: &arrow_schema::DataType) -> DataTypeLayout
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_data.data.layout.md).
+
 
 Return the expected [`DataTypeLayout`] Arrays of this data
 type are expected to have
@@ -83,6 +89,9 @@ fn validate_full(&self) -> Result<(), ArrowError>
 fn validate_nulls(&self) -> Result<(), ArrowError>
 fn validate_values(&self) -> Result<(), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_data.data.ArrayData.md).
+
 
 A generic representation of Arrow array data which encapsulates common attributes
 and operations for Arrow array.
@@ -172,6 +181,9 @@ unsafe fn skip_validation(self, skip_validation: bool) -> Self
 fn from(d: ArrayData) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.data.ArrayDataBuilder.md).
+
+
 Builder for [`ArrayData`] type
 
 ---
@@ -201,6 +213,9 @@ fn new_nullable_empty() -> Self
 fn new_view() -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.data.DataTypeLayout.md).
+
+
 Layout specification for a data type
 
 ---
@@ -214,6 +229,9 @@ Also reachable as `arrow::array::ArrayDataRef`
 ```rust
 type ArrayDataRef = std::sync::Arc<ArrayData>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_data.data.ArrayDataRef.md).
+
 
 A thread-safe, shared reference to the Arrow array data.
 

@@ -1,0 +1,20 @@
+id: native-retained-validation-owner
+language: Rust
+severity: error
+message: Retained evidence decisions belong to native snapshot/document plans; readers run on the owned runtime lane.
+files:
+  - crates/enrichment-store/src/repository.rs
+  - crates/enrichment-store/src/execution_documents.rs
+rule:
+  any:
+    - kind: call_expression
+      has:
+        field: function
+        regex: '(^|::)tokio::task::spawn_blocking$'
+    - kind: identifier
+      regex: '^(verified_blobs|verified_manifests|verified_attempts|text_cache|seen_deliveries|delivery_bytes)$'
+    - kind: match_expression
+      has:
+        field: value
+        regex: '\.payload$'
+note: This focused syntax guard covers deleted local caches and procedural payload dispatch, not proof of native admission or physical ownership.

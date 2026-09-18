@@ -50,6 +50,9 @@ fn uncompressed_size(&self) -> i64
 fn unencoded_byte_array_data_bytes(&self) -> Option<i64>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.ColumnChunkMetaData.md).
+
+
 Metadata for a column chunk.
 
 ---
@@ -104,6 +107,9 @@ fn set_unencoded_byte_array_data_bytes(self, value: Option<i64>) -> Self
 fn from(value: ColumnChunkMetaData) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.ColumnChunkMetaDataBuilder.md).
+
+
 Builder for [`ColumnChunkMetaData`]
 
 This builder is used to create a new column chunk metadata or modify an
@@ -145,6 +151,9 @@ fn to_invalid(&mut self)
 fn valid(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.ColumnIndexBuilder.md).
+
+
 Builder for Parquet [`ColumnIndex`], part of the Parquet [PageIndex]
 
 [PageIndex]: https://github.com/apache/parquet-format/blob/master/PageIndex.md
@@ -177,6 +186,9 @@ fn schema_descr_ptr(&self) -> SchemaDescPtr
 fn version(&self) -> i32
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.FileMetaData.md).
+
+
 File level metadata for a Parquet file.
 
 Includes the version of the file, metadata, number of rows, schema, and column orders
@@ -200,6 +212,9 @@ struct KeyValue
 ```rust
 fn new<F2>(key: String, value: F2) -> KeyValue where F2: Into<Option<String>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.KeyValue.md).
+
 
 A key-value pair for [`FileMetaData`].
 
@@ -238,6 +253,9 @@ fn values(&self) -> &[i64]
 fn from(inner: Vec<i64>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.LevelHistogram.md).
+
+
 Histograms for repetition and definition levels.
 
 Each histogram is a vector of length `max_level + 1`. The value at index `i` is the number of
@@ -268,6 +286,9 @@ fn build(self) -> OffsetIndexMetaData
 fn new() -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.OffsetIndexBuilder.md).
+
+
 Builder for offset index, part of the Parquet [PageIndex].
 
 [PageIndex]: https://github.com/apache/parquet-format/blob/master/PageIndex.md
@@ -285,6 +306,9 @@ struct PageEncodingStats
 **Fields**: `page_type`, `encoding`, `count`
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.PageEncodingStats.md).
+
 
 PageEncodingStats for a column chunk and data page.
 
@@ -313,6 +337,9 @@ fn offset_index(&self) -> Option<&ParquetOffsetIndex>
 fn row_group(&self, i: usize) -> &RowGroupMetaData
 fn row_groups(&self) -> &[RowGroupMetaData]
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.ParquetMetaData.md).
+
 
 Parsed metadata for a single Parquet file
 
@@ -367,6 +394,9 @@ fn take_row_groups(&mut self) -> Vec<RowGroupMetaData>
 ```rust
 fn from(meta_data: ParquetMetaData) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.ParquetMetaDataBuilder.md).
+
 
  A builder for creating / manipulating [`ParquetMetaData`]
 
@@ -437,6 +467,9 @@ fn sorting_columns(&self) -> Option<&Vec<SortingColumn>>
 fn total_byte_size(&self) -> i64
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.RowGroupMetaData.md).
+
+
 Metadata for a row group
 
 Includes [`ColumnChunkMetaData`] for each column in the row group, the number of rows
@@ -466,6 +499,9 @@ fn set_total_byte_size(self, value: i64) -> Self
 fn take_columns(&mut self) -> Vec<ColumnChunkMetaData>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.RowGroupMetaDataBuilder.md).
+
+
 Builder for row group metadata.
 
 ---
@@ -482,6 +518,9 @@ struct SortingColumn
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.SortingColumn.md).
+
+
 Sort order within a RowGroup of a leaf column
 
 ---
@@ -494,6 +533,9 @@ Sort order within a RowGroup of a leaf column
 type FileMetaDataPtr = std::sync::Arc<FileMetaData>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.FileMetaDataPtr.md).
+
+
 Reference counted pointer for [`FileMetaData`].
 
 ---
@@ -505,6 +547,9 @@ Reference counted pointer for [`FileMetaData`].
 ```rust
 type ParquetColumnIndex = Vec<Vec<file::page_index::column_index::ColumnIndexMetaData>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.ParquetColumnIndex.md).
+
 
 Page level statistics for each column chunk of each row group.
 
@@ -533,6 +578,9 @@ column in the third row group of the parquet file.
 type ParquetOffsetIndex = Vec<Vec<file::page_index::offset_index::OffsetIndexMetaData>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.ParquetOffsetIndex.md).
+
+
 [`OffsetIndexMetaData`] for each data page of each row group of each column
 
 This structure is the parsed representation of the [`OffsetIndex`] from the
@@ -554,6 +602,9 @@ the [`OffsetIndexMetaData`] corresponding to column
 ```rust
 type RowGroupMetaDataPtr = std::sync::Arc<RowGroupMetaData>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.RowGroupMetaDataPtr.md).
+
 
 Reference counted pointer for [`RowGroupMetaData`].
 

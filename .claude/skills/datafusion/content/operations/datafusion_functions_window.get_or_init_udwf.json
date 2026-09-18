@@ -1,0 +1,57 @@
+[
+  {
+    "id": "8b8b9651b600ac64790c6256",
+    "path": "datafusion_functions_window::get_or_init_udwf",
+    "name": "get_or_init_udwf",
+    "owner": null,
+    "crate": "datafusion-functions-window",
+    "version": "55.1.0",
+    "kind": "macro",
+    "signature": "macro_rules! get_or_init_udwf",
+    "docs": "Lazily initializes a user-defined window function exactly once\nwhen called concurrently. Repeated calls return a reference to the\nsame instance.\n\n# Parameters\n\n* `$UDWF`: The struct which defines the [`Signature`](datafusion_expr::Signature)\n  of the user-defined window function.\n* `$OUT_FN_NAME`: The expression function name\n  `UDWF_FN` : The unique function name\n* `$DOC`: Doc comments for UDWF.\n* (optional) `$CTOR`: Pass a custom constructor. When omitted it\n  automatically resolves to `$UDWF::default()`.\n\n# Example\n\n```\nuse arrow::datatypes::FieldRef;\n# use datafusion_common::arrow::datatypes::{DataType, Field};\n# use datafusion_expr::{PartitionEvaluator, Signature, Volatility, WindowUDFImpl};\n#\n# use datafusion_functions_window_common::field::WindowUDFFieldArgs;\n# use datafusion_functions_window::get_or_init_udwf;\n# use datafusion_functions_window_common::partition::PartitionEvaluatorArgs;\n#\n/// Defines the `simple_udwf()` user-defined window function.\nget_or_init_udwf!(\n    SimpleUDWF,\n    simple,\n    simple_udwf,\n    \"Simple user-defined window function doc comment.\"\n);\n#\n# assert_eq!(simple_udwf().name(), \"simple_user_defined_window_function\");\n#\n#  #[derive(Debug, PartialEq, Eq, Hash)]\n#  struct SimpleUDWF {\n#      signature: Signature,\n#  }\n#\n#  impl Default for SimpleUDWF {\n#      fn default() -> Self {\n#          Self {\n#             signature: Signature::any(0, Volatility::Immutable),\n#          }\n#      }\n#  }\n#\n#  impl WindowUDFImpl for SimpleUDWF {\n#      fn name(&self) -> &str {\n#          \"simple_user_defined_window_function\"\n#      }\n#      fn signature(&self) -> &Signature {\n#          &self.signature\n#      }\n#      fn partition_evaluator(\n#          &self,\n#         _partition_evaluator_args: PartitionEvaluatorArgs,\n#      ) -> datafusion_common::Result<Box<dyn PartitionEvaluator>> {\n#          unimplemented!()\n#      }\n#      fn field(&self, field_args: WindowUDFFieldArgs) -> datafusion_common::Result<FieldRef> {\n#          Ok(Field::new(field_args.name(), DataType::Int64, false).into())\n#      }\n#  }\n#\n```",
+    "span": {
+      "filename": "src/macros.rs",
+      "begin": [
+        93,
+        1
+      ],
+      "end": [
+        111,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      "macro_export"
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "macro": "macro_rules! get_or_init_udwf {\n    ($UDWF:ident, $OUT_FN_NAME:ident, $UDWF_FN:ident, $DOC:expr) => { ... };\n    ($UDWF:ident, $OUT_FN_NAME:ident, $UDWF_FN:ident, $DOC:expr, $CTOR:path) => { ... };\n}"
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "datafusion_expr::Signature": 87
+    },
+    "link_paths": {
+      "datafusion_expr::Signature": "datafusion_expr_common::signature::Signature"
+    },
+    "artifact": {
+      "id": "e39780ca066e2cac61bd60b52e705d0c0ba137249e8deb377e3d9ca8d6256330",
+      "format_version": 61,
+      "item_id": "555",
+      "origin": "https://docs.rs/crate/datafusion-functions-window/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_functions_window.get_or_init_udwf.md",
+    "record_file": "operations/datafusion_functions_window.get_or_init_udwf.json",
+    "anchor": "op-8b8b9651b600ac64790c6256",
+    "aliases": [
+      "datafusion::functions_window::get_or_init_udwf"
+    ],
+    "resolved_doc_links": {
+      "datafusion_expr::Signature": "../operations/datafusion_expr_common.signature.Signature.md#op-3501f77593554c0ab3e03e9e"
+    }
+  }
+]

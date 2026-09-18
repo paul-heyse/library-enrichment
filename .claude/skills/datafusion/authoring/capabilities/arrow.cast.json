@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "id": "arrow.cast",
+  "title": "Choose conversion failure and output-schema policies explicitly",
+  "task_aliases": [
+    "parse numeric strings",
+    "cast bad values to null",
+    "reject invalid cast",
+    "strict conversion",
+    "safe cast"
+  ],
+  "crates": [
+    "arrow-cast",
+    "arrow-schema"
+  ],
+  "input": [
+    "Array",
+    "DataType",
+    "CastOptions"
+  ],
+  "output": [
+    "ArrayRef",
+    "ArrowError"
+  ],
+  "properties": [
+    "nulls",
+    "errors",
+    "coercion",
+    "metadata"
+  ],
+  "operations": [
+    "arrow_cast::cast::cast_with_options",
+    "arrow_cast::cast::CastOptions::safe",
+    "arrow_cast::cast::can_cast_types"
+  ],
+  "brief": "In Arrow CastOptions, safe=true means null on supported value-conversion failures; safe=false requests an error. Check the specific type pair and output field nullability.",
+  "choices": [
+    {
+      "candidate": "cast_with_options safe=true",
+      "choose_when": "Continue processing malformed supported values",
+      "tradeoff": "Input nulls and failed conversions can become indistinguishable.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "cast_with_options safe=false",
+      "choose_when": "Reject conversion failures",
+      "tradeoff": "Still inspect type-specific precision, overflow and formatting rules.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "DataFusion CAST / TRY_CAST",
+      "choose_when": "Conversion belongs inside a query",
+      "tradeoff": "Use their own documented SQL semantics; do not transfer the Arrow option name blindly.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "arrow.cast.shape",
+      "aspect": "shape",
+      "statement": "&dyn Array + &DataType + &CastOptions -> Result<ArrayRef, ArrowError>. can_cast_types is a type-pair check, not proof that all values are representable.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "arrow.cast.failure",
+      "aspect": "failure",
+      "statement": "Default CastOptions.safe is true. Unsupported casts can still error. A null-on-failure array may require nullable output fields.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "arrow.cast.schema",
+      "aspect": "schema",
+      "statement": "An ArrayRef carries its datatype, not Field/Schema metadata or application validity. Preserve source validity/error distinctions separately if needed.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Specify failure policy before choosing the output field.",
+    "Check conversion-specific decimal/timezone/nested rules and test malformed, valid and input-null controls."
+  ],
+  "unknowns": [
+    "Runtime coverage here is Utf8 to Int32; decimal, timestamp, overflow and nested conversion behavior requires its own probe."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "arrow_cast::cast::cast_with_options",
+        "arrow_cast::cast::CastOptions::safe",
+        "arrow_cast::cast::can_cast_types"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    },
+    {
+      "id": "probe",
+      "kind": "runtime_observation",
+      "tests": [
+        "cast_safe_true_nulls_failed_parses_but_false_errors"
+      ],
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Only the named assertions in the recorded Cargo profile."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "arrow_cast::cast::cast_with_options",
+      "arrow_cast::cast::CastOptions::safe",
+      "arrow_cast::cast::can_cast_types"
+    ],
+    "candidate_set": [
+      "cast_with_options safe=true",
+      "cast_with_options safe=false",
+      "DataFusion CAST / TRY_CAST"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  }
+}

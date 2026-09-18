@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "id": "df.source",
+  "title": "Reuse a provider before implementing a new source",
+  "task_aliases": [
+    "materialized batches table",
+    "partitioned files",
+    "Parquet object storage",
+    "provider view cache",
+    "register table"
+  ],
+  "crates": [
+    "datafusion",
+    "datafusion-catalog",
+    "datafusion-datasource",
+    "datafusion-datasource-parquet",
+    "object_store",
+    "datafusion-catalog-listing"
+  ],
+  "input": [
+    "RecordBatch",
+    "files",
+    "LogicalPlan",
+    "ObjectStore"
+  ],
+  "output": [
+    "TableProvider",
+    "DataFrame",
+    "ExecutionPlan"
+  ],
+  "properties": [
+    "reuse",
+    "pruning",
+    "partitioning",
+    "schema",
+    "storage"
+  ],
+  "operations": [
+    "datafusion_catalog::memory::table::MemTable",
+    "datafusion_catalog::view::ViewTable",
+    "datafusion_catalog_listing::table::ListingTable",
+    "datafusion::execution::context::SessionContext::register_object_store",
+    "datafusion_session::table::TableProvider::scan"
+  ],
+  "brief": "MemTable exposes materialized partitioned batches; ViewTable exposes a logical plan; ListingTable composes supported file formats and stores. Custom providers can reuse these execution components.",
+  "choices": [
+    {
+      "candidate": "MemTable",
+      "choose_when": "Already materialized batches",
+      "tradeoff": "Owns in-memory table data; does not perform file pruning.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "ListingTable + ParquetSource",
+      "choose_when": "Files with partition/statistics pruning",
+      "tradeoff": "Requires store mapping, schema and listing/read configuration.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "ViewTable",
+      "choose_when": "Reusable logical relation",
+      "tradeoff": "Reuses a plan, not necessarily materialized results.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "custom TableProvider",
+      "choose_when": "Source behavior cannot be expressed by existing providers",
+      "tradeoff": "Implement the scan/capability contract; do not rebuild formats/stores unnecessarily.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "df.source.shape",
+      "aspect": "shape",
+      "statement": "MemTable receives schema and Vec<Vec<RecordBatch>> (outer partitions). TableProvider::scan builds Arc<dyn ExecutionPlan>; execution yields batches later.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.source.configuration",
+      "aspect": "configuration",
+      "statement": "ObjectStore registration belongs to the RuntimeEnv registry. Contexts may share it. URL scheme/authority and ListingTableUrl/file paths have different responsibilities.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.source.schema",
+      "aspect": "schema",
+      "statement": "Supply known schema to avoid unnecessary inference, but validate compatibility. Declare partition columns and inspect statistics/pruning; file discovery and metadata reads have costs.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Select the source representation and lifecycle first.",
+    "Compare built-in provider/format/source combinations.",
+    "Verify read projection, partition schema and predicate behavior on a small source-to-result fixture."
+  ],
+  "unknowns": [
+    "Cloud authentication, listing costs and invalidation depend on the selected ObjectStore/deployment; local probes do not qualify them."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "datafusion_catalog::memory::table::MemTable",
+        "datafusion_catalog::view::ViewTable",
+        "datafusion_catalog_listing::table::ListingTable",
+        "datafusion::execution::context::SessionContext::register_object_store",
+        "datafusion_session::table::TableProvider::scan"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    },
+    {
+      "id": "probe",
+      "kind": "runtime_observation",
+      "tests": [
+        "provider_exact_inexact_projection_limit_match_reference",
+        "parquet_listing_source_executes_query"
+      ],
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Only the named assertions in the recorded Cargo profile."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "datafusion_catalog::memory::table::MemTable",
+      "datafusion_catalog::view::ViewTable",
+      "datafusion_catalog_listing::table::ListingTable",
+      "datafusion::execution::context::SessionContext::register_object_store",
+      "datafusion_session::table::TableProvider::scan"
+    ],
+    "candidate_set": [
+      "MemTable",
+      "ListingTable + ParquetSource",
+      "ViewTable",
+      "custom TableProvider"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  },
+  "resolved_operations": [
+    {
+      "path": "datafusion_catalog::memory::table::MemTable",
+      "id": "edca0df891fe36e3d9bd9dea",
+      "kind": "struct",
+      "crate": "datafusion-catalog",
+      "record": "operations/datafusion_catalog.memory.table.MemTable.json",
+      "page": "operations/datafusion_catalog.memory.table.MemTable.md#op-edca0df891fe36e3d9bd9dea",
+      "signature": "struct MemTable"
+    },
+    {
+      "path": "datafusion_catalog::view::ViewTable",
+      "id": "bfab6ebe5a11caa5667b8bcd",
+      "kind": "struct",
+      "crate": "datafusion-catalog",
+      "record": "operations/datafusion_catalog.view.ViewTable.json",
+      "page": "operations/datafusion_catalog.view.ViewTable.md#op-bfab6ebe5a11caa5667b8bcd",
+      "signature": "struct ViewTable"
+    },
+    {
+      "path": "datafusion_catalog_listing::table::ListingTable",
+      "id": "00feae5c1ac67d3f887e695a",
+      "kind": "struct",
+      "crate": "datafusion-catalog-listing",
+      "record": "operations/datafusion_catalog_listing.table.ListingTable.json",
+      "page": "operations/datafusion_catalog_listing.table.ListingTable.md#op-00feae5c1ac67d3f887e695a",
+      "signature": "struct ListingTable"
+    },
+    {
+      "path": "datafusion::execution::context::SessionContext::register_object_store",
+      "id": "c0b8a75bdfc12fe8a5ee5d8e",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.execution.context.SessionContext.json",
+      "page": "operations/datafusion.execution.context.SessionContext.md#op-c0b8a75bdfc12fe8a5ee5d8e",
+      "signature": "fn register_object_store(&self, url: &Url, object_store: Arc<dyn ObjectStore>) -> Option<Arc<dyn ObjectStore>>"
+    },
+    {
+      "path": "datafusion_session::table::TableProvider::scan",
+      "id": "116d00acf0401874b7f0d9f0",
+      "kind": "function",
+      "crate": "datafusion-session",
+      "record": "operations/datafusion_session.table.TableProvider.json",
+      "page": "operations/datafusion_session.table.TableProvider.md#op-116d00acf0401874b7f0d9f0",
+      "signature": "async fn scan(&self, state: &dyn Session, projection: Option<&Vec<usize>>, filters: &[Expr], limit: Option<usize>) -> Result<Arc<dyn ExecutionPlan>>"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/df.source.json"
+}

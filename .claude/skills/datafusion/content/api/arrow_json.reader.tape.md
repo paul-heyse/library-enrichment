@@ -12,6 +12,9 @@ enum TapeElement
 
 **Variants**: `StartObject`, `EndObject`, `StartList`, `EndList`, `String`, `Number`, `I64`, `I32`, `F64`, `F32`, `True`, `False`, `Null`
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.reader.tape.TapeElement.md).
+
+
 We decode JSON to a flattened tape representation,
 allowing for efficient traversal of the JSON data
 

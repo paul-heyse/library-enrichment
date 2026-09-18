@@ -1,0 +1,92 @@
+[
+  {
+    "id": "ae70b4b0dd9491e5b706fe87",
+    "path": "datafusion_spark",
+    "name": "datafusion_spark",
+    "owner": null,
+    "crate": "datafusion-spark",
+    "version": "55.1.0",
+    "kind": "module",
+    "signature": "mod datafusion_spark",
+    "docs": " Spark Expression packages for [DataFusion].\n\n This crate contains a collection of various Spark function packages for DataFusion,\n implemented using the extension API.\n\n [DataFusion]: https://crates.io/crates/datafusion\n\n\n # Available Function Packages\n See the list of [modules](#modules) in this crate for available packages.\n\n # Example: using all function packages\n\n You can register all the functions in all packages using the [`register_all`]\n function as shown below. Any existing functions will be overwritten, with these\n Spark functions taking priority.\n\n ```\n # use datafusion_execution::FunctionRegistry;\n # use datafusion_expr::{ScalarUDF, AggregateUDF, WindowUDF, HigherOrderUDF};\n # use datafusion_expr::planner::ExprPlanner;\n # use datafusion_common::Result;\n # use std::collections::HashSet;\n # use std::sync::Arc;\n # // Note: We can't use a real SessionContext here because the\n # // `datafusion_spark` crate has no dependence on the DataFusion crate\n # // thus use a dummy SessionContext that has enough of the implementation\n # struct SessionContext {}\n # impl FunctionRegistry for SessionContext {\n #    fn register_udf(&mut self, _udf: Arc<ScalarUDF>) -> Result<Option<Arc<ScalarUDF>>> { Ok (None) }\n #    fn udfs(&self) -> HashSet<String> { unimplemented!() }\n #    fn higher_order_function_names(&self) -> HashSet<String> { unimplemented!() }\n #    fn udafs(&self) -> HashSet<String> { unimplemented!() }\n #    fn udwfs(&self) -> HashSet<String> { unimplemented!() }\n #    fn udf(&self, _name: &str) -> Result<Arc<ScalarUDF>> { unimplemented!() }\n #    fn higher_order_function(&self, name: &str) -> Result<Arc<HigherOrderUDF>> { unimplemented!() }\n #    fn udaf(&self, name: &str) -> Result<Arc<AggregateUDF>> {unimplemented!() }\n #    fn udwf(&self, name: &str) -> Result<Arc<WindowUDF>> { unimplemented!() }\n #    fn expr_planners(&self) -> Vec<Arc<dyn ExprPlanner>> { unimplemented!() }\n # }\n # impl SessionContext {\n #   fn new() -> Self { SessionContext {} }\n #   async fn sql(&mut self, _query: &str) -> Result<()> { Ok(()) }\n #  }\n #\n # async fn stub() -> Result<()> {\n // Create a new session context\n let mut ctx = SessionContext::new();\n // Register all Spark functions with the context\n datafusion_spark::register_all(&mut ctx)?;\n // Run a query using the `sha2` function which is now available and has Spark semantics\n let df = ctx.sql(\"SELECT sha2('The input String', 256)\").await?;\n # Ok(())\n # }\n ```\n\n # Example: calling a specific function in Rust\n\n Each package also exports an `expr_fn` submodule that create [`Expr`]s for\n invoking functions via rust using a fluent style. For example, to invoke the\n `sha2` function, you can use the following code:\n\n ```rust\n # use datafusion_expr::{col, lit};\n use datafusion_spark::expr_fn::sha2;\n // Create the expression `sha2(my_data, 256)`\n let expr = sha2(col(\"my_data\"), lit(256));\n ```\n\n # Example: using the Spark expression planner\n\n The [`planner::SparkFunctionPlanner`] provides Spark-compatible expression\n planning, such as mapping SQL `EXTRACT` expressions to Spark's `date_part`\n function. To use it, register it with your session context:\n\n ```ignore\n use std::sync::Arc;\n use datafusion::prelude::SessionContext;\n use datafusion_spark::planner::SparkFunctionPlanner;\n\n let mut ctx = SessionContext::new();\n // Register the Spark expression planner\n ctx.register_expr_planner(Arc::new(SparkFunctionPlanner))?;\n // Now EXTRACT expressions will use Spark semantics\n let df = ctx.sql(\"SELECT EXTRACT(YEAR FROM timestamp_col) FROM my_table\").await?;\n ```\n\n[`Expr`]: datafusion_expr::Expr\n\n # Example: enabling Apache Spark features with SessionStateBuilder\n\n The recommended way to enable Apache Spark compatibility is to use the\n `SessionStateBuilderSpark` extension trait. This registers all\n Apache Spark functions (scalar, aggregate, window, and table) as well as the Apache Spark\n expression planner.\n\n Enable the `core` feature in your `Cargo.toml`:\n ```toml\n datafusion-spark = { version = \"X\", features = [\"core\"] }\n ```\n\n Then use the extension trait - see [`SessionStateBuilderSpark::with_spark_features`]\n for an example.",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        247,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[deny(clippy::clone_on_ref_ptr)]"
+      },
+      {
+        "other": "#[attr = CfgAttrTrace([NameValue { name: \"docsrs\", value: None, span: src/lib.rs:22:13: 22:19 (#0) },\nNameValue { name: \"test\", value: None, span: src/lib.rs:25:13: 25:17 (#0) }])]"
+      },
+      {
+        "other": "#[doc(html_favicon_url = \"https://raw.githubusercontent.com/apache/datafusion/19fe44cf2f30cbdd63d4a4f52c74055163c6cc38/docs/logos/standalone_logo/logo_original.svg\")]"
+      },
+      {
+        "other": "#[doc(html_logo_url = \"https://raw.githubusercontent.com/apache/datafusion/19fe44cf2f30cbdd63d4a4f52c74055163c6cc38/docs/logos/standalone_logo/logo_original.svg\")]"
+      },
+      {
+        "other": "#[attr = Feature([doc_cfg#0])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": true,
+        "items": [
+          4517,
+          4546,
+          4576,
+          4577,
+          4578,
+          4579,
+          4580,
+          4581,
+          4583
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "datafusion_expr::Expr": 288,
+      "`planner::SparkFunctionPlanner`": 4518,
+      "`SessionStateBuilderSpark::with_spark_features`": 4547,
+      "`register_all`": 4583
+    },
+    "link_paths": {
+      "datafusion_expr::Expr": "datafusion_expr::expr::Expr",
+      "`planner::SparkFunctionPlanner`": "datafusion_spark::planner::SparkFunctionPlanner",
+      "`SessionStateBuilderSpark::with_spark_features`": "datafusion_spark::session_state::SessionStateBuilderSpark::with_spark_features",
+      "`register_all`": "datafusion_spark::register_all"
+    },
+    "artifact": {
+      "id": "9a27a666c1e968602535877777386a09ad07767abf0d4ad31f869a221d06ec7f",
+      "format_version": 61,
+      "item_id": "4584",
+      "origin": "https://docs.rs/crate/datafusion-spark/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/datafusion_spark.md",
+    "record_file": "modules/datafusion_spark.json",
+    "anchor": "op-ae70b4b0dd9491e5b706fe87",
+    "aliases": [],
+    "resolved_doc_links": {
+      "datafusion_expr::Expr": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc",
+      "`planner::SparkFunctionPlanner`": "../operations/datafusion_spark.planner.SparkFunctionPlanner.md#op-e6b63867ad6e41fad9c0157a",
+      "`SessionStateBuilderSpark::with_spark_features`": "../operations/datafusion_spark.session_state.SessionStateBuilderSpark.md#op-909d78a08c083d6981fc4f80",
+      "`register_all`": "../operations/datafusion_spark.register_all.md#op-fd7e242dfb35c47d60f716a0"
+    }
+  }
+]

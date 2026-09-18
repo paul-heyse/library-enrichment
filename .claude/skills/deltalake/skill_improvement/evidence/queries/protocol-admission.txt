@@ -1,0 +1,116 @@
+7:#[cfg(feature = "nanosecond-timestamps")]
+22:#[cfg(feature = "datafusion")]
+140:    #[cfg(feature = "nanosecond-timestamps")]
+199:    pub fn can_read_from(&self, snapshot: &dyn TableReference) -> Result<(), TransactionError> {
+200:        self.can_read_from_protocol(snapshot.protocol())
+203:    pub fn can_read_from_protocol(&self, protocol: &Protocol) -> Result<(), TransactionError> {
+231:    pub fn can_write_to(&self, snapshot: &dyn TableReference) -> Result<(), TransactionError> {
+233:        self.can_read_from(snapshot)?;
+266:        self.can_write_to(snapshot)?;
+310:    reader_features.insert(TableFeature::TimestampWithoutTimezone);
+311:    reader_features.insert(TableFeature::DeletionVectors);
+312:    reader_features.insert(TableFeature::VariantType);
+313:    reader_features.insert(TableFeature::VariantTypePreview);
+314:    reader_features.insert(TableFeature::V2Checkpoint);
+315:    #[cfg(feature = "nanosecond-timestamps")]
+316:    reader_features.insert(TableFeature::TimestampNanos);
+317:    #[cfg(feature = "datafusion")]
+319:        reader_features.insert(TableFeature::ColumnMapping);
+323:    writer_features.insert(TableFeature::AppendOnly);
+324:    writer_features.insert(TableFeature::TimestampWithoutTimezone);
+325:    #[cfg(feature = "nanosecond-timestamps")]
+326:    writer_features.insert(TableFeature::TimestampNanos);
+327:    writer_features.insert(TableFeature::VariantType);
+328:    writer_features.insert(TableFeature::VariantTypePreview);
+329:    writer_features.insert(TableFeature::V2Checkpoint);
+330:    #[cfg(feature = "datafusion")]
+332:        writer_features.insert(TableFeature::ChangeDataFeed);
+333:        writer_features.insert(TableFeature::Invariants);
+334:        writer_features.insert(TableFeature::CheckConstraints);
+335:        writer_features.insert(TableFeature::GeneratedColumns);
+336:        writer_features.insert(TableFeature::ColumnMapping);
+338:    writer_features.insert(TableFeature::DeletionVectors);
+339:    // writer_features.insert(TableFeature::IdentityColumns);
+559:        assert!(checker_1.can_read_from(eager_1).is_ok());
+560:        assert!(checker_1.can_write_to(eager_1).is_ok());
+576:        assert!(checker_1.can_read_from(eager_2).is_err());
+577:        assert!(checker_1.can_write_to(eager_2).is_err());
+578:        assert!(checker_2.can_read_from(eager_1).is_ok());
+579:        assert!(checker_2.can_read_from(eager_2).is_ok());
+580:        assert!(checker_2.can_write_to(eager_2).is_ok());
+596:        assert!(checker_1.can_read_from(eager_3).is_err());
+597:        assert!(checker_1.can_write_to(eager_3).is_err());
+598:        assert!(checker_2.can_read_from(eager_3).is_ok());
+599:        assert!(checker_2.can_write_to(eager_3).is_err());
+600:        assert!(checker_3.can_read_from(eager_1).is_ok());
+601:        assert!(checker_3.can_read_from(eager_2).is_ok());
+602:        assert!(checker_3.can_read_from(eager_3).is_ok());
+603:        assert!(checker_3.can_write_to(eager_3).is_ok());
+619:        assert!(checker_1.can_read_from(eager_4).is_err());
+620:        assert!(checker_1.can_write_to(eager_4).is_err());
+621:        assert!(checker_2.can_read_from(eager_4).is_ok());
+622:        assert!(checker_2.can_write_to(eager_4).is_err());
+623:        assert!(checker_3.can_read_from(eager_4).is_ok());
+624:        assert!(checker_3.can_write_to(eager_4).is_err());
+625:        assert!(checker_4.can_read_from(eager_1).is_ok());
+626:        assert!(checker_4.can_read_from(eager_2).is_ok());
+627:        assert!(checker_4.can_read_from(eager_3).is_ok());
+628:        assert!(checker_4.can_read_from(eager_4).is_ok());
+629:        assert!(checker_4.can_write_to(eager_4).is_ok());
+645:        assert!(checker_1.can_read_from(eager_5).is_err());
+646:        assert!(checker_1.can_write_to(eager_5).is_err());
+647:        assert!(checker_2.can_read_from(eager_5).is_ok());
+648:        assert!(checker_2.can_write_to(eager_5).is_err());
+649:        assert!(checker_3.can_read_from(eager_5).is_ok());
+650:        assert!(checker_3.can_write_to(eager_5).is_err());
+651:        assert!(checker_4.can_read_from(eager_5).is_ok());
+652:        assert!(checker_4.can_write_to(eager_5).is_err());
+653:        assert!(checker_5.can_read_from(eager_1).is_ok());
+654:        assert!(checker_5.can_read_from(eager_2).is_ok());
+655:        assert!(checker_5.can_read_from(eager_3).is_ok());
+656:        assert!(checker_5.can_read_from(eager_4).is_ok());
+657:        assert!(checker_5.can_read_from(eager_5).is_ok());
+658:        assert!(checker_5.can_write_to(eager_5).is_ok());
+674:        assert!(checker_1.can_read_from(eager_6).is_err());
+675:        assert!(checker_1.can_write_to(eager_6).is_err());
+676:        assert!(checker_2.can_read_from(eager_6).is_ok());
+677:        assert!(checker_2.can_write_to(eager_6).is_err());
+678:        assert!(checker_3.can_read_from(eager_6).is_ok());
+679:        assert!(checker_3.can_write_to(eager_6).is_err());
+680:        assert!(checker_4.can_read_from(eager_6).is_ok());
+681:        assert!(checker_4.can_write_to(eager_6).is_err());
+682:        assert!(checker_5.can_read_from(eager_6).is_ok());
+683:        assert!(checker_5.can_write_to(eager_6).is_err());
+684:        assert!(checker_6.can_read_from(eager_1).is_ok());
+685:        assert!(checker_6.can_read_from(eager_2).is_ok());
+686:        assert!(checker_6.can_read_from(eager_3).is_ok());
+687:        assert!(checker_6.can_read_from(eager_4).is_ok());
+688:        assert!(checker_6.can_read_from(eager_5).is_ok());
+689:        assert!(checker_6.can_read_from(eager_6).is_ok());
+690:        assert!(checker_6.can_write_to(eager_6).is_ok());
+706:        assert!(checker_1.can_read_from(eager_7).is_err());
+707:        assert!(checker_1.can_write_to(eager_7).is_err());
+708:        assert!(checker_2.can_read_from(eager_7).is_ok());
+709:        assert!(checker_2.can_write_to(eager_7).is_err());
+710:        assert!(checker_3.can_read_from(eager_7).is_ok());
+711:        assert!(checker_3.can_write_to(eager_7).is_err());
+712:        assert!(checker_4.can_read_from(eager_7).is_ok());
+713:        assert!(checker_4.can_write_to(eager_7).is_err());
+714:        assert!(checker_5.can_read_from(eager_7).is_ok());
+715:        assert!(checker_5.can_write_to(eager_7).is_err());
+716:        assert!(checker_6.can_read_from(eager_7).is_ok());
+717:        assert!(checker_6.can_write_to(eager_7).is_err());
+718:        assert!(checker_7.can_read_from(eager_1).is_ok());
+719:        assert!(checker_7.can_read_from(eager_2).is_ok());
+720:        assert!(checker_7.can_read_from(eager_3).is_ok());
+721:        assert!(checker_7.can_read_from(eager_4).is_ok());
+722:        assert!(checker_7.can_read_from(eager_5).is_ok());
+723:        assert!(checker_7.can_read_from(eager_6).is_ok());
+724:        assert!(checker_7.can_read_from(eager_7).is_ok());
+725:        assert!(checker_7.can_write_to(eager_7).is_ok());
+741:        assert!(checker_5.can_write_to(eager_5).is_ok());
+760:        assert!(checker_5.can_write_to(eager_5).is_ok());
+786:        assert!(checker_5.can_write_to(eager_5).is_ok());
+808:            assert!(checker.can_read_from(eager).is_ok());
+809:            assert!(checker.can_write_to(eager).is_ok());
+837:        let err = checker.can_read_from(snapshot.snapshot()).unwrap_err();

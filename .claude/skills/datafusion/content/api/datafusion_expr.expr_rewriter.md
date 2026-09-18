@@ -20,6 +20,9 @@ enum SavedName
 fn restore(self, expr: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.SavedName.md).
+
+
 If the qualified name of an expression is remembered, it will be preserved
 when rewriting the expression
 
@@ -32,6 +35,9 @@ when rewriting the expression
 ```rust
 fn coerce_plan_expr_for_schema(plan: LogicalPlan, schema: &datafusion_common::DFSchema) -> datafusion_common::Result<LogicalPlan>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.coerce_plan_expr_for_schema.md).
+
 
 Returns plan with expressions coerced to types compatible with
 schema types
@@ -46,6 +52,9 @@ schema types
 fn create_col_from_scalar_expr(scalar_expr: &Expr, subqry_alias: String) -> datafusion_common::Result<datafusion_common::Column>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.create_col_from_scalar_expr.md).
+
+
 Create a Column from the Scalar Expr
 
 ---
@@ -57,6 +66,9 @@ Create a Column from the Scalar Expr
 ```rust
 fn normalize_col(expr: Expr, plan: &LogicalPlan) -> datafusion_common::Result<Expr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.normalize_col.md).
+
 
 Recursively call `LogicalPlanBuilder::normalize` on all [`Column`] expressions
 in the `expr` expression tree.
@@ -71,6 +83,9 @@ in the `expr` expression tree.
 fn normalize_col_with_schemas_and_ambiguity_check(expr: Expr, schemas: &[&[&datafusion_common::DFSchema]], using_columns: &[std::collections::HashSet<datafusion_common::Column>]) -> datafusion_common::Result<Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.normalize_col_with_schemas_and_ambiguity_check.md).
+
+
 See [`Column::normalize_with_schemas_and_ambiguity_check`] for usage
 
 ---
@@ -82,6 +97,9 @@ See [`Column::normalize_with_schemas_and_ambiguity_check`] for usage
 ```rust
 fn normalize_cols(exprs: impl IntoIterator<Item = impl Into<Expr>>, plan: &LogicalPlan) -> datafusion_common::Result<Vec<Expr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.normalize_cols.md).
+
 
 Recursively normalize all [`Column`] expressions in a list of expression trees
 
@@ -95,6 +113,9 @@ Recursively normalize all [`Column`] expressions in a list of expression trees
 fn normalize_sorts(sorts: impl IntoIterator<Item = impl Into<expr::Sort>>, plan: &LogicalPlan) -> datafusion_common::Result<Vec<expr::Sort>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.normalize_sorts.md).
+
+
 ---
 
 ## replace_col
@@ -104,6 +125,9 @@ fn normalize_sorts(sorts: impl IntoIterator<Item = impl Into<expr::Sort>>, plan:
 ```rust
 fn replace_col(expr: Expr, replace_map: &std::collections::HashMap<&datafusion_common::Column, &datafusion_common::Column>) -> datafusion_common::Result<Expr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.replace_col.md).
+
 
 Recursively replace all [`Column`] expressions in a given expression tree with
 `Column` expressions provided by the hash map argument.
@@ -118,6 +142,9 @@ Recursively replace all [`Column`] expressions in a given expression tree with
 fn strip_outer_reference(expr: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.strip_outer_reference.md).
+
+
 Recursively remove all the ['OuterReferenceColumn'] and return the inside Column
 in the expression tree.
 
@@ -131,6 +158,9 @@ in the expression tree.
 fn unalias(expr: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.unalias.md).
+
+
 Recursively un-alias an expressions
 
 ---
@@ -142,6 +172,9 @@ Recursively un-alias an expressions
 ```rust
 fn unnormalize_col(expr: Expr) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.unnormalize_col.md).
+
 
 Recursively 'unnormalize' (remove all qualifiers) from an
 expression tree.
@@ -158,6 +191,9 @@ rewrite it to just `bar`.
 ```rust
 fn unnormalize_cols(exprs: impl IntoIterator<Item = Expr>) -> Vec<Expr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.unnormalize_cols.md).
+
 
 Recursively un-normalize all [`Column`] expressions in a list of expression trees
 
@@ -180,6 +216,9 @@ fn new(plan: &LogicalPlan) -> Self
 fn new_for_projection() -> Self
 fn save(&self, expr: &Expr) -> SavedName
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.NamePreserver.md).
+
 
 Handles ensuring the name of rewritten expressions is not changed.
 
@@ -206,6 +245,9 @@ trait FunctionRewrite: Debug
 fn name(&self) -> &str
 fn rewrite(&self, expr: Expr, schema: &DFSchema, config: &ConfigOptions) -> Result<Transformed<Expr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.FunctionRewrite.md).
+
 
 Trait for rewriting [`Expr`]s into function calls.
 

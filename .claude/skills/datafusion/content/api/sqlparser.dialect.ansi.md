@@ -37,6 +37,9 @@ fn require_interval_qualifier(&self) -> bool
 fn supports_nested_comments(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.ansi.AnsiDialect.md).
+
+
 A [`Dialect`] for [ANSI SQL](https://en.wikipedia.org/wiki/SQL:2011).
 
 ---

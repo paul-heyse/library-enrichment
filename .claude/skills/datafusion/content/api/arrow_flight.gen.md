@@ -33,6 +33,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<CancelStatus, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.CancelStatus.md).
+
+
 
 The result of a cancel operation.
 
@@ -69,6 +72,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.Action.md).
+
+
 
 An opaque action specific for the service.
 
@@ -96,6 +102,9 @@ struct ActionType
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.ActionType.md).
+
 
 
 Describes an available action, including both the name used for execution
@@ -125,6 +134,9 @@ struct BasicAuth
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.BasicAuth.md).
+
 
 
 A message for doing simple auth.
@@ -165,6 +177,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.CancelFlightInfoRequest.md).
+
 
 
 The request of the CancelFlightInfo action.
@@ -210,6 +225,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.CancelFlightInfoResult.md).
+
+
 
 The result of the CancelFlightInfo action.
 
@@ -240,6 +258,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.Criteria.md).
+
+
 
 A service specific expression that can be used to return a limited set
 of available Arrow Flight streams.
@@ -266,6 +287,9 @@ struct Empty
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.Empty.md).
+
 
 ---
 
@@ -315,6 +339,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.FlightData.md).
+
+
 
 A batch of Arrow data as part of a stream of batches.
 
@@ -357,6 +384,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.FlightDescriptor.md).
+
 
 
 The name or tag for a Flight. May be used as a way to retrieve or generate
@@ -402,6 +432,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.FlightEndpoint.md).
+
 
 
 A particular stream or split associated with a flight.
@@ -452,6 +485,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.FlightInfo.md).
+
+
 
 The access coordinates for retrieval of a dataset. With a FlightInfo, a
 consumer is able to determine how to retrieve a dataset.
@@ -481,6 +517,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.HandshakeRequest.md).
+
+
 
 The request that a client provides to a server on handshake.
 
@@ -508,6 +547,9 @@ struct HandshakeResponse
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.HandshakeResponse.md).
+
 
 ---
 
@@ -539,6 +581,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.Location.md).
+
 
 
 A location where a Flight service will accept retrieval of a particular
@@ -586,6 +631,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.PollInfo.md).
+
+
 
 The information to process a long-running query.
 
@@ -613,6 +661,9 @@ struct PutResult
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.PutResult.md).
+
 
 *
 The response message associated with the submission of a DoPut.
@@ -654,6 +705,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.RenewFlightEndpointRequest.md).
+
+
 
 The request of the RenewFlightEndpoint action.
 
@@ -690,6 +744,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.Result.md).
+
+
 
 An opaque result returned after executing an action.
 
@@ -723,6 +780,9 @@ fn try_from(schema_ipc: SchemaAsIpc<'_>) -> std::result::Result<Self, arrow_sche
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.SchemaResult.md).
+
 
 
 Wrap the result of a getSchema call
@@ -763,6 +823,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.Ticket.md).
+
 
 
 An opaque identifier that the service can use to retrieve a particular

@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_compact`, `datafusion_functions_ne
 fn array_compact(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_compact.array_compact.md).
+
+
 removes null values from the array.
 
 ---
@@ -23,6 +26,9 @@ removes null values from the array.
 ```rust
 fn array_compact_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_compact.array_compact_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayCompact
@@ -57,5 +63,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_compact.ArrayCompact.md).
+
 
 ---

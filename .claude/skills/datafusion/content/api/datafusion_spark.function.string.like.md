@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 2 public items · structured records in [`model/data
 fn spark_like(args: &[arrow::array::ArrayRef]) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.like.spark_like.md).
+
+
 Returns true if str matches pattern (case sensitive).
 
 ---
@@ -41,6 +44,9 @@ fn return_field_from_args(&self, args: ReturnFieldArgs<'_>) -> Result<FieldRef>
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.like.SparkLike.md).
+
 
 LIKE function for case-sensitive pattern matching
 <https://spark.apache.org/docs/latest/api/sql/index.html#like>

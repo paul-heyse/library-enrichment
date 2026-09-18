@@ -18,6 +18,9 @@ trait RecordReader<T>
 fn read_from_row_group(&mut self, row_group_reader: &mut dyn RowGroupReader, num_records: usize) -> Result<(), ParquetError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.record.record_reader.RecordReader.md).
+
+
 Read up to `num_records` records from `row_group_reader` into `self`.
 
 The type parameter `T` is used to work around the rust orphan rule

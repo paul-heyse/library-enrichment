@@ -12,6 +12,9 @@ Also reachable as `datafusion::datasource::physical_plan::parquet::build_row_fil
 fn build_row_filter(expr: &std::sync::Arc<dyn PhysicalExpr>, file_schema: &arrow::datatypes::SchemaRef, metadata: &parquet::file::metadata::ParquetMetaData, reorder_predicates: bool, file_metrics: &super::ParquetFileMetrics) -> datafusion_common::Result<Option<parquet::arrow::arrow_reader::RowFilter>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.row_filter.build_row_filter.md).
+
+
 Build a [`RowFilter`] from the given predicate expression if possible.
 
 # Arguments
@@ -45,6 +48,9 @@ Also reachable as `datafusion::datasource::physical_plan::parquet::can_expr_be_p
 ```rust
 fn can_expr_be_pushed_down_with_schemas(expr: &std::sync::Arc<dyn PhysicalExpr>, file_schema: &arrow::datatypes::Schema) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.row_filter.can_expr_be_pushed_down_with_schemas.md).
+
 
 Checks if a predicate expression can be pushed down to the parquet decoder.
 

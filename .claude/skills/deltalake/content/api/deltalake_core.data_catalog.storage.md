@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## ListingSchemaProvider
 
 `struct` · `deltalake_core::data_catalog::storage::ListingSchemaProvider`
+[Full member contracts, output types and access classification](../operations/deltalake_core.data_catalog.storage.ListingSchemaProvider.md)
 
 Also reachable as `deltalake::data_catalog::storage::ListingSchemaProvider`
 

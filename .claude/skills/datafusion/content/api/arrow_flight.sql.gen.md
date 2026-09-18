@@ -33,6 +33,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<Nullable, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.Nullable.md).
+
+
 ---
 
 ## Searchable
@@ -66,6 +69,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<Searchable, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.Searchable.md).
+
+
 ---
 
 ## SqlInfo
@@ -98,6 +104,9 @@ fn is_valid(value: i32) -> bool
 ```rust
 fn try_from(value: i32) -> ::core::result::Result<SqlInfo, ::prost::UnknownEnumValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlInfo.md).
+
 
 Options for CommandGetSqlInfo.
 
@@ -134,6 +143,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<SqlNullOrdering, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlNullOrdering.md).
+
+
 ---
 
 ## SqlOuterJoinsSupportLevel
@@ -166,6 +178,9 @@ fn is_valid(value: i32) -> bool
 ```rust
 fn try_from(value: i32) -> ::core::result::Result<SqlOuterJoinsSupportLevel, ::prost::UnknownEnumValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlOuterJoinsSupportLevel.md).
+
 
 ---
 
@@ -200,6 +215,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<SqlSupportedCaseSensitivity, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlSupportedCaseSensitivity.md).
+
+
 ---
 
 ## SqlSupportedElementActions
@@ -232,6 +250,9 @@ fn is_valid(value: i32) -> bool
 ```rust
 fn try_from(value: i32) -> ::core::result::Result<SqlSupportedElementActions, ::prost::UnknownEnumValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlSupportedElementActions.md).
+
 
 ---
 
@@ -266,6 +287,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<SqlSupportedGroupBy, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlSupportedGroupBy.md).
+
+
 ---
 
 ## SqlSupportedPositionedCommands
@@ -298,6 +322,9 @@ fn is_valid(value: i32) -> bool
 ```rust
 fn try_from(value: i32) -> ::core::result::Result<SqlSupportedPositionedCommands, ::prost::UnknownEnumValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlSupportedPositionedCommands.md).
+
 
 ---
 
@@ -332,6 +359,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<SqlSupportedResultSetConcurrency, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlSupportedResultSetConcurrency.md).
+
+
 ---
 
 ## SqlSupportedResultSetType
@@ -364,6 +394,9 @@ fn is_valid(value: i32) -> bool
 ```rust
 fn try_from(value: i32) -> ::core::result::Result<SqlSupportedResultSetType, ::prost::UnknownEnumValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlSupportedResultSetType.md).
+
 
 ---
 
@@ -398,6 +431,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<SqlSupportedSubqueries, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlSupportedSubqueries.md).
+
+
 ---
 
 ## SqlSupportedTransaction
@@ -430,6 +466,9 @@ fn is_valid(value: i32) -> bool
 ```rust
 fn try_from(value: i32) -> ::core::result::Result<SqlSupportedTransaction, ::prost::UnknownEnumValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlSupportedTransaction.md).
+
 
 The level of support for Flight SQL transaction RPCs.
 
@@ -466,6 +505,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<SqlSupportedTransactions, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlSupportedTransactions.md).
+
+
 ---
 
 ## SqlSupportedUnions
@@ -498,6 +540,9 @@ fn is_valid(value: i32) -> bool
 ```rust
 fn try_from(value: i32) -> ::core::result::Result<SqlSupportedUnions, ::prost::UnknownEnumValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlSupportedUnions.md).
+
 
 ---
 
@@ -532,6 +577,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<SqlSupportsConvert, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlSupportsConvert.md).
+
+
 ---
 
 ## SqlTransactionIsolationLevel
@@ -565,6 +613,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<SqlTransactionIsolationLevel, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SqlTransactionIsolationLevel.md).
+
+
 ---
 
 ## SupportedAnsi92SqlGrammarLevel
@@ -576,6 +627,9 @@ enum SupportedAnsi92SqlGrammarLevel
 ```
 
 **Variants**: `Ansi92EntrySql`, `Ansi92IntermediateSql`, `Ansi92FullSql`
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SupportedAnsi92SqlGrammarLevel.md).
+
 
 ---
 
@@ -610,6 +664,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<SupportedSqlGrammar, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SupportedSqlGrammar.md).
+
+
 ---
 
 ## UpdateDeleteRules
@@ -643,6 +700,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<UpdateDeleteRules, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.UpdateDeleteRules.md).
+
+
 ---
 
 ## XdbcDataType
@@ -675,6 +735,9 @@ fn is_valid(value: i32) -> bool
 ```rust
 fn try_from(value: i32) -> ::core::result::Result<XdbcDataType, ::prost::UnknownEnumValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.XdbcDataType.md).
+
 
 *
 The JDBC/ODBC-defined type of any object.
@@ -713,6 +776,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<XdbcDatetimeSubcode, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.XdbcDatetimeSubcode.md).
+
+
 *
 Detailed subtype information for XDBC_TYPE_DATETIME and XDBC_TYPE_INTERVAL.
 
@@ -747,6 +813,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.ActionBeginSavepointRequest.md).
+
 
 
 Request message for the "BeginSavepoint" action.
@@ -787,6 +856,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.ActionBeginSavepointResult.md).
+
+
 
 The result of a "BeginSavepoint" action.
 
@@ -826,6 +898,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.ActionBeginTransactionRequest.md).
+
+
 
 Request message for the "BeginTransaction" action.
 Begins a transaction.
@@ -861,6 +936,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.ActionBeginTransactionResult.md).
+
 
 
 The result of a "BeginTransaction" action.
@@ -902,6 +980,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.ActionCancelQueryRequest.md).
+
 
 
 Request message for the "CancelQuery" action.
@@ -959,6 +1040,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.ActionCancelQueryResult.md).
+
+
 
 The result of cancelling a query.
 
@@ -998,6 +1082,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.ActionClosePreparedStatementRequest.md).
+
 
 
 Request message for the "ClosePreparedStatement" action on a Flight SQL enabled backend.
@@ -1041,6 +1128,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.ActionCreatePreparedStatementRequest.md).
+
+
 
 Request message for the "CreatePreparedStatement" action on a Flight SQL enabled backend.
 
@@ -1075,6 +1165,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.ActionCreatePreparedStatementResult.md).
+
 
 
 Wrap the result of a "CreatePreparedStatement" or "CreatePreparedSubstraitPlan" action.
@@ -1123,6 +1216,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.ActionCreatePreparedSubstraitPlanRequest.md).
+
+
 
 Request message for the "CreatePreparedSubstraitPlan" action on a Flight SQL enabled backend.
 
@@ -1164,6 +1260,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.ActionEndSavepointRequest.md).
+
 
 
 Request message for the "EndSavepoint" action.
@@ -1214,6 +1313,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.ActionEndTransactionRequest.md).
+
+
 
 Request message for the "EndTransaction" action.
 
@@ -1257,6 +1359,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandGetCatalogs.md).
+
 
 
 Represents a request to retrieve the list of catalogs on a Flight SQL enabled backend.
@@ -1311,6 +1416,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandGetCrossReference.md).
+
 
 
 Represents a request to retrieve a description of the foreign key columns in the given foreign key table that
@@ -1384,6 +1492,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandGetDbSchemas.md).
+
+
 
 Represents a request to retrieve the list of database schemas on a Flight SQL enabled backend.
 The definition of a database schema depends on vendor/implementation. It is usually a collection of tables.
@@ -1436,6 +1547,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandGetExportedKeys.md).
+
 
 
 Represents a request to retrieve a description of the foreign key columns that reference the given table's
@@ -1501,6 +1615,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandGetImportedKeys.md).
+
 
 
 Represents a request to retrieve the foreign keys of a table on a Flight SQL enabled backend.
@@ -1571,6 +1688,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandGetPrimaryKeys.md).
+
+
 
 Represents a request to retrieve the primary keys of a table on a Flight SQL enabled backend.
 Used in the command member of FlightDescriptor for the following RPC calls:
@@ -1625,6 +1745,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandGetSqlInfo.md).
+
 
 
 Represents a metadata request. Used in the command member of FlightDescriptor
@@ -1681,6 +1804,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandGetTableTypes.md).
+
+
 
 Represents a request to retrieve the list of table types on a Flight SQL enabled backend.
 The table types depend on vendor/implementation. It is usually used to separate tables from views or system tables.
@@ -1735,6 +1861,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandGetTables.md).
+
 
 
 Represents a request to retrieve the list of tables, and optionally their schemas, on a Flight SQL enabled backend.
@@ -1802,6 +1931,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandGetXdbcTypeInfo.md).
+
 
 
 Represents a request to retrieve information about data type supported on a Flight SQL enabled backend.
@@ -1893,6 +2025,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandPreparedStatementQuery.md).
+
+
 
 Represents an instance of executing a prepared statement. Used in the command member of FlightDescriptor for
 the following RPC calls:
@@ -1946,6 +2081,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandPreparedStatementUpdate.md).
+
+
 
 Represents a SQL update query. Used in the command member of FlightDescriptor
 for the RPC call DoPut to cause the server to execute the included
@@ -1991,6 +2129,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandStatementIngest.md).
+
+
 
 Represents a bulk ingestion request. Used in the command member of FlightDescriptor
 for the the RPC call DoPut to cause the server load the contents of the stream's
@@ -2033,6 +2174,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandStatementQuery.md).
+
 
 
 Represents a SQL query. Used in the command member of FlightDescriptor
@@ -2088,6 +2232,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandStatementSubstraitPlan.md).
+
 
 
 Represents a Substrait plan. Used in the command member of FlightDescriptor
@@ -2145,6 +2292,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.CommandStatementUpdate.md).
+
+
 
 Represents a SQL update query. Used in the command member of FlightDescriptor
 for the RPC call DoPut to cause the server to execute the included SQL update.
@@ -2187,6 +2337,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.DoPutPreparedStatementResult.md).
+
+
 An *optional* response returned when `DoPut` is called with `CommandPreparedStatementQuery`.
 
 *Note on legacy behavior*: previous versions of the protocol did not return any result for
@@ -2225,6 +2378,9 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.DoPutUpdateResult.md).
+
+
 
 Returned from the RPC call DoPut when a CommandStatementUpdate,
 CommandPreparedStatementUpdate, or CommandStatementIngest was
@@ -2254,6 +2410,9 @@ struct SubstraitPlan
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.SubstraitPlan.md).
+
 
 
 An embedded message describing a Substrait plan to execute.
@@ -2289,6 +2448,9 @@ fn type_url() -> &'static str
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.TicketStatementQuery.md).
+
 
 *
 Represents a ticket resulting from GetFlightInfo with a CommandStatementQuery.

@@ -25,11 +25,34 @@ impl AdmittedProvider {
     }
     /// Own an immutable Arrow ingress without exposing MemTable's mutation handle.
     /// This grants no uniqueness, foreign-key, or row-semantic assertion.
-    pub(crate) fn from_batch(batch: arrow::record_batch::RecordBatch) -> Result<Self> {
+    pub(crate) fn from_batch(
+        batch: arrow::record_batch::RecordBatch,
+        pool: &Arc<dyn datafusion::execution::memory_pool::MemoryPool>,
+    ) -> Result<Self> {
+        Self::from_batches(vec![batch], pool)
+    }
+    pub(crate) fn from_batches(
+        batches: Vec<arrow::record_batch::RecordBatch>,
+        pool: &Arc<dyn datafusion::execution::memory_pool::MemoryPool>,
+    ) -> Result<Self> {
+        let schema = batches
+            .first()
+            .ok_or_else(|| {
+                datafusion::common::plan_datafusion_err!(
+                    "captured input requires a declared batch schema"
+                )
+            })?
+            .schema();
+        if batches.iter().any(|batch| batch.schema() != schema) {
+            return datafusion::common::plan_err!("captured batches disagree on their full schema");
+        }
+        for batch in &batches {
+            crate::owned_batch::claim(batch, pool, "native-input")?;
+        }
         Ok(Self {
             inner: Arc::new(datafusion::datasource::MemTable::try_new(
-                batch.schema(),
-                vec![vec![batch]],
+                schema,
+                vec![batches],
             )?),
             constraints: Constraints::new_unverified(vec![]),
             captured_batch: true,

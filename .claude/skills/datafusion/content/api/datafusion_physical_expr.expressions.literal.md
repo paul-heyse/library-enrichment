@@ -12,6 +12,9 @@ Also reachable as `datafusion_physical_expr::expressions::lit`, `datafusion_phys
 fn lit<T: datafusion_expr::Literal>(value: T) -> std::sync::Arc<dyn PhysicalExpr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.literal.lit.md).
+
+
 Create a literal expression
 
 ---
@@ -59,6 +62,9 @@ fn return_field(&self, _input_schema: &Schema) -> Result<FieldRef>
 fn try_to_proto(&self, _ctx: &datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalExprNode>>
 fn with_new_children(Arc<self>, _children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.literal.Literal.md).
+
 
 Represents a literal value
 

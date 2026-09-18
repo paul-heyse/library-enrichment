@@ -10,6 +10,9 @@ Crate `datafusion-datasource` · 6 public items · structured records in [`model
 fn generate_test_files(num_files: usize, overlap_factor: f64) -> Vec<file_groups::FileGroup>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.generate_test_files.md).
+
+
 Generates test files with min-max statistics in different overlap patterns.
 
 Used by tests and benchmarks.
@@ -60,6 +63,9 @@ File 4: [80, 180]
 fn verify_sort_integrity(file_groups: &[file_groups::FileGroup]) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.verify_sort_integrity.md).
+
+
 Used by tests and benchmarks
 
 ---
@@ -91,6 +97,9 @@ fn contains(&self, offset: i64) -> bool
 ```rust
 fn try_from(range: &protobuf::FileRange) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.FileRange.md).
+
 
 Only scan a subset of Row Groups from the Parquet file whose data "midpoint"
 lies within the [start, end) byte offsets. This option can be used to scan non-overlapping
@@ -149,6 +158,9 @@ fn from(object_meta: ObjectMeta) -> Self
 fn try_from(file: &protobuf::PartitionedFile) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.PartitionedFile.md).
+
+
 A single file or part of a file that should be read, along with its schema, statistics
 and partition column values that need to be appended to each row.
 
@@ -175,6 +187,9 @@ This enables query optimizers to use partition column bounds for pruning and pla
 type FileExtensions = datafusion_common::extensions::Extensions
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.FileExtensions.md).
+
+
 User-defined per-file extension data, keyed by concrete Rust type.
 
 Re-exported from [`datafusion_common::extensions::Extensions`]; the same
@@ -194,6 +209,9 @@ Also reachable as `datafusion::datasource::listing::PartitionedFileStream`
 ```rust
 type PartitionedFileStream = std::pin::Pin<Box<dyn Stream<Item = datafusion_common::Result<PartitionedFile>> + Send + Sync + 'static>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.PartitionedFileStream.md).
+
 
 Stream of files get listed from object store
 

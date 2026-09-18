@@ -32,6 +32,9 @@ fn name(&self) -> &str
 fn primitive_type_builder(name: &str, physical_type: PhysicalType) -> PrimitiveTypeBuilder<'_>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.schema.types.Type.md).
+
+
 Representation of a Parquet type.
 
 Used to describe primitive leaf fields and structs, including top-level schema.
@@ -63,6 +66,9 @@ fn logical_type_ref(&self) -> Option<&LogicalType>
 fn name(&self) -> &str
 fn repetition(&self) -> Repetition
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.schema.types.BasicTypeInfo.md).
+
 
 Basic type info. This contains information such as the name of the type,
 the repetition level, the logical type and the kind of the type (group, primitive).
@@ -99,6 +105,9 @@ fn type_length(&self) -> i32
 fn type_precision(&self) -> i32
 fn type_scale(&self) -> i32
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.schema.types.ColumnDescriptor.md).
+
 
 Physical type for leaf-level primitive columns.
 
@@ -148,6 +157,9 @@ fn from(parts: Vec<String>) -> Self
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.schema.types.ColumnPath.md).
+
+
 Represents the location of a column in a Parquet schema
 
 # Example: refer to column named `'my_column'`
@@ -189,6 +201,9 @@ fn with_logical_type(self, logical_type: Option<LogicalType>) -> Self
 fn with_repetition(self, repetition: Repetition) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.schema.types.GroupTypeBuilder.md).
+
+
 A builder for group types. All attributes are optional except the name.
 Note that if not specified explicitly, `None` is used as the repetition of the group,
 which means it is a root (message) type.
@@ -216,6 +231,9 @@ fn with_precision(self, precision: i32) -> Self
 fn with_repetition(self, repetition: Repetition) -> Self
 fn with_scale(self, scale: i32) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.schema.types.PrimitiveTypeBuilder.md).
+
 
 A builder for primitive types. All attributes are optional
 except the name and physical type.
@@ -247,6 +265,9 @@ fn num_columns(&self) -> usize
 fn root_schema(&self) -> &Type
 fn root_schema_ptr(&self) -> TypePtr
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.schema.types.SchemaDescriptor.md).
+
 
 Schema of a Parquet file.
 
@@ -289,6 +310,9 @@ let descriptor = SchemaDescriptor::new(
 type ColumnDescPtr = std::sync::Arc<ColumnDescriptor>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.schema.types.ColumnDescPtr.md).
+
+
 Type alias for `Arc<ColumnDescriptor>`.
 
 ---
@@ -301,6 +325,9 @@ Type alias for `Arc<ColumnDescriptor>`.
 type SchemaDescPtr = std::sync::Arc<SchemaDescriptor>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.schema.types.SchemaDescPtr.md).
+
+
 Type alias for `Arc<SchemaDescriptor>`.
 
 ---
@@ -312,6 +339,9 @@ Type alias for `Arc<SchemaDescriptor>`.
 ```rust
 type TypePtr = std::sync::Arc<Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.schema.types.TypePtr.md).
+
 
 Type alias for `Arc<Type>`.
 

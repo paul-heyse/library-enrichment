@@ -5,6 +5,7 @@ Crate `buoyant_kernel_engine` · 3 public items · structured records in [`model
 ## insert_url_handler
 
 `function` · `buoyant_kernel_engine::storage::insert_url_handler`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.storage.insert_url_handler.md)
 
 Also reachable as `delta_kernel_default_engine::storage::insert_url_handler`
 
@@ -22,6 +23,7 @@ users to provide their own custom URL handler to plug new
 ## store_from_url
 
 `function` · `buoyant_kernel_engine::storage::store_from_url`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.storage.store_from_url.md)
 
 Also reachable as `delta_kernel_default_engine::storage::store_from_url`
 
@@ -55,6 +57,7 @@ let store = store_from_url(&url)?;
 ## store_from_url_opts
 
 `function` · `buoyant_kernel_engine::storage::store_from_url_opts`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.storage.store_from_url_opts.md)
 
 Also reachable as `delta_kernel_default_engine::storage::store_from_url_opts`
 

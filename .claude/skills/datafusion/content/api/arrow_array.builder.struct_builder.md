@@ -46,6 +46,9 @@ fn into_box_any(Box<self>) -> Box<dyn Any>
 fn len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.struct_builder.StructBuilder.md).
+
+
 Builder for [`StructArray`]
 
 Note that callers should make sure that methods of all the child field builders are

@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## ReaderProperties
 
 `struct` · `deltalake_core::datafile::properties::ReaderProperties`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.properties.ReaderProperties.md)
 
 Also reachable as `deltalake::datafile::ReaderProperties`, `deltalake::datafile::properties::ReaderProperties`, `deltalake_core::datafile::ReaderProperties`
 

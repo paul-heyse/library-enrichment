@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 3 public items · structured records in [`model/buoyan
 ## PARTITION_VALUES_PARSED_NAME
 
 `static` · `buoyant_kernel::scan::log_replay::PARTITION_VALUES_PARSED_NAME`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.log_replay.PARTITION_VALUES_PARSED_NAME.md)
 
 Also reachable as `delta_kernel::scan::log_replay::PARTITION_VALUES_PARSED_NAME`
 
@@ -17,6 +18,7 @@ static PARTITION_VALUES_PARSED_NAME: &str
 ## ScanLogReplayProcessor
 
 `struct` · `buoyant_kernel::scan::log_replay::ScanLogReplayProcessor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.log_replay.ScanLogReplayProcessor.md)
 
 Also reachable as `delta_kernel::scan::log_replay::ScanLogReplayProcessor`
 
@@ -78,6 +80,7 @@ to be applied to the selected rows.
 ## SerializableScanState
 
 `struct` · `buoyant_kernel::scan::log_replay::SerializableScanState`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.log_replay.SerializableScanState.md)
 
 Also reachable as `delta_kernel::scan::log_replay::SerializableScanState`
 

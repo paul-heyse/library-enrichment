@@ -1,0 +1,3320 @@
+[
+  {
+    "id": "e35311e9ed6d50fb4e98aafc",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer",
+    "name": "RunEndBuffer",
+    "owner": null,
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct RunEndBuffer<E: ArrowNativeType>",
+    "docs": "A buffer of monotonically increasing, positive integers used to store run-ends.\n\nUsed to compactly represent runs of the same value. Values being represented\nare stored in a separate buffer from this struct. See [`RunArray`] for an example\nof how this is used with a companion array to represent the values.\n\n# Logical vs Physical\n\nPhysically, each value in the `run_ends` buffer is the cumulative length of\nall runs in the logical representation, up to that physical index. Consider\nthe following example:\n\n```text\n          physical                        logical\n    ┌─────────┬─────────┐           ┌─────────┬─────────┐\n    │    3    │    0    │ ◄──────┬─ │    A    │    0    │\n    ├─────────┼─────────┤        │  ├─────────┼─────────┤\n    │    4    │    1    │ ◄────┐ ├─ │    A    │    1    │\n    ├─────────┼─────────┤      │ │  ├─────────┼─────────┤\n    │    6    │    2    │ ◄──┐ │ └─ │    A    │    2    │\n    └─────────┴─────────┘    │ │    ├─────────┼─────────┤\n     run-ends    index       │ └─── │    B    │    3    │\n                             │      ├─────────┼─────────┤\n     logical_offset = 0      ├───── │    C    │    4    │\n     logical_length = 6      │      ├─────────┼─────────┤\n                             └───── │    C    │    5    │\n                                    └─────────┴─────────┘\n                                      values     index\n```\n\nA [`RunEndBuffer`] is physically the buffer and offset with length on the left.\nIn this case, the offset and length represent the whole buffer, so it is essentially\nunsliced. See the section below on slicing for more details on how this buffer\nhandles slicing.\n\nThis means that multiple logical values are represented in the same physical index,\nand multiple logical indices map to the same physical index. The [`RunEndBuffer`]\ncontaining `[3, 4, 6]` is essentially the physical indices `[0, 0, 0, 1, 2, 2]`,\nand having a separately stored buffer of values such as `[A, B, C]` can turn\nthis into a representation of `[A, A, A, B, C, C]`.\n\n# Slicing\n\nIn order to provide zero-copy slicing, this struct stores a separate **logical**\noffset and length. Consider the following example:\n\n```text\n          physical                        logical\n    ┌─────────┬─────────┐           ┌ ─ ─ ─ ─ ┬ ─ ─ ─ ─ ┐\n    │    3    │    0    │ ◄──────┐       A         0\n    ├─────────┼─────────┤        │  ├── ─ ─ ─ ┼ ─ ─ ─ ─ ┤\n    │    4    │    1    │ ◄────┐ │       A         1\n    ├─────────┼─────────┤      │ │  ├─────────┼─────────┤\n    │    6    │    2    │ ◄──┐ │ └─ │    A    │    2    │◄─── logical_offset\n    └─────────┴─────────┘    │ │    ├─────────┼─────────┤\n     run-ends    index       │ └─── │    B    │    3    │\n                             │      ├─────────┼─────────┤\n     logical_offset = 2      └───── │    C    │    4    │\n     logical_length = 3             ├─────────┼─────────┤\n                                         C         5     ◄─── logical_offset + logical_length\n                                    └ ─ ─ ─ ─ ┴ ─ ─ ─ ─ ┘\n                                      values     index\n```\n\nThe physical `run_ends` [`ScalarBuffer`] remains unchanged, in order to facilitate\nzero-copy. However, we now offset into the **logical** representation with an\naccompanying length. This allows us to represent values `[A, B, C]` using physical\nindices `0, 1, 2` with the same underlying physical buffer, at the cost of two\nextra `usize`s to represent the logical slice that was taken.\n\n(A [`RunEndBuffer`] is considered unsliced when `logical_offset` is `0` and\n`logical_length` is equal to the last value in `run_ends`)\n\n[`RunArray`]: https://docs.rs/arrow/latest/arrow/array/struct.RunArray.html\n[Run-End encoded layout]: https://arrow.apache.org/docs/format/Columnar.html#run-end-encoded-layout",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        97,
+        1
+      ],
+      "end": [
+        101,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "E",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ArrowNativeType",
+                          "id": 11,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          574,
+          575,
+          576,
+          577,
+          578,
+          579,
+          580,
+          581,
+          582,
+          583,
+          584,
+          585,
+          586,
+          587,
+          588,
+          589,
+          590,
+          591,
+          593,
+          595
+        ]
+      }
+    },
+    "type_references": {
+      "11": "arrow_buffer::native::ArrowNativeType"
+    },
+    "impl_context": null,
+    "links": {
+      "`RunEndBuffer`": 556,
+      "`ScalarBuffer`": 12
+    },
+    "link_paths": {
+      "`RunEndBuffer`": "arrow_buffer::buffer::run::RunEndBuffer",
+      "`ScalarBuffer`": "arrow_buffer::buffer::scalar::ScalarBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "556",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-e35311e9ed6d50fb4e98aafc",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RunEndBuffer`": "../operations/arrow_buffer.buffer.run.RunEndBuffer.md#op-e35311e9ed6d50fb4e98aafc",
+      "`ScalarBuffer`": "../operations/arrow_buffer.buffer.scalar.ScalarBuffer.md#op-3edbfa8eafafb64c0414f247"
+    }
+  },
+  {
+    "id": "6d61b17de95408418c344977",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::claim",
+    "name": "claim",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn claim(&self, pool: &dyn MemoryPool)",
+    "docs": "Claim memory used by this buffer in the provided memory pool.",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        299,
+        5
+      ],
+      "end": [
+        301,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"pool\"), span: src/buffer/run.rs:298:11: 298:27 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "pool",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "crate::MemoryPool",
+                            "id": 26,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "26": "arrow_buffer::pool::MemoryPool"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "572",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-6d61b17de95408418c344977",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9cc5fd7170b345fbaa2dea11",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::clone",
+    "name": "clone",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> RunEndBuffer<E>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        96,
+        17
+      ],
+      "end": [
+        96,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "RunEndBuffer",
+              "id": 556,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "E"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "556": "arrow_buffer::buffer::run::RunEndBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "$crate::clone::Clone",
+                        "id": "core::clone::Clone",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          96,
+          17
+        ],
+        "end": [
+          96,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "594",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-9cc5fd7170b345fbaa2dea11",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ff27a362aec69c83ce545cee",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::fmt",
+    "name": "fmt",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        96,
+        10
+      ],
+      "end": [
+        96,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 89,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 90,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "89": "core::fmt::Formatter",
+      "90": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "$crate::fmt::Debug",
+                        "id": "core::fmt::Debug",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          96,
+          10
+        ],
+        "end": [
+          96,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "592",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-ff27a362aec69c83ce545cee",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "cea9a0a852df37958433a680",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::get_end_physical_index",
+    "name": "get_end_physical_index",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_end_physical_index(&self) -> usize",
+    "docs": "Returns the physical index at which the logical array ends.\n\nThe same as calling `get_physical_index(length - 1)` but with a fast path\nif the buffer is not logically sliced, in which case it returns `length - 1`.",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        258,
+        5
+      ],
+      "end": [
+        267,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "568",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-cea9a0a852df37958433a680",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "19268163441fcc18e75c61e3",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::get_physical_index",
+    "name": "get_physical_index",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_physical_index(&self, logical_index: usize) -> usize",
+    "docs": "Performs a binary search to find the physical index for the given logical\nindex.\n\nUseful for extracting the corresponding physical `run_ends` when this buffer\nis logically sliced.\n\nThe result is arbitrary if `logical_index >= self.len()`.",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        232,
+        5
+      ],
+      "end": [
+        240,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "logical_index",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "566",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-19268163441fcc18e75c61e3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "576b50df7e077cbc839efad3",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::get_physical_indices",
+    "name": "get_physical_indices",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_physical_indices<I>(&self, logical_indices: &[I]) -> Result<Vec<usize>, I> where I: ArrowNativeType",
+    "docs": "Returns the physical indices corresponding to the provided logical indices.\n\nGiven a slice of logical indices, this method returns a `Vec` containing the\ncorresponding physical indices into the run-ends buffer.\n\nThis method operates by iterating the logical indices in sorted order, instead of\nfinding the physical index for each logical index using binary search via\nthe function [`RunEndBuffer::get_physical_index`].\n\nRunning benchmarks on both approaches showed that the approach used here\nscaled well for larger inputs.\n\nSee <https://github.com/apache/arrow-rs/pull/3622#issuecomment-1407753727> for more details.\n\n# Errors\n\nIf any logical index is out of bounds (>= self.len()), returns an error containing the invalid index.",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        321,
+        5
+      ],
+      "end": [
+        378,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "logical_indices",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "generic": "I"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 69,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 128,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "primitive": "usize"
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "generic": "I"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "I",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "I"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": 11,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "69": "core::result::Result",
+      "128": "alloc::vec::Vec",
+      "11": "arrow_buffer::native::ArrowNativeType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RunEndBuffer::get_physical_index`": 566
+    },
+    "link_paths": {
+      "`RunEndBuffer::get_physical_index`": "arrow_buffer::buffer::run::RunEndBuffer::get_physical_index"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "573",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-576b50df7e077cbc839efad3",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RunEndBuffer::get_physical_index`": "../operations/arrow_buffer.buffer.run.RunEndBuffer.md#op-19268163441fcc18e75c61e3"
+    }
+  },
+  {
+    "id": "19f60c1d1c389969c310f5e1",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::get_start_physical_index",
+    "name": "get_start_physical_index",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_start_physical_index(&self) -> usize",
+    "docs": "Returns the physical index at which the logical array starts.\n\nThe same as calling `get_physical_index(0)` but with a fast path if the\nbuffer is not logically sliced, in which case it always returns `0`.",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        246,
+        5
+      ],
+      "end": [
+        252,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "567",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-19f60c1d1c389969c310f5e1",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "cbee3762d735caa41a6b42df",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::inner",
+    "name": "inner",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn inner(&self) -> &ScalarBuffer<E>",
+    "docs": "Returns the inner [`ScalarBuffer`].",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        288,
+        5
+      ],
+      "end": [
+        290,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ScalarBuffer",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "E"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "arrow_buffer::buffer::scalar::ScalarBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ScalarBuffer`": 12
+    },
+    "link_paths": {
+      "`ScalarBuffer`": "arrow_buffer::buffer::scalar::ScalarBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "570",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-cbee3762d735caa41a6b42df",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ScalarBuffer`": "../operations/arrow_buffer.buffer.scalar.ScalarBuffer.md#op-3edbfa8eafafb64c0414f247"
+    }
+  },
+  {
+    "id": "329511e2bfc6e68b32feb8ec",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::into_inner",
+    "name": "into_inner",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_inner(self) -> ScalarBuffer<E>",
+    "docs": "Returns the inner [`ScalarBuffer`], consuming self.",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        293,
+        5
+      ],
+      "end": [
+        295,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ScalarBuffer",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "E"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "arrow_buffer::buffer::scalar::ScalarBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ScalarBuffer`": 12
+    },
+    "link_paths": {
+      "`ScalarBuffer`": "arrow_buffer::buffer::scalar::ScalarBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "571",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-329511e2bfc6e68b32feb8ec",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ScalarBuffer`": "../operations/arrow_buffer.buffer.scalar.ScalarBuffer.md#op-3edbfa8eafafb64c0414f247"
+    }
+  },
+  {
+    "id": "ede2cc1cac6d8d666b5680ef",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::is_empty",
+    "name": "is_empty",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "Returns true if this buffer is logically empty.",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        173,
+        5
+      ],
+      "end": [
+        175,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "561",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-ede2cc1cac6d8d666b5680ef",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "cafea2e0d147403b62417a4e",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::len",
+    "name": "len",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Returns the logical length of the run-ends stored by this buffer.",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        167,
+        5
+      ],
+      "end": [
+        169,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "560",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-cafea2e0d147403b62417a4e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b0bd0405bd0f11cb5742f118",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::max_value",
+    "name": "max_value",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn max_value(&self) -> usize",
+    "docs": "Returns the maximum run-end encoded in the underlying buffer; that is, the\nlast physical run of the buffer. This does not take into account any logical\nslicing that may have occurred.",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        221,
+        5
+      ],
+      "end": [
+        223,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "565",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-b0bd0405bd0f11cb5742f118",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1897344cc1def84efe4ec6bc",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::new",
+    "name": "new",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(run_ends: ScalarBuffer<E>, logical_offset: usize, logical_length: usize) -> Self",
+    "docs": "Create a new [`RunEndBuffer`] from a [`ScalarBuffer`], `logical_offset`\nand `logical_length`.\n\n# Panics\n\n- `run_ends` does not contain strictly increasing values greater than zero\n- The last value of `run_ends` is less than `logical_offset + logical_length`",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        114,
+        5
+      ],
+      "end": [
+        138,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "run_ends",
+              {
+                "resolved_path": {
+                  "path": "ScalarBuffer",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "E"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "logical_offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "logical_length",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "arrow_buffer::buffer::scalar::ScalarBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RunEndBuffer`": 556,
+      "`ScalarBuffer`": 12
+    },
+    "link_paths": {
+      "`RunEndBuffer`": "arrow_buffer::buffer::run::RunEndBuffer",
+      "`ScalarBuffer`": "arrow_buffer::buffer::scalar::ScalarBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "557",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-1897344cc1def84efe4ec6bc",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RunEndBuffer`": "../operations/arrow_buffer.buffer.run.RunEndBuffer.md#op-e35311e9ed6d50fb4e98aafc",
+      "`ScalarBuffer`": "../operations/arrow_buffer.buffer.scalar.ScalarBuffer.md#op-3edbfa8eafafb64c0414f247"
+    }
+  },
+  {
+    "id": "1fefae2fe3a10f808cb263f0",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::new_unchecked",
+    "name": "new_unchecked",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn new_unchecked(run_ends: ScalarBuffer<E>, logical_offset: usize, logical_length: usize) -> Self",
+    "docs": "Create a new [`RunEndBuffer`] from a [`ScalarBuffer`], `logical_offset`\nand `logical_length`.\n\n# Safety\n\n- `run_ends` must contain strictly increasing values greater than zero\n- The last value of `run_ends` must be greater than or equal to `logical_offset + logical_len`",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        147,
+        5
+      ],
+      "end": [
+        157,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "run_ends",
+              {
+                "resolved_path": {
+                  "path": "ScalarBuffer",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "E"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "logical_offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "logical_length",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "arrow_buffer::buffer::scalar::ScalarBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RunEndBuffer`": 556,
+      "`ScalarBuffer`": 12
+    },
+    "link_paths": {
+      "`RunEndBuffer`": "arrow_buffer::buffer::run::RunEndBuffer",
+      "`ScalarBuffer`": "arrow_buffer::buffer::scalar::ScalarBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "558",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-1fefae2fe3a10f808cb263f0",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RunEndBuffer`": "../operations/arrow_buffer.buffer.run.RunEndBuffer.md#op-e35311e9ed6d50fb4e98aafc",
+      "`ScalarBuffer`": "../operations/arrow_buffer.buffer.scalar.ScalarBuffer.md#op-3edbfa8eafafb64c0414f247"
+    }
+  },
+  {
+    "id": "5f2aa8ad71d94f118a274ea6",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::offset",
+    "name": "offset",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn offset(&self) -> usize",
+    "docs": "Returns the logical offset into the run-ends stored by this buffer.",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        161,
+        5
+      ],
+      "end": [
+        163,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "559",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-5f2aa8ad71d94f118a274ea6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f6c354e415f6cf28551ad64f",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::shrink_to_fit",
+    "name": "shrink_to_fit",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn shrink_to_fit(&mut self)",
+    "docs": "Free up unused memory.",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        178,
+        5
+      ],
+      "end": [
+        181,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "562",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-f6c354e415f6cf28551ad64f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4ad75ee226678e17458ed82a",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::slice",
+    "name": "slice",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn slice(&self, logical_offset: usize, logical_length: usize) -> Self",
+    "docs": "Slices this [`RunEndBuffer`] by the provided `logical_offset` and `logical_length`.\n\n# Panics\n\n- Specified slice (`logical_offset` + `logical_length`) exceeds existing\n  logical length",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        275,
+        5
+      ],
+      "end": [
+        285,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "logical_offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "logical_length",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RunEndBuffer`": 556
+    },
+    "link_paths": {
+      "`RunEndBuffer`": "arrow_buffer::buffer::run::RunEndBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "569",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-4ad75ee226678e17458ed82a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RunEndBuffer`": "../operations/arrow_buffer.buffer.run.RunEndBuffer.md#op-e35311e9ed6d50fb4e98aafc"
+    }
+  },
+  {
+    "id": "d2d1f870c61f92cbbf9411ab",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::sliced_values",
+    "name": "sliced_values",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn sliced_values(&self) -> impl Iterator<Item = E> + '_",
+    "docs": "Returns an iterator yielding run ends adjusted for the logical slice.\n\nEach yielded value is subtracted by the [`logical_offset`] and capped\nat the [`logical_length`].\n\n[`logical_offset`]: Self::offset\n[`logical_length`]: Self::len",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        199,
+        5
+      ],
+      "end": [
+        215,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "impl_trait": [
+              {
+                "trait_bound": {
+                  "trait": {
+                    "path": "Iterator",
+                    "id": 153,
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [],
+                        "constraints": [
+                          {
+                            "name": "Item",
+                            "args": null,
+                            "binding": {
+                              "equality": {
+                                "type": {
+                                  "generic": "E"
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "generic_params": [],
+                  "modifier": "none"
+                }
+              },
+              {
+                "outlives": "'_"
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "153": "core::iter::traits::iterator::Iterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self::offset": 559,
+      "Self::len": 560
+    },
+    "link_paths": {
+      "Self::offset": "arrow_buffer::buffer::run::RunEndBuffer::offset",
+      "Self::len": "arrow_buffer::buffer::run::RunEndBuffer::len"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "564",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-d2d1f870c61f92cbbf9411ab",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Self::offset": "../operations/arrow_buffer.buffer.run.RunEndBuffer.md#op-5f2aa8ad71d94f118a274ea6",
+      "Self::len": "../operations/arrow_buffer.buffer.run.RunEndBuffer.md#op-cafea2e0d147403b62417a4e"
+    }
+  },
+  {
+    "id": "3c80c59e052b954fd6d0cf98",
+    "path": "arrow_buffer::buffer::run::RunEndBuffer::values",
+    "name": "values",
+    "owner": "arrow_buffer::buffer::run::RunEndBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn values(&self) -> &[E]",
+    "docs": "Returns the physical (**unsliced**) run ends of this buffer.\n\nTake care when operating on these values as it doesn't take into account\nany logical slicing that may have occurred.",
+    "span": {
+      "filename": "src/buffer/run.rs",
+      "begin": [
+        188,
+        5
+      ],
+      "end": [
+        190,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "generic": "E"
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RunEndBuffer",
+          "id": "arrow_buffer::buffer::run::RunEndBuffer",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "E"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "E"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowNativeType",
+                      "id": "arrow_buffer::native::ArrowNativeType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/run.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          379,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "563",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.run.RunEndBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.run.RunEndBuffer.json",
+    "anchor": "op-3c80c59e052b954fd6d0cf98",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

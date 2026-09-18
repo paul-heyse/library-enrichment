@@ -13,7 +13,6 @@ use enrichment_core::{
         Artifact,
         arrow_model::expressions::{literal, record, variant},
     },
-    native_key::Key,
     native_union::{Cell, NativeStruct},
     operation::{
         retention::Dependency,
@@ -23,7 +22,7 @@ use enrichment_core::{
 
 #[derive(Clone)]
 pub struct RegistryStore {
-    definitions: Definitions,
+    definitions: Definitions<enrichment_core::identity::RegistryCaptureId>,
     control: ControlStore,
     runtime: QueryRuntime,
 }
@@ -31,12 +30,9 @@ pub struct RegistryStore {
 impl RegistryStore {
     pub fn new(control: ControlStore, runtime: QueryRuntime) -> Self {
         Self {
-            definitions: Definitions::new(
+            definitions: Definitions::<enrichment_core::identity::RegistryCaptureId>::new(
                 control.clone(),
                 runtime.clone(),
-                "registry_captures",
-                Key::RegistryCapture,
-                "capture_id",
             ),
             control,
             runtime,
@@ -113,7 +109,8 @@ fn records<T: NativeStruct + Cell>(
     runtime: &QueryRuntime,
     batches: Vec<RecordBatch>,
 ) -> Result<DataFrame> {
-    let input = runtime.session().read_batches(batches)?;
+    let input =
+        crate::native_catalog::captured_batches(&runtime.session(), "registry_capture", batches)?;
     enrichment_core::native_schema::check_input(
         input.schema().as_arrow(),
         &arrow::datatypes::Schema::new(T::fields()),
@@ -206,23 +203,25 @@ fn python_versions_plan(
     accept: Option<&str>,
     versions: &[String],
 ) -> Result<DataFrame> {
-    let input = runtime
-        .session()
-        .read_batch(RecordBatch::try_from_iter([(
+    let input = crate::native_catalog::batch(
+        &runtime.session(),
+        "registry_capture",
+        RecordBatch::try_from_iter([(
             "version",
             std::sync::Arc::new(arrow::array::StringArray::from(versions.to_vec()))
                 as arrow::array::ArrayRef,
-        )])?)?
-        .aggregate(vec![], vec![array_agg(col("version")).alias("entries")])?
-        .select(vec![
-            coalesce(vec![col("entries"), literal(&Vec::<String>::new())?]).alias("entries"),
-        ])?;
+        )])?,
+    )?
+    .aggregate(vec![], vec![array_agg(col("version")).alias("entries")])?
+    .select(vec![
+        coalesce(vec![col("entries"), literal(&Vec::<String>::new())?]).alias("entries"),
+    ])?;
     capture(
         input,
         artifact,
         accept,
         "python_versions",
-        "pypi-simple-versions/1",
+        include_str!("../../enrichment-core/src/producer/python/registry.rs"),
     )
 }
 
@@ -267,11 +266,16 @@ mod tests {
             }
             _ => panic!("wrong registry fact variant"),
         }
-        enrichment_core::native_struct! { struct Identity { id: String => enrichment_core::native_union::Rule::Text } }
+        enrichment_core::native_struct! { struct Identity { id: enrichment_core::identity::RegistryCaptureId => enrichment_core::native_union::Rule::Text } }
         let selected: Identity = runtime
             .records(
                 frame
-                    .select(vec![Key::RegistryCapture.expression().alias("id")])
+                    .select(vec![
+                        enrichment_core::native_key::Key::RegistryCapture
+                            .identity()
+                            .unwrap()
+                            .alias("id"),
+                    ])
                     .unwrap(),
                 1,
             )
@@ -279,18 +283,30 @@ mod tests {
             .unwrap()
             .pop()
             .unwrap();
-        assert_eq!(selected.id, Key::RegistryCapture.record(&captured).unwrap());
+        assert_eq!(
+            selected.id,
+            enrichment_core::identity::RegistryCaptureId::try_from_record(&captured).unwrap()
+        );
         let mut changed = captured.clone();
         changed.accept = None;
-        assert_ne!(selected.id, Key::RegistryCapture.record(&changed).unwrap());
+        assert_ne!(
+            selected.id,
+            enrichment_core::identity::RegistryCaptureId::try_from_record(&changed).unwrap()
+        );
         changed = captured.clone();
         changed.decoder.push('x');
-        assert_ne!(selected.id, Key::RegistryCapture.record(&changed).unwrap());
+        assert_ne!(
+            selected.id,
+            enrichment_core::identity::RegistryCaptureId::try_from_record(&changed).unwrap()
+        );
         let mut relocated = artifact.clone();
         relocated.source_uri.push_str("/mirror");
         changed = captured;
         changed.artifact = relocated;
-        assert_ne!(selected.id, Key::RegistryCapture.record(&changed).unwrap());
+        assert_ne!(
+            selected.id,
+            enrichment_core::identity::RegistryCaptureId::try_from_record(&changed).unwrap()
+        );
         let empty = rust_index_plan(
             &runtime,
             &artifact,

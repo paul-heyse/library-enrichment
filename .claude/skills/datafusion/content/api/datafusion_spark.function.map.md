@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 4 public items · structured records in [`model/data
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.map.functions.md).
+
+
 ---
 
 ## map_from_arrays
@@ -19,6 +22,9 @@ fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```rust
 fn map_from_arrays() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.map.map_from_arrays.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of map_from_arrays
 
@@ -32,6 +38,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of map_from_ar
 fn map_from_entries() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.map.map_from_entries.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of map_from_entries
 
 ---
@@ -43,6 +52,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of map_from_en
 ```rust
 fn str_to_map() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.map.str_to_map.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of str_to_map
 

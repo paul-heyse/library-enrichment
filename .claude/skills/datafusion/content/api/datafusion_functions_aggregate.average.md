@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::avg`
 fn avg(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.average.avg.md).
+
+
 Returns the avg of a group of values.
 
 ---
@@ -26,6 +29,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::avg_distinct`
 fn avg_distinct(expr: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.average.avg_distinct.md).
+
+
 ---
 
 ## avg_udaf
@@ -35,6 +41,9 @@ fn avg_distinct(expr: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```rust
 fn avg_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.average.avg_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`Avg`]
 
@@ -73,6 +82,9 @@ fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.average.Avg.md).
+
+
 ---
 
 ## AvgAccumulator
@@ -98,6 +110,9 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn supports_retract_batch(&self) -> bool
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.average.AvgAccumulator.md).
+
 
 An accumulator to compute the average
 

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 3 public items · structured records in [`model/buoyan
 ## LoggingMetricsReporter
 
 `struct` · `buoyant_kernel::metrics::reporter::LoggingMetricsReporter`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.reporter.LoggingMetricsReporter.md)
 
 Also reachable as `buoyant_kernel::metrics::LoggingMetricsReporter`, `delta_kernel::metrics::reporter::LoggingMetricsReporter`
 
@@ -35,6 +36,7 @@ A [`MetricsReporter`] that logs each event as a tracing event at the configured 
 ## ReportGeneratorLayer
 
 `struct` · `buoyant_kernel::metrics::reporter::ReportGeneratorLayer`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.reporter.ReportGeneratorLayer.md)
 
 Also reachable as `buoyant_kernel::metrics::ReportGeneratorLayer`, `delta_kernel::metrics::reporter::ReportGeneratorLayer`
 
@@ -73,6 +75,7 @@ Typically added to a subscriber via
 ## MetricsReporter
 
 `trait` · `buoyant_kernel::metrics::reporter::MetricsReporter`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.reporter.MetricsReporter.md)
 
 Also reachable as `buoyant_kernel::metrics::MetricsReporter`, `delta_kernel::metrics::reporter::MetricsReporter`
 

@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 7 public items · structured records in [`mo
 fn contain_hashes<T>(map: &hashbrown::HashTable<(u64, T)>, hash_values: &[u64]) -> arrow::array::BooleanArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.join_hash_map.contain_hashes.md).
+
+
 ---
 
 ## get_matched_indices
@@ -19,6 +22,9 @@ fn contain_hashes<T>(map: &hashbrown::HashTable<(u64, T)>, hash_values: &[u64]) 
 ```rust
 fn get_matched_indices<'a, T>(map: &hashbrown::HashTable<(u64, T)>, next: &[T], iter: Box<dyn Iterator<Item = (usize, &'a u64)> + 'a>, deleted_offset: Option<usize>) -> (Vec<u32>, Vec<u64>) where T: Copy + TryFrom<usize> + PartialOrd + Into<u64> + Sub<Output = T>, <T as TryFrom>::Error: Debug
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.join_hash_map.get_matched_indices.md).
+
 
 ---
 
@@ -30,6 +36,9 @@ fn get_matched_indices<'a, T>(map: &hashbrown::HashTable<(u64, T)>, next: &[T], 
 fn get_matched_indices_with_limit_offset<T>(map: &hashbrown::HashTable<(u64, T)>, next_chain: &[T], hash_values: &[u64], valid_keys: Option<&arrow::buffer::NullBuffer>, limit: usize, offset: (usize, Option<u64>), input_indices: &mut Vec<u32>, match_indices: &mut Vec<u64>) -> Option<(usize, Option<u64>)> where T: Copy + TryFrom<usize> + PartialOrd + Into<u64> + Sub<Output = T> + ArrowNativeType, <T as TryFrom>::Error: Debug
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.join_hash_map.get_matched_indices_with_limit_offset.md).
+
+
 ---
 
 ## update_from_iter
@@ -39,6 +48,9 @@ fn get_matched_indices_with_limit_offset<T>(map: &hashbrown::HashTable<(u64, T)>
 ```rust
 fn update_from_iter<'a, T>(map: &mut hashbrown::HashTable<(u64, T)>, next: &mut [T], iter: Box<dyn Iterator<Item = (usize, &'a u64)> + Send + 'a>, deleted_offset: usize) where T: Copy + TryFrom<usize> + PartialOrd, <T as TryFrom>::Error: Debug
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.join_hash_map.update_from_iter.md).
+
 
 ---
 
@@ -72,6 +84,9 @@ fn len(&self) -> usize
 fn update_from_iter<'a>(&mut self, iter: Box<dyn Iterator<Item = (usize, &'a u64)> + Send + 'a>, deleted_offset: usize)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapU32.md).
+
+
 ---
 
 ## JoinHashMapU64
@@ -104,6 +119,9 @@ fn len(&self) -> usize
 fn update_from_iter<'a>(&mut self, iter: Box<dyn Iterator<Item = (usize, &'a u64)> + Send + 'a>, deleted_offset: usize)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapU64.md).
+
+
 ---
 
 ## JoinHashMapType
@@ -132,6 +150,9 @@ fn is_empty(&self) -> bool
 fn len(&self) -> usize
 fn update_from_iter<'a>(&mut self, iter: Box<dyn Iterator<Item = (usize, &'a u64)> + Send + 'a>, deleted_offset: usize)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.md).
+
 
 Maps a `u64` hash value based on the build side ["on" values] to a list of indices with this key's value.
 

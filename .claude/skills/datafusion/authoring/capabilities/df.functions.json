@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "id": "df.functions",
+  "title": "Discover built-ins in the actual session before writing a UDF",
+  "task_aliases": [
+    "built in scalar functions",
+    "nested list array map",
+    "SQL aliases",
+    "table function",
+    "return field volatility",
+    "custom UDF alternative"
+  ],
+  "crates": [
+    "datafusion-functions",
+    "datafusion-functions-nested",
+    "datafusion-functions-aggregate",
+    "datafusion-functions-window",
+    "datafusion-functions-table",
+    "datafusion-expr"
+  ],
+  "input": [
+    "Expr",
+    "ColumnarValue",
+    "SessionState"
+  ],
+  "output": [
+    "Expr",
+    "ColumnarValue",
+    "TableProvider"
+  ],
+  "properties": [
+    "registry",
+    "features",
+    "coercion",
+    "volatility",
+    "nulls",
+    "metadata"
+  ],
+  "operations": [
+    "datafusion::execution::session_state::SessionState::scalar_functions",
+    "datafusion::execution::session_state::SessionState::aggregate_functions",
+    "datafusion::execution::session_state::SessionState::window_functions",
+    "datafusion::execution::session_state::SessionState::table_functions",
+    "datafusion_expr::udf::ScalarUDFImpl"
+  ],
+  "brief": "Search the SQL catalog, runtime registry and defining function crate. An indexed constructor is not proof of registration under a consumer's feature profile; names/aliases, signature and return-field logic are separate facts.",
+  "choices": [
+    {
+      "candidate": "built-in expr_fn / SQL function",
+      "choose_when": "Existing semantics fit the query",
+      "tradeoff": "Keep optimizer visibility; inspect null/coercion/volatility contracts.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "Arrow kernel",
+      "choose_when": "Already operating on arrays inside an execution boundary",
+      "tradeoff": "Avoid unnecessary SQL/UDF registration but manage schema and scalar broadcasting.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "custom ScalarUDFImpl",
+      "choose_when": "Semantics genuinely differ",
+      "tradeoff": "Declare signature, volatility, invocation and output-field behavior; prove any optimizer hooks.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "table function",
+      "choose_when": "Arguments produce a relation rather than a scalar column",
+      "tradeoff": "Registration and output TableProvider differ from scalar functions.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "df.functions.discovery",
+      "aspect": "discovery",
+      "statement": "SessionState exposes scalar/aggregate/window/table function maps. The captured registry records registered names, canonical names, aliases and signature Debug text for one explicit profile.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.functions.shape",
+      "aspect": "shape",
+      "statement": "ScalarUDFImpl receives invocation arguments including ColumnarValue inputs and row-count/field context. Inspect invoke_with_args and return_field_from_args; scalar versus array and nullable output cannot be inferred from the SQL name.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.functions.optimizer",
+      "aspect": "optimizer",
+      "statement": "Volatility, simplification, ordering/bounds and short-circuit hooks affect planning. Defaults may be appropriate; incorrect advertised properties can change results.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.functions.availability",
+      "aspect": "availability",
+      "statement": "Cargo features, default function installation and session registrations all matter. Runtime registry capture is not a list of every function constructible from the 60 indexed crates.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Find a SQL name or task synonym, resolve its defining implementation and expr_fn helper.",
+    "Check actual registry membership and Cargo features.",
+    "Read the specific function's signature, coercion and return-field/null contract before composing."
+  ],
+  "unknowns": [
+    "The registry signature is Debug output, not a stable signature serialization. Return-field behavior still requires per-function reading/probing."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "datafusion::execution::session_state::SessionState::scalar_functions",
+        "datafusion::execution::session_state::SessionState::aggregate_functions",
+        "datafusion::execution::session_state::SessionState::window_functions",
+        "datafusion::execution::session_state::SessionState::table_functions",
+        "datafusion_expr::udf::ScalarUDFImpl"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "datafusion::execution::session_state::SessionState::scalar_functions",
+      "datafusion::execution::session_state::SessionState::aggregate_functions",
+      "datafusion::execution::session_state::SessionState::window_functions",
+      "datafusion::execution::session_state::SessionState::table_functions",
+      "datafusion_expr::udf::ScalarUDFImpl"
+    ],
+    "candidate_set": [
+      "built-in expr_fn / SQL function",
+      "Arrow kernel",
+      "custom ScalarUDFImpl",
+      "table function"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  }
+}

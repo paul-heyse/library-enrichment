@@ -30,6 +30,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.collection.size.SparkSize.md).
+
+
 Spark-compatible `size` function.
 
 Returns the number of elements in an array or the number of key-value pairs in a map.

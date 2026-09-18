@@ -29,6 +29,9 @@ fn schema(&self) -> SchemaRef
 fn from(value: CommandGetDbSchemas) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.metadata.db_schemas.GetDbSchemasBuilder.md).
+
+
 A builder for a [`CommandGetDbSchemas`] response.
 
 Builds rows like this:

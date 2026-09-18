@@ -10,6 +10,9 @@ Crate `datafusion-common` · 3 public items · structured records in [`model/dat
 fn levenshtein(a: &str, b: &str) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.datafusion_strsim.levenshtein.md).
+
+
 Calculates the minimum number of insertions, deletions, and substitutions
 required to change one string into the other.
 
@@ -29,6 +32,9 @@ assert_eq!(3, levenshtein("kitten", "sitting"));
 fn levenshtein_with_buffer(a: &str, b: &str, cache: &mut Vec<usize>) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.datafusion_strsim.levenshtein_with_buffer.md).
+
+
 Calculates the Levenshtein distance using a reusable cache buffer.
 This avoids allocating a new Vec for each call, improving performance
 when computing many distances.
@@ -44,6 +50,9 @@ The `cache` buffer will be resized as needed and reused across calls.
 ```rust
 fn normalized_levenshtein(a: &str, b: &str) -> f64
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.datafusion_strsim.normalized_levenshtein.md).
+
 
 Calculates the normalized Levenshtein distance between two strings.
 The normalized distance is a value between 0.0 and 1.0, where 1.0 indicates

@@ -30,6 +30,9 @@ fn name(&self) -> &str
 fn reverse_expr(&self) -> Option<Arc<dyn StandardWindowFunctionExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.window.standard_window_function_expr.StandardWindowFunctionExpr.md).
+
+
 Evaluates a window function by instantiating a
 [`PartitionEvaluator`] for calculating the function's output in
 that partition.

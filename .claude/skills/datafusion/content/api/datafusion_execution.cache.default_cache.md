@@ -40,6 +40,9 @@ fn update_cache_limit(&self, limit: usize)
 fn update_cache_ttl(&self, ttl: Option<Duration>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.default_cache.DefaultCache.md).
+
+
 In-memory [`Cache`] with an LRU eviction policy, byte-based memory limit,
 and optional per-entry TTL.
 
@@ -69,6 +72,9 @@ struct SystemTimeProvider
 fn now(&self) -> Instant
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.default_cache.SystemTimeProvider.md).
+
+
 [`TimeProvider`] backed by [`Instant::now`].
 
 This is the default time source used by [`DefaultCache`]
@@ -92,6 +98,9 @@ trait TimeProvider: Send + Sync
 ```rust
 fn now(&self) -> Instant
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.default_cache.TimeProvider.md).
+
 
 Source of the current time used by a [`DefaultCache`] when applying TTLs.
 

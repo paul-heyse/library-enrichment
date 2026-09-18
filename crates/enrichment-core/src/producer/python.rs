@@ -165,6 +165,7 @@ pub struct WorkerProtocol {
 pub mod archive;
 pub mod facts;
 pub mod inventory;
+pub mod registry;
 pub mod requirements;
 pub mod worker;
 

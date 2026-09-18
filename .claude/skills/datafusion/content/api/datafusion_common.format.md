@@ -10,6 +10,9 @@ Crate `datafusion-common` · 7 public items · structured records in [`model/dat
 const DEFAULT_CAST_OPTIONS: arrow::compute::CastOptions<'static> = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.format.DEFAULT_CAST_OPTIONS.md).
+
+
 The default [`CastOptions`] to use within DataFusion
 
 ---
@@ -21,6 +24,9 @@ The default [`CastOptions`] to use within DataFusion
 ```rust
 const DEFAULT_FORMAT_OPTIONS: arrow::util::display::FormatOptions<'static> = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.format.DEFAULT_FORMAT_OPTIONS.md).
+
 
 The default [`FormatOptions`] to use within DataFusion
 Also see [`crate::config::FormatOptions`]
@@ -59,6 +65,9 @@ fn from_str(s: &str) -> Result<Self, Self::Err>
 fn set(&mut self, _: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key: &str, description: &'static str)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.format.ExplainAnalyzeCategories.md).
+
 
 Controls which [`MetricCategory`] values are shown in `EXPLAIN ANALYZE`.
 
@@ -104,6 +113,9 @@ fn set(&mut self, _: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key: &str, description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.format.ExplainFormat.md).
+
+
 Output formats for controlling for Explain plans
 
 ---
@@ -135,6 +147,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```rust
 fn from_str(s: &str) -> Result<Self, Self::Err>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.format.MetricCategory.md).
+
 
 Classifies a metric by what it measures.
 
@@ -204,6 +219,9 @@ fn set(&mut self, _: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key: &str, description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.format.MetricType.md).
+
+
 Categorizes metrics so the display layer can choose the desired verbosity.
 
 The `datafusion.explain.analyze_level` configuration controls which
@@ -240,6 +258,9 @@ struct ExplainStatementOptions
 ```rust
 fn from_utility_options(opts: &[UtilityOption]) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.format.ExplainStatementOptions.md).
+
 
 Normalized options for a single `EXPLAIN` statement.
 

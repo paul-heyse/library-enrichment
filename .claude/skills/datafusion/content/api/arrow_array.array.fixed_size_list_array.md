@@ -72,6 +72,9 @@ fn values(&self) -> &ArrayRef
 fn from(data: ArrayData) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md).
+
+
 An array of [fixed length lists], similar to JSON arrays
 (e.g. `["A", "B"]`).
 

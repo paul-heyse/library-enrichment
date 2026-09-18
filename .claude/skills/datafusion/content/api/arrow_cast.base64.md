@@ -10,6 +10,9 @@ Crate `arrow-cast` · 2 public items · structured records in [`model/arrow_cast
 fn b64_decode<E: Engine, O: OffsetSizeTrait>(engine: &E, array: &arrow_array::GenericBinaryArray<O>) -> Result<arrow_array::GenericBinaryArray<O>, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.base64.b64_decode.md).
+
+
 Base64 decode each element of `array` with the provided [`Engine`]
 
 ---
@@ -21,6 +24,9 @@ Base64 decode each element of `array` with the provided [`Engine`]
 ```rust
 fn b64_encode<E: Engine, O: OffsetSizeTrait>(engine: &E, array: &arrow_array::GenericBinaryArray<O>) -> arrow_array::GenericStringArray<O>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.base64.b64_encode.md).
+
 
 Base64 encode each element of `array` with the provided [`Engine`]
 

@@ -28,6 +28,9 @@ fn as_str(&self) -> &'static str
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.codec.Tz.md).
+
+
 Timezone representation for timestamps.
 
 Avro only distinguishes between UTC and local time (no timezone), but Arrow supports

@@ -22,6 +22,9 @@ enum Boundedness
 fn is_unbounded(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.Boundedness.md).
+
+
 Represents whether a stream of data **generated** by an operator is bounded (finite)
 or unbounded (infinite).
 
@@ -46,6 +49,9 @@ enum CardinalityEffect
 
 **Variants**: `Unknown`, `Equal`, `LowerEqual`, `GreaterEqual`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.CardinalityEffect.md).
+
+
 Indicates the effect an execution plan operator will have on the cardinality
 of its input stream
 
@@ -64,6 +70,9 @@ enum ChildrenPropertiesMode
 **Variants**: `Keep`, `Recompute`
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.ChildrenPropertiesMode.md).
+
 
 Indicates whether the plan properties of the new children must be recomputed.
 
@@ -84,6 +93,9 @@ enum EmissionType
 **Implements**: `core::convert::From`
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.EmissionType.md).
+
 
 Represents how an operator emits its output records.
 
@@ -123,6 +135,9 @@ enum EvaluationType
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.EvaluationType.md).
+
+
 Represents how an operator's stream drives [`RecordBatch`] production
 relative to downstream demand.
 
@@ -146,6 +161,9 @@ enum InvariantLevel
 
 **Derives**: Clone, Copy
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.InvariantLevel.md).
+
+
 [`ExecutionPlan`] Invariant Level
 
 What set of assertions ([Invariant]s)  holds for a particular `ExecutionPlan`
@@ -166,6 +184,9 @@ enum SchedulingType
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.SchedulingType.md).
+
+
 Represents whether an operator's `Stream` has been implemented to actively cooperate with the
 Tokio scheduler or not. Please refer to the [`coop`](crate::coop) module for more details.
 
@@ -180,6 +201,9 @@ Also reachable as `datafusion::physical_plan::apply_expression_roots`, `datafusi
 ```rust
 fn apply_expression_roots<I>(roots: I, f: &mut dyn FnMut(&std::sync::Arc<dyn PhysicalExpr>) -> datafusion_common::Result<datafusion_common::tree_node::TreeNodeRecursion>) -> datafusion_common::Result<datafusion_common::tree_node::TreeNodeRecursion> where I: IntoIterator, I::Item: AsPhysicalExprRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.apply_expression_roots.md).
+
 
 Applies `f` to a shallow sequence of physical expression roots.
 
@@ -197,6 +221,9 @@ because this function does not visit expression children.
 fn check_default_invariants<P: ExecutionPlan + ?Sized>(plan: &P, check: InvariantLevel) -> datafusion_common::Result<(), datafusion_common::DataFusionError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.check_default_invariants.md).
+
+
 Checks a set of invariants that apply to all ExecutionPlan implementations.
 Returns an error if the given node does not conform.
 
@@ -209,6 +236,9 @@ Returns an error if the given node does not conform.
 ```rust
 fn check_not_null_constraints(batch: arrow::array::RecordBatch, column_indices: &Vec<usize>) -> datafusion_common::Result<arrow::array::RecordBatch>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.check_not_null_constraints.md).
+
 
 Checks a `RecordBatch` for `not null` constraints on specified columns.
 
@@ -238,6 +268,9 @@ Also reachable as `datafusion::physical_plan::collect`, `datafusion_physical_pla
 async fn collect(plan: std::sync::Arc<dyn ExecutionPlan>, context: std::sync::Arc<datafusion_execution::TaskContext>) -> datafusion_common::Result<Vec<arrow::array::RecordBatch>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.collect.md).
+
+
 Execute the [ExecutionPlan] and collect the results in memory
 
 ---
@@ -252,6 +285,9 @@ Also reachable as `datafusion::physical_plan::collect_partitioned`, `datafusion_
 async fn collect_partitioned(plan: std::sync::Arc<dyn ExecutionPlan>, context: std::sync::Arc<datafusion_execution::TaskContext>) -> datafusion_common::Result<Vec<Vec<arrow::array::RecordBatch>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.collect_partitioned.md).
+
+
 Execute the [ExecutionPlan] and collect the results in memory
 
 ---
@@ -265,6 +301,9 @@ Also reachable as `datafusion::physical_plan::displayable`, `datafusion_physical
 ```rust
 fn displayable(plan: &dyn ExecutionPlan) -> display::DisplayableExecutionPlan<'_>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.displayable.md).
+
 
 Return a [`DisplayableExecutionPlan`] wrapper around an
 [`ExecutionPlan`] which can be displayed in various easier to
@@ -283,6 +322,9 @@ Also reachable as `datafusion::physical_plan::execute_input_stream`, `datafusion
 ```rust
 fn execute_input_stream(input: std::sync::Arc<dyn ExecutionPlan>, sink_schema: arrow::datatypes::SchemaRef, partition: usize, context: std::sync::Arc<datafusion_execution::TaskContext>) -> datafusion_common::Result<SendableRecordBatchStream>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.execute_input_stream.md).
+
 
 Executes an input stream and ensures that the resulting stream adheres to
 the `not null` constraints specified in the `sink_schema`.
@@ -316,6 +358,9 @@ Also reachable as `datafusion::physical_plan::execute_stream`, `datafusion_physi
 fn execute_stream(plan: std::sync::Arc<dyn ExecutionPlan>, context: std::sync::Arc<datafusion_execution::TaskContext>) -> datafusion_common::Result<SendableRecordBatchStream>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.execute_stream.md).
+
+
 Execute the [ExecutionPlan] and return a single stream of `RecordBatch`es.
 
 See [collect] to buffer the `RecordBatch`es in memory.
@@ -337,6 +382,9 @@ Also reachable as `datafusion::physical_plan::execute_stream_partitioned`, `data
 fn execute_stream_partitioned(plan: std::sync::Arc<dyn ExecutionPlan>, context: std::sync::Arc<datafusion_execution::TaskContext>) -> datafusion_common::Result<Vec<SendableRecordBatchStream>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.execute_stream_partitioned.md).
+
+
 Execute the [ExecutionPlan] and return a vec with one stream per output
 partition
 
@@ -357,6 +405,9 @@ Also reachable as `datafusion::physical_plan::get_plan_string`, `datafusion_phys
 fn get_plan_string(plan: &std::sync::Arc<dyn ExecutionPlan>) -> Vec<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.get_plan_string.md).
+
+
 Utility function yielding a string representation of the given [`ExecutionPlan`].
 
 ---
@@ -368,6 +419,9 @@ Utility function yielding a string representation of the given [`ExecutionPlan`]
 ```rust
 fn has_same_children_properties(plan: &dyn ExecutionPlan, children: &[std::sync::Arc<dyn ExecutionPlan>]) -> datafusion_common::Result<bool>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.has_same_children_properties.md).
+
 
 Check if the `plan` children has the same properties as passed `children`.
 In this case plan can avoid self properties re-computation when its children
@@ -383,6 +437,9 @@ The size of `children` must be equal to the size of `ExecutionPlan::children()`.
 ```rust
 fn need_data_exchange(plan: std::sync::Arc<dyn ExecutionPlan>) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.need_data_exchange.md).
+
 
 Indicate whether a data exchange is needed for the input of `plan`.
 
@@ -404,6 +461,9 @@ Also reachable as `datafusion::physical_plan::replace_children_if_necessary`, `d
 ```rust
 fn replace_children_if_necessary(plan: std::sync::Arc<dyn ExecutionPlan>, children: Vec<std::sync::Arc<dyn ExecutionPlan>>) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.replace_children_if_necessary.md).
+
 
 Returns a plan with the given children, skipping as much work as possible.
 
@@ -436,6 +496,9 @@ The size of `children` must be equal to the size of `ExecutionPlan::children()`.
 fn reset_plan_states(plan: std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.reset_plan_states.md).
+
+
 Make plan ready to be re-executed returning its clone with state reset for all nodes.
 
 Some plans will change their internal states after execution, making them unable to be executed again.
@@ -465,6 +528,9 @@ Also reachable as `datafusion::physical_plan::with_new_children_if_necessary`, `
 ```rust
 fn with_new_children_if_necessary(plan: std::sync::Arc<dyn ExecutionPlan>, children: Vec<std::sync::Arc<dyn ExecutionPlan>>) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.with_new_children_if_necessary.md).
+
 
 ---
 
@@ -502,6 +568,9 @@ fn with_partitioning(self, partitioning: Partitioning) -> Self
 fn with_scheduling_type(self, scheduling_type: SchedulingType) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.PlanProperties.md).
+
+
 Stores plan properties used in query optimization.
 
 Serves as a cache for these properties, which are often
@@ -529,6 +598,9 @@ struct ReplaceChildrenOptions
 const fn new(children_properties: ChildrenPropertiesMode) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.ReplaceChildrenOptions.md).
+
+
 Options for [`ExecutionPlan::replace_children`]
 
 ---
@@ -553,6 +625,9 @@ trait AsPhysicalExprRef
 ```rust
 fn as_physical_expr_ref(&self) -> &Arc<dyn PhysicalExpr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.AsPhysicalExprRef.md).
+
 
 Allows a type to be treated as a reference to an
 [`Arc<dyn PhysicalExpr>`].
@@ -661,6 +736,9 @@ fn with_new_state(&self, _state: Arc<dyn Any + Send + Sync>) -> Option<Arc<dyn E
 fn with_preserve_order(&self, _preserve_order: bool) -> Option<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.ExecutionPlan.md).
+
+
 Represent nodes in the DataFusion Physical Plan.
 
 Calling [`execute`] produces an `async` [`SendableRecordBatchStream`] of
@@ -715,6 +793,9 @@ fn output_ordering(&self) -> Option<&LexOrdering>
 fn output_partitioning(&self) -> &Partitioning
 fn pipeline_behavior(&self) -> EmissionType
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.execution_plan.ExecutionPlanProperties.md).
+
 
 Extension trait provides an easy API to fetch various properties of
 [`ExecutionPlan`] objects based on [`ExecutionPlan::properties`].

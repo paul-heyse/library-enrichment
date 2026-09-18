@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 9 public items · structured records in [`model/buoyan
 ## StructStats
 
 `enum` · `buoyant_kernel::scan::StructStats`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.StructStats.md)
 
 Also reachable as `delta_kernel::scan::StructStats`
 
@@ -23,6 +24,7 @@ Which struct stats columns appear in `stats_parsed` in scan metadata output.
 ## get_transform_for_row
 
 `function` · `buoyant_kernel::scan::get_transform_for_row`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.get_transform_for_row.md)
 
 Also reachable as `delta_kernel::scan::get_transform_for_row`
 
@@ -39,6 +41,7 @@ of the specified row
 ## scan_row_schema
 
 `function` · `buoyant_kernel::scan::scan_row_schema`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.scan_row_schema.md)
 
 Also reachable as `delta_kernel::scan::scan_row_schema`
 
@@ -80,6 +83,7 @@ It is:
 ## selection_vector
 
 `function` · `buoyant_kernel::scan::selection_vector`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.selection_vector.md)
 
 Also reachable as `delta_kernel::scan::selection_vector`
 
@@ -92,6 +96,7 @@ fn selection_vector(engine: &dyn Engine, descriptor: &actions::deletion_vector::
 ## PartitionValuesOptions
 
 `struct` · `buoyant_kernel::scan::PartitionValuesOptions`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.PartitionValuesOptions.md)
 
 Also reachable as `delta_kernel::scan::PartitionValuesOptions`
 
@@ -123,6 +128,7 @@ when present, otherwise from parsing the string map.
 ## Scan
 
 `struct` · `buoyant_kernel::scan::Scan`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.Scan.md)
 
 Also reachable as `delta_kernel::scan::Scan`
 
@@ -154,6 +160,7 @@ scanning the table.
 ## ScanBuilder
 
 `struct` · `buoyant_kernel::scan::ScanBuilder`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.ScanBuilder.md)
 
 Also reachable as `delta_kernel::scan::ScanBuilder`
 
@@ -184,6 +191,7 @@ Builder to scan a snapshot of a table.
 ## ScanMetadata
 
 `struct` · `buoyant_kernel::scan::ScanMetadata`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.ScanMetadata.md)
 
 Also reachable as `delta_kernel::scan::ScanMetadata`
 
@@ -216,6 +224,7 @@ data read from those files.
 ## StatsOptions
 
 `struct` · `buoyant_kernel::scan::StatsOptions`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.StatsOptions.md)
 
 Also reachable as `delta_kernel::scan::StatsOptions`
 

@@ -29,14 +29,14 @@ async fn acquisition_and_offline_routing_preserve_registry_names() {
                 pin.clone(),
                 Scope {
                     ecosystem,
-                    name,
-                    registry: "registry",
-                    version: Some("1.0.0"),
-                    environment_id: "environment",
+                    name: name.into(),
+                    registry: "registry".into(),
+                    version: Some("1.0.0".into()),
+                    environment_id: format!("env_{}", "a".repeat(64)).try_into().unwrap(),
                     mode: ResearchMode::Project,
                     allow_local_build: false,
                     freshness,
-                    profiles: &profiles,
+                    profiles: profiles.clone(),
                 },
             )
             .await

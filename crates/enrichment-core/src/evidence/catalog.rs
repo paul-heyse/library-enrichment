@@ -8,12 +8,18 @@ use serde::{Deserialize, Serialize};
 crate::native_struct! {
 /// A derived comparison is owned by its request and exact input pair, never a producer run.
 pub struct ComparisonPublication {
-    job_id: String => Rule::NonEmpty,
+    job_id: crate::identity::JobId => Rule::Text,
     request_digest: String => Rule::Sha256,
     before_context_id: ContextId => Rule::Text,
-    before_snapshot_id: SnapshotId => Rule::Text,
+    before_snapshot_id: SnapshotId => Rule::ForeignKey {
+        table: "snapshots".into(), field: vec!["snapshot_id".into()],
+        scope: vec![crate::native_union::ScopeKey::exact(&["before_context_id"], &["context_id"])],
+    },
     after_context_id: ContextId => Rule::Text,
-    after_snapshot_id: SnapshotId => Rule::Text,
+    after_snapshot_id: SnapshotId => Rule::ForeignKey {
+        table: "snapshots".into(), field: vec!["snapshot_id".into()],
+        scope: vec![crate::native_union::ScopeKey::exact(&["after_context_id"], &["context_id"])],
+    },
     state: crate::wire::JobState => Rule::Text,
     delivery: super::Artifact => Rule::Text,
 }
@@ -21,8 +27,7 @@ pub struct ComparisonPublication {
 
 impl ComparisonPublication {
     pub fn validate(&self) -> Result<(), String> {
-        if !valid_job_id(&self.job_id)
-            || !valid_digest(&self.request_digest)
+        if !valid_digest(&self.request_digest)
             || !matches!(
                 self.state,
                 crate::wire::JobState::Succeeded | crate::wire::JobState::Partial
@@ -32,12 +37,6 @@ impl ComparisonPublication {
         }
         validate_delivery(&self.delivery)
     }
-}
-
-fn valid_job_id(value: &str) -> bool {
-    value
-        .strip_prefix("job_")
-        .is_some_and(|s| s.len() == 32 && s.bytes().all(|b| b.is_ascii_hexdigit()))
 }
 
 fn valid_digest(value: &str) -> bool {
@@ -68,12 +67,18 @@ fn validate_delivery(delivery: &super::Artifact) -> Result<(), String> {
 crate::native_struct! {
 /// A committed job result is recovered through native catalog records, never by rerunning it.
 pub struct JobPublication {
-    job_id: String => Rule::NonEmpty,
+    job_id: crate::identity::JobId => Rule::Text,
     context_id: ContextId => Rule::Text,
-    snapshot_id: SnapshotId => Rule::Text,
+    snapshot_id: SnapshotId => Rule::ForeignKey {
+        table: "snapshots".into(), field: vec!["snapshot_id".into()],
+        scope: vec![crate::native_union::ScopeKey::exact(&["context_id"], &["context_id"])],
+    },
     kind: PublishedJobKind => Rule::Text,
     state: crate::wire::JobState => Rule::Text,
-    attempt_id: String => Rule::NonEmpty,
+    attempt_id: crate::identity::AttemptId => Rule::ForeignKey {
+        table: "attempts".into(), field: vec!["attempt_id".into()],
+        scope: vec![crate::native_union::ScopeKey::exact(&["snapshot_id"], &["snapshot_id"])],
+    },
     result_artifact_ids: Vec<String> => Rule::Set,
     /// Complete bounded presentation, admitted before this catalog publication.
     /// It is not a producer input and does not enter evidence identity.
@@ -89,16 +94,13 @@ impl JobPublication {
     /// # Errors
     /// Only a service job, a terminal outcome and a bounded result closure may be published.
     pub fn validate(&self) -> Result<(), String> {
-        if !valid_job_id(&self.job_id)
-            || !matches!(
-                self.state,
-                crate::wire::JobState::Succeeded
-                    | crate::wire::JobState::Partial
-                    | crate::wire::JobState::Failed
-                    | crate::wire::JobState::Cancelled
-            )
-            || self.attempt_id.is_empty()
-            || self.result_artifact_ids.is_empty()
+        if !matches!(
+            self.state,
+            crate::wire::JobState::Succeeded
+                | crate::wire::JobState::Partial
+                | crate::wire::JobState::Failed
+                | crate::wire::JobState::Cancelled
+        ) || self.result_artifact_ids.is_empty()
             || self.result_artifact_ids.len() > 64
             || self
                 .result_artifact_ids
@@ -122,7 +124,7 @@ crate::native_struct! {
 /// An immutable snapshot manifest admitted for a particular context.
 pub struct SnapshotEntry {
     snapshot_id: SnapshotId => crate::native_union::Rule::Text,
-    context_id: ContextId => crate::native_union::Rule::Text,
+    context_id: ContextId => Rule::foreign_key("contexts", "context_id"),
     publication: super::snapshot::EvidenceManifest => crate::native_union::Rule::Text,
 }
 }
@@ -145,7 +147,10 @@ crate::native_struct! {
 /// Current selection is an ordered catalog fact, separate from snapshot identity.
 pub struct SnapshotSelection {
     context_id: ContextId => Rule::Text,
-    snapshot_id: SnapshotId => Rule::Text,
+    snapshot_id: SnapshotId => Rule::ForeignKey {
+        table: "snapshots".into(), field: vec!["snapshot_id".into()],
+        scope: vec![crate::native_union::ScopeKey::exact(&["context_id"], &["context_id"])],
+    },
     generation: u64 => Rule::Text,
 }
 }
@@ -164,7 +169,7 @@ pub struct SnapshotAttempt {
 crate::native_struct! {
 pub(crate) struct SnapshotAttemptIdentity {
     snapshot_id: SnapshotId => Rule::Text,
-    attempt_id: String => Rule::NonEmpty,
+    attempt_id: crate::identity::AttemptId => Rule::Text,
 }
 }
 
@@ -174,7 +179,7 @@ impl SnapshotAttempt {
         crate::native_key::Key::SnapshotAttempt
             .record(&SnapshotAttemptIdentity {
                 snapshot_id: self.snapshot_id.clone(),
-                attempt_id: self.run.attempt_id.clone(),
+                attempt_id: self.run.attempt_id,
             })
             .expect("typed snapshot attempt identity")
     }

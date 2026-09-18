@@ -1581,3 +1581,37 @@ Recorded focused receipts in `.dev-state/plan17/execution/`:
 
 Full final-source shutdown, workload, resource, crash and installed-product qualification remain
 Plan 17 requirements. Callback tracking does not make a stuck blocking operation cancellable.
+
+## Plan 19 restricted binary descriptors — verified 2026-09-17
+
+DataFusion 55.1.0, Arrow/Parquet 59.3.0 and both Delta/kernel pins remain unchanged.
+Ciborium and ciborium-ll are pinned exactly to 0.2.2. The independent primary-source and
+visitor-shape report is `.dev-state/plan19/execution/binary-codec-verification.md`.
+
+| Claim | Primary source / exact support | Consequence |
+|---|---|---|
+| 0.2.2 is the non-yanked stable release | [Registry API](https://crates.io/api/v1/crates/ciborium), retrieved 2026-09-17: `max_stable_version` = `0.2.2` | Exact lock and vendor dependency; newer Context7 examples are not this API. |
+| Public recursion-limited typed decode exists | [0.2.2 API](https://docs.rs/ciborium/0.2.2/ciborium/de/fn.from_reader_with_recursion_limit.html): `from_reader_with_recursion_limit` | Limit depth explicitly. The decoder type itself is private at this release. |
+| Native serialization accepts an owned writer | [0.2.2 API](https://docs.rs/ciborium/0.2.2/ciborium/fn.into_writer.html): `pub fn into_writer` | Stop growth at the output limit. |
+| Typed readers are not framing validation | [0.2.2 decoder source](https://docs.rs/ciborium/0.2.2/src/ciborium/de/mod.rs.html): `T::deserialize(&mut reader)` | Exact EOF alone misses a fixed visitor under-consuming a claimed sequence. Native header preflight validates cardinalities first. |
+| Header decoder exposes native CBOR structure | [ciborium-ll 0.2.2](https://docs.rs/ciborium-ll/0.2.2/ciborium_ll/struct.Decoder.html): `pub struct Decoder` | Fixed-stack preflight bounds structure without an intermediate semantic Value tree. |
+| Delta Snapshot contains materialized IPC and table root | [Snapshot serde at 58f07cd6](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/kernel/snapshot/serde.rs) | Narrow vendor changes require definite sequences, raw IPC bytes and current materialization. Portable exports use native Delta bindings, not location-bound serialized snapshots. |
+
+The isolated upstream codec probe covers native write/roundtrip/rebound scan and malformed
+framing/footer refusal. It is not service replay, copied-bundle or final allocation qualification.
+See [ADR-0053](../adr/0053-immutable-delta-provider-rebinding.md) and Plan 19 DC09.
+
+### Plan 19: typed list expansion (2026-09-17)
+
+DataFusion 55.1 `datafusion_expr::logical_plan::Unnest::try_new` calls
+`get_unnested_columns`, which creates a new scalar Field from the element **datatype** and
+drops the element Field metadata (`datafusion-expr-55.1.0/src/logical_plan/plan.rs:4836`).
+Struct child fields remain in the datatype. The core `native_list_entries` full-field UDF
+therefore wraps List/LargeList/FixedSizeList value buffers in a Struct without copying them;
+native UNNEST and `get_field` then preserve identity metadata. Maps use the existing
+metadata-preserving `native_map_entries`. The schema-generated reference walker uses these
+projections for retained-result snapshot references as well as reference admission.
+
+The isolated `plan19_schema_identity_closure_handles_optional_lists_and_decoys` check exercises
+optional parents, duplicate list references and a text decoy. This is not a service/replay or
+complete Arrow operator-matrix qualification. No semantic analyzer rule was relaxed.

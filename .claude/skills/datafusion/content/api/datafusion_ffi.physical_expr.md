@@ -28,6 +28,9 @@ fn from(expr: Arc<dyn PhysicalExpr>) -> Self
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_expr.FFI_PhysicalExpr.md).
+
+
 ---
 
 ## ForeignPhysicalExpr
@@ -69,6 +72,9 @@ fn snapshot(&self) -> Result<Option<Arc<dyn PhysicalExpr>>>
 fn snapshot_generation(&self) -> u64
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_expr.ForeignPhysicalExpr.md).
+
 
 This wrapper struct exists on the receiver side of the FFI interface, so it has
 no guarantees about being able to access the data in `private_data`. Any functions

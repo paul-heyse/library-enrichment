@@ -48,6 +48,9 @@ fn to_data(&self) -> ArrayData
 fn from(data: ArrayData) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.null_array.NullArray.md).
+
+
 An array of [null values](https://arrow.apache.org/docs/format/Columnar.html#null-layout)
 
 A `NullArray` is a simplified array where all values are null.

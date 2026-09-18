@@ -1,93 +1,91 @@
 ---
 name: datafusion
-description: Find what Apache DataFusion and the Arrow Rust family can actually do, at the pinned release, from a prebuilt index of the full API surface, the upstream guides and the runnable examples. Use when implementing against DataFusion, Arrow, Parquet or object_store, when choosing between approaches, when a capability might exist but you are not sure, and to check whether code already written is leaving capability on the table. Do not use for general Rust questions unrelated to these crates.
+description: Choose and implement built-in DataFusion, Arrow, Parquet and object_store capabilities using task and crate routes, reviewed input/output contracts, exact-release API documentation and executable evidence. Use for query planning, Arrow kernels, providers, functions, schemas, storage and interoperability, including checking whether a custom implementation has a built-in alternative.
 ---
 
-# DataFusion capability repository
+# DataFusion and Arrow reference
 
-DataFusion's real API is not in the `datafusion` crate. That facade documents 1,376 items; the
-surface it re-exports spans 60 crates and 7,134 public items with 21,047 methods. Types you think
-you know carry far more than you remember — `SessionConfig` has 64 methods, `Expr` 101,
-`ScalarValue` 107 — and `TableProvider` alone has 3 required methods against 12 provided ones that
-include `merge_into`, `truncate`, `update` and `supports_filters_pushdown`.
+This offline reference supports choosing built-ins before designing an implementation. Start with
+the task or data representation; retrieve the exact operation contract when its semantics matter.
+The reference pins **DataFusion 55.1.0, Arrow/Parquet 59.3.0, object_store 0.13.2 and sqlparser
+0.62.0**. Check the consumer's Cargo.lock and features before transferring a contract. Context7
+and current-branch examples are discovery leads; an older upgrade guide is not proof for this pin.
 
-So the failure this skill exists to prevent is not "I could not find the answer". It is
-**believing you already knew the answer**. Check the index before deciding a capability is absent.
+## Find a suitable built-in
 
-`content/` is prebuilt and pinned. Nothing here queries the network or a service.
+Commands below run from the skill directory. Scripts locate their resources relative to their own
+file, so an absolute script path also works from another working directory. Python 3.11+ standard
+library is sufficient for reading; no service, installation, source cache or network is required.
 
-## Escalation ladder
+```bash
+python3 scripts/reference.py find --task 'gather duplicate ordered indices'
+python3 scripts/reference.py find --task 'blocking sort memory budget'
+python3 scripts/reference.py find --crate arrow-cast --property errors
+python3 scripts/reference.py show arrow.select
+python3 scripts/reference.py compare arrow.select arrow.filter-reuse
+```
 
-Stop at the first rung that answers the question.
+Prefer direct files when they answer the question more cheaply:
 
-0. **Orienting in an unfamiliar area?** Start at `content/topics/00-map.md` and read the one page
-   for that capability. Each maps the capability to its entry points, extension points, settings
-   and examples, so it replaces a dozen index lookups. Skip this rung when you already know the
-   symbol you want.
-1. **Does it exist?** `rg` over `content/index/*.tsv`.
-   ```
-   rg -i 'pushdown' content/index/symbols.tsv
-   rg -iP '\tspill|\tmemory_pool' content/index/methods.tsv
-   ```
-2. **A structured question over the model** — a shipped rule, not an invented pattern.
-   ```
-   ast-grep scan -c queries/sgconfig.yml --filter '^model-' content/model
-   ```
-3. **Full prose for a resolved item.** Read `content/api/<module>.md`. The path is a rule, not a
-   lookup: take the canonical path's module part and replace `::` with `.`.
-   `datafusion_expr::expr::Expr` → `content/api/datafusion_expr.expr.md`.
-4. **Can I plug into it?** Read `content/traits/<Trait>.md` — required versus provided methods,
-   every in-tree implementor, and the examples that implement it.
-5. **How is it actually used?** Structural search over the 79 runnable examples.
-   ```
-   ast-grep run -l rust -p 'impl $TRAIT for $TYPE { $$$ }' content/corpus/examples
-   ast-grep outline --no-default-outline-rules --outline-rules queries/outline/datafusion.yml content/corpus/examples
-   ```
-6. **What is my own code missing?** Run the capability-gap rules against the working repository.
-   ```
-   ast-grep scan -c queries/sgconfig.yml --filter '^project-' <path to the repo you are editing>
-   ```
+- [Task routes](content/routes/tasks.md): selection, conversion, keys, execution, sources, pushdown,
+  expressions, Parquet, functions, relations, schemas, aggregate/window state, reuse and interchange.
+- [Crate roles](content/routes/crates.md): every pinned package, its layer and useful task vocabulary.
+- [Representation routes](content/routes/representations.md): arrays/batches, expressions/plans,
+  streams, files, state and interchange boundaries.
+- [Runtime function registry](skill_improvement/evidence/implementation/runtime-registry.json):
+  registered names, aliases and signatures in the explicitly recorded probe feature profile.
+- [SQL catalog](content/catalogs/sql-functions.md), [configuration](content/catalogs/config-options.md)
+  and [topic map](content/topics/00-map.md): broader discovery beyond the reviewed briefs.
 
-Two catalogs sit outside the ladder because they answer a lookup directly:
-`content/catalogs/config-options.md` (155 settings, each joined to the Rust builder method that
-sets it) and `content/catalogs/sql-functions.md` (332 SQL functions and operators, categorized).
-`content/catalogs/crate-map.md` says which of the 60 crates owns what.
+A decision brief names alternatives, decisive conditions, semantic inputs/outputs, implementation
+steps, evidence and unknowns. Its recommendations are conditional judgments. Sixteen briefs are
+reviewed in depth; the broader API inventory is discovery coverage, not equivalent characterization
+of every operation. Search silence does not establish absence.
 
-Rung 6 is the one to reach for unprompted after writing DataFusion code. It is cheap and it is the
-only rung that finds capability you did not think to look for.
+## Retrieve the implementation contract
 
-## Rules that keep answers correct
+```bash
+python3 scripts/reference.py show df.pushdown --view contract
+python3 scripts/reference.py show datafusion::prelude::DataFrame --member execute_stream --view contract
+python3 scripts/reference.py show arrow_cast::cast::CastOptions --member safe
+rg -i 'pushdown' content/index/operations.tsv
+rg -i 'expr_fn.*coalesce' content/index/symbols.tsv
+```
 
-**`datafusion::…` is almost never where something is defined.** It is an access path. Resolve it
-through `content/index/aliases.tsv` before concluding anything about which crate owns an item, and
-quote the canonical path when you report a finding.
+`show` resolves facade aliases to defining paths and retains distinct implementation contexts.
+`--view contract` includes complete upstream docs, raw rustdoc type trees, source spans, artifact
+identity and resolved documentation links. Member/field/variant pages live under
+`content/operations/`; module documentation lives under `content/modules/`. Older `content/api/`
+pages and indexes remain useful compact summaries. A display signature is a projection, not the
+authority when it contains a placeholder or expanded async-trait types.
 
-**Absence from the index is evidence about this pinned release only** — DataFusion 55.1.0, Arrow
-59.3.0, object_store 0.13.2, sqlparser 0.62.0. It is not evidence about a newer release and not
-evidence about a crate outside the pinned set. Say which you mean.
+Output defaults to 12,000 bytes. Larger results return an explicit text fragment and `next_offset`;
+repeat the same command/view with `--offset` to continue, or read the named file. Do not treat a
+partial result as the complete contract. Facets are lexical filters, not inferred type compatibility.
 
-**Feature gating comes from `content/index/features.tsv` and nowhere else.** rustdoc JSON records
-no per-item `cfg(feature = …)` at these format versions, so a signature can never tell you whether
-an item is behind a feature. Do not infer it from one. `content/PROVENANCE.json` also records which
-crates were documented with `all-features`; four were not, and their surface is default-features
-only.
+Before committing to a composition, read the relevant details: null and duplicate behavior,
+ordering, projection/filter/limit sequence, schema/metadata propagation, errors versus panics,
+scalar/array shape, ownership, state and feature/registration requirements. The brief identifies
+which of these change the choice; the full contract supplies exact signatures and preconditions.
 
-**Prefer a shipped rule to an invented pattern, and a `kind`-anchored rule to `--pattern`.**
-Patterns are formatting-sensitive: a pattern for a method declaration silently misses the same
-method written across several lines. Every shipped rule has `ast-grep test` fixtures for this
-reason.
+## Evidence and deeper discovery
 
-**ast-grep establishes syntax, not semantics.** It resolves no imports, types or dispatch. A trait
-implemented in an example is syntax-confirmed; which crate a bare identifier refers to is not
-established by ast-grep at all. Report the difference rather than collapsing it.
+[Probe receipts](skill_improvement/evidence/implementation/probe-results.json) and the adjacent
+sources, lockfile, feature profile and logs distinguish executed assertions from source-backed
+claims. A successful small fixture does not establish whole-query RSS, cloud I/O, performance or
+cross-version compatibility. Hosted rustdoc coverage also depends on its build configuration;
+see `content/PROVENANCE.json` and `content/index/features.tsv`. Config setter candidates are
+name-based leads, not verified setter-to-setting mappings.
 
-## Reporting
+For unresolved behavior, inspect selected exact source with
+[scripts/source_evidence.py](scripts/source_evidence.py), or search the upstream examples:
 
-Cite the canonical path and the file you read it in. When a capability exists but you are not
-recommending it, say so explicitly — the point of this repository is that the caller learns the
-option existed. When the index is silent, report silence rather than absence.
+```bash
+ast-grep run -l rust -p 'impl $TRAIT for $TYPE { $$$ }' content/corpus/examples
+ast-grep scan -c queries/sgconfig.yml --filter '^project-' /path/to/consumer
+```
 
-## Additional references
-
-Read `reference.md` for the full layout, the record and column schemas, the rule inventory, and
-runnable query recipes. Read `queries/README.md` before writing a new rule or changing one.
+Structural rules find candidates. They do not resolve receiver types or prove defects: another
+async `collect` also matches. Use semantic resolution only when identity/dispatch is consequential.
+Read [reference.md](reference.md) for schemas and queries, and [maintenance.md](maintenance.md) for
+regeneration, targeted review, reproducible probes and portable reader/research bundles.

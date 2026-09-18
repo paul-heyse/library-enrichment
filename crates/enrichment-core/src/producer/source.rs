@@ -19,6 +19,9 @@ pub const VERSION: &str = "2";
 /// Largest text kept for one section or example.
 const MAX_FRAGMENT_CHARS: usize = 8_000;
 
+/// Physical source-window bound shared by native command selection and the line reader.
+pub const MAX_WINDOW_LINES: usize = 1024;
+
 /// The text files a crate ships that become fragments, relative to the crate root.
 pub const DOCUMENT_FILES: &[(&str, FragmentKind)] = &[
     ("README.md", FragmentKind::ReadmeSection),
@@ -26,68 +29,6 @@ pub const DOCUMENT_FILES: &[(&str, FragmentKind)] = &[
     ("CHANGES.md", FragmentKind::ChangelogSection),
     ("HISTORY.md", FragmentKind::ChangelogSection),
 ];
-
-/// Files under an extracted crate that are worth storing as their own text artifacts: the
-/// documents above plus every `examples/*.rs`.
-/// # Errors
-/// Unsafe entries, I/O and excessive document inventories remain explicit.
-pub fn text_files(crate_root: &Path) -> std::io::Result<Vec<(String, FragmentKind)>> {
-    let mut out = Vec::new();
-    for (file, kind) in DOCUMENT_FILES {
-        match std::fs::symlink_metadata(crate_root.join(file)) {
-            Ok(metadata) if metadata.is_file() => out.push(((*file).into(), *kind)),
-            Ok(_) => {
-                return Err(std::io::Error::other(
-                    "source document is not a regular file",
-                ));
-            }
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
-            Err(e) => return Err(e),
-        }
-    }
-    let directory = crate_root.join("examples");
-    match std::fs::symlink_metadata(&directory) {
-        Ok(metadata) if metadata.is_dir() => {}
-        Ok(_) => {
-            return Err(std::io::Error::other(
-                "examples is not a physical directory",
-            ));
-        }
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(out),
-        Err(e) => return Err(e),
-    }
-    let mut count = 0usize;
-    let mut bytes = 0usize;
-    for entry in std::fs::read_dir(directory)? {
-        let entry = entry?;
-        count += 1;
-        if count > 20_000 {
-            return Err(std::io::Error::other(
-                "source inventory exceeds 20000 entries",
-            ));
-        }
-        if entry.path().extension().is_some_and(|ext| ext == "rs") {
-            if !entry.file_type()?.is_file() {
-                return Err(std::io::Error::other(
-                    "source example is not a regular file",
-                ));
-            }
-            let name = entry
-                .file_name()
-                .into_string()
-                .map_err(|_| std::io::Error::other("source example name is not UTF-8"))?;
-            bytes += name.len() + 9;
-            if bytes > 1024 * 1024 || out.len() >= 8192 {
-                return Err(std::io::Error::other(
-                    "source descriptor inventory exceeds budget",
-                ));
-            }
-            out.push((format!("examples/{name}"), FragmentKind::Example));
-        }
-    }
-    out.sort_by(|a, b| a.0.cmp(&b.0));
-    Ok(out)
-}
 
 /// Emit declared feature records without retaining a feature-document collection.
 pub fn visit_features(
@@ -255,11 +196,11 @@ crate::native_struct! {
 pub struct SourceExcerpt {
     window_kind: SourceWindowKind => crate::native_union::Rule::Text,
     /// The file, relative to the crate root.
-    path: String => crate::native_union::Rule::Text,
+    path: String => crate::native_union::Rule::MemberPath,
     /// First line included, 1-based.
-    start_line: usize => crate::native_union::Rule::Text,
+    start_line: usize => crate::native_union::Rule::Coordinate(crate::native_union::Unit::LineOneBased),
     /// Last line included, 1-based.
-    end_line: usize => crate::native_union::Rule::Text,
+    end_line: usize => crate::native_union::Rule::RangeEnd { unit: crate::native_union::Unit::LineOneBased, start: "start_line".into() },
     /// The text.
     text: String => crate::native_union::Rule::Text,
     /// Whether the file had more lines after `end_line`.
@@ -326,13 +267,21 @@ pub fn source_excerpt_reader(
     max_lines: usize,
 ) -> std::io::Result<Option<SourceExcerpt>> {
     let mut reader = crate::evidence::text::LineReader::new(source, 1024 * 1024);
-    let start = line.max(1);
-    let limit = max_lines.clamp(1, 1024);
+    // The native source command chooses this window. The physical reader refuses an
+    // invalid command instead of silently making another policy decision.
+    if line == 0 || !(1..=MAX_WINDOW_LINES).contains(&max_lines) {
+        return Err(std::io::Error::other("source window was not admitted"));
+    }
+    let start = line;
+    let limit = max_lines;
+    let sentinel = start
+        .checked_add(limit)
+        .ok_or_else(|| std::io::Error::other("source window overflows"))?;
     let mut selected = Vec::new();
     let mut count = 0;
     let mut end = 0;
     let mut truncated = false;
-    for index in 1..=start.saturating_add(limit) {
+    for index in 1..=sentinel {
         let Some(bytes) = reader.next_line()? else {
             break;
         };
@@ -412,12 +361,16 @@ mod tests {
             Ok(())
         })
         .expect("features");
-        for (file, kind) in text_files(root).expect("fixture inventory") {
-            let text = std::fs::read_to_string(root.join(&file)).expect("text");
+        for (file, kind) in [
+            ("README.md", FragmentKind::ReadmeSection),
+            ("CHANGELOG.md", FragmentKind::ChangelogSection),
+            ("examples/basic.rs", FragmentKind::Example),
+        ] {
+            let text = std::fs::read_to_string(root.join(file)).expect("text");
             visit_document(
                 &text,
-                &file,
-                &artifact_for(&file).unwrap_or_else(|| tarball.into()),
+                file,
+                &artifact_for(file).unwrap_or_else(|| tarball.into()),
                 kind,
                 true,
                 &mut |row| {
@@ -514,6 +467,10 @@ mod tests {
             ("", 4, 4, false)
         );
         assert!(source_excerpt_reader(&b"\xff\n"[..], "bad", 1, 2).is_err());
+        assert!(source_excerpt_reader(bytes, "src.py", 0, 2).is_err());
+        assert!(source_excerpt_reader(bytes, "src.py", 1, 0).is_err());
+        assert!(source_excerpt_reader(bytes, "src.py", 1, 1025).is_err());
+        assert!(source_excerpt_reader(bytes, "src.py", usize::MAX, 1).is_err());
     }
 
     #[test]
@@ -525,13 +482,6 @@ mod tests {
             .join("tests/fixtures/crates/enr-fixture-0.2.0");
         let manifest = std::fs::read_to_string(root.join("Cargo.toml")).expect("manifest");
         let facts = super::super::docsrs::manifest_facts(&manifest).expect("facts");
-        let files = text_files(&root).expect("fixture inventory");
-        assert!(files.iter().any(|(f, _)| f == "README.md"));
-        assert!(
-            files
-                .iter()
-                .any(|(f, k)| f == "examples/basic.rs" && *k == FragmentKind::Example)
-        );
         let fragments = source_fragments(&root, &facts, "art_manifest", "art_tarball", &|file| {
             (file == "README.md").then(|| "art_readme".to_owned())
         });

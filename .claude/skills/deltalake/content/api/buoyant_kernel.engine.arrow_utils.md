@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 14 public items · structured records in [`model/buoya
 ## ReorderIndexTransform
 
 `enum` · `buoyant_kernel::engine::arrow_utils::ReorderIndexTransform`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_utils.ReorderIndexTransform.md)
 
 Also reachable as `delta_kernel::engine::arrow_utils::ReorderIndexTransform`
 
@@ -21,6 +22,7 @@ enum ReorderIndexTransform
 ## build_json_reorder_indices
 
 `function` · `buoyant_kernel::engine::arrow_utils::build_json_reorder_indices`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_utils.build_json_reorder_indices.md)
 
 Also reachable as `delta_kernel::engine::arrow_utils::build_json_reorder_indices`
 
@@ -48,6 +50,7 @@ by the reader via `reorder_struct_array`.
 ## fix_nested_null_masks
 
 `function` · `buoyant_kernel::engine::arrow_utils::fix_nested_null_masks`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_utils.fix_nested_null_masks.md)
 
 Also reachable as `buoyant_kernel::engine::arrow_data::fix_nested_null_masks`, `delta_kernel::engine::arrow_utils::fix_nested_null_masks`
 
@@ -67,6 +70,7 @@ ancestors. The parquet reader stopped doing this automatically as of arrow-53.3,
 ## fixup_json_read
 
 `function` · `buoyant_kernel::engine::arrow_utils::fixup_json_read`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_utils.fixup_json_read.md)
 
 Also reachable as `delta_kernel::engine::arrow_utils::fixup_json_read`
 
@@ -85,6 +89,7 @@ reused for every batch from the same file.
 ## fixup_parquet_read
 
 `function` · `buoyant_kernel::engine::arrow_utils::fixup_parquet_read`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_utils.fixup_parquet_read.md)
 
 Also reachable as `delta_kernel::engine::arrow_utils::fixup_parquet_read`
 
@@ -126,6 +131,7 @@ are `Identical` to the kernel target.
 ## generate_mask
 
 `function` · `buoyant_kernel::engine::arrow_utils::generate_mask`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_utils.generate_mask.md)
 
 Also reachable as `delta_kernel::engine::arrow_utils::generate_mask`
 
@@ -141,6 +147,7 @@ computed from a [`Schema`] using [`get_requested_indices`]
 ## get_requested_indices
 
 `function` · `buoyant_kernel::engine::arrow_utils::get_requested_indices`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_utils.get_requested_indices.md)
 
 Also reachable as `delta_kernel::engine::arrow_utils::get_requested_indices`
 
@@ -161,6 +168,7 @@ returned array means.
 ## json_arrow_schema
 
 `function` · `buoyant_kernel::engine::arrow_utils::json_arrow_schema`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_utils.json_arrow_schema.md)
 
 Also reachable as `delta_kernel::engine::arrow_utils::json_arrow_schema`
 
@@ -180,6 +188,7 @@ insert the synthesized metadata columns at their correct positions.
 ## make_arrow_error
 
 `function` · `buoyant_kernel::engine::arrow_utils::make_arrow_error`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_utils.make_arrow_error.md)
 
 Also reachable as `delta_kernel::engine::arrow_utils::make_arrow_error`
 
@@ -194,6 +203,7 @@ Create an [`Error::Arrow`] with a backtrace from the given message.
 ## ordering_needs_row_indexes
 
 `function` · `buoyant_kernel::engine::arrow_utils::ordering_needs_row_indexes`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_utils.ordering_needs_row_indexes.md)
 
 Also reachable as `delta_kernel::engine::arrow_utils::ordering_needs_row_indexes`
 
@@ -211,6 +221,7 @@ columns are not allowed to be nested.
 ## parse_json
 
 `function` · `buoyant_kernel::engine::arrow_utils::parse_json`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_utils.parse_json.md)
 
 Also reachable as `buoyant_kernel::engine::parse_json`, `delta_kernel::engine::arrow_utils::parse_json`, `deltalake::kernel::engine::parse_json`, `deltalake_core::kernel::engine::parse_json`
 
@@ -234,6 +245,7 @@ surface as batch-level errors.
 ## to_json_bytes
 
 `function` · `buoyant_kernel::engine::arrow_utils::to_json_bytes`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_utils.to_json_bytes.md)
 
 Also reachable as `buoyant_kernel::engine::to_json_bytes`, `delta_kernel::engine::arrow_utils::to_json_bytes`, `deltalake::kernel::engine::to_json_bytes`, `deltalake_core::kernel::engine::to_json_bytes`
 
@@ -248,6 +260,7 @@ serialize an arrow RecordBatch to a JSON string by appending to a buffer.
 ## ReorderIndex
 
 `struct` · `buoyant_kernel::engine::arrow_utils::ReorderIndex`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_utils.ReorderIndex.md)
 
 Also reachable as `delta_kernel::engine::arrow_utils::ReorderIndex`
 
@@ -270,6 +283,7 @@ output. The `transform` indicates what, if any, transforms are needed. See the d
 ## RowIndexBuilder
 
 `struct` · `buoyant_kernel::engine::arrow_utils::RowIndexBuilder`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_utils.RowIndexBuilder.md)
 
 Also reachable as `delta_kernel::engine::arrow_utils::RowIndexBuilder`
 

@@ -1,0 +1,1044 @@
+[
+  {
+    "id": "f9036ab52623c01f96e1f809",
+    "path": "buoyant_kernel::engine_data::EngineData",
+    "name": "EngineData",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "trait",
+    "signature": "trait EngineData: AsAny",
+    "docs": "Any type that an engine wants to return as \"data\" needs to implement this trait. The bulk of the\nwork is in the [`EngineData::visit_rows`] method. See the docs for that method for more details.\n```rust\n# use buoyant_kernel as delta_kernel;\n# use std::any::Any;\n# use delta_kernel::DeltaResult;\n# use delta_kernel::engine_data::{RowVisitor, EngineData, GetData};\n# use delta_kernel::expressions::{ArrayData, ColumnName};\n# use delta_kernel::schema::SchemaRef;\nstruct MyDataType; // Whatever the engine wants here\nimpl MyDataType {\n  fn do_extraction<'a>(&self) -> Vec<&'a dyn GetData<'a>> {\n     /// Actually do the extraction into getters\n     todo!()\n  }\n}\n\nimpl EngineData for MyDataType {\n  fn visit_rows(&self, leaf_columns: &[ColumnName], visitor: &mut dyn RowVisitor) -> DeltaResult<()> {\n    let getters = self.do_extraction(); // do the extraction\n    visitor.visit(self.len(), &getters); // call the visitor back with the getters\n    Ok(())\n  }\n  fn len(&self) -> usize {\n    todo!() // actually get the len here\n  }\n  fn append_columns(&self, schema: SchemaRef, columns: Vec<ArrayData>) -> DeltaResult<Box<dyn EngineData>> {\n    todo!() // convert `SchemaRef` and `ArrayData` into local representation and append them\n  }\n  fn apply_selection_vector(self: Box<Self>, selection_vector: Vec<bool>) -> DeltaResult<Box<dyn EngineData>> {\n    todo!() // filter out unselected rows; rows beyond the selection vector's end are selected\n  }\n  fn has_field(&self, name: &ColumnName) -> bool {\n    todo!() // determine whether the field exists in the data\n  }\n}\n```",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/engine_data.rs",
+      "begin": [
+        513,
+        1
+      ],
+      "end": [
+        576,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          2746,
+          2751,
+          2752,
+          2754,
+          2756,
+          2757
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "AsAny",
+                "id": 45,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": [
+          2763
+        ]
+      }
+    },
+    "type_references": {
+      "45": "buoyant_kernel::AsAny"
+    },
+    "impl_context": null,
+    "links": {
+      "`EngineData::visit_rows`": 2746
+    },
+    "link_paths": {
+      "`EngineData::visit_rows`": "buoyant_kernel::engine_data::EngineData::visit_rows"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "758",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/engine_data.rs#L513",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "1145",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.engine_data.EngineData.md",
+    "record_file": "operations/buoyant_kernel.engine_data.EngineData.json",
+    "anchor": "op-f9036ab52623c01f96e1f809",
+    "aliases": [
+      "buoyant_kernel::EngineData",
+      "delta_kernel::engine_data::EngineData"
+    ],
+    "resolved_doc_links": {
+      "`EngineData::visit_rows`": "../operations/buoyant_kernel.engine_data.EngineData.md#op-570353c5be5947995201ad57"
+    }
+  },
+  {
+    "id": "c891d8ad6d4b19f183f8ec34",
+    "path": "buoyant_kernel::engine_data::EngineData::append_columns",
+    "name": "append_columns",
+    "owner": "buoyant_kernel::engine_data::EngineData",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn append_columns(&self, schema: SchemaRef, columns: Vec<ArrayData>) -> DeltaResult<Box<dyn EngineData>>",
+    "docs": "Append new columns provided by Kernel to the existing data.\n\nThis method creates a new [`EngineData`] instance that combines the existing columns\nwith the provided new columns. The original data remains unchanged.\n\n# Parameters\n- `schema`: The schema of the columns being appended (not the entire resulting schema). This\n  schema must describe exactly the columns being added in the `columns` parameter.\n- `columns`: The column data to append. Each [`ArrayData`] corresponds to one field in the\n  schema.\n\n# Returns\nA new `EngineData` instance containing both the original columns and the appended columns.\nThe schema of the result will contain all original fields followed by the new schema fields.\n\n# Errors\nReturns an error if:\n- The number of rows in any appended column doesn't match the existing data.\n- The number of new columns doesn't match the number of schema fields.\n- Data type conversion to the engine's native data types fails.\n- The engine cannot create the combined data structure.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/engine_data.rs",
+      "begin": [
+        552,
+        5
+      ],
+      "end": [
+        556,
+        43
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 778,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "columns",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 296,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayData",
+                              "id": 2753,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 42,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "EngineData",
+                                            "id": 758,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "778": "buoyant_kernel::schema::SchemaRef",
+      "296": "alloc::vec::Vec",
+      "2753": "buoyant_kernel::expressions::scalars::ArrayData",
+      "239": "buoyant_kernel::error::DeltaResult",
+      "42": "alloc::boxed::Box",
+      "758": "buoyant_kernel::engine_data::EngineData"
+    },
+    "impl_context": null,
+    "links": {
+      "`EngineData`": 758,
+      "`ArrayData`": 2753
+    },
+    "link_paths": {
+      "`EngineData`": "buoyant_kernel::engine_data::EngineData",
+      "`ArrayData`": "buoyant_kernel::expressions::scalars::ArrayData"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "2754",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/engine_data.rs#L552",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "3868",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.engine_data.EngineData.md",
+    "record_file": "operations/buoyant_kernel.engine_data.EngineData.json",
+    "anchor": "op-c891d8ad6d4b19f183f8ec34",
+    "aliases": [
+      "buoyant_kernel::EngineData::append_columns",
+      "delta_kernel::engine_data::EngineData::append_columns"
+    ],
+    "resolved_doc_links": {
+      "`EngineData`": "../operations/buoyant_kernel.engine_data.EngineData.md#op-f9036ab52623c01f96e1f809",
+      "`ArrayData`": "../operations/buoyant_kernel.expressions.scalars.ArrayData.md#op-a5aa855d83dfb4d57e0420d7"
+    }
+  },
+  {
+    "id": "1e67ac80541d2398db9da79f",
+    "path": "buoyant_kernel::engine_data::EngineData::apply_selection_vector",
+    "name": "apply_selection_vector",
+    "owner": "buoyant_kernel::engine_data::EngineData",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn apply_selection_vector(Box<self>, selection_vector: Vec<bool>) -> DeltaResult<Box<dyn EngineData>>",
+    "docs": "Apply a selection vector to the data and return a data where only the selected rows are\nincluded. This consumes the EngineData, allowing engines to implement this \"in place\" if\ndesired.\n\nThe selection vector may be shorter than the data; rows beyond its end are selected and\nmust be retained (see [`FilteredEngineData`]). An empty selection vector selects all rows.\nA selection vector longer than the data is invalid and must be rejected, e.g. with\n[`Error::InvalidSelectionVector`].",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/engine_data.rs",
+      "begin": [
+        566,
+        5
+      ],
+      "end": [
+        569,
+        43
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Box",
+                  "id": 42,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "selection_vector",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 296,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "bool"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 42,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "EngineData",
+                                            "id": 758,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "42": "alloc::boxed::Box",
+      "296": "alloc::vec::Vec",
+      "239": "buoyant_kernel::error::DeltaResult",
+      "758": "buoyant_kernel::engine_data::EngineData"
+    },
+    "impl_context": null,
+    "links": {
+      "`Error::InvalidSelectionVector`": 2755,
+      "`FilteredEngineData`": 111
+    },
+    "link_paths": {
+      "`Error::InvalidSelectionVector`": "buoyant_kernel::error::Error::InvalidSelectionVector",
+      "`FilteredEngineData`": "buoyant_kernel::engine_data::FilteredEngineData"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "2756",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/engine_data.rs#L566",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "3870",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.engine_data.EngineData.md",
+    "record_file": "operations/buoyant_kernel.engine_data.EngineData.json",
+    "anchor": "op-1e67ac80541d2398db9da79f",
+    "aliases": [
+      "buoyant_kernel::EngineData::apply_selection_vector",
+      "delta_kernel::engine_data::EngineData::apply_selection_vector"
+    ],
+    "resolved_doc_links": {
+      "`Error::InvalidSelectionVector`": "../operations/buoyant_kernel.error.Error.md#op-2e1cb840440643bea6559dfa",
+      "`FilteredEngineData`": "../operations/buoyant_kernel.engine_data.FilteredEngineData.md#op-62b3837332f86d6b0fa41aab"
+    }
+  },
+  {
+    "id": "ac824a3c381a3bf53376b4a6",
+    "path": "buoyant_kernel::engine_data::EngineData::has_field",
+    "name": "has_field",
+    "owner": "buoyant_kernel::engine_data::EngineData",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn has_field(&self, name: &ColumnName) -> bool",
+    "docs": "Returns `true` if a field at the given (possibly nested) path exists in this data's schema.\n\nFor a top-level field named `\"foo\"`, use `ColumnName::new([\"foo\"])`. For nested fields,\neach non-leaf element of the path must be a struct field at that level.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/engine_data.rs",
+      "begin": [
+        575,
+        5
+      ],
+      "end": [
+        575,
+        52
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "name",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ColumnName",
+                      "id": 520,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "520": "buoyant_kernel::expressions::column_names::ColumnName"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "2757",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/engine_data.rs#L575",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "3871",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.engine_data.EngineData.md",
+    "record_file": "operations/buoyant_kernel.engine_data.EngineData.json",
+    "anchor": "op-ac824a3c381a3bf53376b4a6",
+    "aliases": [
+      "buoyant_kernel::EngineData::has_field",
+      "delta_kernel::engine_data::EngineData::has_field"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6d47e01294b800c48ca93c11",
+    "path": "buoyant_kernel::engine_data::EngineData::is_empty",
+    "name": "is_empty",
+    "owner": "buoyant_kernel::engine_data::EngineData",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "Returns true if the data is empty (i.e., has no rows).",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/engine_data.rs",
+      "begin": [
+        527,
+        5
+      ],
+      "end": [
+        529,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "2752",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/engine_data.rs#L527",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "3866",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.engine_data.EngineData.md",
+    "record_file": "operations/buoyant_kernel.engine_data.EngineData.json",
+    "anchor": "op-6d47e01294b800c48ca93c11",
+    "aliases": [
+      "buoyant_kernel::EngineData::is_empty",
+      "delta_kernel::engine_data::EngineData::is_empty"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0aeeda6dd3a828033c3dd5a2",
+    "path": "buoyant_kernel::engine_data::EngineData::len",
+    "name": "len",
+    "owner": "buoyant_kernel::engine_data::EngineData",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Return the number of items (rows) in blob",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/engine_data.rs",
+      "begin": [
+        524,
+        5
+      ],
+      "end": [
+        524,
+        28
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "2751",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/engine_data.rs#L524",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "3865",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.engine_data.EngineData.md",
+    "record_file": "operations/buoyant_kernel.engine_data.EngineData.json",
+    "anchor": "op-0aeeda6dd3a828033c3dd5a2",
+    "aliases": [
+      "buoyant_kernel::EngineData::len",
+      "delta_kernel::engine_data::EngineData::len"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "570353c5be5947995201ad57",
+    "path": "buoyant_kernel::engine_data::EngineData::visit_rows",
+    "name": "visit_rows",
+    "owner": "buoyant_kernel::engine_data::EngineData",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn visit_rows(&self, column_names: &[ColumnName], visitor: &mut dyn RowVisitor) -> DeltaResult<()>",
+    "docs": "Visits a subset of leaf columns in each row of this data, passing a `GetData` item for each\nrequested column to the visitor's `visit` method (along with the number of rows of data to\nbe visited).",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/engine_data.rs",
+      "begin": [
+        517,
+        5
+      ],
+      "end": [
+        521,
+        26
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "column_names",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ColumnName",
+                        "id": 520,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "visitor",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "RowVisitor",
+                            "id": 524,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "520": "buoyant_kernel::expressions::column_names::ColumnName",
+      "524": "buoyant_kernel::engine_data::RowVisitor",
+      "239": "buoyant_kernel::error::DeltaResult"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "2746",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/engine_data.rs#L517",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "3781",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.engine_data.EngineData.md",
+    "record_file": "operations/buoyant_kernel.engine_data.EngineData.json",
+    "anchor": "op-570353c5be5947995201ad57",
+    "aliases": [
+      "buoyant_kernel::EngineData::visit_rows",
+      "delta_kernel::engine_data::EngineData::visit_rows"
+    ],
+    "resolved_doc_links": {}
+  }
+]

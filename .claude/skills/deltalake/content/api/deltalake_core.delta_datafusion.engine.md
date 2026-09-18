@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## DataFusionEngine
 
 `struct` · `deltalake_core::delta_datafusion::engine::DataFusionEngine`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.engine.DataFusionEngine.md)
 
 Also reachable as `deltalake::delta_datafusion::engine::DataFusionEngine`
 

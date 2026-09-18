@@ -10,6 +10,9 @@ Crate `datafusion-expr` · 3 public items · structured records in [`model/dataf
 fn arc_ptr_eq<T: ?Sized>(a: &std::sync::Arc<T>, b: &std::sync::Arc<T>) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.ptr_eq.arc_ptr_eq.md).
+
+
 Compares two `Arc` pointers for equality based on their underlying pointers values.
 This is not equivalent to [`Arc::ptr_eq`] for fat pointers, see that method
 for more information.
@@ -23,6 +26,9 @@ for more information.
 ```rust
 fn arc_ptr_hash<T: ?Sized>(a: &std::sync::Arc<T>, hasher: &mut impl Hasher)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.ptr_eq.arc_ptr_hash.md).
+
 
 Hashes an `Arc` pointer based on its underlying pointer value.
 The general contract for this function is that if [`arc_ptr_eq`] returns `true`
@@ -53,6 +59,9 @@ fn from(ptr: Ptr) -> Self
 ```rust
 fn deref(&self) -> &Self::Target
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.ptr_eq.PtrEq.md).
+
 
 A wrapper around a pointer that implements `Eq` and `Hash` comparing
 the underlying pointer address.

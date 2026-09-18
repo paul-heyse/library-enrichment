@@ -10,6 +10,9 @@ Crate `datafusion-functions-aggregate-common` · 5 public items · structured re
 fn apply_filter_as_nulls(input: &dyn Array, opt_filter: Option<&arrow::array::BooleanArray>) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.nulls.apply_filter_as_nulls.md).
+
+
 Applies optional filter to input, returning a new array of the same type
 with the same data, but with any values that were filtered out set to null
 
@@ -22,6 +25,9 @@ with the same data, but with any values that were filtered out set to null
 ```rust
 fn filter_to_nulls(filter: &arrow::array::BooleanArray) -> arrow::buffer::NullBuffer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.nulls.filter_to_nulls.md).
+
 
 Converts an aggregate filter expression to a `NullBuffer`.
 
@@ -38,6 +44,9 @@ The `NullBuffer` is
 ```rust
 fn filtered_null_mask(opt_filter: Option<&arrow::array::BooleanArray>, input: &dyn Array) -> Option<arrow::buffer::NullBuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.nulls.filtered_null_mask.md).
+
 
 Compute an output validity mask for an array that has been filtered
 
@@ -93,6 +102,9 @@ true  = valid   false = filter        true  = valid
 fn set_nulls<T: ArrowNumericType + Send>(array: arrow::array::PrimitiveArray<T>, nulls: Option<arrow::buffer::NullBuffer>) -> arrow::array::PrimitiveArray<T>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.nulls.set_nulls.md).
+
+
 Sets the validity mask for a `PrimitiveArray` to `nulls`
 replacing any existing null mask
 
@@ -107,6 +119,9 @@ See [`set_nulls_dyn`] for a version that works with `Array`
 ```rust
 fn set_nulls_dyn(input: &dyn Array, nulls: Option<arrow::buffer::NullBuffer>) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.nulls.set_nulls_dyn.md).
+
 
 Replaces the nulls in the input array with the given `NullBuffer`
 

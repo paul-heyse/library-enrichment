@@ -27,6 +27,9 @@ fn register(&self, url: Url, store: Arc<dyn ObjectStore>) -> Option<Arc<dyn Obje
 fn resolve(&self, to_resolve: &Url) -> Result<(Arc<dyn ObjectStore>, Path)>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.registry.DefaultObjectStoreRegistry.md).
+
+
 An [`ObjectStoreRegistry`] that uses [`parse_url_opts`] to create stores based on the environment
 
 ---
@@ -49,6 +52,9 @@ trait ObjectStoreRegistry: Send + Sync + std::fmt::Debug + 'static
 fn register(&self, url: Url, store: Arc<dyn ObjectStore>) -> Option<Arc<dyn ObjectStore>>
 fn resolve(&self, url: &Url) -> Result<(Arc<dyn ObjectStore>, Path)>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.registry.ObjectStoreRegistry.md).
+
 
 [`ObjectStoreRegistry`] maps a URL to an [`ObjectStore`] instance
 

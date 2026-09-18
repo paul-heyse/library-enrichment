@@ -2,8 +2,8 @@
 #   filename:  tool-data.schema.json
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel
-from typing import Any, Literal
 from enum import Enum, StrEnum
+from typing import Any, Literal
 
 
 class AdapterDaemonStatus(BaseModel):
@@ -20,14 +20,6 @@ class AdapterStatus(BaseModel):
     )
     available: bool
     tools: list[str]
-
-
-class AlternativeValue3(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    mode: Literal["inline"]
-    value: Any
 
 
 class ApiOrigin(StrEnum):
@@ -110,6 +102,119 @@ class Ecosystem(Enum):
     rust = "rust"
     python = "python"
     NoneType_None = None
+
+
+class ComparisonPathStep3(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["field"]
+    name: str
+
+
+class ComparisonPathStep4(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["item"]
+    ordinal: int = Field(..., ge=0)
+
+
+class ComparisonPathStep(RootModel[ComparisonPathStep3 | ComparisonPathStep4]):
+    root: ComparisonPathStep3 | ComparisonPathStep4
+
+
+class Kind10(StrEnum):
+    module = "module"
+    struct = "struct"
+    class_ = "class"
+    attribute = "attribute"
+    union = "union"
+    enum = "enum"
+    variant = "variant"
+    struct_field = "struct_field"
+    trait = "trait"
+    trait_alias = "trait_alias"
+    type_alias = "type_alias"
+    function = "function"
+    method = "method"
+    constant = "constant"
+    static = "static"
+    macro = "macro"
+    proc_macro = "proc_macro"
+    assoc_type = "assoc_type"
+    assoc_const = "assoc_const"
+    primitive = "primitive"
+    extern_crate = "extern_crate"
+    extern_type = "extern_type"
+    import_ = "import"
+
+
+class EvidenceClass(StrEnum):
+    declared = "declared"
+    statically_extracted = "statically_extracted"
+    compiler_derived = "compiler_derived"
+    typechecker_observed = "typechecker_observed"
+    runtime_observed = "runtime_observed"
+    agent_inferred = "agent_inferred"
+
+
+class Kind11(StrEnum):
+    api_signature = "api_signature"
+    doc_text = "doc_text"
+    feature_definition = "feature_definition"
+    readme_section = "readme_section"
+    changelog_section = "changelog_section"
+    example = "example"
+    source_excerpt = "source_excerpt"
+
+
+class ComparisonValue7(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    axis: Literal["fragment"]
+    evidence_class: EvidenceClass = Field(
+        ...,
+        description='The six epistemic classes (blueprint §6.2).\n\nThese are categories, not a confidence scale. An API signature can be `compiler_derived`\nwhile "this replaces our orchestration layer" is `agent_inferred`, and the two never merge.\n\nThe values are, in order: `declared`, `statically_extracted`, `compiler_derived`,\n`typechecker_observed`, `runtime_observed`, `agent_inferred`.\n\nNo variant carries a doc comment -- see the module docs in [`super`](crate::wire).',
+    )
+    kind: Kind11 = Field(..., description="What kind of text a fragment is.")
+    text: str
+
+
+class ComparisonValue9(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    axis: Literal["python_header"]
+    values: list[str]
+
+
+class Relation(StrEnum):
+    reexports = "reexports"
+    implements = "implements"
+    inherits = "inherits"
+    member_of = "member_of"
+    documents = "documents"
+    returns = "returns"
+    accepts = "accepts"
+
+
+class ComparisonValue10(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    axis: Literal["relationship"]
+    qualifier: str | None
+    relation: Relation = Field(
+        ...,
+        description="Typed relations between symbols (§6.1).\n\nThe values are, in order: `reexports`, `implements`, `member_of`, `documents`, `returns`,\n`accepts`.",
+    )
+    target_definition_id: str | None
+    target_kind: str
+    target_package: str | None
+    target_path: str | None
+    target_symbol_id: str | None
 
 
 class ComponentStatus(BaseModel):
@@ -243,19 +348,20 @@ class DeliveryLimits(BaseModel):
     )
 
 
-class DeltaBinding(BaseModel):
+class DeltaTableRef(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    cohort_id: str
-    contract_id: str
-    relation: str
-    rows: str = Field(
-        ...,
-        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
-    )
+    contract_id: str = Field(..., pattern="^schema_contract_[0-9a-f]{64}$")
     table_id: str
     table_uri: str
+
+
+class DeltaVersionRef(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    table: DeltaTableRef
     version: str = Field(
         ...,
         pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
@@ -521,15 +627,6 @@ class ExecutionTarget7(BaseModel):
     limitation: str
 
 
-class EvidenceClass(StrEnum):
-    declared = "declared"
-    statically_extracted = "statically_extracted"
-    compiler_derived = "compiler_derived"
-    typechecker_observed = "typechecker_observed"
-    runtime_observed = "runtime_observed"
-    agent_inferred = "agent_inferred"
-
-
 class SourceVersionMatch(StrEnum):
     exact = "exact"
     compatible_claimed = "compatible_claimed"
@@ -568,7 +665,7 @@ class FetchCounters(BaseModel):
     )
 
 
-class Kind8(StrEnum):
+class Kind12(StrEnum):
     registry_metadata = "registry_metadata"
     crate_source = "crate_source"
     documentation_build_config = "documentation_build_config"
@@ -637,7 +734,7 @@ class InspectionAspect(StrEnum):
     members = "members"
 
 
-class Kind9(StrEnum):
+class Kind13(StrEnum):
     module = "module"
     struct = "struct"
     class_ = "class"
@@ -668,7 +765,7 @@ class InspectionCandidate(BaseModel):
         extra="forbid",
     )
     definition_id: str
-    kind: Kind9 = Field(
+    kind: Kind13 = Field(
         ...,
         description="Declaration kind, shared by native fields, admission and generated wire enums.",
     )
@@ -710,8 +807,8 @@ class JobRequest(BaseModel):
         extra="forbid",
     )
     action: Action
-    interest_token: str | None
-    job_id: str = Field(..., min_length=1)
+    interest_token: str | None = Field(..., pattern="^interest_[0-9a-f]{32}$")
+    job_id: str = Field(..., min_length=1, pattern="^job_[0-9a-f]{32}$")
     max_bytes: str | None = Field(
         ...,
         pattern="^(?:(?:1(?:0(?:2[4-9][0-9]{0}|[3-8][0-9]{1}|9[0-9]{1})|[1-8][0-9]{2}|9[0-9]{2})|[2-8][0-9]{3}|9[0-9]{3})|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{4,18})$",
@@ -1006,11 +1103,72 @@ class CountsByKind(RootModel[str]):
     )
 
 
+class NativeCacheActivity(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    cold_loads: str | None = Field(
+        ...,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    hits: str | None = Field(
+        ...,
+        description="For file metadata this counts a returned entry before reader validation;\nit does not assert that the entry was accepted or that I/O was avoided.",
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    incremental_refreshes: str | None = Field(
+        ...,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    invalidations: str | None = Field(
+        ...,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    misses: str | None = Field(
+        ...,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    oversize_bypasses: str | None = Field(
+        ...,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    unchanged_refreshes: str | None = Field(
+        ...,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    waits: str | None = Field(
+        ...,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    writer_publications: str | None = Field(
+        ...,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+
+
 class NativeCacheFamily(StrEnum):
     immutable_providers = "immutable_providers"
     file_metadata = "file_metadata"
-    file_statistics = "file_statistics"
-    file_listings = "file_listings"
+    delta_snapshots = "delta_snapshots"
+    verified_contracts = "verified_contracts"
+
+
+class NativeCacheOwnership(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    in_flight_bytes: str = Field(
+        ...,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    live_value_bytes: str = Field(
+        ...,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    resident_value_bytes: str = Field(
+        ...,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
 
 
 class ObservationOrigin(StrEnum):
@@ -1041,7 +1199,7 @@ class OverviewChild(BaseModel):
     is_reexport: bool = Field(
         ..., description="Whether this path re-exports a definition elsewhere."
     )
-    kind: Kind9 = Field(..., description="Kind.")
+    kind: Kind13 = Field(..., description="Kind.")
     path: str = Field(..., description="Public path.")
 
 
@@ -1130,13 +1288,17 @@ class ProcessAuthority(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    effect_id: str
+    effect_id: str = Field(..., pattern="^process_effect_[0-9a-f]{64}$")
     environment_id: str | None = Field(
         ...,
         description="Identifies the declared or resolved environment.",
         pattern="^env_[0-9a-f]{64}$",
     )
-    grant_id: str
+    grant_id: str = Field(
+        ...,
+        description="Exact command authority, derived from the admitted owner and claim fence.",
+        pattern="^grant_[0-9a-f]{64}$",
+    )
     kind: Literal["command"]
     snapshot_id: str | None = Field(
         ...,
@@ -1149,7 +1311,7 @@ class ProcessAuthority5(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    definition_id: str
+    definition_id: str = Field(..., pattern="^process_[0-9a-f]{64}$")
     kind: Literal["qualification"]
 
 
@@ -1177,7 +1339,7 @@ class ProcessObservation(BaseModel):
     exit_code: int | None
     finished_at: EventTime
     image_id: str
-    operation_id: str
+    operation_id: str = Field(..., pattern="^process_[0-9a-f]{64}$")
     started_at: EventTime
     stderr: str
     stdout: str
@@ -1276,16 +1438,6 @@ class RelationChanges(BaseModel):
         ...,
         pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
     )
-
-
-class Relation(StrEnum):
-    reexports = "reexports"
-    implements = "implements"
-    inherits = "inherits"
-    member_of = "member_of"
-    documents = "documents"
-    returns = "returns"
-    accepts = "accepts"
 
 
 class ReleaseLinks(BaseModel):
@@ -1606,7 +1758,7 @@ class Scope(StrEnum):
     relationships = "relationships"
 
 
-class Kind11(StrEnum):
+class Kind15(StrEnum):
     registry_metadata = "registry_metadata"
     crate_source = "crate_source"
     documentation_build_config = "documentation_build_config"
@@ -1716,7 +1868,7 @@ class SearchRequest(BaseModel):
     cursor: str | None = Field(..., description="Continue a previous page.")
     kinds: list[str] | None = Field(
         ...,
-        description="Evidence families: `api`, `docs`, `examples`, `release_notes`, `features`, `source`.",
+        description="Evidence families: `api`, `docs`, `examples`, `release_notes`, `features`. Source requires inspection.",
     )
     max_bytes: str | None = Field(
         ...,
@@ -1933,7 +2085,7 @@ class SubjectRef(
     )
 
 
-class Kind12(StrEnum):
+class Kind16(StrEnum):
     module = "module"
     struct = "struct"
     class_ = "class"
@@ -1967,7 +2119,7 @@ class SymbolHeader(BaseModel):
     definition_id: str
     definition_path: str
     is_reexport: bool
-    kind: Kind12 = Field(
+    kind: Kind16 = Field(
         ...,
         description="Declaration kind, shared by native fields, admission and generated wire enums.",
     )
@@ -2031,7 +2183,7 @@ class TerminalOutcome5(BaseModel):
     status: Literal["partial"]
 
 
-class Kind13(StrEnum):
+class Kind17(StrEnum):
     api_signature = "api_signature"
     doc_text = "doc_text"
     feature_definition = "feature_definition"
@@ -2335,6 +2487,21 @@ class CompareRequest(BaseModel):
     to_version: str | None
 
 
+class ComparisonFieldPath(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    steps: list[ComparisonPathStep] = Field(..., max_length=64, min_length=0)
+
+
+class ComparisonValue8(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    axis: Literal["rust_documentation"]
+    configuration: DocsRsMetadata
+
+
 class ConfigurationDifference14(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -2375,6 +2542,19 @@ class DeliveryDescriptor(BaseModel):
     )
     limits: DeliveryLimits
     mode: Literal["inline"]
+
+
+class DeltaBinding(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    cohort_id: str = Field(..., pattern="^cohort_[0-9a-f]{32}$")
+    relation: str
+    rows: str = Field(
+        ...,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    source: DeltaVersionRef
 
 
 class Distribution(BaseModel):
@@ -2485,7 +2665,7 @@ class Gap(BaseModel):
         extra="forbid",
     )
     detail: str
-    kind: Kind8 = Field(
+    kind: Kind12 = Field(
         ...,
         description="The kinds of evidence a producer can require or yield, and that `coverage.indexed` and\n`coverage.missing` name.\n\nThe values are, in order: `registry_metadata`, `crate_source`,\n`documentation_build_config`, `hosted_rustdoc_json`, `public_api`, `documentation`,\n`examples`, `release_notes`, `source_excerpts`.",
     )
@@ -2547,6 +2727,7 @@ class NativeCacheCounters(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
+    activity: NativeCacheActivity
     entries: str = Field(
         ...,
         pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
@@ -2560,6 +2741,10 @@ class NativeCacheCounters(BaseModel):
         ...,
         description="Absent when the upstream trait has no allocation-free occupancy query.",
         pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    ownership: NativeCacheOwnership | None = Field(
+        ...,
+        description="Snapshot reservations by ownership phase; absent for caches without this measurement.",
     )
 
 
@@ -2637,7 +2822,7 @@ class ProducerRun(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    attempt_id: str
+    attempt_id: str = Field(..., pattern="^attempt_[0-9a-f]{32}$")
     config_digest: str
     finished_at: EventTime
     gaps: list[Gap]
@@ -2890,7 +3075,7 @@ class ScopeAssessment(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    kind: Kind11 = Field(
+    kind: Kind15 = Field(
         ...,
         description="The kinds of evidence a producer can require or yield, and that `coverage.indexed` and\n`coverage.missing` name.\n\nThe values are, in order: `registry_metadata`, `crate_source`,\n`documentation_build_config`, `hosted_rustdoc_json`, `public_api`, `documentation`,\n`examples`, `release_notes`, `source_excerpts`.",
     )
@@ -2972,7 +3157,7 @@ class TextFragment(BaseModel):
     )
     display_subject: str
     fragment_id: str
-    kind: Kind13 = Field(..., description="What kind of text a fragment is.")
+    kind: Kind17 = Field(..., description="What kind of text a fragment is.")
     source: FactSource
     subject: SubjectRef
     text: str
@@ -3028,12 +3213,6 @@ class AlternativeValue4(BaseModel):
     size_bytes: str = Field(
         ...,
         pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
-    )
-
-
-class AlternativeValue(RootModel[AlternativeValue3 | AlternativeValue4]):
-    root: AlternativeValue3 | AlternativeValue4 = Field(
-        ..., description="A final encoded comparison cell or its exact immutable artifact."
     )
 
 
@@ -3215,31 +3394,6 @@ class RustDetails(BaseModel):
     callable: RustCallable | None
     const_stability: RustStability | None
     stability: RustStability | None
-
-
-class Alternative(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    source: FactSource | None
-    value: AlternativeValue
-
-
-class Change(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    after: list[Alternative] | None
-    after_page: Page
-    before: list[Alternative] | None
-    before_page: Page = Field(
-        ..., description="Values and their source references share this bounded alternative order."
-    )
-    change_id: str
-    interpretation: str
-    kind: ChangeKind
-    scope: Scope
-    subject: str
 
 
 class ExecutionObservation(BaseModel):
@@ -3487,6 +3641,14 @@ class TerminalOutcome(RootModel[TerminalOutcome4 | TerminalOutcome5 | TerminalOu
     )
 
 
+class ApiComparisonObservation(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    origin: ApiOrigin
+    payload: ApiPayload
+
+
 class ApiObservationProjection(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -3537,6 +3699,43 @@ class ComparisonSide(BaseModel):
         ...,
         description="Names one immutable set of evidence available for a context.",
         pattern="^snap_[0-9a-f]{64}$",
+    )
+
+
+class ComparisonValue6(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    axis: Literal["api"]
+    defined_in_package: str
+    definition_path: str
+    is_reexport: bool
+    kind: Kind10 = Field(
+        ...,
+        description="Declaration kind, shared by native fields, admission and generated wire enums.",
+    )
+    observation: ApiComparisonObservation | None
+    qualifier: str | None
+
+
+class ComparisonValue(
+    RootModel[
+        ComparisonValue6
+        | ComparisonValue7
+        | ComparisonValue8
+        | ComparisonValue9
+        | ComparisonValue10
+    ]
+):
+    root: (
+        ComparisonValue6
+        | ComparisonValue7
+        | ComparisonValue8
+        | ComparisonValue9
+        | ComparisonValue10
+    ) = Field(
+        ...,
+        description="Closed native values shared by set equality, before/after delivery and value artifacts.",
     )
 
 
@@ -3658,6 +3857,71 @@ class OverviewData(BaseModel):
     )
 
 
+class AlternativeValue3(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    mode: Literal["inline"]
+    value: ComparisonValue
+
+
+class AlternativeValue(RootModel[AlternativeValue3 | AlternativeValue4]):
+    root: AlternativeValue3 | AlternativeValue4 = Field(
+        ..., description="A final encoded comparison cell or its exact immutable artifact."
+    )
+
+
+class JobData(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    active_interests: str = Field(
+        ...,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    interest_token: str | None = Field(..., pattern="^interest_[0-9a-f]{32}$")
+    job_id: str = Field(..., pattern="^job_[0-9a-f]{32}$")
+    result: JobResult | None
+    stage: str
+    state: State4 = Field(
+        ...,
+        description="The persisted job states (blueprint §8.3).\n\nThe values are, in order: `queued`, `running`, `succeeded`, `partial`, `failed`,\n`cancel_requested`, `cancelled`. `cancel_requested` is distinct from `cancelled` because\ncancelling one caller's interest must not kill work another caller still needs.\n\nNo variant carries a doc comment -- see the module docs in [`super`](crate::wire).",
+    )
+    submitted_at: EventTime
+    updated_at: EventTime
+
+
+class Alternative(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    source: FactSource | None
+    value: AlternativeValue
+
+
+class Change(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    after: list[Alternative] | None
+    after_page: Page
+    before: list[Alternative] | None
+    before_page: Page = Field(
+        ..., description="Values and their source references share this bounded alternative order."
+    )
+    change_id: str
+    fields: list[ComparisonFieldPath] = Field(
+        ...,
+        description="Native value-set differences at schema fields and declared sequence ordinals. Parent\npaths also capture changes in alternative correlation and whole-sequence ordering.",
+        max_length=65536,
+        min_length=0,
+    )
+    interpretation: str
+    kind: ChangeKind
+    scope: Scope
+    subject: str
+
+
 class CompareData(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -3682,26 +3946,6 @@ class CompareData(BaseModel):
         ...,
         pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
     )
-
-
-class JobData(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    active_interests: str = Field(
-        ...,
-        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
-    )
-    interest_token: str | None
-    job_id: str
-    result: JobResult | None
-    stage: str
-    state: State4 = Field(
-        ...,
-        description="The persisted job states (blueprint §8.3).\n\nThe values are, in order: `queued`, `running`, `succeeded`, `partial`, `failed`,\n`cancel_requested`, `cancelled`. `cancel_requested` is distinct from `cancelled` because\ncancelling one caller's interest must not kill work another caller still needs.\n\nNo variant carries a doc comment -- see the module docs in [`super`](crate::wire).",
-    )
-    submitted_at: str
-    updated_at: str
 
 
 class LibraryEnrichmentToolData(

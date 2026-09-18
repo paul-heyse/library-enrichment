@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## DeltaScanExec
 
 `struct` · `deltalake_core::delta_datafusion::table_provider::next::scan::exec::DeltaScanExec`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.table_provider.next.scan.exec.DeltaScanExec.md)
 
 Also reachable as `deltalake::delta_datafusion::DeltaScanExec`, `deltalake_core::delta_datafusion::DeltaScanExec`
 

@@ -10,6 +10,9 @@ Crate `parquet` · 4 public items · structured records in [`model/parquet.bloom
 const BITSET_MAX_LENGTH: usize = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.bloom_filter.BITSET_MAX_LENGTH.md).
+
+
 The maximum number of bytes for a bloom filter bitset.
 
 ---
@@ -21,6 +24,9 @@ The maximum number of bytes for a bloom filter bitset.
 ```rust
 const BITSET_MIN_LENGTH: usize = 32
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.bloom_filter.BITSET_MIN_LENGTH.md).
+
 
 The minimum number of bytes for a bloom filter bitset.
 
@@ -37,6 +43,9 @@ struct BloomFilterHeader
 **Fields**: `num_bytes`, `algorithm`, `hash`, `compression`
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/parquet.bloom_filter.BloomFilterHeader.md).
+
 
 Bloom filter header is stored at beginning of Bloom filter data of each column
 and followed by its bitset.
@@ -68,6 +77,9 @@ fn read_from_column_chunk<R: ChunkReader>(column_metadata: &ColumnChunkMetaData,
 fn write<W: Write>(&self, writer: W) -> Result<(), ParquetError>
 fn write_bitset<W: Write>(&self, writer: W) -> Result<(), ParquetError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.bloom_filter.Sbbf.md).
+
 
 A split block Bloom filter (SBBF).
 

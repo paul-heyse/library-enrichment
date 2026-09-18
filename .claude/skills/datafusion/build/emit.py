@@ -219,6 +219,8 @@ def write_api(grouped: dict[str, list[Item]], root: Path) -> int:
                 lines.append("")
                 lines.append("**Derives**: " + ", ".join(sorted(derived)))
             lines.extend(_method_block(item))
+            lines += ["", "[Full member, field, variant and typed contracts]"
+                      f"(../operations/{module_slug(item.path)}.md).", ""]
             if item.docs:
                 lines.append("")
                 lines.append(item.docs.rstrip())

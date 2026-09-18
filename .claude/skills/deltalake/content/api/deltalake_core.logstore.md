@@ -5,6 +5,7 @@ Crate `deltalake-core` · 15 public items · structured records in [`model/delta
 ## CommitOrBytes
 
 `enum` · `deltalake_core::logstore::CommitOrBytes`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.CommitOrBytes.md)
 
 Also reachable as `deltalake::logstore::CommitOrBytes`
 
@@ -23,6 +24,7 @@ Holder whether it's tmp_commit path or commit bytes
 ## abort_commit_entry
 
 `function` · `deltalake_core::logstore::abort_commit_entry`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.abort_commit_entry.md)
 
 Also reachable as `deltalake::logstore::abort_commit_entry`
 
@@ -37,6 +39,7 @@ Default implementation for aborting a commit entry
 ## default_logstore
 
 `function` · `deltalake_core::logstore::default_logstore`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.default_logstore.md)
 
 Also reachable as `deltalake::logstore::default_logstore`
 
@@ -51,6 +54,7 @@ Return the [DefaultLogStore] implementation with the provided configuration opti
 ## extract_version_from_filename
 
 `function` · `deltalake_core::logstore::extract_version_from_filename`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.extract_version_from_filename.md)
 
 Also reachable as `deltalake::logstore::extract_version_from_filename`
 
@@ -65,6 +69,7 @@ Extract version from a file name in the delta log
 ## get_actions
 
 `function` · `deltalake_core::logstore::get_actions`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.get_actions.md)
 
 Also reachable as `deltalake::logstore::get_actions`
 
@@ -79,6 +84,7 @@ Reads a commit and gets list of actions
 ## get_all_versions_from
 
 `function` · `deltalake_core::logstore::get_all_versions_from`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.get_all_versions_from.md)
 
 Also reachable as `deltalake::logstore::get_all_versions_from`
 
@@ -94,6 +100,7 @@ vector of commit infos. We guarantee the length of the two vectors is equal
 ## get_latest_version
 
 `function` · `deltalake_core::logstore::get_latest_version`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.get_latest_version.md)
 
 Also reachable as `deltalake::logstore::get_latest_version`
 
@@ -108,6 +115,7 @@ Default implementation for retrieving the latest version
 ## logstore_for
 
 `function` · `deltalake_core::logstore::logstore_for`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.logstore_for.md)
 
 Also reachable as `deltalake::logstore::logstore_for`
 
@@ -133,6 +141,7 @@ let logstore = logstore_for(&location, storage_config).expect("Failed to get a l
 ## logstore_with
 
 `function` · `deltalake_core::logstore::logstore_with`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.logstore_with.md)
 
 Also reachable as `deltalake::logstore::logstore_with`
 
@@ -147,6 +156,7 @@ Return the [LogStoreRef] using the given [ObjectStoreRef]
 ## read_commit_entry
 
 `function` · `deltalake_core::logstore::read_commit_entry`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.read_commit_entry.md)
 
 Also reachable as `deltalake::logstore::read_commit_entry`
 
@@ -161,6 +171,7 @@ Read delta log for a specific version
 ## to_uri
 
 `function` · `deltalake_core::logstore::to_uri`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.to_uri.md)
 
 Also reachable as `deltalake::logstore::to_uri`
 
@@ -177,6 +188,7 @@ This is largely a convenience function to help with the nuances of empty [Path] 
 ## write_commit_entry
 
 `function` · `deltalake_core::logstore::write_commit_entry`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.write_commit_entry.md)
 
 Also reachable as `deltalake::logstore::write_commit_entry`
 
@@ -191,6 +203,7 @@ Default implementation for writing a commit entry
 ## LogStoreConfig
 
 `struct` · `deltalake_core::logstore::LogStoreConfig`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.LogStoreConfig.md)
 
 Also reachable as `deltalake::logstore::LogStoreConfig`
 
@@ -231,6 +244,7 @@ Configuration parameters for a log store
 ## LogStore
 
 `trait` · `deltalake_core::logstore::LogStore`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.LogStore.md)
 
 Also reachable as `deltalake::logstore::LogStore`
 
@@ -282,6 +296,7 @@ the implementation of this interface. Specifically,
 ## LogStoreRef
 
 `type_alias` · `deltalake_core::logstore::LogStoreRef`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.LogStoreRef.md)
 
 Also reachable as `deltalake::logstore::LogStoreRef`
 

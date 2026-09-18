@@ -10,6 +10,9 @@ Crate `datafusion-functions` · 2 public items · structured records in [`model/
 fn adjust_to_local_time<T: ArrowTimestampType>(ts: i64, tz: arrow::array::timezone::Tz) -> datafusion_common::Result<i64>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.to_local_time.adjust_to_local_time.md).
+
+
 This function converts a timestamp with a timezone to a timestamp without a timezone.
 The display value of the adjusted timestamp remain the same, but the underlying timestamp
 representation is adjusted according to the relative timezone offset to UTC.
@@ -93,6 +96,9 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.to_local_time.ToLocalTimeFunc.md).
+
 
 A UDF function that converts a timezone-aware timestamp to local time (with no offset or
 timezone information). In other words, this function strips off the timezone from the timestamp,

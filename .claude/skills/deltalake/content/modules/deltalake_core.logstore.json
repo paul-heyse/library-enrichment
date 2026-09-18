@@ -1,0 +1,124 @@
+[
+  {
+    "id": "fafbdacc7fa1a9134feeca7a",
+    "path": "deltalake_core::logstore",
+    "name": "logstore",
+    "owner": null,
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "module",
+    "signature": "mod logstore",
+    "docs": "# DeltaLake storage system\n\nInteracting with storage systems is a crucial part of any table format.\nOn one had the storage abstractions need to provide certain guarantees\n(e.g. atomic rename, ...) and meet certain assumptions (e.g. sorted list results)\non the other hand can we exploit our knowledge about the general file layout\nand access patterns to optimize our operations in terms of cost and performance.\n\nTwo distinct phases are involved in querying a Delta table:\n- **Metadata**: Fetching metadata about the table, such as schema, partitioning, and statistics.\n- **Data**: Reading and processing data files based on the metadata.\n\nWhen writing to a table, we see the same phases, just in inverse order:\n- **Data**: Writing data files that should become part of the table.\n- **Metadata**: Updating table metadata to incorporate updates.\n\nTwo main abstractions govern the file operations [`LogStore`] and [`ObjectStore`].\n\n[`LogStore`]s are scoped to individual tables and are responsible for maintaining proper\nbehaviours and ensuring consistency during the metadata phase. The correctness is predicated\non the atomicity and durability guarantees of the implementation of this interface.\n\n- Atomic visibility: Partial writes must not be visible to readers.\n- Mutual exclusion: Only one writer must be able to write to a specific log file.\n- Consistent listing: Once a file has been written, any future list files operation must return\n  the underlying file system entry must immediately.\n\n<div class=\"warning\">\n\nWhile most object stores today provide the required guarantees, the specific\nlocking mechanics are a table level responsibility. Specific implementations may\ndecide to refer to a central catalog or other mechanisms for coordination.\n\n</div>\n\n[`ObjectStore`]s are responsible for direct interactions with storage systems. Either\nduring the data phase, where additional requirements are imposed on the storage system,\nor by specific LogStore implementations for their internal object store interactions.\n\n## Managing LogStores and ObjectStores.\n\nAside from very basic implementations (i.e. in-memory and local file system) we rely\non external integrations to provide [`ObjectStore`] and/or [`LogStore`] implementations.\n\nAt runtime, deltalake needs to produce appropriate [`ObjectStore`]s to access the files\ndiscovered in a table. This is done via\n\n## Configuration\n",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        1,
+        1
+      ],
+      "end": [
+        1331,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          3413,
+          3678,
+          3679,
+          3680,
+          3681,
+          3682,
+          3683,
+          3684,
+          3685,
+          3686,
+          3687,
+          3688,
+          3689,
+          3690,
+          3691,
+          3692,
+          3693,
+          3694,
+          3695,
+          3697,
+          3102,
+          3698,
+          3699,
+          3187,
+          3738,
+          2499,
+          3817,
+          3818,
+          3819,
+          3820,
+          3821,
+          3822,
+          3823,
+          3824
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`ObjectStore`": 235,
+      "`LogStore`": 2499
+    },
+    "link_paths": {
+      "`ObjectStore`": "object_store::ObjectStore",
+      "`LogStore`": "deltalake_core::logstore::LogStore"
+    },
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3825",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L1",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "5524",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "modules/deltalake_core.logstore.md",
+    "record_file": "modules/deltalake_core.logstore.json",
+    "anchor": "op-fafbdacc7fa1a9134feeca7a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`LogStore`": "../operations/deltalake_core.logstore.LogStore.md#op-05065cf369d14ac5f8039639"
+    }
+  }
+]

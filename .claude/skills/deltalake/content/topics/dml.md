@@ -6,9 +6,9 @@ Delta has no in-place update. Every DML operation rewrites the files it touches 
 
 | Type | Kind | Methods | Prose | Records |
 |---|---|---:|---|---|
-| `deltalake_core::operations::delete::DeleteBuilder` | struct | 11 | [prose](../api/deltalake_core.operations.delete.md#deletebuilder) | [records](../model/deltalake_core.operations.delete.json) |
-| `deltalake_core::operations::update::UpdateBuilder` | struct | 11 | [prose](../api/deltalake_core.operations.update.md#updatebuilder) | [records](../model/deltalake_core.operations.update.json) |
-| `deltalake_core::operations::merge::MergeBuilder` | struct | 19 | [prose](../api/deltalake_core.operations.merge.md#mergebuilder) | [records](../model/deltalake_core.operations.merge.json) |
+| `deltalake_core::operations::delete::DeleteBuilder` | struct | 9 | [prose](../api/deltalake_core.operations.delete.md#deletebuilder) | [records](../model/deltalake_core.operations.delete.json) |
+| `deltalake_core::operations::update::UpdateBuilder` | struct | 9 | [prose](../api/deltalake_core.operations.update.md#updatebuilder) | [records](../model/deltalake_core.operations.update.json) |
+| `deltalake_core::operations::merge::MergeBuilder` | struct | 17 | [prose](../api/deltalake_core.operations.merge.md#mergebuilder) | [records](../model/deltalake_core.operations.merge.json) |
 
 ## Runnable examples (4)
 

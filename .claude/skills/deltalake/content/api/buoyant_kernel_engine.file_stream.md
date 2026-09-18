@@ -5,6 +5,7 @@ Crate `buoyant_kernel_engine` · 4 public items · structured records in [`model
 ## OnError
 
 `enum` · `buoyant_kernel_engine::file_stream::OnError`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.file_stream.OnError.md)
 
 Also reachable as `delta_kernel_default_engine::file_stream::OnError`
 
@@ -23,6 +24,7 @@ Describes the behavior of the `FileStream` if file opening or scanning fails
 ## FileStream
 
 `struct` · `buoyant_kernel_engine::file_stream::FileStream`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.file_stream.FileStream.md)
 
 Also reachable as `delta_kernel_default_engine::file_stream::FileStream`
 
@@ -52,6 +54,7 @@ A stream that iterates record batch by record batch, file over file.
 ## FileOpener
 
 `trait` · `buoyant_kernel_engine::file_stream::FileOpener`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.file_stream.FileOpener.md)
 
 Also reachable as `delta_kernel_default_engine::file_stream::FileOpener`
 
@@ -79,6 +82,7 @@ stream of [`RecordBatch`]
 ## FileOpenFuture
 
 `type_alias` · `buoyant_kernel_engine::file_stream::FileOpenFuture`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.file_stream.FileOpenFuture.md)
 
 Also reachable as `delta_kernel_default_engine::file_stream::FileOpenFuture`
 

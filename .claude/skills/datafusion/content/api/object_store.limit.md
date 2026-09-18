@@ -41,6 +41,9 @@ async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions)
 async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.limit.LimitStore.md).
+
+
 Store wrapper that wraps an inner store and limits the maximum number of concurrent
 object store operations. Where each call to an [`ObjectStore`] member function is
 considered a single operation, even if it may result in more than one network call
@@ -80,6 +83,9 @@ async fn abort(&mut self) -> Result<()>
 async fn complete(&mut self) -> Result<PutResult>
 fn put_part(&mut self, data: PutPayload) -> UploadPart
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.limit.LimitUpload.md).
+
 
 An [`MultipartUpload`] wrapper that limits the maximum number of concurrent requests
 

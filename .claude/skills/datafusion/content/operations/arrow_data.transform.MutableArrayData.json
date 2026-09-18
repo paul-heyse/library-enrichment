@@ -1,0 +1,1848 @@
+[
+  {
+    "id": "9a9844b073b5d0f5c42f8a0d",
+    "path": "arrow_data::transform::MutableArrayData",
+    "name": "MutableArrayData",
+    "owner": null,
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct MutableArrayData<'a>",
+    "docs": "Efficiently create an [ArrayData] from one or more existing [ArrayData]s by\ncopying chunks.\n\nThe main use case of this struct is to perform unary operations to arrays of\narbitrary types, such as `filter` and `take`.\n\n# Example\n```\nuse arrow_buffer::Buffer;\nuse arrow_data::ArrayData;\nuse arrow_data::transform::MutableArrayData;\nuse arrow_schema::DataType;\nfn i32_array(values: &[i32]) -> ArrayData {\n  ArrayData::try_new(DataType::Int32, values.len(), None, 0, vec![Buffer::from_slice_ref(values)], vec![]).unwrap()\n}\nlet arr1  = i32_array(&[1, 2, 3, 4, 5]);\nlet arr2  = i32_array(&[6, 7, 8, 9, 10]);\n// Create a mutable array for copying values from arr1 and arr2, with a capacity for 6 elements\nlet capacity = 3 * std::mem::size_of::<i32>();\nlet mut mutable = MutableArrayData::new(vec![&arr1, &arr2], false, 10);\n// Copy the first 3 elements from arr1\nmutable.extend(0, 0, 3);\n// Copy the last 3 elements from arr2\nmutable.extend(1, 2, 5);\n// Complete the MutableArrayData into a new ArrayData\nlet frozen = mutable.freeze();\nassert_eq!(frozen, i32_array(&[1, 2, 3, 8, 9, 10]));\n```",
+    "span": {
+      "filename": "src/transform/mod.rs",
+      "begin": [
+        136,
+        1
+      ],
+      "end": [
+        181,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          274,
+          275,
+          276,
+          277,
+          278,
+          279,
+          280,
+          281,
+          282,
+          283,
+          284,
+          285,
+          286,
+          287,
+          288,
+          290
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "ArrayData": 6
+    },
+    "link_paths": {
+      "ArrayData": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "261",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.transform.MutableArrayData.md",
+    "record_file": "operations/arrow_data.transform.MutableArrayData.json",
+    "anchor": "op-9a9844b073b5d0f5c42f8a0d",
+    "aliases": [
+      "arrow::array::MutableArrayData"
+    ],
+    "resolved_doc_links": {
+      "ArrayData": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "02d2f7d4e4ca9314b0e18c7b",
+    "path": "arrow_data::transform::MutableArrayData::extend",
+    "name": "extend",
+    "owner": "arrow_data::transform::MutableArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn extend(&mut self, index: usize, start: usize, end: usize)",
+    "docs": "Extends the in progress array with a region of the input arrays.\n\n# Panic\nThis function panics if there is an invalid index,\ni.e. `index` >= the number of source arrays,\n`end` > the length of the `index`th array,\nor the offset type overflows (e.g. more than 2 GiB in a `StringArray`).",
+    "span": {
+      "filename": "src/transform/mod.rs",
+      "begin": [
+        774,
+        5
+      ],
+      "end": [
+        777,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": {
+      "since": "59.0.0",
+      "note": "Use `try_extend` which returns an error on overflow instead of panicking"
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "index",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "start",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "end",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableArrayData",
+          "id": "arrow_data::transform::MutableArrayData",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/transform/mod.rs",
+        "begin": [
+          397,
+          1
+        ],
+        "end": [
+          896,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "268",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.transform.MutableArrayData.md",
+    "record_file": "operations/arrow_data.transform.MutableArrayData.json",
+    "anchor": "op-02d2f7d4e4ca9314b0e18c7b",
+    "aliases": [
+      "arrow::array::MutableArrayData::extend"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b0b314ef38963b35849ae7e6",
+    "path": "arrow_data::transform::MutableArrayData::extend_nulls",
+    "name": "extend_nulls",
+    "owner": "arrow_data::transform::MutableArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn extend_nulls(&mut self, len: usize)",
+    "docs": "Extends the in progress array with null elements, ignoring the input arrays.\n\n# Panics\n\nPanics if [`MutableArrayData`] not created with `use_nulls` or nullable source arrays,\nor if the run-end counter overflows for `RunEndEncoded` arrays.",
+    "span": {
+      "filename": "src/transform/mod.rs",
+      "begin": [
+        808,
+        5
+      ],
+      "end": [
+        811,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": {
+      "since": "59.0.0",
+      "note": "Use `try_extend_nulls` which returns an error on overflow instead of panicking"
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableArrayData",
+          "id": "arrow_data::transform::MutableArrayData",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/transform/mod.rs",
+        "begin": [
+          397,
+          1
+        ],
+        "end": [
+          896,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MutableArrayData`": 261
+    },
+    "link_paths": {
+      "`MutableArrayData`": "arrow_data::transform::MutableArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "262",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.transform.MutableArrayData.md",
+    "record_file": "operations/arrow_data.transform.MutableArrayData.json",
+    "anchor": "op-b0b314ef38963b35849ae7e6",
+    "aliases": [
+      "arrow::array::MutableArrayData::extend_nulls"
+    ],
+    "resolved_doc_links": {
+      "`MutableArrayData`": "../operations/arrow_data.transform.MutableArrayData.md#op-9a9844b073b5d0f5c42f8a0d"
+    }
+  },
+  {
+    "id": "cbe6c7d3c37f14bb4382a85d",
+    "path": "arrow_data::transform::MutableArrayData::fmt",
+    "name": "fmt",
+    "owner": "arrow_data::transform::MutableArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/transform/mod.rs",
+      "begin": [
+        184,
+        5
+      ],
+      "end": [
+        189,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::fmt::Formatter",
+                      "id": 100,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 101,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "100": "core::fmt::Formatter",
+      "101": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableArrayData",
+          "id": "arrow_data::transform::MutableArrayData",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'_"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/transform/mod.rs",
+        "begin": [
+          183,
+          1
+        ],
+        "end": [
+          190,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "289",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.transform.MutableArrayData.md",
+    "record_file": "operations/arrow_data.transform.MutableArrayData.json",
+    "anchor": "op-cbe6c7d3c37f14bb4382a85d",
+    "aliases": [
+      "arrow::array::MutableArrayData::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "105947de8c991bf8a6a159ae",
+    "path": "arrow_data::transform::MutableArrayData::freeze",
+    "name": "freeze",
+    "owner": "arrow_data::transform::MutableArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn freeze(self) -> ArrayData",
+    "docs": "Creates a [ArrayData] from the in progress array, consuming `self`.",
+    "span": {
+      "filename": "src/transform/mod.rs",
+      "begin": [
+        832,
+        5
+      ],
+      "end": [
+        834,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayData",
+              "id": 6,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableArrayData",
+          "id": "arrow_data::transform::MutableArrayData",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/transform/mod.rs",
+        "begin": [
+          397,
+          1
+        ],
+        "end": [
+          896,
+          2
+        ]
+      }
+    },
+    "links": {
+      "ArrayData": 6
+    },
+    "link_paths": {
+      "ArrayData": "arrow_data::data::ArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "272",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.transform.MutableArrayData.md",
+    "record_file": "operations/arrow_data.transform.MutableArrayData.json",
+    "anchor": "op-105947de8c991bf8a6a159ae",
+    "aliases": [
+      "arrow::array::MutableArrayData::freeze"
+    ],
+    "resolved_doc_links": {
+      "ArrayData": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "60c4729e033f4d76ceb1063b",
+    "path": "arrow_data::transform::MutableArrayData::into_builder",
+    "name": "into_builder",
+    "owner": "arrow_data::transform::MutableArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_builder(self) -> ArrayDataBuilder",
+    "docs": "Consume self and returns the in progress array as [`ArrayDataBuilder`].\n\nThis is useful for extending the default behavior of MutableArrayData.",
+    "span": {
+      "filename": "src/transform/mod.rs",
+      "begin": [
+        839,
+        5
+      ],
+      "end": [
+        895,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayDataBuilder",
+              "id": 13,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "13": "arrow_data::data::ArrayDataBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableArrayData",
+          "id": "arrow_data::transform::MutableArrayData",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/transform/mod.rs",
+        "begin": [
+          397,
+          1
+        ],
+        "end": [
+          896,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrayDataBuilder`": 13
+    },
+    "link_paths": {
+      "`ArrayDataBuilder`": "arrow_data::data::ArrayDataBuilder"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "273",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.transform.MutableArrayData.md",
+    "record_file": "operations/arrow_data.transform.MutableArrayData.json",
+    "anchor": "op-60c4729e033f4d76ceb1063b",
+    "aliases": [
+      "arrow::array::MutableArrayData::into_builder"
+    ],
+    "resolved_doc_links": {
+      "`ArrayDataBuilder`": "../operations/arrow_data.data.ArrayDataBuilder.md#op-0a0f2a3a6b77674c3513d310"
+    }
+  },
+  {
+    "id": "bebb53dcaa20e1aba98558cb",
+    "path": "arrow_data::transform::MutableArrayData::is_empty",
+    "name": "is_empty",
+    "owner": "arrow_data::transform::MutableArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "Returns true if len is 0",
+    "span": {
+      "filename": "src/transform/mod.rs",
+      "begin": [
+        821,
+        5
+      ],
+      "end": [
+        823,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableArrayData",
+          "id": "arrow_data::transform::MutableArrayData",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/transform/mod.rs",
+        "begin": [
+          397,
+          1
+        ],
+        "end": [
+          896,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "270",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.transform.MutableArrayData.md",
+    "record_file": "operations/arrow_data.transform.MutableArrayData.json",
+    "anchor": "op-bebb53dcaa20e1aba98558cb",
+    "aliases": [
+      "arrow::array::MutableArrayData::is_empty"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "06e2a4e0c1c31f7b9dff34ce",
+    "path": "arrow_data::transform::MutableArrayData::len",
+    "name": "len",
+    "owner": "arrow_data::transform::MutableArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Returns the current length",
+    "span": {
+      "filename": "src/transform/mod.rs",
+      "begin": [
+        815,
+        5
+      ],
+      "end": [
+        817,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableArrayData",
+          "id": "arrow_data::transform::MutableArrayData",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/transform/mod.rs",
+        "begin": [
+          397,
+          1
+        ],
+        "end": [
+          896,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "269",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.transform.MutableArrayData.md",
+    "record_file": "operations/arrow_data.transform.MutableArrayData.json",
+    "anchor": "op-06e2a4e0c1c31f7b9dff34ce",
+    "aliases": [
+      "arrow::array::MutableArrayData::len"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "dacfab0ce3002df7e79e51f1",
+    "path": "arrow_data::transform::MutableArrayData::new",
+    "name": "new",
+    "owner": "arrow_data::transform::MutableArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(arrays: Vec<&'a ArrayData>, use_nulls: bool, capacity: usize) -> Self",
+    "docs": "Returns a new [MutableArrayData] with capacity to `capacity` slots and\nspecialized to create an [ArrayData] from multiple `arrays`.\n\n# Arguments\n* `arrays` - the source arrays to copy from\n* `use_nulls` - a flag indicating whether the caller intends to call `extend_nulls`.\n  Note: null-handling is enabled automatically if any source array contains nulls.\n* `capacity` - the preallocated capacity of the output array, in slots (number of elements)\n\nif `use_nulls` is `false` and no source arrays contains nulls, calling\n[MutableArrayData::extend_nulls] or [MutableArrayData::try_extend_nulls] will panic.",
+    "span": {
+      "filename": "src/transform/mod.rs",
+      "begin": [
+        409,
+        5
+      ],
+      "end": [
+        411,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "arrays",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 11,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": "'a",
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "ArrayData",
+                                  "id": 6,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "use_nulls",
+              {
+                "primitive": "bool"
+              }
+            ],
+            [
+              "capacity",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "11": "alloc::vec::Vec",
+      "6": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableArrayData",
+          "id": "arrow_data::transform::MutableArrayData",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/transform/mod.rs",
+        "begin": [
+          397,
+          1
+        ],
+        "end": [
+          896,
+          2
+        ]
+      }
+    },
+    "links": {
+      "MutableArrayData::try_extend_nulls": 263,
+      "ArrayData": 6,
+      "MutableArrayData::extend_nulls": 262,
+      "MutableArrayData": 261
+    },
+    "link_paths": {
+      "MutableArrayData::try_extend_nulls": "arrow_data::transform::MutableArrayData::try_extend_nulls",
+      "ArrayData": "arrow_data::data::ArrayData",
+      "MutableArrayData::extend_nulls": "arrow_data::transform::MutableArrayData::extend_nulls",
+      "MutableArrayData": "arrow_data::transform::MutableArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "264",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.transform.MutableArrayData.md",
+    "record_file": "operations/arrow_data.transform.MutableArrayData.json",
+    "anchor": "op-dacfab0ce3002df7e79e51f1",
+    "aliases": [
+      "arrow::array::MutableArrayData::new"
+    ],
+    "resolved_doc_links": {
+      "MutableArrayData::try_extend_nulls": "../operations/arrow_data.transform.MutableArrayData.md#op-b920a03adea9f24122e9747d",
+      "ArrayData": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78",
+      "MutableArrayData::extend_nulls": "../operations/arrow_data.transform.MutableArrayData.md#op-b0b314ef38963b35849ae7e6",
+      "MutableArrayData": "../operations/arrow_data.transform.MutableArrayData.md#op-9a9844b073b5d0f5c42f8a0d"
+    }
+  },
+  {
+    "id": "63aec003aed21c05fd505628",
+    "path": "arrow_data::transform::MutableArrayData::null_count",
+    "name": "null_count",
+    "owner": "arrow_data::transform::MutableArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn null_count(&self) -> usize",
+    "docs": "Returns the current null count",
+    "span": {
+      "filename": "src/transform/mod.rs",
+      "begin": [
+        827,
+        5
+      ],
+      "end": [
+        829,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableArrayData",
+          "id": "arrow_data::transform::MutableArrayData",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/transform/mod.rs",
+        "begin": [
+          397,
+          1
+        ],
+        "end": [
+          896,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "271",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.transform.MutableArrayData.md",
+    "record_file": "operations/arrow_data.transform.MutableArrayData.json",
+    "anchor": "op-63aec003aed21c05fd505628",
+    "aliases": [
+      "arrow::array::MutableArrayData::null_count"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6f12846efe9c085fcfec8e7a",
+    "path": "arrow_data::transform::MutableArrayData::try_extend",
+    "name": "try_extend",
+    "owner": "arrow_data::transform::MutableArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_extend(&mut self, index: usize, start: usize, end: usize) -> Result<(), ArrowError>",
+    "docs": "Extends the in progress array with a region of the input arrays, returning an error on\noverflow.\n\n# Arguments\n* `index` - the index of array that you want to copy values from\n* `start` - the start index of the chunk (inclusive)\n* `end` - the end index of the chunk (exclusive)\n\n# Errors\nReturns an error if offset arithmetic overflows the underlying integer type.\n\n# Panic\nThis function panics if there is an invalid index,\ni.e. `index` >= the number of source arrays\nor `end` > the length of the `index`th array",
+    "span": {
+      "filename": "src/transform/mod.rs",
+      "begin": [
+        745,
+        5
+      ],
+      "end": [
+        761,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "index",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "start",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "end",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 16,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 17,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "16": "core::result::Result",
+      "17": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableArrayData",
+          "id": "arrow_data::transform::MutableArrayData",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/transform/mod.rs",
+        "begin": [
+          397,
+          1
+        ],
+        "end": [
+          896,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "267",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.transform.MutableArrayData.md",
+    "record_file": "operations/arrow_data.transform.MutableArrayData.json",
+    "anchor": "op-6f12846efe9c085fcfec8e7a",
+    "aliases": [
+      "arrow::array::MutableArrayData::try_extend"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b920a03adea9f24122e9747d",
+    "path": "arrow_data::transform::MutableArrayData::try_extend_nulls",
+    "name": "try_extend_nulls",
+    "owner": "arrow_data::transform::MutableArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_extend_nulls(&mut self, len: usize) -> Result<(), ArrowError>",
+    "docs": "Extends the in progress array with null elements, ignoring the input arrays, returning an\nerror on overflow.\n\nPrefer this over [`extend_nulls`](Self::extend_nulls) to handle cases where the run-end\ncounter overflows (relevant for `RunEndEncoded` arrays).\n\n# Panics\n\nPanics if [`MutableArrayData`] not created with `use_nulls` or nullable source arrays",
+    "span": {
+      "filename": "src/transform/mod.rs",
+      "begin": [
+        788,
+        5
+      ],
+      "end": [
+        796,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 16,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 17,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "16": "core::result::Result",
+      "17": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableArrayData",
+          "id": "arrow_data::transform::MutableArrayData",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/transform/mod.rs",
+        "begin": [
+          397,
+          1
+        ],
+        "end": [
+          896,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self::extend_nulls": 262,
+      "`MutableArrayData`": 261
+    },
+    "link_paths": {
+      "Self::extend_nulls": "arrow_data::transform::MutableArrayData::extend_nulls",
+      "`MutableArrayData`": "arrow_data::transform::MutableArrayData"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "263",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.transform.MutableArrayData.md",
+    "record_file": "operations/arrow_data.transform.MutableArrayData.json",
+    "anchor": "op-b920a03adea9f24122e9747d",
+    "aliases": [
+      "arrow::array::MutableArrayData::try_extend_nulls"
+    ],
+    "resolved_doc_links": {
+      "Self::extend_nulls": "../operations/arrow_data.transform.MutableArrayData.md#op-b0b314ef38963b35849ae7e6",
+      "`MutableArrayData`": "../operations/arrow_data.transform.MutableArrayData.md#op-9a9844b073b5d0f5c42f8a0d"
+    }
+  },
+  {
+    "id": "cb1a737a84ac34f5e8417e92",
+    "path": "arrow_data::transform::MutableArrayData::with_capacities",
+    "name": "with_capacities",
+    "owner": "arrow_data::transform::MutableArrayData",
+    "crate": "arrow-data",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_capacities(arrays: Vec<&'a ArrayData>, use_nulls: bool, capacities: Capacities) -> Self",
+    "docs": "Similar to [MutableArrayData::new], but lets users define the\npreallocated capacities of the array with more granularity.\n\nSee [MutableArrayData::new] for more information on the arguments.\n\n# Panics\n\nThis function panics if the given `capacities` don't match the data type\nof `arrays`. Or when a [Capacities] variant is not yet supported.",
+    "span": {
+      "filename": "src/transform/mod.rs",
+      "begin": [
+        422,
+        5
+      ],
+      "end": [
+        728,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "arrays",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 11,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": "'a",
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "ArrayData",
+                                  "id": 6,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "use_nulls",
+              {
+                "primitive": "bool"
+              }
+            ],
+            [
+              "capacities",
+              {
+                "resolved_path": {
+                  "path": "Capacities",
+                  "id": 265,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "11": "alloc::vec::Vec",
+      "6": "arrow_data::data::ArrayData",
+      "265": "arrow_data::transform::Capacities"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MutableArrayData",
+          "id": "arrow_data::transform::MutableArrayData",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/transform/mod.rs",
+        "begin": [
+          397,
+          1
+        ],
+        "end": [
+          896,
+          2
+        ]
+      }
+    },
+    "links": {
+      "MutableArrayData::new": 264,
+      "Capacities": 265
+    },
+    "link_paths": {
+      "MutableArrayData::new": "arrow_data::transform::MutableArrayData::new",
+      "Capacities": "arrow_data::transform::Capacities"
+    },
+    "artifact": {
+      "id": "2e3f16c974fca640e60898159679617c9f90b8a84cca26ed8ced2dbfdcb62542",
+      "format_version": 61,
+      "item_id": "266",
+      "origin": "https://docs.rs/crate/arrow-data/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_data.transform.MutableArrayData.md",
+    "record_file": "operations/arrow_data.transform.MutableArrayData.json",
+    "anchor": "op-cb1a737a84ac34f5e8417e92",
+    "aliases": [
+      "arrow::array::MutableArrayData::with_capacities"
+    ],
+    "resolved_doc_links": {
+      "MutableArrayData::new": "../operations/arrow_data.transform.MutableArrayData.md#op-dacfab0ce3002df7e79e51f1",
+      "Capacities": "../operations/arrow_data.transform.Capacities.md#op-85e7a2e1566fea07900143a1"
+    }
+  }
+]

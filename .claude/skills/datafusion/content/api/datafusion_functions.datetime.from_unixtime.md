@@ -34,4 +34,7 @@ fn signature(&self) -> &Signature
 fn strictly_order_preserving(&self, _inputs: &[ExprProperties]) -> Result<bool>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.from_unixtime.FromUnixtimeFunc.md).
+
+
 ---

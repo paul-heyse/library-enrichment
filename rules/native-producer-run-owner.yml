@@ -1,0 +1,29 @@
+id: native-producer-run-owner
+language: Rust
+severity: error
+message: Native producer_run_plan owns run composition and semantic acquisition selection.
+files:
+  - crates/enrichment-daemon/src/ops/inspect_execution.rs
+  - crates/enrichment-daemon/src/ops/verify.rs
+  - crates/enrichment-daemon/src/ops/resolve.rs
+  - crates/enrichment-daemon/src/ops/revision.rs
+  - crates/enrichment-daemon/src/ops/python.rs
+rule:
+  kind: function_item
+  has:
+    field: name
+    regex: '^(publish|publish_completed|run|acquire|semantic_inputs)$'
+  any:
+    - has:
+        kind: struct_expression
+        has:
+          field: name
+          regex: '(^|::)ProducerRun$'
+        stopBy: end
+    - has:
+        kind: field_expression
+        has:
+          field: field
+          regex: '^receipt_ids$'
+        stopBy: end
+note: Physical observations, bounded codecs and independent fixtures remain permitted. This rule checks syntax, not callee resolution.

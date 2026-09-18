@@ -5,6 +5,7 @@ Crate `deltalake-catalog-unity` · 2 public items · structured records in [`mod
 ## TemporaryToken
 
 `struct` · `deltalake_catalog_unity::client::token::TemporaryToken`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.client.token.TemporaryToken.md)
 
 ```rust
 struct TemporaryToken<T>
@@ -21,6 +22,7 @@ A temporary authentication token with an associated expiry
 ## TokenCache
 
 `struct` · `deltalake_catalog_unity::client::token::TokenCache`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.client.token.TokenCache.md)
 
 ```rust
 struct TokenCache<T>

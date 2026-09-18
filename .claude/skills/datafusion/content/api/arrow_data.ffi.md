@@ -44,6 +44,9 @@ unsafe fn set_null_count(&mut self, null_count: i64)
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.ffi.FFI_ArrowArray.md).
+
+
 ABI-compatible struct for ArrowArray from C Data Interface
 See <https://arrow.apache.org/docs/format/CDataInterface.html#the-arrowarray-structure>
 

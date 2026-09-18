@@ -81,8 +81,7 @@ pub struct ArrowConfig {
     native: NativeQueryConfig => crate::native_union::Rule::Text,
     memory_bytes: usize => crate::native_union::Rule::Text,
     spill_bytes: u64 => crate::native_union::Rule::Text,
-    descriptor_cache_bytes: usize => crate::native_union::Rule::Text,
-    metadata_cache_bytes: usize => crate::native_union::Rule::Text,
+    caches: NativeCachePolicy => crate::native_union::Rule::Text,
     batch_rows: usize => crate::native_union::Rule::Text,
     partitions: usize => crate::native_union::Rule::Text,
     concurrency: usize => crate::native_union::Rule::Text,
@@ -105,8 +104,7 @@ impl Default for ArrowConfig {
             // workstation. These are shared ceilings, not eager allocations.
             memory_bytes: 32 * 1024 * 1024 * 1024,
             spill_bytes: 64 * 1024 * 1024 * 1024,
-            descriptor_cache_bytes: 1024 * 1024 * 1024,
-            metadata_cache_bytes: 2 * 1024 * 1024 * 1024,
+            caches: NativeCachePolicy::default(),
             batch_rows: 1024,
             partitions: 16,
             concurrency: 16,
@@ -123,12 +121,43 @@ impl Default for ArrowConfig {
 }
 
 crate::native_struct! {
+/// One immutable declaration configures native cache ownership and reader/table policy.
+#[serde(default)]
+pub struct NativeCachePolicy {
+    metadata_bytes: usize => crate::native_union::Rule::Text,
+    snapshots_bytes: usize => crate::native_union::Rule::Text,
+    snapshot_entry_bytes: usize => crate::native_union::Rule::Text,
+    providers_bytes: usize => crate::native_union::Rule::Text,
+    contracts_bytes: usize => crate::native_union::Rule::Text,
+    predicate_bytes: usize => crate::native_union::Rule::Text,
+    control_checkpoint_interval: u64 => crate::native_union::Rule::Text,
+    checkpoint_interval: u64 => crate::native_union::Rule::Text,
+}
+}
+impl Default for NativeCachePolicy {
+    fn default() -> Self {
+        Self {
+            metadata_bytes: 2 * 1024 * 1024 * 1024,
+            snapshots_bytes: 4 * 1024 * 1024 * 1024,
+            snapshot_entry_bytes: 512 * 1024 * 1024,
+            providers_bytes: 1024 * 1024 * 1024,
+            contracts_bytes: 64 * 1024 * 1024,
+            predicate_bytes: 100 * 1024 * 1024,
+            control_checkpoint_interval: 10,
+            checkpoint_interval: 100,
+        }
+    }
+}
+
+crate::native_struct! {
 /// Effective native choices; measurements select defaults, configuration captures each run.
 #[serde(default)]
 pub struct NativeQueryConfig {
     /// Stack capacity for each native async and blocking worker; separate from Arrow memory.
     worker_stack_bytes: usize => crate::native_union::Rule::Text,
     blocking_threads: usize => crate::native_union::Rule::Text,
+    /// Independent admission for uninstrumented parser children; retained until reaping.
+    parser_concurrency: usize => crate::native_union::Rule::UnsignedRange { min: 1, max: 16 },
     decoder_filter: bool => crate::native_union::Rule::Text,
     observation_bloom: bool => crate::native_union::Rule::Text,
     reorder_filters: bool => crate::native_union::Rule::Text,
@@ -146,6 +175,7 @@ impl Default for NativeQueryConfig {
         Self {
             worker_stack_bytes: 16 * 1024 * 1024,
             blocking_threads: 16,
+            parser_concurrency: 16,
             decoder_filter: true,
             observation_bloom: true,
             reorder_filters: true,
@@ -359,8 +389,9 @@ pub struct PythonProducers {
     pypi_url: String => crate::native_union::Rule::Text,
     /// Simple API base for artifact corroboration.
     simple_url: String => crate::native_union::Rule::Text,
-    /// Service-owned Python interpreter containing enrichment_worker and pinned Griffe.
-    worker_python: PathBuf => crate::native_union::Rule::Text,
+    /// Absolute service-owned interpreter containing enrichment_worker and pinned Griffe.
+    /// Absent until an installation supplies it; never resolved through the caller's PATH.
+    worker_python: Option<PathBuf> => crate::native_union::Rule::Text,
     /// Total worker deadline.
     worker_timeout_seconds: u64 => crate::native_union::Rule::Text,
 }
@@ -370,7 +401,7 @@ impl Default for PythonProducers {
         Self {
             pypi_url: "https://pypi.org/pypi".into(),
             simple_url: "https://pypi.org/simple".into(),
-            worker_python: PathBuf::from("python3"),
+            worker_python: None,
             worker_timeout_seconds: 30,
         }
     }
@@ -577,15 +608,11 @@ mod tests {
     fn generated_config_records_preserve_values_and_exclude_only_load_origin() {
         use crate::native_union::NativeStruct;
         let mut config = Config::default();
-        let id = crate::native_key::Key::OperationPolicy
-            .record(&config)
-            .unwrap();
+        let id = crate::identity::OperationPolicyId::try_from_record(&config).unwrap();
         config.source = Source::File("/tmp/operator.toml".into());
         assert_eq!(
             id,
-            crate::native_key::Key::OperationPolicy
-                .record(&config)
-                .unwrap()
+            crate::identity::OperationPolicyId::try_from_record(&config).unwrap()
         );
         let batch = Config::batch(&[config]).unwrap();
         let rows = crate::evidence::arrow_model::cells::RowSet::batch(&batch).unwrap();

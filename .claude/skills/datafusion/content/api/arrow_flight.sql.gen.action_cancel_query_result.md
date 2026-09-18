@@ -12,4 +12,7 @@ enum CancelResult
 
 **Variants**: `Unspecified`, `Cancelled`, `Cancelling`, `NotCancellable`
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.action_cancel_query_result.CancelResult.md).
+
+
 ---

@@ -1,5 +1,9 @@
 # Reference: layout, schemas, and query recipes
 
+For task selection start with [reviewed decisions](content/routes/tasks.md) and the
+[bounded reader](scripts/README.md). This page retains direct-file and structural-query recipes.
+Full member contracts are under `content/operations/`; compact legacy module pages link to them.
+
 Everything below is generated from pinned sources by `build/build.py` and verified by
 `build/verify.py`. Counts are from the current build; `content/PROVENANCE.json` is
 authoritative.
@@ -15,18 +19,18 @@ authoritative.
 | Target | `x86_64-unknown-linux-gnu` |
 | Transitively | arrow 59.3.0 · parquet 59.3.0 · datafusion 55.1.0 · object_store 0.13.2 · sqlparser 0.62.0 |
 
-804 canonical items · 2,355 methods · 124 trait-implementation edges · 1,168 access-path
+804 canonical items · 2,308 compact-index methods · 124 trait-implementation edges · 1,168 access-path
 aliases · 211 modules.
 
-**Why a commit and not a release.** crates.io's newest `deltalake` is 0.32.4 (2026-06-07),
-which pins arrow 58 / datafusion 53. The arrow-59 / datafusion-55 combination exists only on
-unreleased `main`. docs.rs therefore has nothing to serve for this pin, which is why
+**Why a commit and not a release.** At acquisition (2026-09-15), the published deltalake
+line targeted Arrow 58 / DataFusion 53. This retained commit supplies the Arrow 59 /
+DataFusion 55 profile. These are capture-time facts, not a current release recommendation. docs.rs therefore has nothing to serve for this pin, which is why
 `build/acquire.py` produces the rustdoc JSON locally — see `build/README.md`.
 
 **Why the kernel is pinned separately.** delta-rs declares `delta_kernel` as a git dependency
 tracking `branch = "buoyant/main"`. A branch is not a pin: the same delta-rs commit resolves to
-a different kernel next week. Acquisition resolves a lockfile and then *asserts* that it pins
-the revision the manifest names, aborting if the branch has moved.
+a different kernel next week. Replay restores the retained lock bytes. Explicit refresh resolves a new lock and checks each
+package against the declared revision; it never silently follows a moved branch.
 
 ## Layout
 
@@ -35,7 +39,10 @@ content/
   PROVENANCE.json        versions, per-crate feature envelope, counts, per-file sha256
   index/*.tsv            line-oriented projection            -> ripgrep
   model/<module>.json    structure, signatures, edges        -> ast-grep
-  api/<module>.md        the full doc prose, stored once     -> Read
+  api/<module>.md        compact legacy summaries            -> Read
+  operations/*.json|md   full docs, types, outputs and access -> reader/Read
+  capabilities/*.json|md reviewed conditional choices         -> reader/Read
+  routes/*.md           task/crate/representation/effects     -> Read
   traits/<Trait>.md      the 42 extension points             -> Read
   topics/<slug>.md       15 capability axes + 00-map.md      -> Read
   catalogs/*.md          operations, properties, features, errors, foreign impls, crates
@@ -88,7 +95,7 @@ Tab-separated, sorted, one record per line. No header row.
 | File | Rows | Columns |
 |---|---|---|
 | `symbols.tsv` | 804 | `canonical_path · kind · crate · api_page · alias_count · method_count · summary` |
-| `methods.tsv` | 2,355 | `owner_path · method · via_trait ("-" if inherent) · signature · summary` |
+| `methods.tsv` | 2,308 | `owner_path · method · via_trait ("-" if inherent) · signature · summary` |
 | `impls.tsv` | 124 | `trait_path · implementor_path · implementor_crate` — traits defined *in* this index |
 | `foreign-impls.tsv` | 2,233 | `trait_path · implementor_path · nameable (yes\|no) · crate` — traits defined elsewhere |
 | `aliases.tsv` | 1,168 | `access_path · canonical_path · kind` |
@@ -116,7 +123,7 @@ never copies it.
 
 | File | Holds |
 |---|---|
-| `catalogs/operations.md` | 24 operation builders, the `DeltaTable` method that constructs each, and every `with_*` it accepts |
+| `catalogs/operations.md` | Structured return-based construction, awaited outputs and explicit build/execute/flush APIs |
 | `catalogs/table-properties.md` | 24 `TableProperty` variants, and the extension trait that reads them back |
 | `catalogs/table-features.md` | 48 protocol feature variants across the kernel and delta-rs enums |
 | `catalogs/errors.md` | 183 error variants; `DeltaTableError` is the one a retry policy branches on |

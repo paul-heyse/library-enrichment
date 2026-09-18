@@ -1,0 +1,20 @@
+# `deltalake_aws::constants::BILLING_MODE_KEY_NAME`
+
+Full upstream contracts; raw type trees and source locators in [structured records](deltalake_aws.constants.BILLING_MODE_KEY_NAME.json).
+
+<a id="op-15001a74b183888e4023a685"></a>
+## BILLING_MODE_KEY_NAME
+
+`constant` · `deltalake_aws::constants::BILLING_MODE_KEY_NAME` · deltalake-aws 1.0.0+58f07cd6
+
+Access: **public**. Canonical source location is not automatically a valid import path.
+
+```rust
+const BILLING_MODE_KEY_NAME: &str = "DELTA_DYNAMO_BILLING_MODE"
+```
+
+[Exact source](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/aws/src/constants.rs#L143).
+
+Source: `crates/aws/src/constants.rs:143`. [Exact documentation build](https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184).
+
+No upstream documentation on this item; consult its owner/trait contract.

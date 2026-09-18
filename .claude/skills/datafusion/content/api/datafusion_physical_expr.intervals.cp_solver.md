@@ -14,6 +14,9 @@ enum PropagationResult
 
 **Derives**: Debug, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.intervals.cp_solver.PropagationResult.md).
+
+
 This object encapsulates all possible constraint propagation results.
 
 ---
@@ -25,6 +28,9 @@ This object encapsulates all possible constraint propagation results.
 ```rust
 fn propagate_arithmetic(op: &datafusion_expr::Operator, parent: &datafusion_expr::interval_arithmetic::Interval, left_child: &datafusion_expr::interval_arithmetic::Interval, right_child: &datafusion_expr::interval_arithmetic::Interval) -> datafusion_common::Result<Option<(datafusion_expr::interval_arithmetic::Interval, datafusion_expr::interval_arithmetic::Interval)>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.intervals.cp_solver.propagate_arithmetic.md).
+
 
 This function refines intervals `left_child` and `right_child` by applying
 constraint propagation through `parent` via operation. The main idea is
@@ -54,6 +60,9 @@ apply the following operations:
 ```rust
 fn propagate_comparison(op: &datafusion_expr::Operator, parent: &datafusion_expr::interval_arithmetic::Interval, left_child: &datafusion_expr::interval_arithmetic::Interval, right_child: &datafusion_expr::interval_arithmetic::Interval) -> datafusion_common::Result<Option<(datafusion_expr::interval_arithmetic::Interval, datafusion_expr::interval_arithmetic::Interval)>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.intervals.cp_solver.propagate_comparison.md).
+
 
 This function refines intervals `left_child` and `right_child` by applying
 comparison propagation through `parent` via operation. The main idea is
@@ -125,6 +134,9 @@ fn update_intervals(&self, assignments: &mut [(usize, Interval)])
 fn update_ranges(&mut self, leaf_bounds: &mut [(usize, Interval)], given_range: Interval) -> Result<PropagationResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.intervals.cp_solver.ExprIntervalGraph.md).
+
+
 This object implements a directed acyclic expression graph (DAEG) that
 is used to compute ranges for expressions through interval arithmetic.
 
@@ -156,6 +168,9 @@ fn new_with_interval(expr: Arc<dyn PhysicalExpr>, interval: Interval) -> Self
 ```rust
 fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.intervals.cp_solver.ExprIntervalGraphNode.md).
+
 
 This is a node in the DAEG; it encapsulates a reference to the actual
 [`PhysicalExpr`] as well as an interval containing expression bounds.

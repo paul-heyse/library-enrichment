@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::and`, `arrow::compute::kernels::boolean::and`
 fn and(left: &BooleanArray, right: &BooleanArray) -> Result<BooleanArray, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.boolean.and.md).
+
+
 Performs `AND` operation on two arrays. If either left or right value is null then the
 result is also null.
 # Error
@@ -37,6 +40,9 @@ Also reachable as `arrow::compute::and_kleene`, `arrow::compute::kernels::boolea
 ```rust
 fn and_kleene(left: &BooleanArray, right: &BooleanArray) -> Result<BooleanArray, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.boolean.and_kleene.md).
+
 
 Logical 'and' boolean values with Kleene logic
 
@@ -81,6 +87,9 @@ Also reachable as `arrow::compute::and_not`, `arrow::compute::kernels::boolean::
 fn and_not(left: &BooleanArray, right: &BooleanArray) -> Result<BooleanArray, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.boolean.and_not.md).
+
+
 Performs `AND_NOT` operation on two arrays. If either left or right value is null then the
 result is also null.
 # Error
@@ -108,6 +117,9 @@ Also reachable as `arrow::compute::is_not_null`, `arrow::compute::kernels::boole
 fn is_not_null(input: &dyn Array) -> Result<BooleanArray, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.boolean.is_not_null.md).
+
+
 Returns a non-null [BooleanArray] with whether each value of the array is not null.
 # Error
 This function never errors.
@@ -132,6 +144,9 @@ Also reachable as `arrow::compute::is_null`, `arrow::compute::kernels::boolean::
 fn is_null(input: &dyn Array) -> Result<BooleanArray, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.boolean.is_null.md).
+
+
 Returns a non-null [BooleanArray] with whether each value of the array is null.
 # Error
 This function never errors.
@@ -155,6 +170,9 @@ Also reachable as `arrow::compute::kernels::boolean::not`, `arrow::compute::not`
 ```rust
 fn not(left: &BooleanArray) -> Result<BooleanArray, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.boolean.not.md).
+
 
 Performs unary `NOT` operation on an arrays. If value is null then the result is also
 null.
@@ -181,6 +199,9 @@ Also reachable as `arrow::compute::kernels::boolean::or`, `arrow::compute::or`
 fn or(left: &BooleanArray, right: &BooleanArray) -> Result<BooleanArray, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.boolean.or.md).
+
+
 Performs `OR` operation on two arrays. If either left or right value is null then the
 result is also null.
 # Error
@@ -206,6 +227,9 @@ Also reachable as `arrow::compute::kernels::boolean::or_kleene`, `arrow::compute
 ```rust
 fn or_kleene(left: &BooleanArray, right: &BooleanArray) -> Result<BooleanArray, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.boolean.or_kleene.md).
+
 
 Logical 'or' boolean values with Kleene logic
 

@@ -1,0 +1,3627 @@
+[
+  {
+    "id": "d23128d312d259aad0f09763",
+    "path": "arrow_buffer::builder::BufferBuilder",
+    "name": "BufferBuilder",
+    "owner": null,
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct BufferBuilder<T: ArrowNativeType>",
+    "docs": "Builder for creating Arrow [`Buffer`] objects\n\nA [`Buffer`] is the underlying data structure of Arrow's Arrays.\n\nFor all supported types, there are type definitions for the\ngeneric version of `BufferBuilder<T>`, e.g. `BufferBuilder`.\n\n**Note it is typically faster to create buffers directly from `Vec`**.\nSee example on [`Buffer`].\n\n# See Also\n* [`BooleanBufferBuilder`]: for packing bits in [`BooleanBuffer`]s\n* [`NullBufferBuilder`]: for creating [`NullBuffer`]s of null values\n\n[`BooleanBuffer`]: crate::BooleanBuffer\n[`NullBuffer`]: crate::NullBuffer\n\n# Example:\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<u8>::new(100);\nbuilder.append_slice(&[42, 43, 44]);\nbuilder.append(45);\nlet buffer = builder.finish();\nassert_eq!(unsafe { buffer.typed_data::<u8>() }, &[42, 43, 44, 45]);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        59,
+        1
+      ],
+      "end": [
+        62,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ArrowNativeType",
+                          "id": 11,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          743,
+          744,
+          745,
+          746,
+          747,
+          748,
+          749,
+          750,
+          751,
+          752,
+          753,
+          754,
+          755,
+          756,
+          757,
+          758,
+          209,
+          365,
+          760,
+          762,
+          764,
+          766,
+          768
+        ]
+      }
+    },
+    "type_references": {
+      "11": "arrow_buffer::native::ArrowNativeType"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::BooleanBuffer": 393,
+      "`BooleanBufferBuilder`": 215,
+      "`NullBufferBuilder`": 485,
+      "crate::NullBuffer": 31,
+      "`Buffer`": 123
+    },
+    "link_paths": {
+      "crate::BooleanBuffer": "arrow_buffer::buffer::boolean::BooleanBuffer",
+      "`BooleanBufferBuilder`": "arrow_buffer::builder::boolean::BooleanBufferBuilder",
+      "`NullBufferBuilder`": "arrow_buffer::builder::null::NullBufferBuilder",
+      "crate::NullBuffer": "arrow_buffer::buffer::null::NullBuffer",
+      "`Buffer`": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "208",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-d23128d312d259aad0f09763",
+    "aliases": [
+      "arrow_buffer::BufferBuilder"
+    ],
+    "resolved_doc_links": {
+      "crate::BooleanBuffer": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5",
+      "`BooleanBufferBuilder`": "../operations/arrow_buffer.builder.boolean.BooleanBufferBuilder.md#op-3b603b0bd38714441734f47c",
+      "`NullBufferBuilder`": "../operations/arrow_buffer.builder.null.NullBufferBuilder.md#op-f629e701548be729fb00ab9e",
+      "crate::NullBuffer": "../operations/arrow_buffer.buffer.null.NullBuffer.md#op-d8209d291b86c5deb0050e48",
+      "`Buffer`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b"
+    }
+  },
+  {
+    "id": "aa111d7699bc82c2240129ac",
+    "path": "arrow_buffer::builder::BufferBuilder::advance",
+    "name": "advance",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn advance(&mut self, i: usize)",
+    "docs": "Increases the number of elements in the internal buffer by `n`\nand resizes the buffer as needed.\n\nThe values of the newly added elements are 0.\nThis method is usually used when appending `NULL` values to the buffer\nas they still require physical memory space.\n\n# Example:\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<u8>::new(10);\nbuilder.advance(2);\n\nassert_eq!(builder.len(), 2);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        163,
+        5
+      ],
+      "end": [
+        165,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "i",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "729",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-aa111d7699bc82c2240129ac",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::advance"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6e4751748befe9d3358bcc2f",
+    "path": "arrow_buffer::builder::BufferBuilder::append",
+    "name": "append",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append(&mut self, v: T)",
+    "docs": "Appends a value of type `T` into the builder,\ngrowing the internal buffer as needed.\n\n# Example:\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<u8>::new(10);\nbuilder.append(42);\n\nassert_eq!(builder.len(), 1);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        196,
+        5
+      ],
+      "end": [
+        199,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "v",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "727",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-6e4751748befe9d3358bcc2f",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::append"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4705f9f82ad32e6b404478fe",
+    "path": "arrow_buffer::builder::BufferBuilder::append_n",
+    "name": "append_n",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_n(&mut self, n: usize, v: T)",
+    "docs": "Appends a value of type `T` into the builder N times,\ngrowing the internal buffer as needed.\n\n# Example:\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<u8>::new(10);\nbuilder.append_n(10, 42);\n\nassert_eq!(builder.len(), 10);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        214,
+        5
+      ],
+      "end": [
+        217,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "v",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "735",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-4705f9f82ad32e6b404478fe",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::append_n"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6b666c78996f02f104ae4fcc",
+    "path": "arrow_buffer::builder::BufferBuilder::append_n_zeroed",
+    "name": "append_n_zeroed",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_n_zeroed(&mut self, n: usize)",
+    "docs": "Appends `n`, zero-initialized values\n\n# Example:\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<u32>::new(10);\nbuilder.append_n_zeroed(3);\n\nassert_eq!(builder.len(), 3);\nassert_eq!(builder.as_slice(), &[0, 0, 0])\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        232,
+        5
+      ],
+      "end": [
+        234,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "736",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-6b666c78996f02f104ae4fcc",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::append_n_zeroed"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "28eb6cfc62c411d15b334bfa",
+    "path": "arrow_buffer::builder::BufferBuilder::append_slice",
+    "name": "append_slice",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_slice(&mut self, slice: &[T])",
+    "docs": "Appends a slice of type `T`, growing the internal buffer as needed.\n\n# Example:\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<u8>::new(10);\nbuilder.append_slice(&[42, 44, 46]);\n\nassert_eq!(builder.len(), 3);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        248,
+        5
+      ],
+      "end": [
+        250,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "slice",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "generic": "T"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "728",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-28eb6cfc62c411d15b334bfa",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::append_slice"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "145478c191b94884adc17165",
+    "path": "arrow_buffer::builder::BufferBuilder::append_trusted_len_iter",
+    "name": "append_trusted_len_iter",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn append_trusted_len_iter(&mut self, iter: impl IntoIterator<Item = T>)",
+    "docs": "# Safety\nThis requires the iterator be a trusted length. This could instead require\nthe iterator implement `TrustedLen` once that is stabilized.",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        324,
+        5
+      ],
+      "end": [
+        332,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "iter",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "IntoIterator",
+                        "id": 19,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [],
+                            "constraints": [
+                              {
+                                "name": "Item",
+                                "args": null,
+                                "binding": {
+                                  "equality": {
+                                    "type": {
+                                      "generic": "T"
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl IntoIterator<Item = T>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "IntoIterator",
+                          "id": 19,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "generic": "T"
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "19": "core::iter::traits::collect::IntoIterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "740",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-145478c191b94884adc17165",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::append_trusted_len_iter"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "82a33939a2dd28e77fc5ccb8",
+    "path": "arrow_buffer::builder::BufferBuilder::as_slice",
+    "name": "as_slice",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_slice(&self) -> &[T]",
+    "docs": "View the contents of this buffer as a slice\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<f64>::new(10);\nbuilder.append(1.3);\nbuilder.append_n(2, 2.3);\n\nassert_eq!(builder.as_slice(), &[1.3, 2.3, 2.3]);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        263,
+        5
+      ],
+      "end": [
+        270,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "generic": "T"
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "737",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-82a33939a2dd28e77fc5ccb8",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::as_slice"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e6b395866335b721c1d628f4",
+    "path": "arrow_buffer::builder::BufferBuilder::as_slice_mut",
+    "name": "as_slice_mut",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_slice_mut(&mut self) -> &mut [T]",
+    "docs": "View the contents of this buffer as a mutable slice\n\n# Example:\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<f32>::new(10);\n\nbuilder.append_slice(&[1., 2., 3.4]);\nassert_eq!(builder.as_slice(), &[1., 2., 3.4]);\n\nbuilder.as_slice_mut()[1] = 4.2;\nassert_eq!(builder.as_slice(), &[1., 4.2, 3.4]);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        287,
+        5
+      ],
+      "end": [
+        294,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "slice": {
+                  "generic": "T"
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "738",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-e6b395866335b721c1d628f4",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::as_slice_mut"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "92edc3acde55851057589bb0",
+    "path": "arrow_buffer::builder::BufferBuilder::build",
+    "name": "build",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn build(self) -> Buffer",
+    "docs": "Builds an immutable [Buffer] without resetting the builder.\n\nThis consumes the builder. Use [`Self::finish`] to reuse it.\n\n# Example:\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<u8>::new(10);\nbuilder.append_slice(&[42, 44, 46]);\nlet buffer = builder.build();\nassert_eq!(unsafe { buffer.typed_data::<u8>() }, &[42, 44, 46]);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        367,
+        5
+      ],
+      "end": [
+        369,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Buffer",
+              "id": 123,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Buffer": 123,
+      "`Self::finish`": 742
+    },
+    "link_paths": {
+      "Buffer": "arrow_buffer::buffer::immutable::Buffer",
+      "`Self::finish`": "arrow_buffer::builder::BufferBuilder::finish"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "741",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-92edc3acde55851057589bb0",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::build"
+    ],
+    "resolved_doc_links": {
+      "Buffer": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b",
+      "`Self::finish`": "../operations/arrow_buffer.builder.BufferBuilder.md#op-117882d41f14f4ed91f23d22"
+    }
+  },
+  {
+    "id": "aa99c6ed476a67c7107de7af",
+    "path": "arrow_buffer::builder::BufferBuilder::capacity",
+    "name": "capacity",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn capacity(&self) -> usize",
+    "docs": "Returns the actual capacity (number of elements) of the internal buffer.\n\nNote: the internal capacity returned by this method might be larger than\nwhat you'd expect after setting the capacity in the `new()` or `reserve()`\nfunctions.",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        141,
+        5
+      ],
+      "end": [
+        144,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "734",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-aa99c6ed476a67c7107de7af",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::capacity"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7aa075d5d5af7802c09f54d4",
+    "path": "arrow_buffer::builder::BufferBuilder::default",
+    "name": "default",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn default() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        373,
+        5
+      ],
+      "end": [
+        375,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          372,
+          1
+        ],
+        "end": [
+          376,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "761",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-7aa075d5d5af7802c09f54d4",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::default"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "db7073c17b0e6f7b0dcd3aae",
+    "path": "arrow_buffer::builder::BufferBuilder::extend",
+    "name": "extend",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I)",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        379,
+        5
+      ],
+      "end": [
+        381,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "iter",
+              {
+                "generic": "I"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "I",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "IntoIterator",
+                          "id": 19,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "generic": "T"
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "19": "core::iter::traits::collect::IntoIterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Extend",
+        "id": "core::iter::traits::collect::Extend",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "generic": "T"
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::iter::traits::collect::Extend",
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          378,
+          1
+        ],
+        "end": [
+          382,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "763",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-db7073c17b0e6f7b0dcd3aae",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::extend"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "117882d41f14f4ed91f23d22",
+    "path": "arrow_buffer::builder::BufferBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> Buffer",
+    "docs": "Resets this builder and returns an immutable [Buffer].\n\nUse [`Self::build`] when you don't need to reuse this builder.\n\n# Example:\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<u8>::new(10);\nbuilder.append_slice(&[42, 44, 46]);\nlet buffer = builder.finish();\nassert_eq!(unsafe { buffer.typed_data::<u8>() }, &[42, 44, 46]);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        348,
+        5
+      ],
+      "end": [
+        351,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Buffer",
+              "id": 123,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Buffer": 123,
+      "`Self::build`": 741
+    },
+    "link_paths": {
+      "Buffer": "arrow_buffer::buffer::immutable::Buffer",
+      "`Self::build`": "arrow_buffer::builder::BufferBuilder::build"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "742",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-117882d41f14f4ed91f23d22",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::finish"
+    ],
+    "resolved_doc_links": {
+      "Buffer": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b",
+      "`Self::build`": "../operations/arrow_buffer.builder.BufferBuilder.md#op-92edc3acde55851057589bb0"
+    }
+  },
+  {
+    "id": "1bf3bfaaf759464a6969bb4c",
+    "path": "arrow_buffer::builder::BufferBuilder::fmt",
+    "name": "fmt",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        58,
+        10
+      ],
+      "end": [
+        58,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 89,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 90,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "89": "core::fmt::Formatter",
+      "90": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "$crate::fmt::Debug",
+                        "id": "core::fmt::Debug",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          58,
+          10
+        ],
+        "end": [
+          58,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "759",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-1bf3bfaaf759464a6969bb4c",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6833a869d34eb305196766da",
+    "path": "arrow_buffer::builder::BufferBuilder::from",
+    "name": "from",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from(value: Vec<T>) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        385,
+        5
+      ],
+      "end": [
+        390,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 128,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "T"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "Vec",
+                    "id": "alloc::vec::Vec",
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "generic": "T"
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          384,
+          1
+        ],
+        "end": [
+          391,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "765",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-6833a869d34eb305196766da",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::from"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "81516d7a2ca49dfa64bab924",
+    "path": "arrow_buffer::builder::BufferBuilder::from_iter",
+    "name": "from_iter",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        394,
+        5
+      ],
+      "end": [
+        398,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "iter",
+              {
+                "generic": "I"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "I",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "IntoIterator",
+                          "id": 19,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "generic": "T"
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "19": "core::iter::traits::collect::IntoIterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "FromIterator",
+        "id": "core::iter::traits::collect::FromIterator",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "generic": "T"
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::iter::traits::collect::FromIterator",
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          393,
+          1
+        ],
+        "end": [
+          399,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "767",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-81516d7a2ca49dfa64bab924",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::from_iter"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8ea504fa45e1b438c0c945b8",
+    "path": "arrow_buffer::builder::BufferBuilder::is_empty",
+    "name": "is_empty",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "Returns whether the internal buffer is empty.\n\n# Example:\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<u8>::new(10);\nbuilder.append(42);\n\nassert_eq!(builder.is_empty(), false);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        132,
+        5
+      ],
+      "end": [
+        134,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "733",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-8ea504fa45e1b438c0c945b8",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::is_empty"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7e361686a482963be0127573",
+    "path": "arrow_buffer::builder::BufferBuilder::len",
+    "name": "len",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Returns the current number of array elements in the internal buffer.\n\n# Example:\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<u8>::new(10);\nbuilder.append(42);\n\nassert_eq!(builder.len(), 1);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        117,
+        5
+      ],
+      "end": [
+        119,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "732",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-7e361686a482963be0127573",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::len"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ba1b352fdd04a57ff811dd8d",
+    "path": "arrow_buffer::builder::BufferBuilder::new",
+    "name": "new",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(capacity: usize) -> Self",
+    "docs": "Creates a new builder with initial capacity for _at least_ `capacity`\nelements of type `T`.\n\nThe capacity can later be manually adjusted with the\n[`reserve()`](BufferBuilder::reserve) method.\nAlso the\n[`append()`](BufferBuilder::append),\n[`append_slice()`](BufferBuilder::append_slice) and\n[`advance()`](BufferBuilder::advance)\nmethods automatically increase the capacity if needed.\n\n# Example:\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<u8>::new(10);\n\nassert!(builder.capacity() >= 10);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        85,
+        5
+      ],
+      "end": [
+        92,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "capacity",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {
+      "BufferBuilder::append_slice": 728,
+      "BufferBuilder::append": 727,
+      "BufferBuilder::advance": 729,
+      "BufferBuilder::reserve": 726
+    },
+    "link_paths": {
+      "BufferBuilder::append_slice": "arrow_buffer::builder::BufferBuilder::append_slice",
+      "BufferBuilder::append": "arrow_buffer::builder::BufferBuilder::append",
+      "BufferBuilder::advance": "arrow_buffer::builder::BufferBuilder::advance",
+      "BufferBuilder::reserve": "arrow_buffer::builder::BufferBuilder::reserve"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "730",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-ba1b352fdd04a57ff811dd8d",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::new"
+    ],
+    "resolved_doc_links": {
+      "BufferBuilder::append_slice": "../operations/arrow_buffer.builder.BufferBuilder.md#op-28eb6cfc62c411d15b334bfa",
+      "BufferBuilder::append": "../operations/arrow_buffer.builder.BufferBuilder.md#op-6e4751748befe9d3358bcc2f",
+      "BufferBuilder::advance": "../operations/arrow_buffer.builder.BufferBuilder.md#op-aa111d7699bc82c2240129ac",
+      "BufferBuilder::reserve": "../operations/arrow_buffer.builder.BufferBuilder.md#op-846bed9026e6e86d5ef8959c"
+    }
+  },
+  {
+    "id": "965135cfde77554a8600fe95",
+    "path": "arrow_buffer::builder::BufferBuilder::new_from_buffer",
+    "name": "new_from_buffer",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn new_from_buffer(buffer: MutableBuffer) -> Self",
+    "docs": "Creates a new builder from a [`MutableBuffer`]\n\n# Safety\n\n- `buffer` bytes must be aligned to type `T`",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        99,
+        5
+      ],
+      "end": [
+        104,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "buffer",
+              {
+                "resolved_path": {
+                  "path": "MutableBuffer",
+                  "id": 147,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "147": "arrow_buffer::buffer::mutable::MutableBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MutableBuffer`": 147
+    },
+    "link_paths": {
+      "`MutableBuffer`": "arrow_buffer::buffer::mutable::MutableBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "731",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-965135cfde77554a8600fe95",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::new_from_buffer"
+    ],
+    "resolved_doc_links": {
+      "`MutableBuffer`": "../operations/arrow_buffer.buffer.mutable.MutableBuffer.md#op-c6098a137f542fbc611c6673"
+    }
+  },
+  {
+    "id": "846bed9026e6e86d5ef8959c",
+    "path": "arrow_buffer::builder::BufferBuilder::reserve",
+    "name": "reserve",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn reserve(&mut self, n: usize)",
+    "docs": "Reserves memory for _at least_ `n` more elements of type `T`.\n\n# Example:\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<u8>::new(10);\nbuilder.reserve(10);\n\nassert!(builder.capacity() >= 20);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        179,
+        5
+      ],
+      "end": [
+        181,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "726",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-846bed9026e6e86d5ef8959c",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::reserve"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "463696634e1fc4ea9fc8f24a",
+    "path": "arrow_buffer::builder::BufferBuilder::truncate",
+    "name": "truncate",
+    "owner": "arrow_buffer::builder::BufferBuilder",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn truncate(&mut self, len: usize)",
+    "docs": "Shorten this BufferBuilder to `len` items\n\nIf `len` is greater than the builder's current length, this has no effect\n\n# Example:\n\n```\n# use arrow_buffer::builder::BufferBuilder;\nlet mut builder = BufferBuilder::<u16>::new(10);\n\nbuilder.append_slice(&[42, 44, 46]);\nassert_eq!(builder.as_slice(), &[42, 44, 46]);\n\nbuilder.truncate(2);\nassert_eq!(builder.as_slice(), &[42, 44]);\n\nbuilder.append(12);\nassert_eq!(builder.as_slice(), &[42, 44, 12]);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        316,
+        5
+      ],
+      "end": [
+        318,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferBuilder",
+          "id": "arrow_buffer::builder::BufferBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowNativeType",
+                        "id": "arrow_buffer::native::ArrowNativeType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/mod.rs",
+        "begin": [
+          64,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "739",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.builder.BufferBuilder.md",
+    "record_file": "operations/arrow_buffer.builder.BufferBuilder.json",
+    "anchor": "op-463696634e1fc4ea9fc8f24a",
+    "aliases": [
+      "arrow_buffer::BufferBuilder::truncate"
+    ],
+    "resolved_doc_links": {}
+  }
+]

@@ -10,6 +10,9 @@ Crate `datafusion-functions` · 39 public items · structured records in [`model
 fn abs() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.abs.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of abs
 
 ---
@@ -21,6 +24,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of abs
 ```rust
 fn acos() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.acos.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of acos
 
@@ -34,6 +40,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of acos
 fn acosh() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.acosh.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of acosh
 
 ---
@@ -45,6 +54,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of acosh
 ```rust
 fn asin() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.asin.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of asin
 
@@ -58,6 +70,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of asin
 fn asinh() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.asinh.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of asinh
 
 ---
@@ -69,6 +84,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of asinh
 ```rust
 fn atan() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.atan.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of atan
 
@@ -82,6 +100,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of atan
 fn atan2() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.atan2.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of atan2
 
 ---
@@ -93,6 +114,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of atan2
 ```rust
 fn atanh() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.atanh.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of atanh
 
@@ -106,6 +130,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of atanh
 fn cbrt() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.cbrt.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of cbrt
 
 ---
@@ -117,6 +144,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of cbrt
 ```rust
 fn ceil() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.ceil.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of ceil
 
@@ -130,6 +160,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of ceil
 fn cos() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.cos.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of cos
 
 ---
@@ -141,6 +174,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of cos
 ```rust
 fn cosh() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.cosh.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of cosh
 
@@ -154,6 +190,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of cosh
 fn cot() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.cot.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of cot
 
 ---
@@ -165,6 +204,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of cot
 ```rust
 fn degrees() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.degrees.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of degrees
 
@@ -178,6 +220,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of degrees
 fn exp() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.exp.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of exp
 
 ---
@@ -189,6 +234,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of exp
 ```rust
 fn factorial() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.factorial.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of factorial
 
@@ -202,6 +250,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of factorial
 fn floor() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.floor.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of floor
 
 ---
@@ -213,6 +264,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of floor
 ```rust
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.functions.md).
+
 
 Returns all DataFusion functions defined in this package
 
@@ -226,6 +280,9 @@ Returns all DataFusion functions defined in this package
 fn gcd() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.gcd.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of gcd
 
 ---
@@ -237,6 +294,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of gcd
 ```rust
 fn isnan() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.isnan.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of isnan
 
@@ -250,6 +310,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of isnan
 fn iszero() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.iszero.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of iszero
 
 ---
@@ -261,6 +324,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of iszero
 ```rust
 fn lcm() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.lcm.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of lcm
 
@@ -274,6 +340,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of lcm
 fn ln() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.ln.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of ln
 
 ---
@@ -285,6 +354,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of ln
 ```rust
 fn log() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.log.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of log
 
@@ -298,6 +370,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of log
 fn log10() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.log10.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of log10
 
 ---
@@ -309,6 +384,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of log10
 ```rust
 fn log2() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.log2.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of log2
 
@@ -322,6 +400,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of log2
 fn nanvl() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.nanvl.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of nanvl
 
 ---
@@ -333,6 +414,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of nanvl
 ```rust
 fn pi() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.pi.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of pi
 
@@ -346,6 +430,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of pi
 fn power() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.power.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of power
 
 ---
@@ -357,6 +444,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of power
 ```rust
 fn radians() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.radians.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of radians
 
@@ -370,6 +460,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of radians
 fn random() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.random.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of random
 
 ---
@@ -381,6 +474,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of random
 ```rust
 fn round() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.round.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of round
 
@@ -394,6 +490,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of round
 fn signum() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.signum.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of signum
 
 ---
@@ -405,6 +504,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of signum
 ```rust
 fn sin() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.sin.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of sin
 
@@ -418,6 +520,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of sin
 fn sinh() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.sinh.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of sinh
 
 ---
@@ -429,6 +534,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of sinh
 ```rust
 fn sqrt() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.sqrt.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of sqrt
 
@@ -442,6 +550,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of sqrt
 fn tan() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.tan.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of tan
 
 ---
@@ -454,6 +565,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of tan
 fn tanh() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.tanh.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of tanh
 
 ---
@@ -465,6 +579,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of tanh
 ```rust
 fn trunc() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.trunc.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of trunc
 

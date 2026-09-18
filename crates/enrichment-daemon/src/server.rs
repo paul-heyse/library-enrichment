@@ -20,7 +20,8 @@ use enrichment_core::request::ResearchRequest;
 
 use crate::ops;
 use crate::paths::DaemonPaths;
-use crate::rpc::{self, Request, Response, RpcError, codes};
+use crate::rpc::{self, Request, RpcError, codes};
+type Response = rpc::Response<rpc::Payload>;
 use crate::service::Service;
 use crate::status;
 
@@ -164,9 +165,7 @@ async fn handle_connection(
                         "Send large payloads as content-addressed artifact handles, not inline.",
                     ),
                 );
-                write_half
-                    .write_all(rpc::write_frame(&response).as_bytes())
-                    .await?;
+                write_response(&mut write_half, &service, &response).await?;
                 continue;
             }
             Err(rpc::FrameError::Io(err)) => return Err(err),
@@ -178,9 +177,7 @@ async fn handle_connection(
 
         let dispatched = dispatch(&service, &frame).await;
         if let Some(response) = dispatched.response {
-            write_half
-                .write_all(rpc::write_frame(&response).as_bytes())
-                .await?;
+            write_response(&mut write_half, &service, &response).await?;
         }
         if dispatched.shutdown {
             // Answer first, then stop: the caller needs its acknowledgement.
@@ -192,12 +189,29 @@ async fn handle_connection(
 }
 
 /// What routing one frame produced.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct Dispatched {
     /// The frame to write back, or `None` for a notification.
     pub response: Option<Response>,
     /// Whether the daemon should stop after answering.
     pub shutdown: bool,
+}
+
+async fn write_response(
+    writer: &mut tokio::net::unix::OwnedWriteHalf,
+    service: &Service,
+    response: &Response,
+) -> std::io::Result<()> {
+    let pool = service
+        .repository
+        .runtime
+        .session()
+        .runtime_env()
+        .memory_pool
+        .clone();
+    let frame = rpc::encode_frame(response, &pool)?;
+    writer.write_all(frame.as_str().as_bytes()).await?;
+    writer.write_all(b"\n").await
 }
 
 impl Dispatched {
@@ -263,9 +277,11 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
             // Administrative or invalid protocol input is exact transport provenance, never a
             // semantic research key. Preserve the bytes that actually arrived at the boundary.
             request_digest: enrichment_core::canonical::sha256_hex(frame.as_bytes()),
-            policy_digest: enrichment_core::native_key::Key::OperationPolicy
-                .record(&service.config)
-                .expect("effective native configuration"),
+            policy_digest: enrichment_core::identity::OperationPolicyId::try_from_record(
+                &service.config,
+            )
+            .expect("effective native configuration")
+            .to_string(),
         });
     let correlation = crate::envelope::new_request_id().to_string();
     let owned = service.clone();
@@ -368,7 +384,7 @@ async fn dispatch_request(
         unknown => match ResearchRequest::from_rpc(unknown, request.params) {
             Some(Ok(input)) => {
                 let budget = input.requested_budget();
-                let envelope = dispatch_research(service, input).await;
+                let envelope = dispatch_research(service, input, request.delivery.clone()).await;
                 research_response(
                     service,
                     request.id,
@@ -404,7 +420,7 @@ async fn dispatch_request(
 
     // Measured even for a notification: the work happened, and a counter that quietly skipped
     // it would understate what this process did.
-    let bytes = serde_json::to_vec(&response).map_or(0, |v| v.len());
+    let bytes = enrichment_core::json_output::measure(&response).expect("admitted RPC response");
     service.metrics.record_response(
         &request.method,
         status,
@@ -424,6 +440,7 @@ async fn dispatch_request(
 async fn dispatch_research(
     service: &Service,
     input: ResearchRequest,
+    profile: enrichment_core::mcp_delivery::DeliveryProfile,
 ) -> enrichment_core::wire::Envelope {
     if let Err(error) = enrichment_store::request_admission::research(
         &service.repository.runtime,
@@ -441,7 +458,9 @@ async fn dispatch_research(
         ResearchRequest::Inspect(request) => ops::inspect::inspect(service, request).await,
         ResearchRequest::Compare(request) => ops::compare::compare(service, request).await,
         ResearchRequest::Verify(request) => ops::verify::verify(service, request).await,
-        ResearchRequest::ReadArtifact(request) => ops::artifact::read(service, request).await,
+        ResearchRequest::ReadArtifact(request) => {
+            ops::artifact::read(service, request, profile).await
+        }
         ResearchRequest::Job(request) => ops::verify::control(service, request).await,
         ResearchRequest::ServiceStatus(request) => {
             status::status_envelope(service, request.component.as_deref()).await
@@ -477,20 +496,27 @@ async fn research_response(
     }
     let bounded =
         ops::common::enforce_delivery_budget(service, result, requested, profile.clone()).await;
-    let projected = match &profile {
-        enrichment_core::mcp_delivery::DeliveryProfile::Envelope => serde_json::to_value(&bounded),
-        enrichment_core::mcp_delivery::DeliveryProfile::McpStdio { era, .. } => {
-            enrichment_core::mcp_delivery::project(&bounded, era)
-                .map_err(serde_json::Error::io)
-                .and_then(serde_json::to_value)
-        }
-        enrichment_core::mcp_delivery::DeliveryProfile::McpResourceStdio { era, uri, .. } => {
-            enrichment_core::mcp_delivery::project_resource(&bounded, era, uri)
-                .map_err(serde_json::Error::io)
-                .and_then(serde_json::to_value)
+    let pool = service
+        .repository
+        .runtime
+        .session()
+        .runtime_env()
+        .memory_pool
+        .clone();
+    let mut response = match profile.project(&bounded, &pool) {
+        Ok(projected) => Response::ok(id, projected),
+        Err(error) => {
+            return Response::err(
+                id,
+                RpcError::new(
+                    codes::INTERNAL_ERROR,
+                    format!("response buffer unavailable: {error}"),
+                    "BUDGET_EXCEEDED",
+                    "Retry after native memory pressure has subsided.",
+                ),
+            );
         }
     };
-    let mut response = Response::ok(id, projected.expect("bounded native research projection"));
     response.observation = Some(rpc::ResponseObservation {
         status: bounded.status(),
         has_gap: !bounded.coverage.missing.is_empty(),
@@ -589,12 +615,13 @@ mod tests {
         (dir, service)
     }
 
-    async fn dispatch_str(frame: &str) -> Response {
+    async fn dispatch_str(frame: &str) -> rpc::Response {
         let (_dir, service) = test_service();
-        dispatch(&service, frame)
+        let response = dispatch(&service, frame)
             .await
             .response
-            .expect("this frame expects a response")
+            .expect("this frame expects a response");
+        serde_json::from_slice(&serde_json::to_vec(&response).unwrap()).unwrap()
     }
 
     #[tokio::test]
@@ -800,7 +827,13 @@ mod tests {
     #[tokio::test]
     async fn a_response_frame_is_exactly_one_line() {
         let response = dispatch_str(r#"{"jsonrpc":"2.0","id":1,"method":"service.status"}"#).await;
-        let frame = rpc::write_frame(&response);
+        let pool = Arc::new(datafusion::execution::memory_pool::GreedyMemoryPool::new(
+            1024 * 1024,
+        )) as Arc<dyn datafusion::execution::memory_pool::MemoryPool>;
+        let frame = format!(
+            "{}\n",
+            rpc::encode_frame(&response, &pool).unwrap().as_str()
+        );
         assert_eq!(frame.matches('\n').count(), 1);
         assert!(frame.ends_with('\n'));
     }

@@ -30,7 +30,7 @@ def negative_cases(ok: dict) -> list[tuple[str, dict]]:
     unknown_field = copy.deepcopy(ok)
     unknown_field["unexpected_root_field"] = True
     obsolete_epoch = copy.deepcopy(ok)
-    obsolete_epoch["schema_version"] = "2.0"
+    obsolete_epoch["schema_version"] = "11.0"
     bare_handle = copy.deepcopy(ok)
     bare_handle["artifacts"] = [
         {
@@ -48,6 +48,13 @@ def negative_cases(ok: dict) -> list[tuple[str, dict]]:
     numeric_page["data"]["page"]["returned"] = 1
     missing_page_presence = copy.deepcopy(ok)
     del missing_page_presence["data"]["page"]["next_cursor"]
+    pending = json.loads((EXAMPLES / "pending.fixture.json").read_text())
+    wrong_job = copy.deepcopy(pending)
+    wrong_job["data"]["job_id"] = "job_00112233445566778899AABBCCDDEEFF"
+    wrong_interest = copy.deepcopy(pending)
+    wrong_interest["data"]["interest_token"] = pending["data"]["job_id"]
+    lossy_clock = copy.deepcopy(pending)
+    lossy_clock["data"]["submitted_at"] = "2026-09-16T00:00:00Z"
 
     return [
         ("pending without a job handle", pending_no_job),
@@ -58,6 +65,9 @@ def negative_cases(ok: dict) -> list[tuple[str, dict]]:
         ("continuing page without progress", empty_continuation),
         ("retired numeric page count", numeric_page),
         ("missing page cursor presence", missing_page_presence),
+        ("noncanonical job identity", wrong_job),
+        ("job identity used as caller interest", wrong_interest),
+        ("job clock without canonical precision", lossy_clock),
     ]
 
 

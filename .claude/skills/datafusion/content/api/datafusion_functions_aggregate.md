@@ -12,6 +12,9 @@ Also reachable as `datafusion::functions_aggregate::all_default_aggregate_functi
 fn all_default_aggregate_functions() -> Vec<std::sync::Arc<datafusion_expr::AggregateUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.all_default_aggregate_functions.md).
+
+
 Returns all default aggregate functions
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `datafusion::functions_aggregate::register_all`
 ```rust
 fn register_all(registry: &mut dyn FunctionRegistry) -> datafusion_common::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.register_all.md).
+
 
 Registers all enabled packages with a [`FunctionRegistry`]
 
@@ -40,6 +46,9 @@ Also reachable as `datafusion::functions_aggregate::create_func`
 macro_rules! create_func
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.create_func.md).
+
+
 ---
 
 ## make_udaf_expr
@@ -52,6 +61,9 @@ Also reachable as `datafusion::functions_aggregate::make_udaf_expr`
 macro_rules! make_udaf_expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.make_udaf_expr.md).
+
+
 ---
 
 ## make_udaf_expr_and_func
@@ -63,5 +75,8 @@ Also reachable as `datafusion::functions_aggregate::make_udaf_expr_and_func`
 ```rust
 macro_rules! make_udaf_expr_and_func
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.make_udaf_expr_and_func.md).
+
 
 ---

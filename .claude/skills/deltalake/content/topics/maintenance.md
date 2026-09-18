@@ -6,11 +6,11 @@ Maintenance is what keeps a Delta table fast rather than merely correct. Optimiz
 
 | Type | Kind | Methods | Prose | Records |
 |---|---|---:|---|---|
-| `deltalake_core::operations::optimize::OptimizeBuilder` | struct | 14 | [prose](../api/deltalake_core.operations.optimize.md#optimizebuilder) | [records](../model/deltalake_core.operations.optimize.json) |
-| `deltalake_core::operations::vacuum::VacuumBuilder` | struct | 12 | [prose](../api/deltalake_core.operations.vacuum.md#vacuumbuilder) | [records](../model/deltalake_core.operations.vacuum.json) |
-| `deltalake_core::operations::restore::RestoreBuilder` | struct | 9 | [prose](../api/deltalake_core.operations.restore.md#restorebuilder) | [records](../model/deltalake_core.operations.restore.json) |
-| `deltalake_core::operations::filesystem_check::FileSystemCheckBuilder` | struct | 6 | [prose](../api/deltalake_core.operations.filesystem_check.md#filesystemcheckbuilder) | [records](../model/deltalake_core.operations.filesystem_check.json) |
-| `deltalake_core::operations::generate::GenerateBuilder` | struct | 4 | [prose](../api/deltalake_core.operations.generate.md#generatebuilder) | [records](../model/deltalake_core.operations.generate.json) |
+| `deltalake_core::operations::optimize::OptimizeBuilder` | struct | 12 | [prose](../api/deltalake_core.operations.optimize.md#optimizebuilder) | [records](../model/deltalake_core.operations.optimize.json) |
+| `deltalake_core::operations::vacuum::VacuumBuilder` | struct | 10 | [prose](../api/deltalake_core.operations.vacuum.md#vacuumbuilder) | [records](../model/deltalake_core.operations.vacuum.json) |
+| `deltalake_core::operations::restore::RestoreBuilder` | struct | 7 | [prose](../api/deltalake_core.operations.restore.md#restorebuilder) | [records](../model/deltalake_core.operations.restore.json) |
+| `deltalake_core::operations::filesystem_check::FileSystemCheckBuilder` | struct | 4 | [prose](../api/deltalake_core.operations.filesystem_check.md#filesystemcheckbuilder) | [records](../model/deltalake_core.operations.filesystem_check.json) |
+| `deltalake_core::operations::generate::GenerateBuilder` | struct | 2 | [prose](../api/deltalake_core.operations.generate.md#generatebuilder) | [records](../model/deltalake_core.operations.generate.json) |
 
 ## Runnable examples (4)
 

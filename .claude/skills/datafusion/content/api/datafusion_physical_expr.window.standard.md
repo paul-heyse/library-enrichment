@@ -41,6 +41,9 @@ fn partition_by(&self) -> &[Arc<dyn PhysicalExpr>]
 fn uses_bounded_memory(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.window.standard.StandardWindowExpr.md).
+
+
 A window expr that takes the form of a [`StandardWindowFunctionExpr`].
 
 ---

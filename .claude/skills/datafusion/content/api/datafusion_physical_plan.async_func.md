@@ -44,6 +44,9 @@ fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.async_func.AsyncFuncExec.md).
+
+
 This structure evaluates a set of async expressions on a record
 batch producing a new record batch
 
@@ -74,6 +77,9 @@ fn new(num_input_columns: usize) -> Self
 fn next_column_name(&self) -> String
 fn output_column(&self, idx: usize) -> Arc<dyn PhysicalExpr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.async_func.AsyncMapper.md).
+
 
 Maps async_expressions to new columns
 

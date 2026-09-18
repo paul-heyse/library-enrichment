@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 3 public items · structured records in [`mo
 fn can_interleave<T: Borrow<std::sync::Arc<dyn ExecutionPlan>>>(inputs: impl Iterator<Item = T>) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.union.can_interleave.md).
+
+
 Returns true if all inputs have the same [`Partitioning::Hash`] or [`Partitioning::Range`]
 spec, making them safe to interleave. Two inputs are interleave-compatible when partition
 `k` covers the identical key range or hash bucket across every input.
@@ -67,6 +70,9 @@ fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.union.InterleaveExec.md).
+
 
 Combines multiple input streams by interleaving them.
 
@@ -156,6 +162,9 @@ fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.union.UnionExec.md).
+
 
 `UnionExec`: `UNION ALL` execution plan.
 

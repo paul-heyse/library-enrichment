@@ -10,6 +10,9 @@ Crate `arrow-buffer` · 2 public items · structured records in [`model/arrow_bu
 struct ParseI256Error
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.bigint.ParseI256Error.md).
+
+
 An opaque error similar to [`std::num::ParseIntError`]
 
 ---
@@ -391,6 +394,9 @@ fn is_negative(&self) -> bool
 fn is_positive(&self) -> bool
 fn signum(&self) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.bigint.i256.md).
+
 
 A signed 256-bit integer
 

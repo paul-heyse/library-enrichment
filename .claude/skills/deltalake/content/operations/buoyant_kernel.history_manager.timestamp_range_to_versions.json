@@ -1,0 +1,239 @@
+[
+  {
+    "id": "445a752da0f5d64bcc328691",
+    "path": "buoyant_kernel::history_manager::timestamp_range_to_versions",
+    "name": "timestamp_range_to_versions",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn timestamp_range_to_versions(snapshot: &snapshot::Snapshot, engine: &dyn Engine, start_timestamp: Timestamp, end_timestamp: Option<Timestamp>) -> DeltaResult<(Version, Option<Version>)>",
+    "docs": "Converts a timestamp range to a corresponding version range.\n\nThis function finds the version range that corresponds to the given timestamp range.\nThe returned tuple contains:\n- The first (earliest) version with a timestamp greater than or equal to `start_timestamp`\n- If `end_timestamp` is provided, the version with a timestamp less than or equal to\n  `end_timestamp`.\n\n# Arguments\n* `snapshot` - The snapshot that defines the searchable version range\n* `engine` - The engine used to access version history\n* `start_timestamp` - The lower bound timestamp (inclusive), in milliseconds since Unix epoch\n* `end_timestamp` - The optional upper bound timestamp (inclusive), or `None` to indicate no\n  upper bound\n\n# Returns\nA tuple containing the start version and optional end version (inclusive)\n\n# Errors\nReturns [`LogHistoryError::InvalidTimestampRange`] if `start_timestamp > end_timestamp`.\n\nReturns [`LogHistoryError::TimestampOutOfRange`] if:\n- No version exists at or after `start_timestamp`\n- `end_timestamp` is provided and no version exists at or before it\n\nReturns [`LogHistoryError::EmptyTimestampRange`] if the entire range falls between two commits.\n\n# Examples\n```ignore\nuse delta_kernel::snapshot::Snapshot;\nuse test_utils::delta_kernel_default_engine::DefaultEngine;\nuse delta_kernel::history_manager::timestamp_range_to_versions;\n\nlet engine = DefaultEngine::try_new(...)?;\nlet snapshot = Snapshot::builder_for(table_uri).build(&engine)?;\n\n// Find versions between January 1, 2023 and March 1, 2023\nlet start_timestamp = 1672531200000; // Jan 1, 2023 (milliseconds since epoch)\nlet end_timestamp = 1677628800000;   // Mar 1, 2023 (milliseconds since epoch)\n\nlet (start_version, end_version) =\n    timestamp_range_to_versions(&snapshot, &engine, start_timestamp, Some(end_timestamp))?;\n```",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/history_manager/mod.rs",
+      "begin": [
+        632,
+        1
+      ],
+      "end": [
+        693,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "snapshot",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::snapshot::Snapshot",
+                      "id": 6521,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "engine",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Engine",
+                            "id": 926,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "start_timestamp",
+              {
+                "resolved_path": {
+                  "path": "Timestamp",
+                  "id": 10450,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "end_timestamp",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 23,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Timestamp",
+                              "id": 10450,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "crate::DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": [
+                          {
+                            "resolved_path": {
+                              "path": "crate::Version",
+                              "id": 1650,
+                              "args": null
+                            }
+                          },
+                          {
+                            "resolved_path": {
+                              "path": "Option",
+                              "id": 23,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "crate::Version",
+                                          "id": 1650,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6521": "buoyant_kernel::snapshot::Snapshot",
+      "926": "buoyant_kernel::Engine",
+      "10450": "buoyant_kernel::history_manager::Timestamp",
+      "23": "core::option::Option",
+      "239": "buoyant_kernel::error::DeltaResult",
+      "1650": "buoyant_kernel::Version"
+    },
+    "impl_context": null,
+    "links": {
+      "`LogHistoryError::InvalidTimestampRange`": 10501,
+      "`LogHistoryError::TimestampOutOfRange`": 10509,
+      "`LogHistoryError::EmptyTimestampRange`": 10505
+    },
+    "link_paths": {
+      "`LogHistoryError::InvalidTimestampRange`": "buoyant_kernel::history_manager::error::LogHistoryError::InvalidTimestampRange",
+      "`LogHistoryError::TimestampOutOfRange`": "buoyant_kernel::history_manager::error::LogHistoryError::TimestampOutOfRange",
+      "`LogHistoryError::EmptyTimestampRange`": "buoyant_kernel::history_manager::error::LogHistoryError::EmptyTimestampRange"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "10601",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/history_manager/mod.rs#L632",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "16526",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.history_manager.timestamp_range_to_versions.md",
+    "record_file": "operations/buoyant_kernel.history_manager.timestamp_range_to_versions.json",
+    "anchor": "op-445a752da0f5d64bcc328691",
+    "aliases": [
+      "delta_kernel::history_manager::timestamp_range_to_versions"
+    ],
+    "resolved_doc_links": {
+      "`LogHistoryError::InvalidTimestampRange`": "../operations/buoyant_kernel.history_manager.error.LogHistoryError.md#op-daccd834fdc4daa2e9470543",
+      "`LogHistoryError::TimestampOutOfRange`": "../operations/buoyant_kernel.history_manager.error.LogHistoryError.md#op-d826f69b327b93b6ee4b7767",
+      "`LogHistoryError::EmptyTimestampRange`": "../operations/buoyant_kernel.history_manager.error.LogHistoryError.md#op-02a6d6d959b277e9030bcdab"
+    }
+  }
+]

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## MeteredParquetHandler
 
 `struct` · `buoyant_kernel::metrics::metered_parquet::MeteredParquetHandler`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.metered_parquet.MeteredParquetHandler.md)
 
 Also reachable as `buoyant_kernel::metrics::MeteredParquetHandler`, `delta_kernel::metrics::metered_parquet::MeteredParquetHandler`
 

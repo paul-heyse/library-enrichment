@@ -43,14 +43,8 @@ fn keys(relation: Relation, plan: DataFrame) -> Result<DataFrame> {
         .distinct()
 }
 
-pub(crate) async fn digest(
-    relation: Relation,
-    plan: DataFrame,
-    runtime: &QueryRuntime,
-    max_rows: usize,
-) -> Result<String> {
-    // StringAgg owns ordered multi-partition merging and native accumulator memory accounting.
-    // Fixed-width hexadecimal row digests need no ambiguous delimiter or object reconstruction.
+pub(crate) fn digest_plan(relation: Relation, plan: DataFrame) -> Result<DataFrame> {
+    // One row per relation, retaining the count for native admission before reuse.
     let aggregate = keys(relation, plan)?.aggregate(
         vec![],
         vec![
@@ -61,14 +55,25 @@ pub(crate) async fn digest(
             count(col("semantic_key")).alias("rows"),
         ],
     )?;
-    let frame = aggregate.select(vec![
+    aggregate.select(vec![
         hex_digest(concat(vec![
             lit(format!("enrichment/relation/1/{}/", relation.name())),
             coalesce(vec![col("keys"), lit("")]),
         ]))
         .alias("digest"),
         col("rows"),
-    ])?;
+    ])
+}
+
+pub(crate) async fn digest(
+    relation: Relation,
+    plan: DataFrame,
+    runtime: &QueryRuntime,
+    max_rows: usize,
+) -> Result<String> {
+    // StringAgg owns ordered multi-partition merging and native accumulator memory accounting.
+    // Fixed-width hexadecimal row digests need no ambiguous delimiter or object reconstruction.
+    let frame = digest_plan(relation, plan)?;
     let output = runtime.execute(frame).await?;
     let batch = output
         .batches

@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_any_match`, `datafusion_functions_
 fn array_any_match(array: datafusion_expr::Expr, lambda: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_any_match.array_any_match.md).
+
+
 returns true if any element in the array satisfies the predicate
 
 ---
@@ -23,6 +26,9 @@ returns true if any element in the array satisfies the predicate
 ```rust
 fn array_any_match_higher_order_function() -> std::sync::Arc<datafusion_expr::HigherOrderUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_any_match.array_any_match_higher_order_function.md).
+
 
 HigherOrderFunction that returns a [`HigherOrderUDF`](datafusion_expr::HigherOrderUDF) for 
 ArrayAnyMatch
@@ -59,5 +65,8 @@ fn name(&self) -> &str
 fn return_field_from_args(&self, args: HigherOrderReturnFieldArgs<'_>) -> Result<Arc<Field>>
 fn signature(&self) -> &HigherOrderSignature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_any_match.ArrayAnyMatch.md).
+
 
 ---

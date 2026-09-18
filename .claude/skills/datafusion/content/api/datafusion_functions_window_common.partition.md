@@ -24,6 +24,9 @@ fn is_reversed(&self) -> bool
 fn new(input_exprs: &'a [Arc<dyn PhysicalExpr>], input_fields: &'a [FieldRef], is_reversed: bool, ignore_nulls: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window_common.partition.PartitionEvaluatorArgs.md).
+
+
 Arguments passed to created user-defined window function state
 during physical execution.
 

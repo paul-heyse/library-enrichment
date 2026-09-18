@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::nullif::nullif`, `arrow::compute::nu
 fn nullif(left: &dyn Array, right: &arrow_array::BooleanArray) -> Result<arrow_array::ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.nullif.nullif.md).
+
+
 Returns a new array with the same values and the validity bit to false where
 the corresponding element of `right` is true.
 

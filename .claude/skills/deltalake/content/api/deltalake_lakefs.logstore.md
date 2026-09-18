@@ -5,6 +5,7 @@ Crate `deltalake-lakefs` · 1 public items · structured records in [`model/delt
 ## lakefs_logstore
 
 `function` · `deltalake_lakefs::logstore::lakefs_logstore`
+[Full member contracts, output types and access classification](../operations/deltalake_lakefs.logstore.lakefs_logstore.md)
 
 ```rust
 fn lakefs_logstore(store: deltalake_core::logstore::ObjectStoreRef, root_store: deltalake_core::logstore::ObjectStoreRef, location: &url::Url, options: &StorageConfig) -> deltalake_core::DeltaResult<std::sync::Arc<dyn LogStore>>

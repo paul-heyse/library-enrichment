@@ -1,0 +1,2166 @@
+[
+  {
+    "id": "d9df4726e3133f2ae1d81ca9",
+    "path": "parquet::arrow::async_writer::AsyncArrowWriter",
+    "name": "AsyncArrowWriter",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct AsyncArrowWriter<W>",
+    "docs": "Encodes [`RecordBatch`] to parquet, outputting to an [`AsyncFileWriter`]\n\n## Memory Usage\n\nThis writer eagerly writes data as soon as possible to the underlying [`AsyncFileWriter`],\npermitting fine-grained control over buffering and I/O scheduling. However, the columnar\nnature of parquet forces data for an entire row group to be buffered in memory, before\nit can be flushed. Depending on the data and the configured row group size, this buffering\nmay be substantial.\n\nMemory usage can be limited by calling [`Self::flush`] to flush the in progress row group,\nalthough this will likely increase overall file size and reduce query performance.\nSee [ArrowWriter] for more information.\n\n```no_run\n# use tokio::fs::File;\n# use arrow_array::RecordBatch;\n# use parquet::arrow::AsyncArrowWriter;\n# async fn test() {\nlet mut writer: AsyncArrowWriter<File> = todo!();\nlet batch: RecordBatch = todo!();\nwriter.write(&batch).await.unwrap();\n// Trigger an early flush if buffered size exceeds 1_000_000\nif writer.in_progress_size() > 1_000_000 {\n    writer.flush().await.unwrap()\n}\n# }\n```",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        157,
+        1
+      ],
+      "end": [
+        163,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "W",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          3603,
+          3604,
+          3605,
+          3606,
+          3607,
+          3608,
+          3609,
+          3610,
+          3611,
+          3612,
+          3613,
+          3614,
+          3615,
+          3616,
+          3617
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Self::flush`": 3590,
+      "`AsyncFileWriter`": 3552,
+      "`RecordBatch`": 2524,
+      "ArrowWriter": 3205
+    },
+    "link_paths": {
+      "`Self::flush`": "parquet::arrow::async_writer::AsyncArrowWriter::flush",
+      "`AsyncFileWriter`": "parquet::arrow::async_writer::AsyncFileWriter",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch",
+      "ArrowWriter": "parquet::arrow::arrow_writer::ArrowWriter"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3551",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.AsyncArrowWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.AsyncArrowWriter.json",
+    "anchor": "op-d9df4726e3133f2ae1d81ca9",
+    "aliases": [
+      "parquet::arrow::AsyncArrowWriter"
+    ],
+    "resolved_doc_links": {
+      "`Self::flush`": "../operations/parquet.arrow.async_writer.AsyncArrowWriter.md#op-e33e535332a5dcdf85001c53",
+      "`AsyncFileWriter`": "../operations/parquet.arrow.async_writer.AsyncFileWriter.md#op-d1acaf94f7f04028351c03f9",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "ArrowWriter": "../operations/parquet.arrow.arrow_writer.ArrowWriter.md#op-dc781972049f13083eb8f4f3"
+    }
+  },
+  {
+    "id": "29bc5b3e6ff95a70f3361089",
+    "path": "parquet::arrow::async_writer::AsyncArrowWriter::append_key_value_metadata",
+    "name": "append_key_value_metadata",
+    "owner": "parquet::arrow::async_writer::AsyncArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_key_value_metadata(&mut self, kv_metadata: KeyValue)",
+    "docs": "Append [`KeyValue`] metadata in addition to those in [`WriterProperties`]\n\nThis method allows to append metadata after [`RecordBatch`]es are written.",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        243,
+        5
+      ],
+      "end": [
+        245,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "kv_metadata",
+              {
+                "resolved_path": {
+                  "path": "KeyValue",
+                  "id": 3221,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3221": "parquet::file::metadata::KeyValue"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncArrowWriter",
+          "id": "parquet::arrow::async_writer::AsyncArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileWriter",
+                        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/mod.rs",
+        "begin": [
+          165,
+          1
+        ],
+        "end": [
+          297,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RecordBatch`": 2524,
+      "`KeyValue`": 3221,
+      "`WriterProperties`": 3207
+    },
+    "link_paths": {
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch",
+      "`KeyValue`": "parquet::file::metadata::KeyValue",
+      "`WriterProperties`": "parquet::file::properties::WriterProperties"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3599",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.AsyncArrowWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.AsyncArrowWriter.json",
+    "anchor": "op-29bc5b3e6ff95a70f3361089",
+    "aliases": [
+      "parquet::arrow::AsyncArrowWriter::append_key_value_metadata"
+    ],
+    "resolved_doc_links": {
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "`KeyValue`": "../operations/parquet.file.metadata.KeyValue.md#op-c5f599a409980a2c03049085",
+      "`WriterProperties`": "../operations/parquet.file.properties.WriterProperties.md#op-1a8b0462c7a132d1d5004af2"
+    }
+  },
+  {
+    "id": "abc42fd1981f1aae8594bc34",
+    "path": "parquet::arrow::async_writer::AsyncArrowWriter::bytes_written",
+    "name": "bytes_written",
+    "owner": "parquet::arrow::async_writer::AsyncArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn bytes_written(&self) -> usize",
+    "docs": "Returns the number of bytes written by this instance",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        215,
+        5
+      ],
+      "end": [
+        217,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncArrowWriter",
+          "id": "parquet::arrow::async_writer::AsyncArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileWriter",
+                        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/mod.rs",
+        "begin": [
+          165,
+          1
+        ],
+        "end": [
+          297,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3597",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.AsyncArrowWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.AsyncArrowWriter.json",
+    "anchor": "op-abc42fd1981f1aae8594bc34",
+    "aliases": [
+      "parquet::arrow::AsyncArrowWriter::bytes_written"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5c282b7320072d6623b69960",
+    "path": "parquet::arrow::async_writer::AsyncArrowWriter::close",
+    "name": "close",
+    "owner": "parquet::arrow::async_writer::AsyncArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "async fn close(self) -> Result<ParquetMetaData>",
+    "docs": "Close and finalize the writer.\n\nAll the data in the inner buffer will be force flushed.",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        267,
+        5
+      ],
+      "end": [
+        269,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetMetaData",
+                          "id": 3004,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": true,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3004": "parquet::file::metadata::ParquetMetaData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncArrowWriter",
+          "id": "parquet::arrow::async_writer::AsyncArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileWriter",
+                        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/mod.rs",
+        "begin": [
+          165,
+          1
+        ],
+        "end": [
+          297,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3600",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.AsyncArrowWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.AsyncArrowWriter.json",
+    "anchor": "op-5c282b7320072d6623b69960",
+    "aliases": [
+      "parquet::arrow::AsyncArrowWriter::close"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a8b620f7190f319356ab73a2",
+    "path": "parquet::arrow::async_writer::AsyncArrowWriter::finish",
+    "name": "finish",
+    "owner": "parquet::arrow::async_writer::AsyncArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "async fn finish(&mut self) -> Result<ParquetMetaData>",
+    "docs": "Close and finalize the writer.\n\nAll the data in the inner buffer will be force flushed.\n\nUnlike [`Self::close`] this does not consume self\n\nAttempting to write after calling finish will result in an error",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        254,
+        5
+      ],
+      "end": [
+        262,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetMetaData",
+                          "id": 3004,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": true,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3004": "parquet::file::metadata::ParquetMetaData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncArrowWriter",
+          "id": "parquet::arrow::async_writer::AsyncArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileWriter",
+                        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/mod.rs",
+        "begin": [
+          165,
+          1
+        ],
+        "end": [
+          297,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::close`": 3600
+    },
+    "link_paths": {
+      "`Self::close`": "parquet::arrow::async_writer::AsyncArrowWriter::close"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3601",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.AsyncArrowWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.AsyncArrowWriter.json",
+    "anchor": "op-a8b620f7190f319356ab73a2",
+    "aliases": [
+      "parquet::arrow::AsyncArrowWriter::finish"
+    ],
+    "resolved_doc_links": {
+      "`Self::close`": "../operations/parquet.arrow.async_writer.AsyncArrowWriter.md#op-5c282b7320072d6623b69960"
+    }
+  },
+  {
+    "id": "e33e535332a5dcdf85001c53",
+    "path": "parquet::arrow::async_writer::AsyncArrowWriter::flush",
+    "name": "flush",
+    "owner": "parquet::arrow::async_writer::AsyncArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "async fn flush(&mut self) -> Result<()>",
+    "docs": "Flushes all buffered rows into a new row group",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        233,
+        5
+      ],
+      "end": [
+        238,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": true,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncArrowWriter",
+          "id": "parquet::arrow::async_writer::AsyncArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileWriter",
+                        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/mod.rs",
+        "begin": [
+          165,
+          1
+        ],
+        "end": [
+          297,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3590",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.AsyncArrowWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.AsyncArrowWriter.json",
+    "anchor": "op-e33e535332a5dcdf85001c53",
+    "aliases": [
+      "parquet::arrow::AsyncArrowWriter::flush"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5c25a2377bd885af0d6ba5e4",
+    "path": "parquet::arrow::async_writer::AsyncArrowWriter::flushed_row_groups",
+    "name": "flushed_row_groups",
+    "owner": "parquet::arrow::async_writer::AsyncArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn flushed_row_groups(&self) -> &[RowGroupMetaData]",
+    "docs": "Returns metadata for any flushed row groups",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        191,
+        5
+      ],
+      "end": [
+        193,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "RowGroupMetaData",
+                    "id": 2934,
+                    "args": null
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2934": "parquet::file::metadata::RowGroupMetaData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncArrowWriter",
+          "id": "parquet::arrow::async_writer::AsyncArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileWriter",
+                        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/mod.rs",
+        "begin": [
+          165,
+          1
+        ],
+        "end": [
+          297,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3593",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.AsyncArrowWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.AsyncArrowWriter.json",
+    "anchor": "op-5c25a2377bd885af0d6ba5e4",
+    "aliases": [
+      "parquet::arrow::AsyncArrowWriter::flushed_row_groups"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7bfc3a9ee50bcc5bb38610bf",
+    "path": "parquet::arrow::async_writer::AsyncArrowWriter::in_progress_rows",
+    "name": "in_progress_rows",
+    "owner": "parquet::arrow::async_writer::AsyncArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn in_progress_rows(&self) -> usize",
+    "docs": "Returns the number of rows buffered in the in progress row group",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        210,
+        5
+      ],
+      "end": [
+        212,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncArrowWriter",
+          "id": "parquet::arrow::async_writer::AsyncArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileWriter",
+                        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/mod.rs",
+        "begin": [
+          165,
+          1
+        ],
+        "end": [
+          297,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3596",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.AsyncArrowWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.AsyncArrowWriter.json",
+    "anchor": "op-7bfc3a9ee50bcc5bb38610bf",
+    "aliases": [
+      "parquet::arrow::AsyncArrowWriter::in_progress_rows"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "26a2013e7be3a95588a9e0dc",
+    "path": "parquet::arrow::async_writer::AsyncArrowWriter::in_progress_size",
+    "name": "in_progress_size",
+    "owner": "parquet::arrow::async_writer::AsyncArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn in_progress_size(&self) -> usize",
+    "docs": "Anticipated encoded size of the in progress row group.\n\nSee [ArrowWriter::memory_size] for more information.",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        205,
+        5
+      ],
+      "end": [
+        207,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncArrowWriter",
+          "id": "parquet::arrow::async_writer::AsyncArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileWriter",
+                        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/mod.rs",
+        "begin": [
+          165,
+          1
+        ],
+        "end": [
+          297,
+          2
+        ]
+      }
+    },
+    "links": {
+      "ArrowWriter::memory_size": 3202
+    },
+    "link_paths": {
+      "ArrowWriter::memory_size": "parquet::arrow::arrow_writer::ArrowWriter::memory_size"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3595",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.AsyncArrowWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.AsyncArrowWriter.json",
+    "anchor": "op-26a2013e7be3a95588a9e0dc",
+    "aliases": [
+      "parquet::arrow::AsyncArrowWriter::in_progress_size"
+    ],
+    "resolved_doc_links": {
+      "ArrowWriter::memory_size": "../operations/parquet.arrow.arrow_writer.ArrowWriter.md#op-a9f0f6c5417870b05921e32c"
+    }
+  },
+  {
+    "id": "0ca48a047df2b3f0b24fb11c",
+    "path": "parquet::arrow::async_writer::AsyncArrowWriter::into_inner",
+    "name": "into_inner",
+    "owner": "parquet::arrow::async_writer::AsyncArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_inner(self) -> W",
+    "docs": "Consumes the [`AsyncArrowWriter`] and returns the underlying [`AsyncFileWriter`]\n\n# Notes\n\nThis method does **not** flush or finalize the writer, so buffered data\nwill be lost if you have not called [`Self::finish`].",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        277,
+        5
+      ],
+      "end": [
+        279,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "W"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncArrowWriter",
+          "id": "parquet::arrow::async_writer::AsyncArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileWriter",
+                        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/mod.rs",
+        "begin": [
+          165,
+          1
+        ],
+        "end": [
+          297,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::finish`": 3601,
+      "`AsyncArrowWriter`": 3551,
+      "`AsyncFileWriter`": 3552
+    },
+    "link_paths": {
+      "`Self::finish`": "parquet::arrow::async_writer::AsyncArrowWriter::finish",
+      "`AsyncArrowWriter`": "parquet::arrow::async_writer::AsyncArrowWriter",
+      "`AsyncFileWriter`": "parquet::arrow::async_writer::AsyncFileWriter"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3602",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.AsyncArrowWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.AsyncArrowWriter.json",
+    "anchor": "op-0ca48a047df2b3f0b24fb11c",
+    "aliases": [
+      "parquet::arrow::AsyncArrowWriter::into_inner"
+    ],
+    "resolved_doc_links": {
+      "`Self::finish`": "../operations/parquet.arrow.async_writer.AsyncArrowWriter.md#op-a8b620f7190f319356ab73a2",
+      "`AsyncArrowWriter`": "../operations/parquet.arrow.async_writer.AsyncArrowWriter.md#op-d9df4726e3133f2ae1d81ca9",
+      "`AsyncFileWriter`": "../operations/parquet.arrow.async_writer.AsyncFileWriter.md#op-d1acaf94f7f04028351c03f9"
+    }
+  },
+  {
+    "id": "c1ee28d160f6af47c36ec925",
+    "path": "parquet::arrow::async_writer::AsyncArrowWriter::memory_size",
+    "name": "memory_size",
+    "owner": "parquet::arrow::async_writer::AsyncArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn memory_size(&self) -> usize",
+    "docs": "Estimated memory usage, in bytes, of this `ArrowWriter`\n\nSee [ArrowWriter::memory_size] for more information.",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        198,
+        5
+      ],
+      "end": [
+        200,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncArrowWriter",
+          "id": "parquet::arrow::async_writer::AsyncArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileWriter",
+                        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/mod.rs",
+        "begin": [
+          165,
+          1
+        ],
+        "end": [
+          297,
+          2
+        ]
+      }
+    },
+    "links": {
+      "ArrowWriter::memory_size": 3202
+    },
+    "link_paths": {
+      "ArrowWriter::memory_size": "parquet::arrow::arrow_writer::ArrowWriter::memory_size"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3594",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.AsyncArrowWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.AsyncArrowWriter.json",
+    "anchor": "op-c1ee28d160f6af47c36ec925",
+    "aliases": [
+      "parquet::arrow::AsyncArrowWriter::memory_size"
+    ],
+    "resolved_doc_links": {
+      "ArrowWriter::memory_size": "../operations/parquet.arrow.arrow_writer.ArrowWriter.md#op-a9f0f6c5417870b05921e32c"
+    }
+  },
+  {
+    "id": "fd7548dcb462a9bacb3890b9",
+    "path": "parquet::arrow::async_writer::AsyncArrowWriter::try_new",
+    "name": "try_new",
+    "owner": "parquet::arrow::async_writer::AsyncArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new(writer: W, arrow_schema: SchemaRef, props: Option<WriterProperties>) -> Result<Self>",
+    "docs": "Try to create a new Async Arrow Writer",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        167,
+        5
+      ],
+      "end": [
+        174,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "writer",
+              {
+                "generic": "W"
+              }
+            ],
+            [
+              "arrow_schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 3007,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "props",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 74,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "WriterProperties",
+                              "id": 3207,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3007": "arrow_schema::schema::SchemaRef",
+      "74": "core::option::Option",
+      "3207": "parquet::file::properties::WriterProperties",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncArrowWriter",
+          "id": "parquet::arrow::async_writer::AsyncArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileWriter",
+                        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/mod.rs",
+        "begin": [
+          165,
+          1
+        ],
+        "end": [
+          297,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3591",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.AsyncArrowWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.AsyncArrowWriter.json",
+    "anchor": "op-fd7548dcb462a9bacb3890b9",
+    "aliases": [
+      "parquet::arrow::AsyncArrowWriter::try_new"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a7345afa30be1128dbd9eb09",
+    "path": "parquet::arrow::async_writer::AsyncArrowWriter::try_new_with_options",
+    "name": "try_new_with_options",
+    "owner": "parquet::arrow::async_writer::AsyncArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_with_options(writer: W, arrow_schema: SchemaRef, options: ArrowWriterOptions) -> Result<Self>",
+    "docs": "Try to create a new Async Arrow Writer with [`ArrowWriterOptions`]",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        177,
+        5
+      ],
+      "end": [
+        188,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "writer",
+              {
+                "generic": "W"
+              }
+            ],
+            [
+              "arrow_schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 3007,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "ArrowWriterOptions",
+                  "id": 3208,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3007": "arrow_schema::schema::SchemaRef",
+      "3208": "parquet::arrow::arrow_writer::ArrowWriterOptions",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncArrowWriter",
+          "id": "parquet::arrow::async_writer::AsyncArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileWriter",
+                        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/mod.rs",
+        "begin": [
+          165,
+          1
+        ],
+        "end": [
+          297,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrowWriterOptions`": 3208
+    },
+    "link_paths": {
+      "`ArrowWriterOptions`": "parquet::arrow::arrow_writer::ArrowWriterOptions"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3592",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.AsyncArrowWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.AsyncArrowWriter.json",
+    "anchor": "op-a7345afa30be1128dbd9eb09",
+    "aliases": [
+      "parquet::arrow::AsyncArrowWriter::try_new_with_options"
+    ],
+    "resolved_doc_links": {
+      "`ArrowWriterOptions`": "../operations/parquet.arrow.arrow_writer.ArrowWriterOptions.md#op-74a6b6dbd93b8f0178eea49c"
+    }
+  },
+  {
+    "id": "f09eb8c2ec767c2748d61c7d",
+    "path": "parquet::arrow::async_writer::AsyncArrowWriter::write",
+    "name": "write",
+    "owner": "parquet::arrow::async_writer::AsyncArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "async fn write(&mut self, batch: &RecordBatch) -> Result<()>",
+    "docs": "Enqueues the provided `RecordBatch` to be written\n\nAfter every sync write by the inner [ArrowWriter], the inner buffer will be\nchecked and flush if at least half full",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        223,
+        5
+      ],
+      "end": [
+        230,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "RecordBatch",
+                      "id": 2524,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": true,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2524": "arrow_array::record_batch::RecordBatch",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncArrowWriter",
+          "id": "parquet::arrow::async_writer::AsyncArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileWriter",
+                        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/mod.rs",
+        "begin": [
+          165,
+          1
+        ],
+        "end": [
+          297,
+          2
+        ]
+      }
+    },
+    "links": {
+      "ArrowWriter": 3205
+    },
+    "link_paths": {
+      "ArrowWriter": "parquet::arrow::arrow_writer::ArrowWriter"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3598",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.AsyncArrowWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.AsyncArrowWriter.json",
+    "anchor": "op-f09eb8c2ec767c2748d61c7d",
+    "aliases": [
+      "parquet::arrow::AsyncArrowWriter::write"
+    ],
+    "resolved_doc_links": {
+      "ArrowWriter": "../operations/parquet.arrow.arrow_writer.ArrowWriter.md#op-dc781972049f13083eb8f4f3"
+    }
+  }
+]

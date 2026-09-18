@@ -151,7 +151,7 @@ fn host_key(url: &Url) -> Option<String> {
 /// What an archive may contain before extraction writes anything (§10, gate C11).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArchivePolicy {
-    /// Maximum number of entries.
+    /// Maximum archive records and physical entries, including implicit parent directories.
     pub max_entries: usize,
     /// Maximum total decompressed bytes across all entries.
     pub max_total_bytes: u64,

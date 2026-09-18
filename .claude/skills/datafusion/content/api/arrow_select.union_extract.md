@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::union_extract::union_extract`, `arro
 fn union_extract(union_array: &arrow_array::UnionArray, target: &str) -> Result<arrow_array::ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.union_extract.union_extract.md).
+
+
 Returns the value of the target field when selected, or NULL otherwise.
 ```text
 ┌─────────────────┐                                   ┌─────────────────┐
@@ -72,6 +75,9 @@ Also reachable as `arrow::compute::kernels::union_extract::union_extract_by_id`,
 ```rust
 fn union_extract_by_id(union_array: &arrow_array::UnionArray, target_type_id: i8) -> Result<arrow_array::ArrayRef, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_select.union_extract.union_extract_by_id.md).
+
 
 Like [`union_extract`], but selects the child by `type_id` rather than by
 field name.

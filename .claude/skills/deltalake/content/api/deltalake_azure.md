@@ -5,6 +5,7 @@ Crate `deltalake-azure` · 2 public items · structured records in [`model/delta
 ## register_handlers
 
 `function` · `deltalake_azure::register_handlers`
+[Full member contracts, output types and access classification](../operations/deltalake_azure.register_handlers.md)
 
 Also reachable as `deltalake::azure::register_handlers`
 
@@ -19,6 +20,7 @@ Register an [ObjectStoreFactory] for common Azure [Url] schemes
 ## AzureFactory
 
 `struct` · `deltalake_azure::AzureFactory`
+[Full member contracts, output types and access classification](../operations/deltalake_azure.AzureFactory.md)
 
 Also reachable as `deltalake::azure::AzureFactory`
 

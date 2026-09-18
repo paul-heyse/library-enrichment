@@ -10,6 +10,9 @@ Crate `datafusion-physical-expr-common` · 4 public items · structured records 
 const INITIAL_BUFFER_CAPACITY: usize = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.binary_map.INITIAL_BUFFER_CAPACITY.md).
+
+
 The initial size, in bytes, of the string data
 
 ---
@@ -27,6 +30,9 @@ enum OutputType
 **Variants**: `Utf8`, `Utf8View`, `Binary`, `BinaryView`
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.binary_map.OutputType.md).
+
 
 Should the output be a String or Binary?
 
@@ -54,6 +60,9 @@ fn non_null_len(&self) -> usize
 fn size(&self) -> usize
 fn take(&mut self) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.md).
+
 
 Optimized map for storing Arrow "bytes" types (`String`, `LargeString`,
 `Binary`, and `LargeBinary`) values that can produce the set of keys on
@@ -189,6 +198,9 @@ fn non_null_len(&self) -> usize
 fn size(&self) -> usize
 fn take(&mut self) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.binary_map.ArrowBytesSet.md).
+
 
 HashSet optimized for storing string or binary values that can produce that
 the final set as a GenericStringArray with minimal copies.

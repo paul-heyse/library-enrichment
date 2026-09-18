@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::bool_and`
 fn bool_and(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.bool_and_or.bool_and.md).
+
+
 The values to combine with `AND`
 
 ---
@@ -23,6 +26,9 @@ The values to combine with `AND`
 ```rust
 fn bool_and_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.bool_and_or.bool_and_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`BoolAnd`]
 
@@ -38,6 +44,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::bool_or`
 fn bool_or(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.bool_and_or.bool_or.md).
+
+
 The values to combine with `OR`
 
 ---
@@ -49,6 +58,9 @@ The values to combine with `OR`
 ```rust
 fn bool_or_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.bool_and_or.bool_or_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`BoolOr`]
 
@@ -81,6 +93,9 @@ fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.bool_and_or.BoolAnd.md).
+
+
 BOOL_AND aggregate expression
 
 ---
@@ -111,6 +126,9 @@ fn reverse_expr(&self) -> ReversedUDAF
 fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.bool_and_or.BoolOr.md).
+
 
 BOOL_OR aggregate expression
 

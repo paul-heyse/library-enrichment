@@ -14,6 +14,9 @@ enum RegisterFunction
 
 **Derives**: Clone, Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion.execution.context.RegisterFunction.md).
+
+
 The result of processing a [`CreateFunction`] statement with [`FunctionFactory`].
 
 ---
@@ -36,6 +39,9 @@ struct EmptySerializerRegistry
 fn deserialize_logical_plan(&self, name: &str, _bytes: &[u8]) -> Result<Arc<dyn UserDefinedLogicalNode>>
 fn serialize_logical_plan(&self, node: &dyn UserDefinedLogicalNode) -> Result<Vec<u8>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.execution.context.EmptySerializerRegistry.md).
+
 
 Default implementation of [SerializerRegistry] that throws unimplemented error
 for all requests.
@@ -63,6 +69,9 @@ fn with_allow_ddl(self, allow: bool) -> Self
 fn with_allow_dml(self, allow: bool) -> Self
 fn with_allow_statements(self, allow: bool) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.execution.context.SQLOptions.md).
+
 
 Describes which SQL statements can be run.
 
@@ -193,6 +202,9 @@ fn udfs(&self) -> HashSet<String>
 fn udwf(&self, name: &str) -> Result<Arc<WindowUDF>>
 fn udwfs(&self) -> HashSet<String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.execution.context.SessionContext.md).
+
 
 Main interface for executing queries with DataFusion. Maintains
 the state of the connection between a user and an instance of the
@@ -353,6 +365,9 @@ trait DataFilePaths
 fn to_urls(self) -> Result<Vec<ListingTableUrl>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.execution.context.DataFilePaths.md).
+
+
 DataFilePaths adds a method to convert strings and vector of strings to vector of [`ListingTableUrl`] URLs.
 This allows methods such [`SessionContext::read_csv`] and [`SessionContext::read_avro`]
 to take either a single file or multiple files.
@@ -372,6 +387,9 @@ trait FunctionFactory: Debug + Sync + Send
 ```rust
 async fn create(&self, state: &SessionState, statement: CreateFunction) -> Result<RegisterFunction>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.execution.context.FunctionFactory.md).
+
 
 Interface for handling `CREATE FUNCTION` statements and interacting with
 [SessionState] to create and register functions ([`ScalarUDF`],

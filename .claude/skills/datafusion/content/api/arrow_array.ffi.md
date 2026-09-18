@@ -14,6 +14,9 @@ Also reachable as `arrow::array::export_array_into_raw`, `arrow::ffi::export_arr
 unsafe fn export_array_into_raw(src: array::ArrayRef, out_array: *mut FFI_ArrowArray, out_schema: *mut FFI_ArrowSchema) -> std::result::Result<(), arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.ffi.export_array_into_raw.md).
+
+
 Exports an array to raw pointers of the C Data Interface provided by the consumer.
 # Safety
 Assumes that these pointers represent valid C Data Interfaces, both in memory
@@ -35,6 +38,9 @@ Also reachable as `arrow::ffi::from_ffi`
 unsafe fn from_ffi(array: FFI_ArrowArray, schema: &FFI_ArrowSchema) -> std::result::Result<arrow_data::ArrayData, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.ffi.from_ffi.md).
+
+
 Import [ArrayData] from the C Data Interface
 
 # Safety
@@ -53,6 +59,9 @@ Also reachable as `arrow::ffi::from_ffi_and_data_type`
 unsafe fn from_ffi_and_data_type(array: FFI_ArrowArray, data_type: arrow_schema::DataType) -> std::result::Result<arrow_data::ArrayData, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.ffi.from_ffi_and_data_type.md).
+
+
 Import [ArrayData] from the C Data Interface
 
 # Safety
@@ -70,6 +79,9 @@ Also reachable as `arrow::ffi::to_ffi`
 ```rust
 fn to_ffi(data: &arrow_data::ArrayData) -> std::result::Result<(FFI_ArrowArray, FFI_ArrowSchema), arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.ffi.to_ffi.md).
+
 
 Export to the C Data Interface
 

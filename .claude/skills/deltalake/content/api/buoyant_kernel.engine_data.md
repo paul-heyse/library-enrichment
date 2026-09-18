@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 10 public items · structured records in [`model/buoya
 ## FilteredEngineData
 
 `struct` · `buoyant_kernel::engine_data::FilteredEngineData`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine_data.FilteredEngineData.md)
 
 Also reachable as `buoyant_kernel::FilteredEngineData`, `delta_kernel::engine_data::FilteredEngineData`
 
@@ -51,6 +52,7 @@ Interpreting unselected (`false`) rows will result in incorrect/undefined behavi
 ## ListItem
 
 `struct` · `buoyant_kernel::engine_data::ListItem`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine_data.ListItem.md)
 
 Also reachable as `delta_kernel::engine_data::ListItem`
 
@@ -77,6 +79,7 @@ repeated downcasting.
 ## MapItem
 
 `struct` · `buoyant_kernel::engine_data::MapItem`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine_data.MapItem.md)
 
 Also reachable as `delta_kernel::engine_data::MapItem`
 
@@ -107,6 +110,7 @@ materialize the map using [`MapItem::get`].
 ## RowIndexIterator
 
 `struct` · `buoyant_kernel::engine_data::RowIndexIterator`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine_data.RowIndexIterator.md)
 
 Also reachable as `buoyant_kernel::RowIndexIterator`, `delta_kernel::engine_data::RowIndexIterator`
 
@@ -140,6 +144,7 @@ Constructed internally and passed (alongside the column getters) to
 ## EngineData
 
 `trait` · `buoyant_kernel::engine_data::EngineData`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine_data.EngineData.md)
 
 Also reachable as `buoyant_kernel::EngineData`, `delta_kernel::engine_data::EngineData`
 
@@ -205,6 +210,7 @@ impl EngineData for MyDataType {
 ## FilteredRowVisitor
 
 `trait` · `buoyant_kernel::engine_data::FilteredRowVisitor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine_data.FilteredRowVisitor.md)
 
 Also reachable as `buoyant_kernel::FilteredRowVisitor`, `delta_kernel::engine_data::FilteredRowVisitor`
 
@@ -240,6 +246,7 @@ vector, building the bridge, and calling [`EngineData::visit_rows`].
 ## GetData
 
 `trait` · `buoyant_kernel::engine_data::GetData`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine_data.GetData.md)
 
 Also reachable as `buoyant_kernel::GetData`, `delta_kernel::engine_data::GetData`
 
@@ -289,6 +296,7 @@ for. Therefore, for each "data container" an Engine has, it is only necessary to
 ## RowVisitor
 
 `trait` · `buoyant_kernel::engine_data::RowVisitor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine_data.RowVisitor.md)
 
 Also reachable as `buoyant_kernel::RowVisitor`, `delta_kernel::engine_data::RowVisitor`
 
@@ -338,6 +346,7 @@ not need to worry about this trait.
 ## StringArrayAccessor
 
 `trait` · `buoyant_kernel::engine_data::StringArrayAccessor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine_data.StringArrayAccessor.md)
 
 Also reachable as `delta_kernel::engine_data::StringArrayAccessor`
 
@@ -369,6 +378,7 @@ type once at construction and access elements via virtual dispatch thereafter.
 ## TypedGetData
 
 `trait` · `buoyant_kernel::engine_data::TypedGetData`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine_data.TypedGetData.md)
 
 Also reachable as `delta_kernel::engine_data::TypedGetData`
 

@@ -10,6 +10,9 @@ Crate `datafusion-optimizer` · 2 public items · structured records in [`model/
 fn eliminate_outer(join_type: datafusion_expr::logical_plan::JoinType, left_non_nullable: bool, right_non_nullable: bool) -> datafusion_expr::logical_plan::JoinType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.eliminate_outer_join.eliminate_outer.md).
+
+
 ---
 
 ## EliminateOuterJoin
@@ -38,6 +41,9 @@ fn name(&self) -> &str
 fn rewrite(&self, plan: LogicalPlan, _config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>>
 fn supports_rewrite(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.md).
+
 
 Attempt to simplify outer joins when filters make their null-padded
 rows impossible to observe.

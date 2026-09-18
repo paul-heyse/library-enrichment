@@ -30,6 +30,9 @@ fn decode(&mut self, buf: &[u8]) -> Result<usize, ArrowError>
 fn flush(&mut self) -> Result<Option<RecordBatch>, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_json.file_format.JsonDecoder.md).
+
+
 ---
 
 ## JsonFormat
@@ -69,6 +72,9 @@ fn get_ext_with_compression(&self, file_compression_type: &FileCompressionType) 
 async fn infer_schema(&self, _state: &dyn Session, store: &Arc<dyn ObjectStore>, objects: &[ObjectMeta]) -> Result<SchemaRef>
 async fn infer_stats(&self, _state: &dyn Session, _store: &Arc<dyn ObjectStore>, table_schema: SchemaRef, _object: &ObjectMeta) -> Result<Statistics>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_json.file_format.JsonFormat.md).
+
 
 JSON `FileFormat` implementation supporting both line-delimited and array formats.
 
@@ -129,6 +135,9 @@ fn create(&self, state: &dyn Session, format_options: &HashMap<String, String>) 
 fn default(&self) -> Arc<dyn FileFormat>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_json.file_format.JsonFormatFactory.md).
+
+
 Factory struct used to create [JsonFormat]
 
 ---
@@ -158,6 +167,9 @@ fn new() -> Self
 ```rust
 fn serialize(&self, batch: RecordBatch, _initial: bool) -> Result<Bytes>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_json.file_format.JsonSerializer.md).
+
 
 Define a struct for serializing Json records to a stream
 
@@ -211,6 +223,9 @@ async fn write_all(&self, data: SendableRecordBatchStream, context: &Arc<TaskCon
 ```rust
 fn fmt_as(&self, t: DisplayFormatType, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_json.file_format.JsonSink.md).
+
 
 Implements [`DataSink`] for writing to a Json file.
 

@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::corr`
 fn corr(y: datafusion_expr::Expr, x: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.correlation.corr.md).
+
+
 Correlation between two numeric values.
 
 ---
@@ -23,6 +26,9 @@ Correlation between two numeric values.
 ```rust
 fn corr_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.correlation.corr_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`Correlation`]
 
@@ -59,6 +65,9 @@ fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.correlation.Correlation.md).
+
+
 ---
 
 ## CorrelationAccumulator
@@ -90,6 +99,9 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn supports_retract_batch(&self) -> bool
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.correlation.CorrelationAccumulator.md).
+
 
 An accumulator to compute correlation
 
@@ -123,5 +135,8 @@ fn size(&self) -> usize
 fn state(&mut self, emit_to: EmitTo) -> Result<Vec<ArrayRef>>
 fn update_batch(&mut self, values: &[ArrayRef], group_indices: &[usize], opt_filter: Option<&BooleanArray>, total_num_groups: usize) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.correlation.CorrelationGroupsAccumulator.md).
+
 
 ---

@@ -1,0 +1,20 @@
+# `deltalake::__deltalake_auto_register_opendal`
+
+Full upstream contracts; raw type trees and source locators in [structured records](deltalake.__deltalake_auto_register_opendal.json).
+
+<a id="op-371784c1d024dea7281ee459"></a>
+## __deltalake_auto_register_opendal
+
+`module` · `deltalake::__deltalake_auto_register_opendal` · deltalake 1.0.0+58f07cd6
+
+Access: **internal_module**. Canonical source location is not automatically a valid import path.
+
+```rust
+mod __deltalake_auto_register_opendal
+```
+
+[Exact source](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/deltalake/src/lib.rs#L57).
+
+Source: `crates/deltalake/src/lib.rs:57`. [Exact documentation build](https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184).
+
+No upstream documentation on this item; consult its owner/trait contract.

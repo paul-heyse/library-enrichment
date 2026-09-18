@@ -5,6 +5,7 @@ Crate `deltalake-core` · 4 public items · structured records in [`model/deltal
 ## KernelDataFileReader
 
 `struct` · `deltalake_core::datafile::reader::KernelDataFileReader`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.reader.KernelDataFileReader.md)
 
 Also reachable as `deltalake::datafile::reader::KernelDataFileReader`
 
@@ -29,6 +30,7 @@ File-tier reader backed by `delta-kernel`'s parquet handler (placeholder).
 ## KernelDataReader
 
 `struct` · `deltalake_core::datafile::reader::KernelDataReader`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.reader.KernelDataReader.md)
 
 Also reachable as `deltalake::datafile::reader::KernelDataReader`
 
@@ -56,6 +58,7 @@ values, and column-mapping transforms — the full Delta read semantics.
 ## ParquetFileReader
 
 `struct` · `deltalake_core::datafile::reader::ParquetFileReader`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.reader.ParquetFileReader.md)
 
 Also reachable as `deltalake::datafile::reader::ParquetFileReader`
 
@@ -88,6 +91,7 @@ seam where parquet decryption will later attach, mirroring the write side.
 ## ParquetTableReader
 
 `struct` · `deltalake_core::datafile::reader::ParquetTableReader`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.reader.ParquetTableReader.md)
 
 Also reachable as `deltalake::datafile::reader::ParquetTableReader`
 

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 5 public items · structured records in [`model/buoyan
 ## transform_to_logical
 
 `function` · `buoyant_kernel::scan::state::transform_to_logical`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.state.transform_to_logical.md)
 
 Also reachable as `delta_kernel::scan::state::transform_to_logical`
 
@@ -20,6 +21,7 @@ format
 ## DvInfo
 
 `struct` · `buoyant_kernel::scan::state::DvInfo`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.state.DvInfo.md)
 
 Also reachable as `delta_kernel::scan::state::DvInfo`
 
@@ -52,6 +54,7 @@ this struct can be used by an engine to materialize a selection vector
 ## ScanFile
 
 `struct` · `buoyant_kernel::scan::state::ScanFile`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.state.ScanFile.md)
 
 Also reachable as `delta_kernel::scan::state::ScanFile`
 
@@ -70,6 +73,7 @@ A `ScanFile` represents information about one file that needs to be scanned to r
 ## Stats
 
 `struct` · `buoyant_kernel::scan::state::Stats`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.state.Stats.md)
 
 Also reachable as `delta_kernel::scan::state::Stats`
 
@@ -96,6 +100,7 @@ Give engines an easy way to consume stats
 ## ScanCallback
 
 `type_alias` · `buoyant_kernel::scan::state::ScanCallback`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.scan.state.ScanCallback.md)
 
 Also reachable as `delta_kernel::scan::state::ScanCallback`
 

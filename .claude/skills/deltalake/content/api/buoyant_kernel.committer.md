@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## Committer
 
 `trait` · `buoyant_kernel::committer::Committer`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.committer.Committer.md)
 
 Also reachable as `delta_kernel::committer::Committer`
 

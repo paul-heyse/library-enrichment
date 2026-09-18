@@ -190,18 +190,10 @@ impl History {
         decode(self.select(Selection::Kernel).await?)
     }
     pub(crate) fn failure(&self, diagnostic: enrichment_core::wire::Diagnostic) {
-        match telemetry::Failure::try_from(diagnostic) {
-            Ok(failure) => {
-                let id = failure.correlation_id.clone();
-                self.emit(id.as_deref(), || EventPayload::Failure { value: failure });
-            }
-            Err(error) => {
-                if let Some(h) = &self.0 {
-                    h.dropped.fetch_add(1, Ordering::AcqRel);
-                }
-                eprintln!("diagnostic recovery payload could not be encoded: {error}");
-            }
-        }
+        let id = diagnostic.correlation_id.clone();
+        self.emit(id.as_deref(), || EventPayload::Failure {
+            value: diagnostic,
+        });
     }
     async fn select(&self, selection: Selection) -> Result<Vec<RecordBatch>> {
         let Some(h) = &self.0 else {
@@ -363,8 +355,8 @@ async fn persist(
     runtime_id: &str,
     commit_sequence: i64,
     entries: Vec<Entry>,
-    mut captured: Option<deltalake::DeltaTable>,
-) -> Result<deltalake::DeltaTable> {
+    mut captured: Option<crate::native_delta::LoadedTable>,
+) -> Result<crate::native_delta::LoadedTable> {
     let (events, reservations): (Vec<_>, Vec<_>) = entries
         .into_iter()
         .map(|entry| (entry.event, entry.memory))
@@ -387,7 +379,7 @@ async fn persist(
     drop(events);
     // Keep the capture/encoding reservations through the complete Delta writer.
     let _reservations = reservations;
-    let input = runtime.session().read_batch(batch)?;
+    let input = crate::native_catalog::batch(&runtime.session(), "telemetry_history", batch)?;
     // Producer observations can enter the queue out of allocation order. Delta transaction
     // versions follow this sole writer's commit order, independently of observation sequence.
     for _ in 0..16 {

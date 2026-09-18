@@ -21,15 +21,14 @@ use super::ids::RequestId;
 use super::job::JobHandle;
 use super::research::DeliveryDescriptor;
 
-/// The wire schema version. Currently only `5.0`.
-///
-/// No variant carries a doc comment -- see the module docs in [`super`](crate::wire).
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+crate::native_vocabulary! {
+/// The current wire epoch is declared once. Historical envelopes have no decoder.
+#[derive(Default, Hash)]
 #[schemars(inline)]
 pub enum SchemaVersion {
     #[default]
-    #[serde(rename = "5.0")]
-    V5_0,
+    Current = "12.0",
+}
 }
 
 crate::native_vocabulary! {
@@ -107,6 +106,28 @@ pub struct EnvelopeBody {
     pub delivery: DeliveryDescriptor,
 }
 
+// One field declaration drives the public Rust/schema shape and the borrowed native
+// projection. The private outcome fields retain their checked constructors below.
+macro_rules! envelope_shape {
+    ($source:ident; $(#[$attr:meta])* pub struct Envelope {
+        $($(#[$field_attr:meta])* $visibility:vis $name:ident: $ty:ty => $projection:expr,)*
+    }) => {
+        $(#[$attr])*
+        pub struct Envelope {
+            $($(#[$field_attr])* $visibility $name: $ty,)*
+        }
+        pub(crate) fn write_native(
+            $source: &crate::mcp_delivery::native::NativeEnvelope<'_>,
+            writer: &mut dyn std::io::Write,
+        ) -> std::io::Result<()> {
+            let mut object = crate::mcp_delivery::stream::Object::new(writer)?;
+            $(object.member(stringify!($name), &$projection)?;)*
+            object.finish()
+        }
+    };
+}
+
+envelope_shape! { source;
 /// The response envelope every tool returns.
 ///
 /// `status`, `job` and `error` are private: [`Envelope::new`] and the [`Outcome`] enum are the
@@ -120,31 +141,32 @@ pub struct EnvelopeBody {
     transform = status_conditionals
 )]
 pub struct Envelope {
-    /// Always `5.0` for this contract.
-    pub schema_version: SchemaVersion,
+    /// The epoch selected by the current native envelope declaration.
+    pub schema_version: SchemaVersion => source.schema_version(),
     /// Opaque per-request identifier.
-    pub request_id: RequestId,
-    status: Status,
+    pub request_id: RequestId => source.request_value(),
+    status: Status => source.outcome()?.child("status")?.required()?,
     /// One-line account of what this result establishes.
-    pub summary: String,
+    pub summary: String => source.header()?.child("summary")?.value(),
     /// The research context, or `null`.
-    pub context_id: Option<crate::identity::ContextId>,
+    pub context_id: Option<crate::identity::ContextId> => source.header()?.child("context_id")?.value(),
     /// The snapshot read, or `null`.
-    pub snapshot_id: Option<crate::identity::SnapshotId>,
+    pub snapshot_id: Option<crate::identity::SnapshotId> => source.header()?.child("snapshot_id")?.value(),
     /// Tool-specific payload.
-    pub data: ToolData,
+    pub data: ToolData => source.result().child("data")?.value(),
     /// What was looked at, and what was not.
-    pub coverage: Coverage,
+    pub coverage: Coverage => source.header()?.child("coverage")?.value(),
     /// Registry freshness.
-    pub freshness: Freshness,
+    pub freshness: Freshness => source.header()?.child("freshness")?.value(),
     /// Supporting facts with provenance.
-    pub evidence: Vec<Evidence>,
+    pub evidence: Vec<Evidence> => source.result().child("evidence")?.value(),
     /// Bounded artifacts available for reading.
-    pub artifacts: Vec<ArtifactHandle>,
+    pub artifacts: Vec<ArtifactHandle> => source.result().child("artifacts")?.value(),
     /// Result-bounding accounting.
-    pub delivery: DeliveryDescriptor,
-    job: Option<JobHandle>,
-    error: Option<ErrorDetail>,
+    pub delivery: DeliveryDescriptor => source.result().child("delivery")?.value(),
+    job: Option<JobHandle> => source.outcome_member("job")?,
+    error: Option<ErrorDetail> => source.outcome_member("error")?,
+}
 }
 
 impl Envelope {
@@ -158,7 +180,7 @@ impl Envelope {
             Outcome::Error { job, error } => (job, Some(error)),
         };
         Self {
-            schema_version: SchemaVersion::V5_0,
+            schema_version: SchemaVersion::Current,
             request_id: body.request_id,
             status,
             summary: body.summary,
@@ -329,10 +351,10 @@ impl TryFrom<RawEnvelope> for Envelope {
 
     fn try_from(raw: RawEnvelope) -> Result<Self, EnvelopeError> {
         // `schema_version` is enforced by its type: `SchemaVersion` has exactly one variant, so
-        // deserializing anything but "5.0" already fails. This irrefutable pattern consumes it
+        // deserializing any other epoch already fails. This irrefutable pattern consumes it
         // and doubles as a tripwire -- adding a second variant makes this line stop compiling,
         // forcing a deliberate decision about accepting an older document.
-        let SchemaVersion::V5_0 = raw.schema_version;
+        let SchemaVersion::Current = raw.schema_version;
         if matches!(raw.delivery, DeliveryDescriptor::Artifact { .. }) {
             if !raw.data.is_empty() {
                 return Err(EnvelopeError::ArtifactWithData);
@@ -506,7 +528,7 @@ mod tests {
 
     fn raw_envelope(status: Status, has_job: bool, has_error: bool) -> RawEnvelope {
         RawEnvelope {
-            schema_version: SchemaVersion::V5_0,
+            schema_version: SchemaVersion::Current,
             request_id: RequestId::try_from("req_matrix".to_owned()).expect("non-empty"),
             status,
             summary: String::new(),
@@ -530,7 +552,10 @@ mod tests {
             artifacts: Vec::new(),
             delivery: DeliveryDescriptor::default(),
             job: has_job.then(|| JobHandle {
-                job_id: "job_matrix".to_owned(),
+                job_id: "job_00112233445566778899aabbccddeeff"
+                    .to_owned()
+                    .try_into()
+                    .unwrap(),
                 state: super::super::job::JobState::Queued,
                 stage: "probe".to_owned(),
                 poll_after_ms: 1000,

@@ -29,6 +29,9 @@ fn new_with_ffi_codec(provider: Arc<dyn SchemaProvider>, runtime: Option<Handle>
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.schema_provider.FFI_SchemaProvider.md).
+
+
 A stable struct for sharing [`SchemaProvider`] across FFI boundaries.
 
 ---
@@ -55,6 +58,9 @@ async fn table(&self, name: &str) -> Result<Option<Arc<dyn TableProvider>>, Data
 fn table_exist(&self, name: &str) -> bool
 fn table_names(&self) -> Vec<String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.schema_provider.ForeignSchemaProvider.md).
+
 
 This wrapper struct exists on the receiver side of the FFI interface, so it has
 no guarantees about being able to access the data in `private_data`. Any functions

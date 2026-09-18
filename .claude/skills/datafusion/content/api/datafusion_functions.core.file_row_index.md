@@ -31,6 +31,9 @@ fn return_type(&self, args: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.file_row_index.FileRowIndexFunc.md).
+
+
 Scalar UDF implementation for `file_row_index()`.
 
 File sources that can expose per-file row indexes rewrite this placeholder

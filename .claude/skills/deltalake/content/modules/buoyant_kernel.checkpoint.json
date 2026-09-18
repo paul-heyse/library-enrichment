@@ -1,0 +1,123 @@
+[
+  {
+    "id": "00431814b37f77a78d019358",
+    "path": "buoyant_kernel::checkpoint",
+    "name": "checkpoint",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "module",
+    "signature": "mod checkpoint",
+    "docs": "This module implements the API for **customized** Delta checkpoint writes, where the\ncaller drives the write themselves. The entry point is [`Snapshot::create_checkpoint_writer`].\n\nIf you want an all-in-one API that handles writing the checkpoint, use\n[`Snapshot::checkpoint`] instead.\n\n## Checkpoint Types and Selection Logic\nThis API supports two checkpoint types, selected based on table features:\n\n| Table Feature    | Resulting Checkpoint Type                   | Description                                                                                                             |\n|------------------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|\n| No v2Checkpoints | Single-file Classic-named V1                | Follows V1 specification without [`CheckpointMetadata`] action                                                          |\n| v2Checkpoints    | Classic-named V2 (with or without sidecars) | Follows V2 specification with [`CheckpointMetadata`] action while maintaining backward compatibility via classic naming |\n\nFor more information on the V1/V2 specifications, see the following protocol section:\n<https://github.com/delta-io/delta/blob/master/PROTOCOL.md#checkpoint-specs>\n\n## Architecture\n\n- [`CheckpointWriter`] - Core component that manages the checkpoint creation workflow\n- [`ActionReconciliationIterator`] - Iterator over the checkpoint data to be written\n\n## Usage\n\nThe following steps outline the process of creating a checkpoint:\n\n1. Create a [`CheckpointWriter`] using [`Snapshot::create_checkpoint_writer`]\n2. Get the checkpoint path from [`CheckpointWriter::checkpoint_path`]\n3. Get the checkpoint data from [`CheckpointWriter::checkpoint_data`]\n4. Write the data to the path in object storage (engine-specific)\n5. Collect metadata ([`FileMeta`]) from the write operation\n6. Build a [`LastCheckpointHintStats`] from the exhausted iterator state\n7. Pass the [`LastCheckpointHintStats`] to [`CheckpointWriter::finalize`]\n\n```no_run\n# use std::sync::Arc;\n# use buoyant_kernel as delta_kernel;\n# use delta_kernel::ActionReconciliationIterator;\n# use delta_kernel::checkpoint::CheckpointWriter;\n# use delta_kernel::Engine;\n# use delta_kernel::Snapshot;\n# use delta_kernel::SnapshotRef;\n# use delta_kernel::DeltaResult;\n# use delta_kernel::Error;\n# use delta_kernel::FileMeta;\n# use url::Url;\nfn write_checkpoint_file(path: Url, data: ActionReconciliationIterator) -> DeltaResult<FileMeta> {\n    todo!() /* engine-specific logic to write data to object storage*/\n}\n\nlet engine: &dyn Engine = todo!(); /* create engine instance */\n\n// Create a snapshot for the table at the version you want to checkpoint\nlet url = delta_kernel::try_parse_uri(\"./tests/data/app-txn-no-checkpoint\")?;\nlet snapshot = Snapshot::builder_for(url).build(engine)?;\n\n// Create a checkpoint writer from the snapshot\nlet writer = snapshot.create_checkpoint_writer(engine)?;\n\n// Get the checkpoint path and data\nlet checkpoint_path = writer.checkpoint_path()?;\nlet checkpoint_data = writer.checkpoint_data(engine)?;\n\n// Get the iterator state before consuming the data\nlet state = checkpoint_data.state();\n\n// Write the checkpoint data to the object store and collect metadata\n// The write function consumes the iterator, dropping its Arc reference to the state.\nlet metadata: FileMeta = write_checkpoint_file(checkpoint_path, checkpoint_data)?;\n/* IMPORTANT: All data must be written before finalizing the checkpoint */\n\n// Build the [`LastCheckpointHintStats`] from the exhausted iterator state\nlet state = std::sync::Arc::into_inner(state)\n    .ok_or(Error::internal_error(\"checkpoint state Arc still has other references\"))?;\nlet last_checkpoint_stats =\n    delta_kernel::checkpoint::LastCheckpointHintStats::from_reconciliation_state(\n        state,\n        metadata.size,\n        0, /* num_sidecars */\n    )?;\n\n// Finalize the checkpoint by passing the stats\nwriter.finalize(engine, &last_checkpoint_stats)?;\n\n# Ok::<_, Error>(())\n```\n\n## Warning\nMulti-part (V1) checkpoints are DEPRECATED and UNSAFE.\n\n## Note\nWe currently do not plan to support UUID-named V2 checkpoints, since S3's put-if-absent\nsemantics remove the need for UUIDs to ensure uniqueness. Supporting only classic-named\ncheckpoints avoids added complexity, such as coordinating naming decisions between kernel and\nengine, and handling coexistence with legacy V1 checkpoints. If a compelling use case arises\nin the future, we can revisit this decision.\n\n[`CheckpointMetadata`]: crate::actions::CheckpointMetadata\n[`FileMeta`]: crate::FileMeta\n[`LastCheckpointHint`]: crate::last_checkpoint_hint::LastCheckpointHint\n[`Snapshot::checkpoint`]: crate::Snapshot::checkpoint\n[`Snapshot::create_checkpoint_writer`]: crate::Snapshot::create_checkpoint_writer",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/checkpoint/mod.rs",
+      "begin": [
+        1,
+        1
+      ],
+      "end": [
+        848,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          1437,
+          1470,
+          1476,
+          1473,
+          1544
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "crate::actions::CheckpointMetadata": 1318,
+      "`CheckpointWriter`": 1544,
+      "`LastCheckpointHintStats`": 1437,
+      "crate::Snapshot::create_checkpoint_writer": 1582,
+      "`CheckpointWriter::checkpoint_path`": 1546,
+      "`CheckpointWriter::checkpoint_data`": 1547,
+      "crate::Snapshot::checkpoint": 1436,
+      "`CheckpointWriter::finalize`": 1433,
+      "`ActionReconciliationIterator`": 112,
+      "crate::FileMeta": 1583,
+      "crate::last_checkpoint_hint::LastCheckpointHint": 1434
+    },
+    "link_paths": {
+      "crate::actions::CheckpointMetadata": "buoyant_kernel::actions::CheckpointMetadata",
+      "`CheckpointWriter`": "buoyant_kernel::checkpoint::CheckpointWriter",
+      "`LastCheckpointHintStats`": "buoyant_kernel::checkpoint::LastCheckpointHintStats",
+      "crate::Snapshot::create_checkpoint_writer": "buoyant_kernel::snapshot::Snapshot::create_checkpoint_writer",
+      "`CheckpointWriter::checkpoint_path`": "buoyant_kernel::checkpoint::CheckpointWriter::checkpoint_path",
+      "`CheckpointWriter::checkpoint_data`": "buoyant_kernel::checkpoint::CheckpointWriter::checkpoint_data",
+      "crate::Snapshot::checkpoint": "buoyant_kernel::snapshot::Snapshot::checkpoint",
+      "`CheckpointWriter::finalize`": "buoyant_kernel::checkpoint::CheckpointWriter::finalize",
+      "`ActionReconciliationIterator`": "buoyant_kernel::action_reconciliation::log_replay::ActionReconciliationIterator",
+      "crate::FileMeta": "buoyant_kernel::FileMeta",
+      "crate::last_checkpoint_hint::LastCheckpointHint": "buoyant_kernel::last_checkpoint_hint::LastCheckpointHint"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "1545",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/checkpoint/mod.rs#L1",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "1890",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "modules/buoyant_kernel.checkpoint.md",
+    "record_file": "modules/buoyant_kernel.checkpoint.json",
+    "anchor": "op-00431814b37f77a78d019358",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::actions::CheckpointMetadata": "../operations/buoyant_kernel.actions.CheckpointMetadata.md#op-9bba21f6cfd5be377c2c70ef",
+      "`CheckpointWriter`": "../operations/buoyant_kernel.checkpoint.CheckpointWriter.md#op-a939c219c148fee02b6e7899",
+      "`LastCheckpointHintStats`": "../operations/buoyant_kernel.checkpoint.LastCheckpointHintStats.md#op-c0d681511b8dfe300769514f",
+      "crate::Snapshot::create_checkpoint_writer": "../operations/buoyant_kernel.snapshot.Snapshot.md#op-096e4c0dfe996afe80e5a73f",
+      "`CheckpointWriter::checkpoint_path`": "../operations/buoyant_kernel.checkpoint.CheckpointWriter.md#op-0826bd673b994a7fe038b8f4",
+      "`CheckpointWriter::checkpoint_data`": "../operations/buoyant_kernel.checkpoint.CheckpointWriter.md#op-45760f00db3731fb219db989",
+      "crate::Snapshot::checkpoint": "../operations/buoyant_kernel.snapshot.Snapshot.md#op-0ef8437dc52b7daa4e09715e",
+      "`CheckpointWriter::finalize`": "../operations/buoyant_kernel.checkpoint.CheckpointWriter.md#op-ef0e358abb0e1bd2b521211e",
+      "`ActionReconciliationIterator`": "../operations/buoyant_kernel.action_reconciliation.log_replay.ActionReconciliationIterator.md#op-e9d4036b573b4f1725f0c862",
+      "crate::FileMeta": "../operations/buoyant_kernel.FileMeta.md#op-4f91686d2ae38bd425051a59",
+      "crate::last_checkpoint_hint::LastCheckpointHint": "../operations/buoyant_kernel.last_checkpoint_hint.LastCheckpointHint.md#op-cc49bf8c5ed0b8b91d681ef0"
+    }
+  }
+]

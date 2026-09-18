@@ -49,6 +49,9 @@ fn len(&self) -> usize
 fn extend<T: IntoIterator<Item = Option<V>>>(&mut self, iter: T)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_list_view_builder.GenericListViewBuilder.md).
+
+
 Builder for [`GenericListViewArray`]
 
 ---

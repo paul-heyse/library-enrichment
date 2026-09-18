@@ -31,6 +31,9 @@ fn try_from(value: [u8; 8]) -> Result<Self>
 fn try_from(value: &[u8]) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.footer_tail.FooterTail.md).
+
+
 Parsed Parquet footer tail (last 8 bytes of a Parquet file)
 
 There are 8 bytes at the end of the Parquet footer with the following layout:

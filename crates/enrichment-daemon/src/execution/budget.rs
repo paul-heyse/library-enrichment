@@ -5,12 +5,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use enrichment_core::identity::StorageReservationId;
 use enrichment_store::physical_ownership::{OwnershipStore, StorageReservation};
 pub struct Reservation {
     pub root: PathBuf,
-    id: String,
+    id: StorageReservationId,
     store: OwnershipStore,
-    closed: bool,
+    release_slot: Option<enrichment_store::physical_ownership::ReleaseSlot>,
 }
 
 /// A host preparation allocation. All first-party extraction/writes use its remaining bound.
@@ -93,16 +94,16 @@ fn bytes(path: &Path) -> io::Result<u64> {
 
 impl Reservation {
     pub async fn acquire(store: &OwnershipStore, requested: u64, budget: u64) -> io::Result<Self> {
+        let release_slot = store.reserve_release().map_err(io::Error::other)?;
         let cache = PathBuf::from(store.cache());
-        let id = uuid::Uuid::new_v4().simple().to_string();
-        let root = cache.join("handoff").join(&id);
+        let id = StorageReservationId::new();
+        let root = cache.join("handoff").join(id.component());
         let capture = cache.clone();
         store
             .reserve_storage(
                 StorageReservation {
-                    reservation_id: id.clone(),
+                    reservation_id: id,
                     cache: store.cache().into(),
-                    quarantine: super::path_text(&root)?,
                     bytes: requested,
                     released: false,
                     sequence: 0,
@@ -123,7 +124,7 @@ impl Reservation {
             root,
             id,
             store: store.clone(),
-            closed: false,
+            release_slot: Some(release_slot),
         })
     }
     fn remove(&self) -> io::Result<()> {
@@ -140,11 +141,11 @@ impl Reservation {
 }
 impl Drop for Reservation {
     fn drop(&mut self) {
-        if self.closed {
+        let Some(slot) = self.release_slot.take() else {
             return;
-        }
+        };
         match self.remove() {
-            Ok(()) => self.store.release_after_removal(self.id.clone()),
+            Ok(()) => self.store.release_after_removal(self.id, slot),
             Err(error) => {
                 eprintln!("library-enrichmentd: retained quarantine reservation: {error}")
             }
@@ -167,7 +168,15 @@ pub(crate) async fn recover_orphans(store: &OwnershipStore) -> io::Result<()> {
             }
             let entry = entry?;
             super::inventory::capture(&entry.path(), u64::MAX)?;
-            captured.push(super::path_text(&entry.path())?);
+            captured.push(
+                StorageReservationId::from_component(
+                    entry
+                        .file_name()
+                        .to_str()
+                        .ok_or_else(|| io::Error::other("quarantine component is not UTF-8"))?,
+                )
+                .map_err(io::Error::other)?,
+            );
         }
     }
     for root in store
@@ -175,7 +184,7 @@ pub(crate) async fn recover_orphans(store: &OwnershipStore) -> io::Result<()> {
         .await
         .map_err(io::Error::other)?
     {
-        match fs::remove_dir_all(root) {
+        match fs::remove_dir_all(handoff.join(root.component())) {
             Ok(()) => {}
             Err(error) if error.kind() == io::ErrorKind::NotFound => {}
             Err(error) => return Err(error),
@@ -206,7 +215,10 @@ mod tests {
         std::mem::forget(first);
         recover_orphans(&store).await.unwrap();
         let next = Reservation::acquire(&store, 16, 16).await.unwrap();
-        next.close().await.unwrap();
+        let quarantine = next.root.clone();
+        drop(next);
+        store.runtime().close_diagnostics().await.unwrap();
+        assert!(!quarantine.exists());
     }
     #[tokio::test]
     async fn preparation_refuses_writes_beyond_its_reserved_bound() {

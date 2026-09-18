@@ -12,6 +12,9 @@ Also reachable as `datafusion::arrow::ARROW_VERSION`, `datafusion_common::arrow:
 const ARROW_VERSION: &str = "59.3.0"
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.ARROW_VERSION.md).
+
+
 Arrow crate version
 
 ---

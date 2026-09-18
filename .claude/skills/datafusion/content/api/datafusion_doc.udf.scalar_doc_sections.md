@@ -12,6 +12,9 @@ Also reachable as `datafusion_doc::scalar_doc_sections::DOC_SECTION_ARRAY`, `dat
 const DOC_SECTION_ARRAY: DocSection = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udf.scalar_doc_sections.DOC_SECTION_ARRAY.md).
+
+
 ---
 
 ## DOC_SECTION_BINARY_STRING
@@ -23,6 +26,9 @@ Also reachable as `datafusion_doc::scalar_doc_sections::DOC_SECTION_BINARY_STRIN
 ```rust
 const DOC_SECTION_BINARY_STRING: DocSection = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udf.scalar_doc_sections.DOC_SECTION_BINARY_STRING.md).
+
 
 ---
 
@@ -36,6 +42,9 @@ Also reachable as `datafusion_doc::scalar_doc_sections::DOC_SECTION_CONDITIONAL`
 const DOC_SECTION_CONDITIONAL: DocSection = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udf.scalar_doc_sections.DOC_SECTION_CONDITIONAL.md).
+
+
 ---
 
 ## DOC_SECTION_DATETIME
@@ -47,6 +56,9 @@ Also reachable as `datafusion_doc::scalar_doc_sections::DOC_SECTION_DATETIME`, `
 ```rust
 const DOC_SECTION_DATETIME: DocSection = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udf.scalar_doc_sections.DOC_SECTION_DATETIME.md).
+
 
 ---
 
@@ -60,6 +72,9 @@ Also reachable as `datafusion_doc::scalar_doc_sections::DOC_SECTION_HASHING`, `d
 const DOC_SECTION_HASHING: DocSection = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udf.scalar_doc_sections.DOC_SECTION_HASHING.md).
+
+
 ---
 
 ## DOC_SECTION_MAP
@@ -71,6 +86,9 @@ Also reachable as `datafusion_doc::scalar_doc_sections::DOC_SECTION_MAP`, `dataf
 ```rust
 const DOC_SECTION_MAP: DocSection = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udf.scalar_doc_sections.DOC_SECTION_MAP.md).
+
 
 ---
 
@@ -84,6 +102,9 @@ Also reachable as `datafusion_doc::scalar_doc_sections::DOC_SECTION_MATH`, `data
 const DOC_SECTION_MATH: DocSection = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udf.scalar_doc_sections.DOC_SECTION_MATH.md).
+
+
 ---
 
 ## DOC_SECTION_OTHER
@@ -95,6 +116,9 @@ Also reachable as `datafusion_doc::scalar_doc_sections::DOC_SECTION_OTHER`, `dat
 ```rust
 const DOC_SECTION_OTHER: DocSection = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udf.scalar_doc_sections.DOC_SECTION_OTHER.md).
+
 
 ---
 
@@ -108,6 +132,9 @@ Also reachable as `datafusion_doc::scalar_doc_sections::DOC_SECTION_REGEX`, `dat
 const DOC_SECTION_REGEX: DocSection = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udf.scalar_doc_sections.DOC_SECTION_REGEX.md).
+
+
 ---
 
 ## DOC_SECTION_STRING
@@ -119,6 +146,9 @@ Also reachable as `datafusion_doc::scalar_doc_sections::DOC_SECTION_STRING`, `da
 ```rust
 const DOC_SECTION_STRING: DocSection = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udf.scalar_doc_sections.DOC_SECTION_STRING.md).
+
 
 ---
 
@@ -132,6 +162,9 @@ Also reachable as `datafusion_doc::scalar_doc_sections::DOC_SECTION_STRUCT`, `da
 const DOC_SECTION_STRUCT: DocSection = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udf.scalar_doc_sections.DOC_SECTION_STRUCT.md).
+
+
 ---
 
 ## DOC_SECTION_UNION
@@ -143,6 +176,9 @@ Also reachable as `datafusion_doc::scalar_doc_sections::DOC_SECTION_UNION`, `dat
 ```rust
 const DOC_SECTION_UNION: DocSection = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udf.scalar_doc_sections.DOC_SECTION_UNION.md).
+
 
 ---
 
@@ -156,6 +192,9 @@ Also reachable as `datafusion_doc::scalar_doc_sections::doc_sections`, `datafusi
 fn doc_sections() -> Vec<DocSection>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udf.scalar_doc_sections.doc_sections.md).
+
+
 ---
 
 ## doc_sections_const
@@ -167,5 +206,8 @@ Also reachable as `datafusion_doc::scalar_doc_sections::doc_sections_const`, `da
 ```rust
 const fn doc_sections_const() -> &'static [DocSection]
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udf.scalar_doc_sections.doc_sections_const.md).
+
 
 ---

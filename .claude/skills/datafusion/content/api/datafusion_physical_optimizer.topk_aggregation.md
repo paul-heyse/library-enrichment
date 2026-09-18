@@ -28,6 +28,9 @@ fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> Resu
 fn schema_check(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.topk_aggregation.TopKAggregation.md).
+
+
 An optimizer rule that passes a `limit` hint to aggregations if the whole result is not needed
 
 ---

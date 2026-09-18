@@ -1,0 +1,163 @@
+
+running 0 tests
+
+successes:
+
+successes:
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+successes:
+
+successes:
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 7 tests
+test batch_construction_checks_top_level_nullability ... ok
+test cast_safe_true_nulls_failed_parses_but_false_errors ... ok
+test empty_schema_exposes_different_batch_selection_contracts ... ok
+test filter_null_is_not_selected_and_metadata_is_retained ... ok
+test row_decode_hydrates_dictionary_and_preserves_values ... ok
+test row_order_changes_with_null_placement ... ok
+test take_preserves_requested_order_duplicates_and_null_indices ... ok
+
+successes:
+
+successes:
+    batch_construction_checks_top_level_nullability
+    cast_safe_true_nulls_failed_parses_but_false_errors
+    empty_schema_exposes_different_batch_selection_contracts
+    filter_null_is_not_selected_and_metadata_is_retained
+    row_decode_hydrates_dictionary_and_preserves_values
+    row_order_changes_with_null_placement
+    take_preserves_requested_order_duplicates_and_null_indices
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+test coalesce_uses_planning_and_preserves_nonnull_fallback ... ok
+test expressions_require_coercion_before_direct_simplification ... ok
+test joins_sets_and_window_frames_have_distinct_cardinality ... ok
+test parquet_listing_source_executes_query ... ok
+test provider_exact_inexact_projection_limit_match_reference ... ok
+test stream_collect_cache_and_sort_resource_error ... ok
+
+successes:
+
+---- coalesce_uses_planning_and_preserves_nonnull_fallback stdout ----
+coalesce optimized plan: Projection: CASE WHEN t.b IS NOT NULL THEN t.b ELSE t.a END AS c
+  TableScan: t projection=[a, b]
+
+---- expressions_require_coercion_before_direct_simplification stdout ----
+uncoerced simplification: BinaryExpr(BinaryExpr { left: Literal(Int32(1), None), op: Plus, right: Literal(Int64(2), None) })
+
+---- joins_sets_and_window_frames_have_distinct_cardinality stdout ----
+window frame control: [RecordBatch { schema: Schema { fields: [Field { name: "x", data_type: Int64 }, Field { name: "peers", data_type: Int64 }, Field { name: "explicit_rows", data_type: Int64 }], metadata: {} }, columns: [PrimitiveArray<Int64>
+[
+  1,
+  1,
+], PrimitiveArray<Int64>
+[
+  2,
+  2,
+], PrimitiveArray<Int64>
+[
+  1,
+  2,
+]], row_count: 2 }, RecordBatch { schema: Schema { fields: [Field { name: "x", data_type: Int64 }, Field { name: "peers", data_type: Int64 }, Field { name: "explicit_rows", data_type: Int64 }], metadata: {} }, columns: [PrimitiveArray<Int64>
+[
+  2,
+], PrimitiveArray<Int64>
+[
+  3,
+], PrimitiveArray<Int64>
+[
+  3,
+]], row_count: 1 }]
+
+---- parquet_listing_source_executes_query stdout ----
+listing plan: SortPreservingMergeExec: [a@0 ASC NULLS LAST]
+  SortExec: expr=[a@0 ASC NULLS LAST], preserve_partitioning=[true]
+    FilterExec: b@1 > 5, projection=[a@0]
+      RepartitionExec: partitioning=RoundRobinBatch(32), input_partitions=1
+        DataSourceExec: file_groups={1 group: [[home/paul/library-enrichment/.claude/skills/datafusion/skill_improvement/evidence/implementation/probes/fixtures/listing-770755/part.parquet]]}, projection=[a, b], file_type=parquet, predicate=b@1 > 5, pruning_predicate=b_null_count@1 != row_count@2 AND b_max@0 > 5, required_guarantees=[]
+
+
+---- provider_exact_inexact_projection_limit_match_reference stdout ----
+provider exact=true query=SELECT a FROM p WHERE b > 5 plan=TableScan: p projection=[a], full_filters=[p.b > Int32(5)]
+provider exact=true query=SELECT a FROM p WHERE b > 5 LIMIT 2 plan=Limit: skip=0, fetch=2
+  TableScan: p projection=[a], full_filters=[p.b > Int32(5)], fetch=2
+provider exact=true query=SELECT a, b FROM p WHERE b > 5 plan=TableScan: p projection=[a, b], full_filters=[p.b > Int32(5)]
+scan observations: [ObservedScan { projection: Some([0]), filters: 1, limit: None }, ObservedScan { projection: Some([0]), filters: 1, limit: Some(2) }, ObservedScan { projection: Some([0, 1]), filters: 1, limit: None }]
+provider exact=false query=SELECT a FROM p WHERE b > 5 plan=Projection: p.a
+  Filter: p.b > Int32(5)
+    TableScan: p projection=[a, b], partial_filters=[p.b > Int32(5)]
+provider exact=false query=SELECT a FROM p WHERE b > 5 LIMIT 2 plan=Projection: p.a
+  Limit: skip=0, fetch=2
+    Filter: p.b > Int32(5)
+      TableScan: p projection=[a, b], partial_filters=[p.b > Int32(5)]
+provider exact=false query=SELECT a, b FROM p WHERE b > 5 plan=Filter: p.b > Int32(5)
+  TableScan: p projection=[a, b], partial_filters=[p.b > Int32(5)]
+scan observations: [ObservedScan { projection: Some([0, 1]), filters: 1, limit: None }, ObservedScan { projection: Some([0, 1]), filters: 1, limit: None }, ObservedScan { projection: Some([0, 1]), filters: 1, limit: None }]
+
+---- stream_collect_cache_and_sort_resource_error stdout ----
+restricted sort plan: SortExec: expr=[x@0 ASC NULLS LAST], preserve_partitioning=[false]
+  DataSourceExec: partitions=1, partition_sizes=[1]
+
+pool control: Not enough memory to continue external sort. Consider increasing the memory limit config: 'datafusion.runtime.memory_limit', or decreasing the config: 'datafusion.execution.sort_spill_reservation_bytes'.
+caused by
+Resources exhausted: Failed to allocate additional 10.0 MB for ExternalSorterMerge[0] with 0.0 B already allocated for this reservation - 1.0 B remain available for the total memory pool: greedy(used: 0.0 B, pool_size: 1.0 B)
+
+
+successes:
+    coalesce_uses_planning_and_preserves_nonnull_fallback
+    expressions_require_coercion_before_direct_simplification
+    joins_sets_and_window_frames_have_distinct_cardinality
+    parquet_listing_source_executes_query
+    provider_exact_inexact_projection_limit_match_reference
+    stream_collect_cache_and_sort_resource_error
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+
+running 1 test
+test ipc_dictionary_roundtrip_keeps_representation ... ok
+
+successes:
+
+successes:
+    ipc_dictionary_roundtrip_keeps_representation
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 1 test
+test parquet_selection_is_relative_to_retained_row_groups ... ok
+
+successes:
+
+---- parquet_selection_is_relative_to_retained_row_groups stdout ----
+local Parquet requests: metadata_bytes=561, scan_bytes=133, output_rows=1; bytes requested from this in-memory ChunkReader, not network or decoder CPU
+local Parquet requests: metadata_bytes=561, scan_bytes=90, output_rows=1; bytes requested from this in-memory ChunkReader, not network or decoder CPU
+local Parquet requests: metadata_bytes=561, scan_bytes=47, output_rows=1; bytes requested from this in-memory ChunkReader, not network or decoder CPU
+
+
+successes:
+    parquet_selection_is_relative_to_retained_row_groups
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling datafusion-skill-reference-probes v0.1.0 (<skill>/skill_improvement/evidence/implementation/probes)
+    Finished `test` profile [unoptimized] target(s) in 1.09s
+     Running unittests src/bin/filter_cost.rs (<skill>/skill_improvement/evidence/.build-target-implementation/debug/deps/filter_cost-7e0af6c3a088cb61)
+     Running unittests src/bin/registry.rs (<skill>/skill_improvement/evidence/.build-target-implementation/debug/deps/registry-9a51b80d8513726a)
+     Running tests/arrow_contracts.rs (<skill>/skill_improvement/evidence/.build-target-implementation/debug/deps/arrow_contracts-e6af62465d0b419c)
+     Running tests/engine_contracts.rs (<skill>/skill_improvement/evidence/.build-target-implementation/debug/deps/engine_contracts-2c9b50662e8d9d8f)
+     Running tests/ipc_contracts.rs (<skill>/skill_improvement/evidence/.build-target-implementation/debug/deps/ipc_contracts-0a8ed420dec3e531)
+     Running tests/parquet_contracts.rs (<skill>/skill_improvement/evidence/.build-target-implementation/debug/deps/parquet_contracts-8155dc0d68b18f41)

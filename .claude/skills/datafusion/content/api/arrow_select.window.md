@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::window::shift`, `arrow::compute::shi
 fn shift(array: &dyn Array, offset: i64) -> Result<arrow_array::ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.window.shift.md).
+
+
 Shifts array by defined number of items (to left or right)
 A positive value for `offset` shifts the array to the right
 a negative value shifts the array to the left.

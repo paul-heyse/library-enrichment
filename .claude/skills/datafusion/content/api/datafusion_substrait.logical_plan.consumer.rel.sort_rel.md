@@ -10,4 +10,7 @@ Crate `datafusion-substrait` · 1 public items · structured records in [`model/
 async fn from_sort_rel(consumer: &impl SubstraitConsumer, sort: &substrait::proto::SortRel) -> datafusion::common::Result<datafusion::logical_expr::LogicalPlan>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.rel.sort_rel.from_sort_rel.md).
+
+
 ---

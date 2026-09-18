@@ -28,6 +28,9 @@ fn new(mask: &'a BooleanBuffer) -> Self
 fn next(&mut self) -> Option<RowSelector>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.selection.boolean.MaskRunIter.md).
+
+
 Streaming RLE view of a [`BooleanBuffer`], yielding owned [`RowSelector`]s
 without allocation.
 

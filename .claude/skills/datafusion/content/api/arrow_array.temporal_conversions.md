@@ -12,6 +12,9 @@ Also reachable as `arrow::temporal_conversions::MICROSECONDS`
 const MICROSECONDS: i64 = 1_000_000
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.MICROSECONDS.md).
+
+
 Number of microseconds in a second
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `arrow::temporal_conversions::MICROSECONDS_IN_DAY`
 ```rust
 const MICROSECONDS_IN_DAY: i64 = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.MICROSECONDS_IN_DAY.md).
+
 
 Number of microseconds in a day
 
@@ -40,6 +46,9 @@ Also reachable as `arrow::temporal_conversions::MILLISECONDS`
 const MILLISECONDS: i64 = 1_000
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.MILLISECONDS.md).
+
+
 Number of milliseconds in a second
 
 ---
@@ -53,6 +62,9 @@ Also reachable as `arrow::temporal_conversions::MILLISECONDS_IN_DAY`
 ```rust
 const MILLISECONDS_IN_DAY: i64 = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.MILLISECONDS_IN_DAY.md).
+
 
 Number of milliseconds in a day
 
@@ -68,6 +80,9 @@ Also reachable as `arrow::temporal_conversions::NANOSECONDS`
 const NANOSECONDS: i64 = 1_000_000_000
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.NANOSECONDS.md).
+
+
 Number of nanoseconds in a second
 
 ---
@@ -81,6 +96,9 @@ Also reachable as `arrow::temporal_conversions::NANOSECONDS_IN_DAY`
 ```rust
 const NANOSECONDS_IN_DAY: i64 = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.NANOSECONDS_IN_DAY.md).
+
 
 Number of nanoseconds in a day
 
@@ -96,6 +114,9 @@ Also reachable as `arrow::temporal_conversions::SECONDS_IN_DAY`
 const SECONDS_IN_DAY: i64 = 86_400
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.SECONDS_IN_DAY.md).
+
+
 Number of seconds in a day
 
 ---
@@ -109,6 +130,9 @@ Also reachable as `arrow::temporal_conversions::UNIX_EPOCH_DAY`
 ```rust
 const UNIX_EPOCH_DAY: i64 = 719_163
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.UNIX_EPOCH_DAY.md).
+
 
 Constant from chrono crate
 
@@ -133,6 +157,9 @@ Also reachable as `arrow::temporal_conversions::as_date`
 fn as_date<T: ArrowPrimitiveType>(v: i64) -> Option<chrono::NaiveDate>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.as_date.md).
+
+
 Converts an [`ArrowPrimitiveType`] to [`NaiveDate`]
 
 ---
@@ -146,6 +173,9 @@ Also reachable as `arrow::temporal_conversions::as_datetime`
 ```rust
 fn as_datetime<T: ArrowPrimitiveType>(v: i64) -> Option<chrono::NaiveDateTime>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.as_datetime.md).
+
 
 Converts an [`ArrowPrimitiveType`] to [`NaiveDateTime`]
 
@@ -161,6 +191,9 @@ Also reachable as `arrow::temporal_conversions::as_datetime_with_timezone`
 fn as_datetime_with_timezone<T: ArrowPrimitiveType>(v: i64, tz: timezone::Tz) -> Option<chrono::DateTime<timezone::Tz>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.as_datetime_with_timezone.md).
+
+
 Converts an [`ArrowPrimitiveType`] to [`DateTime<Tz>`]
 
 ---
@@ -174,6 +207,9 @@ Also reachable as `arrow::temporal_conversions::as_duration`
 ```rust
 fn as_duration<T: ArrowPrimitiveType>(v: i64) -> Option<chrono::Duration>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.as_duration.md).
+
 
 Converts an [`ArrowPrimitiveType`] to [`Duration`]
 
@@ -189,6 +225,9 @@ Also reachable as `arrow::temporal_conversions::as_time`
 fn as_time<T: ArrowPrimitiveType>(v: i64) -> Option<chrono::NaiveTime>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.as_time.md).
+
+
 Converts an [`ArrowPrimitiveType`] to [`NaiveTime`]
 
 ---
@@ -202,6 +241,9 @@ Also reachable as `arrow::temporal_conversions::date32_to_datetime`
 ```rust
 fn date32_to_datetime(v: i32) -> Option<chrono::NaiveDateTime>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.date32_to_datetime.md).
+
 
 converts a `i32` representing a `date32` to [`NaiveDateTime`]
 
@@ -217,6 +259,9 @@ Also reachable as `arrow::temporal_conversions::date64_to_datetime`
 fn date64_to_datetime(v: i64) -> Option<chrono::NaiveDateTime>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.date64_to_datetime.md).
+
+
 converts a `i64` representing a `date64` to [`NaiveDateTime`]
 
 ---
@@ -230,6 +275,9 @@ Also reachable as `arrow::temporal_conversions::duration_ns_to_duration`
 ```rust
 fn duration_ns_to_duration(v: i64) -> chrono::Duration
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.duration_ns_to_duration.md).
+
 
 converts a `i64` representing a `duration(ns)` to [`Duration`]
 
@@ -245,6 +293,9 @@ Also reachable as `arrow::temporal_conversions::duration_us_to_duration`
 fn duration_us_to_duration(v: i64) -> chrono::Duration
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.duration_us_to_duration.md).
+
+
 converts a `i64` representing a `duration(us)` to [`Duration`]
 
 ---
@@ -258,6 +309,9 @@ Also reachable as `arrow::temporal_conversions::time32ms_to_time`
 ```rust
 fn time32ms_to_time(v: i32) -> Option<chrono::NaiveTime>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.time32ms_to_time.md).
+
 
 converts a `i32` representing a `time32(ms)` to [`NaiveDateTime`]
 
@@ -273,6 +327,9 @@ Also reachable as `arrow::temporal_conversions::time32s_to_time`
 fn time32s_to_time(v: i32) -> Option<chrono::NaiveTime>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.time32s_to_time.md).
+
+
 converts a `i32` representing a `time32(s)` to [`NaiveDateTime`]
 
 ---
@@ -286,6 +343,9 @@ Also reachable as `arrow::temporal_conversions::time64ns_to_time`
 ```rust
 fn time64ns_to_time(v: i64) -> Option<chrono::NaiveTime>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.time64ns_to_time.md).
+
 
 converts a `i64` representing a `time64(ns)` to [`NaiveDateTime`]
 
@@ -301,6 +361,9 @@ Also reachable as `arrow::temporal_conversions::time64us_to_time`
 fn time64us_to_time(v: i64) -> Option<chrono::NaiveTime>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.time64us_to_time.md).
+
+
 converts a `i64` representing a `time64(us)` to [`NaiveDateTime`]
 
 ---
@@ -314,6 +377,9 @@ Also reachable as `arrow::temporal_conversions::time_to_time32ms`
 ```rust
 fn time_to_time32ms(v: chrono::NaiveTime) -> i32
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.time_to_time32ms.md).
+
 
 converts [`NaiveTime`] to a `i32` representing a `time32(ms)`
 
@@ -329,6 +395,9 @@ Also reachable as `arrow::temporal_conversions::time_to_time32s`
 fn time_to_time32s(v: chrono::NaiveTime) -> i32
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.time_to_time32s.md).
+
+
 converts [`NaiveTime`] to a `i32` representing a `time32(s)`
 
 ---
@@ -342,6 +411,9 @@ Also reachable as `arrow::temporal_conversions::time_to_time64ns`
 ```rust
 fn time_to_time64ns(v: chrono::NaiveTime) -> i64
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.time_to_time64ns.md).
+
 
 converts [`NaiveTime`] to a `i64` representing a `time64(ns)`
 
@@ -357,6 +429,9 @@ Also reachable as `arrow::temporal_conversions::time_to_time64us`
 fn time_to_time64us(v: chrono::NaiveTime) -> i64
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.time_to_time64us.md).
+
+
 converts [`NaiveTime`] to a `i64` representing a `time64(us)`
 
 ---
@@ -370,6 +445,9 @@ Also reachable as `arrow::temporal_conversions::timestamp_ms_to_datetime`
 ```rust
 fn timestamp_ms_to_datetime(v: i64) -> Option<chrono::NaiveDateTime>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.timestamp_ms_to_datetime.md).
+
 
 converts a `i64` representing a `timestamp(ms)` to [`NaiveDateTime`]
 
@@ -385,6 +463,9 @@ Also reachable as `arrow::temporal_conversions::timestamp_ns_to_datetime`
 fn timestamp_ns_to_datetime(v: i64) -> Option<chrono::NaiveDateTime>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.timestamp_ns_to_datetime.md).
+
+
 converts a `i64` representing a `timestamp(ns)` to [`NaiveDateTime`]
 
 ---
@@ -398,6 +479,9 @@ Also reachable as `arrow::temporal_conversions::timestamp_s_to_date`
 ```rust
 fn timestamp_s_to_date(secs: i64) -> Option<chrono::NaiveDateTime>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.timestamp_s_to_date.md).
+
 
 Similar to timestamp_s_to_datetime but only compute `date`
 
@@ -413,6 +497,9 @@ Also reachable as `arrow::temporal_conversions::timestamp_s_to_datetime`
 fn timestamp_s_to_datetime(v: i64) -> Option<chrono::NaiveDateTime>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.timestamp_s_to_datetime.md).
+
+
 converts a `i64` representing a `timestamp(s)` to [`NaiveDateTime`]
 
 ---
@@ -426,6 +513,9 @@ Also reachable as `arrow::temporal_conversions::timestamp_s_to_time`
 ```rust
 fn timestamp_s_to_time(secs: i64) -> Option<chrono::NaiveDateTime>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.timestamp_s_to_time.md).
+
 
 Similar to timestamp_s_to_datetime but only compute `time`
 
@@ -441,6 +531,9 @@ Also reachable as `arrow::temporal_conversions::timestamp_us_to_datetime`
 fn timestamp_us_to_datetime(v: i64) -> Option<chrono::NaiveDateTime>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.timestamp_us_to_datetime.md).
+
+
 converts a `i64` representing a `timestamp(us)` to [`NaiveDateTime`]
 
 ---
@@ -455,6 +548,9 @@ Also reachable as `arrow::temporal_conversions::try_duration_ms_to_duration`
 fn try_duration_ms_to_duration(v: i64) -> Option<chrono::Duration>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.try_duration_ms_to_duration.md).
+
+
 converts a `i64` representing a `duration(ms)` to [`Option<Duration>`]
 
 ---
@@ -468,6 +564,9 @@ Also reachable as `arrow::temporal_conversions::try_duration_s_to_duration`
 ```rust
 fn try_duration_s_to_duration(v: i64) -> Option<chrono::Duration>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.temporal_conversions.try_duration_s_to_duration.md).
+
 
 converts a `i64` representing a `duration(s)` to [`Option<Duration>`]
 

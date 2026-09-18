@@ -1,0 +1,25 @@
+id: native-research-no-handler-truncation
+language: Rust
+severity: error
+message: Research citation identity and excerpt selection use the shared native citation projection.
+files:
+  - crates/enrichment-daemon/src/ops/search.rs
+  - crates/enrichment-daemon/src/ops/overview.rs
+  - crates/enrichment-daemon/src/ops/inspect.rs
+  - crates/enrichment-daemon/src/ops/resolve.rs
+  - crates/enrichment-daemon/src/ops/common.rs
+rule:
+  any:
+    - kind: function_item
+      has:
+        field: name
+        regex: '^(truncate|evidence_from_fragment)$'
+    - kind: call_expression
+      has:
+        field: function
+        regex: '(^|::)Evidence::new$'
+  not:
+    inside:
+      pattern: 'mod tests { $$$BODY }'
+      stopBy: end
+note: This catches retired handler authority. Vector truncation and mechanical native projection remain permitted; it does not resolve aliases.

@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::filter`, `arrow::compute::kernels::filter::fi
 fn filter(values: &dyn Array, predicate: &BooleanArray) -> Result<ArrayRef, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.filter.filter.md).
+
+
 Returns a filtered `values` [`Array`] where the corresponding elements of
 `predicate` are `true`.
 
@@ -53,6 +56,9 @@ Also reachable as `arrow::compute::filter_record_batch`, `arrow::compute::kernel
 fn filter_record_batch(record_batch: &RecordBatch, predicate: &BooleanArray) -> Result<RecordBatch, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.filter.filter_record_batch.md).
+
+
 Returns a filtered [RecordBatch] where the corresponding elements of
 `predicate` are true.
 
@@ -75,6 +81,9 @@ Also reachable as `arrow::compute::kernels::filter::prep_null_mask_filter`, `arr
 ```rust
 fn prep_null_mask_filter(filter: &BooleanArray) -> BooleanArray
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_select.filter.prep_null_mask_filter.md).
+
 
 Convert all null values in `BooleanArray` to `false`
 
@@ -127,6 +136,9 @@ fn new(filter: &BooleanArray) -> Self
 fn optimize(self) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.filter.FilterBuilder.md).
+
+
 A builder to construct [`FilterPredicate`]
 
 ---
@@ -151,6 +163,9 @@ fn filter(&self, values: &dyn Array) -> Result<ArrayRef, ArrowError>
 fn filter_nulls(&self, nulls: Option<&NullBuffer>) -> Option<NullBuffer>
 fn filter_record_batch(&self, record_batch: &RecordBatch) -> Result<RecordBatch, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_select.filter.FilterPredicate.md).
+
 
 A filtering predicate that can be applied to an [`Array`]
 
@@ -187,6 +202,9 @@ fn from(filter: &'a BooleanBuffer) -> Self
 ```rust
 fn next(&mut self) -> Option<Self::Item>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_select.filter.SlicesIterator.md).
+
 
 An iterator of `(usize, usize)` each representing an interval
 `[start, end)` whose slots of a bitmap [Buffer] are true.

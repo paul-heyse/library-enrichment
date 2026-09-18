@@ -34,6 +34,9 @@ fn sliced_values(&self) -> impl Iterator<Item = E> + '_
 fn values(&self) -> &[E]
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.run.RunEndBuffer.md).
+
+
 A buffer of monotonically increasing, positive integers used to store run-ends.
 
 Used to compactly represent runs of the same value. Values being represented

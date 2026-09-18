@@ -12,6 +12,9 @@ Also reachable as `arrow::array::make_array`, `arrow_array::make_array`
 fn make_array(data: arrow_data::ArrayData) -> ArrayRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.make_array.md).
+
+
 Constructs an [`ArrayRef`] from an [`ArrayData`].
 
 # Notes:
@@ -55,6 +58,9 @@ Also reachable as `arrow::array::new_empty_array`, `arrow_array::new_empty_array
 fn new_empty_array(data_type: &arrow_schema::DataType) -> ArrayRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.new_empty_array.md).
+
+
 Creates a new empty array
 
 ```
@@ -79,6 +85,9 @@ Also reachable as `arrow::array::new_null_array`, `arrow_array::new_null_array`
 ```rust
 fn new_null_array(data_type: &arrow_schema::DataType, length: usize) -> ArrayRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.new_null_array.md).
+
 
 Creates a new array of `data_type` of length `length` filled
 entirely of `NULL` values
@@ -150,6 +159,9 @@ fn slice(&self, offset: usize, length: usize) -> ArrayRef
 fn to_data(&self) -> ArrayData
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.Array.md).
+
+
 An array in the [Arrow Columnar Format](https://arrow.apache.org/docs/format/Columnar.html)
 
 # Safety
@@ -194,6 +206,9 @@ trait ArrayAccessor: Array
 fn value(&self, index: usize) -> Self::Item
 unsafe fn value_unchecked(&self, index: usize) -> Self::Item
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.ArrayAccessor.md).
+
 
 A generic trait for accessing the values of an [`Array`]
 
@@ -294,6 +309,9 @@ trait BinaryArrayType<'a>: ArrayAccessor<Item = &'a [u8]> + Sized
 fn iter(&self) -> ArrayIter<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.BinaryArrayType.md).
+
+
 A trait for Arrow Binary Arrays, currently four types are supported:
 - `BinaryArray`
 - `LargeBinaryArray`
@@ -328,6 +346,9 @@ fn element_range(&self, index: usize) -> std::ops::Range<usize>
 fn values(&self) -> &ArrayRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.ListLikeArray.md).
+
+
 A trait for Arrow list-like arrays, abstracting over
 [`GenericListArray`], [`GenericListViewArray`], and [`FixedSizeListArray`].
 
@@ -353,6 +374,9 @@ trait StringArrayType<'a>: ArrayAccessor<Item = &'a str> + Sized
 fn is_ascii(&self) -> bool
 fn iter(&self) -> ArrayIter<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.StringArrayType.md).
+
 
 A trait for Arrow String Arrays, currently three types are supported:
 - `StringArray`
@@ -420,6 +444,9 @@ fn as_string_opt<O: OffsetSizeTrait>(&self) -> Option<&GenericStringArray<O>>
 fn as_struct_opt(&self) -> Option<&StructArray>
 fn as_union_opt(&self) -> Option<&UnionArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.ArrayRef.md).
+
 
 A reference-counted reference to a generic `Array`
 

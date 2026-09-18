@@ -1,0 +1,20 @@
+id: native-decoder-contract
+language: Rust
+severity: error
+message: Decoder request, effect and stream receipts come from the core native declaration.
+files:
+  - crates/enrichment-store/src/native_worker.rs
+  - crates/enrichment-store/src/native_rustdoc.rs
+rule:
+  kind: struct_item
+  has:
+    field: name
+    regex: '^(Request|Report|Extraction|Receipt|StreamReceipt)$'
+  not:
+    inside:
+      kind: mod_item
+      has:
+        field: name
+        regex: '(^tests$|_tests$)'
+      stopBy: end
+note: Scope is the physical Rust decoder, where a handwritten DTO would bypass the native contract. External format decoders and independent fixtures remain valid.

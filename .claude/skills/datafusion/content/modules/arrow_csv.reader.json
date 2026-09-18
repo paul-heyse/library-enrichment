@@ -1,0 +1,70 @@
+[
+  {
+    "id": "bee90653886c075fc154b5b7",
+    "path": "arrow_csv::reader",
+    "name": "reader",
+    "owner": null,
+    "crate": "arrow-csv",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod reader",
+    "docs": " CSV Reading: [`Reader`] and [`ReaderBuilder`]\n\n # Basic Usage\n\n This CSV reader allows CSV files to be read into the Arrow memory model. Records are\n loaded in batches and are then converted from row-based data to columnar data.\n\n Example:\n\n ```\n # use arrow_schema::*;\n # use arrow_csv::{Reader, ReaderBuilder};\n # use std::fs::File;\n # use std::sync::Arc;\n\n let schema = Schema::new(vec![\n     Field::new(\"city\", DataType::Utf8, false),\n     Field::new(\"lat\", DataType::Float64, false),\n     Field::new(\"lng\", DataType::Float64, false),\n ]);\n\n let file = File::open(\"test/data/uk_cities.csv\").unwrap();\n\n let mut csv = ReaderBuilder::new(Arc::new(schema)).build(file).unwrap();\n let batch = csv.next().unwrap().unwrap();\n ```\n\n # Example: Numeric calculations on CSV\n This code finds the maximum value in column 0 of a CSV file containing\n ```csv\n c1,c2,c3,c4\n 1,1.1,\"hong kong\",true\n 3,323.12,\"XiAn\",false\n 10,131323.12,\"cheng du\",false\n ```\n\n ```\n # use arrow_array::cast::AsArray;\n # use arrow_array::types::Int16Type;\n # use arrow_csv::ReaderBuilder;\n # use arrow_schema::{DataType, Field, Schema};\n # use std::fs::File;\n # use std::sync::Arc;\n // Open the example file\n let file = File::open(\"test/data/example.csv\").unwrap();\n let csv_schema = Schema::new(vec![\n     Field::new(\"c1\", DataType::Int16, true),\n     Field::new(\"c2\", DataType::Float32, true),\n     Field::new(\"c3\", DataType::Utf8, true),\n     Field::new(\"c4\", DataType::Boolean, true),\n ]);\n let mut reader = ReaderBuilder::new(Arc::new(csv_schema))\n     .with_header(true)\n     .build(file)\n     .unwrap();\n // find the maximum value in column 0 across all batches\n let mut max_c0 = 0;\n while let Some(r) = reader.next() {\n   let r = r.unwrap(); // handle error\n   // get the max value in column(0) for this batch\n   let col = r.column(0).as_primitive::<Int16Type>();\n   let batch_max = col.iter().max().flatten().unwrap_or_default();\n   max_c0 = max_c0.max(batch_max);\n }\n assert_eq!(max_c0, 10);\n```\n\n # Async Usage\n\n The lower-level [`Decoder`] can be integrated with various forms of async data streams,\n and is designed to be agnostic to the various different kinds of async IO primitives found\n within the Rust ecosystem.\n\n For example, see below for how it can be used with an arbitrary `Stream` of `Bytes`\n\n ```\n # use std::task::{Poll, ready};\n # use bytes::{Buf, Bytes};\n # use arrow_schema::ArrowError;\n # use futures::stream::{Stream, StreamExt};\n # use arrow_array::RecordBatch;\n # use arrow_csv::reader::Decoder;\n #\n fn decode_stream<S: Stream<Item = Bytes> + Unpin>(\n     mut decoder: Decoder,\n     mut input: S,\n ) -> impl Stream<Item = Result<RecordBatch, ArrowError>> {\n     let mut buffered = Bytes::new();\n     futures::stream::poll_fn(move |cx| {\n         loop {\n             if buffered.is_empty() {\n                 if let Some(b) = ready!(input.poll_next_unpin(cx)) {\n                     buffered = b;\n                 }\n                 // Note: don't break on `None` as the decoder needs\n                 // to be called with an empty array to delimit the\n                 // final record\n             }\n             let decoded = match decoder.decode(buffered.as_ref()) {\n                 Ok(0) => break,\n                 Ok(decoded) => decoded,\n                 Err(e) => return Poll::Ready(Some(Err(e))),\n             };\n             buffered.advance(decoded);\n         }\n\n         Poll::Ready(decoder.flush().transpose())\n     })\n }\n\n ```\n\n In a similar vein, it can also be used with tokio-based IO primitives\n\n ```\n # use std::pin::Pin;\n # use std::task::{Poll, ready};\n # use futures::Stream;\n # use tokio::io::AsyncBufRead;\n # use arrow_array::RecordBatch;\n # use arrow_csv::reader::Decoder;\n # use arrow_schema::ArrowError;\n fn decode_stream<R: AsyncBufRead + Unpin>(\n     mut decoder: Decoder,\n     mut reader: R,\n ) -> impl Stream<Item = Result<RecordBatch, ArrowError>> {\n     futures::stream::poll_fn(move |cx| {\n         loop {\n             let b = match ready!(Pin::new(&mut reader).poll_fill_buf(cx)) {\n                 Ok(b) => b,\n                 Err(e) => return Poll::Ready(Some(Err(e.into()))),\n             };\n             let decoded = match decoder.decode(b) {\n                 // Note: the decoder needs to be called with an empty\n                 // array to delimit the final record\n                 Ok(0) => break,\n                 Ok(decoded) => decoded,\n                 Err(e) => return Poll::Ready(Some(Err(e))),\n             };\n             Pin::new(&mut reader).consume(decoded);\n         }\n\n         Poll::Ready(decoder.flush().transpose())\n     })\n }\n ```\n",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        3055,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          10,
+          88,
+          93,
+          94,
+          140,
+          91
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Reader`": 93,
+      "`ReaderBuilder`": 91,
+      "`Decoder`": 140
+    },
+    "link_paths": {
+      "`Reader`": "arrow_csv::reader::Reader",
+      "`ReaderBuilder`": "arrow_csv::reader::ReaderBuilder",
+      "`Decoder`": "arrow_csv::reader::Decoder"
+    },
+    "artifact": {
+      "id": "8bc70021e0951ef4350d8bbda6b3ad80c76264b8f77161afdde5e41a8359a8f7",
+      "format_version": 61,
+      "item_id": "92",
+      "origin": "https://docs.rs/crate/arrow-csv/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/arrow_csv.reader.md",
+    "record_file": "modules/arrow_csv.reader.json",
+    "anchor": "op-bee90653886c075fc154b5b7",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Reader`": "../operations/arrow_csv.reader.Reader.md#op-80f5b4a82073800a3487a573",
+      "`ReaderBuilder`": "../operations/arrow_csv.reader.ReaderBuilder.md#op-743461f30ad5174b593cb0bd",
+      "`Decoder`": "../operations/arrow_csv.reader.Decoder.md#op-3b738a30f68a89852bb9bff5"
+    }
+  }
+]

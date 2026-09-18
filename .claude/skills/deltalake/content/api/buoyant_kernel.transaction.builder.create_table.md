@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## CreateTableTransactionBuilder
 
 `struct` · `buoyant_kernel::transaction::builder::create_table::CreateTableTransactionBuilder`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.builder.create_table.CreateTableTransactionBuilder.md)
 
 Also reachable as `buoyant_kernel::transaction::create_table::CreateTableTransactionBuilder`, `delta_kernel::transaction::builder::create_table::CreateTableTransactionBuilder`
 

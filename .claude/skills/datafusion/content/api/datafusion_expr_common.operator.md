@@ -37,6 +37,9 @@ fn swap(&self) -> Option<Operator>
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.operator.Operator.md).
+
+
 Operators applied to expressions
 
 ---

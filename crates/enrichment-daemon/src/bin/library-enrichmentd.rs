@@ -1,7 +1,4 @@
-//! The daemon CLI: `library-enrichmentd start|status|stop` (blueprint §2.2).
-//!
-//! Three subcommands do not justify an argument-parsing dependency: `clap` is absent from the
-//! lock and would add roughly eight crates to read one word of input.
+//! Service lifecycle, native publication retirement, export and operator maintenance.
 //!
 //! All output here goes to stderr or the daemon log, never stdout of an MCP process -- this
 //! binary is not the MCP adapter, but the habit is the one the whole service keeps (§7.4).
@@ -16,11 +13,102 @@ use enrichment_daemon::service::Service;
 use enrichment_store::StatePaths;
 
 const USAGE: &str = "usage: library-enrichmentd \
-<start|status|stop|validate [FILE]|socket-path|export CONTEXT DIR|verify-bundle DIR|cleanup cache|evidence [--plan|--apply]|reset-development ROOT [--plan|--apply]>";
+<start|status|stop|validate [FILE]|socket-path|export CONTEXT DIR|verify-bundle DIR|retire-roots ROOT... [--plan|--apply]|reclaim TABLE --apply|reclaim-artifacts --apply|cleanup cache|evidence [--plan|--apply]|reset-development ROOT [--plan|--apply]>";
 
 fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
     let command = args.next();
+
+    if command.as_deref() == Some("reclaim-artifacts") {
+        if args.next().as_deref() != Some("--apply") || args.next().is_some() {
+            eprintln!("library-enrichmentd: reclaim-artifacts requires --apply\n{USAGE}");
+            return ExitCode::FAILURE;
+        }
+        let result = (|| -> Result<_, Box<dyn std::error::Error>> {
+            let report = enrichment_daemon::maintenance::reclaim_artifacts(
+                &Config::from_env()?,
+                &StatePaths::from_env()?,
+            )?;
+            Ok(serde_json::to_string_pretty(&report)?)
+        })();
+        return match result {
+            Ok(report) => {
+                println!("{report}");
+                ExitCode::SUCCESS
+            }
+            Err(error) => {
+                eprintln!("library-enrichmentd: {error}");
+                ExitCode::FAILURE
+            }
+        };
+    }
+
+    if command.as_deref() == Some("reclaim") {
+        let (Some(table), Some(mode)) = (args.next(), args.next()) else {
+            eprintln!(
+                "library-enrichmentd: reclaim requires an exact table name and --apply\n{USAGE}"
+            );
+            return ExitCode::FAILURE;
+        };
+        if mode != "--apply" || args.next().is_some() {
+            eprintln!("library-enrichmentd: invalid reclaim arguments\n{USAGE}");
+            return ExitCode::FAILURE;
+        }
+        let result = (|| -> Result<_, Box<dyn std::error::Error>> {
+            let report = enrichment_daemon::maintenance::reclaim_table(
+                &Config::from_env()?,
+                &StatePaths::from_env()?,
+                table,
+            )?;
+            Ok(serde_json::to_string_pretty(&report)?)
+        })();
+        return match result {
+            Ok(report) => {
+                println!("{report}");
+                ExitCode::SUCCESS
+            }
+            Err(error) => {
+                eprintln!("library-enrichmentd: reclamation failed: {error}");
+                ExitCode::FAILURE
+            }
+        };
+    }
+
+    if command.as_deref() == Some("retire-roots") {
+        let mut roots = args.collect::<Vec<_>>();
+        let apply = roots.last().is_some_and(|value| value == "--apply");
+        if roots
+            .last()
+            .is_some_and(|value| matches!(value.as_str(), "--apply" | "--plan"))
+        {
+            roots.pop();
+        }
+        if roots.is_empty() || roots.len() > 256 || roots.iter().any(|root| root.starts_with('-')) {
+            eprintln!(
+                "library-enrichmentd: retire-roots requires 1–256 root ids and an optional trailing mode\n{USAGE}"
+            );
+            return ExitCode::FAILURE;
+        }
+        let result = (|| -> Result<_, Box<dyn std::error::Error>> {
+            let report = enrichment_daemon::maintenance::retire_roots(
+                &Config::from_env()?,
+                &StatePaths::from_env()?,
+                roots,
+                apply,
+            )?;
+            Ok(serde_json::to_string_pretty(&report)?)
+        })();
+        return match result {
+            Ok(report) => {
+                println!("{report}");
+                ExitCode::SUCCESS
+            }
+            Err(error) => {
+                eprintln!("library-enrichmentd: retirement refused: {error}");
+                ExitCode::FAILURE
+            }
+        };
+    }
 
     if matches!(
         command.as_deref(),
@@ -49,8 +137,7 @@ fn main() -> ExitCode {
         );
     }
 
-    // `validate` is the only subcommand that takes an operand, so it is handled before the
-    // arity check the others share.
+    // Handle validation before the remaining zero-operand command arity check.
     if command.as_deref() == Some("validate") {
         let source = args.next();
         if args.next().is_some() {

@@ -14,6 +14,9 @@ enum DeserializerOutput
 
 **Derives**: Debug, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.decoder.DeserializerOutput.md).
+
+
 Possible outputs of a [`BatchDeserializer`].
 
 ---
@@ -25,6 +28,9 @@ Possible outputs of a [`BatchDeserializer`].
 ```rust
 fn deserialize_stream<'a>(input: impl Stream<Item = datafusion_common::Result<bytes::Bytes>> + Unpin + Send + 'a, deserializer: impl BatchDeserializer<bytes::Bytes> + 'a) -> futures::stream::BoxStream<'a, datafusion_common::Result<::arrow::array::RecordBatch, arrow::error::ArrowError>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.decoder.deserialize_stream.md).
+
 
 Deserializes a stream of bytes into a stream of [`RecordBatch`] objects using the
 provided deserializer.
@@ -61,6 +67,9 @@ fn finish(&mut self)
 fn next(&mut self) -> Result<DeserializerOutput, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.decoder.DecoderDeserializer.md).
+
+
 A generic, decoder-based deserialization scheme for processing encoded data.
 
 This struct is responsible for converting a stream of bytes, which represent
@@ -90,6 +99,9 @@ fn finish(&mut self)
 fn next(&mut self) -> Result<DeserializerOutput, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.decoder.BatchDeserializer.md).
+
+
 Trait defining a scheme for deserializing byte streams into structured data.
 Implementors of this trait are responsible for converting raw bytes into
 `RecordBatch` objects.
@@ -116,6 +128,9 @@ fn can_flush_early(&self) -> bool
 fn decode(&mut self, buf: &[u8]) -> Result<usize, ArrowError>
 fn flush(&mut self) -> Result<Option<RecordBatch>, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.decoder.Decoder.md).
+
 
 A general interface for decoders such as [`arrow::json::reader::Decoder`] and
 [`arrow::csv::reader::Decoder`]. Defines an interface similar to

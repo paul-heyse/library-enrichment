@@ -22,6 +22,9 @@ fn new(expr: &Arc<dyn PhysicalExpr>, schema: SchemaRef) -> Self
 fn prune_plan_with_page_index(&self, access_plan: ParquetAccessPlan, arrow_schema: &Schema, parquet_schema: &SchemaDescriptor, parquet_metadata: &ParquetMetaData, file_metrics: &ParquetFileMetrics) -> ParquetAccessPlan
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.page_filter.PagePruningAccessPlanFilter.md).
+
+
 Filters a [`ParquetAccessPlan`] based on the [Parquet PageIndex], if present
 
 It does so by evaluating statistics from the [`ParquetColumnIndex`] and

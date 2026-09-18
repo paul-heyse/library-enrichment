@@ -1,0 +1,222 @@
+[
+  {
+    "id": "1e28964b08a51187f1e0918f",
+    "path": "arrow_buffer::util::bit_util::apply_bitwise_binary_op",
+    "name": "apply_bitwise_binary_op",
+    "owner": null,
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn apply_bitwise_binary_op<F>(left: &mut [u8], left_offset_in_bits: usize, right: impl AsRef<[u8]>, right_offset_in_bits: usize, len_in_bits: usize, op: F) where F: FnMut(u64, u64) -> u64",
+    "docs": "Applies a bitwise operation relative to another bit-packed byte slice\n(right) in place\n\nNote: applies the operation 64-bits (u64) at a time.\n\n# Arguments\n\n* `left` - The mutable buffer to be modified in-place\n* `offset_in_bits` - Starting bit offset in Self buffer\n* `right` - slice of bit-packed bytes in LSB order\n* `right_offset_in_bits` - Starting bit offset in the right buffer\n* `len_in_bits` - Number of bits to process\n* `op` - Binary operation to apply (e.g., `|a, b| a & b`). Applied a word at a time\n\n# Example: Modify entire buffer\n```\n# use arrow_buffer::MutableBuffer;\n# use arrow_buffer::bit_util::apply_bitwise_binary_op;\nlet mut left = MutableBuffer::new(2);\nleft.extend_from_slice(&[0b11110000u8, 0b00110011u8]);\nlet right = &[0b10101010u8, 0b10101010u8];\n// apply bitwise AND between left and right buffers, updating left in place\napply_bitwise_binary_op(left.as_slice_mut(), 0, right, 0, 16, |a, b| a & b);\nassert_eq!(left.as_slice(), &[0b10100000u8, 0b00100010u8]);\n```\n\n# Example: Modify buffer with offsets\n```\n# use arrow_buffer::MutableBuffer;\n# use arrow_buffer::bit_util::apply_bitwise_binary_op;\nlet mut left = MutableBuffer::new(2);\nleft.extend_from_slice(&[0b00000000u8, 0b00000000u8]);\nlet right = &[0b10110011u8, 0b11111110u8];\n// apply bitwise OR between left and right buffers,\n// Apply only 8 bits starting from bit offset 3 in left and bit offset 2 in right\napply_bitwise_binary_op(left.as_slice_mut(), 3, right, 2, 8, |a, b| a | b);\nassert_eq!(left.as_slice(), &[0b01100000, 0b00000101u8]);\n```\n\n# Panics\n\nIf the offset or lengths exceed the buffer or slice size.",
+    "span": {
+      "filename": "src/util/bit_util.rs",
+      "begin": [
+        199,
+        1
+      ],
+      "end": [
+        271,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "left",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "slice": {
+                      "primitive": "u8"
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "left_offset_in_bits",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "right",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsRef",
+                        "id": 107,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "slice": {
+                                    "primitive": "u8"
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ],
+            [
+              "right_offset_in_bits",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "len_in_bits",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "op",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "impl AsRef<[u8]>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "AsRef",
+                          "id": 107,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "slice": {
+                                      "primitive": "u8"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "F"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "FnMut",
+                        "id": 252,
+                        "args": {
+                          "parenthesized": {
+                            "inputs": [
+                              {
+                                "primitive": "u64"
+                              },
+                              {
+                                "primitive": "u64"
+                              }
+                            ],
+                            "output": {
+                              "primitive": "u64"
+                            }
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "core::convert::AsRef",
+      "252": "core::ops::function::FnMut"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "224",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.util.bit_util.apply_bitwise_binary_op.md",
+    "record_file": "operations/arrow_buffer.util.bit_util.apply_bitwise_binary_op.json",
+    "anchor": "op-1e28964b08a51187f1e0918f",
+    "aliases": [
+      "arrow::util::bit_util::apply_bitwise_binary_op"
+    ],
+    "resolved_doc_links": {}
+  }
+]

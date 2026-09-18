@@ -23,6 +23,9 @@ fn len(&self) -> usize
 fn serialize<S: Serialize>(&mut self, rows: &[S]) -> Result<(), ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.reader.Decoder.md).
+
+
 A low-level interface for reading JSON data from a byte stream
 
 See [`Reader`] for a higher-level interface for interface with [`BufRead`]
@@ -83,6 +86,9 @@ fn strict_mode(&self) -> bool
 fn struct_mode(&self) -> StructMode
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.reader.DecoderContext.md).
+
+
 Context for decoder creation, containing configuration.
 
 This context is passed through the decoder creation process and contains
@@ -116,6 +122,9 @@ fn schema(&self) -> SchemaRef
 fn next(&mut self) -> Option<Self::Item>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.reader.Reader.md).
+
+
 Reads JSON data with a known schema directly into arrow [`RecordBatch`]
 
 Lines consisting solely of ASCII whitespace are ignored
@@ -145,6 +154,9 @@ fn with_ignore_type_conflicts(self, ignore_type_conflicts: bool) -> Self
 fn with_strict_mode(self, strict_mode: bool) -> Self
 fn with_struct_mode(self, struct_mode: StructMode) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_json.reader.ReaderBuilder.md).
+
 
 A builder for [`Reader`] and [`Decoder`]
 

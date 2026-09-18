@@ -1,6 +1,6 @@
 //! Bounded byte-preserving Markdown section locations, independent of evidence extraction.
 use enrichment_core::operation::selections::ArtifactWindow;
-use std::io::{self, BufRead, BufReader, Read, Seek, SeekFrom};
+use std::io::{self, BufRead, BufReader, Seek};
 
 pub(super) fn sections(file: &mut std::fs::File) -> io::Result<Vec<ArtifactWindow>> {
     file.rewind()?;
@@ -76,13 +76,6 @@ pub(super) fn sections(file: &mut std::fs::File) -> io::Result<Vec<ArtifactWindo
     }
 }
 
-pub(super) fn range(file: &mut std::fs::File, start: usize, count: usize) -> io::Result<Vec<u8>> {
-    file.seek(SeekFrom::Start(start as u64))?;
-    let mut bytes = vec![0; count];
-    file.read_exact(&mut bytes)?;
-    Ok(bytes)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -102,10 +95,6 @@ mod tests {
         let (start, end) = (*start, *end);
         assert_eq!(label.as_deref(), Some("Title"));
         assert_eq!(&bytes[start..end], b"\r\nbody\xff\r\n```\r# ignored\r```\r");
-        assert_eq!(
-            range(&mut file, start, end - start).unwrap(),
-            &bytes[start..end]
-        );
         assert_eq!(
             windows[0],
             ArtifactWindow {

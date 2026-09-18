@@ -5,6 +5,7 @@ Crate `deltalake-core` · 5 public items · structured records in [`model/deltal
 ## DEFAULT_NUM_INDEX_COLS
 
 `constant` · `deltalake_core::table::config::DEFAULT_NUM_INDEX_COLS`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.config.DEFAULT_NUM_INDEX_COLS.md)
 
 Also reachable as `deltalake::table::config::DEFAULT_NUM_INDEX_COLS`
 
@@ -19,6 +20,7 @@ Default num index cols
 ## DEFAULT_TARGET_FILE_SIZE
 
 `constant` · `deltalake_core::table::config::DEFAULT_TARGET_FILE_SIZE`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.config.DEFAULT_TARGET_FILE_SIZE.md)
 
 Also reachable as `deltalake::table::config::DEFAULT_TARGET_FILE_SIZE`
 
@@ -33,6 +35,7 @@ Default target file size
 ## DeltaConfigError
 
 `enum` · `deltalake_core::table::config::DeltaConfigError`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.config.DeltaConfigError.md)
 
 Also reachable as `deltalake::table::config::DeltaConfigError`
 
@@ -59,6 +62,7 @@ Delta configuration error
 ## TableProperty
 
 `enum` · `deltalake_core::table::config::TableProperty`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.config.TableProperty.md)
 
 Also reachable as `deltalake::TableProperty`, `deltalake::table::config::TableProperty`, `deltalake_core::TableProperty`
 
@@ -94,6 +98,7 @@ Typed property keys that can be defined on a delta table
 ## TablePropertiesExt
 
 `trait` · `deltalake_core::table::config::TablePropertiesExt`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.config.TablePropertiesExt.md)
 
 Also reachable as `deltalake::table::config::TablePropertiesExt`
 

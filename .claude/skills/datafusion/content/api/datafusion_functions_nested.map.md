@@ -10,6 +10,9 @@ Crate `datafusion-functions-nested` · 3 public items · structured records in [
 fn map(keys: Vec<datafusion_expr::Expr>, values: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.map.map.md).
+
+
 Returns a map created from a key list and a value list
 
 ---
@@ -21,6 +24,9 @@ Returns a map created from a key list and a value list
 ```rust
 fn map_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.map.map_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 MapFunc
@@ -54,5 +60,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.map.MapFunc.md).
+
 
 ---

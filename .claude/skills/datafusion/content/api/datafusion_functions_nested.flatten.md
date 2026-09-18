@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::flatten`, `datafusion_functions_nested::
 fn flatten(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.flatten.flatten.md).
+
+
 flattens an array of arrays into a single array.
 
 ---
@@ -23,6 +26,9 @@ flattens an array of arrays into a single array.
 ```rust
 fn flatten_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.flatten.flatten_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 Flatten
@@ -57,5 +63,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.flatten.Flatten.md).
+
 
 ---

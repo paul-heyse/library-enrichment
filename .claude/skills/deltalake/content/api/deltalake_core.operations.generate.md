@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## GenerateBuilder
 
 `struct` · `deltalake_core::operations::generate::GenerateBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.generate.GenerateBuilder.md)
 
 Also reachable as `deltalake::operations::generate::GenerateBuilder`
 
@@ -20,13 +21,6 @@ struct GenerateBuilder
 
 ```rust
 fn into_future(self) -> Self::IntoFuture
-```
-
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
 ```
 
 Simple builder to generate the manifest

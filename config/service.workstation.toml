@@ -6,10 +6,21 @@
 [arrow]
 memory_bytes = 34359738368         # 32 GiB shared managed query memory
 spill_bytes = 68719476736          # 64 GiB shared spill ceiling
-descriptor_cache_bytes = 1073741824  # 1 GiB immutable provider descriptors
-metadata_cache_bytes = 2147483648  # 2 GiB metadata cache
 partitions = 16
 concurrency = 16
+
+[arrow.native]
+parser_concurrency = 16          # Shared Rust/Python parser slots, held through child reaping
+
+[arrow.caches]
+metadata_bytes = 2147483648       # 2 GiB shared Parquet metadata
+snapshots_bytes = 4294967296      # 4 GiB resident committed Delta snapshots
+snapshot_entry_bytes = 536870912  # 512 MiB per retained snapshot
+providers_bytes = 1073741824      # 1 GiB typed immutable provider ingredients
+contracts_bytes = 67108864       # 64 MiB positive verified contracts
+predicate_bytes = 104857600      # 100 MiB native predicate reuse per row group
+control_checkpoint_interval = 10
+checkpoint_interval = 100
 
 [limits]
 expensive_worker_concurrency = 8

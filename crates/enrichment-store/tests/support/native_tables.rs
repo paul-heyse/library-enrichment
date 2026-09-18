@@ -60,15 +60,36 @@ pub async fn providers(
         let input = runtime.session().read_batch(batch).unwrap();
         bindings.push(
             tables
-                .append(relation, "fixture", input, rows)
+                .append(
+                    relation,
+                    &enrichment_core::identity::CohortId::new(),
+                    input,
+                    rows,
+                )
                 .await
                 .unwrap(),
         );
     }
     let data_root = root.parent().unwrap();
     enrichment_store::leases::initialize(data_root).unwrap();
-    let protection = enrichment_store::leases::ReadProtection::Root(
-        enrichment_store::leases::shared(data_root).unwrap(),
+    let retention = enrichment_store::retention::RetentionStore::new(
+        enrichment_store::control::ControlStore::open(data_root, runtime.clone()).unwrap(),
+        runtime.clone(),
+    );
+    let protection = enrichment_store::leases::ReadProtection::Durable(
+        retention
+            .enroll(
+                "fixture".into(),
+                enrichment_store::retention::ProtectionKind::Query,
+                bindings
+                    .iter()
+                    .map(|binding| enrichment_store::retention::Dependency::Table {
+                        value: binding.selection(),
+                    })
+                    .collect(),
+            )
+            .await
+            .unwrap(),
     );
     tables.providers(&bindings, protection).await.unwrap()
 }

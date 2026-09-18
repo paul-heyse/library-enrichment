@@ -9,23 +9,65 @@ use datafusion::{
     error::{DataFusionError, Result},
     prelude::{col, lit},
 };
+use enrichment_core::evidence::Artifact;
 use enrichment_core::evidence::arrow_model::cells::RowSet;
-use enrichment_core::evidence::{Artifact, arrow_model::acquisitions};
 use std::sync::Arc;
 
 use enrichment_core::{
     native_union::NativeStruct,
     operation::results::{ResultReference, ResultSection, RetainedResult},
 };
+enrichment_core::native_struct! { struct SnapshotReference { snapshot_id: enrichment_core::identity::SnapshotId => enrichment_core::native_union::Rule::Text } }
+
+async fn snapshot_references(
+    runtime: &QueryRuntime,
+    record: &enrichment_core::operation::results::ResultRecord,
+) -> Result<Vec<enrichment_core::identity::SnapshotId>> {
+    use enrichment_core::{native_union::Domain, operation::results::ResultRecord};
+    let session = runtime.session();
+    let frame = crate::native_catalog::batch(
+        &session,
+        "result_catalog",
+        ResultRecord::batch(std::slice::from_ref(record))?,
+    )?
+    .with_column("result_owner", lit("result"))?;
+    let Some(references) = crate::field_admission::identity_values(
+        frame,
+        &Schema::new(ResultRecord::fields()),
+        "result_owner",
+        Domain::Snapshot,
+    )?
+    else {
+        return Ok(Vec::new());
+    };
+    Ok(runtime
+        .records::<SnapshotReference>(
+            references
+                .select(vec![col("value").alias("snapshot_id")])?
+                .sort(vec![col("snapshot_id").sort(true, false)])?,
+            32,
+        )
+        .await?
+        .into_iter()
+        .map(|r| r.snapshot_id)
+        .collect())
+}
 pub(crate) fn schema() -> SchemaRef {
     Arc::new(Schema::new(RetainedResult::fields()))
+}
+
+/// Native result values and their exact physical dependency protection share one lifetime.
+/// A delivery owner retains this through its final file read, not only the Delta row decode.
+pub struct CapturedResult {
+    pub record: enrichment_core::operation::results::ResultRecord,
+    _protection: crate::leases::ReadProtection,
 }
 
 pub(crate) fn retained_root(
     record: &RetainedResult,
     sequence: u64,
 ) -> crate::retention::RetentionRoot {
-    use crate::retention::{Dependency, RetentionRoot, TableVersion};
+    use crate::retention::{Dependency, RetentionRoot, TableSelection};
     let mut dependencies = record
         .references
         .iter()
@@ -37,12 +79,14 @@ pub(crate) fn retained_root(
         artifact_id: record.result_artifact_id.clone(),
     });
     dependencies.push(Dependency::Table {
-        value: TableVersion {
-            table_uri: format!("result_{}", record.version.tool),
-            table_id: record.version.table_id.clone(),
-            version: record.version.version,
-            contract_id: record.version.contract_id.clone(),
-            cohort_id: None,
+        value: TableSelection {
+            source: record.version.source.clone(),
+            row: Some(crate::retention::RowKey {
+                column: "result_artifact_id".into(),
+                value: enrichment_core::identity::RowValue::Text {
+                    value: record.result_artifact_id.clone(),
+                },
+            }),
         },
     });
     RetentionRoot {
@@ -81,8 +125,12 @@ impl ControlStore {
         crate::native_catalog::work(
             &admission,
             "result_receipt_inputs",
-            crate::artifact_catalog::flatten(admission.read_batch(receipt_batch.clone())?)?
-                .into_view(),
+            crate::artifact_catalog::flatten(crate::native_catalog::batch(
+                &admission,
+                "result_catalog",
+                receipt_batch.clone(),
+            )?)?
+            .into_view(),
         )?;
         runtime.require_empty(admission.sql("SELECT 'result_receipt_input' AS witness FROM result_receipt_inputs HAVING count(*)>1023 OR sum(size_bytes)>536870912").await?,
             "result_receipt_input_budget", "result_retention").await?;
@@ -99,14 +147,22 @@ impl ControlStore {
         let obligation = retention
             .create_obligation(
                 artifact.artifact_id.clone(),
-                vec![crate::retention::Dependency::TableScope {
-                    table_uri: format!("result_{}", index.record.data.kind()),
-                }],
+                vec![crate::retention::pending_row(
+                    &format!("result_{}", index.record.data.kind()),
+                    &crate::result_relations::contract(index.record.data.kind())?,
+                    crate::retention::RowKey {
+                        column: "result_artifact_id".into(),
+                        value: enrichment_core::identity::RowValue::Text {
+                            value: artifact.artifact_id.clone(),
+                        },
+                    },
+                )?],
             )
             .await?;
         let record = RetainedResult {
             result_artifact_id: artifact.artifact_id.clone(),
             body_base: base,
+            snapshots: snapshot_references(runtime, &index.record).await?,
             version: crate::result_relations::retain(
                 &self.delta_namespace(),
                 &artifact.artifact_id,
@@ -142,7 +198,8 @@ impl ControlStore {
             crate::native_catalog::work(
                 &session,
                 "issued_result",
-                session.read_batch(batch.clone())?.into_view(),
+                crate::native_catalog::batch(&session, "result_catalog", batch.clone())?
+                    .into_view(),
             )?;
             crate::native_catalog::work(
                 &session,
@@ -150,7 +207,11 @@ impl ControlStore {
                 pin.artifacts(runtime)
                     .await?
                     .union(crate::artifact_catalog::flatten(
-                        session.read_batch(receipt_batch.clone())?,
+                        crate::native_catalog::batch(
+                            &session,
+                            "result_catalog",
+                            receipt_batch.clone(),
+                        )?,
                     )?)?
                     .into_view(),
             )?;
@@ -217,20 +278,28 @@ impl ControlSnapshot {
         &self,
         declared: &RetainedResult,
     ) -> Result<enrichment_core::operation::results::ResultRecord> {
+        Ok(self.capture_result(declared).await?.record)
+    }
+    pub async fn capture_result(&self, declared: &RetainedResult) -> Result<CapturedResult> {
         let protection = self
             .protect(
                 declared.result_artifact_id.clone(),
                 crate::retention::ProtectionKind::Query,
                 retained_root(declared, 0).dependencies,
+                std::slice::from_ref(&declared.result_artifact_id),
             )
             .await?;
-        crate::result_relations::read(
+        let record = crate::result_relations::read(
             &self.delta,
             &declared.result_artifact_id,
             &declared.version,
-            protection,
+            protection.clone(),
         )
-        .await
+        .await?;
+        Ok(CapturedResult {
+            record,
+            _protection: protection,
+        })
     }
     /// Native recursive closure, with explicit cycle/depth/cardinality/byte refusal. Selection
     /// uses this captured catalog; the byte driver only verifies the resulting finite inventory.
@@ -240,61 +309,69 @@ impl ControlSnapshot {
         blobs: &BlobStore,
         root: &Artifact,
     ) -> Result<Vec<Artifact>> {
+        self.result_artifact_closure(runtime, blobs, std::slice::from_ref(root), true)
+            .await
+    }
+
+    /// Verify one native-selected union of retained results and transitive artifacts.
+    pub(crate) async fn result_artifacts(
+        &self,
+        runtime: &QueryRuntime,
+        blobs: &BlobStore,
+        roots: &[Artifact],
+    ) -> Result<Vec<Artifact>> {
+        self.result_artifact_closure(runtime, blobs, roots, false)
+            .await
+    }
+
+    async fn result_artifact_closure(
+        &self,
+        runtime: &QueryRuntime,
+        blobs: &BlobStore,
+        roots: &[Artifact],
+        exclude_roots: bool,
+    ) -> Result<Vec<Artifact>> {
         let session = self.session(runtime).await?;
-        let selected = session
-            .table("state.records.retained_results")
-            .await?
-            .filter(col("result_artifact_id").eq(lit(root.artifact_id.clone())))?;
-        if runtime
-            .execute(selected.clone().limit(0, Some(2))?)
-            .await?
-            .rows
-            != 1
-        {
-            return Err(DataFusionError::Execution(
-                "result is not enrolled in captured native retention".into(),
-            ));
-        }
-        crate::native_catalog::work(&session, "selected_result", selected.into_view())?;
         crate::native_catalog::work(
             &session,
             "issued_artifacts",
             self.artifacts(runtime).await?.into_view(),
         )?;
-        let closure = session.sql("WITH RECURSIVE edges AS (SELECT result_artifact_id,unnest(references) AS child FROM state.records.retained_results), walk AS (SELECT result_artifact_id AS id, make_array(result_artifact_id) AS path, 0 AS depth, false AS cycle FROM selected_result UNION ALL SELECT e.child.artifact_id, array_append(w.path,e.child.artifact_id), w.depth+1, array_has(w.path,e.child.artifact_id) FROM walk w JOIN edges e ON w.id=e.result_artifact_id WHERE w.depth<64 AND NOT w.cycle) SELECT * FROM walk").await?;
-        crate::native_catalog::work(&session, "result_closure", closure.into_view())?;
-        runtime
-            .require_empty(
-                session
-                    .sql("SELECT id FROM result_closure WHERE cycle OR depth=64 LIMIT 1")
-                    .await?,
-                "result_dependency_depth_cycle",
-                "result_retention",
+        let selected = dependency_plan(runtime, &session, roots).await?;
+        let artifacts = runtime.records::<Artifact>(selected, 1024).await?;
+        if artifacts.is_empty() {
+            return Ok(artifacts);
+        }
+        let returned = if exclude_roots {
+            Some(runtime.records::<Artifact>(session.sql("SELECT a.* FROM closure_artifacts a LEFT ANTI JOIN requested_result_root r ON a.artifact_id=r.artifact_id ORDER BY a.artifact_id").await?,1024).await?)
+        } else {
+            None
+        };
+        let root_ids = roots
+            .iter()
+            .map(|root| root.artifact_id.clone())
+            .collect::<Vec<_>>();
+        let protection = self
+            .protect(
+                format!("result-validation/{}", uuid::Uuid::new_v4()),
+                crate::retention::ProtectionKind::Query,
+                artifacts
+                    .iter()
+                    .map(|artifact| crate::retention::Dependency::Artifact {
+                        artifact_id: artifact.artifact_id.clone(),
+                    })
+                    .collect(),
+                &root_ids,
             )
             .await?;
-        runtime.require_empty(session.sql("SELECT w.id FROM result_closure w LEFT ANTI JOIN issued_artifacts a ON w.id=a.artifact_id LIMIT 1").await?,"result_dependency_present", "result_retention").await?;
-        let selected = session.sql("WITH candidates AS (SELECT a.*, row_number() OVER (PARTITION BY a.artifact_id ORDER BY a.source_uri,a.retrieved_at,a.media_type,a.kind) AS position FROM issued_artifacts a JOIN (SELECT DISTINCT id FROM result_closure) c ON a.artifact_id=c.id) SELECT * EXCLUDE (position) FROM candidates WHERE position=1").await?;
-        crate::native_catalog::work(&session, "closure_artifacts", selected.clone().into_view())?;
-        runtime.require_empty(session.sql("SELECT 'artifact_closure_budget' AS witness FROM closure_artifacts HAVING count(*)>1024 OR sum(size_bytes)>536870912").await?,"result_dependency_budget","result_retention").await?;
-        let output = runtime.execute(selected).await?;
-        let mut artifacts = Vec::new();
-        for batch in output.batches {
-            let rows = RowSet::batch(&batch)?;
-            for i in 0..batch.num_rows() {
-                artifacts.push(acquisitions::decode_one(rows.row(i))?);
-            }
-        }
-        let owned = blobs.clone();
-        let root_id = root.artifact_id.clone();
+        let blobs = blobs.clone();
         runtime
             .blocking(move || -> std::io::Result<Vec<Artifact>> {
+                let _protection = protection;
                 for artifact in &artifacts {
-                    owned.verify(artifact, 512 * 1024 * 1024)?;
+                    blobs.verify(artifact, 512 * 1024 * 1024)?;
                 }
-                Ok(artifacts
-                    .into_iter()
-                    .filter(|a| a.artifact_id != root_id)
-                    .collect())
+                Ok(returned.unwrap_or(artifacts))
             })
             .await?
             .map_err(Into::into)
@@ -333,9 +410,170 @@ impl ControlSnapshot {
     }
 }
 
+/// Decisions over a captured native catalog; no blob reads or fresh catalog generations.
+async fn dependency_plan(
+    runtime: &QueryRuntime,
+    session: &datafusion::prelude::SessionContext,
+    roots: &[Artifact],
+) -> Result<datafusion::dataframe::DataFrame> {
+    if roots.len() > 1024 {
+        return datafusion::common::exec_err!("result root input bound");
+    }
+    crate::native_catalog::input(session, "requested_result_root", Artifact::batch(roots)?)?;
+    runtime.require_empty(session.sql("SELECT artifact_id AS witness FROM requested_result_root GROUP BY artifact_id HAVING count(DISTINCT sha256)<>1 OR count(DISTINCT size_bytes)<>1 UNION ALL SELECT r.artifact_id FROM requested_result_root r LEFT ANTI JOIN state.records.retained_results t ON r.artifact_id=t.result_artifact_id").await?,"result_root_declaration","result_retention").await?;
+    let selected=session.sql("SELECT t.* FROM state.records.retained_results t LEFT SEMI JOIN requested_result_root r ON t.result_artifact_id=r.artifact_id").await?;
+    crate::native_catalog::work(session, "selected_result", selected.into_view())?;
+    runtime.require_empty(session.sql("SELECT result_artifact_id AS witness FROM selected_result GROUP BY result_artifact_id HAVING count(*)<>1").await?,"result_root_cardinality","result_retention").await?;
+    runtime.require_empty(session.sql("SELECT r.artifact_id AS witness FROM requested_result_root r LEFT ANTI JOIN issued_artifacts a ON r.artifact_id=a.artifact_id AND r.sha256=a.sha256 AND r.size_bytes=a.size_bytes").await?,"result_root_content_identity","result_retention").await?;
+    let closure=session.sql("WITH RECURSIVE edges AS (SELECT result_artifact_id,unnest(references) AS child FROM state.records.retained_results), walk AS (SELECT result_artifact_id AS id, make_array(result_artifact_id) AS path, 0 AS depth, false AS cycle FROM selected_result UNION ALL SELECT e.child.artifact_id, array_append(w.path,e.child.artifact_id), w.depth+1, array_has(w.path,e.child.artifact_id) FROM walk w JOIN edges e ON w.id=e.result_artifact_id WHERE w.depth<64 AND NOT w.cycle) SELECT * FROM walk").await?;
+    crate::native_catalog::work(session, "result_closure", closure.into_view())?;
+    runtime
+        .require_empty(
+            session
+                .sql("SELECT id AS witness FROM result_closure WHERE cycle OR depth=64 LIMIT 1")
+                .await?,
+            "result_dependency_depth_cycle",
+            "result_retention",
+        )
+        .await?;
+    runtime.require_empty(session.sql("SELECT w.id AS witness FROM result_closure w LEFT ANTI JOIN issued_artifacts a ON w.id=a.artifact_id LIMIT 1").await?,"result_dependency_present","result_retention").await?;
+    runtime.require_empty(session.sql("SELECT a.artifact_id AS witness FROM issued_artifacts a JOIN (SELECT DISTINCT id FROM result_closure) c ON a.artifact_id=c.id GROUP BY a.artifact_id HAVING count(DISTINCT a.sha256)<>1 OR count(DISTINCT a.size_bytes)<>1").await?,"result_dependency_content_identity","result_retention").await?;
+    let selected=session.sql("WITH candidates AS (SELECT a.*, row_number() OVER (PARTITION BY a.artifact_id ORDER BY a.source_uri,a.retrieved_at,a.media_type,a.kind) AS position FROM issued_artifacts a JOIN (SELECT DISTINCT id FROM result_closure) c ON a.artifact_id=c.id) SELECT * EXCLUDE (position) FROM candidates WHERE position=1").await?;
+    crate::native_catalog::work(session, "closure_artifacts", selected.clone().into_view())?;
+    runtime.require_empty(session.sql("SELECT 'artifact_closure_budget' AS witness FROM closure_artifacts HAVING count(*)>1024 OR sum(size_bytes)>536870912").await?,"result_dependency_budget","result_retention").await?;
+    selected.sort(vec![col("artifact_id").sort(true, false)])
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use enrichment_core::native_union::{Domain, Rule};
+    enrichment_core::native_struct! {struct Edge {artifact_id:String=>Rule::Reference(Domain::Artifact)} }
+    enrichment_core::native_struct! {struct Root {
+        result_artifact_id:String=>Rule::Reference(Domain::Artifact),references:Vec<Edge> => Rule::Sequence
+    } }
+
+    #[tokio::test]
+    async fn result_dependency_union_selects_once_and_refuses_cycles_missing_or_conflicting_content()
+    -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let runtime = QueryRuntime::new(directory.path(), Default::default())?;
+        let artifact = |name: &str| {
+            Artifact::describe(
+                name.as_bytes(),
+                enrichment_core::evidence::ArtifactKind::Other,
+                "application/octet-stream",
+                &format!("unit://{name}"),
+                enrichment_core::native_time::AcquisitionTime::from_micros(1).unwrap(),
+            )
+        };
+        let a = artifact("a");
+        let b = artifact("b");
+        let child = artifact("child");
+        let roots = [
+            Root {
+                result_artifact_id: a.artifact_id.clone(),
+                references: vec![Edge {
+                    artifact_id: child.artifact_id.clone(),
+                }],
+            },
+            Root {
+                result_artifact_id: b.artifact_id.clone(),
+                references: vec![Edge {
+                    artifact_id: child.artifact_id.clone(),
+                }],
+            },
+        ];
+        let selected = async |records: &[Root],
+                              issued: &[Artifact],
+                              requested: &[Artifact]|
+               -> Result<Vec<Artifact>> {
+            let temporary = runtime.session();
+            let input =
+                crate::native_catalog::batch(&temporary, "result_roots", Root::batch(records)?)?
+                    .into_view();
+            let session = runtime.bound_session(
+                [(
+                    "state".into(),
+                    Arc::new(crate::native_catalog::BoundCatalog::default().with_schema(
+                        crate::native_catalog::BindingKind::FoldedRecords,
+                        [("retained_results".into(), input)].into_iter().collect(),
+                    )) as Arc<dyn datafusion::catalog::CatalogProvider>,
+                )]
+                .into_iter()
+                .collect(),
+            )?;
+            crate::native_catalog::input(&session, "issued_artifacts", Artifact::batch(issued)?)?;
+            runtime
+                .records(dependency_plan(&runtime, &session, requested).await?, 1024)
+                .await
+        };
+        let mut other_origin = child.clone();
+        other_origin.source_uri = "unit://second-origin".into();
+        let issued = vec![a.clone(), b.clone(), child.clone(), other_origin];
+        assert_eq!(
+            selected(&roots, &issued, &[a.clone(), b.clone()])
+                .await?
+                .len(),
+            3
+        );
+        assert!(selected(&roots, &issued, &[]).await?.is_empty());
+        assert!(
+            selected(&roots, &issued, std::slice::from_ref(&child))
+                .await
+                .is_err()
+        );
+        assert!(
+            selected(&roots, &issued[..2], std::slice::from_ref(&a))
+                .await
+                .is_err()
+        );
+        let mut conflicting = issued.clone();
+        conflicting[3].size_bytes += 1;
+        assert!(
+            selected(&roots, &conflicting, std::slice::from_ref(&a))
+                .await
+                .is_err()
+        );
+        let mut wrong = a.clone();
+        wrong.sha256 = "0".repeat(64);
+        assert!(selected(&roots, &issued, &[wrong]).await.is_err());
+        let duplicated = [roots[0].clone(), roots[0].clone()];
+        assert!(
+            selected(&duplicated, &issued, std::slice::from_ref(&a))
+                .await
+                .is_err()
+        );
+        let cyclic = [
+            Root {
+                result_artifact_id: a.artifact_id.clone(),
+                references: vec![Edge {
+                    artifact_id: b.artifact_id.clone(),
+                }],
+            },
+            Root {
+                result_artifact_id: b.artifact_id.clone(),
+                references: vec![Edge {
+                    artifact_id: a.artifact_id.clone(),
+                }],
+            },
+        ];
+        assert!(
+            selected(&cyclic, &issued, std::slice::from_ref(&a))
+                .await
+                .is_err()
+        );
+        let large = issued[..3]
+            .iter()
+            .cloned()
+            .map(|mut artifact| {
+                artifact.size_bytes = 200 * 1024 * 1024;
+                artifact
+            })
+            .collect::<Vec<_>>();
+        assert!(selected(&roots, &large, &large[..2]).await.is_err());
+        runtime.close_diagnostics().await
+    }
     #[tokio::test]
     async fn captured_native_receipts_sections_and_dependency_integrity() {
         let root = tempfile::tempdir().unwrap();

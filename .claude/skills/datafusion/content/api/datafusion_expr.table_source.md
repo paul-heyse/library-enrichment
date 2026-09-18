@@ -18,6 +18,9 @@ enum TableProviderFilterPushDown
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.table_source.TableProviderFilterPushDown.md).
+
+
 Indicates how a filter expression is handled by
 [`TableProvider::scan`].
 
@@ -52,6 +55,9 @@ enum TableType
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.table_source.TableType.md).
+
+
 Indicates the type of this table for metadata/catalog purposes.
 
 ---
@@ -81,6 +87,9 @@ fn schema(&self) -> SchemaRef
 fn supports_filters_pushdown(&self, filters: &[&Expr]) -> Result<Vec<TableProviderFilterPushDown>>
 fn table_type(&self) -> TableType
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.table_source.TableSource.md).
+
 
 Planning time information about a table.
 

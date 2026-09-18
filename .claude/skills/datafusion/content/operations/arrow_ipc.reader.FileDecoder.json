@@ -1,0 +1,1037 @@
+[
+  {
+    "id": "6e691454a30392bcbceb3c88",
+    "path": "arrow_ipc::reader::FileDecoder",
+    "name": "FileDecoder",
+    "owner": null,
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct FileDecoder",
+    "docs": "A low-level, push-based interface for reading an IPC file\n\nFor a higher-level interface see [`FileReader`]\n\nFor an example of using this API with `mmap` see the [`zero_copy_ipc`] example.\n\n[`zero_copy_ipc`]: https://github.com/apache/arrow-rs/blob/main/arrow/examples/zero_copy_ipc.rs\n\n```\n# use std::sync::Arc;\n# use arrow_array::*;\n# use arrow_array::types::Int32Type;\n# use arrow_buffer::Buffer;\n# use arrow_ipc::convert::fb_to_schema;\n# use arrow_ipc::reader::{FileDecoder, read_footer_length};\n# use arrow_ipc::root_as_footer;\n# use arrow_ipc::writer::FileWriter;\n// Write an IPC file\n\nlet batch = RecordBatch::try_from_iter([\n    (\"a\", Arc::new(Int32Array::from(vec![1, 2, 3])) as _),\n    (\"b\", Arc::new(Int32Array::from(vec![1, 2, 3])) as _),\n    (\"c\", Arc::new(DictionaryArray::<Int32Type>::from_iter([\"hello\", \"hello\", \"world\"])) as _),\n]).unwrap();\n\nlet schema = batch.schema();\n\nlet mut out = Vec::with_capacity(1024);\nlet mut writer = FileWriter::try_new(&mut out, schema.as_ref()).unwrap();\nwriter.write(&batch).unwrap();\nwriter.finish().unwrap();\n\ndrop(writer);\n\n// Read IPC file\n\nlet buffer = Buffer::from_vec(out);\nlet trailer_start = buffer.len() - 10;\nlet footer_len = read_footer_length(buffer[trailer_start..].try_into().unwrap()).unwrap();\nlet footer = root_as_footer(&buffer[trailer_start - footer_len..trailer_start]).unwrap();\n\nlet back = fb_to_schema(footer.schema().unwrap());\nassert_eq!(&back, schema.as_ref());\n\nlet mut decoder = FileDecoder::new(schema, footer.version());\n\n// Read dictionaries\nfor block in footer.dictionaries().iter().flatten() {\n    let block_len = block.bodyLength() as usize + block.metaDataLength() as usize;\n    let data = buffer.slice_with_length(block.offset() as _, block_len);\n    decoder.read_dictionary(&block, &data).unwrap();\n}\n\n// Read record batch\nlet batches = footer.recordBatches().unwrap();\nassert_eq!(batches.len(), 1); // Only wrote a single batch\n\nlet block = batches.get(0);\nlet block_len = block.bodyLength() as usize + block.metaDataLength() as usize;\nlet data = buffer.slice_with_length(block.offset() as _, block_len);\nlet back = decoder.read_record_batch(block, &data).unwrap().unwrap();\n\nassert_eq!(batch, back);\n```",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1021,
+        1
+      ],
+      "end": [
+        1028,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          212,
+          213,
+          214,
+          215,
+          216,
+          217,
+          218,
+          219,
+          220,
+          221,
+          222,
+          223,
+          224,
+          225,
+          226,
+          228
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`FileReader`": 202
+    },
+    "link_paths": {
+      "`FileReader`": "arrow_ipc::reader::FileReader"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "203",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.FileDecoder.json",
+    "anchor": "op-6e691454a30392bcbceb3c88",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FileReader`": "../operations/arrow_ipc.reader.FileReader.md#op-637d6dc146e8bf36b6e304bf"
+    }
+  },
+  {
+    "id": "54d2cb0be1f4a6526645bf61",
+    "path": "arrow_ipc::reader::FileDecoder::fmt",
+    "name": "fmt",
+    "owner": "arrow_ipc::reader::FileDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1020,
+        10
+      ],
+      "end": [
+        1020,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 57,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 58,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "57": "core::fmt::Formatter",
+      "58": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileDecoder",
+          "id": "arrow_ipc::reader::FileDecoder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1020,
+          10
+        ],
+        "end": [
+          1020,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "227",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.FileDecoder.json",
+    "anchor": "op-54d2cb0be1f4a6526645bf61",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3a20f9042276749a431d6212",
+    "path": "arrow_ipc::reader::FileDecoder::new",
+    "name": "new",
+    "owner": "arrow_ipc::reader::FileDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(schema: SchemaRef, version: MetadataVersion) -> Self",
+    "docs": "Create a new [`FileDecoder`] with the given schema and version",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1032,
+        5
+      ],
+      "end": [
+        1041,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "version",
+              {
+                "resolved_path": {
+                  "path": "MetadataVersion",
+                  "id": 170,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_schema::schema::SchemaRef",
+      "170": "arrow_ipc::gen::Schema::MetadataVersion"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileDecoder",
+          "id": "arrow_ipc::reader::FileDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1030,
+          1
+        ],
+        "end": [
+          1150,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FileDecoder`": 203
+    },
+    "link_paths": {
+      "`FileDecoder`": "arrow_ipc::reader::FileDecoder"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "204",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.FileDecoder.json",
+    "anchor": "op-3a20f9042276749a431d6212",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FileDecoder`": "../operations/arrow_ipc.reader.FileDecoder.md#op-6e691454a30392bcbceb3c88"
+    }
+  },
+  {
+    "id": "cd113b10317005a1aa815923",
+    "path": "arrow_ipc::reader::FileDecoder::read_dictionary",
+    "name": "read_dictionary",
+    "owner": "arrow_ipc::reader::FileDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn read_dictionary(&mut self, block: &Block, buf: &Buffer) -> Result<(), ArrowError>",
+    "docs": "Read the dictionary with the given block and data buffer",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1094,
+        5
+      ],
+      "end": [
+        1113,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "block",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Block",
+                      "id": 210,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "buf",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Buffer",
+                      "id": 79,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "210": "arrow_ipc::gen::File::Block",
+      "79": "arrow_buffer::buffer::immutable::Buffer",
+      "44": "core::result::Result",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileDecoder",
+          "id": "arrow_ipc::reader::FileDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1030,
+          1
+        ],
+        "end": [
+          1150,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "209",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.FileDecoder.json",
+    "anchor": "op-cd113b10317005a1aa815923",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "94811364eb792d09c9651ea8",
+    "path": "arrow_ipc::reader::FileDecoder::read_record_batch",
+    "name": "read_record_batch",
+    "owner": "arrow_ipc::reader::FileDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn read_record_batch(&self, block: &Block, buf: &Buffer) -> Result<Option<RecordBatch>, ArrowError>",
+    "docs": "Read the RecordBatch with the given block and data buffer",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1116,
+        5
+      ],
+      "end": [
+        1149,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "block",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Block",
+                      "id": 210,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "buf",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Buffer",
+                      "id": 79,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 127,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "RecordBatch",
+                                      "id": 118,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "210": "arrow_ipc::gen::File::Block",
+      "79": "arrow_buffer::buffer::immutable::Buffer",
+      "44": "core::result::Result",
+      "127": "core::option::Option",
+      "118": "arrow_array::record_batch::RecordBatch",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileDecoder",
+          "id": "arrow_ipc::reader::FileDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1030,
+          1
+        ],
+        "end": [
+          1150,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "211",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.FileDecoder.json",
+    "anchor": "op-94811364eb792d09c9651ea8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4867a14351f3f7c88f4622b2",
+    "path": "arrow_ipc::reader::FileDecoder::with_projection",
+    "name": "with_projection",
+    "owner": "arrow_ipc::reader::FileDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_projection(self, projection: Vec<usize>) -> Self",
+    "docs": "Specify a projection",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1044,
+        5
+      ],
+      "end": [
+        1047,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "projection",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 206,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "206": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileDecoder",
+          "id": "arrow_ipc::reader::FileDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1030,
+          1
+        ],
+        "end": [
+          1150,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "205",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.FileDecoder.json",
+    "anchor": "op-4867a14351f3f7c88f4622b2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "db3176b246a3ec2268493421",
+    "path": "arrow_ipc::reader::FileDecoder::with_require_alignment",
+    "name": "with_require_alignment",
+    "owner": "arrow_ipc::reader::FileDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_require_alignment(self, require_alignment: bool) -> Self",
+    "docs": "Specifies if the array data in input buffers is required to be properly aligned.\n\nIf `require_alignment` is true, this decoder will return an error if any array data in the\ninput `buf` is not properly aligned.\nUnder the hood it will use [`arrow_data::ArrayDataBuilder::build`] to construct\n[`arrow_data::ArrayData`].\n\nIf `require_alignment` is false (the default), this decoder will automatically allocate a\nnew aligned buffer and copy over the data if any array data in the input `buf` is not\nproperly aligned. (Properly aligned array data will remain zero-copy.)\nUnder the hood it will use [`arrow_data::ArrayDataBuilder::align_buffers`] to construct\n[`arrow_data::ArrayData`].",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1061,
+        5
+      ],
+      "end": [
+        1064,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "require_alignment",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileDecoder",
+          "id": "arrow_ipc::reader::FileDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1030,
+          1
+        ],
+        "end": [
+          1150,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`arrow_data::ArrayDataBuilder::build`": 122,
+      "`arrow_data::ArrayData`": 123,
+      "`arrow_data::ArrayDataBuilder::align_buffers`": 124
+    },
+    "link_paths": {
+      "`arrow_data::ArrayDataBuilder::build`": "arrow_data::data::ArrayDataBuilder::build",
+      "`arrow_data::ArrayData`": "arrow_data::data::ArrayData",
+      "`arrow_data::ArrayDataBuilder::align_buffers`": "arrow_data::data::ArrayDataBuilder::align_buffers"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "207",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.FileDecoder.json",
+    "anchor": "op-db3176b246a3ec2268493421",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`arrow_data::ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "e750154fa82597609b22c72a",
+    "path": "arrow_ipc::reader::FileDecoder::with_skip_validation",
+    "name": "with_skip_validation",
+    "owner": "arrow_ipc::reader::FileDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn with_skip_validation(self, skip_validation: bool) -> Self",
+    "docs": "Specifies if validation should be skipped when reading data (defaults to `false`)\n\n# Safety\n\nThis flag must only be set to `true` when you trust the input data and are sure the data you are\nreading is a valid Arrow IPC file, otherwise undefined behavior may\nresult.\n\nFor example, some programs may wish to trust reading IPC files written\nby the same process that created the files.",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1076,
+        5
+      ],
+      "end": [
+        1079,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "skip_validation",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileDecoder",
+          "id": "arrow_ipc::reader::FileDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1030,
+          1
+        ],
+        "end": [
+          1150,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "208",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.FileDecoder.json",
+    "anchor": "op-e750154fa82597609b22c72a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

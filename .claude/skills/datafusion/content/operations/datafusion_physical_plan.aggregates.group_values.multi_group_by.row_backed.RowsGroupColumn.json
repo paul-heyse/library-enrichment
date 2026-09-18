@@ -1,0 +1,1407 @@
+[
+  {
+    "id": "c4432d606b876f77c52a957c",
+    "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+    "name": "RowsGroupColumn",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct RowsGroupColumn",
+    "docs": "A [`GroupColumn`] that stores group values for a single column in the arrow\n[row format], backed by a single-field [`RowConverter`].\n\n# NULL semantics\n\nThe [`GroupColumn`] contract treats two NULLs as equal. The row format\nencodes NULL with a distinct sentinel, so `null`-row bytes compare equal to\neach other and unequal to any non-null row — matching the contract without\nspecial-casing.\n\n# Float `-0.0` / `NaN`\n\nEquality here is byte equality under arrow's IEEE-754 *totalOrder* row\nencoding, which treats `-0.0` and `+0.0` as distinct and canonicalizes\n`NaN`. Because hashing is performed separately (on the raw input array), a\ncaller must ensure the two agree — e.g. by normalizing `-0.0 → +0.0` on the\ninput columns before hashing when a float leaf is present (as\n[`GroupValuesRows`] does). See the module docs.\n\n[row format]: arrow::row\n[`GroupValuesRows`]: crate::aggregates::group_values::GroupValuesRows",
+    "span": {
+      "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+      "begin": [
+        78,
+        1
+      ],
+      "end": [
+        89,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          241,
+          242,
+          243,
+          244,
+          245,
+          246,
+          247,
+          248,
+          249,
+          250,
+          251,
+          252,
+          253,
+          254,
+          255,
+          256,
+          257,
+          258,
+          267
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`GroupColumn`": 151,
+      "arrow::row": 233,
+      "crate::aggregates::group_values::GroupValuesRows": 235,
+      "`RowConverter`": 234
+    },
+    "link_paths": {
+      "`GroupColumn`": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+      "arrow::row": "arrow_row",
+      "crate::aggregates::group_values::GroupValuesRows": "datafusion_physical_plan::aggregates::group_values::row::GroupValuesRows",
+      "`RowConverter`": "arrow_row::RowConverter"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "236",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.json",
+    "anchor": "op-c4432d606b876f77c52a957c",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`GroupColumn`": "../operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.GroupColumn.md#op-204596f00d03b5d0c6d4dde1",
+      "arrow::row": "../modules/arrow_row.md#op-303caac8dd00f839fb954c1c",
+      "crate::aggregates::group_values::GroupValuesRows": "../operations/datafusion_physical_plan.aggregates.group_values.row.GroupValuesRows.md#op-582641990575e3e296c3f1a9",
+      "`RowConverter`": "../operations/arrow_row.RowConverter.md#op-3289371bf6ccaf9946ba91e3"
+    }
+  },
+  {
+    "id": "52a8b8d3f63f06cfb06402ec",
+    "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn::append_val",
+    "name": "append_val",
+    "owner": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn append_val(&mut self, array: &ArrayRef, row: usize) -> Result<()>",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+      "begin": [
+        246,
+        5
+      ],
+      "end": [
+        250,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "array",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ArrayRef",
+                      "id": 178,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "row",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "178": "arrow_array::array::ArrayRef",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowsGroupColumn",
+          "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "GroupColumn",
+        "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "260",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.json",
+    "anchor": "op-52a8b8d3f63f06cfb06402ec",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ac08f67202a967a58a4f20b9",
+    "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn::build",
+    "name": "build",
+    "owner": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn build(Box<self>) -> ArrayRef",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+      "begin": [
+        293,
+        5
+      ],
+      "end": [
+        295,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Box",
+                  "id": 186,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 178,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "186": "alloc::boxed::Box",
+      "178": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowsGroupColumn",
+          "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "GroupColumn",
+        "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "265",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.json",
+    "anchor": "op-ac08f67202a967a58a4f20b9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ce0adba349124db44819c8ad",
+    "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn::equal_to",
+    "name": "equal_to",
+    "owner": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn equal_to(&self, lhs_row: usize, array: &ArrayRef, rhs_row: usize) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+      "begin": [
+        236,
+        5
+      ],
+      "end": [
+        244,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "lhs_row",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "array",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ArrayRef",
+                      "id": 178,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "rhs_row",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "178": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowsGroupColumn",
+          "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "GroupColumn",
+        "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "259",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.json",
+    "anchor": "op-ce0adba349124db44819c8ad",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3dcf1de7d2fcbc7f64ba83d2",
+    "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn::len",
+    "name": "len",
+    "owner": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+      "begin": [
+        285,
+        5
+      ],
+      "end": [
+        287,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowsGroupColumn",
+          "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "GroupColumn",
+        "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "263",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.json",
+    "anchor": "op-3dcf1de7d2fcbc7f64ba83d2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9f825f00f7844f90d5ba4fe3",
+    "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn::size",
+    "name": "size",
+    "owner": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn size(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+      "begin": [
+        289,
+        5
+      ],
+      "end": [
+        291,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowsGroupColumn",
+          "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "GroupColumn",
+        "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "264",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.json",
+    "anchor": "op-9f825f00f7844f90d5ba4fe3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ab3cedbe152475e59abb4de7",
+    "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn::supports_type",
+    "name": "supports_type",
+    "owner": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_type(data_type: &DataType) -> bool",
+    "docs": "Returns whether `data_type` can be handled by this generic column.\n\nThis is stricter than [`RowConverter::supports_fields`]: the row\nformat also has to survive the `build` / `take_n` reverse trip\nthrough [`RowConverter::convert_rows`], and arrow's\n`decode_fixed_size_list` (arrow-row 59.1.0) skips the\ndictionary-flatten correction that the other list-like decoders\napply, so any `FixedSizeList` containing a `Dictionary` leaf\npanics on emit with `\"FixedSizeListArray expected data type\nDictionary(...) got <flattened> for \\\"item\\\"\"`.\n\nReject those shapes here so `make_group_column` falls back to\n`GroupValuesRows`. The other list-likes (`List`, `LargeList`,\n`ListView`, `LargeListView`, `Map`) do carry the correction, so\nthey decode without panicking — but the correction *flattens* any\ndictionary child to its value type, so `build` / `take_n` must\nre-encode the emitted array back to `output_type` via\n`encode_array_if_necessary` (which has a reconstruction arm for\neach of these containers).\n\nAdditionally, `Union` and `RunEndEncoded` are rejected because\nthey were routed to `GroupValuesRows` before this column existed\nand their arrow-row round-trip has not been covered by this\ncrate's tests yet. Keeping them on the pre-PR path avoids\nintroducing an untested code path for those types.",
+    "span": {
+      "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+      "begin": [
+        185,
+        5
+      ],
+      "end": [
+        193,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DataType",
+                      "id": 197,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "197": "arrow_schema::datatype::DataType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowsGroupColumn",
+          "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+        "begin": [
+          159,
+          1
+        ],
+        "end": [
+          233,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RowConverter::supports_fields`": 237,
+      "`RowConverter::convert_rows`": 238
+    },
+    "link_paths": {
+      "`RowConverter::supports_fields`": "arrow_row::RowConverter::supports_fields",
+      "`RowConverter::convert_rows`": "arrow_row::RowConverter::convert_rows"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "239",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.json",
+    "anchor": "op-ab3cedbe152475e59abb4de7",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "44dcaaf91c9c2feb1aff38dc",
+    "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn::take_n",
+    "name": "take_n",
+    "owner": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn take_n(&mut self, n: usize) -> ArrayRef",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+      "begin": [
+        297,
+        5
+      ],
+      "end": [
+        316,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 178,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "178": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowsGroupColumn",
+          "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "GroupColumn",
+        "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "266",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.json",
+    "anchor": "op-44dcaaf91c9c2feb1aff38dc",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1bd9b1d273a5adf96a9f9ad0",
+    "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn::try_new",
+    "name": "try_new",
+    "owner": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_new(data_type: DataType) -> Result<Self>",
+    "docs": "Create an empty [`RowsGroupColumn`] for `data_type`.",
+    "span": {
+      "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+      "begin": [
+        196,
+        5
+      ],
+      "end": [
+        204,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data_type",
+              {
+                "resolved_path": {
+                  "path": "DataType",
+                  "id": 197,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "197": "arrow_schema::datatype::DataType",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowsGroupColumn",
+          "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+        "begin": [
+          159,
+          1
+        ],
+        "end": [
+          233,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RowsGroupColumn`": 236
+    },
+    "link_paths": {
+      "`RowsGroupColumn`": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "240",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.json",
+    "anchor": "op-1bd9b1d273a5adf96a9f9ad0",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RowsGroupColumn`": "../operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.md#op-c4432d606b876f77c52a957c"
+    }
+  },
+  {
+    "id": "57e6121458de6a67af58c3d8",
+    "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn::vectorized_append",
+    "name": "vectorized_append",
+    "owner": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn vectorized_append(&mut self, array: &ArrayRef, rows: &[usize]) -> Result<()>",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+      "begin": [
+        276,
+        5
+      ],
+      "end": [
+        283,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "array",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ArrayRef",
+                      "id": 178,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "rows",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "usize"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "178": "arrow_array::array::ArrayRef",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowsGroupColumn",
+          "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "GroupColumn",
+        "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "262",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.json",
+    "anchor": "op-57e6121458de6a67af58c3d8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "327085b84d9f36ba0b1861af",
+    "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn::vectorized_equal_to",
+    "name": "vectorized_equal_to",
+    "owner": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn vectorized_equal_to(&self, lhs_rows: &[usize], array: &ArrayRef, rhs_rows: &[usize], equal_to_results: &mut BooleanBufferBuilder)",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+      "begin": [
+        252,
+        5
+      ],
+      "end": [
+        274,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "lhs_rows",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "usize"
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "array",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ArrayRef",
+                      "id": 178,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "rhs_rows",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "usize"
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "equal_to_results",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "BooleanBufferBuilder",
+                      "id": 181,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "178": "arrow_array::array::ArrayRef",
+      "181": "arrow_buffer::builder::boolean::BooleanBufferBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowsGroupColumn",
+          "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "GroupColumn",
+        "id": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "261",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.json",
+    "anchor": "op-327085b84d9f36ba0b1861af",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

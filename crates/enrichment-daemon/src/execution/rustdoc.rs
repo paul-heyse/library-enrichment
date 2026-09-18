@@ -15,85 +15,34 @@ use std::sync::{Arc, atomic::AtomicBool};
 
 use enrichment_core::{
     canonical,
-    execution::ProcessObservation,
+    execution::{ProcessObservation, producer::Invocation},
     identity::Environment,
     producer::{docsrs::ManifestFacts, rustdoc},
 };
 
-use super::{Runner, capsule::PreparationError, capsule::require_success, capsule::strings};
+use super::{Runner, capsule::PreparationError, capsule::require_success};
+use enrichment_store::owned_bytes::OwnedBytes;
 
 /// The toolchain identity the fallback runs under, from `config/toolchains.toml`.
 ///
 /// Duplicated here as a constant rather than read at run time because it is part of the
 /// compiled producer's identity: changing it is a code change with a provenance consequence,
 /// not a configuration tweak. `just rustdoc-format-matrix` is what re-measures it.
-pub const TOOLCHAIN: &str = "nightly-2026-09-13";
-/// The rustc release the toolchain must report, or the output is not admitted.
-pub const RUSTC_RELEASE: &str = "1.100.0-nightly";
-/// The commit hash the toolchain must report.
-pub const RUSTC_COMMIT: &str = "809936eac";
+pub const TOOLCHAIN: &str = enrichment_core::execution::producer::RUSTDOC_TOOLCHAIN;
 /// The only target this producer builds for.
-pub const TARGET: &str = "x86_64-unknown-linux-gnu";
-
-#[derive(Debug, serde::Serialize)]
-pub struct BuildSpec {
-    pub target: String,
-    pub features: Vec<String>,
-    pub default_features: bool,
-}
-impl BuildSpec {
-    pub fn for_environment(environment: &Environment) -> Result<Self, String> {
-        let target = environment.target.as_deref().unwrap_or(TARGET);
-        if target != TARGET {
-            return Err(format!(
-                "requested rustdoc target {target} is not installed in the admitted producer image; supported target is {TARGET}"
-            ));
-        }
-        Ok(Self {
-            target: target.into(),
-            features: environment.features.clone().unwrap_or_default(),
-            default_features: environment.default_features.unwrap_or(true),
-        })
-    }
-
-    fn rustdoc_args(&self, manifest: &str) -> Vec<String> {
-        let mut args = strings(&[
-            "/usr/local/cargo/bin/cargo",
-            &format!("+{TOOLCHAIN}"),
-            "rustdoc",
-            "--frozen",
-            "--lib",
-            &format!("--manifest-path={manifest}"),
-            &format!("--target={}", self.target),
-        ]);
-        if !self.default_features {
-            args.push("--no-default-features".into());
-        }
-        for feature in &self.features {
-            args.push(format!("--features={feature}"));
-        }
-        args.extend(strings(&[
-            "--",
-            "-Z",
-            "unstable-options",
-            "--output-format",
-            "json",
-        ]));
-        args
-    }
-}
+pub const TARGET: &str = enrichment_core::execution::producer::RUST_TARGET;
 
 /// What a successful local build produced.
 pub struct LocalBuild {
     /// The rustdoc JSON, verified to declare a supported `format_version`.
-    pub payload: Vec<u8>,
+    pub payload: OwnedBytes,
     /// The format version the document declares.
     pub format_version: u32,
     /// The exact `rustc -vV` output of the toolchain that emitted it.
     pub rustc_identity: String,
     /// Every bounded process observation, in order, for provenance.
     pub observations: Vec<ProcessObservation>,
-    pub lock: Vec<u8>,
+    pub lock: OwnedBytes,
     pub environment: Environment,
     pub started_at: enrichment_core::native_time::ObservationTime,
     pub finished_at: enrichment_core::native_time::ObservationTime,
@@ -119,7 +68,7 @@ pub async fn build(
     image: &str,
     capsules: &Path,
     budget_mib: u64,
-    tarball: &[u8],
+    tarball: OwnedBytes,
     facts: &ManifestFacts,
     requested: &Environment,
     cancel: Arc<AtomicBool>,
@@ -129,7 +78,10 @@ pub async fn build(
     let containment_identity = runner
         .containment_identity()
         .map_err(|e| PreparationError::from_runner(&e))?;
-    let spec = BuildSpec::for_environment(requested)?;
+    let spec =
+        enrichment_store::producer_plan::rustdoc_options(runner.ownership.runtime(), requested)
+            .await
+            .map_err(|error| PreparationError::Environment(error.to_string()))?;
     // This is the largest writer of capsule storage in the service -- a whole
     // `CARGO_TARGET_DIR` plus a fetched registry closure -- so it takes the same aggregate
     // ceiling as every other capsule, checked before anything is extracted.
@@ -148,92 +100,62 @@ pub async fn build(
 
     // The toolchain is a recorded identity, so check it before trusting anything it emits.
     let identity = runner
-        .run(
-            image,
-            &root,
-            &strings(&[
-                "/usr/local/cargo/bin/rustc",
-                &format!("+{TOOLCHAIN}"),
-                "-vV",
-            ]),
-            cancel.clone(),
-        )
+        .run(image, &root, &Invocation::RustdocIdentity, cancel.clone())
         .await
         .map_err(|e| PreparationError::from_runner(&e))?;
-    require_success(&identity, "dated nightly producer identity")?;
-    if !identity.stdout.contains(RUSTC_RELEASE) || !identity.stdout.contains(RUSTC_COMMIT) {
-        return Err(format!(
-            "the admitted image's {TOOLCHAIN} reports an unrecorded compiler; \
-             config/toolchains.toml records {RUSTC_RELEASE} ({RUSTC_COMMIT}) and the image said: {}",
-            identity.stdout.trim()
-        )
-        .into());
-    }
+    require_success(
+        runner,
+        &Invocation::RustdocIdentity,
+        &identity,
+        "dated nightly producer identity",
+    )
+    .await?;
     let rustc_identity = identity.stdout.clone();
     let mut observations = vec![identity];
 
-    let extracted = enrichment_core::archive::extract_tar_gz(
+    let storage = Arc::new(storage);
+    let prepared = super::preparation::cargo_source(
+        runner,
+        storage.clone(),
+        &root,
         tarball,
-        &root.join("source"),
-        &storage.archive_policy().map_err(|e| e.to_string())?,
+        facts
+            .package_name
+            .as_deref()
+            .ok_or("Cargo package identity missing")?,
+        facts.package_version.as_deref(),
     )
-    .map_err(|e| e.to_string())?;
-    let top = extracted.top_level.ok_or("crate archive lacks one root")?;
+    .await?;
+    let top = prepared.root;
+    let lib = prepared.identity.lib_name;
+    let _storage = storage;
+    std::fs::create_dir_all(root.join("cargo-home")).map_err(|error| error.to_string())?;
     let source = root.join("source").join(&top);
-
-    // The same admission the consumer capsule applies: no path, Git or alternate-registry
-    // dependency, and no package-supplied Cargo configuration or toolchain override.
-    let manifest: toml::Value = toml::from_str(
-        &std::fs::read_to_string(source.join("Cargo.toml")).map_err(|e| e.to_string())?,
-    )
-    .map_err(|e| e.to_string())?;
-    super::capsule::validate_cargo_sources(&manifest)?;
-    for path in enrichment_core::producer::python::archive::files(&source)? {
-        if path.split('/').any(|part| part == ".cargo")
-            || path.ends_with("rust-toolchain")
-            || path.ends_with("rust-toolchain.toml")
-        {
-            std::fs::remove_file(source.join(path)).map_err(|e| e.to_string())?;
-        }
-    }
-
-    let manifest_path = format!("/capsule/source/{top}/Cargo.toml");
-    std::fs::create_dir_all(root.join("cargo-home")).map_err(|e| e.to_string())?;
     // Acquisition is networked and separate from the build, which is offline. Fetching is the
     // only step allowed to reach a registry, and it resolves nothing the manifest did not name.
     let fetch = runner
-        .acquire(
+        .run(
             image,
             &root,
-            &strings(&[
-                "/usr/local/cargo/bin/cargo",
-                &format!("+{TOOLCHAIN}"),
-                "fetch",
-                &format!("--manifest-path={manifest_path}"),
-                &format!("--target={}", spec.target),
-            ]),
+            &Invocation::RustdocFetch {
+                source_root: top.clone(),
+            },
             cancel.clone(),
-            [
-                (
-                    format!("source/{top}/Cargo.lock"),
-                    enrichment_core::capsule_protocol::OutputKind::File,
-                ),
-                (
-                    "cargo-home".into(),
-                    enrichment_core::capsule_protocol::OutputKind::Directory,
-                ),
-            ]
-            .into(),
         )
         .await
         .map_err(|e| PreparationError::from_runner(&e))?;
-    require_success(&fetch, "rustdoc dependency acquisition")?;
+    require_success(
+        runner,
+        &Invocation::RustdocFetch {
+            source_root: top.clone(),
+        },
+        &fetch,
+        "rustdoc dependency acquisition",
+    )
+    .await?;
     observations.push(fetch);
 
-    let lock = std::fs::read(source.join("Cargo.lock")).map_err(|e| e.to_string())?;
-    if lock.len() > 1_048_576 {
-        return Err("rustdoc dependency lock exceeds retained record bound".into());
-    }
+    let lock = super::preparation::read(runner, source.join("Cargo.lock"), 1_048_576).await?;
     let environment = Environment::resolved(
         TOOLCHAIN.into(),
         spec.target.clone(),
@@ -241,53 +163,53 @@ pub async fn build(
         Some(spec.default_features),
         canonical::sha256_hex(&lock),
     );
-    let argv = spec.rustdoc_args(&manifest_path);
     let built = runner
-        .prepare_outputs(
+        .run(
             image,
             &root,
-            &argv,
+            &Invocation::RustdocBuild {
+                source_root: top.clone(),
+                lib_name: lib.clone(),
+                features: spec.features.clone(),
+                default_features: spec.default_features,
+            },
             cancel,
-            [(
-                format!(
-                    "target/{TARGET}/doc/{}.json",
-                    facts.lib_name.clone().unwrap_or_else(|| top
-                        .split('-')
-                        .next()
-                        .unwrap_or(&top)
-                        .replace('-', "_"))
-                ),
-                enrichment_core::capsule_protocol::OutputKind::File,
-            )]
-            .into(),
         )
         .await
         .map_err(|e| PreparationError::from_runner(&e))?;
-    require_success(&built, "local rustdoc build")?;
+    require_success(
+        runner,
+        &Invocation::RustdocBuild {
+            source_root: top.clone(),
+            lib_name: lib.clone(),
+            features: spec.features.clone(),
+            default_features: spec.default_features,
+        },
+        &built,
+        "local rustdoc build",
+    )
+    .await?;
     observations.push(built);
 
-    let lib = facts
-        .lib_name
-        .clone()
-        .unwrap_or_else(|| top.split('-').next().unwrap_or(&top).replace('-', "_"));
     let produced = root
         .join("target")
         .join(TARGET)
         .join("doc")
         .join(format!("{lib}.json"));
-    let payload = std::fs::read(&produced).map_err(|e| {
-        PreparationError::Environment(format!(
-            "the build succeeded but produced no {}: {e}",
-            produced.display()
-        ))
-    })?;
-
-    // Check the emitted format before normalization, exactly as the hosted path does. A
-    // nightly that moved to an unsupported format is a refusal, not a silent misparse (R04).
-    let text = String::from_utf8(payload).map_err(|e| e.to_string())?;
-    let probe = rustdoc::probe_format(&text).map_err(|e| {
-        PreparationError::Environment(format!("the locally built JSON is unusable: {e}"))
-    })?;
+    let payload = super::preparation::read(runner, produced, rustdoc::facts::MAX_BYTES).await?;
+    // Version probing ignores the body; parsing and normalization run in the owned decoder.
+    let payload = runner
+        .ownership
+        .runtime()
+        .blocking(move || -> Result<_, String> {
+            let text = std::str::from_utf8(&payload).map_err(|error| error.to_string())?;
+            let probe = rustdoc::probe_format(text)
+                .map_err(|error| format!("the locally built JSON is unusable: {error}"))?;
+            Ok((payload, probe))
+        })
+        .await
+        .map_err(|error| PreparationError::Policy(error.to_string()))??;
+    let (payload, probe) = payload;
 
     if runner
         .containment_identity()
@@ -298,7 +220,7 @@ pub async fn build(
     }
     drop(scratch);
     Ok(LocalBuild {
-        payload: text.into_bytes(),
+        payload,
         format_version: probe.format_version,
         rustc_identity,
         observations,
@@ -310,26 +232,4 @@ pub async fn build(
         image_id: image.into(),
         containment_identity,
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn fallback_honors_requested_features_defaults_and_frozen_lock() {
-        let requested =
-            Environment::declared(Some(TARGET.into()), Some(vec!["serde".into()]), Some(false));
-        let spec = BuildSpec::for_environment(&requested).unwrap();
-        let args = spec.rustdoc_args("/capsule/Cargo.toml");
-        assert!(args.iter().any(|a| a == "--features=serde"));
-        assert!(args.iter().any(|a| a == "--no-default-features"));
-        assert!(args.iter().any(|a| a == "--frozen"));
-        assert!(!args.iter().any(|a| a == "--all-features"));
-        let missing = Environment::declared(Some("aarch64-unknown-linux-gnu".into()), None, None);
-        assert!(
-            BuildSpec::for_environment(&missing)
-                .unwrap_err()
-                .contains("not installed")
-        );
-    }
 }

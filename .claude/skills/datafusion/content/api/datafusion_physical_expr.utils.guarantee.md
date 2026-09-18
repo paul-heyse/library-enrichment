@@ -16,6 +16,9 @@ enum Guarantee
 
 **Derives**: Clone, Copy, Debug, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.utils.guarantee.Guarantee.md).
+
+
 What is guaranteed about the values for a [`LiteralGuarantee`]?
 
 ---
@@ -47,6 +50,9 @@ fn analyze(expr: &Arc<dyn PhysicalExpr>) -> Vec<LiteralGuarantee>
 ```rust
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.utils.guarantee.LiteralGuarantee.md).
+
 
 Represents a guarantee that must be true for a boolean expression to
 evaluate to `true`.

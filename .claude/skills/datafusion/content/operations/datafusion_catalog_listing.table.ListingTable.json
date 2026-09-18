@@ -1,0 +1,4071 @@
+[
+  {
+    "id": "00feae5c1ac67d3f887e695a",
+    "path": "datafusion_catalog_listing::table::ListingTable",
+    "name": "ListingTable",
+    "owner": null,
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct ListingTable",
+    "docs": "Built in [`TableProvider`] that reads data from one or more files as a single table.\n\nThe files are read using an  [`ObjectStore`] instance, for example from\nlocal files or objects from AWS S3.\n\n# Features:\n* Reading multiple files as a single table\n* Hive style partitioning (e.g., directories named `date=2024-06-01`)\n* Merges schemas from files with compatible but not identical schemas (see [`ListingTableConfig::file_schema`])\n* `limit`, `filter` and `projection` pushdown for formats that support it (e.g.,\n  Parquet)\n* Statistics collection and pruning based on file metadata\n* Pre-existing sort order (see [`ListingOptions::file_sort_order`])\n* Metadata caching to speed up repeated queries (see [`FileMetadataCache`])\n* Statistics caching (see [`FileStatisticsCache`])\n\n[`FileMetadataCache`]: datafusion_execution::cache::cache_manager::FileMetadataCache\n\n# Reading Directories and Hive Style Partitioning\n\nFor example, given the `table1` directory (or object store prefix)\n\n```text\ntable1\n ├── file1.parquet\n └── file2.parquet\n```\n\nA `ListingTable` would read the files `file1.parquet` and `file2.parquet` as\na single table, merging the schemas if the files have compatible but not\nidentical schemas.\n\nGiven the `table2` directory (or object store prefix)\n\n```text\ntable2\n ├── date=2024-06-01\n │    ├── file3.parquet\n │    └── file4.parquet\n └── date=2024-06-02\n      └── file5.parquet\n```\n\nA `ListingTable` would read the files `file3.parquet`, `file4.parquet`, and\n`file5.parquet` as a single table, again merging schemas if necessary.\n\nGiven the hive style partitioning structure (e.g,. directories named\n`date=2024-06-01` and `date=2026-06-02`), `ListingTable` also adds a `date`\ncolumn when reading the table:\n* The files in `table2/date=2024-06-01` will have the value `2024-06-01`\n* The files in `table2/date=2024-06-02` will have the value `2024-06-02`.\n\nIf the query has a predicate like `WHERE date = '2024-06-01'`\nonly the corresponding directory will be read.\n\n# See Also\n\n1. [`ListingTableConfig`]: Configuration options\n1. [`DataSourceExec`]: `ExecutionPlan` used by `ListingTable`\n\n[`DataSourceExec`]: datafusion_datasource::source::DataSourceExec\n\n# Caching Metadata\n\nSome formats, such as Parquet, use the `FileMetadataCache` to cache file\nmetadata that is needed to execute but expensive to read, such as row\ngroups and statistics. The cache is scoped to the `SessionContext` and can\nbe configured via the [runtime config options].\n\n[runtime config options]: https://datafusion.apache.org/user-guide/configs.html#runtime-configuration-settings\n\n# Example: Read a directory of parquet files using a [`ListingTable`]\n\n```no_run\n# use datafusion_common::Result;\n# use std::sync::Arc;\n# use datafusion_catalog::TableProvider;\n# use datafusion_catalog_listing::{ListingOptions, ListingTable, ListingTableConfig};\n# use datafusion_datasource::ListingTableUrl;\n# use datafusion_datasource_parquet::file_format::ParquetFormat;/// #\n# use datafusion_catalog::Session;\nasync fn get_listing_table(session: &dyn Session) -> Result<Arc<dyn TableProvider>> {\n    let table_path = \"/path/to/parquet\";\n\n    // Parse the path\n    let table_path = ListingTableUrl::parse(table_path)?;\n\n    // Create default parquet options\n    let file_format = ParquetFormat::new();\n    let listing_options = ListingOptions::new(Arc::new(file_format))\n        .with_file_extension(\".parquet\");\n\n// Resolve the schema\nlet resolved_schema = listing_options\n   .infer_schema(session, &table_path)\n   .await?;\n\nlet config = ListingTableConfig::new(table_path)\n  .with_listing_options(listing_options)\n  .with_schema(resolved_schema);\n\n// Create a new TableProvider\nlet provider = Arc::new(ListingTable::try_new(config)?);\n\nOk(provider)\n}\n```",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        180,
+        1
+      ],
+      "end": [
+        209,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          271,
+          272,
+          273,
+          274,
+          275,
+          276,
+          277,
+          278,
+          279,
+          280,
+          281,
+          282,
+          283,
+          284,
+          285,
+          286,
+          287,
+          288,
+          289,
+          290,
+          292,
+          294,
+          313
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`TableProvider`": 252,
+      "`FileStatisticsCache`": 254,
+      "datafusion_execution::cache::cache_manager::FileMetadataCache": 253,
+      "`ListingTableConfig`": 92,
+      "`ListingOptions::file_sort_order`": 178,
+      "`ListingTable`": 3,
+      "`ObjectStore`": 159,
+      "`ListingTableConfig::file_schema`": 83,
+      "datafusion_datasource::source::DataSourceExec": 255
+    },
+    "link_paths": {
+      "`TableProvider`": "datafusion_session::table::TableProvider",
+      "`FileStatisticsCache`": "datafusion_execution::cache::cache_manager::FileStatisticsCache",
+      "datafusion_execution::cache::cache_manager::FileMetadataCache": "datafusion_execution::cache::cache_manager::FileMetadataCache",
+      "`ListingTableConfig`": "datafusion_catalog_listing::config::ListingTableConfig",
+      "`ListingOptions::file_sort_order`": "datafusion_catalog_listing::options::ListingOptions::file_sort_order",
+      "`ListingTable`": "datafusion_catalog_listing::table::ListingTable",
+      "`ObjectStore`": "object_store::ObjectStore",
+      "`ListingTableConfig::file_schema`": "datafusion_catalog_listing::config::ListingTableConfig::file_schema",
+      "datafusion_datasource::source::DataSourceExec": "datafusion_datasource::source::DataSourceExec"
+    },
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "3",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-00feae5c1ac67d3f887e695a",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable",
+      "datafusion_catalog_listing::ListingTable"
+    ],
+    "resolved_doc_links": {
+      "`TableProvider`": "../operations/datafusion_session.table.TableProvider.md#op-76e5c2e5b081ebf294e9493e",
+      "`FileStatisticsCache`": "../operations/datafusion_execution.cache.cache_manager.FileStatisticsCache.md#op-5a9ca2374f0f0f017e5506c9",
+      "datafusion_execution::cache::cache_manager::FileMetadataCache": "../operations/datafusion_execution.cache.cache_manager.FileMetadataCache.md#op-eae1fe1b1bd732ee9949f01d",
+      "`ListingTableConfig`": "../operations/datafusion_catalog_listing.config.ListingTableConfig.md#op-4acbb7e9df4c811e49fabab5",
+      "`ListingOptions::file_sort_order`": "../operations/datafusion_catalog_listing.options.ListingOptions.md#op-aeed47965969ef6c92614a05",
+      "`ListingTable`": "../operations/datafusion_catalog_listing.table.ListingTable.md#op-00feae5c1ac67d3f887e695a",
+      "`ObjectStore`": "../operations/object_store.ObjectStore.md#op-94894eaf9e5f6b785baca8ca",
+      "`ListingTableConfig::file_schema`": "../operations/datafusion_catalog_listing.config.ListingTableConfig.md#op-5bd022953393c8343e35ce2a",
+      "datafusion_datasource::source::DataSourceExec": "../operations/datafusion_datasource.source.DataSourceExec.md#op-96b0a6eef9f3c044c580d9b6"
+    }
+  },
+  {
+    "id": "fb58a954313272a71a4537d6",
+    "path": "datafusion_catalog_listing::table::ListingTable::clone",
+    "name": "clone",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> ListingTable",
+    "docs": "",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        179,
+        17
+      ],
+      "end": [
+        179,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ListingTable",
+              "id": 3,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3": "datafusion_catalog_listing::table::ListingTable"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          179,
+          17
+        ],
+        "end": [
+          179,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "293",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-fb58a954313272a71a4537d6",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::clone",
+      "datafusion_catalog_listing::ListingTable::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b47825c03688ba09f844c4bd",
+    "path": "datafusion_catalog_listing::table::ListingTable::constraints",
+    "name": "constraints",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn constraints(&self) -> Option<&Constraints>",
+    "docs": "",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        484,
+        5
+      ],
+      "end": [
+        486,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 84,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Constraints",
+                              "id": 258,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "84": "core::option::Option",
+      "258": "datafusion_common::functional_dependencies::Constraints"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "TableProvider",
+        "id": "datafusion_session::table::TableProvider",
+        "args": null
+      },
+      "trait_path": "datafusion_session::table::TableProvider",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          479,
+          1
+        ],
+        "end": [
+          773,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "296",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-b47825c03688ba09f844c4bd",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::constraints",
+      "datafusion_catalog_listing::ListingTable::constraints"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9835ce64b672e31f4a837417",
+    "path": "datafusion_catalog_listing::table::ListingTable::fmt",
+    "name": "fmt",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        179,
+        10
+      ],
+      "end": [
+        179,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 63,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 64,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "63": "core::fmt::Formatter",
+      "64": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          179,
+          10
+        ],
+        "end": [
+          179,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "291",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-9835ce64b672e31f4a837417",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::fmt",
+      "datafusion_catalog_listing::ListingTable::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "01862f2174c1fb5762878378",
+    "path": "datafusion_catalog_listing::table::ListingTable::get_column_default",
+    "name": "get_column_default",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn get_column_default(&self, column: &str) -> Option<&Expr>",
+    "docs": "",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        770,
+        5
+      ],
+      "end": [
+        772,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "column",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "primitive": "str"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 84,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Expr",
+                              "id": 134,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "84": "core::option::Option",
+      "134": "datafusion_expr::expr::Expr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "TableProvider",
+        "id": "datafusion_session::table::TableProvider",
+        "args": null
+      },
+      "trait_path": "datafusion_session::table::TableProvider",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          479,
+          1
+        ],
+        "end": [
+          773,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "312",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-01862f2174c1fb5762878378",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::get_column_default",
+      "datafusion_catalog_listing::ListingTable::get_column_default"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "10a54019dfa8876cd79d969e",
+    "path": "datafusion_catalog_listing::table::ListingTable::get_table_definition",
+    "name": "get_table_definition",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn get_table_definition(&self) -> Option<&str>",
+    "docs": "",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        697,
+        5
+      ],
+      "end": [
+        699,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 84,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "primitive": "str"
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "84": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "TableProvider",
+        "id": "datafusion_session::table::TableProvider",
+        "args": null
+      },
+      "trait_path": "datafusion_session::table::TableProvider",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          479,
+          1
+        ],
+        "end": [
+          773,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "309",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-10a54019dfa8876cd79d969e",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::get_table_definition",
+      "datafusion_catalog_listing::ListingTable::get_table_definition"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2b92986ced8d83211cbbb73e",
+    "path": "datafusion_catalog_listing::table::ListingTable::insert_into",
+    "name": "insert_into",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "async fn insert_into(&self, state: &dyn Session, input: Arc<dyn ExecutionPlan>, insert_op: InsertOp) -> datafusion_common::Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        701,
+        5
+      ],
+      "end": [
+        768,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "state",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Session",
+                            "id": 101,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "input",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 104,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 303,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "insert_op",
+              {
+                "resolved_path": {
+                  "path": "InsertOp",
+                  "id": 311,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 300,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 301,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 302,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "datafusion_common::Result",
+                                                            "id": 98,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "Arc",
+                                                                        "id": 104,
+                                                                        "args": {
+                                                                          "angle_bracketed": {
+                                                                            "args": [
+                                                                              {
+                                                                                "type": {
+                                                                                  "dyn_trait": {
+                                                                                    "traits": [
+                                                                                      {
+                                                                                        "trait": {
+                                                                                          "path": "ExecutionPlan",
+                                                                                          "id": 303,
+                                                                                          "args": null
+                                                                                        },
+                                                                                        "generic_params": []
+                                                                                      }
+                                                                                    ],
+                                                                                    "lifetime": null
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            ],
+                                                                            "constraints": []
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 6,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "101": "datafusion_session::session::Session",
+      "104": "alloc::sync::Arc",
+      "303": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "311": "datafusion_expr::logical_plan::dml::InsertOp",
+      "300": "core::pin::Pin",
+      "301": "alloc::boxed::Box",
+      "302": "core::future::future::Future",
+      "98": "datafusion_common::error::Result",
+      "6": "core::marker::Send"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "TableProvider",
+        "id": "datafusion_session::table::TableProvider",
+        "args": null
+      },
+      "trait_path": "datafusion_session::table::TableProvider",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          479,
+          1
+        ],
+        "end": [
+          773,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "310",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-2b92986ced8d83211cbbb73e",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::insert_into",
+      "datafusion_catalog_listing::ListingTable::insert_into"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ad3eafe20add1ea7c9515eda",
+    "path": "datafusion_catalog_listing::table::ListingTable::list_files_for_scan",
+    "name": "list_files_for_scan",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "async fn list_files_for_scan<'a>(&'a self, ctx: &'a dyn Session, filters: &'a [Expr], limit: Option<usize>) -> datafusion_common::Result<ListFilesResult>",
+    "docs": "Get the list of files for a scan as well as the file level statistics.\nThe list is grouped to let the execution plan know how the files should\nbe distributed to different threads / executors.\n\nIf [`ListingOptions::output_partitioning`] is set, returns one file\ngroup per declared partition, including empty trailing groups.",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        782,
+        5
+      ],
+      "end": [
+        798,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'a",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'a",
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Session",
+                            "id": 101,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "filters",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'a",
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Expr",
+                        "id": 134,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "limit",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 84,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 98,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ListFilesResult",
+                          "id": 222,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": true,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "101": "datafusion_session::session::Session",
+      "134": "datafusion_expr::expr::Expr",
+      "84": "core::option::Option",
+      "98": "datafusion_common::error::Result",
+      "222": "datafusion_catalog_listing::table::ListFilesResult"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          775,
+          1
+        ],
+        "end": [
+          1051,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ListingOptions::output_partitioning`": 181
+    },
+    "link_paths": {
+      "`ListingOptions::output_partitioning`": "datafusion_catalog_listing::options::ListingOptions::output_partitioning"
+    },
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "221",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-ad3eafe20add1ea7c9515eda",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::list_files_for_scan",
+      "datafusion_catalog_listing::ListingTable::list_files_for_scan"
+    ],
+    "resolved_doc_links": {
+      "`ListingOptions::output_partitioning`": "../operations/datafusion_catalog_listing.options.ListingOptions.md#op-df20634d5465d3ff2c7a06da"
+    }
+  },
+  {
+    "id": "6221a6da9ea5a8799de693ad",
+    "path": "datafusion_catalog_listing::table::ListingTable::options",
+    "name": "options",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn options(&self) -> &ListingOptions",
+    "docs": "Get options ref",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        296,
+        5
+      ],
+      "end": [
+        298,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ListingOptions",
+                  "id": 86,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "86": "datafusion_catalog_listing::options::ListingOptions"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          211,
+          1
+        ],
+        "end": [
+          378,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "264",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-6221a6da9ea5a8799de693ad",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::options",
+      "datafusion_catalog_listing::ListingTable::options"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "74dfc785055e8d748da6e392",
+    "path": "datafusion_catalog_listing::table::ListingTable::scan",
+    "name": "scan",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "async fn scan(&self, state: &dyn Session, projection: Option<&Vec<usize>>, filters: &[Expr], limit: Option<usize>) -> datafusion_common::Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        492,
+        5
+      ],
+      "end": [
+        504,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "state",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Session",
+                            "id": 101,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "projection",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 84,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": "'life2",
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "Vec",
+                                  "id": 80,
+                                  "args": {
+                                    "angle_bracketed": {
+                                      "args": [
+                                        {
+                                          "type": {
+                                            "primitive": "usize"
+                                          }
+                                        }
+                                      ],
+                                      "constraints": []
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "filters",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life3",
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Expr",
+                        "id": 134,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "limit",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 84,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 300,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 301,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 302,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "datafusion_common::Result",
+                                                            "id": 98,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "Arc",
+                                                                        "id": 104,
+                                                                        "args": {
+                                                                          "angle_bracketed": {
+                                                                            "args": [
+                                                                              {
+                                                                                "type": {
+                                                                                  "dyn_trait": {
+                                                                                    "traits": [
+                                                                                      {
+                                                                                        "trait": {
+                                                                                          "path": "ExecutionPlan",
+                                                                                          "id": 303,
+                                                                                          "args": null
+                                                                                        },
+                                                                                        "generic_params": []
+                                                                                      }
+                                                                                    ],
+                                                                                    "lifetime": null
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            ],
+                                                                            "constraints": []
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 6,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life2",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life3",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life2",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life3",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "101": "datafusion_session::session::Session",
+      "84": "core::option::Option",
+      "80": "alloc::vec::Vec",
+      "134": "datafusion_expr::expr::Expr",
+      "300": "core::pin::Pin",
+      "301": "alloc::boxed::Box",
+      "302": "core::future::future::Future",
+      "98": "datafusion_common::error::Result",
+      "104": "alloc::sync::Arc",
+      "303": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "6": "core::marker::Send"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "TableProvider",
+        "id": "datafusion_session::table::TableProvider",
+        "args": null
+      },
+      "trait_path": "datafusion_session::table::TableProvider",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          479,
+          1
+        ],
+        "end": [
+          773,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "299",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-74dfc785055e8d748da6e392",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::scan",
+      "datafusion_catalog_listing::ListingTable::scan"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "cdeddef1a06bcb056f833d59",
+    "path": "datafusion_catalog_listing::table::ListingTable::scan_with_args",
+    "name": "scan_with_args",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "async fn scan_with_args<'a>(&self, state: &dyn Session, args: ScanArgs<'a>) -> datafusion_common::Result<ScanResult>",
+    "docs": "",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        506,
+        5
+      ],
+      "end": [
+        671,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "state",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Session",
+                            "id": 101,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "args",
+              {
+                "resolved_path": {
+                  "path": "ScanArgs",
+                  "id": 305,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'a"
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 300,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 301,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 302,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "datafusion_common::Result",
+                                                            "id": 98,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "ScanResult",
+                                                                        "id": 306,
+                                                                        "args": null
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 6,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'a",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "101": "datafusion_session::session::Session",
+      "305": "datafusion_session::table::ScanArgs",
+      "300": "core::pin::Pin",
+      "301": "alloc::boxed::Box",
+      "302": "core::future::future::Future",
+      "98": "datafusion_common::error::Result",
+      "306": "datafusion_session::table::ScanResult",
+      "6": "core::marker::Send"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "TableProvider",
+        "id": "datafusion_session::table::TableProvider",
+        "args": null
+      },
+      "trait_path": "datafusion_session::table::TableProvider",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          479,
+          1
+        ],
+        "end": [
+          773,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "304",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-cdeddef1a06bcb056f833d59",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::scan_with_args",
+      "datafusion_catalog_listing::ListingTable::scan_with_args"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d308660258262a33aa41f42b",
+    "path": "datafusion_catalog_listing::table::ListingTable::schema",
+    "name": "schema",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn schema(&self) -> SchemaRef",
+    "docs": "",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        480,
+        5
+      ],
+      "end": [
+        482,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "SchemaRef",
+              "id": 85,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "85": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "TableProvider",
+        "id": "datafusion_session::table::TableProvider",
+        "args": null
+      },
+      "trait_path": "datafusion_session::table::TableProvider",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          479,
+          1
+        ],
+        "end": [
+          773,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "295",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-d308660258262a33aa41f42b",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::schema",
+      "datafusion_catalog_listing::ListingTable::schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "adeb958106d942bf5f829225",
+    "path": "datafusion_catalog_listing::table::ListingTable::schema_adapter_factory",
+    "name": "schema_adapter_factory",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn schema_adapter_factory(&self) -> Option<Arc<dyn SchemaAdapterFactory>>",
+    "docs": "Deprecated: Returns the [`SchemaAdapterFactory`] used by this [`ListingTable`].\n\n`SchemaAdapterFactory` has been removed. Use `PhysicalExprAdapterFactory` instead.\nSee `upgrading.md` for more details.\n\nAlways returns `None`.",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        335,
+        5
+      ],
+      "end": [
+        337,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[expect(deprecated)]"
+      }
+    ],
+    "deprecation": {
+      "since": "52.0.0",
+      "note": "SchemaAdapterFactory has been removed. Use PhysicalExprAdapterFactory instead. See upgrading.md for more details."
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 84,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 104,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "SchemaAdapterFactory",
+                                            "id": 105,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "84": "core::option::Option",
+      "104": "alloc::sync::Arc",
+      "105": "datafusion_datasource::schema_adapter::SchemaAdapterFactory"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          211,
+          1
+        ],
+        "end": [
+          378,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`SchemaAdapterFactory`": 105,
+      "`ListingTable`": 3
+    },
+    "link_paths": {
+      "`SchemaAdapterFactory`": "datafusion_datasource::schema_adapter::SchemaAdapterFactory",
+      "`ListingTable`": "datafusion_catalog_listing::table::ListingTable"
+    },
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "267",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-adeb958106d942bf5f829225",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::schema_adapter_factory",
+      "datafusion_catalog_listing::ListingTable::schema_adapter_factory"
+    ],
+    "resolved_doc_links": {
+      "`SchemaAdapterFactory`": "../operations/datafusion_datasource.schema_adapter.SchemaAdapterFactory.md#op-3a8d8affcaa558dad7e4798c",
+      "`ListingTable`": "../operations/datafusion_catalog_listing.table.ListingTable.md#op-00feae5c1ac67d3f887e695a"
+    }
+  },
+  {
+    "id": "889274aa48551e3db0491657",
+    "path": "datafusion_catalog_listing::table::ListingTable::schema_source",
+    "name": "schema_source",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn schema_source(&self) -> SchemaSource",
+    "docs": "Get the schema source",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        301,
+        5
+      ],
+      "end": [
+        303,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "SchemaSource",
+              "id": 4,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4": "datafusion_catalog_listing::config::SchemaSource"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          211,
+          1
+        ],
+        "end": [
+          378,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "265",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-889274aa48551e3db0491657",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::schema_source",
+      "datafusion_catalog_listing::ListingTable::schema_source"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d653684b22393ebfad13a61a",
+    "path": "datafusion_catalog_listing::table::ListingTable::supports_filters_pushdown",
+    "name": "supports_filters_pushdown",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_filters_pushdown(&self, filters: &[&Expr]) -> datafusion_common::Result<Vec<TableProviderFilterPushDown>>",
+    "docs": "",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        673,
+        5
+      ],
+      "end": [
+        695,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "filters",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "borrowed_ref": {
+                        "lifetime": null,
+                        "is_mutable": false,
+                        "type": {
+                          "resolved_path": {
+                            "path": "Expr",
+                            "id": 134,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 98,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 80,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "TableProviderFilterPushDown",
+                                      "id": 308,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "134": "datafusion_expr::expr::Expr",
+      "98": "datafusion_common::error::Result",
+      "80": "alloc::vec::Vec",
+      "308": "datafusion_expr::table_source::TableProviderFilterPushDown"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "TableProvider",
+        "id": "datafusion_session::table::TableProvider",
+        "args": null
+      },
+      "trait_path": "datafusion_session::table::TableProvider",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          479,
+          1
+        ],
+        "end": [
+          773,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "307",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-d653684b22393ebfad13a61a",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::supports_filters_pushdown",
+      "datafusion_catalog_listing::ListingTable::supports_filters_pushdown"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ec92e8ccd1d25eb5ad35670c",
+    "path": "datafusion_catalog_listing::table::ListingTable::table_paths",
+    "name": "table_paths",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn table_paths(&self) -> &Vec<ListingTableUrl>",
+    "docs": "Get paths ref",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        291,
+        5
+      ],
+      "end": [
+        293,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 80,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ListingTableUrl",
+                              "id": 81,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "80": "alloc::vec::Vec",
+      "81": "datafusion_datasource::url::ListingTableUrl"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          211,
+          1
+        ],
+        "end": [
+          378,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "263",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-ec92e8ccd1d25eb5ad35670c",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::table_paths",
+      "datafusion_catalog_listing::ListingTable::table_paths"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "15289e7e2874f82e5f41bfb6",
+    "path": "datafusion_catalog_listing::table::ListingTable::table_type",
+    "name": "table_type",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn table_type(&self) -> TableType",
+    "docs": "",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        488,
+        5
+      ],
+      "end": [
+        490,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "TableType",
+              "id": 298,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "298": "datafusion_expr::table_source::TableType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "TableProvider",
+        "id": "datafusion_session::table::TableProvider",
+        "args": null
+      },
+      "trait_path": "datafusion_session::table::TableProvider",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          479,
+          1
+        ],
+        "end": [
+          773,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "297",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-15289e7e2874f82e5f41bfb6",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::table_type",
+      "datafusion_catalog_listing::ListingTable::table_type"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a4ca438d9f11f2accc7961cf",
+    "path": "datafusion_catalog_listing::table::ListingTable::try_create_output_ordering",
+    "name": "try_create_output_ordering",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_create_output_ordering(&self, execution_props: &ExecutionProps, file_groups: &[FileGroup]) -> datafusion_common::Result<Vec<LexOrdering>>",
+    "docs": "Creates output ordering from user-specified file_sort_order or derives\nfrom file orderings when user doesn't specify.\n\nIf user specified `file_sort_order`, that takes precedence.\nOtherwise, attempts to derive common ordering from file orderings in\nthe provided file groups.",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        360,
+        5
+      ],
+      "end": [
+        377,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "execution_props",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ExecutionProps",
+                      "id": 269,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "file_groups",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "FileGroup",
+                        "id": 217,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 98,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 80,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "LexOrdering",
+                                      "id": 270,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "269": "datafusion_expr::execution_props::ExecutionProps",
+      "217": "datafusion_datasource::file_groups::FileGroup",
+      "98": "datafusion_common::error::Result",
+      "80": "alloc::vec::Vec",
+      "270": "datafusion_physical_expr_common::sort_expr::LexOrdering"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          211,
+          1
+        ],
+        "end": [
+          378,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "268",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-a4ca438d9f11f2accc7961cf",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::try_create_output_ordering",
+      "datafusion_catalog_listing::ListingTable::try_create_output_ordering"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d18fbff9422877af9cc1b171",
+    "path": "datafusion_catalog_listing::table::ListingTable::try_new",
+    "name": "try_new",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_new(config: ListingTableConfig) -> datafusion_common::Result<Self>",
+    "docs": "Create new [`ListingTable`]\n\nSee documentation and example on [`ListingTable`] and [`ListingTableConfig`]",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        215,
+        5
+      ],
+      "end": [
+        257,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "config",
+              {
+                "resolved_path": {
+                  "path": "ListingTableConfig",
+                  "id": 92,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 98,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "92": "datafusion_catalog_listing::config::ListingTableConfig",
+      "98": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          211,
+          1
+        ],
+        "end": [
+          378,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ListingTable`": 3,
+      "`ListingTableConfig`": 92
+    },
+    "link_paths": {
+      "`ListingTable`": "datafusion_catalog_listing::table::ListingTable",
+      "`ListingTableConfig`": "datafusion_catalog_listing::config::ListingTableConfig"
+    },
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "256",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-d18fbff9422877af9cc1b171",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::try_new",
+      "datafusion_catalog_listing::ListingTable::try_new"
+    ],
+    "resolved_doc_links": {
+      "`ListingTable`": "../operations/datafusion_catalog_listing.table.ListingTable.md#op-00feae5c1ac67d3f887e695a",
+      "`ListingTableConfig`": "../operations/datafusion_catalog_listing.config.ListingTableConfig.md#op-4acbb7e9df4c811e49fabab5"
+    }
+  },
+  {
+    "id": "dc20323167e6f9927865361e",
+    "path": "datafusion_catalog_listing::table::ListingTable::with_cache",
+    "name": "with_cache",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_cache(self, cache: Option<Arc<FileStatisticsCache>>) -> Self",
+    "docs": "Set the [`FileStatisticsCache`] used to cache parquet file statistics.\n\nSetting a statistics cache on the `SessionContext` can avoid refetching statistics\nmultiple times in the same session.\n",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        279,
+        5
+      ],
+      "end": [
+        282,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "cache",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 84,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 104,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "FileStatisticsCache",
+                                          "id": 254,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "84": "core::option::Option",
+      "104": "alloc::sync::Arc",
+      "254": "datafusion_execution::cache::cache_manager::FileStatisticsCache"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          211,
+          1
+        ],
+        "end": [
+          378,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FileStatisticsCache`": 254
+    },
+    "link_paths": {
+      "`FileStatisticsCache`": "datafusion_execution::cache::cache_manager::FileStatisticsCache"
+    },
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "261",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-dc20323167e6f9927865361e",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::with_cache",
+      "datafusion_catalog_listing::ListingTable::with_cache"
+    ],
+    "resolved_doc_links": {
+      "`FileStatisticsCache`": "../operations/datafusion_execution.cache.cache_manager.FileStatisticsCache.md#op-5a9ca2374f0f0f017e5506c9"
+    }
+  },
+  {
+    "id": "9a32922f3d0ed53b16f0c2c6",
+    "path": "datafusion_catalog_listing::table::ListingTable::with_column_defaults",
+    "name": "with_column_defaults",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_column_defaults(self, column_defaults: HashMap<String, Expr>) -> Self",
+    "docs": "Assign column defaults",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        266,
+        5
+      ],
+      "end": [
+        272,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "column_defaults",
+              {
+                "resolved_path": {
+                  "path": "HashMap",
+                  "id": 260,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "String",
+                              "id": 99,
+                              "args": null
+                            }
+                          }
+                        },
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Expr",
+                              "id": 134,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "260": "std::collections::hash::map::HashMap",
+      "99": "alloc::string::String",
+      "134": "datafusion_expr::expr::Expr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          211,
+          1
+        ],
+        "end": [
+          378,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "259",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-9a32922f3d0ed53b16f0c2c6",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::with_column_defaults",
+      "datafusion_catalog_listing::ListingTable::with_column_defaults"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c2401c8815f6ffdfee6ada52",
+    "path": "datafusion_catalog_listing::table::ListingTable::with_constraints",
+    "name": "with_constraints",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_constraints(self, constraints: Constraints) -> Self",
+    "docs": "Assign constraints",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        260,
+        5
+      ],
+      "end": [
+        263,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "constraints",
+              {
+                "resolved_path": {
+                  "path": "Constraints",
+                  "id": 258,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "258": "datafusion_common::functional_dependencies::Constraints"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          211,
+          1
+        ],
+        "end": [
+          378,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "257",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-c2401c8815f6ffdfee6ada52",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::with_constraints",
+      "datafusion_catalog_listing::ListingTable::with_constraints"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "277e87ba53f6811e309471df",
+    "path": "datafusion_catalog_listing::table::ListingTable::with_definition",
+    "name": "with_definition",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_definition(self, definition: Option<String>) -> Self",
+    "docs": "Specify the SQL definition for this table, if any",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        285,
+        5
+      ],
+      "end": [
+        288,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "definition",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 84,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "String",
+                              "id": 99,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "84": "core::option::Option",
+      "99": "alloc::string::String"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          211,
+          1
+        ],
+        "end": [
+          378,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "262",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-277e87ba53f6811e309471df",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::with_definition",
+      "datafusion_catalog_listing::ListingTable::with_definition"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5b1f2e3a30fb80b053a0239d",
+    "path": "datafusion_catalog_listing::table::ListingTable::with_schema_adapter_factory",
+    "name": "with_schema_adapter_factory",
+    "owner": "datafusion_catalog_listing::table::ListingTable",
+    "crate": "datafusion-catalog-listing",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_schema_adapter_factory(self, _schema_adapter_factory: Arc<dyn SchemaAdapterFactory>) -> Self",
+    "docs": "Deprecated: Set the [`SchemaAdapterFactory`] for this [`ListingTable`]\n\n`SchemaAdapterFactory` has been removed. Use [`ListingTableConfig::with_expr_adapter_factory`]\nand `PhysicalExprAdapterFactory` instead. See `upgrading.md` for more details.\n\nThis method is a no-op and returns `self` unchanged.",
+    "span": {
+      "filename": "src/table.rs",
+      "begin": [
+        316,
+        5
+      ],
+      "end": [
+        322,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[expect(deprecated)]"
+      }
+    ],
+    "deprecation": {
+      "since": "52.0.0",
+      "note": "SchemaAdapterFactory has been removed. Use ListingTableConfig::with_expr_adapter_factory and PhysicalExprAdapterFactory instead. See upgrading.md for more details."
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "_schema_adapter_factory",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 104,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "SchemaAdapterFactory",
+                                    "id": 105,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "104": "alloc::sync::Arc",
+      "105": "datafusion_datasource::schema_adapter::SchemaAdapterFactory"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ListingTable",
+          "id": "datafusion_catalog_listing::table::ListingTable",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table.rs",
+        "begin": [
+          211,
+          1
+        ],
+        "end": [
+          378,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`SchemaAdapterFactory`": 105,
+      "`ListingTable`": 3,
+      "`ListingTableConfig::with_expr_adapter_factory`": 103
+    },
+    "link_paths": {
+      "`SchemaAdapterFactory`": "datafusion_datasource::schema_adapter::SchemaAdapterFactory",
+      "`ListingTable`": "datafusion_catalog_listing::table::ListingTable",
+      "`ListingTableConfig::with_expr_adapter_factory`": "datafusion_catalog_listing::config::ListingTableConfig::with_expr_adapter_factory"
+    },
+    "artifact": {
+      "id": "f0d9f377da34e321061b51857f1918a3e33a20e56f248a9f82efffc090deae87",
+      "format_version": 61,
+      "item_id": "266",
+      "origin": "https://docs.rs/crate/datafusion-catalog-listing/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_catalog_listing.table.ListingTable.md",
+    "record_file": "operations/datafusion_catalog_listing.table.ListingTable.json",
+    "anchor": "op-5b1f2e3a30fb80b053a0239d",
+    "aliases": [
+      "datafusion::datasource::listing::ListingTable::with_schema_adapter_factory",
+      "datafusion_catalog_listing::ListingTable::with_schema_adapter_factory"
+    ],
+    "resolved_doc_links": {
+      "`SchemaAdapterFactory`": "../operations/datafusion_datasource.schema_adapter.SchemaAdapterFactory.md#op-3a8d8affcaa558dad7e4798c",
+      "`ListingTable`": "../operations/datafusion_catalog_listing.table.ListingTable.md#op-00feae5c1ac67d3f887e695a",
+      "`ListingTableConfig::with_expr_adapter_factory`": "../operations/datafusion_catalog_listing.config.ListingTableConfig.md#op-f80a39d13d477b5a50e15f76"
+    }
+  }
+]

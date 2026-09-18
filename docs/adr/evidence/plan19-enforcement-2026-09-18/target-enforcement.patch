@@ -1,0 +1,183 @@
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -3,7 +3,9 @@
+ A local-first library-evidence service for Rust and Python, exposed over MCP. The governing
+ specification is [`docs/blueprint/IMPLEMENTATION_BLUEPRINT.md`](docs/blueprint/IMPLEMENTATION_BLUEPRINT.md)
+ and the execution brief is [`docs/blueprint/AGENT_HANDOFF.md`](docs/blueprint/AGENT_HANDOFF.md).
+-Both are frozen provenance: read them, never edit them. Current state is [`STATUS.md`](STATUS.md).
++Both are frozen provenance: read them, never edit them. The living design in
++[`docs/design/DESIGN.md`](docs/design/DESIGN.md) and accepted ADRs record authorized changes.
++Current implementation state is [`STATUS.md`](STATUS.md); an accepted design is not a passed gate.
+ 
+ Build the smallest complete, reproducible evidence service that lets a strong coding agent
+ discover useful capabilities, retrieve precise support, verify consequential assumptions, and
+@@ -18,11 +20,12 @@
+ |---|---|
+ | Core ownership | Rust owns identities, resolution, fetching, normalization, evidence storage, querying, job state, policy, and publication. |
+ | Python boundary | A thin FastMCP 4 adapter and a separate extraction worker. Never reimplement the core in Python. |
+-| Python semantics | Astral **ty** or pyrefly, not pyright, not mypy. |
++| Python semantics | Astral **ty**. Not pyrefly, not pyright, not mypy. |
+ | Rust semantics | rust-analyzer over LSP, behind a producer adapter. |
+ | Static extraction | Griffe, with `allow_inspection=False` and explicit `search_paths`. |
+ | Rust API source | Hosted rustdoc JSON from docs.rs **before** any local compilation. |
+-| Storage | Immutable artifacts and Arrow/Parquet snapshots; DataFusion for retrieval. |
++| Native runtime | Arrow declarations own semantic, storage and wire contracts; DataFusion owns data operations and policy plans. Narrow native UDFs preserve unsupported field semantics. |
++| Storage and publication | Delta owns durable tables, conflict checks and log membership; one control transaction selects exact evidence/result versions. Immutable artifacts remain content addressed. |
+ | Context7 | A separate MCP connection used by the calling agent. No proxy, no embedded LLM. |
+ | Transport | Per-client stdio adapters over one local Rust daemon. |
+ 
+@@ -43,8 +46,8 @@
+ 
+ `skills/library-research/` is the **product** — the skill this service ships. It is not a
+ development skill, and it is never installed into user configuration without an explicit,
+-operator-invoked setup command. `.claude/skills/` is the separate (currently empty) directory
+-for development skills.
++operator-invoked setup command. `.claude/skills/` contains separate development skills,
++including the pinned DataFusion, Delta and FastMCP capability repositories.
+ 
+ ## Toolchain and environment identities
+ 
+@@ -62,13 +65,20 @@
+ pinned in the lockfile, never installed as a global `uv tool`.
+ 
+ `pyrefly` is installed on this workstation and globally plugin-enabled in Claude Code, and
+-`pyright-lsp` is too. **Neither is this project's engine although pyrefly may be used and may become the project's engine.** If `ty` is unavailable, the affected
++`pyright-lsp` is too. **Neither is this project's producer engine.** ADR-0046's operator-tooling
++scope does not replace the ty producer. If `ty` is unavailable, the affected
+ gates are `blocked` and it warrants an ADR — it is never grounds for substituting another
+ type checker.
+ 
+ ## Command surface
+ 
+ Start with `just --list`. Do not run the full suite before every edit.
++
++During the Plan 19 hard pivot, use scoped unit/static/schema/compile checks. Full integration,
++service publication/CDF/export/restart, installed-client journeys and full CI wait for the actual
++CP11 architecture and source/package/enforcement/install/state/client deletion barrier. A test
++that performs a storage or service journey remains an integration test regardless of its folder
++or test annotation. Intermediate commits need not preserve historical functional continuity.
+ 
+ | Change | Useful checks |
+ |---|---|
+@@ -81,11 +91,12 @@
+ 
+ ## Phases and gates
+ 
+-The blueprint sequences six phases in vertical slices (§13). Every phase must leave a runnable
+-and tested system; a directory scaffold is not an implemented service.
++The blueprint sequences six phases in vertical slices (§13). Completed delivery requires the
++real phase acceptance evidence; a scaffold or compile check is not an implemented service.
++Authorized hard-pivot plans define intermediate sequencing and their final qualification barrier.
+ 
+-`tests/gates.toml` is the machine-readable registry of all 46 acceptance IDs (R01–R10 Rust,
+-P01–P10 Python, C01–C20 cross-cutting, A01–A06 client acceptance). `just acceptance-report`
++`tests/gates.toml` is the machine-readable acceptance registry. Derive its current ID set and
++count from the registry, including ADR-authorized replacements and retired IDs. `just acceptance-report`
+ generates `docs/reports/acceptance.json` by joining real test output against that registry;
+ every gate not matched by an executed test defaults to `not_run`. Use `/phase-gate <n>`.
+ 
+--- a/.claude/rules/rust-core-boundary.md
++++ b/.claude/rules/rust-core-boundary.md
+@@ -18,19 +18,27 @@
+ behavior to a client; it does not constrain anything. Network limits, archive extraction
+ safety, execution profiles, and environment allowlisting are core responsibilities.
+ 
+-**Only the daemon publishes.** Workers write staged outputs under job-specific paths. Validate
+-schema, references, digest integrity, and expected coverage before publication; publish an
+-immutable snapshot directory, then atomically update the context's current pointer. Readers
+-must never observe a partially written table, including after a crash mid-publication (C06).
++**Publication uses the native Delta control owner (ADR-0042).** Mechanical workers write
++owned staging outputs. Native schema, scoped reference, digest and coverage admission precedes
++publication. One Delta control transaction selects exact table/result versions and retained
++roots. A completed file write or cached committed snapshot does not grant visibility or read
++authority. Readers must never observe a partially published contribution (C06).
+ 
+-Producers are typed `ProducerSpec`/`ProducerPlan` records over a small explicit dependency
+-graph. Do not build a generic orchestration platform. A producer derives its command from
+-typed options; it never concatenates a shell command supplied by a caller.
++Producers consume finite native declarations and operation plans. DataFusion selects
++normalization, policy, eligibility, exact grants and publication; physical drivers perform
++only admitted I/O, parsing and process operations. Do not restore `ProducerSpec`/`ProducerPlan`
++or a second workflow authority. A producer derives its command from typed options; it never
++concatenates a shell command supplied by a caller.
+ 
+ Identity is four distinct things — `release_id`, `environment_id`, `context_id`, `snapshot_id`
+ — and they do not collapse. A context records whether its environment is `unspecified`,
+ `declared`, `resolved`, or `verified`. When later evidence resolves an unknown field, return a
+ **new derived context**; never mutate the meaning of an existing ID (C16).
++
++Full Arrow Fields, including child metadata, carry identity domains, clock meanings,
++requiredness and reference scope (ADR-0047). Native literals and SQL parameters preserve those
++fields. Binary identity values render as text only at explicit protocol/path/diagnostic
++boundaries; equal physical layouts do not authorize semantic coercion.
+ 
+ One Arrow/DataFusion type universe. `deny.toml` sets `multiple-versions = "deny"`; pin
+ DataFusion first and derive `arrow`, `parquet`, and `object_store` from it. The reverse order
+--- a/.claude/rules/generated-artifacts.md
++++ b/.claude/rules/generated-artifacts.md
+@@ -3,22 +3,24 @@
+   - "schemas/generated/**"
+   - "python/enrichment_mcp/_generated/**"
+   - "crates/*/src/generated/**"
++  - "python/enrichment_mcp/_schemas/**"
++  - "python/enrichment_worker/_schemas/worker.arrow"
+ ---
+ 
+ # Generated artifacts are never hand-edited
+ 
+-Rust wire types are authoritative (blueprint §6.3). JSON Schemas are generated from them, and
+-the Pydantic boundary DTOs are generated from those schemas. Editing a generated file makes the
++Native Rust declarations are authoritative (ADR-0047). They generate semantic Arrow Fields,
++worker contracts and wire schemas; Pydantic boundary DTOs derive from those wire schemas. Editing a generated file makes the
+ three drift silently, which is exactly the failure the generation pipeline exists to prevent.
+ 
+ To change a schema: change the Rust type, run `just schemas-generate`, and commit both sides in
+-the same change. `just schema-conformance` runs `git diff --exit-code` over `schemas/generated/`
+-to prove generation is reproducible.
++the same change. `just schema-conformance` checks reproducible generation and independent
++current-epoch fixtures; a dirty tree alone is not generation drift.
+ 
+-Codegen fidelity is not the oracle. The oracle is the conformance corpus: the four fixtures in
+-`contracts/examples/` must validate, and the three negative cases from `VALIDATION_REPORT.md`
+-(pending without a job handle, error without an error object, unknown root field) must be
+-rejected, under the generated schema exactly as under the frozen one.
++Codegen fidelity is not the oracle. Independent current fixtures in `tests/fixtures/wire/`
++and explicit negative cases establish canonical value, requiredness and outcome behavior.
++Frozen `contracts/` files remain provenance of the earlier contract; authorized hard pivots
++do not require the current reader to accept historical epochs or restore compatibility code.
+ 
+ Preserve upstream raw JSON in content-addressed blobs so normalization can improve without
+ refetching. Persist upstream IDs as local producer identifiers, never as globally meaningful
+--- a/.claude/rules/frozen-contracts.md
++++ b/.claude/rules/frozen-contracts.md
+@@ -12,10 +12,11 @@
+ paths. `just provenance-check` verifies their digests, so editing one breaks a gate. That is
+ deliberate: it makes the freeze mechanical rather than a convention.
+ 
+-`contracts/research-envelope.schema.json` is the **Phase-0 acceptance target**. Generated
+-schemas do not need to match it byte-for-byte — `$id`, `$defs` ordering, and serde-derived
+-naming will legitimately differ. They must match it *behaviourally*: accept the same documents
+-and reject the same documents. `just schema-conformance` is the oracle.
++`contracts/research-envelope.schema.json` preserves the **Phase-0 contract**. ADR-0047 and
++its accepted predecessors authorize the current native schema and hard wire pivot. Preserve
++the historical bytes; do not impose historical acceptance or add an old-epoch reader.
++`just schema-conformance` proves the current generated contract against independent current
++fixtures and negative cases.
+ 
+ Acceptance gate IDs are stable identifiers. Never renumber them, never delete one, never reuse
+ a retired ID. Retire by marking the gate superseded and recording why. Downstream reports,
+--- a/.claude/rules/execution-policy.md
++++ b/.claude/rules/execution-policy.md
+@@ -30,8 +30,10 @@
+ credentials, `PYTHONPATH`, package-manager configuration, `.env` files, or project hooks —
+ allowlist each variable explicitly.
+ 
+-podman, docker, and bwrap are all available on this workstation, so `build` and `runtime` gate
+-coverage is never legitimately `not_run` here for want of a sandbox.
++An installed container tool does not prove the configured execution route is qualified.
++Native route admission consumes actual containment identity, immutable image and resource
++qualification facts. Missing prerequisites are `blocked` when a gate is attempted; a gate
++intentionally deferred by the hard-pivot barrier remains `not_run`.
+ 
+ Archive extraction rejects path traversal, absolute paths, symlink escapes, oversized
+ decompression, and device files — **before** anything lands outside the scratch directory

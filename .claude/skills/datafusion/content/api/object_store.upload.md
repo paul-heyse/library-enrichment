@@ -25,6 +25,9 @@ async fn wait_for_capacity(&mut self, max_concurrency: usize) -> Result<()>
 fn write(&mut self, buf: &[u8])
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.upload.WriteMultipart.md).
+
+
 A synchronous write API for uploading data in parallel in fixed size chunks
 
 Uses multiple tokio tasks in a [`JoinSet`] to multiplex upload tasks in parallel
@@ -58,6 +61,9 @@ async fn complete(&mut self) -> Result<PutResult>
 fn put_part(&mut self, data: PutPayload) -> UploadPart
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.upload.MultipartUpload.md).
+
+
 A trait allowing writing an object in fixed size chunks
 
 Consecutive chunks of data can be written by calling [`MultipartUpload::put_part`] and polling
@@ -78,6 +84,9 @@ is called before all [`UploadPart`] have been polled to completion.
 ```rust
 type UploadPart = futures_util::future::BoxFuture<'static, Result<()>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.upload.UploadPart.md).
+
 
 An upload part request
 

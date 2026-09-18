@@ -22,6 +22,9 @@ enum FFI_SortProperties
 fn from(value: &SortProperties) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.expr.expr_properties.FFI_SortProperties.md).
+
+
 ---
 
 ## FFI_ExprProperties
@@ -41,6 +44,9 @@ struct FFI_ExprProperties
 ```rust
 fn try_from(value: &ExprProperties) -> Result<Self, Self::Error>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.expr.expr_properties.FFI_ExprProperties.md).
+
 
 A stable struct for sharing [`ExprProperties`] across FFI boundaries.
 See [`ExprProperties`] for the meaning of each field.
@@ -66,5 +72,8 @@ struct FFI_SortOptions
 ```rust
 fn from(value: &SortOptions) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.expr.expr_properties.FFI_SortOptions.md).
+
 
 ---

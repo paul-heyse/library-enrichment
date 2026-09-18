@@ -269,7 +269,7 @@ fn object_members(
     Ok(())
 }
 
-fn value(
+pub(crate) fn value(
     writer: &mut dyn Write,
     field: &FieldRef,
     array: &dyn Array,

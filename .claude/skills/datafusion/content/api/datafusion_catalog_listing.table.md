@@ -16,6 +16,9 @@ struct ListFilesResult
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog_listing.table.ListFilesResult.md).
+
+
 Result of a file listing operation from [`ListingTable::list_files_for_scan`].
 
 ---
@@ -64,6 +67,9 @@ fn schema(&self) -> SchemaRef
 fn supports_filters_pushdown(&self, filters: &[&Expr]) -> datafusion_common::Result<Vec<TableProviderFilterPushDown>>
 fn table_type(&self) -> TableType
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog_listing.table.ListingTable.md).
+
 
 Built in [`TableProvider`] that reads data from one or more files as a single table.
 

@@ -17,7 +17,10 @@ use std::sync::Arc;
 /// Declaration traversal is mechanical; DataFusion's own hash/encoding functions own the digest.
 /// # Errors
 /// Unbounded or unsupported declarations refuse before registration or mutation.
-pub fn schema_identity(semantic: &Schema, storage: &Schema) -> Result<String> {
+pub fn schema_identity(
+    semantic: &Schema,
+    storage: &Schema,
+) -> Result<crate::identity::SchemaContractId> {
     crate::native_contract::Manifest::new(semantic, storage)?.identity()
 }
 
@@ -179,6 +182,15 @@ impl ScalarUDFImpl for CanonicalBytes {
         }
         Ok(ColumnarValue::Array(Arc::new(output.finish())))
     }
+}
+
+/// Exact declared value framing for native format-lowering kernels. It carries the full
+/// semantic field and uses the same bounded canonical representation as native identities.
+pub(crate) fn field_value(field: &Field, array: &dyn Array, row: usize) -> Result<Vec<u8>> {
+    let mut bytes = Vec::new();
+    field_bytes(field, &mut bytes)?;
+    value(array, row, field, &mut bytes)?;
+    Ok(bytes)
 }
 
 fn field_bytes(field: &Field, out: &mut Vec<u8>) -> Result<()> {

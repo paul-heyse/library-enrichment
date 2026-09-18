@@ -29,6 +29,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.extract.SparkHour.md).
+
+
 ---
 
 ## SparkMinute
@@ -58,6 +61,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.extract.SparkMinute.md).
+
+
 ---
 
 ## SparkSecond
@@ -86,5 +92,8 @@ fn name(&self) -> &str
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.extract.SparkSecond.md).
+
 
 ---

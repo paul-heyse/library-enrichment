@@ -17,9 +17,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import capabilities
 import catalogs
+import contracts
 import emit
 import fetch
+import licenses
 import link
 import model
 import queries
@@ -218,6 +221,7 @@ def main(argv: list[str] | None = None) -> int:
 
     say("\nreading crate manifests for features and docs.rs configuration")
     facts = collect_crate_facts(manifest, cache)
+    licenses.write(pairs, CACHE, content)
 
     counts = write_indexes(items, facts, content / "index")
     say("index rows: " + ", ".join(f"{k}={v}" for k, v in sorted(counts.items())))
@@ -230,6 +234,10 @@ def main(argv: list[str] | None = None) -> int:
     say(f"\nwriting {len(grouped)} module pages")
     emit.write_model(grouped, content)
     emit.write_api(grouped, content)
+    contract_counts = contracts.write(
+        models, items, content, SKILL_ROOT / "authoring/contract-notes.json"
+    )
+    say("contract records: " + str(contract_counts))
 
     say("fetching corpora")
     corpora = write_corpora(manifest, cache, content)
@@ -262,6 +270,7 @@ def main(argv: list[str] | None = None) -> int:
     say("writing capability topic pages")
     topic_pages = topics.write_topics(items, content, HERE.joinpath("topics.json"))
     say(f"  {topic_pages} topics")
+    capability_counts = capabilities.write(SKILL_ROOT, content)
 
     say("generating rules from the model")
     crate_roots = sorted({name.replace("-", "_") for name, _ in pairs})
@@ -288,6 +297,8 @@ def main(argv: list[str] | None = None) -> int:
         "sql_functions": functions,
         "traits_demonstrated_by_examples": len(demonstrated),
         "registration_calls_demonstrated": len(registered),
+        **contract_counts,
+        **capability_counts,
     }
     emit.write_provenance(content, manifest, facts, totals, tool_versions)
 

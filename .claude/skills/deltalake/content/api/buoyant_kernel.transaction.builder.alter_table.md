@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 4 public items · structured records in [`model/buoyan
 ## AlterTableTransactionBuilder
 
 `struct` · `buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.builder.alter_table.AlterTableTransactionBuilder.md)
 
 Also reachable as `delta_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder`
 
@@ -33,6 +34,7 @@ Uses a type-state pattern (`S`) to enforce at compile time:
 ## Modifying
 
 `struct` · `buoyant_kernel::transaction::builder::alter_table::Modifying`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.builder.alter_table.Modifying.md)
 
 Also reachable as `delta_kernel::transaction::builder::alter_table::Modifying`
 
@@ -50,6 +52,7 @@ See [`Chainable`] for the operations available on this state.
 ## Ready
 
 `struct` · `buoyant_kernel::transaction::builder::alter_table::Ready`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.builder.alter_table.Ready.md)
 
 Also reachable as `delta_kernel::transaction::builder::alter_table::Ready`
 
@@ -67,6 +70,7 @@ See [`Chainable`] for the operations available on this state.
 ## Chainable
 
 `trait` · `buoyant_kernel::transaction::builder::alter_table::Chainable`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.builder.alter_table.Chainable.md)
 
 Also reachable as `delta_kernel::transaction::builder::alter_table::Chainable`
 

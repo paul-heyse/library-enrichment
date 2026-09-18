@@ -1,0 +1,18 @@
+id: native-delta-reference-owner
+language: Rust
+severity: error
+message: Delta references share native scope declarations and binary semantic identities.
+files:
+  - crates/enrichment-core/src/**/*.rs
+  - crates/enrichment-store/src/**/*.rs
+  - crates/enrichment-daemon/src/**/*.rs
+rule:
+  any:
+    - kind: field_declaration
+      regex: '\b(cohort_id|contract_id)\s*:\s*(String|&str)\b'
+    - kind: macro_invocation
+      has:
+        field: macro
+        regex: '(^|::)native_(struct|split_record|union)$'
+      regex: '\b(cohort_id|contract_id)\s*:\s*(String|&str)\b|\bstruct\s+(DefinitionBinding|TableVersion)\b|\bstruct\s+(DeltaBinding|ResultVersion|StorageCapture|TableSelection)\s*\{[^}]*\b(table_uri|table_id|contract_id)\s*:'
+note: This checks source ownership only. Native execution units prove full-field admission and scope semantics.

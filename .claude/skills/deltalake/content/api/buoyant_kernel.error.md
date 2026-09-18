@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 4 public items · structured records in [`model/buoyan
 ## Error
 
 `enum` · `buoyant_kernel::error::Error`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.error.Error.md)
 
 Also reachable as `buoyant_kernel::Error`, `delta_kernel::error::Error`
 
@@ -86,6 +87,7 @@ All the types of errors that the kernel can run into
 ## DeltaResult
 
 `type_alias` · `buoyant_kernel::error::DeltaResult`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.error.DeltaResult.md)
 
 Also reachable as `buoyant_kernel::DeltaResult`, `delta_kernel::error::DeltaResult`
 
@@ -108,6 +110,7 @@ A [`std::result::Result`] that has the kernel [`Error`] as the error variant
 ## DeltaResultIterator
 
 `type_alias` · `buoyant_kernel::error::DeltaResultIterator`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.error.DeltaResultIterator.md)
 
 Also reachable as `buoyant_kernel::DeltaResultIterator`, `delta_kernel::error::DeltaResultIterator`
 
@@ -125,6 +128,7 @@ kernel APIs.
 ## DeltaResultIteratorStatic
 
 `type_alias` · `buoyant_kernel::error::DeltaResultIteratorStatic`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.error.DeltaResultIteratorStatic.md)
 
 Also reachable as `buoyant_kernel::DeltaResultIteratorStatic`, `delta_kernel::error::DeltaResultIteratorStatic`
 

@@ -1,0 +1,60 @@
+[
+  {
+    "id": "c0659878d97e47d99bdd0f38",
+    "path": "arrow_array::downcast_integer",
+    "name": "downcast_integer",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "macro",
+    "signature": "macro_rules! downcast_integer",
+    "docs": "Given one or more expressions evaluating to an integer [`DataType`] invokes the provided macro\n`m` with the corresponding integer [`ArrowPrimitiveType`], followed by any additional arguments\n\n```\n# use arrow_array::{downcast_primitive, ArrowPrimitiveType, downcast_integer};\n# use arrow_schema::DataType;\n\nmacro_rules! dictionary_key_size_helper {\n  ($t:ty, $o:ty) => {\n      std::mem::size_of::<<$t as ArrowPrimitiveType>::Native>() as $o\n  };\n}\n\nfn dictionary_key_size(t: &DataType) -> u8 {\n    match t {\n        DataType::Dictionary(k, _) => downcast_integer! {\n            k.as_ref() => (dictionary_key_size_helper, u8),\n            _ => unreachable!(),\n        },\n        // You can also add a guard to the pattern\n        DataType::LargeUtf8 if true => u8::MAX,\n        _ => u8::MAX,\n    }\n}\n\nassert_eq!(dictionary_key_size(&DataType::Dictionary(Box::new(DataType::Int32), Box::new(DataType::Utf8))), 4);\nassert_eq!(dictionary_key_size(&DataType::Dictionary(Box::new(DataType::Int64), Box::new(DataType::Utf8))), 8);\nassert_eq!(dictionary_key_size(&DataType::Dictionary(Box::new(DataType::UInt16), Box::new(DataType::Utf8))), 2);\n```\n\n[`DataType`]: arrow_schema::DataType",
+    "span": {
+      "filename": "src/cast.rs",
+      "begin": [
+        76,
+        1
+      ],
+      "end": [
+        106,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      "macro_export"
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "macro": "macro_rules! downcast_integer {\n    ($($data_type:expr),+ => ($m:path $(, $args:tt)*), $($p:pat $(if $pred:expr)? => $fallback:expr $(,)?)*) => { ... };\n}"
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "arrow_schema::DataType": 126,
+      "`ArrowPrimitiveType`": 307
+    },
+    "link_paths": {
+      "arrow_schema::DataType": "arrow_schema::datatype::DataType",
+      "`ArrowPrimitiveType`": "arrow_array::types::ArrowPrimitiveType"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "4648",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.downcast_integer.md",
+    "record_file": "operations/arrow_array.downcast_integer.json",
+    "anchor": "op-c0659878d97e47d99bdd0f38",
+    "aliases": [
+      "arrow::array::downcast_integer"
+    ],
+    "resolved_doc_links": {
+      "arrow_schema::DataType": "../operations/arrow_schema.datatype.DataType.md#op-bf69df5b14436e006d3a531c",
+      "`ArrowPrimitiveType`": "../operations/arrow_array.types.ArrowPrimitiveType.md#op-ddd581d2aed24174207ba803"
+    }
+  }
+]

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 3 public items · structured records in [`model/buoyan
 ## CommitResponse
 
 `enum` · `buoyant_kernel::committer::commit_types::CommitResponse`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.committer.commit_types.CommitResponse.md)
 
 Also reachable as `buoyant_kernel::committer::CommitResponse`, `delta_kernel::committer::commit_types::CommitResponse`
 
@@ -31,6 +32,7 @@ Committer returns `CommitResponse::Conflict` with the version that was attempted
 ## CommitType
 
 `enum` · `buoyant_kernel::committer::commit_types::CommitType`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.committer.commit_types.CommitType.md)
 
 Also reachable as `buoyant_kernel::committer::CommitType`, `delta_kernel::committer::commit_types::CommitType`
 
@@ -57,6 +59,7 @@ is a table creation or a write to an existing table, and whether the table is ca
 ## CommitMetadata
 
 `struct` · `buoyant_kernel::committer::commit_types::CommitMetadata`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.committer.commit_types.CommitMetadata.md)
 
 Also reachable as `buoyant_kernel::committer::CommitMetadata`, `delta_kernel::committer::commit_types::CommitMetadata`
 

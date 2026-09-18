@@ -28,6 +28,9 @@ fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> Resu
 fn schema_check(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.pushdown_sort.PushdownSort.md).
+
+
 A PhysicalOptimizerRule that attempts to push down sort requirements to data sources.
 
 See module-level documentation for details.

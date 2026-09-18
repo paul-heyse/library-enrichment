@@ -5,6 +5,7 @@ Crate `deltalake-core` · 4 public items · structured records in [`model/deltal
 ## EPOCH_DAYS_FROM_CE
 
 `constant` · `deltalake_core::delta_datafusion::expr::EPOCH_DAYS_FROM_CE`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.expr.EPOCH_DAYS_FROM_CE.md)
 
 Also reachable as `deltalake::delta_datafusion::expr::EPOCH_DAYS_FROM_CE`
 
@@ -19,6 +20,7 @@ Epoch days from ce calendar until 1970-01-01
 ## fmt_expr_to_sql
 
 `function` · `deltalake_core::delta_datafusion::expr::fmt_expr_to_sql`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.expr.fmt_expr_to_sql.md)
 
 Also reachable as `deltalake::delta_datafusion::expr::fmt_expr_to_sql`
 
@@ -33,6 +35,7 @@ Format an `Expr` to a parsable SQL expression
 ## parse_predicate_expression
 
 `function` · `deltalake_core::delta_datafusion::expr::parse_predicate_expression`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.expr.parse_predicate_expression.md)
 
 Also reachable as `deltalake::delta_datafusion::expr::parse_predicate_expression`
 
@@ -47,6 +50,7 @@ Parse a string predicate into an `Expr`
 ## parse_sql_predicate_to_kernel
 
 `function` · `deltalake_core::delta_datafusion::expr::parse_sql_predicate_to_kernel`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.expr.parse_sql_predicate_to_kernel.md)
 
 Also reachable as `deltalake::delta_datafusion::expr::parse_sql_predicate_to_kernel`
 

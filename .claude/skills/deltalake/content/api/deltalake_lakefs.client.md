@@ -5,6 +5,7 @@ Crate `deltalake-lakefs` · 2 public items · structured records in [`model/delt
 ## LakeFSClient
 
 `struct` · `deltalake_lakefs::client::LakeFSClient`
+[Full member contracts, output types and access classification](../operations/deltalake_lakefs.client.LakeFSClient.md)
 
 ```rust
 struct LakeFSClient
@@ -34,6 +35,7 @@ Slim LakeFS client for lakefs branch operations.
 ## LakeFSConfig
 
 `struct` · `deltalake_lakefs::client::LakeFSConfig`
+[Full member contracts, output types and access classification](../operations/deltalake_lakefs.client.LakeFSConfig.md)
 
 ```rust
 struct LakeFSConfig

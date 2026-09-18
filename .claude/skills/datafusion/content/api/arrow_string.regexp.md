@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::comparison::regexp_is_match`, `arrow
 fn regexp_is_match<'a, S1, S2, S3>(array: &'a S1, regex_array: &'a S2, flags_array: Option<&'a S3>) -> Result<BooleanArray, arrow_schema::ArrowError> where &'a S1: StringArrayType<'a>, &'a S2: StringArrayType<'a>, &'a S3: StringArrayType<'a>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_string.regexp.regexp_is_match.md).
+
+
 Return BooleanArray indicating which strings in an array match an array of
 regular expressions.
 
@@ -58,6 +61,9 @@ Also reachable as `arrow::compute::kernels::comparison::regexp_is_match_scalar`,
 fn regexp_is_match_scalar<'a, S>(array: &'a S, regex: &str, flag: Option<&str>) -> Result<BooleanArray, arrow_schema::ArrowError> where &'a S: StringArrayType<'a>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_string.regexp.regexp_is_match_scalar.md).
+
+
 Return BooleanArray indicating which strings in an array match a single regular expression.
 
 This is equivalent to the SQL `array ~ regex_array`, supporting
@@ -94,6 +100,9 @@ Also reachable as `arrow::compute::kernels::regexp::regexp_match`, `arrow::compu
 ```rust
 fn regexp_match(array: &dyn Array, regex_array: &dyn Datum, flags_array: Option<&dyn Datum>) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_string.regexp.regexp_match.md).
+
 
 Extract all groups matched by a regular expression for a given String array.
 

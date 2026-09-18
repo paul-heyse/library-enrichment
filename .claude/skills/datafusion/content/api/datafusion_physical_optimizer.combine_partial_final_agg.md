@@ -28,6 +28,9 @@ fn optimize(&self, plan: Arc<dyn ExecutionPlan>, _config: &ConfigOptions) -> Res
 fn schema_check(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.combine_partial_final_agg.CombinePartialFinalAggregate.md).
+
+
 CombinePartialFinalAggregate optimizer rule combines the adjacent Partial and Final AggregateExecs
 into a Single AggregateExec if their grouping exprs and aggregate exprs equal.
 

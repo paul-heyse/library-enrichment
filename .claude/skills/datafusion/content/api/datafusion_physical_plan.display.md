@@ -16,6 +16,9 @@ enum DisplayFormatType
 
 **Derives**: Clone, Copy, Debug, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.display.DisplayFormatType.md).
+
+
 Options for controlling how each [`ExecutionPlan`] should format itself
 
 ---
@@ -27,6 +30,9 @@ Options for controlling how each [`ExecutionPlan`] should format itself
 ```rust
 fn display_orderings(f: &mut std::fmt::Formatter<'_>, orderings: &[datafusion_physical_expr::LexOrdering]) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.display.display_orderings.md).
+
 
 ---
 
@@ -47,6 +53,9 @@ struct DefaultDisplay<T>
 ```rust
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.display.DefaultDisplay.md).
+
 
 A new type wrapper to display `T` implementing`DisplayAs` using the `Default` mode
 
@@ -82,6 +91,9 @@ fn tree_render(&self) -> impl fmt::Display + 'a
 fn with_full_metrics(inner: &'a dyn ExecutionPlan) -> Self
 fn with_metrics(inner: &'a dyn ExecutionPlan) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.display.DisplayableExecutionPlan.md).
+
 
 Wraps an `ExecutionPlan` with various methods for formatting
 
@@ -137,6 +149,9 @@ struct ProjectSchemaDisplay<'a>
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.display.ProjectSchemaDisplay.md).
+
+
 A wrapper to customize partitioned file display
 
 ---
@@ -158,6 +173,9 @@ struct VerboseDisplay<T>
 ```rust
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.display.VerboseDisplay.md).
+
 
 A new type wrapper to display `T` implementing `DisplayAs` using the `Verbose` mode
 
@@ -234,6 +252,9 @@ trait DisplayAs
 ```rust
 fn fmt_as(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.display.DisplayAs.md).
+
 
 Trait for types which could have additional details when formatted in `Verbose` mode
 

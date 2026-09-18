@@ -31,6 +31,9 @@ fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Tra
 fn supports_rewrite(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.simplify_expressions.simplify_exprs.SimplifyExpressions.md).
+
+
 Optimizer Pass that simplifies [`LogicalPlan`]s by rewriting
 [`Expr`]`s evaluating constants and applying algebraic
 simplifications

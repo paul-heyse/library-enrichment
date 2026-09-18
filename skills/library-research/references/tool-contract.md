@@ -24,13 +24,19 @@ For long jobs, poll the supplied job ID with bounded waits. Cancel only your req
 
 Tools may create service-owned caches or jobs, but none should modify the working repository. `verify_usage` and analysis involving build scripts/imports are execution, even if their purpose is inspection.
 
-## Research contract 5.0
+## Research contract 12.0
 
 Read the installed catalog for exact schemas. Removed depth/aspects arguments and old root
 pagination are rejected. Selection, scope assessment, cursor checks, policy, enforced byte
 limits and durable results belong to the Rust service. Full-range UInt64, Int64 and native
-size/count values use decimal JSON strings in wire 5.0, including `max_items`, `max_bytes`,
+size/count values use decimal JSON strings in wire 12.0, including `max_items`, `max_bytes`,
 `wait_seconds` and pagination counts. Follow the generated field schema for smaller numeric types.
+
+Job, caller-interest and producer-attempt identifiers use distinct `job_`, `interest_` and
+`attempt_` prefixes followed by exactly 32 lowercase hexadecimal digits. Preserve the returned
+identifier; a job ID is not an interest token or attempt ID. Job clocks use canonical UTC with
+six fractional digits. The generated schema is the authority for every field. Older wire
+epochs are refused; there is no compatibility reader.
 
 ### Focused selection
 
@@ -123,3 +129,8 @@ a label only. A missing source URI does not change the recorded version-match as
 Inspection's `symbol` is an identity-only `SymbolHeader`. Signatures, documentation, cfg
 hints, deprecation and producer coordinates belong to the independently qualified
 `observations`. An unknown observation is never a fabricated zero producer item.
+
+Comparison alternatives have a declared `axis`: `api`, `fragment`, `rust_documentation`,
+`python_header`, or `relationship`. API observations retain typed callable/parameter facts under
+`observation.payload`; signatures remain producer renderings. Inline values and complete value
+artifacts share this schema. A missing observation remains null and never proves absence.

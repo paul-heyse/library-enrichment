@@ -1,0 +1,16 @@
+id: native-captured-input-owner
+language: Rust
+severity: error
+message: Finite native inputs use the paid immutable captured-batch provider, not an exposed mutable table.
+files:
+  - crates/enrichment-store/src/native_catalog.rs
+rule:
+  kind: scoped_identifier
+  regex: 'MemTable::try_new$'
+  inside:
+    kind: function_item
+    has:
+      field: name
+      regex: '^batch$'
+    stopBy: end
+note: Native input buffers retain a pool claim through the final reader; empty constraints grant no semantic or uniqueness fact.

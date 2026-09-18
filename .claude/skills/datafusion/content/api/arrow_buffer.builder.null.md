@@ -40,6 +40,9 @@ fn set_bit(&mut self, index: usize, v: bool)
 fn truncate(&mut self, len: usize)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.builder.null.NullBufferBuilder.md).
+
+
 Builder for creating [`NullBuffer`]s (bitmaps indicating validity/nulls).
 
 # See also

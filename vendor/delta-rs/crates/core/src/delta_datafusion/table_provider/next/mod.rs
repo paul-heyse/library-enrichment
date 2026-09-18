@@ -517,8 +517,37 @@ impl DeltaScan {
         self.snapshot.snapshot()
     }
 
+    /// Share the complete immutable native state of a persisted read provider. This
+    /// accessor does not load files, reconstruct a table, or bind runtime authority.
+    pub fn immutable_snapshot(&self) -> Result<Arc<EagerSnapshot>> {
+        match &self.snapshot {
+            SnapshotWrapper::EagerSnapshot(snapshot)
+                if snapshot.snapshot().load_config().require_files
+                    && !snapshot.snapshot().load_config().skip_stats
+                    && snapshot.snapshot().materialized_files().is_some() =>
+            {
+                Ok(snapshot.clone())
+            }
+            _ => Err(DataFusionError::Plan(
+                "immutable provider requires complete materialized native state".into(),
+            )),
+        }
+    }
+
+    /// Extract full-table ingredients for a consumer that rebuilds its own projection.
+    /// Selected-file and row-index semantics cannot be discarded by that consumer.
+    pub fn full_table_snapshot(&self) -> Result<Arc<EagerSnapshot>> {
+        if self.file_selection.is_some() || self.row_index_column.is_some() {
+            return Err(DataFusionError::Plan(
+                "full-table restoration cannot discard scan selection".into(),
+            ));
+        }
+        self.immutable_snapshot()
+    }
+
     /// Refuse scan state that the immutable provider codec cannot preserve.
     pub fn validate_immutable_codec(&self) -> Result<()> {
+        self.immutable_snapshot()?;
         if self.file_skipping_predicate.is_some() || self.read_operation_id.is_some() {
             return Err(DataFusionError::Plan(
                 "immutable Delta codec cannot retain operation-local scan state".into(),

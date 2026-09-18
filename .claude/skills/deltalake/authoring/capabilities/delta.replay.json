@@ -1,0 +1,135 @@
+{
+  "id": "delta.replay",
+  "title": "Use transaction markers without assuming replay suppression",
+  "reviewed": "2026-09-18",
+  "brief": "Application transaction markers are useful persisted coordination metadata. At this pin, repeating the same marker on sequential appends does not automatically suppress the second write.",
+  "task_aliases": [
+    "idempotent ingestion",
+    "replay batch",
+    "transaction application version",
+    "deduplicate append",
+    "exactly once"
+  ],
+  "crates": [
+    "deltalake-core"
+  ],
+  "input": [
+    "application ID and version",
+    "CommitProperties",
+    "snapshot transaction state"
+  ],
+  "output": [
+    "txn action",
+    "transaction_version lookup"
+  ],
+  "properties": [
+    "idempotent ingestion",
+    "replay batch",
+    "transaction application version",
+    "deduplicate append",
+    "exactly once"
+  ],
+  "operations": [
+    "deltalake_core::kernel::transaction::CommitProperties::with_application_transaction",
+    "deltalake_core::kernel::transaction::CommitProperties::with_application_transactions",
+    "deltalake_core::kernel::snapshot::EagerSnapshot::transaction_version",
+    "deltalake_core::operations::write::WriteBuilder::with_commit_properties"
+  ],
+  "choices": [
+    {
+      "candidate": "Application transactions + explicit recovery check",
+      "choose_when": "An application coordinates checkpoints with committed table state",
+      "tradeoff": "Design race/retry handling; a pre-read alone is not atomic deduplication"
+    },
+    {
+      "candidate": "Plain append",
+      "choose_when": "Every invocation is intended to add records",
+      "tradeoff": "Repeated requests repeat data"
+    },
+    {
+      "candidate": "Domain-key merge or externally coordinated ingestion",
+      "choose_when": "You need a stronger uniqueness/replay policy",
+      "tradeoff": "Define key semantics and concurrent ownership explicitly"
+    }
+  ],
+  "claims": [
+    {
+      "id": "delta.replay.1",
+      "aspect": "observed replay",
+      "statement": "Two sequential writes with the same application marker version 7 produced two rows and table version 1; transaction_version returned Some(7).",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "repeated_transaction_marker_does_not_suppress_sequential_append"
+    },
+    {
+      "id": "delta.replay.2",
+      "aspect": "coordination",
+      "statement": "A txn marker participates in transaction state and conflict logic, but the marker alone is not an exactly-once ingestion algorithm.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.replay.3",
+      "aspect": "recovery",
+      "statement": "After an ambiguous error, reload and inspect the application marker, commit metadata/history and data outcome before choosing whether to retry. Retention may limit the evidence available.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.replay.4",
+      "aspect": "controlled interleaving",
+      "statement": "A stale writer carrying the same application marker conflicted after the competing writer committed; this does not change the separately observed sequential replay behavior.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "competing_marker_writers_conflict_and_cdf_enablement_is_historical"
+    }
+  ],
+  "implementation": [
+    "Persist a meaningful application batch identity in commit properties and define how it maps to source offsets.",
+    "Specify concurrent ownership, conflict handling and reconciliation, then test duplicate delivery and failures after publication.",
+    "Do not advertise with_commit_properties(Default::default()) as idempotency."
+  ],
+  "effects": [
+    "persist coordination metadata",
+    "may append duplicate rows if retried"
+  ],
+  "errors": [
+    "A repeated marker and a retryable storage/transaction failure are different conditions."
+  ],
+  "unknowns": [
+    "No distributed exactly-once protocol or external checkpoint service is qualified by the local tests."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "scope": "Exact git-capture full contracts for the selected operations"
+    },
+    {
+      "id": "source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/kernel/transaction/mod.rs",
+      "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+    },
+    {
+      "id": "runtime",
+      "kind": "runtime_observation",
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Named local assertions only; see profile, fixtures and source digests",
+      "tests": [
+        "repeated_transaction_marker_does_not_suppress_sequential_append",
+        "competing_marker_writers_conflict_and_cdf_enablement_is_historical"
+      ]
+    }
+  ]
+}

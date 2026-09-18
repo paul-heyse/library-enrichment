@@ -10,6 +10,9 @@ Crate `datafusion-common` · 3 public items · structured records in [`model/dat
 fn estimate_memory_size<T>(num_elements: usize, fixed_size: usize) -> Result<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.memory.estimate_memory_size.md).
+
+
 Estimates the memory size required for a hash table prior to allocation.
 
 # Parameters
@@ -78,6 +81,9 @@ Also reachable as `datafusion_physical_plan::spill::get_record_batch_memory_size
 fn get_record_batch_memory_size(batch: &arrow::record_batch::RecordBatch) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.memory.get_record_batch_memory_size.md).
+
+
 Calculate total used memory of this batch.
 
 This function is used to estimate the physical memory usage of the `RecordBatch`.
@@ -127,6 +133,9 @@ fn count_batch(&mut self, batch: &RecordBatch) -> usize
 fn memory_usage(&self) -> usize
 fn new() -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.memory.RecordBatchMemoryCounter.md).
+
 
 Tracks the memory used by a sequence of [`RecordBatch`]es that may share
 underlying buffers, counting each buffer exactly once.

@@ -46,6 +46,9 @@ fn sub_checked(self, rhs: Self) -> Result<Self, ArrowError>
 fn sub_wrapping(self, rhs: Self) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.arithmetic.ArrowNativeTypeOp.md).
+
+
 Trait for [`ArrowNativeType`] that adds checked and unchecked arithmetic operations,
 and totally ordered comparison operations
 

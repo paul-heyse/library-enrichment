@@ -48,6 +48,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.Alignment.md).
+
+
 Alignment specification for PostgreSQL user-defined base types.
 
 Specifies the storage alignment requirement for values of the data type.
@@ -115,6 +118,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterCollationOperation.md).
+
+
 Operations supported by `ALTER COLLATION`.
 
 ---
@@ -171,6 +177,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterColumnOperation.md).
+
+
 An `ALTER COLUMN` (`Statement::AlterTable`) operation
 
 ---
@@ -220,6 +229,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterConnectorOwner.md).
+
 
 New connector owner specification for `ALTER CONNECTOR ... OWNER TO ...`
 
@@ -271,6 +283,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterFunctionAction.md).
+
+
 Function action in `ALTER FUNCTION ... action [ ... ] [ RESTRICT ]`.
 
 ---
@@ -321,6 +336,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterFunctionKind.md).
+
+
 Function-like object type used by [`AlterFunction`].
 
 ---
@@ -370,6 +388,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterFunctionOperation.md).
+
 
 Operation for `ALTER FUNCTION` / `ALTER AGGREGATE`.
 
@@ -427,6 +448,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterIndexOperation.md).
+
+
 Alterations that can be applied to an index.
 
 ---
@@ -476,6 +500,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterOperatorClassOperation.md).
+
 
 An [AlterOperatorClass] operation
 
@@ -527,6 +554,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterOperatorFamilyOperation.md).
+
+
 An [AlterOperatorFamily] operation
 
 ---
@@ -577,6 +607,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterOperatorOperation.md).
+
+
 An [AlterOperator] operation
 
 ---
@@ -626,6 +659,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterPolicyOperation.md).
+
 
 An `ALTER Policy` (`Statement::AlterPolicy`) operation
 
@@ -685,6 +721,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterSchemaOperation.md).
+
+
 An `ALTER SCHEMA` (`Statement::AlterSchema`) operation.
 
 See [BigQuery](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#alter_schema_collate_statement)
@@ -738,6 +777,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterTableAlgorithm.md).
+
+
 [MySQL] `ALTER TABLE` algorithm.
 
 [MySQL]: https://dev.mysql.com/doc/refman/8.4/en/alter-table.html
@@ -790,6 +832,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterTableLock.md).
+
 
 [MySQL] `ALTER TABLE` lock.
 
@@ -850,6 +895,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterTableOperation.md).
+
+
 An `ALTER TABLE` (`Statement::AlterTable`) operation
 
 ---
@@ -893,6 +941,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterTableType.md).
+
 
 Table type for ALTER TABLE statements.
 Used to distinguish between regular tables, Iceberg tables, and Dynamic tables.
@@ -938,6 +989,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterTypeAddValuePosition.md).
+
 
 See [AlterTypeAddValue]
 
@@ -988,6 +1042,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterTypeOperation.md).
+
 
 An [AlterType] operation
 
@@ -1054,6 +1111,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.ColumnOption.md).
+
+
 `ColumnOption`s are modifiers that follow a column definition in a `CREATE
 TABLE` statement.
 
@@ -1111,6 +1171,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.ColumnOptions.md).
+
+
 Representation of how multiple `ColumnOption`s are grouped for a column.
 
 ---
@@ -1160,6 +1223,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.ColumnPolicy.md).
+
 
 Column policy that identify a security policy of access to a column.
 Syntax
@@ -1211,6 +1277,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreateCollationDefinition.md).
+
+
 Definition forms supported by `CREATE COLLATION`.
 
 ---
@@ -1260,6 +1329,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreatePolicyCommand.md).
+
 
 Command that a policy can apply to (FOR clause).
 ```sql
@@ -1315,6 +1387,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreatePolicyType.md).
+
+
 Policy type for a `CREATE POLICY` statement.
 ```sql
 AS [ PERMISSIVE | RESTRICTIVE ]
@@ -1369,6 +1444,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.Deduplicate.md).
+
+
 DEDUPLICATE statement used in OPTIMIZE TABLE et al. such as in ClickHouse SQL
 [ClickHouse](https://clickhouse.com/docs/en/sql-reference/statements/optimize)
 
@@ -1413,6 +1491,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.DeferrableInitial.md).
+
 
 Initial setting for deferrable constraints (`INITIALLY IMMEDIATE` or `INITIALLY DEFERRED`).
 
@@ -1463,6 +1544,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.DistStyle.md).
+
 
 Redshift distribution style for `CREATE TABLE`.
 
@@ -1515,6 +1599,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.DropBehavior.md).
+
 
 `<drop behavior> ::= CASCADE | RESTRICT`.
 
@@ -1574,6 +1661,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.ForValues.md).
+
+
 PostgreSQL partition bound specification for `PARTITION OF`.
 
 Specifies partition bounds for a child partition table.
@@ -1628,6 +1718,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.FunctionReturnType.md).
+
+
 The return type of a `CREATE FUNCTION` statement.
 
 ---
@@ -1671,6 +1764,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.GeneratedAs.md).
+
 
 `GeneratedAs`s are modifiers that follow a column option in a `generated`.
 'ExpStored' is used for a column generated from an expression and stored.
@@ -1716,6 +1812,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.GeneratedExpressionMode.md).
+
 
 `GeneratedExpressionMode`s are modifiers that follow an expression in a `generated`.
 No modifier is typically the same as Virtual.
@@ -1767,6 +1866,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.IdentityPropertyFormatKind.md).
+
 
 A format of parameters of identity column.
 
@@ -1831,6 +1933,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.IdentityPropertyKind.md).
+
+
 Identity is a column option for defining an identity or autoincrement column in a `CREATE TABLE` statement.
 Syntax
 ```sql
@@ -1887,6 +1992,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.IdentityPropertyOrder.md).
+
+
 The identity column option specifies how values are generated for the auto-incremented column, either in increasing or decreasing order.
 Syntax
 ```sql
@@ -1942,6 +2050,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.IndexOption.md).
+
+
 MySQL index option, used in [`CREATE TABLE`], [`CREATE INDEX`], and [`ALTER TABLE`].
 
 [`CREATE TABLE`]: https://dev.mysql.com/doc/refman/8.4/en/create-table.html
@@ -1995,6 +2106,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.IndexType.md).
+
 
 Indexing method used by that index.
 
@@ -2059,6 +2173,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.KeyOrIndexDisplay.md).
+
+
 Representation whether a definition can can contains the KEY or INDEX keywords with the same
 meaning.
 
@@ -2115,6 +2232,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.NullsDistinctOption.md).
+
+
 [PostgreSQL] unique index nulls handling option: `[ NULLS [ NOT ] DISTINCT ]`
 
 [PostgreSQL]: https://www.postgresql.org/docs/17/sql-altertable.html
@@ -2167,6 +2287,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.OperatorClassItem.md).
+
+
 An item in a CREATE OPERATOR CLASS statement
 
 ---
@@ -2216,6 +2339,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.OperatorFamilyDropItem.md).
+
 
 An item in an ALTER OPERATOR FAMILY DROP statement
 
@@ -2267,6 +2393,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.OperatorFamilyItem.md).
+
+
 An item in an ALTER OPERATOR FAMILY ADD statement
 
 ---
@@ -2316,6 +2445,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.OperatorOption.md).
+
 
 Option for `ALTER OPERATOR SET` operation
 
@@ -2367,6 +2499,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.OperatorPurpose.md).
+
+
 Purpose of an operator in an operator class
 
 ---
@@ -2416,6 +2551,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.Owner.md).
+
 
 New owner specification for `ALTER TABLE ... OWNER TO ...`
 
@@ -2472,6 +2610,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.Partition.md).
+
 
 PARTITION statement used in ALTER TABLE et al. such as in Hive and ClickHouse SQL.
 For example, ClickHouse's OPTIMIZE TABLE supports syntax like PARTITION ID 'partition_id' and PARTITION expr.
@@ -2530,6 +2671,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.PartitionBoundValue.md).
+
 
 A value in a partition bound specification.
 
@@ -2590,6 +2734,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.ReferentialAction.md).
+
+
 `<referential_action> =
 { RESTRICT | CASCADE | SET NULL | NO ACTION | SET DEFAULT }`
 
@@ -2649,6 +2796,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.RenameTableNameKind.md).
+
+
 `RenameTableNameKind` is the kind used in an `ALTER TABLE _ RENAME` statement.
 
 Note: [MySQL] is the only database that supports the AS keyword for this operation.
@@ -2703,6 +2853,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.ReplicaIdentity.md).
+
+
 ALTER TABLE operation REPLICA IDENTITY values
 See [Postgres ALTER TABLE docs](https://www.postgresql.org/docs/current/sql-altertable.html)
 
@@ -2754,6 +2907,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.TriggerObjectKind.md).
+
+
 Whether the syntax used for the trigger object (ROW or STATEMENT) is `FOR` or `FOR EACH`.
 
 ---
@@ -2803,6 +2959,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.UserDefinedTypeInternalLength.md).
+
 
 Internal length specification for PostgreSQL user-defined base types.
 
@@ -2875,6 +3034,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.UserDefinedTypeRangeOption.md).
+
+
 Options for PostgreSQL `CREATE TYPE ... AS RANGE` statement.
 
 Range types are data types representing a range of values of some element type
@@ -2941,6 +3103,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.UserDefinedTypeRepresentation.md).
+
+
 SQL user defined type definition
 
 ---
@@ -2990,6 +3155,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.UserDefinedTypeSqlDefinitionOption.md).
+
 
 Options for PostgreSQL `CREATE TYPE ... (<options>)` statement (base type definition).
 
@@ -3059,6 +3227,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.UserDefinedTypeStorage.md).
+
 
 Storage specification for PostgreSQL user-defined base types.
 
@@ -3134,6 +3305,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterCollation.md).
+
+
 ALTER COLLATION statement.
 Note: this is a PostgreSQL-specific statement.
 
@@ -3191,6 +3365,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterFunction.md).
+
+
 `ALTER FUNCTION` / `ALTER AGGREGATE` statement.
 
 ---
@@ -3240,6 +3417,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterOperator.md).
+
 
 `ALTER OPERATOR` statement
 See <https://www.postgresql.org/docs/current/sql-alteroperator.html>
@@ -3298,6 +3478,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterOperatorClass.md).
+
+
 `ALTER OPERATOR CLASS` statement
 See <https://www.postgresql.org/docs/current/sql-alteropclass.html>
 
@@ -3355,6 +3538,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterOperatorFamily.md).
+
+
 `ALTER OPERATOR FAMILY` statement
 See <https://www.postgresql.org/docs/current/sql-alteropfamily.html>
 
@@ -3405,6 +3591,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterPolicy.md).
+
 
 ALTER POLICY statement.
 
@@ -3467,6 +3656,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterSchema.md).
+
+
 An `ALTER SCHEMA` (`Statement::AlterSchema`) statement.
 
 ---
@@ -3523,6 +3715,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterTable.md).
+
+
 ALTER TABLE statement
 
 ---
@@ -3566,6 +3761,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterType.md).
+
 
 An `ALTER TYPE` statement (`Statement::AlterType`)
 
@@ -3611,6 +3809,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterTypeAddValue.md).
+
+
 See [AlterTypeOperation::AddValue]
 
 ---
@@ -3655,6 +3856,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterTypeRename.md).
+
+
 See [AlterTypeOperation::Rename]
 
 ---
@@ -3698,6 +3902,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.AlterTypeRenameValue.md).
+
 
 See [AlterTypeOperation::RenameValue]
 
@@ -3748,6 +3955,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.ClusteredBy.md).
+
 
 Hive supports `CLUSTERED BY` statement in `CREATE TABLE`.
 Syntax: `CLUSTERED BY (col_name, ...) [SORTED BY (col_name [ASC|DESC], ...)] INTO num_buckets BUCKETS`
@@ -3808,6 +4018,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.ColumnDef.md).
+
+
 SQL column definition
 
 ---
@@ -3863,6 +4076,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.ColumnOptionDef.md).
+
 
 An optionally-named `ColumnOption`: `[ CONSTRAINT <name> ] <column-option>`.
 
@@ -3923,6 +4139,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.ColumnPolicyProperty.md).
+
+
 Properties describing a column policy (masking or projection).
 
 ---
@@ -3978,6 +4197,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.ConstraintCharacteristics.md).
+
 
 `<constraint_characteristics> = [ DEFERRABLE | NOT DEFERRABLE ] [ INITIALLY DEFERRED | INITIALLY IMMEDIATE ] [ ENFORCED | NOT ENFORCED ]`
 
@@ -4037,6 +4259,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreateCollation.md).
+
+
 CREATE COLLATION statement.
 Note: this is a PostgreSQL-specific statement.
 
@@ -4087,6 +4312,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreateConnector.md).
+
 
 ```sql
 CREATE CONNECTOR [IF NOT EXISTS] connector_name
@@ -4145,6 +4373,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreateDomain.md).
+
 
 ```sql
 CREATE DOMAIN name [ AS ] data_type
@@ -4213,6 +4444,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreateExtension.md).
+
+
 CREATE EXTENSION statement
 Note: this is a PostgreSQL-specific statement
 
@@ -4263,6 +4497,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreateFunction.md).
+
 
 CREATE FUNCTION statement
 
@@ -4320,6 +4557,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreateIndex.md).
+
+
 CREATE INDEX statement.
 
 ---
@@ -4375,6 +4615,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreateOperator.md).
+
 
 CREATE OPERATOR statement
 See <https://www.postgresql.org/docs/current/sql-createoperator.html>
@@ -4433,6 +4676,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreateOperatorClass.md).
+
+
 CREATE OPERATOR CLASS statement
 See <https://www.postgresql.org/docs/current/sql-createopclass.html>
 
@@ -4490,6 +4736,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreateOperatorFamily.md).
+
+
 CREATE OPERATOR FAMILY statement
 See <https://www.postgresql.org/docs/current/sql-createopfamily.html>
 
@@ -4540,6 +4789,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreatePolicy.md).
+
 
 CREATE POLICY statement.
 
@@ -4599,6 +4851,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreateTable.md).
+
+
 CREATE TABLE statement.
 
 ---
@@ -4648,6 +4903,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreateTrigger.md).
+
 
 CREATE TRIGGER
 
@@ -4717,6 +4975,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.CreateView.md).
+
+
 CREATE VIEW statement.
 
 ---
@@ -4772,6 +5033,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.DropExtension.md).
+
 
 DROP EXTENSION statement
 Note: this is a PostgreSQL-specific statement
@@ -4835,6 +5099,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.DropFunction.md).
+
+
 DROP FUNCTION statement
 
 ---
@@ -4890,6 +5157,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.DropOperator.md).
+
 
 `DROP OPERATOR` statement
 See <https://www.postgresql.org/docs/current/sql-dropoperator.html>
@@ -4948,6 +5218,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.DropOperatorClass.md).
+
+
 `DROP OPERATOR CLASS` statement
 See <https://www.postgresql.org/docs/current/sql-dropopclass.html>
 
@@ -5005,6 +5278,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.DropOperatorFamily.md).
+
+
 `DROP OPERATOR FAMILY` statement
 See <https://www.postgresql.org/docs/current/sql-dropopfamily.html>
 
@@ -5056,6 +5332,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.DropOperatorSignature.md).
+
+
 Operator signature for a `DROP OPERATOR` statement
 
 ---
@@ -5105,6 +5384,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.DropPolicy.md).
+
 
 DROP POLICY statement.
 
@@ -5158,6 +5440,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.DropTrigger.md).
+
+
 DROP TRIGGER
 
 ```sql
@@ -5206,6 +5491,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.IdentityParameters.md).
+
+
 Parameters specifying seed and increment for identity columns.
 
 ---
@@ -5249,6 +5537,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.IdentityProperty.md).
+
 
 Properties for the `IDENTITY` / `AUTOINCREMENT` column option.
 
@@ -5313,6 +5604,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.IndexColumn.md).
+
+
 Index column type.
 
 ---
@@ -5369,6 +5663,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.Msck.md).
+
+
 An `MSCK` statement.
 
 ```sql
@@ -5424,6 +5721,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.OperatorArgTypes.md).
+
+
 Operator argument types for CREATE OPERATOR CLASS
 
 ---
@@ -5474,6 +5774,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.ProcedureParam.md).
+
+
 A parameter of a stored procedure or function declaration.
 
 ---
@@ -5523,6 +5826,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.TagsColumnOption.md).
+
 
 Tags option of column
 Syntax
@@ -5585,6 +5891,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.Truncate.md).
+
+
 A `TRUNCATE` statement.
 
 ```sql
@@ -5638,6 +5947,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.UserDefinedTypeCompositeAttributeDef.md).
+
 
 SQL user defined type attribute definition
 
@@ -5694,6 +6006,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.ddl.ViewColumnDef.md).
+
 
 Column definition specified in a `CREATE VIEW` statement.
 

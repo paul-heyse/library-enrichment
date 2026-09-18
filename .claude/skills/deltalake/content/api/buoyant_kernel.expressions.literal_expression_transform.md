@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## Error
 
 `enum` · `buoyant_kernel::expressions::literal_expression_transform::Error`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.literal_expression_transform.Error.md)
 
 Also reachable as `delta_kernel::expressions::literal_expression_transform::Error`
 

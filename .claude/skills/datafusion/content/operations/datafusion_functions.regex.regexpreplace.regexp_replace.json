@@ -1,0 +1,218 @@
+[
+  {
+    "id": "0557fd320af633139ff50d9b",
+    "path": "datafusion_functions::regex::regexpreplace::regexp_replace",
+    "name": "regexp_replace",
+    "owner": null,
+    "crate": "datafusion-functions",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn regexp_replace<'a, T: OffsetSizeTrait, U>(string_array: U, pattern_array: U, replacement_array: U, flags_array: Option<U>) -> datafusion_common::Result<arrow::array::ArrayRef> where U: ArrayAccessor<Item = &'a str>",
+    "docs": "Replaces substring(s) matching a PCRE-like regular expression.\n\nThe full list of supported features and syntax can be found at\n<https://docs.rs/regex/latest/regex/#syntax>\n\nSupported flags with the addition of 'g' can be found at\n<https://docs.rs/regex/latest/regex/#grouping-and-flags>\n\n# Examples\n\n```ignore\n# use datafusion::prelude::*;\n# use datafusion::error::Result;\n# #[tokio::main]\n# async fn main() -> Result<()> {\nlet ctx = SessionContext::new();\nlet df = ctx.read_csv(\"tests/data/regex.csv\", CsvReadOptions::new()).await?;\n\n// use the regexp_replace function to replace substring(s) without flags\nlet df = df.with_column(\n    \"a\",\n    regexp_replace(vec![col(\"values\"), col(\"patterns\"), col(\"replacement\")])\n)?;\n// use the regexp_replace function to replace substring(s) with flags\nlet df = df.with_column(\n    \"b\",\n    regexp_replace(vec![col(\"values\"), col(\"patterns\"), col(\"replacement\"), col(\"flags\")]),\n)?;\n\n// literals can be used as well\nlet df = df.with_column(\n    \"c\",\n    regexp_replace(vec![lit(\"foobarbequebaz\"), lit(\"(bar)(beque)\"), lit(r\"\\2\")]),\n)?;\n\ndf.show().await?;\n\n# Ok(())\n# }\n```",
+    "span": {
+      "filename": "src/regex/regexpreplace.rs",
+      "begin": [
+        331,
+        1
+      ],
+      "end": [
+        472,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "string_array",
+              {
+                "generic": "U"
+              }
+            ],
+            [
+              "pattern_array",
+              {
+                "generic": "U"
+              }
+            ],
+            [
+              "replacement_array",
+              {
+                "generic": "U"
+              }
+            ],
+            [
+              "flags_array",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 95,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "U"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 90,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "arrow::array::ArrayRef",
+                          "id": 100,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "OffsetSizeTrait",
+                          "id": 4194,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "U",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "U"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayAccessor",
+                        "id": 4195,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [],
+                            "constraints": [
+                              {
+                                "name": "Item",
+                                "args": null,
+                                "binding": {
+                                  "equality": {
+                                    "type": {
+                                      "borrowed_ref": {
+                                        "lifetime": "'a",
+                                        "is_mutable": false,
+                                        "type": {
+                                          "primitive": "str"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "95": "core::option::Option",
+      "90": "datafusion_common::error::Result",
+      "100": "arrow_array::array::ArrayRef",
+      "4194": "arrow_array::array::list_array::OffsetSizeTrait",
+      "4195": "arrow_array::array::ArrayAccessor"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e1d096725359f4276d6acc8757f0e9612b0b148678410a03da37509b2bdba1ac",
+      "format_version": 61,
+      "item_id": "4193",
+      "origin": "https://docs.rs/crate/datafusion-functions/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_functions.regex.regexpreplace.regexp_replace.md",
+    "record_file": "operations/datafusion_functions.regex.regexpreplace.regexp_replace.json",
+    "anchor": "op-0557fd320af633139ff50d9b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

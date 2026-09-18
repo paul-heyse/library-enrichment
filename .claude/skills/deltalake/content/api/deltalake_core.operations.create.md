@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## CreateBuilder
 
 `struct` · `deltalake_core::operations::create::CreateBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.create.CreateBuilder.md)
 
 Also reachable as `deltalake::operations::create::CreateBuilder`
 
@@ -41,13 +42,6 @@ fn with_table_name(self, name: impl Into<String>) -> Self
 
 ```rust
 fn into_future(self) -> Self::IntoFuture
-```
-
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
 ```
 
 Build an operation to create a new [DeltaTable]

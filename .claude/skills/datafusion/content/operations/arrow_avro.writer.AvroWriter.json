@@ -1,0 +1,93 @@
+[
+  {
+    "id": "109f7d6c1f115d2ec6574736",
+    "path": "arrow_avro::writer::AvroWriter",
+    "name": "AvroWriter",
+    "owner": null,
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "type_alias",
+    "signature": "type AvroWriter<W> = Writer<W, writer::format::AvroOcfFormat>",
+    "docs": "Alias for an Avro **Object Container File** writer.\n\n### Quickstart (runnable)\n\n```\nuse std::io::Cursor;\nuse std::sync::Arc;\nuse arrow_array::{ArrayRef, Int64Array, StringArray, RecordBatch};\nuse arrow_schema::{DataType, Field, Schema};\nuse arrow_avro::writer::AvroWriter;\nuse arrow_avro::reader::ReaderBuilder;\n\n# fn main() -> Result<(), Box<dyn std::error::Error>> {\n// Writer schema: { id: long, name: string }\nlet writer_schema = Schema::new(vec![\n    Field::new(\"id\", DataType::Int64, false),\n    Field::new(\"name\", DataType::Utf8, false),\n]);\n\n// Build a RecordBatch with two rows\nlet batch = RecordBatch::try_new(\n    Arc::new(writer_schema.clone()),\n    vec![\n        Arc::new(Int64Array::from(vec![1, 2])) as ArrayRef,\n        Arc::new(StringArray::from(vec![\"a\", \"b\"])) as ArrayRef,\n    ],\n)?;\n\n// Write an Avro **Object Container File** (OCF) to memory\nlet mut w = AvroWriter::new(Vec::<u8>::new(), writer_schema.clone())?;\nw.write(&batch)?;\nw.finish()?;\nlet bytes = w.into_inner();\n\n// Build a Reader and decode the batch back\nlet mut r = ReaderBuilder::new().build(Cursor::new(bytes))?;\nlet out = r.next().unwrap()?;\nassert_eq!(out.num_rows(), 2);\n# Ok(()) }\n```",
+    "span": {
+      "filename": "src/writer/mod.rs",
+      "begin": [
+        613,
+        1
+      ],
+      "end": [
+        613,
+        51
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "type_alias": {
+        "type": {
+          "resolved_path": {
+            "path": "Writer",
+            "id": 539,
+            "args": {
+              "angle_bracketed": {
+                "args": [
+                  {
+                    "type": {
+                      "generic": "W"
+                    }
+                  },
+                  {
+                    "type": {
+                      "resolved_path": {
+                        "path": "crate::writer::format::AvroOcfFormat",
+                        "id": 413,
+                        "args": null
+                      }
+                    }
+                  }
+                ],
+                "constraints": []
+              }
+            }
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "W",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        }
+      }
+    },
+    "type_references": {
+      "539": "arrow_avro::writer::Writer",
+      "413": "arrow_avro::writer::format::AvroOcfFormat"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "600",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.writer.AvroWriter.md",
+    "record_file": "operations/arrow_avro.writer.AvroWriter.json",
+    "anchor": "op-109f7d6c1f115d2ec6574736",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

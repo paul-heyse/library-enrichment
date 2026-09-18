@@ -1,0 +1,95 @@
+[
+  {
+    "id": "209408c3e0722e98219d2290",
+    "path": "sqlparser",
+    "name": "sqlparser",
+    "owner": null,
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "module",
+    "signature": "mod sqlparser",
+    "docs": " # SQL Parser for Rust\n\n This crate provides an ANSI:SQL 2011 lexer and parser that can parse SQL\n into an Abstract Syntax Tree ([`AST`]). See the [sqlparser crates.io page]\n for more information.\n\n For more information:\n 1. [`Parser::parse_sql`] and [`Parser::new`] for the Parsing API\n 2. [`ast`] for the AST structure\n 3. [`Dialect`] for supported SQL dialects\n 4. [`Spanned`] for source text locations (see \"Source Spans\" below for details)\n\n [`Spanned`]: ast::Spanned\n\n # Example parsing SQL text\n\n ```\n use sqlparser::dialect::GenericDialect;\n use sqlparser::parser::Parser;\n\n let dialect = GenericDialect {}; // or AnsiDialect\n\n let sql = \"SELECT a, b, 123, myfunc(b) \\\n            FROM table_1 \\\n            WHERE a > b AND b < 100 \\\n            ORDER BY a DESC, b\";\n\n let ast = Parser::parse_sql(&dialect, sql).unwrap();\n\n println!(\"AST: {:?}\", ast);\n ```\n\n # Creating SQL text from AST\n\n This crate allows users to recover the original SQL text (with comments\n removed, normalized whitespace and identifier capitalization), which is\n useful for tools that analyze and manipulate SQL.\n\n ```\n # use sqlparser::dialect::GenericDialect;\n # use sqlparser::parser::Parser;\n let sql = \"SELECT a FROM table_1\";\n\n // parse to a Vec<Statement>\n let ast = Parser::parse_sql(&GenericDialect, sql).unwrap();\n\n // The original SQL text can be generated from the AST\n assert_eq!(ast[0].to_string(), sql);\n ```\n\n # Pretty Printing\n\n SQL statements can be pretty-printed with proper indentation and line breaks using the alternate flag (`{:#}`):\n\n ```\n # use sqlparser::dialect::GenericDialect;\n # use sqlparser::parser::Parser;\n let sql = \"SELECT a, b FROM table_1\";\n let ast = Parser::parse_sql(&GenericDialect, sql).unwrap();\n\n // Pretty print with indentation and line breaks\n let pretty_sql = format!(\"{:#}\", ast[0]);\n assert_eq!(pretty_sql, r#\"\n SELECT\n   a,\n   b\n FROM\n   table_1\n \"#.trim());\n ```\n [sqlparser crates.io page]: https://crates.io/crates/sqlparser\n [`Parser::parse_sql`]: crate::parser::Parser::parse_sql\n [`Parser::new`]: crate::parser::Parser::new\n [`AST`]: crate::ast\n [`ast`]: crate::ast\n [`Dialect`]: crate::dialect::Dialect\n\n # Source Spans\n\n Starting with version  `0.53.0` sqlparser introduced source spans to the\n AST. This feature provides source information for syntax errors, enabling\n better error messages. See [issue #1548] for more information and the\n [`Spanned`] trait to access the spans.\n\n [issue #1548]: https://github.com/apache/datafusion-sqlparser-rs/issues/1548\n [`Spanned`]: ast::Spanned\n\n ## Migration Guide\n\n For the next few releases, we will be incrementally adding source spans to the\n AST nodes, trying to minimize the impact on existing users. Some breaking\n changes are inevitable, and the following is a summary of the changes:\n\n #### New fields for spans (must be added to any existing pattern matches)\n\n The primary change is that new fields will be added to AST nodes to store the source `Span` or `TokenWithLocation`.\n\n This will require\n 1. Adding new fields to existing pattern matches.\n 2. Filling in the proper span information when constructing AST nodes.\n\n For example, since `Ident` now stores a `Span`, to construct an `Ident` you\n must provide now provide one:\n\n Previously:\n ```text\n # use sqlparser::ast::Ident;\n Ident {\n     value: \"name\".into(),\n     quote_style: None,\n }\n ```\n Now\n ```rust\n # use sqlparser::ast::Ident;\n # use sqlparser::tokenizer::Span;\n Ident {\n     value: \"name\".into(),\n     quote_style: None,\n     span: Span::empty(),\n };\n ```\n\n Similarly, when pattern matching on `Ident`, you must now account for the\n `span` field.\n\n #### Misc.\n - [`TokenWithLocation`] stores a full `Span`, rather than just a source location.\n   Users relying on `token.location` should use `token.location.start` instead.\n\n[`TokenWithLocation`]: tokenizer::TokenWithLocation",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        185,
+        20
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[allow(clippy::upper_case_acronyms)]"
+      },
+      {
+        "other": "#[allow(clippy::large_enum_variant)]"
+      },
+      {
+        "other": "#[forbid(clippy::unreachable)]"
+      },
+      {
+        "other": "#[forbid(missing_docs)]"
+      },
+      {
+        "other": "#[attr = CfgAttrTrace]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": true,
+        "items": [
+          7613,
+          28361,
+          28154,
+          31091,
+          31541,
+          31573
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "tokenizer::TokenWithLocation": 31446,
+      "crate::parser::Parser::new": 30729,
+      "crate::dialect::Dialect": 27066,
+      "crate::ast": 7613,
+      "ast::Spanned": 1060,
+      "crate::parser::Parser::parse_sql": 30730
+    },
+    "link_paths": {
+      "tokenizer::TokenWithLocation": "sqlparser::tokenizer::TokenWithLocation",
+      "crate::parser::Parser::new": null,
+      "crate::dialect::Dialect": "sqlparser::dialect::Dialect",
+      "crate::ast": "sqlparser::ast",
+      "ast::Spanned": "sqlparser::ast::spans::Spanned",
+      "crate::parser::Parser::parse_sql": null
+    },
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "28320",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/sqlparser.md",
+    "record_file": "modules/sqlparser.json",
+    "anchor": "op-209408c3e0722e98219d2290",
+    "aliases": [],
+    "resolved_doc_links": {
+      "tokenizer::TokenWithLocation": "../operations/sqlparser.tokenizer.TokenWithLocation.md#op-7ec0654f527110b60fe2dabe",
+      "crate::parser::Parser::new": "../operations/sqlparser.parser.Parser.md#op-82ec32737f9279974a92f7f8",
+      "crate::dialect::Dialect": "../operations/sqlparser.dialect.Dialect.md#op-f184df0633eac2f7d134147b",
+      "crate::ast": "../modules/sqlparser.ast.md#op-6df9e19e14357308f7c3707f",
+      "ast::Spanned": "../operations/sqlparser.ast.spans.Spanned.md#op-a414e73174d10b9c5448d654",
+      "crate::parser::Parser::parse_sql": "../operations/sqlparser.parser.Parser.md#op-fc7ccb40a43499852e70701f"
+    }
+  }
+]

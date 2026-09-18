@@ -1,0 +1,483 @@
+[
+  {
+    "id": "5955577f57f524b623a2af12",
+    "path": "arrow_array::array::dictionary_array::AnyDictionaryArray",
+    "name": "AnyDictionaryArray",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "trait",
+    "signature": "trait AnyDictionaryArray: Array",
+    "docs": "A [`DictionaryArray`] with the key type erased\n\nThis can be used to efficiently implement kernels for all possible dictionary\nkeys without needing to create specialized implementations for each key type\n\nFor example\n\n```\n# use arrow_array::*;\n# use arrow_array::cast::AsArray;\n# use arrow_array::builder::PrimitiveDictionaryBuilder;\n# use arrow_array::types::*;\n# use arrow_schema::ArrowError;\n# use std::sync::Arc;\n\nfn to_string(a: &dyn Array) -> Result<ArrayRef, ArrowError> {\n    if let Some(d) = a.as_any_dictionary_opt() {\n        // Recursively handle dictionary input\n        let r = to_string(d.values().as_ref())?;\n        return Ok(d.with_values(r));\n    }\n    downcast_primitive_array! {\n        a => Ok(Arc::new(a.iter().map(|x| x.map(|x| format!(\"{x:?}\"))).collect::<StringArray>())),\n        d => Err(ArrowError::InvalidArgumentError(format!(\"{d:?} not supported\")))\n    }\n}\n\nlet result = to_string(&Int32Array::from(vec![1, 2, 3])).unwrap();\nlet actual = result.as_string::<i32>().iter().map(Option::unwrap).collect::<Vec<_>>();\nassert_eq!(actual, &[\"1\", \"2\", \"3\"]);\n\nlet mut dict = PrimitiveDictionaryBuilder::<Int32Type, UInt16Type>::new();\ndict.extend([Some(1), Some(1), Some(2), Some(3), Some(2)]);\nlet dict = dict.finish();\n\nlet r = to_string(&dict).unwrap();\nlet r = r.as_dictionary::<Int32Type>().downcast_dict::<StringArray>().unwrap();\nassert_eq!(r.keys(), dict.keys()); // Keys are the same\n\nlet actual = r.into_iter().map(Option::unwrap).collect::<Vec<_>>();\nassert_eq!(actual, &[\"1\", \"1\", \"2\", \"3\", \"2\"]);\n```\n\nSee [`AsArray::as_any_dictionary_opt`] and [`AsArray::as_any_dictionary`]",
+    "span": {
+      "filename": "src/array/dictionary_array.rs",
+      "begin": [
+        1016,
+        1
+      ],
+      "end": [
+        1037,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          432,
+          433,
+          434,
+          435
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Array",
+                "id": 76,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": [
+          375
+        ]
+      }
+    },
+    "type_references": {
+      "76": "arrow_array::array::Array"
+    },
+    "impl_context": null,
+    "links": {
+      "`AsArray::as_any_dictionary_opt`": 436,
+      "`AsArray::as_any_dictionary`": 437,
+      "`DictionaryArray`": 277
+    },
+    "link_paths": {
+      "`AsArray::as_any_dictionary_opt`": "arrow_array::cast::AsArray::as_any_dictionary_opt",
+      "`AsArray::as_any_dictionary`": "arrow_array::cast::AsArray::as_any_dictionary",
+      "`DictionaryArray`": "arrow_array::array::dictionary_array::DictionaryArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "376",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.dictionary_array.AnyDictionaryArray.md",
+    "record_file": "operations/arrow_array.array.dictionary_array.AnyDictionaryArray.json",
+    "anchor": "op-5955577f57f524b623a2af12",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`AsArray::as_any_dictionary_opt`": "../operations/arrow_array.cast.AsArray.md#op-ea0c096d64b7dccb3a293969",
+      "`AsArray::as_any_dictionary`": "../operations/arrow_array.cast.AsArray.md#op-936d9f41d40b7be15147c47e",
+      "`DictionaryArray`": "../operations/arrow_array.array.dictionary_array.DictionaryArray.md#op-761ab0c11d727f026bdc2e47"
+    }
+  },
+  {
+    "id": "452de658f9cbb8c489956037",
+    "path": "arrow_array::array::dictionary_array::AnyDictionaryArray::keys",
+    "name": "keys",
+    "owner": "arrow_array::array::dictionary_array::AnyDictionaryArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn keys(&self) -> &dyn Array",
+    "docs": "Returns the primitive keys of this dictionary as an [`Array`]",
+    "span": {
+      "filename": "src/array/dictionary_array.rs",
+      "begin": [
+        1018,
+        5
+      ],
+      "end": [
+        1018,
+        34
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Array",
+                        "id": 76,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "76": "arrow_array::array::Array"
+    },
+    "impl_context": null,
+    "links": {
+      "`Array`": 76
+    },
+    "link_paths": {
+      "`Array`": "arrow_array::array::Array"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "432",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.dictionary_array.AnyDictionaryArray.md",
+    "record_file": "operations/arrow_array.array.dictionary_array.AnyDictionaryArray.json",
+    "anchor": "op-452de658f9cbb8c489956037",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Array`": "../operations/arrow_array.array.Array.md#op-cabb9fba5e3e968cee823d21"
+    }
+  },
+  {
+    "id": "c8e26bb608b4b944255fd4ea",
+    "path": "arrow_array::array::dictionary_array::AnyDictionaryArray::normalized_keys",
+    "name": "normalized_keys",
+    "owner": "arrow_array::array::dictionary_array::AnyDictionaryArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn normalized_keys(&self) -> Vec<usize>",
+    "docs": "Returns the keys of this dictionary as usize\n\nThe values for nulls will be arbitrary, but are guaranteed\nto be in the range `0..self.values.len()`\n\n# Panic\n\nPanics if `values.len() == 0`",
+    "span": {
+      "filename": "src/array/dictionary_array.rs",
+      "begin": [
+        1031,
+        5
+      ],
+      "end": [
+        1031,
+        45
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 145,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "145": "alloc::vec::Vec"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "434",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.dictionary_array.AnyDictionaryArray.md",
+    "record_file": "operations/arrow_array.array.dictionary_array.AnyDictionaryArray.json",
+    "anchor": "op-c8e26bb608b4b944255fd4ea",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f15de9c6d4108e4e945b0ea4",
+    "path": "arrow_array::array::dictionary_array::AnyDictionaryArray::values",
+    "name": "values",
+    "owner": "arrow_array::array::dictionary_array::AnyDictionaryArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn values(&self) -> &ArrayRef",
+    "docs": "Returns the values of this dictionary",
+    "span": {
+      "filename": "src/array/dictionary_array.rs",
+      "begin": [
+        1021,
+        5
+      ],
+      "end": [
+        1021,
+        35
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ArrayRef",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "433",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.dictionary_array.AnyDictionaryArray.md",
+    "record_file": "operations/arrow_array.array.dictionary_array.AnyDictionaryArray.json",
+    "anchor": "op-f15de9c6d4108e4e945b0ea4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f4f33a7a89d4905c14c46961",
+    "path": "arrow_array::array::dictionary_array::AnyDictionaryArray::with_values",
+    "name": "with_values",
+    "owner": "arrow_array::array::dictionary_array::AnyDictionaryArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_values(&self, values: ArrayRef) -> ArrayRef",
+    "docs": "Create a new [`DictionaryArray`] replacing `values` with the new values\n\nSee [`DictionaryArray::with_values`]",
+    "span": {
+      "filename": "src/array/dictionary_array.rs",
+      "begin": [
+        1036,
+        5
+      ],
+      "end": [
+        1036,
+        57
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "values",
+              {
+                "resolved_path": {
+                  "path": "ArrayRef",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": null,
+    "links": {
+      "`DictionaryArray::with_values`": 318,
+      "`DictionaryArray`": 277
+    },
+    "link_paths": {
+      "`DictionaryArray::with_values`": "arrow_array::array::dictionary_array::DictionaryArray::with_values",
+      "`DictionaryArray`": "arrow_array::array::dictionary_array::DictionaryArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "435",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.dictionary_array.AnyDictionaryArray.md",
+    "record_file": "operations/arrow_array.array.dictionary_array.AnyDictionaryArray.json",
+    "anchor": "op-f4f33a7a89d4905c14c46961",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`DictionaryArray::with_values`": "../operations/arrow_array.array.dictionary_array.DictionaryArray.md#op-0282e1ff97cb915672985c5e",
+      "`DictionaryArray`": "../operations/arrow_array.array.dictionary_array.DictionaryArray.md#op-761ab0c11d727f026bdc2e47"
+    }
+  }
+]

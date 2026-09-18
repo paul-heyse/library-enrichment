@@ -1,0 +1,3840 @@
+[
+  {
+    "id": "972e6ecc4b3db74073f32c0b",
+    "path": "object_store::local::LocalFileSystem",
+    "name": "LocalFileSystem",
+    "owner": null,
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "struct",
+    "signature": "struct LocalFileSystem",
+    "docs": "Local filesystem storage providing an [`ObjectStore`] interface to files on\nlocal disk. Can optionally be created with a directory prefix\n\n# Path Semantics\n\nThis implementation follows the [file URI] scheme outlined in [RFC 3986]. In\nparticular paths are delimited by `/`\n\n[file URI]: https://en.wikipedia.org/wiki/File_URI_scheme\n[RFC 3986]: https://www.rfc-editor.org/rfc/rfc3986\n\n# Path Semantics\n\n[`LocalFileSystem`] will expose the path semantics of the underlying filesystem, which may\nhave additional restrictions beyond those enforced by [`Path`].\n\nFor example:\n\n* Windows forbids certain filenames, e.g. `COM0`,\n* Windows forbids folders with trailing `.`\n* Windows forbids certain ASCII characters, e.g. `<` or `|`\n* OS X forbids filenames containing `:`\n* Leading `-` are discouraged on Unix systems where they may be interpreted as CLI flags\n* Filesystems may have restrictions on the maximum path or path segment length\n* Filesystem support for non-ASCII characters is inconsistent\n\nAdditionally some filesystems, such as NTFS, are case-insensitive, whilst others like\nFAT don't preserve case at all. Further some filesystems support non-unicode character\nsequences, such as unpaired UTF-16 surrogates, and [`LocalFileSystem`] will error on\nencountering such sequences.\n\nFinally, filenames matching the regex `/.*#\\d+/`, e.g. `foo.parquet#123`, are not supported\nby [`LocalFileSystem`] as they are used to provide atomic writes. Such files will be ignored\nfor listing operations, and attempting to address such a file will error.\n\n# Tokio Compatibility\n\nTokio discourages performing blocking IO on a tokio worker thread, however,\nno major operating systems have stable async file APIs. Therefore if called from\na tokio context, this will use [`tokio::runtime::Handle::spawn_blocking`] to dispatch\nIO to a blocking thread pool, much like `tokio::fs` does under-the-hood.\n\nIf not called from a tokio context, this will perform IO on the current thread with\nno additional complexity or overheads\n\n# Symlinks\n\n[`LocalFileSystem`] will follow symlinks as normal, however, it is worth noting:\n\n* Broken symlinks will be silently ignored by listing operations\n* No effort is made to prevent breaking symlinks when deleting files\n* Symlinks that resolve to paths outside the root **will** be followed\n* Mutating a file through one or more symlinks will mutate the underlying file\n* Deleting a path that resolves to a symlink will only delete the symlink\n\n# Cross-Filesystem Copy\n\n[`LocalFileSystem::copy_opts`] is implemented using [`std::fs::hard_link`], and therefore\ndoes not support copying across filesystem boundaries.\n",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        201,
+        1
+      ],
+      "end": [
+        205,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          1521,
+          1522,
+          1523,
+          1524,
+          1525,
+          1526,
+          1527,
+          1528,
+          1529,
+          1530,
+          1531,
+          1532,
+          1533,
+          1534,
+          1535,
+          1536,
+          1537,
+          1538,
+          1539,
+          1540,
+          1541,
+          1542,
+          1543,
+          1544,
+          1545,
+          1547,
+          1549,
+          1551,
+          1553,
+          1563
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`LocalFileSystem`": 1512,
+      "`Path`": 495,
+      "`tokio::runtime::Handle::spawn_blocking`": 1513,
+      "`std::fs::hard_link`": 1515,
+      "`ObjectStore`": 514,
+      "`LocalFileSystem::copy_opts`": 1514
+    },
+    "link_paths": {
+      "`LocalFileSystem`": "object_store::local::LocalFileSystem",
+      "`Path`": "object_store::path::Path",
+      "`tokio::runtime::Handle::spawn_blocking`": null,
+      "`std::fs::hard_link`": "std::fs::hard_link",
+      "`ObjectStore`": "object_store::ObjectStore",
+      "`LocalFileSystem::copy_opts`": null
+    },
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1512",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-972e6ecc4b3db74073f32c0b",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`LocalFileSystem`": "../operations/object_store.local.LocalFileSystem.md#op-972e6ecc4b3db74073f32c0b",
+      "`Path`": "../operations/object_store.path.Path.md#op-387136a1d8baa9d740b7fc0b",
+      "`ObjectStore`": "../operations/object_store.ObjectStore.md#op-94894eaf9e5f6b785baca8ca",
+      "`LocalFileSystem::copy_opts`": "../operations/object_store.local.LocalFileSystem.md#op-e32cd6a5fa4552ccda02bac9"
+    }
+  },
+  {
+    "id": "7498891aa5df249627347abd",
+    "path": "object_store::local::LocalFileSystem::clone",
+    "name": "clone",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn clone(&self) -> LocalFileSystem",
+    "docs": "",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        200,
+        10
+      ],
+      "end": [
+        200,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "LocalFileSystem",
+              "id": 1512,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "1512": "object_store::local::LocalFileSystem"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          200,
+          10
+        ],
+        "end": [
+          200,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1546",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-7498891aa5df249627347abd",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e32cd6a5fa4552ccda02bac9",
+    "path": "object_store::local::LocalFileSystem::copy_opts",
+    "name": "copy_opts",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()>",
+    "docs": "",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        544,
+        5
+      ],
+      "end": [
+        618,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "from",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "to",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life2",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "CopyOptions",
+                  "id": 559,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "tuple": []
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life2",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life2",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "495": "object_store::path::Path",
+      "559": "object_store::CopyOptions",
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "88": "core::marker::Send"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ObjectStore",
+        "id": "object_store::ObjectStore",
+        "args": null
+      },
+      "trait_path": "object_store::ObjectStore",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          329,
+          1
+        ],
+        "end": [
+          667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1514",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-e32cd6a5fa4552ccda02bac9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3dac0807c8d78f8aede69df3",
+    "path": "object_store::local::LocalFileSystem::default",
+    "name": "default",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn default() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        219,
+        5
+      ],
+      "end": [
+        221,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          218,
+          1
+        ],
+        "end": [
+          222,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1552",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-3dac0807c8d78f8aede69df3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "18ca02f26f910f6ce4da1f23",
+    "path": "object_store::local::LocalFileSystem::delete_stream",
+    "name": "delete_stream",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn delete_stream(&self, locations: BoxStream<'static, Result<Path>>) -> BoxStream<'static, Result<Path>>",
+    "docs": "",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        462,
+        5
+      ],
+      "end": [
+        479,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "locations",
+              {
+                "resolved_path": {
+                  "path": "BoxStream",
+                  "id": 553,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'static"
+                        },
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Result",
+                              "id": 85,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Path",
+                                          "id": 495,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BoxStream",
+              "id": 553,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'static"
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Result",
+                          "id": 85,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Path",
+                                      "id": 495,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "553": "futures_core::stream::BoxStream",
+      "85": "object_store::Result",
+      "495": "object_store::path::Path"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ObjectStore",
+        "id": "object_store::ObjectStore",
+        "args": null
+      },
+      "trait_path": "object_store::ObjectStore",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          329,
+          1
+        ],
+        "end": [
+          667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1558",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-18ca02f26f910f6ce4da1f23",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4ffb5767a530397fcc20b97a",
+    "path": "object_store::local::LocalFileSystem::fmt",
+    "name": "fmt",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        213,
+        5
+      ],
+      "end": [
+        215,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::fmt::Formatter",
+                      "id": 153,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 154,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "153": "core::fmt::Formatter",
+      "154": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Display",
+        "id": "core::fmt::Display",
+        "args": null
+      },
+      "trait_path": "core::fmt::Display",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          212,
+          1
+        ],
+        "end": [
+          216,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1550",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-4ffb5767a530397fcc20b97a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d3033e7964436c25c07999d8",
+    "path": "object_store::local::LocalFileSystem::fmt",
+    "name": "fmt",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        200,
+        17
+      ],
+      "end": [
+        200,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 153,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 154,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "153": "core::fmt::Formatter",
+      "154": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          200,
+          17
+        ],
+        "end": [
+          200,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1548",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-d3033e7964436c25c07999d8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d7c4a724c2bc491fa26262e0",
+    "path": "object_store::local::LocalFileSystem::get_opts",
+    "name": "get_opts",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult>",
+    "docs": "",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        421,
+        5
+      ],
+      "end": [
+        445,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "location",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "GetOptions",
+                  "id": 551,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "GetResult",
+                                                                        "id": 502,
+                                                                        "args": null
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "495": "object_store::path::Path",
+      "551": "object_store::GetOptions",
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "502": "object_store::GetResult",
+      "88": "core::marker::Send"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ObjectStore",
+        "id": "object_store::ObjectStore",
+        "args": null
+      },
+      "trait_path": "object_store::ObjectStore",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          329,
+          1
+        ],
+        "end": [
+          667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1556",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-d7c4a724c2bc491fa26262e0",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ecc7647be71598417a1adb01",
+    "path": "object_store::local::LocalFileSystem::get_ranges",
+    "name": "get_ranges",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn get_ranges(&self, location: &Path, ranges: &[Range<u64>]) -> Result<Vec<Bytes>>",
+    "docs": "",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        447,
+        5
+      ],
+      "end": [
+        460,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "location",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "ranges",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life2",
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Range",
+                        "id": 504,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "primitive": "u64"
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "Vec",
+                                                                        "id": 566,
+                                                                        "args": {
+                                                                          "angle_bracketed": {
+                                                                            "args": [
+                                                                              {
+                                                                                "type": {
+                                                                                  "resolved_path": {
+                                                                                    "path": "Bytes",
+                                                                                    "id": 505,
+                                                                                    "args": null
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            ],
+                                                                            "constraints": []
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life2",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life2",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "495": "object_store::path::Path",
+      "504": "core::ops::range::Range",
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "566": "alloc::vec::Vec",
+      "505": "bytes::bytes::Bytes",
+      "88": "core::marker::Send"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ObjectStore",
+        "id": "object_store::ObjectStore",
+        "args": null
+      },
+      "trait_path": "object_store::ObjectStore",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          329,
+          1
+        ],
+        "end": [
+          667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1557",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-ecc7647be71598417a1adb01",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a59144be87b7c88304a21d10",
+    "path": "object_store::local::LocalFileSystem::list",
+    "name": "list",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>>",
+    "docs": "",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        481,
+        5
+      ],
+      "end": [
+        483,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "prefix",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 44,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "Path",
+                                  "id": 495,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BoxStream",
+              "id": 553,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'static"
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Result",
+                          "id": 85,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "ObjectMeta",
+                                      "id": 507,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "44": "core::option::Option",
+      "495": "object_store::path::Path",
+      "553": "futures_core::stream::BoxStream",
+      "85": "object_store::Result",
+      "507": "object_store::ObjectMeta"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ObjectStore",
+        "id": "object_store::ObjectStore",
+        "args": null
+      },
+      "trait_path": "object_store::ObjectStore",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          329,
+          1
+        ],
+        "end": [
+          667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1559",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-a59144be87b7c88304a21d10",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1de165d3859f586172e9aeaa",
+    "path": "object_store::local::LocalFileSystem::list_with_delimiter",
+    "name": "list_with_delimiter",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult>",
+    "docs": "",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        493,
+        5
+      ],
+      "end": [
+        542,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "prefix",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 44,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": "'life1",
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "Path",
+                                  "id": 495,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "ListResult",
+                                                                        "id": 557,
+                                                                        "args": null
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "44": "core::option::Option",
+      "495": "object_store::path::Path",
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "557": "object_store::ListResult",
+      "88": "core::marker::Send"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ObjectStore",
+        "id": "object_store::ObjectStore",
+        "args": null
+      },
+      "trait_path": "object_store::ObjectStore",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          329,
+          1
+        ],
+        "end": [
+          667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1561",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-1de165d3859f586172e9aeaa",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "80b8a93c4891308bf2b47175",
+    "path": "object_store::local::LocalFileSystem::list_with_offset",
+    "name": "list_with_offset",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>>",
+    "docs": "",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        485,
+        5
+      ],
+      "end": [
+        491,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "prefix",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 44,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "Path",
+                                  "id": 495,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "offset",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BoxStream",
+              "id": 553,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'static"
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Result",
+                          "id": 85,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "ObjectMeta",
+                                      "id": 507,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "44": "core::option::Option",
+      "495": "object_store::path::Path",
+      "553": "futures_core::stream::BoxStream",
+      "85": "object_store::Result",
+      "507": "object_store::ObjectMeta"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ObjectStore",
+        "id": "object_store::ObjectStore",
+        "args": null
+      },
+      "trait_path": "object_store::ObjectStore",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          329,
+          1
+        ],
+        "end": [
+          667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1560",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-80b8a93c4891308bf2b47175",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "512521d62621680f9913f857",
+    "path": "object_store::local::LocalFileSystem::new",
+    "name": "new",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "Create new filesystem storage with no prefix",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        226,
+        5
+      ],
+      "end": [
+        233,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          224,
+          1
+        ],
+        "end": [
+          263,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1516",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-512521d62621680f9913f857",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "32357d932e2a02d02fe2eddf",
+    "path": "object_store::local::LocalFileSystem::new_with_prefix",
+    "name": "new_with_prefix",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn new_with_prefix(prefix: impl AsRef<std::path::Path>) -> Result<Self>",
+    "docs": "Create new filesystem storage with `prefix` applied to all paths\n\nReturns an error if the path does not exist\n",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        239,
+        5
+      ],
+      "end": [
+        251,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "prefix",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsRef",
+                        "id": 250,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "std::path::Path",
+                                    "id": 1518,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 85,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl AsRef<std::path::Path>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "AsRef",
+                          "id": 250,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "std::path::Path",
+                                      "id": 1518,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "250": "core::convert::AsRef",
+      "1518": "std::path::Path",
+      "85": "object_store::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          224,
+          1
+        ],
+        "end": [
+          263,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1517",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-32357d932e2a02d02fe2eddf",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7101aec82997fb878b0c3cf7",
+    "path": "object_store::local::LocalFileSystem::path_to_filesystem",
+    "name": "path_to_filesystem",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn path_to_filesystem(&self, location: &Path) -> Result<PathBuf>",
+    "docs": "Return an absolute filesystem path of the given file location",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        254,
+        5
+      ],
+      "end": [
+        256,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "location",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 85,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "PathBuf",
+                          "id": 1192,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "495": "object_store::path::Path",
+      "85": "object_store::Result",
+      "1192": "std::path::PathBuf"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          224,
+          1
+        ],
+        "end": [
+          263,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1519",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-7101aec82997fb878b0c3cf7",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e8781561598aa3ecc5367911",
+    "path": "object_store::local::LocalFileSystem::put_multipart_opts",
+    "name": "put_multipart_opts",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> Result<Box<dyn MultipartUpload>>",
+    "docs": "",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        404,
+        5
+      ],
+      "end": [
+        419,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "location",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "opts",
+              {
+                "resolved_path": {
+                  "path": "PutMultipartOptions",
+                  "id": 549,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "Box",
+                                                                        "id": 499,
+                                                                        "args": {
+                                                                          "angle_bracketed": {
+                                                                            "args": [
+                                                                              {
+                                                                                "type": {
+                                                                                  "dyn_trait": {
+                                                                                    "traits": [
+                                                                                      {
+                                                                                        "trait": {
+                                                                                          "path": "MultipartUpload",
+                                                                                          "id": 500,
+                                                                                          "args": null
+                                                                                        },
+                                                                                        "generic_params": []
+                                                                                      }
+                                                                                    ],
+                                                                                    "lifetime": null
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            ],
+                                                                            "constraints": []
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "495": "object_store::path::Path",
+      "549": "object_store::PutMultipartOptions",
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "500": "object_store::upload::MultipartUpload",
+      "88": "core::marker::Send"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ObjectStore",
+        "id": "object_store::ObjectStore",
+        "args": null
+      },
+      "trait_path": "object_store::ObjectStore",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          329,
+          1
+        ],
+        "end": [
+          667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1555",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-e8781561598aa3ecc5367911",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8907263ecbdabc6ca9c853fb",
+    "path": "object_store::local::LocalFileSystem::put_opts",
+    "name": "put_opts",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult>",
+    "docs": "",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        330,
+        5
+      ],
+      "end": [
+        402,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "location",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "payload",
+              {
+                "resolved_path": {
+                  "path": "PutPayload",
+                  "id": 496,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "opts",
+              {
+                "resolved_path": {
+                  "path": "PutOptions",
+                  "id": 547,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "PutResult",
+                                                                        "id": 497,
+                                                                        "args": null
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "495": "object_store::path::Path",
+      "496": "object_store::payload::PutPayload",
+      "547": "object_store::PutOptions",
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "497": "object_store::PutResult",
+      "88": "core::marker::Send"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ObjectStore",
+        "id": "object_store::ObjectStore",
+        "args": null
+      },
+      "trait_path": "object_store::ObjectStore",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          329,
+          1
+        ],
+        "end": [
+          667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1554",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-8907263ecbdabc6ca9c853fb",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ff2c2f2175d5101030ba1cc1",
+    "path": "object_store::local::LocalFileSystem::rename_opts",
+    "name": "rename_opts",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> Result<()>",
+    "docs": "",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        620,
+        5
+      ],
+      "end": [
+        666,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "from",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "to",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life2",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "RenameOptions",
+                  "id": 1067,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "tuple": []
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life2",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life2",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "495": "object_store::path::Path",
+      "1067": "object_store::RenameOptions",
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "88": "core::marker::Send"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ObjectStore",
+        "id": "object_store::ObjectStore",
+        "args": null
+      },
+      "trait_path": "object_store::ObjectStore",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          329,
+          1
+        ],
+        "end": [
+          667,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1562",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-ff2c2f2175d5101030ba1cc1",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d270322ee887bec61797877c",
+    "path": "object_store::local::LocalFileSystem::with_automatic_cleanup",
+    "name": "with_automatic_cleanup",
+    "owner": "object_store::local::LocalFileSystem",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn with_automatic_cleanup(self, automatic_cleanup: bool) -> Self",
+    "docs": "Enable automatic cleanup of empty directories when deleting files",
+    "span": {
+      "filename": "src/local.rs",
+      "begin": [
+        259,
+        5
+      ],
+      "end": [
+        262,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "automatic_cleanup",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "LocalFileSystem",
+          "id": "object_store::local::LocalFileSystem",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/local.rs",
+        "begin": [
+          224,
+          1
+        ],
+        "end": [
+          263,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1520",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.local.LocalFileSystem.md",
+    "record_file": "operations/object_store.local.LocalFileSystem.json",
+    "anchor": "op-d270322ee887bec61797877c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

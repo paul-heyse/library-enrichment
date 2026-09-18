@@ -14,6 +14,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_DATE_UNIT`, `arrow_ipc::ENUM_MAX_DATE_UN
 const ENUM_MAX_DATE_UNIT: i16 = 1
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MAX_DATE_UNIT.md).
+
+
 ---
 
 ## ENUM_MAX_DICTIONARY_KIND
@@ -27,6 +30,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_DICTIONARY_KIND`, `arrow_ipc::ENUM_MAX_D
 ```rust
 const ENUM_MAX_DICTIONARY_KIND: i16 = 0
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MAX_DICTIONARY_KIND.md).
+
 
 ---
 
@@ -42,6 +48,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_ENDIANNESS`, `arrow_ipc::ENUM_MAX_ENDIAN
 const ENUM_MAX_ENDIANNESS: i16 = 1
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MAX_ENDIANNESS.md).
+
+
 ---
 
 ## ENUM_MAX_FEATURE
@@ -55,6 +64,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_FEATURE`, `arrow_ipc::ENUM_MAX_FEATURE`
 ```rust
 const ENUM_MAX_FEATURE: i64 = 2
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MAX_FEATURE.md).
+
 
 ---
 
@@ -70,6 +82,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_INTERVAL_UNIT`, `arrow_ipc::ENUM_MAX_INT
 const ENUM_MAX_INTERVAL_UNIT: i16 = 2
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MAX_INTERVAL_UNIT.md).
+
+
 ---
 
 ## ENUM_MAX_METADATA_VERSION
@@ -83,6 +98,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_METADATA_VERSION`, `arrow_ipc::ENUM_MAX_
 ```rust
 const ENUM_MAX_METADATA_VERSION: i16 = 4
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MAX_METADATA_VERSION.md).
+
 
 ---
 
@@ -98,6 +116,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_PRECISION`, `arrow_ipc::ENUM_MAX_PRECISI
 const ENUM_MAX_PRECISION: i16 = 2
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MAX_PRECISION.md).
+
+
 ---
 
 ## ENUM_MAX_TIME_UNIT
@@ -111,6 +132,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_TIME_UNIT`, `arrow_ipc::ENUM_MAX_TIME_UN
 ```rust
 const ENUM_MAX_TIME_UNIT: i16 = 3
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MAX_TIME_UNIT.md).
+
 
 ---
 
@@ -126,6 +150,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_TYPE`, `arrow_ipc::ENUM_MAX_TYPE`
 const ENUM_MAX_TYPE: u8 = 26
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MAX_TYPE.md).
+
+
 ---
 
 ## ENUM_MAX_UNION_MODE
@@ -139,6 +166,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_UNION_MODE`, `arrow_ipc::ENUM_MAX_UNION_
 ```rust
 const ENUM_MAX_UNION_MODE: i16 = 1
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MAX_UNION_MODE.md).
+
 
 ---
 
@@ -154,6 +184,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_DATE_UNIT`, `arrow_ipc::ENUM_MIN_DATE_UN
 const ENUM_MIN_DATE_UNIT: i16 = 0
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MIN_DATE_UNIT.md).
+
+
 ---
 
 ## ENUM_MIN_DICTIONARY_KIND
@@ -167,6 +200,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_DICTIONARY_KIND`, `arrow_ipc::ENUM_MIN_D
 ```rust
 const ENUM_MIN_DICTIONARY_KIND: i16 = 0
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MIN_DICTIONARY_KIND.md).
+
 
 ---
 
@@ -182,6 +218,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_ENDIANNESS`, `arrow_ipc::ENUM_MIN_ENDIAN
 const ENUM_MIN_ENDIANNESS: i16 = 0
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MIN_ENDIANNESS.md).
+
+
 ---
 
 ## ENUM_MIN_FEATURE
@@ -195,6 +234,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_FEATURE`, `arrow_ipc::ENUM_MIN_FEATURE`
 ```rust
 const ENUM_MIN_FEATURE: i64 = 0
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MIN_FEATURE.md).
+
 
 ---
 
@@ -210,6 +252,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_INTERVAL_UNIT`, `arrow_ipc::ENUM_MIN_INT
 const ENUM_MIN_INTERVAL_UNIT: i16 = 0
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MIN_INTERVAL_UNIT.md).
+
+
 ---
 
 ## ENUM_MIN_METADATA_VERSION
@@ -223,6 +268,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_METADATA_VERSION`, `arrow_ipc::ENUM_MIN_
 ```rust
 const ENUM_MIN_METADATA_VERSION: i16 = 0
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MIN_METADATA_VERSION.md).
+
 
 ---
 
@@ -238,6 +286,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_PRECISION`, `arrow_ipc::ENUM_MIN_PRECISI
 const ENUM_MIN_PRECISION: i16 = 0
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MIN_PRECISION.md).
+
+
 ---
 
 ## ENUM_MIN_TIME_UNIT
@@ -251,6 +302,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_TIME_UNIT`, `arrow_ipc::ENUM_MIN_TIME_UN
 ```rust
 const ENUM_MIN_TIME_UNIT: i16 = 0
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MIN_TIME_UNIT.md).
+
 
 ---
 
@@ -266,6 +320,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_TYPE`, `arrow_ipc::ENUM_MIN_TYPE`
 const ENUM_MIN_TYPE: u8 = 0
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MIN_TYPE.md).
+
+
 ---
 
 ## ENUM_MIN_UNION_MODE
@@ -279,6 +336,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_UNION_MODE`, `arrow_ipc::ENUM_MIN_UNION_
 ```rust
 const ENUM_MIN_UNION_MODE: i16 = 0
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_MIN_UNION_MODE.md).
+
 
 ---
 
@@ -294,6 +354,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_DATE_UNIT`, `arrow_ipc::ENUM_VALUES_D
 const ENUM_VALUES_DATE_UNIT: [DateUnit; 2] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_VALUES_DATE_UNIT.md).
+
+
 ---
 
 ## ENUM_VALUES_DICTIONARY_KIND
@@ -307,6 +370,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_DICTIONARY_KIND`, `arrow_ipc::ENUM_VA
 ```rust
 const ENUM_VALUES_DICTIONARY_KIND: [DictionaryKind; 1] = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_VALUES_DICTIONARY_KIND.md).
+
 
 ---
 
@@ -322,6 +388,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_ENDIANNESS`, `arrow_ipc::ENUM_VALUES_
 const ENUM_VALUES_ENDIANNESS: [Endianness; 2] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_VALUES_ENDIANNESS.md).
+
+
 ---
 
 ## ENUM_VALUES_FEATURE
@@ -335,6 +404,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_FEATURE`, `arrow_ipc::ENUM_VALUES_FEA
 ```rust
 const ENUM_VALUES_FEATURE: [Feature; 3] = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_VALUES_FEATURE.md).
+
 
 ---
 
@@ -350,6 +422,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_INTERVAL_UNIT`, `arrow_ipc::ENUM_VALU
 const ENUM_VALUES_INTERVAL_UNIT: [IntervalUnit; 3] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_VALUES_INTERVAL_UNIT.md).
+
+
 ---
 
 ## ENUM_VALUES_METADATA_VERSION
@@ -363,6 +438,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_METADATA_VERSION`, `arrow_ipc::ENUM_V
 ```rust
 const ENUM_VALUES_METADATA_VERSION: [MetadataVersion; 5] = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_VALUES_METADATA_VERSION.md).
+
 
 ---
 
@@ -378,6 +456,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_PRECISION`, `arrow_ipc::ENUM_VALUES_P
 const ENUM_VALUES_PRECISION: [Precision; 3] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_VALUES_PRECISION.md).
+
+
 ---
 
 ## ENUM_VALUES_TIME_UNIT
@@ -391,6 +472,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_TIME_UNIT`, `arrow_ipc::ENUM_VALUES_T
 ```rust
 const ENUM_VALUES_TIME_UNIT: [TimeUnit; 4] = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_VALUES_TIME_UNIT.md).
+
 
 ---
 
@@ -406,6 +490,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_TYPE`, `arrow_ipc::ENUM_VALUES_TYPE`
 const ENUM_VALUES_TYPE: [Type; 27] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_VALUES_TYPE.md).
+
+
 ---
 
 ## ENUM_VALUES_UNION_MODE
@@ -420,6 +507,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_UNION_MODE`, `arrow_ipc::ENUM_VALUES_
 const ENUM_VALUES_UNION_MODE: [UnionMode; 2] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ENUM_VALUES_UNION_MODE.md).
+
+
 ---
 
 ## BinaryOffset
@@ -431,6 +521,9 @@ Also reachable as `arrow::ipc::BinaryOffset`, `arrow_ipc::BinaryOffset`
 ```rust
 enum BinaryOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.BinaryOffset.md).
+
 
 ---
 
@@ -444,6 +537,9 @@ Also reachable as `arrow::ipc::BinaryViewOffset`, `arrow_ipc::BinaryViewOffset`
 enum BinaryViewOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.BinaryViewOffset.md).
+
+
 ---
 
 ## BoolOffset
@@ -455,6 +551,9 @@ Also reachable as `arrow::ipc::BoolOffset`, `arrow_ipc::BoolOffset`
 ```rust
 enum BoolOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.BoolOffset.md).
+
 
 ---
 
@@ -468,6 +567,9 @@ Also reachable as `arrow::ipc::DateOffset`, `arrow_ipc::DateOffset`
 enum DateOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DateOffset.md).
+
+
 ---
 
 ## DecimalOffset
@@ -479,6 +581,9 @@ Also reachable as `arrow::ipc::DecimalOffset`, `arrow_ipc::DecimalOffset`
 ```rust
 enum DecimalOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DecimalOffset.md).
+
 
 ---
 
@@ -492,6 +597,9 @@ Also reachable as `arrow::ipc::DictionaryEncodingOffset`, `arrow_ipc::Dictionary
 enum DictionaryEncodingOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DictionaryEncodingOffset.md).
+
+
 ---
 
 ## DurationOffset
@@ -503,6 +611,9 @@ Also reachable as `arrow::ipc::DurationOffset`, `arrow_ipc::DurationOffset`
 ```rust
 enum DurationOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DurationOffset.md).
+
 
 ---
 
@@ -516,6 +627,9 @@ Also reachable as `arrow::ipc::FieldOffset`, `arrow_ipc::FieldOffset`
 enum FieldOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FieldOffset.md).
+
+
 ---
 
 ## FixedSizeBinaryOffset
@@ -527,6 +641,9 @@ Also reachable as `arrow::ipc::FixedSizeBinaryOffset`, `arrow_ipc::FixedSizeBina
 ```rust
 enum FixedSizeBinaryOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FixedSizeBinaryOffset.md).
+
 
 ---
 
@@ -540,6 +657,9 @@ Also reachable as `arrow::ipc::FixedSizeListOffset`, `arrow_ipc::FixedSizeListOf
 enum FixedSizeListOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FixedSizeListOffset.md).
+
+
 ---
 
 ## FloatingPointOffset
@@ -551,6 +671,9 @@ Also reachable as `arrow::ipc::FloatingPointOffset`, `arrow_ipc::FloatingPointOf
 ```rust
 enum FloatingPointOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FloatingPointOffset.md).
+
 
 ---
 
@@ -564,6 +687,9 @@ Also reachable as `arrow::ipc::IntOffset`, `arrow_ipc::IntOffset`
 enum IntOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.IntOffset.md).
+
+
 ---
 
 ## IntervalOffset
@@ -575,6 +701,9 @@ Also reachable as `arrow::ipc::IntervalOffset`, `arrow_ipc::IntervalOffset`
 ```rust
 enum IntervalOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.IntervalOffset.md).
+
 
 ---
 
@@ -588,6 +717,9 @@ Also reachable as `arrow::ipc::KeyValueOffset`, `arrow_ipc::KeyValueOffset`
 enum KeyValueOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.KeyValueOffset.md).
+
+
 ---
 
 ## LargeBinaryOffset
@@ -599,6 +731,9 @@ Also reachable as `arrow::ipc::LargeBinaryOffset`, `arrow_ipc::LargeBinaryOffset
 ```rust
 enum LargeBinaryOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeBinaryOffset.md).
+
 
 ---
 
@@ -612,6 +747,9 @@ Also reachable as `arrow::ipc::LargeListOffset`, `arrow_ipc::LargeListOffset`
 enum LargeListOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeListOffset.md).
+
+
 ---
 
 ## LargeListViewOffset
@@ -623,6 +761,9 @@ Also reachable as `arrow::ipc::LargeListViewOffset`, `arrow_ipc::LargeListViewOf
 ```rust
 enum LargeListViewOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeListViewOffset.md).
+
 
 ---
 
@@ -636,6 +777,9 @@ Also reachable as `arrow::ipc::LargeUtf8Offset`, `arrow_ipc::LargeUtf8Offset`
 enum LargeUtf8Offset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeUtf8Offset.md).
+
+
 ---
 
 ## ListOffset
@@ -647,6 +791,9 @@ Also reachable as `arrow::ipc::ListOffset`, `arrow_ipc::ListOffset`
 ```rust
 enum ListOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ListOffset.md).
+
 
 ---
 
@@ -660,6 +807,9 @@ Also reachable as `arrow::ipc::ListViewOffset`, `arrow_ipc::ListViewOffset`
 enum ListViewOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ListViewOffset.md).
+
+
 ---
 
 ## MapOffset
@@ -671,6 +821,9 @@ Also reachable as `arrow::ipc::MapOffset`, `arrow_ipc::MapOffset`
 ```rust
 enum MapOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.MapOffset.md).
+
 
 ---
 
@@ -684,6 +837,9 @@ Also reachable as `arrow::ipc::NullOffset`, `arrow_ipc::NullOffset`
 enum NullOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.NullOffset.md).
+
+
 ---
 
 ## RunEndEncodedOffset
@@ -695,6 +851,9 @@ Also reachable as `arrow::ipc::RunEndEncodedOffset`, `arrow_ipc::RunEndEncodedOf
 ```rust
 enum RunEndEncodedOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.RunEndEncodedOffset.md).
+
 
 ---
 
@@ -708,6 +867,9 @@ Also reachable as `arrow::ipc::SchemaOffset`, `arrow_ipc::SchemaOffset`
 enum SchemaOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.SchemaOffset.md).
+
+
 ---
 
 ## Struct_Offset
@@ -719,6 +881,9 @@ Also reachable as `arrow::ipc::Struct_Offset`, `arrow_ipc::Struct_Offset`
 ```rust
 enum Struct_Offset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Struct_Offset.md).
+
 
 ---
 
@@ -732,6 +897,9 @@ Also reachable as `arrow::ipc::TimeOffset`, `arrow_ipc::TimeOffset`
 enum TimeOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.TimeOffset.md).
+
+
 ---
 
 ## TimestampOffset
@@ -743,6 +911,9 @@ Also reachable as `arrow::ipc::TimestampOffset`, `arrow_ipc::TimestampOffset`
 ```rust
 enum TimestampOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.TimestampOffset.md).
+
 
 ---
 
@@ -756,6 +927,9 @@ Also reachable as `arrow::ipc::UnionOffset`, `arrow_ipc::UnionOffset`
 enum UnionOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.UnionOffset.md).
+
+
 ---
 
 ## Utf8Offset
@@ -767,6 +941,9 @@ Also reachable as `arrow::ipc::Utf8Offset`, `arrow_ipc::Utf8Offset`
 ```rust
 enum Utf8Offset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Utf8Offset.md).
+
 
 ---
 
@@ -780,6 +957,9 @@ Also reachable as `arrow::ipc::Utf8ViewOffset`, `arrow_ipc::Utf8ViewOffset`
 enum Utf8ViewOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Utf8ViewOffset.md).
+
+
 ---
 
 ## finish_schema_buffer
@@ -791,6 +971,9 @@ Also reachable as `arrow::ipc::finish_schema_buffer`, `arrow_ipc::finish_schema_
 ```rust
 fn finish_schema_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<Schema<'a>>)
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.finish_schema_buffer.md).
+
 
 ---
 
@@ -804,6 +987,9 @@ Also reachable as `arrow::ipc::finish_size_prefixed_schema_buffer`, `arrow_ipc::
 fn finish_size_prefixed_schema_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<Schema<'a>>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.finish_size_prefixed_schema_buffer.md).
+
+
 ---
 
 ## root_as_schema
@@ -815,6 +1001,9 @@ Also reachable as `arrow::ipc::root_as_schema`, `arrow_ipc::root_as_schema`
 ```rust
 fn root_as_schema(buf: &[u8]) -> Result<Schema<'_>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.root_as_schema.md).
+
 
 Verifies that a buffer of bytes contains a `Schema`
 and returns it.
@@ -835,6 +1024,9 @@ Also reachable as `arrow::ipc::root_as_schema_unchecked`, `arrow_ipc::root_as_sc
 unsafe fn root_as_schema_unchecked(buf: &[u8]) -> Schema<'_>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.root_as_schema_unchecked.md).
+
+
 Assumes, without verification, that a buffer of bytes contains a Schema and returns it.
 # Safety
 Callers must trust the given bytes do indeed contain a valid `Schema`.
@@ -850,6 +1042,9 @@ Also reachable as `arrow::ipc::root_as_schema_with_opts`, `arrow_ipc::root_as_sc
 ```rust
 fn root_as_schema_with_opts<'b, 'o>(opts: &'o flatbuffers::VerifierOptions, buf: &'b [u8]) -> Result<Schema<'b>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.root_as_schema_with_opts.md).
+
 
 Verifies, with the given options, that a buffer of bytes
 contains a `Schema` and returns it.
@@ -870,6 +1065,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_schema`, `arrow_ipc::size_p
 fn size_prefixed_root_as_schema(buf: &[u8]) -> Result<Schema<'_>, flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.size_prefixed_root_as_schema.md).
+
+
 Verifies that a buffer of bytes contains a size prefixed
 `Schema` and returns it.
 Note that verification is still experimental and may not
@@ -889,6 +1087,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_schema_unchecked`, `arrow_i
 unsafe fn size_prefixed_root_as_schema_unchecked(buf: &[u8]) -> Schema<'_>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.size_prefixed_root_as_schema_unchecked.md).
+
+
 Assumes, without verification, that a buffer of bytes contains a size prefixed Schema and returns it.
 # Safety
 Callers must trust the given bytes do indeed contain a valid size prefixed `Schema`.
@@ -904,6 +1105,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_schema_with_opts`, `arrow_i
 ```rust
 fn size_prefixed_root_as_schema_with_opts<'b, 'o>(opts: &'o flatbuffers::VerifierOptions, buf: &'b [u8]) -> Result<Schema<'b>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.size_prefixed_root_as_schema_with_opts.md).
+
 
 Verifies, with the given verifier options, that a buffer of
 bytes contains a size prefixed `Schema` and returns
@@ -949,6 +1153,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Binary.md).
+
+
 Opaque binary data
 
 ---
@@ -964,6 +1171,9 @@ struct BinaryArgs
 ```
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.BinaryArgs.md).
+
 
 ---
 
@@ -983,6 +1193,9 @@ struct BinaryBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 fn finish(self) -> flatbuffers::WIPOffset<Binary<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> BinaryBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.BinaryBuilder.md).
+
 
 ---
 
@@ -1021,6 +1234,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.BinaryView.md).
+
+
 Logically the same as Binary, but the internal representation uses a view
 struct that contains the string length and either the string's entire data
 inline (for small strings) or an inlined prefix, an index of another buffer,
@@ -1043,6 +1259,9 @@ struct BinaryViewArgs
 
 **Derives**: Default
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.BinaryViewArgs.md).
+
+
 ---
 
 ## BinaryViewBuilder
@@ -1061,6 +1280,9 @@ struct BinaryViewBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 fn finish(self) -> flatbuffers::WIPOffset<BinaryView<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> BinaryViewBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.BinaryViewBuilder.md).
+
 
 ---
 
@@ -1099,6 +1321,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Bool.md).
+
+
 ---
 
 ## BoolArgs
@@ -1112,6 +1337,9 @@ struct BoolArgs
 ```
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.BoolArgs.md).
+
 
 ---
 
@@ -1131,6 +1359,9 @@ struct BoolBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 fn finish(self) -> flatbuffers::WIPOffset<Bool<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> BoolBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.BoolBuilder.md).
+
 
 ---
 
@@ -1177,6 +1408,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Buffer.md).
+
+
 ----------------------------------------------------------------------
 A Buffer represents a single contiguous memory segment
 
@@ -1218,6 +1452,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Date.md).
+
+
 Date is either a 32-bit or 64-bit signed integer type representing an
 elapsed time since UNIX epoch (1970-01-01), stored in either of two units:
 
@@ -1241,6 +1478,9 @@ struct DateArgs
 
 **Derives**: Default
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DateArgs.md).
+
+
 ---
 
 ## DateBuilder
@@ -1260,6 +1500,9 @@ fn add_unit(&mut self, unit: DateUnit)
 fn finish(self) -> flatbuffers::WIPOffset<Date<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DateBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DateBuilder.md).
+
 
 ---
 
@@ -1308,6 +1551,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DateUnit.md).
+
+
 ---
 
 ## Decimal
@@ -1348,6 +1594,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Decimal.md).
+
+
 Exact decimal value represented as an integer value in two's
 complement. Currently only 128-bit (16-byte) and 256-bit (32-byte) integers
 are used. The representation uses the endianness indicated
@@ -1368,6 +1617,9 @@ struct DecimalArgs
 **Fields**: `precision`, `scale`, `bitWidth`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DecimalArgs.md).
+
 
 ---
 
@@ -1390,6 +1642,9 @@ fn add_scale(&mut self, scale: i32)
 fn finish(self) -> flatbuffers::WIPOffset<Decimal<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DecimalBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DecimalBuilder.md).
+
 
 ---
 
@@ -1432,6 +1687,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DictionaryEncoding.md).
+
+
 ---
 
 ## DictionaryEncodingArgs
@@ -1447,6 +1705,9 @@ struct DictionaryEncodingArgs<'a>
 **Fields**: `id`, `indexType`, `isOrdered`, `dictionaryKind`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DictionaryEncodingArgs.md).
+
 
 ---
 
@@ -1470,6 +1731,9 @@ fn add_isOrdered(&mut self, isOrdered: bool)
 fn finish(self) -> flatbuffers::WIPOffset<DictionaryEncoding<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DictionaryEncodingBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DictionaryEncodingBuilder.md).
+
 
 ---
 
@@ -1518,6 +1782,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DictionaryKind.md).
+
+
 ----------------------------------------------------------------------
 Dictionary encoding metadata
 Maintained for forwards compatibility, in the future
@@ -1562,6 +1829,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Duration.md).
+
+
 ---
 
 ## DurationArgs
@@ -1577,6 +1847,9 @@ struct DurationArgs
 **Fields**: `unit`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DurationArgs.md).
+
 
 ---
 
@@ -1597,6 +1870,9 @@ fn add_unit(&mut self, unit: TimeUnit)
 fn finish(self) -> flatbuffers::WIPOffset<Duration<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DurationBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.DurationBuilder.md).
+
 
 ---
 
@@ -1645,6 +1921,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 ```rust
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Endianness.md).
+
 
 ----------------------------------------------------------------------
 Endianness of the platform producing the data
@@ -1695,6 +1974,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 ```rust
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Feature.md).
+
 
 Represents Arrow Features that might not have full support
 within implementations. This is intended to be used in
@@ -1784,6 +2066,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Field.md).
+
+
 ----------------------------------------------------------------------
 A field represents a named column in a record / row batch or child of a
 nested type.
@@ -1803,6 +2088,9 @@ struct FieldArgs<'a>
 **Fields**: `name`, `nullable`, `type_type`, `type_`, `dictionary`, `children`, `custom_metadata`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FieldArgs.md).
+
 
 ---
 
@@ -1829,6 +2117,9 @@ fn add_type_type(&mut self, type_type: Type)
 fn finish(self) -> flatbuffers::WIPOffset<Field<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> FieldBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FieldBuilder.md).
+
 
 ---
 
@@ -1868,6 +2159,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FixedSizeBinary.md).
+
+
 ---
 
 ## FixedSizeBinaryArgs
@@ -1883,6 +2177,9 @@ struct FixedSizeBinaryArgs
 **Fields**: `byteWidth`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FixedSizeBinaryArgs.md).
+
 
 ---
 
@@ -1903,6 +2200,9 @@ fn add_byteWidth(&mut self, byteWidth: i32)
 fn finish(self) -> flatbuffers::WIPOffset<FixedSizeBinary<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> FixedSizeBinaryBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FixedSizeBinaryBuilder.md).
+
 
 ---
 
@@ -1942,6 +2242,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FixedSizeList.md).
+
+
 ---
 
 ## FixedSizeListArgs
@@ -1957,6 +2260,9 @@ struct FixedSizeListArgs
 **Fields**: `listSize`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FixedSizeListArgs.md).
+
 
 ---
 
@@ -1977,6 +2283,9 @@ fn add_listSize(&mut self, listSize: i32)
 fn finish(self) -> flatbuffers::WIPOffset<FixedSizeList<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> FixedSizeListBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FixedSizeListBuilder.md).
+
 
 ---
 
@@ -2016,6 +2325,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FloatingPoint.md).
+
+
 ---
 
 ## FloatingPointArgs
@@ -2031,6 +2343,9 @@ struct FloatingPointArgs
 **Fields**: `precision`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FloatingPointArgs.md).
+
 
 ---
 
@@ -2051,6 +2366,9 @@ fn add_precision(&mut self, precision: Precision)
 fn finish(self) -> flatbuffers::WIPOffset<FloatingPoint<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> FloatingPointBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.FloatingPointBuilder.md).
+
 
 ---
 
@@ -2091,6 +2409,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Int.md).
+
+
 ---
 
 ## IntArgs
@@ -2106,6 +2427,9 @@ struct IntArgs
 **Fields**: `bitWidth`, `is_signed`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.IntArgs.md).
+
 
 ---
 
@@ -2127,6 +2451,9 @@ fn add_is_signed(&mut self, is_signed: bool)
 fn finish(self) -> flatbuffers::WIPOffset<Int<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> IntBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.IntBuilder.md).
+
 
 ---
 
@@ -2166,6 +2493,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Interval.md).
+
+
 ---
 
 ## IntervalArgs
@@ -2181,6 +2511,9 @@ struct IntervalArgs
 **Fields**: `unit`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.IntervalArgs.md).
+
 
 ---
 
@@ -2201,6 +2534,9 @@ fn add_unit(&mut self, unit: IntervalUnit)
 fn finish(self) -> flatbuffers::WIPOffset<Interval<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> IntervalBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.IntervalBuilder.md).
+
 
 ---
 
@@ -2249,6 +2585,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.IntervalUnit.md).
+
+
 ---
 
 ## KeyValue
@@ -2288,6 +2627,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.KeyValue.md).
+
+
 ----------------------------------------------------------------------
 user defined key value pairs to add custom metadata to arrow
 key namespacing is the responsibility of the user
@@ -2307,6 +2649,9 @@ struct KeyValueArgs<'a>
 **Fields**: `key`, `value`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.KeyValueArgs.md).
+
 
 ---
 
@@ -2328,6 +2673,9 @@ fn add_value(&mut self, value: flatbuffers::WIPOffset<&'b str>)
 fn finish(self) -> flatbuffers::WIPOffset<KeyValue<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> KeyValueBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.KeyValueBuilder.md).
+
 
 ---
 
@@ -2366,6 +2714,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeBinary.md).
+
+
 Same as Binary, but with 64-bit offsets, allowing to represent
 extremely large data values.
 
@@ -2382,6 +2733,9 @@ struct LargeBinaryArgs
 ```
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeBinaryArgs.md).
+
 
 ---
 
@@ -2401,6 +2755,9 @@ struct LargeBinaryBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 fn finish(self) -> flatbuffers::WIPOffset<LargeBinary<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> LargeBinaryBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeBinaryBuilder.md).
+
 
 ---
 
@@ -2439,6 +2796,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeList.md).
+
+
 Same as List, but with 64-bit offsets, allowing to represent
 extremely large data values.
 
@@ -2455,6 +2815,9 @@ struct LargeListArgs
 ```
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeListArgs.md).
+
 
 ---
 
@@ -2474,6 +2837,9 @@ struct LargeListBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 fn finish(self) -> flatbuffers::WIPOffset<LargeList<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> LargeListBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeListBuilder.md).
+
 
 ---
 
@@ -2512,6 +2878,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeListView.md).
+
+
 Same as ListView, but with 64-bit offsets and sizes, allowing to represent
 extremely large data values.
 
@@ -2528,6 +2897,9 @@ struct LargeListViewArgs
 ```
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeListViewArgs.md).
+
 
 ---
 
@@ -2547,6 +2919,9 @@ struct LargeListViewBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 fn finish(self) -> flatbuffers::WIPOffset<LargeListView<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> LargeListViewBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeListViewBuilder.md).
+
 
 ---
 
@@ -2585,6 +2960,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeUtf8.md).
+
+
 Same as Utf8, but with 64-bit offsets, allowing to represent
 extremely large data values.
 
@@ -2601,6 +2979,9 @@ struct LargeUtf8Args
 ```
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeUtf8Args.md).
+
 
 ---
 
@@ -2620,6 +3001,9 @@ struct LargeUtf8Builder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 fn finish(self) -> flatbuffers::WIPOffset<LargeUtf8<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> LargeUtf8Builder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.LargeUtf8Builder.md).
+
 
 ---
 
@@ -2658,6 +3042,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.List.md).
+
+
 ---
 
 ## ListArgs
@@ -2671,6 +3058,9 @@ struct ListArgs
 ```
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ListArgs.md).
+
 
 ---
 
@@ -2690,6 +3080,9 @@ struct ListBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 fn finish(self) -> flatbuffers::WIPOffset<List<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> ListBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ListBuilder.md).
+
 
 ---
 
@@ -2728,6 +3121,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ListView.md).
+
+
 Represents the same logical types that List can, but contains offsets and
 sizes allowing for writes in any order and sharing of child values among
 list values.
@@ -2745,6 +3141,9 @@ struct ListViewArgs
 ```
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ListViewArgs.md).
+
 
 ---
 
@@ -2764,6 +3163,9 @@ struct ListViewBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 fn finish(self) -> flatbuffers::WIPOffset<ListView<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> ListViewBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.ListViewBuilder.md).
+
 
 ---
 
@@ -2802,6 +3204,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 ```rust
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Map.md).
+
 
 A Map is a logical nested type that is represented as
 
@@ -2845,6 +3250,9 @@ struct MapArgs
 
 **Derives**: Default
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.MapArgs.md).
+
+
 ---
 
 ## MapBuilder
@@ -2864,6 +3272,9 @@ fn add_keysSorted(&mut self, keysSorted: bool)
 fn finish(self) -> flatbuffers::WIPOffset<Map<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> MapBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.MapBuilder.md).
+
 
 ---
 
@@ -2912,6 +3323,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.MetadataVersion.md).
+
+
 ---
 
 ## Null
@@ -2949,6 +3363,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Null.md).
+
+
 These are stored in the flatbuffer in the Type union below
 
 ---
@@ -2964,6 +3381,9 @@ struct NullArgs
 ```
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.NullArgs.md).
+
 
 ---
 
@@ -2983,6 +3403,9 @@ struct NullBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 fn finish(self) -> flatbuffers::WIPOffset<Null<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> NullBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.NullBuilder.md).
+
 
 ---
 
@@ -3031,6 +3454,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Precision.md).
+
+
 ---
 
 ## RunEndEncoded
@@ -3068,6 +3494,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.RunEndEncoded.md).
+
+
 Contains two child arrays, run_ends and values.
 The run_ends child array must be a 16/32/64-bit integer array
 which encodes the indices at which the run with the value in
@@ -3088,6 +3517,9 @@ struct RunEndEncodedArgs
 
 **Derives**: Default
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.RunEndEncodedArgs.md).
+
+
 ---
 
 ## RunEndEncodedBuilder
@@ -3106,6 +3538,9 @@ struct RunEndEncodedBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 fn finish(self) -> flatbuffers::WIPOffset<RunEndEncoded<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> RunEndEncodedBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.RunEndEncodedBuilder.md).
+
 
 ---
 
@@ -3148,6 +3583,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Schema.md).
+
+
 ----------------------------------------------------------------------
 A Schema describes the columns in a row batch
 
@@ -3166,6 +3604,9 @@ struct SchemaArgs<'a>
 **Fields**: `endianness`, `fields`, `custom_metadata`, `features`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.SchemaArgs.md).
+
 
 ---
 
@@ -3189,6 +3630,9 @@ fn add_fields(&mut self, fields: flatbuffers::WIPOffset<flatbuffers::Vector<'b, 
 fn finish(self) -> flatbuffers::WIPOffset<Schema<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SchemaBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.SchemaBuilder.md).
+
 
 ---
 
@@ -3227,6 +3671,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Struct_.md).
+
+
 A Struct_ in the flatbuffer metadata is the same as an Arrow Struct
 (according to the physical memory layout). We used Struct_ here as
 Struct is a reserved word in Flatbuffers
@@ -3244,6 +3691,9 @@ struct Struct_Args
 ```
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Struct_Args.md).
+
 
 ---
 
@@ -3263,6 +3713,9 @@ struct Struct_Builder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 fn finish(self) -> flatbuffers::WIPOffset<Struct_<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> Struct_Builder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Struct_Builder.md).
+
 
 ---
 
@@ -3303,6 +3756,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Time.md).
+
+
 Time is either a 32-bit or 64-bit signed integer type representing an
 elapsed time since midnight, stored in either of four units: seconds,
 milliseconds, microseconds or nanoseconds.
@@ -3334,6 +3790,9 @@ struct TimeArgs
 
 **Derives**: Default
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.TimeArgs.md).
+
+
 ---
 
 ## TimeBuilder
@@ -3354,6 +3813,9 @@ fn add_unit(&mut self, unit: TimeUnit)
 fn finish(self) -> flatbuffers::WIPOffset<Time<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> TimeBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.TimeBuilder.md).
+
 
 ---
 
@@ -3402,6 +3864,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.TimeUnit.md).
+
+
 ---
 
 ## Timestamp
@@ -3440,6 +3905,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 ```rust
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Timestamp.md).
+
 
 Timestamp is a 64-bit signed integer representing an elapsed time since a
 fixed epoch, stored in either of four units: seconds, milliseconds,
@@ -3563,6 +4031,9 @@ struct TimestampArgs<'a>
 
 **Derives**: Default
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.TimestampArgs.md).
+
+
 ---
 
 ## TimestampBuilder
@@ -3583,6 +4054,9 @@ fn add_unit(&mut self, unit: TimeUnit)
 fn finish(self) -> flatbuffers::WIPOffset<Timestamp<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> TimestampBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.TimestampBuilder.md).
+
 
 ---
 
@@ -3631,6 +4105,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Type.md).
+
+
 ----------------------------------------------------------------------
 Top-level Type value, enabling extensible type-specific metadata. We can
 add new logical types to Type without breaking backwards compatibility
@@ -3646,6 +4123,9 @@ Also reachable as `arrow::ipc::TypeUnionTableOffset`, `arrow_ipc::TypeUnionTable
 ```rust
 struct TypeUnionTableOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.TypeUnionTableOffset.md).
+
 
 ---
 
@@ -3686,6 +4166,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Union.md).
+
+
 A union is a complex type with children in Field
 By default ids in the type vector refer to the offsets in the children
 optionally typeIds provides an indirection between the child offset and the type id
@@ -3707,6 +4190,9 @@ struct UnionArgs<'a>
 
 **Derives**: Default
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.UnionArgs.md).
+
+
 ---
 
 ## UnionBuilder
@@ -3727,6 +4213,9 @@ fn add_typeIds(&mut self, typeIds: flatbuffers::WIPOffset<flatbuffers::Vector<'b
 fn finish(self) -> flatbuffers::WIPOffset<Union<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> UnionBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.UnionBuilder.md).
+
 
 ---
 
@@ -3775,6 +4264,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.UnionMode.md).
+
+
 ---
 
 ## Utf8
@@ -3812,6 +4304,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Utf8.md).
+
+
 Unicode with UTF-8 encoding
 
 ---
@@ -3827,6 +4322,9 @@ struct Utf8Args
 ```
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Utf8Args.md).
+
 
 ---
 
@@ -3846,6 +4344,9 @@ struct Utf8Builder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 fn finish(self) -> flatbuffers::WIPOffset<Utf8<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> Utf8Builder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Utf8Builder.md).
+
 
 ---
 
@@ -3884,6 +4385,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Utf8View.md).
+
+
 Logically the same as Utf8, but the internal representation uses a view
 struct that contains the string length and either the string's entire data
 inline (for small strings) or an inlined prefix, an index of another buffer,
@@ -3906,6 +4410,9 @@ struct Utf8ViewArgs
 
 **Derives**: Default
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Utf8ViewArgs.md).
+
+
 ---
 
 ## Utf8ViewBuilder
@@ -3924,5 +4431,8 @@ struct Utf8ViewBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 fn finish(self) -> flatbuffers::WIPOffset<Utf8View<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> Utf8ViewBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Schema.Utf8ViewBuilder.md).
+
 
 ---

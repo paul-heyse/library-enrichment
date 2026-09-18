@@ -12,6 +12,9 @@ Also reachable as `parquet::variant::cast_to_variant`, `parquet_variant_compute:
 fn cast_to_variant(input: &dyn Array) -> Result<VariantArray, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.cast_to_variant.cast_to_variant.md).
+
+
 Convert an array to a [`VariantArray`] with strict mode enabled (returns errors on conversion
 failures).
 
@@ -29,6 +32,9 @@ Also reachable as `parquet::variant::cast_to_variant_with_options`, `parquet_var
 ```rust
 fn cast_to_variant_with_options(input: &dyn Array, options: &arrow::compute::CastOptions<'_>) -> Result<VariantArray, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.cast_to_variant.cast_to_variant_with_options.md).
+
 
 Casts a typed arrow [`Array`] to a [`VariantArray`]. This is useful when you
 need to convert a specific data type

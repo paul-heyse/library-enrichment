@@ -53,6 +53,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.tokenizer.Token.md).
+
+
 SQL Token enumeration
 
 ---
@@ -100,6 +103,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.tokenizer.Whitespace.md).
+
 
 Represents whitespace in the input: spaces, newlines, tabs and comments.
 
@@ -163,6 +169,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.tokenizer.Location.md).
+
 
 Location in input string
 
@@ -233,6 +242,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.tokenizer.Span.md).
+
 
 A span represents a linear portion of the input string (start, end)
 
@@ -305,6 +317,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.tokenizer.TokenWithSpan.md).
+
+
 A [Token] with [Span] attached to it
 
 This is used to track the location of a token in the input string
@@ -350,6 +365,9 @@ fn tokenize_with_location_into_buf_with_mapper(&mut self, buf: &mut Vec<TokenWit
 fn with_unescape(self, unescape: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.tokenizer.Tokenizer.md).
+
+
 SQL Tokenizer
 
 ---
@@ -373,6 +391,9 @@ struct TokenizerError
 ```rust
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.tokenizer.TokenizerError.md).
+
 
 An error reported by the tokenizer, with a human-readable `message` and a `location`.
 
@@ -429,6 +450,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.tokenizer.Word.md).
+
+
 A keyword (like SELECT) or an optionally quoted SQL identifier
 
 ---
@@ -442,6 +466,9 @@ A keyword (like SELECT) or an optionally quoted SQL identifier
 ```rust
 type TokenWithLocation = TokenWithSpan
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.tokenizer.TokenWithLocation.md).
+
 
 Backwards compatibility struct for [`TokenWithSpan`]
 

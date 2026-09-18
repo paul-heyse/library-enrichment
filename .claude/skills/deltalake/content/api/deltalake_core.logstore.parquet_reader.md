@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## ParquetObjectReader
 
 `struct` · `deltalake_core::logstore::parquet_reader::ParquetObjectReader`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.parquet_reader.ParquetObjectReader.md)
 
 Also reachable as `deltalake::logstore::parquet_reader::ParquetObjectReader`
 

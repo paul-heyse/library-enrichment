@@ -1,5 +1,5 @@
 //! Final delivery for the closed comparison value shapes. Selection, equality, ordering and
-//! provenance stay native. Only a small inline value becomes an owned JSON tree.
+//! provenance stay native. Inline values decode through the declared native union; artifacts use the same wire codec.
 use arrow::{array::Array, datatypes::FieldRef};
 use enrichment_core::{
     compare::AlternativeValue,
@@ -8,8 +8,6 @@ use enrichment_core::{
     wire::ArtifactHandle,
 };
 use std::io::{self, Write};
-
-const INLINE_BYTES: usize = 4096;
 
 struct Charged<'a>(&'a mut dyn Write);
 impl Write for Charged<'_> {
@@ -27,44 +25,40 @@ pub(crate) fn deliver(
     array: &dyn Array,
     row: usize,
     blobs: &crate::BlobStore,
-    artifact_bytes: usize,
-) -> io::Result<Option<AlternativeValue>> {
-    let mut inline = Vec::new();
-    match native_json::write_value(&mut inline, INLINE_BYTES, field, array, row) {
-        Ok(_) => {
-            crate::runtime::charge_result(inline.len()).map_err(io::Error::other)?;
-            return Ok(Some(AlternativeValue::Inline {
-                value: serde_json::from_slice(&inline)?,
-            }));
+    inline: bool,
+    bytes: usize,
+) -> io::Result<AlternativeValue> {
+    if inline {
+        let actual = native_json::write_value(io::sink(), bytes, field, array, row)?;
+        if actual != bytes {
+            return Err(io::Error::other("native comparison byte witness changed"));
         }
-        Err(e) if e.kind() == io::ErrorKind::OutOfMemory => {}
-        Err(e) => return Err(io::Error::new(io::ErrorKind::InvalidData, e)),
-    }
-    // Count escaped bytes from borrowed Arrow before writing. Stop a page without leaving a
-    // partial artifact or charging the operation for a discarded value.
-    let bytes = native_json::write_value(
-        io::sink(),
-        crate::result::MAX_BYTES as usize,
-        field,
-        array,
-        row,
-    )?;
-    if bytes > artifact_bytes {
-        return Ok(None);
+        crate::runtime::charge_result(bytes).map_err(io::Error::other)?;
+        let value = array
+            .as_any()
+            .downcast_ref::<arrow::array::StructArray>()
+            .ok_or_else(|| io::Error::other("comparison value requires declared native variant"))?;
+        let batch = arrow::record_batch::RecordBatch::from(value.clone());
+        let rows = enrichment_core::evidence::arrow_model::cells::RowSet::batch(&batch)
+            .map_err(io::Error::other)?;
+        use enrichment_core::native_union::NativeUnion;
+        return Ok(AlternativeValue::Inline {
+            value: <enrichment_core::compare::ComparisonValue as NativeUnion>::decode(
+                rows.row(row),
+            )
+            .map_err(io::Error::other)?,
+        });
     }
     let retrieved_at =
         enrichment_core::native_time::AcquisitionTime::now().map_err(io::Error::other)?;
     let stored = blobs.put_stream(
-        crate::result::MAX_BYTES,
+        bytes as u64,
         |writer| {
-            native_json::write_value(
-                Charged(writer),
-                crate::result::MAX_BYTES as usize,
-                field,
-                array,
-                row,
-            )
-            .map(|_| ())
+            let actual = native_json::write_value(Charged(writer), bytes, field, array, row)?;
+            if actual != bytes {
+                return Err(io::Error::other("native comparison byte witness changed"));
+            }
+            Ok(())
         },
         |digest, size_bytes| Artifact {
             artifact_id: artifact_id_for(digest),
@@ -72,7 +66,7 @@ pub(crate) fn deliver(
             size_bytes,
             kind: ArtifactKind::Other,
             media_type: "application/json".into(),
-            source_uri: "service:comparison-value/3".into(),
+            source_uri: "service:comparison-value/4".into(),
             retrieved_at,
             final_url: None,
             etag: None,
@@ -90,20 +84,17 @@ pub(crate) fn deliver(
         receipt: artifact.clone(),
         description: "Complete observed comparison value".into(),
     };
-    Ok(Some(AlternativeValue::Artifact {
+    Ok(AlternativeValue::Artifact {
         artifact: handle,
         size_bytes: artifact.size_bytes,
         sha256: artifact.sha256,
-    }))
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use arrow::{
-        array::{ArrayRef, BooleanArray, StringArray, StructArray},
-        datatypes::{DataType, Field, Fields},
-    };
+    use enrichment_core::{compare::ComparisonValue, native_union::Cell};
     use std::sync::Arc;
 
     #[test]
@@ -113,42 +104,42 @@ mod tests {
         // Escaped output exceeds the removed 16 MiB render ceiling while the Arrow scalar
         // remains small enough for the native batch allowance. Include explicit nested nulls.
         let text = format!("é😀{}", "\u{0001}".repeat(3 * 1024 * 1024));
-        let fields = Fields::from(vec![
-            Field::new("text", DataType::Utf8, false),
-            Field::new("optional", DataType::Boolean, true),
-        ]);
-        let values = StructArray::new(
-            fields,
-            vec![
-                Arc::new(StringArray::from(vec!["small", &text])) as ArrayRef,
-                Arc::new(BooleanArray::from(vec![Some(true), None])) as ArrayRef,
-            ],
-            None,
-        );
-        let field = native_json::record_field(values.fields().clone());
-        assert_eq!(
-            deliver(
-                &field,
-                &values,
-                0,
-                &blobs,
-                crate::result::MAX_BYTES as usize
-            )
-            .unwrap()
-            .unwrap(),
-            AlternativeValue::Inline {
-                value: serde_json::json!({"text": "small", "optional": true})
-            }
-        );
-        let value = deliver(
-            &field,
-            &values,
-            1,
-            &blobs,
+        let short = ComparisonValue::Fragment {
+            kind: enrichment_core::evidence::FragmentKind::DocText,
+            text: "small".into(),
+            evidence_class: enrichment_core::wire::EvidenceClass::StaticallyExtracted,
+        };
+        let long = ComparisonValue::Fragment {
+            kind: enrichment_core::evidence::FragmentKind::DocText,
+            text: text.clone(),
+            evidence_class: enrichment_core::wire::EvidenceClass::StaticallyExtracted,
+        };
+        let values = ComparisonValue::encode(&[Some(&short), Some(&long)]).unwrap();
+        let field = Arc::new(enrichment_core::native_union::field::<ComparisonValue>(
+            "value",
+            enrichment_core::native_union::Rule::Text,
+        ));
+        let small_bytes = native_json::write_value(
+            io::sink(),
             crate::result::MAX_BYTES as usize,
+            &field,
+            values.as_ref(),
+            0,
         )
-        .unwrap()
         .unwrap();
+        let large_bytes = native_json::write_value(
+            io::sink(),
+            crate::result::MAX_BYTES as usize,
+            &field,
+            values.as_ref(),
+            1,
+        )
+        .unwrap();
+        assert_eq!(
+            deliver(&field, values.as_ref(), 0, &blobs, true, small_bytes).unwrap(),
+            AlternativeValue::Inline { value: short }
+        );
+        let value = deliver(&field, values.as_ref(), 1, &blobs, false, large_bytes).unwrap();
         let AlternativeValue::Artifact {
             artifact,
             size_bytes,
@@ -158,28 +149,13 @@ mod tests {
             panic!("artifact delivery")
         };
         assert!(*size_bytes > 16 * 1024 * 1024);
-        assert!(
-            deliver(&field, &values, 1, &blobs, 1024).unwrap().is_none(),
-            "a value beyond this page's remaining capacity is deferred before writing"
-        );
         let stored = artifact.receipt.clone();
         assert_eq!(*sha256, stored.sha256);
         assert_eq!(*size_bytes, stored.size_bytes);
         let recovered: serde_json::Value =
             blobs.read_json(&stored, crate::result::MAX_BYTES).unwrap();
-        assert_eq!(
-            recovered,
-            serde_json::json!({"optional": null, "text": text})
-        );
-        let repeated = deliver(
-            &field,
-            &values,
-            1,
-            &blobs,
-            crate::result::MAX_BYTES as usize,
-        )
-        .unwrap()
-        .unwrap();
+        assert_eq!(recovered, serde_json::to_value(&long).unwrap());
+        let repeated = deliver(&field, values.as_ref(), 1, &blobs, false, large_bytes).unwrap();
         let AlternativeValue::Artifact {
             artifact: repeated,
             sha256: repeated_digest,

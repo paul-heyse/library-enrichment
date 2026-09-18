@@ -22,6 +22,9 @@ trait SessionStateBuilderSpark
 fn with_spark_features(self) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.session_state.SessionStateBuilderSpark.md).
+
+
 Extension trait for adding Apache Spark features to [`SessionStateBuilder`].
 
 This trait provides a convenient way to register all Apache Spark-compatible

@@ -32,4 +32,7 @@ fn state(&mut self) -> datafusion_common::Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> datafusion_common::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.count_distinct.dict.DictionaryCountAccumulator.md).
+
+
 ---

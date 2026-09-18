@@ -27,6 +27,34 @@ fn start_ticks(pid: u32) -> io::Result<u64> {
         .map_err(io::Error::other)
 }
 
+/// Capture a directly spawned child before supplying its source-bearing request.
+/// Parent identity and repeated start ticks prevent a reused PID from becoming ownership.
+pub(crate) fn child(pid: u32) -> io::Result<NativeProcess> {
+    let observer = current()?;
+    let ticks = start_ticks(pid)?;
+    let stat = text(format!("/proc/{pid}/stat"), 8192)?;
+    let (_, fields) = stat
+        .rsplit_once(')')
+        .ok_or_else(|| io::Error::other("invalid child stat"))?;
+    let parent: u32 = fields
+        .split_whitespace()
+        .nth(1)
+        .ok_or_else(|| io::Error::other("child parent missing"))?
+        .parse()
+        .map_err(io::Error::other)?;
+    use std::os::unix::fs::MetadataExt;
+    let namespace = std::fs::metadata(format!("/proc/{pid}/ns/pid"))?;
+    let namespace = format!("{}:{}", namespace.dev(), namespace.ino());
+    if parent != observer.pid || namespace != observer.pid_namespace || ticks != start_ticks(pid)? {
+        return Err(io::Error::other("child identity or parent changed"));
+    }
+    Ok(NativeProcess {
+        pid,
+        start_ticks: ticks,
+        ..observer
+    })
+}
+
 pub(crate) fn current() -> io::Result<NativeProcess> {
     #[cfg(target_os = "linux")]
     {
@@ -60,5 +88,13 @@ pub(crate) fn observe(process: NativeProcess, observer: &NativeProcess) -> Proce
         observer: observer.clone(),
         present,
         start_ticks: ticks,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn direct_child_capture_refuses_the_observer_itself() {
+        assert!(super::child(std::process::id()).is_err());
     }
 }

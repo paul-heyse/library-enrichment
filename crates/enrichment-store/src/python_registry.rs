@@ -12,6 +12,92 @@ use enrichment_core::{
 };
 use std::sync::Arc;
 
+/// A selected file and typed registry info produce one canonical release record.
+/// Missing optional source metadata remains NULL; it cannot change content identity.
+pub async fn release(
+    runtime: &QueryRuntime,
+    registry: &str,
+    package: &str,
+    selected: &Selected,
+    info: &Option<enrichment_core::producer::python::registry::ReleaseInfo>,
+) -> Result<enrichment_core::identity::Release> {
+    use datafusion::{functions::core::expr_ext::FieldAccessor, prelude::col};
+    use enrichment_core::{
+        evidence::arrow_model::expressions::{literal, record},
+        identity::{Ecosystem, Release, ReleaseKey, ReleaseLinks},
+        native_key::Key,
+        native_union::{Cell, NativeStruct, Rule},
+        producer::python::registry::ReleaseInfo,
+    };
+    enrichment_core::native_struct! { struct Input {
+        registry: String => Rule::NonEmpty,
+        package: String => Rule::NonEmpty,
+        selected: Selected => Rule::Text,
+        info: Option<ReleaseInfo> => Rule::Text,
+    } }
+    let session = runtime.session();
+    crate::native_catalog::input(
+        &session,
+        "python_release",
+        Input::batch(&[Input {
+            registry: registry.into(),
+            package: package.into(),
+            selected: selected.clone(),
+            info: info.clone(),
+        }])?,
+    )?;
+    let frame = session.sql("SELECT *,lower(map_extract(selected.file.digests,'sha256')[1]) AS digest,map_extract(info.project_urls,'Documentation')[1] AS documentation FROM python_release").await?;
+    crate::native_catalog::work(&session, "release_input", frame.clone().into_view())?;
+    runtime.require_empty(session.sql("SELECT 'python_release_digest' AS witness FROM release_input WHERE digest IS NULL OR NOT regexp_like(digest,'^[0-9a-f]{64}$')").await?, "python_release_digest", "registry_selection").await?;
+    let key = record(
+        &ReleaseKey::data_type(),
+        &[
+            ("ecosystem", literal(&Ecosystem::Python)?),
+            ("registry", col("registry")),
+            ("package", col("package")),
+            ("version", col("selected").field("version")),
+            ("artifact_digest", col("digest")),
+        ],
+    )?;
+    let frame = frame.with_column("key", key)?;
+    let identity = Key::Release.identity_expression(
+        ReleaseKey::fields()
+            .iter()
+            .map(|field| col("key").field(field.name()))
+            .collect(),
+    )?;
+    let release = record(
+        &Release::data_type(),
+        &[
+            ("release_id", identity),
+            ("key", col("key")),
+            (
+                "links",
+                record(
+                    &ReleaseLinks::data_type(),
+                    &[
+                        ("documentation", col("documentation")),
+                        ("homepage", col("info").field("home_page")),
+                    ],
+                )?,
+            ),
+            ("license", col("info").field("license")),
+            ("yanked", col("selected").field("file").field("yanked")),
+        ],
+    )?;
+    let frame = frame.select(vec![release.alias("release")])?.select(
+        Release::fields()
+            .iter()
+            .map(|field| col("release").field(field.name()).alias(field.name()))
+            .collect::<Vec<_>>(),
+    )?;
+    runtime
+        .records(frame, 1)
+        .await?
+        .pop()
+        .ok_or_else(|| datafusion::common::exec_datafusion_err!("selected Python release missing"))
+}
+
 /// Compile all marker decisions into one native plan over explicit environment/extra facts.
 /// Keep the selected ordinals relational so callers join the requirement facts natively.
 pub async fn active_requirement_plan(
@@ -35,11 +121,18 @@ pub async fn active_requirement_plan(
     }
     let session = runtime.session();
     if requirements.is_empty() {
-        return session.read_batch(RecordBatch::new_empty(Arc::new(Schema::new(vec![
-            Field::new("index", DataType::UInt64, false),
-        ]))));
+        return crate::native_catalog::batch(
+            &session,
+            "python_registry",
+            RecordBatch::new_empty(Arc::new(Schema::new(vec![Field::new(
+                "index",
+                DataType::UInt64,
+                false,
+            )]))),
+        );
     }
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "marker_environment",
         MarkerEnvironment::batch(std::slice::from_ref(environment))?,
     )?;
@@ -48,7 +141,8 @@ pub async fn active_requirement_plan(
     } else {
         extras.to_vec()
     };
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "marker_extras",
         RecordBatch::try_from_iter(vec![(
             "extra",
@@ -179,4 +273,97 @@ pub async fn select(
     ])?;
     let mut selected = rows(runtime, frame, 1).await?;
     Ok(selected.pop())
+}
+
+#[cfg(test)]
+mod source_metadata_tests {
+    use super::*;
+    use enrichment_core::producer::python::registry::{ReleaseMetadata, Versions};
+
+    #[tokio::test]
+    async fn native_release_preserves_optional_metadata_and_canonical_digest_identity() -> Result<()>
+    {
+        let root = tempfile::tempdir()?;
+        let runtime = QueryRuntime::new(root.path(), Default::default())?;
+        let source = serde_json::json!({
+            "info": {"license": "MIT", "home_page": null,
+                "project_urls": {"Documentation": "https://example.org/docs", "Other": null},
+                "external_field": {"preserved": "in artifact"}},
+            "urls": [{"filename": "package-1.0-py3-none-any.whl", "packagetype": "bdist_wheel",
+                "url": "https://example.org/package.whl", "digests": {"sha256": "A".repeat(64)}, "yanked": true}],
+            "ignored": [1, 2, 3],
+        });
+        let metadata: ReleaseMetadata =
+            serde_json::from_value(source).expect("typed registry fixture");
+        let selected = Selected {
+            version: "1.0".into(),
+            file: metadata.urls[0].clone(),
+        };
+        let full = release(
+            &runtime,
+            "https://index.example",
+            "package",
+            &selected,
+            &metadata.info,
+        )
+        .await?;
+        assert_eq!(full.release_id, full.key.id());
+        assert_eq!(
+            full.key.artifact_digest.as_deref(),
+            Some("a".repeat(64).as_str())
+        );
+        assert_eq!(full.license.as_deref(), Some("MIT"));
+        assert_eq!(
+            full.links.documentation.as_deref(),
+            Some("https://example.org/docs")
+        );
+        assert!(full.links.homepage.is_none());
+        assert!(full.yanked);
+        let bound = crate::python_distribution::release_binding(
+            &runtime,
+            &full,
+            &["package_api".into(), "package_api".into()],
+        )
+        .await?;
+        assert_eq!(bound.root_module.as_deref(), Some("package_api"));
+        assert_eq!(bound.lib_name, bound.root_module);
+        assert_eq!(bound.release_id, full.release_id);
+        for roots in [vec![], vec!["package_api".into(), "another_package".into()]] {
+            let ambiguous =
+                crate::python_distribution::release_binding(&runtime, &bound, &roots).await?;
+            assert!(ambiguous.root_module.is_none());
+            assert!(ambiguous.lib_name.is_none());
+            assert_eq!(ambiguous.release_id, full.release_id);
+        }
+        let missing = release(
+            &runtime,
+            "https://index.example",
+            "package",
+            &selected,
+            &None,
+        )
+        .await?;
+        assert_eq!(missing.release_id, full.release_id);
+        assert!(missing.license.is_none());
+        assert_eq!(missing.links, Default::default());
+        let mut invalid = selected;
+        invalid.file.digests.clear();
+        assert!(
+            release(
+                &runtime,
+                "https://index.example",
+                "package",
+                &invalid,
+                &None
+            )
+            .await
+            .is_err()
+        );
+        assert!(serde_json::from_str::<ReleaseMetadata>(r#"{"urls":null}"#).is_err());
+        let versions: Versions =
+            serde_json::from_str(r#"{"versions":["1.0","2.0"],"name":"package"}"#)
+                .expect("typed versions fixture");
+        assert_eq!(versions.versions, ["1.0", "2.0"]);
+        runtime.close_diagnostics().await
+    }
 }

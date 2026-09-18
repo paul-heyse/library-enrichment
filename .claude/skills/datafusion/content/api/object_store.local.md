@@ -44,6 +44,9 @@ async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions)
 async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.local.LocalFileSystem.md).
+
+
 Local filesystem storage providing an [`ObjectStore`] interface to files on
 local disk. Can optionally be created with a directory prefix
 

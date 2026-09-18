@@ -295,8 +295,7 @@ pub struct QueryLimits {
     pub native: enrichment_core::config::NativeQueryConfig,
     pub memory_bytes: usize,
     pub spill_bytes: u64,
-    pub descriptor_cache_bytes: usize,
-    pub metadata_cache_bytes: usize,
+    pub caches: enrichment_core::config::NativeCachePolicy,
     pub batch_rows: usize,
     pub partitions: usize,
     pub concurrency: usize,
@@ -317,8 +316,7 @@ impl From<&enrichment_core::config::ArrowConfig> for QueryLimits {
             native: config.native.clone(),
             memory_bytes: config.memory_bytes,
             spill_bytes: config.spill_bytes,
-            descriptor_cache_bytes: config.descriptor_cache_bytes,
-            metadata_cache_bytes: config.metadata_cache_bytes,
+            caches: config.caches.clone(),
             batch_rows: config.batch_rows,
             partitions: config.partitions,
             concurrency: config.concurrency,
@@ -334,11 +332,21 @@ impl From<&enrichment_core::config::ArrowConfig> for QueryLimits {
 pub struct QueryRuntime {
     executor: Arc<NativeExecutor>,
     template: SessionState,
+    selection: Arc<
+        std::sync::OnceLock<(
+            enrichment_core::operation::selections::RuntimeWitness,
+            String,
+        )>,
+    >,
     declarations: crate::native_catalog::Tables,
     pub(crate) descriptors: Arc<crate::provider_cache::ProviderCache>,
+    pub(crate) metadata: Arc<crate::native_cache::MetadataCache>,
+    pub(crate) snapshots: Arc<crate::snapshot_registry::Registry>,
+    pub(crate) contracts: Arc<crate::contract_cache::Contracts>,
     retention_admission: Arc<tokio::sync::OnceCell<()>>,
     permits: Arc<Semaphore>,
     operations: Arc<Semaphore>,
+    parsers: Arc<Semaphore>,
     limits: Arc<QueryLimits>,
     diagnostics: crate::telemetry_history::History,
     kernel_metrics: tracing::Dispatch,
@@ -348,6 +356,7 @@ pub struct QueryRuntime {
 /// Owned execution lanes for one DataFusion resource/policy runtime. Synchronous kernel
 /// callers must not occupy the blocking threads needed by the filesystem futures they await.
 /// Every owned task and blocking callback retains both lanes until it actually exits.
+#[derive(Debug)]
 pub(crate) struct NativeExecutor {
     compute: Option<tokio::runtime::Runtime>,
     kernel_io: Option<tokio::runtime::Runtime>,
@@ -405,7 +414,21 @@ impl NativeExecutor {
         self: &Arc<Self>,
         work: impl FnOnce() -> T + Send + 'static,
     ) -> datafusion::common::runtime::SpawnedTask<T> {
-        let handle = self.compute_handle();
+        self.spawn_blocking_on(self.compute_handle(), work)
+    }
+
+    pub(crate) fn spawn_io_blocking<T: Send + 'static>(
+        self: &Arc<Self>,
+        work: impl FnOnce() -> T + Send + 'static,
+    ) -> datafusion::common::runtime::SpawnedTask<T> {
+        self.spawn_blocking_on(self.io_handle(), work)
+    }
+
+    fn spawn_blocking_on<T: Send + 'static>(
+        self: &Arc<Self>,
+        handle: tokio::runtime::Handle,
+        work: impl FnOnce() -> T + Send + 'static,
+    ) -> datafusion::common::runtime::SpawnedTask<T> {
         let _enter = handle.enter();
         let executor = self.clone();
         let operation = capture_operation();
@@ -459,13 +482,27 @@ impl QueryRuntime {
         (self.limits.batch_rows, self.limits.partitions)
     }
 
+    pub(crate) fn reserve_release(&self) -> Result<crate::retention_tasks::ReleaseSlot> {
+        self.releases.reserve()
+    }
+
+    /// Finish submitted final-owner writes before sealing an immutable export. Callers
+    /// must already have dropped its writers/providers; this does not revoke live owners.
+    pub(crate) async fn flush_releases(&self) -> Result<()> {
+        self.releases.flush().await
+    }
+
     pub(crate) fn release_retention(
         &self,
+        slot: crate::retention_tasks::ReleaseSlot,
         work: impl Future<Output = Result<()>> + Send + 'static,
     ) -> Result<()> {
         self.releases.submit(
+            slot,
             &self.executor_handle(),
-            self.executor.physical_context().scope(work),
+            self.executor
+                .physical_context()
+                .scope(crate::task_context::InputContext::capture().scope(work)),
         )
     }
 
@@ -563,6 +600,15 @@ impl QueryRuntime {
         })
     }
 
+    /// Parser processes have separate admission from native queries: enrolling their physical
+    /// ownership must remain possible even when every parser slot is occupied.
+    pub(crate) async fn parser_permit(&self) -> Result<tokio::sync::OwnedSemaphorePermit> {
+        tokio::time::timeout(self.remaining()?, self.parsers.clone().acquire_owned())
+            .await
+            .map_err(|_| deadline_budget("native parser admission deadline"))?
+            .map_err(|error| DataFusionError::Execution(error.to_string()))
+    }
+
     /// Own one complete native Delta write, including native planning and commit acknowledgement.
     /// The native task keeps its permit and operation context until it exits; disconnects and
     /// deadlines abort via DataFusion's SpawnedTask. An interrupted commit is indeterminate and
@@ -636,7 +682,12 @@ impl QueryRuntime {
     /// A terminal control commit must remain possible after its producer deadline expires.
     /// Only the finite JobStore settlement methods use this scope; it cannot launch effects or
     /// renew a claim. It retains request/policy correlation with a fresh bounded query budget.
-    pub(crate) async fn settlement<T>(&self, id: &str, work: impl Future<Output = T>) -> T {
+    pub(crate) async fn settlement<T>(
+        &self,
+        id: impl std::fmt::Display,
+        work: impl Future<Output = T>,
+    ) -> T {
+        let id = id.to_string();
         let descriptor = OPERATION
             .try_with(|operation| operation.descriptor.clone())
             .unwrap_or_else(|_| OperationDescriptor {
@@ -735,6 +786,7 @@ impl QueryRuntime {
         crate::task_context::install()?;
         if !(1..=16).contains(&limits.concurrency)
             || !(1..=16).contains(&limits.native.blocking_threads)
+            || !(1..=16).contains(&limits.native.parser_concurrency)
             || !(8 * 1024 * 1024..=64 * 1024 * 1024).contains(&limits.native.worker_stack_bytes)
         {
             return Err(DataFusionError::Configuration(
@@ -775,6 +827,10 @@ impl QueryRuntime {
             kernel_io: Some(lane("enrichment-kernel-io")?),
             physical_tasks: tokio_util::task::TaskTracker::new(),
         });
+        crate::native_cache::validate(&limits.caches)?;
+        let metadata = Arc::new(crate::native_cache::MetadataCache::new(
+            limits.caches.metadata_bytes,
+        ));
         let runtime = RuntimeEnvBuilder::new()
             .with_memory_pool(Arc::new(PeakRecordingPool::new(Arc::new(
                 FairSpillPool::new(limits.memory_bytes),
@@ -782,14 +838,18 @@ impl QueryRuntime {
             .with_temp_file_path(spill_root)
             .with_max_temp_directory_size(limits.spill_bytes)
             .with_max_spill_merge_fan_in(8)
-            .with_metadata_cache_limit(limits.metadata_cache_bytes)
+            .with_cache_manager(metadata.config())
             .build_arc()?;
         // The registry's implicit file backend is not our acknowledged durable backend.
         // Register once before any Delta builder or scan; both use this exact shared handle.
         runtime.register_object_store(
             &url::Url::parse("file:///")
                 .map_err(|error| DataFusionError::External(Box::new(error)))?,
-            Arc::new(crate::durable_store::DurableLocalStore::new()),
+            Arc::new(crate::durable_store::DurableLocalStore::new(
+                metadata.clone(),
+                executor.clone(),
+                runtime.memory_pool.clone(),
+            )),
         );
         let limits = Arc::new(limits);
         let policy = crate::native_policy::NativePolicy::new(Arc::clone(&limits));
@@ -801,6 +861,10 @@ impl QueryRuntime {
             .with_option_extension(policy.clone())
             .set_bool("datafusion.execution.parquet.skip_metadata", false);
         config.options_mut().execution.parquet = policy.table_options().global;
+        // The service has one finite internal SQL dialect. DuckDB supports higher-order
+        // `->` lambdas; Generic treats that token as JSON access at DataFusion 55.1.
+        // Bind this before building the template and its immutable session witness.
+        config.options_mut().sql_parser.dialect = datafusion::common::config::Dialect::DuckDB;
         let template = SessionContext::new_with_config_rt(config, Arc::clone(&runtime)).state();
         let planner = Arc::new(crate::arrow_contract::NativePlanner);
         let config = template.config().clone();
@@ -810,6 +874,9 @@ impl QueryRuntime {
             Arc::new(enrichment_core::native_analysis::SemanticAnalyzer),
         );
         analyzer_rules.insert(0, Arc::new(crate::leases::RetentionAnalyzer));
+        analyzer_rules.push(Arc::new(
+            enrichment_core::native_analysis::SemanticAfterAnalysis,
+        ));
         let functions = enrichment_core::native_types::ClockMeaning::VALUES
             .iter()
             .map(|value| {
@@ -827,11 +894,24 @@ impl QueryRuntime {
             )))
             .chain(
                 [
+                    enrichment_core::native_record::named_struct(),
+                    enrichment_core::native_selection::coalesce(),
+                    enrichment_core::native_collections::list_values(),
                     enrichment_core::native_version::semver_key(),
                     enrichment_core::native_version::pep440_value(),
                     enrichment_core::native_version::pep440_matches(),
                     enrichment_core::native_url::parts(),
+                    enrichment_core::native_cargo::entries(),
+                    enrichment_core::native_python_metadata::headers(),
                     enrichment_core::native_text::position(),
+                    enrichment_core::native_semantics::consumer(),
+                    enrichment_core::native_semantics::protocol_position(),
+                    enrichment_core::native_runtime::report(),
+                    enrichment_core::native_runtime::selection_transport(),
+                    enrichment_core::native_lsp::decoder(),
+                    enrichment_core::native_lsp::coordinates(),
+                    enrichment_core::native_lsp::utf8_coordinates(),
+                    enrichment_core::native_lsp::uri(),
                 ]
                 .into_iter()
                 .map(Arc::new),
@@ -847,16 +927,34 @@ impl QueryRuntime {
                 crate::operation_index::OperationCacheFactory,
             )))
             .build();
+        let snapshots = Arc::new(crate::snapshot_registry::Registry::new(
+            &limits.caches,
+            template.runtime_env().memory_pool.clone(),
+            limits.concurrency,
+        ));
+        let contracts = Arc::new(crate::contract_cache::Contracts::new(
+            limits.caches.contracts_bytes,
+            template.runtime_env().memory_pool.clone(),
+        ));
+        let declarations = crate::native_catalog::declarations(
+            &limits.native.retention,
+            &template.runtime_env().memory_pool,
+        )?;
         let mut shared = Self {
             executor,
             template,
-            declarations: crate::native_catalog::declarations(&limits.native.retention)?,
+            selection: Arc::default(),
+            declarations,
             descriptors: Arc::new(crate::provider_cache::ProviderCache::new(
-                limits.descriptor_cache_bytes,
+                limits.caches.providers_bytes,
             )),
+            metadata,
+            snapshots,
+            contracts,
             retention_admission: Arc::default(),
             permits: Arc::new(Semaphore::new(limits.concurrency)),
             operations: Arc::new(Semaphore::new(limits.concurrency)),
+            parsers: Arc::new(Semaphore::new(limits.native.parser_concurrency)),
             limits,
             diagnostics: crate::telemetry_history::History::default(),
             kernel_metrics: tracing::Dispatch::none(),
@@ -870,6 +968,27 @@ impl QueryRuntime {
         shared.template = SessionStateBuilder::new_from_existing(shared.template)
             .with_config(config)
             .build();
+        shared.template = crate::session_witness::Witness::bind(shared.template);
+        let selection = enrichment_core::operation::selections::RuntimeWitness {
+            definition: DEFINITION_REVISION.into(),
+            options: crate::session_witness::Witness::persisted_options(&shared.template)?,
+            native: shared.limits.native.clone(),
+            caches: shared.limits.caches.clone(),
+            memory_bytes: shared.limits.memory_bytes,
+            spill_bytes: shared.limits.spill_bytes,
+            batch_rows: shared.limits.batch_rows,
+            partitions: shared.limits.partitions,
+            concurrency: shared.limits.concurrency,
+            result_rows: shared.limits.result_rows,
+            result_bytes: shared.limits.result_bytes,
+            deadline_nanoseconds: shared.limits.deadline.as_nanos().try_into().map_err(|_| {
+                DataFusionError::Plan("native runtime deadline exceeds witness width".into())
+            })?,
+        };
+        let identity = enrichment_core::native_key::Key::RuntimeWitness.record(&selection)?;
+        shared.selection.set((selection, identity)).map_err(|_| {
+            DataFusionError::Internal("runtime selection witness already bound".into())
+        })?;
         let pool = Arc::clone(&shared.template.runtime_env().memory_pool);
         let mut telemetry = shared.clone();
         // Reserved, single diagnostic admission shares the same executor, memory and spill.
@@ -895,11 +1014,10 @@ impl QueryRuntime {
         maximum: usize,
     ) -> datafusion::common::Result<Vec<T>> {
         let expected = arrow::datatypes::Schema::new(T::fields());
-        enrichment_core::native_schema::check_input(frame.schema().as_arrow(), &expected)?;
-        for field in expected.fields() {
-            let actual = frame.schema().field_with_unqualified_name(field.name())?;
-            enrichment_core::native_analysis::compatible(actual, field, "typed record decoder")?;
-        }
+        enrichment_core::native_schema::check_record_selection(
+            frame.schema().as_arrow(),
+            &expected,
+        )?;
         let limit = maximum.checked_add(1).ok_or_else(|| {
             datafusion::common::DataFusionError::ResourcesExhausted("record bound overflow".into())
         })?;
@@ -924,11 +1042,37 @@ impl QueryRuntime {
         Ok(records)
     }
 
+    /// Captured once after the complete compiled function/option set is installed. Keeping
+    /// the typed preimage makes the digest an identity, not an undocumented authority token.
+    pub fn selection_witness(
+        &self,
+    ) -> &(
+        enrichment_core::operation::selections::RuntimeWitness,
+        String,
+    ) {
+        self.selection
+            .get()
+            .expect("runtime construction binds selection meaning")
+    }
+
     /// Fresh scoped tables with shared spill, memory accounting and metadata cache.
     #[must_use]
     pub fn session(&self) -> SessionContext {
         self.bound_session(std::collections::BTreeMap::new())
             .expect("empty native inventory has a valid fixed schema")
+    }
+
+    pub(crate) fn invalidate_namespace(
+        &self,
+        namespace: &crate::snapshot_registry::Namespace,
+    ) -> Result<()> {
+        self.snapshots.invalidate(namespace)?;
+        self.descriptors.invalidate(namespace)?;
+        self.contracts.invalidate(namespace)
+    }
+
+    pub(crate) fn cache_policy(&self) -> &enrichment_core::config::NativeCachePolicy {
+        &self.limits.caches
     }
 
     pub(crate) fn retention_policy(
@@ -957,7 +1101,8 @@ impl QueryRuntime {
         use datafusion::catalog::{CatalogProviderList, MemoryCatalogProviderList};
         let mut state = self.template.clone();
         let catalogs = Arc::new(MemoryCatalogProviderList::new());
-        let (metadata, summary) = crate::native_catalog::metadata(&bindings)?;
+        let (metadata, summary) =
+            crate::native_catalog::metadata(&bindings, &self.template.runtime_env().memory_pool)?;
         bindings.insert(
             "operation".into(),
             Arc::new(
@@ -1037,34 +1182,12 @@ impl QueryRuntime {
         let summary = self.diagnostic_summary().await?;
         use datafusion::common::config::ExtensionOptions;
         let pool = &self.template.runtime_env().memory_pool;
-        use enrichment_core::wire::status::{NativeCacheCounters, NativeCacheFamily};
-        let manager = &self.template.runtime_env().cache_manager;
-        let metadata = manager.get_file_metadata_cache();
-        let mut caches = vec![
+        let caches = vec![
             self.descriptors.counters(),
-            NativeCacheCounters {
-                family: NativeCacheFamily::FileMetadata,
-                entries: metadata.len(),
-                limit_bytes: metadata.cache_limit(),
-                occupied_bytes: None,
-            },
+            self.snapshots.counters(),
+            self.contracts.counters(),
+            self.metadata.counters(),
         ];
-        if let Some(cache) = manager.get_file_statistic_cache() {
-            caches.push(NativeCacheCounters {
-                family: NativeCacheFamily::FileStatistics,
-                entries: cache.len(),
-                limit_bytes: cache.cache_limit(),
-                occupied_bytes: None,
-            });
-        }
-        if let Some(cache) = manager.get_list_files_cache() {
-            caches.push(NativeCacheCounters {
-                family: NativeCacheFamily::FileListings,
-                entries: cache.len(),
-                limit_bytes: cache.cache_limit(),
-                occupied_bytes: None,
-            });
-        }
         let settings = self
             .template
             .config_options()
@@ -1094,7 +1217,7 @@ impl QueryRuntime {
             concurrency_limit: self.limits.concurrency,
             managed_memory_limit_bytes: self.limits.memory_bytes,
             spill_limit_bytes: self.limits.spill_bytes,
-            metadata_cache_limit_bytes: self.limits.metadata_cache_bytes,
+            metadata_cache_limit_bytes: self.limits.caches.metadata_bytes,
             caches,
         })
     }
@@ -1107,12 +1230,16 @@ impl QueryRuntime {
     /// After stopping/joining root drivers, await native physical work, release retention,
     /// flush/close history, then await any final kernel work started by those writes.
     pub async fn close_diagnostics(&self) -> Result<()> {
+        self.parsers.close();
         self.executor.drain().await;
-        let releases = self.releases.close().await;
+        self.releases.close().await?;
         let diagnostics = self.diagnostics.close().await;
         self.executor.drain().await;
         self.descriptors.clear();
-        releases.and(diagnostics)
+        self.contracts.clear();
+        self.snapshots.clear();
+        self.metadata.clear();
+        diagnostics
     }
 
     /// Plan and consume one owned finite command. Release query admission before polling
@@ -1120,7 +1247,7 @@ impl QueryRuntime {
     /// Its owner must await physical completion; a caller timeout cannot certify cleanup.
     pub async fn command(
         &self,
-        id: String,
+        id: enrichment_core::identity::JobId,
         kind: crate::native_effect::CommandKind,
         driver: impl std::future::Future<Output = ()> + Send + 'static,
     ) -> Result<()> {
@@ -1202,6 +1329,7 @@ impl QueryRuntime {
             state.config_options(),
             |plan, rule| trace.rule("analysis", rule.name(), plan),
         )?;
+        enrichment_core::native_analysis::validate_plan(&analyzed)?;
         crate::preparation::result(
             analyzed.schema().as_arrow(),
             logical.schema().as_arrow(),
@@ -1212,9 +1340,13 @@ impl QueryRuntime {
             u64::try_from(planning.elapsed().as_micros()).unwrap_or(u64::MAX),
         );
         let optimizing = Instant::now();
-        let optimized = state.optimizer().optimize(analyzed, &state, |plan, rule| {
-            trace.rule("optimization", rule.name(), plan)
-        })?;
+        let optimized = state
+            .optimizer()
+            .optimize(analyzed, &state, |plan, rule| {
+                trace.rule("optimization", rule.name(), plan)
+            })?
+            .resolve_lambda_variables()?
+            .data;
         trace.optimized(
             &optimized,
             u64::try_from(optimizing.elapsed().as_micros()).unwrap_or(u64::MAX),
@@ -1236,6 +1368,9 @@ impl QueryRuntime {
         if plan.output_partitioning().partition_count() > 1 {
             plan = Arc::new(CoalescePartitionsExec::new(plan));
         }
+        plan.check_invariants(
+            datafusion::physical_plan::execution_plan::InvariantLevel::Executable,
+        )?;
         trace.physical(
             Arc::clone(&plan),
             u64::try_from(planning.elapsed().as_micros()).unwrap_or(u64::MAX),
@@ -1260,20 +1395,25 @@ impl QueryRuntime {
     /// Native projection and limit bound diagnostic hydration before execution. An empty
     /// relation proves only this invariant; row IDs remain witnesses, not schema metadata.
     pub async fn require_empty(&self, frame: DataFrame, rule: &str, stage: &str) -> Result<()> {
-        if frame.schema().fields().len() != 1 {
-            return Err(self.failed(crate::preparation::InvariantFailure::contract(
-                "invariant query must select one identity column",
-                stage,
-                Vec::new(),
-            )));
-        }
-        let (qualifier, field) = frame.schema().qualified_field(0);
-        let key = datafusion::common::Column::new(qualifier.cloned(), field.name());
-        let frame = frame
-            .select(vec![
-                datafusion::logical_expr::Expr::Column(key).alias("witness_id"),
-            ])?
-            .limit(0, Some(8))?;
+        self.require_empty_with_cause(
+            frame,
+            rule,
+            stage,
+            enrichment_core::wire::DiagnosticCause::CorruptState,
+        )
+        .await
+    }
+
+    /// The native rule owner declares whether a refusal concerns input, capacity or state.
+    /// Physical/query failures keep their own cause; only a returned violation uses this one.
+    pub async fn require_empty_with_cause(
+        &self,
+        frame: DataFrame,
+        rule: &str,
+        stage: &str,
+        cause: enrichment_core::wire::DiagnosticCause,
+    ) -> Result<()> {
+        let frame = crate::invariants::witness(frame, stage, 8)?;
         let output = self
             .execute_family(
                 frame,
@@ -1282,11 +1422,14 @@ impl QueryRuntime {
             .await
             .map_err(|e| e.context(format!("invariant {stage}: {rule}")))?;
         if output.rows != 0 {
-            return Err(self.failed(crate::preparation::InvariantFailure::error(
-                rule,
-                stage,
-                crate::preparation::witnesses(&output.batches),
-            )));
+            return Err(
+                self.failed(crate::preparation::InvariantFailure::with_cause(
+                    rule,
+                    stage,
+                    crate::preparation::witnesses(&output.batches),
+                    cause,
+                )),
+            );
         }
         Ok(())
     }
@@ -1355,6 +1498,11 @@ impl QueryRuntime {
                     });
                 }
                 charge_output(bytes - previous_bytes)?;
+                crate::owned_batch::claim(
+                    &batch,
+                    &self.session().runtime_env().memory_pool,
+                    "native-result-buffers",
+                )?;
                 batches.push(batch);
             }
             drop(stream);
@@ -1477,6 +1625,11 @@ impl QueryRuntime {
                 bytes = bytes
                     .checked_add(batch.get_array_memory_size())
                     .ok_or_else(|| budget("scan bytes counter"))?;
+                crate::owned_batch::claim(
+                    &batch,
+                    &self.session().runtime_env().memory_pool,
+                    "native-fold-buffers",
+                )?;
                 state = consume(state, batch, Arc::clone(&permit)).await?;
             }
             drop(stream);

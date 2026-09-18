@@ -1,0 +1,10 @@
+id: native-provider-cache-is-typed
+valid:
+  - 'let retained = snapshot.clone();'
+  - 'let view = provider_replay::decode(current, descriptor).await?;'
+  - 'mod tests { fn probe() { let codec = DeltaLogicalCodec {}; } }'
+invalid:
+  - 'let bytes = serde_json::to_vec(&snapshot)?;'
+  - 'let codec = DeltaLogicalCodec {};'
+  - 'codec.encode_immutable_provider(&provider, &mut bytes)?;'
+  - 'codec.try_decode_table_provider(&bytes, schema, context)?;'

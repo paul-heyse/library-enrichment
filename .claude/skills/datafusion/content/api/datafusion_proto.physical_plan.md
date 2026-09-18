@@ -31,6 +31,9 @@ fn try_encode_udaf(&self, node: &AggregateUDF, buf: &mut Vec<u8>) -> Result<()>
 fn try_encode_udf(&self, node: &ScalarUDF, buf: &mut Vec<u8>) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.ComposedPhysicalExtensionCodec.md).
+
+
 A PhysicalExtensionCodec that tries one of multiple inner codecs
 until one works
 
@@ -56,6 +59,9 @@ fn physical_expr_to_proto(&self, expr: &Arc<dyn PhysicalExpr>, codec: &dyn Physi
 fn proto_to_execution_plan(&self, proto: &protobuf::PhysicalPlanNode, ctx: &PhysicalPlanDecodeContext<'_>) -> Result<Arc<dyn ExecutionPlan>>
 fn proto_to_physical_expr(&self, proto: &protobuf::PhysicalExprNode, input_schema: &Schema, ctx: &PhysicalPlanDecodeContext<'_>) -> Result<Arc<dyn PhysicalExpr>> where Self: Sized
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.DeduplicatingProtoConverter.md).
+
 
 A proto converter that deduplicates [`PhysicalExpr`] by [`PhysicalExpr::expression_id`].
 This helps preserve referential integrity when deserializing [`ExecutionPlan`]s
@@ -87,6 +93,9 @@ fn try_decode(&self, _buf: &[u8], _inputs: &[Arc<dyn ExecutionPlan>], _ctx: &Tas
 fn try_encode(&self, _node: Arc<dyn ExecutionPlan>, _buf: &mut Vec<u8>, _proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.DefaultPhysicalExtensionCodec.md).
+
+
 ---
 
 ## DefaultPhysicalProtoConverter
@@ -107,6 +116,9 @@ fn physical_expr_to_proto(&self, expr: &Arc<dyn PhysicalExpr>, codec: &dyn Physi
 fn proto_to_execution_plan(&self, proto: &protobuf::PhysicalPlanNode, ctx: &PhysicalPlanDecodeContext<'_>) -> Result<Arc<dyn ExecutionPlan>>
 fn proto_to_physical_expr(&self, proto: &protobuf::PhysicalExprNode, input_schema: &Schema, ctx: &PhysicalPlanDecodeContext<'_>) -> Result<Arc<dyn PhysicalExpr>> where Self: Sized
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.DefaultPhysicalProtoConverter.md).
+
 
 ---
 
@@ -129,6 +141,9 @@ fn scalar_subquery_results(&self) -> Option<&ScalarSubqueryResults>
 fn task_ctx(&self) -> &'a TaskContext
 fn with_scalar_subquery_results(&self, scalar_subquery_results: ScalarSubqueryResults) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.PhysicalPlanDecodeContext.md).
+
 
 Context threaded through physical-plan deserialization.
 
@@ -158,6 +173,9 @@ fn try_encode<B>(&self, buf: &mut B) -> Result<()> where B: BufMut, Self: Sized
 fn try_from_physical_plan(plan: Arc<dyn ExecutionPlan>, codec: &dyn PhysicalExtensionCodec) -> Result<Self> where Self: Sized
 fn try_into_physical_plan(&self, ctx: &TaskContext, codec: &dyn PhysicalExtensionCodec) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.AsExecutionPlan.md).
+
 
 ---
 
@@ -192,6 +210,9 @@ fn try_encode_udf(&self, _node: &ScalarUDF, _buf: &mut Vec<u8>) -> Result<()>
 fn try_encode_udwf(&self, _node: &WindowUDF, _buf: &mut Vec<u8>) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.PhysicalExtensionCodec.md).
+
+
 ---
 
 ## PhysicalPlanNodeExt
@@ -219,6 +240,9 @@ fn try_into_generate_series_physical_plan(&self, generate_series: &protobuf::Gen
 fn try_into_physical_plan_with_context(&self, ctx: &PhysicalPlanDecodeContext<'_>, proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<Arc<dyn ExecutionPlan>>
 fn try_into_physical_plan_with_converter(&self, ctx: &TaskContext, codec: &dyn PhysicalExtensionCodec, proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.PhysicalPlanNodeExt.md).
+
 
 Extension methods on [`protobuf::PhysicalPlanNode`].
 
@@ -259,6 +283,9 @@ fn physical_expr_to_proto(&self, expr: &Arc<dyn PhysicalExpr>, codec: &dyn Physi
 fn proto_to_execution_plan(&self, proto: &protobuf::PhysicalPlanNode, ctx: &PhysicalPlanDecodeContext<'_>) -> Result<Arc<dyn ExecutionPlan>>
 fn proto_to_physical_expr(&self, proto: &protobuf::PhysicalExprNode, input_schema: &Schema, ctx: &PhysicalPlanDecodeContext<'_>) -> Result<Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.physical_plan.PhysicalProtoConverterExtension.md).
+
 
 Controls the conversion of physical plans and expressions to and from their
 Protobuf variants. Using this trait, users can perform optimizations on the

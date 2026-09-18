@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "id": "arrow.row-keys",
+  "title": "Encode composite keys for local comparisons",
+  "task_aliases": [
+    "compare composite keys",
+    "multi column sorting",
+    "dictionary row encoding",
+    "durable key bytes",
+    "row decode"
+  ],
+  "crates": [
+    "arrow-row",
+    "arrow-ord",
+    "arrow-ipc"
+  ],
+  "input": [
+    "ArrayRef",
+    "SortField",
+    "SortOptions"
+  ],
+  "output": [
+    "Rows",
+    "OwnedRow",
+    "ArrayRef"
+  ],
+  "properties": [
+    "order",
+    "nulls",
+    "dictionary",
+    "lifecycle",
+    "interchange"
+  ],
+  "operations": [
+    "arrow_row::RowConverter",
+    "arrow_row::RowConverter::convert_columns",
+    "arrow_row::RowConverter::convert_rows",
+    "arrow_row::SortField",
+    "arrow_ord::sort::lexsort_to_indices"
+  ],
+  "brief": "RowConverter is a comparison representation with converter-specific ordering, not a durable wire format. Decoding preserves values but hydrates dictionaries.",
+  "choices": [
+    {
+      "candidate": "RowConverter",
+      "choose_when": "Repeated local composite comparisons",
+      "tradeoff": "Associate rows with the same converter; configure descending/null placement per field.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "lexsort_to_indices",
+      "choose_when": "Only sorted row positions are needed",
+      "tradeoff": "Avoid managing your own encoded-row lifecycle.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "DataFrame sort/group/distinct",
+      "choose_when": "The operation is relational",
+      "tradeoff": "Keep execution and optimization in the engine.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "IPC / Parquet / specified application encoding",
+      "choose_when": "Persistence or cross-process compatibility is required",
+      "tradeoff": "Define a format/schema compatibility policy; bytes alone do not define durable identity.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "arrow.row-keys.shape",
+      "aspect": "shape",
+      "statement": "RowConverter::new takes ordered SortFields. convert_columns takes &[ArrayRef] and returns Rows; convert_rows returns Vec<ArrayRef>, not a reconstructed schema.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "arrow.row-keys.lifecycle",
+      "aspect": "lifecycle",
+      "statement": "Upstream requires compared rows to come from the same converter. Rows exposes borrowed Row views; OwnedRow owns row bytes. Row encoding may change across releases.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream",
+        "source"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "arrow.row-keys.dictionary",
+      "aspect": "dictionary",
+      "statement": "Dictionary inputs are hydrated for row encoding. The Int8/Utf8 probe decodes to Utf8, not Dictionary<Int8,Utf8>; exact dictionary assignments require preserving separate representation information or choosing another format.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream",
+        "source"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "arrow.row-keys.semantics",
+      "aspect": "semantics",
+      "statement": "SortOptions controls null placement and direction. Do not infer application collation, canonical equality or stable float encoding from lexicographic byte comparison.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Keep converter configuration associated with rows.",
+    "Validate decoded physical types and schema separately from value equality.",
+    "Use a specified interchange format when output must outlive the local comparison contract."
+  ],
+  "unknowns": [
+    "Float/nested/extension domain equivalence and cross-release serialization are not qualified.",
+    "The IPC round trip preserves dictionary type, keys and values in one pinned process/profile; it does not certify arbitrary reader/writer version pairs."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "arrow_row::RowConverter",
+        "arrow_row::RowConverter::convert_columns",
+        "arrow_row::RowConverter::convert_rows",
+        "arrow_row::SortField",
+        "arrow_ord::sort::lexsort_to_indices"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    },
+    {
+      "id": "probe",
+      "kind": "runtime_observation",
+      "tests": [
+        "row_order_changes_with_null_placement",
+        "row_decode_hydrates_dictionary_and_preserves_values",
+        "ipc_dictionary_roundtrip_keeps_representation"
+      ],
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Only the named assertions in the recorded Cargo profile."
+    },
+    {
+      "id": "source",
+      "kind": "upstream_source",
+      "path": "skill_improvement/evidence/sources/arrow-row-59.3.0/src/lib.rs",
+      "scope": "Selected exact published source; source-manifest.json retains provenance."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "arrow_row::RowConverter",
+      "arrow_row::RowConverter::convert_columns",
+      "arrow_row::RowConverter::convert_rows",
+      "arrow_row::SortField",
+      "arrow_ord::sort::lexsort_to_indices"
+    ],
+    "candidate_set": [
+      "RowConverter",
+      "lexsort_to_indices",
+      "DataFrame sort/group/distinct",
+      "IPC / Parquet / specified application encoding"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  }
+}

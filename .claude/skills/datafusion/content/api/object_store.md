@@ -16,6 +16,9 @@ enum CopyMode
 
 **Derives**: Clone, Copy, Debug, Default, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/object_store.CopyMode.md).
+
+
 Configure preconditions for the copy operation
 
 ---
@@ -55,6 +58,9 @@ fn source(&self) -> ::core::option::Option<&dyn ::thiserror::__private18::Error 
 fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.Error.md).
+
+
 A specialized `Error` for object store-related errors
 
 ---
@@ -72,6 +78,9 @@ enum GetResultPayload
 **Variants**: `File`, `Stream`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/object_store.GetResultPayload.md).
+
 
 The kind of a [`GetResult`]
 
@@ -94,6 +103,9 @@ enum PutMode
 
 **Derives**: Clone, Debug, Default, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/object_store.PutMode.md).
+
+
 Configure preconditions for the put operation
 
 ---
@@ -111,6 +123,9 @@ enum RenameTargetMode
 **Variants**: `Overwrite`, `Create`
 
 **Derives**: Clone, Copy, Debug, Default, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/object_store.RenameTargetMode.md).
+
 
 Configure preconditions for the target of rename operation.
 
@@ -140,6 +155,9 @@ fn new() -> Self
 fn with_extensions(self, extensions: Extensions) -> Self
 fn with_mode(self, mode: CopyMode) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.CopyOptions.md).
+
 
 Options for a copy request
 
@@ -174,6 +192,9 @@ fn with_range(self, range: Option<impl Into<GetRange>>) -> Self
 fn with_version(self, version: Option<impl Into<String>>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.GetOptions.md).
+
+
 Options for a get request, such as range
 
 ---
@@ -199,6 +220,9 @@ async fn bytes(self) -> Result<Bytes>
 fn into_stream(self) -> BoxStream<'static, Result<Bytes>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.GetResult.md).
+
+
 Result for a get request
 
 ---
@@ -216,6 +240,9 @@ struct ListResult
 **Fields**: `common_prefixes`, `objects`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/object_store.ListResult.md).
+
 
 Result of a list call that includes objects, prefixes (directories) and a
 token for the next set of results. Individual result sets may be limited to
@@ -236,6 +263,9 @@ struct ObjectMeta
 **Fields**: `location`, `last_modified`, `size`, `e_tag`, `version`
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/object_store.ObjectMeta.md).
+
 
 The metadata that describes an object.
 
@@ -263,6 +293,9 @@ struct PutMultipartOptions
 fn from(attributes: Attributes) -> Self
 fn from(tags: TagSet) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.PutMultipartOptions.md).
+
 
 Options for [`ObjectStore::put_multipart_opts`]
 
@@ -292,6 +325,9 @@ fn from(attributes: Attributes) -> Self
 fn from(tags: TagSet) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.PutOptions.md).
+
+
 Options for a put request
 
 ---
@@ -309,6 +345,9 @@ struct PutResult
 **Fields**: `e_tag`, `version`
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/object_store.PutResult.md).
+
 
 Result for a put request
 
@@ -336,6 +375,9 @@ fn with_extensions(self, extensions: Extensions) -> Self
 fn with_target_mode(self, target_mode: RenameTargetMode) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.RenameOptions.md).
+
+
 Options for a rename request
 
 ---
@@ -361,6 +403,9 @@ struct UpdateVersion
 ```rust
 fn from(value: PutResult) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.UpdateVersion.md).
+
 
 Uniquely identifies a version of an object to update
 
@@ -408,6 +453,9 @@ async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -
 async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult>
 async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.ObjectStore.md).
+
 
 Universal API for object store services.
 
@@ -557,6 +605,9 @@ fn rename(&self, from: &Path, to: &Path) -> impl Future<Output = Result<()>>
 fn rename_if_not_exists(&self, from: &Path, to: &Path) -> impl Future<Output = Result<()>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.ObjectStoreExt.md).
+
+
 Extension trait for [`ObjectStore`] with convenience functions.
 
 See the [module-level documentation](crate) for a high level overview and
@@ -578,6 +629,9 @@ Also reachable as `datafusion::object_store::DynObjectStore`
 type DynObjectStore = dyn ObjectStore
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.DynObjectStore.md).
+
+
 An alias for a dynamically dispatched object store implementation.
 
 ---
@@ -592,6 +646,9 @@ Also reachable as `datafusion::object_store::MultipartId`
 type MultipartId = String
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.MultipartId.md).
+
+
 Id type for multipart uploads.
 
 ---
@@ -605,6 +662,9 @@ Also reachable as `datafusion::object_store::Result`
 ```rust
 type Result<T, E = Error> = std::result::Result<T, E>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.Result.md).
+
 
 A specialized `Result` for object store-related errors
 

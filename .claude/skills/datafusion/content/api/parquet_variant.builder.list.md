@@ -44,6 +44,9 @@ fn try_new_list(&mut self) -> Result<ListBuilder<'_, Self::State<'_>>, ArrowErro
 fn try_new_object(&mut self) -> Result<ObjectBuilder<'_, Self::State<'_>>, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant.builder.list.ListBuilder.md).
+
+
 A builder for creating [`Variant::List`] values.
 
 See the examples on [`VariantBuilder`] for usage.
@@ -69,6 +72,9 @@ struct ListState<'a>
 ```rust
 fn rollback(&mut self)
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant.builder.list.ListState.md).
+
 
 Internal state for list building
 

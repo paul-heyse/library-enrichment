@@ -14,6 +14,9 @@ enum OnDecodeError
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.url.url_decode.OnDecodeError.md).
+
+
 How [`spark_handled_url_decode`] reacts to a malformed input value.
 
 ---
@@ -25,6 +28,9 @@ How [`spark_handled_url_decode`] reacts to a malformed input value.
 ```rust
 fn spark_handled_url_decode(args: &[arrow::array::ArrayRef], on_error: OnDecodeError) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.url.url_decode.spark_handled_url_decode.md).
+
 
 ---
 
@@ -54,5 +60,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.url.url_decode.UrlDecode.md).
+
 
 ---

@@ -1,0 +1,1087 @@
+[
+  {
+    "id": "945a70edefc042f10763dbee",
+    "path": "arrow_ipc::reader::stream::StreamDecoder",
+    "name": "StreamDecoder",
+    "owner": null,
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct StreamDecoder",
+    "docs": "A low-level interface for reading [`RecordBatch`] data from a stream of bytes\n\nSee [StreamReader](crate::reader::StreamReader) for a higher-level interface",
+    "span": {
+      "filename": "src/reader/stream.rs",
+      "begin": [
+        35,
+        1
+      ],
+      "end": [
+        51,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          133,
+          134,
+          135,
+          136,
+          137,
+          138,
+          139,
+          140,
+          141,
+          142,
+          143,
+          144,
+          145,
+          146,
+          147,
+          149,
+          151
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "crate::reader::StreamReader": 119,
+      "`RecordBatch`": 118
+    },
+    "link_paths": {
+      "crate::reader::StreamReader": "arrow_ipc::reader::StreamReader",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "120",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.stream.StreamDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.stream.StreamDecoder.json",
+    "anchor": "op-945a70edefc042f10763dbee",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::reader::StreamReader": "../operations/arrow_ipc.reader.StreamReader.md#op-e303cfe08d702b62a9f2f221",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "5c8e95bc24fe46c31db8e91b",
+    "path": "arrow_ipc::reader::stream::StreamDecoder::decode",
+    "name": "decode",
+    "owner": "arrow_ipc::reader::stream::StreamDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn decode(&mut self, buffer: &mut Buffer) -> Result<Option<RecordBatch>, ArrowError>",
+    "docs": "Try to read the next [`RecordBatch`] from the provided [`Buffer`]\n\n[`Buffer::advance`] will be called on `buffer` for any consumed bytes.\n\nThe push-based interface facilitates integration with sources that yield arbitrarily\ndelimited bytes ranges, such as a chunked byte stream received from object storage\n\n```\n# use arrow_array::RecordBatch;\n# use arrow_buffer::Buffer;\n# use arrow_ipc::reader::StreamDecoder;\n# use arrow_schema::ArrowError;\n#\nfn print_stream<I>(src: impl Iterator<Item = Buffer>) -> Result<(), ArrowError> {\n    let mut decoder = StreamDecoder::new();\n    for mut x in src {\n        while !x.is_empty() {\n            if let Some(x) = decoder.decode(&mut x)? {\n                println!(\"{x:?}\");\n            }\n            if let Some(schema) = decoder.schema() {\n                println!(\"Schema: {schema:?}\");\n            }\n        }\n    }\n    decoder.finish().unwrap();\n    Ok(())\n}\n```",
+    "span": {
+      "filename": "src/reader/stream.rs",
+      "begin": [
+        159,
+        5
+      ],
+      "end": [
+        286,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "buffer",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Buffer",
+                      "id": 79,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 127,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "RecordBatch",
+                                      "id": 118,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "79": "arrow_buffer::buffer::immutable::Buffer",
+      "44": "core::result::Result",
+      "127": "core::option::Option",
+      "118": "arrow_array::record_batch::RecordBatch",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamDecoder",
+          "id": "arrow_ipc::reader::stream::StreamDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/stream.rs",
+        "begin": [
+          88,
+          1
+        ],
+        "end": [
+          302,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Buffer`": 79,
+      "`Buffer::advance`": 130,
+      "`RecordBatch`": 118
+    },
+    "link_paths": {
+      "`Buffer`": "arrow_buffer::buffer::immutable::Buffer",
+      "`Buffer::advance`": "arrow_buffer::buffer::immutable::Buffer::advance",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "131",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.stream.StreamDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.stream.StreamDecoder.json",
+    "anchor": "op-5c8e95bc24fe46c31db8e91b",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Buffer`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "24f38be20e661242a2a22025",
+    "path": "arrow_ipc::reader::stream::StreamDecoder::default",
+    "name": "default",
+    "owner": "arrow_ipc::reader::stream::StreamDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn default() -> StreamDecoder",
+    "docs": "",
+    "span": {
+      "filename": "src/reader/stream.rs",
+      "begin": [
+        34,
+        17
+      ],
+      "end": [
+        34,
+        24
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "resolved_path": {
+              "path": "StreamDecoder",
+              "id": 120,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "120": "arrow_ipc::reader::stream::StreamDecoder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamDecoder",
+          "id": "arrow_ipc::reader::stream::StreamDecoder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/stream.rs",
+        "begin": [
+          34,
+          17
+        ],
+        "end": [
+          34,
+          24
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "150",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.stream.StreamDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.stream.StreamDecoder.json",
+    "anchor": "op-24f38be20e661242a2a22025",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6adee2df65f58c6aa4d6c72f",
+    "path": "arrow_ipc::reader::stream::StreamDecoder::finish",
+    "name": "finish",
+    "owner": "arrow_ipc::reader::stream::StreamDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> Result<(), ArrowError>",
+    "docs": "Signal the end of stream\n\nReturns an error if any partial data remains in the stream",
+    "span": {
+      "filename": "src/reader/stream.rs",
+      "begin": [
+        291,
+        5
+      ],
+      "end": [
+        301,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "44": "core::result::Result",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamDecoder",
+          "id": "arrow_ipc::reader::stream::StreamDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/stream.rs",
+        "begin": [
+          88,
+          1
+        ],
+        "end": [
+          302,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "132",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.stream.StreamDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.stream.StreamDecoder.json",
+    "anchor": "op-6adee2df65f58c6aa4d6c72f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "00500ff1672a7e83800ca538",
+    "path": "arrow_ipc::reader::stream::StreamDecoder::fmt",
+    "name": "fmt",
+    "owner": "arrow_ipc::reader::stream::StreamDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/reader/stream.rs",
+      "begin": [
+        34,
+        10
+      ],
+      "end": [
+        34,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 57,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 58,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "57": "core::fmt::Formatter",
+      "58": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamDecoder",
+          "id": "arrow_ipc::reader::stream::StreamDecoder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/stream.rs",
+        "begin": [
+          34,
+          10
+        ],
+        "end": [
+          34,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "148",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.stream.StreamDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.stream.StreamDecoder.json",
+    "anchor": "op-00500ff1672a7e83800ca538",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c6275fec945ec8d2cc23eb20",
+    "path": "arrow_ipc::reader::stream::StreamDecoder::new",
+    "name": "new",
+    "owner": "arrow_ipc::reader::stream::StreamDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "Create a new [`StreamDecoder`]",
+    "span": {
+      "filename": "src/reader/stream.rs",
+      "begin": [
+        90,
+        5
+      ],
+      "end": [
+        92,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamDecoder",
+          "id": "arrow_ipc::reader::stream::StreamDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/stream.rs",
+        "begin": [
+          88,
+          1
+        ],
+        "end": [
+          302,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`StreamDecoder`": 120
+    },
+    "link_paths": {
+      "`StreamDecoder`": "arrow_ipc::reader::stream::StreamDecoder"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "121",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.stream.StreamDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.stream.StreamDecoder.json",
+    "anchor": "op-c6275fec945ec8d2cc23eb20",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`StreamDecoder`": "../operations/arrow_ipc.reader.stream.StreamDecoder.md#op-945a70edefc042f10763dbee"
+    }
+  },
+  {
+    "id": "70ec6fe0a8316944a05369ed",
+    "path": "arrow_ipc::reader::stream::StreamDecoder::schema",
+    "name": "schema",
+    "owner": "arrow_ipc::reader::stream::StreamDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn schema(&self) -> Option<SchemaRef>",
+    "docs": "Return the schema if decoded, else None.",
+    "span": {
+      "filename": "src/reader/stream.rs",
+      "begin": [
+        112,
+        5
+      ],
+      "end": [
+        114,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 127,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SchemaRef",
+                          "id": 128,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "127": "core::option::Option",
+      "128": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamDecoder",
+          "id": "arrow_ipc::reader::stream::StreamDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/stream.rs",
+        "begin": [
+          88,
+          1
+        ],
+        "end": [
+          302,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "126",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.stream.StreamDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.stream.StreamDecoder.json",
+    "anchor": "op-70ec6fe0a8316944a05369ed",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c97eecbb2e28fd1d7697693f",
+    "path": "arrow_ipc::reader::stream::StreamDecoder::with_require_alignment",
+    "name": "with_require_alignment",
+    "owner": "arrow_ipc::reader::stream::StreamDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_require_alignment(self, require_alignment: bool) -> Self",
+    "docs": "Specifies whether or not array data in input buffers is required to be properly aligned.\n\nIf `require_alignment` is true, this decoder will return an error if any array data in the\ninput `buf` is not properly aligned.\nUnder the hood it will use [`arrow_data::ArrayDataBuilder::build`] to construct\n[`arrow_data::ArrayData`].\n\nIf `require_alignment` is false (the default), this decoder will automatically allocate a\nnew aligned buffer and copy over the data if any array data in the input `buf` is not\nproperly aligned. (Properly aligned array data will remain zero-copy.)\nUnder the hood it will use [`arrow_data::ArrayDataBuilder::align_buffers`] to construct\n[`arrow_data::ArrayData`].",
+    "span": {
+      "filename": "src/reader/stream.rs",
+      "begin": [
+        106,
+        5
+      ],
+      "end": [
+        109,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "require_alignment",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamDecoder",
+          "id": "arrow_ipc::reader::stream::StreamDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/stream.rs",
+        "begin": [
+          88,
+          1
+        ],
+        "end": [
+          302,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`arrow_data::ArrayDataBuilder::build`": 122,
+      "`arrow_data::ArrayData`": 123,
+      "`arrow_data::ArrayDataBuilder::align_buffers`": 124
+    },
+    "link_paths": {
+      "`arrow_data::ArrayDataBuilder::build`": "arrow_data::data::ArrayDataBuilder::build",
+      "`arrow_data::ArrayData`": "arrow_data::data::ArrayData",
+      "`arrow_data::ArrayDataBuilder::align_buffers`": "arrow_data::data::ArrayDataBuilder::align_buffers"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "125",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.stream.StreamDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.stream.StreamDecoder.json",
+    "anchor": "op-c97eecbb2e28fd1d7697693f",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`arrow_data::ArrayData`": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78"
+    }
+  },
+  {
+    "id": "a59ef0c6983413e7cd6e28c4",
+    "path": "arrow_ipc::reader::stream::StreamDecoder::with_skip_validation",
+    "name": "with_skip_validation",
+    "owner": "arrow_ipc::reader::stream::StreamDecoder",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn with_skip_validation(self, skip_validation: bool) -> Self",
+    "docs": "Specifies if validation should be skipped when reading data (defaults to `false`)\n\n# Safety\n\nThis flag must only be set to `true` when you trust the input data and are\nsure the data you are reading is valid Arrow IPC stream data, otherwise\nundefined behavior may result.\n\nFor example, DataFusion uses this when reading spill files it wrote itself.",
+    "span": {
+      "filename": "src/reader/stream.rs",
+      "begin": [
+        125,
+        5
+      ],
+      "end": [
+        128,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "skip_validation",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamDecoder",
+          "id": "arrow_ipc::reader::stream::StreamDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/stream.rs",
+        "begin": [
+          88,
+          1
+        ],
+        "end": [
+          302,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "129",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.stream.StreamDecoder.md",
+    "record_file": "operations/arrow_ipc.reader.stream.StreamDecoder.json",
+    "anchor": "op-a59ef0c6983413e7cd6e28c4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

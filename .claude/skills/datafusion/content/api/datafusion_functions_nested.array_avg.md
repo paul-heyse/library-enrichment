@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_avg`, `datafusion_functions_nested
 fn array_avg(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_avg.array_avg.md).
+
+
 returns the arithmetic mean of elements in a numeric array.
 
 ---
@@ -23,6 +26,9 @@ returns the arithmetic mean of elements in a numeric array.
 ```rust
 fn array_avg_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_avg.array_avg_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayAvg
@@ -58,5 +64,8 @@ fn name(&self) -> &str
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_avg.ArrayAvg.md).
+
 
 ---

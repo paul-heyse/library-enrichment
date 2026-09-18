@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_product`, `datafusion_functions_ne
 fn array_product(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_product.array_product.md).
+
+
 returns the product of the elements of a numeric array.
 
 ---
@@ -23,6 +26,9 @@ returns the product of the elements of a numeric array.
 ```rust
 fn array_product_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_product.array_product_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayProduct
@@ -58,5 +64,8 @@ fn name(&self) -> &str
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_product.ArrayProduct.md).
+
 
 ---

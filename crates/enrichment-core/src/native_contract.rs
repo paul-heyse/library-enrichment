@@ -43,8 +43,15 @@ fn shape(kind: &DataType) -> String {
         DataType::Struct(_) => "Struct".into(),
         DataType::List(_) => "List".into(),
         DataType::LargeList(_) => "LargeList".into(),
+        DataType::ListView(_) => "ListView".into(),
+        DataType::LargeListView(_) => "LargeListView".into(),
         DataType::FixedSizeList(_, size) => format!("FixedSizeList({size})"),
         DataType::Map(_, ordered) => format!("Map({ordered})"),
+        DataType::RunEndEncoded(_, _) => "RunEndEncoded".into(),
+        DataType::Union(fields, mode) => format!(
+            "Union({mode:?},{:?})",
+            fields.iter().map(|(tag, _)| tag).collect::<Vec<_>>()
+        ),
         DataType::Dictionary(key, value) => format!("Dictionary({key},{})", shape(value)),
         value => value.to_string(),
     }
@@ -81,8 +88,19 @@ fn capture(
         }
         DataType::List(field)
         | DataType::LargeList(field)
+        | DataType::ListView(field)
+        | DataType::LargeListView(field)
         | DataType::FixedSizeList(field, _)
         | DataType::Map(field, _) => child(field, 0),
+        DataType::Union(fields, _) => {
+            for (ordinal, (_, field)) in fields.iter().enumerate() {
+                child(field, ordinal);
+            }
+        }
+        DataType::RunEndEncoded(ends, values) => {
+            child(ends, 0);
+            child(values, 1);
+        }
         DataType::Dictionary(_, value) => {
             child(
                 &Field::new("dictionary_values", value.as_ref().clone(), true),
@@ -101,9 +119,9 @@ impl Manifest {
             projection: "contract".into(),
             path: vec![],
             properties: [
-                ("manifest".into(), "1".into()),
+                ("manifest".into(), "2".into()),
                 ("canonical".into(), "2".into()),
-                ("intrinsic".into(), "3".into()),
+                ("intrinsic".into(), "7".into()),
                 ("extensions".into(), "1".into()),
                 ("delta_mapping".into(), "2".into()),
                 ("wire".into(), crate::native_json::REVISION.into()),
@@ -130,22 +148,22 @@ impl Manifest {
         Ok(Self { fields })
     }
 
-    pub fn identity(&self) -> Result<String> {
-        crate::native_key::Key::SchemaContract.hex_digest(self)
+    pub fn identity(&self) -> Result<crate::identity::SchemaContractId> {
+        crate::identity::SchemaContractId::try_from_record(self)
     }
 }
 
 /// A native full join explains additions, removals and changed rules/layout/codec witnesses.
-/// The caller supplies a scoped session; the relation also serves fail-closed cache admission.
+/// The caller supplies immutable paid inputs and a scoped session. This layer only plans;
+/// it cannot create an unaccounted mutable MemTable while verifying a cached contract.
 pub async fn changes(
     session: &SessionContext,
-    before: &Manifest,
-    after: &Manifest,
+    before: DataFrame,
+    after: DataFrame,
 ) -> Result<DataFrame> {
-    for (name, manifest) in [("contract_before", before), ("contract_after", after)] {
+    for (name, input) in [("contract_before", before), ("contract_after", after)] {
         let key = crate::native_key::Key::ContractField;
-        let frame = session
-            .read_batch(ContractField::batch(&manifest.fields)?)?
+        let frame = input
             .with_column("field_identity", key.expression())?
             .with_column(
                 "descriptor",
@@ -162,4 +180,18 @@ pub async fn changes(
         session.register_table(name, frame.into_view())?;
     }
     session.sql("SELECT coalesce(b.projection,a.projection) AS projection, coalesce(b.path,a.path) AS path, CASE WHEN b.field_identity IS NULL THEN 'added' WHEN a.field_identity IS NULL THEN 'removed' ELSE 'changed' END AS kind, b.descriptor AS before, a.descriptor AS after FROM contract_before b FULL JOIN contract_after a ON b.projection=a.projection AND b.path=a.path WHERE b.field_identity IS DISTINCT FROM a.field_identity ORDER BY projection,path").await
+}
+
+/// The one-identity-column admission view of the complete native difference relation.
+/// A difference is identified by its typed path and before/after values, not display text.
+pub async fn violations(
+    session: &SessionContext,
+    before: DataFrame,
+    after: DataFrame,
+) -> Result<DataFrame> {
+    changes(session, before, after).await?.select(vec![
+        crate::native_key::Key::ContractChange
+            .expression()
+            .alias("witness_id"),
+    ])
 }

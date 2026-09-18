@@ -1,0 +1,133 @@
+[
+  {
+    "id": "9c4ca4c7ad0f37f542abdf27",
+    "path": "datafusion_physical_optimizer::ensure_requirements::enforce_sorting::parallelize_sorts",
+    "name": "parallelize_sorts",
+    "owner": null,
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn parallelize_sorts(requirements: PlanWithCorrespondingCoalescePartitions) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<PlanWithCorrespondingCoalescePartitions>>",
+    "docs": "Transform [`CoalescePartitionsExec`] + [`SortExec`] cascades into [`SortExec`]\n+ [`SortPreservingMergeExec`] cascades, as illustrated below.\n\nA [`CoalescePartitionsExec`] + [`SortExec`] cascade combines partitions\nfirst, and then sorts:\n```text\n  ┌ ─ ─ ─ ─ ─ ┐\n   ┌─┬─┬─┐\n  ││B│A│D│... ├──┐\n   └─┴─┴─┘       │\n  └ ─ ─ ─ ─ ─ ┘  │  ┌────────────────────────┐   ┌ ─ ─ ─ ─ ─ ─ ┐   ┌────────┐    ┌ ─ ─ ─ ─ ─ ─ ─ ┐\n   Partition 1   │  │        Coalesce        │    ┌─┬─┬─┬─┬─┐      │        │     ┌─┬─┬─┬─┬─┐\n                 ├──▶(no ordering guarantees)│──▶││B│E│A│D│C│...───▶  Sort  ├───▶││A│B│C│D│E│... │\n                 │  │                        │    └─┴─┴─┴─┴─┘      │        │     └─┴─┴─┴─┴─┘\n  ┌ ─ ─ ─ ─ ─ ┐  │  └────────────────────────┘   └ ─ ─ ─ ─ ─ ─ ┘   └────────┘    └ ─ ─ ─ ─ ─ ─ ─ ┘\n   ┌─┬─┐         │                                 Partition                       Partition\n  ││E│C│ ...  ├──┘\n   └─┴─┘\n  └ ─ ─ ─ ─ ─ ┘\n   Partition 2\n```\n\n\nA [`SortExec`] + [`SortPreservingMergeExec`] cascade sorts each partition\nfirst, then merges partitions while preserving the sort:\n```text\n  ┌ ─ ─ ─ ─ ─ ┐   ┌────────┐   ┌ ─ ─ ─ ─ ─ ┐\n   ┌─┬─┬─┐        │        │    ┌─┬─┬─┐\n  ││B│A│D│... │──▶│  Sort  │──▶││A│B│D│... │──┐\n   └─┴─┴─┘        │        │    └─┴─┴─┘       │\n  └ ─ ─ ─ ─ ─ ┘   └────────┘   └ ─ ─ ─ ─ ─ ┘  │  ┌─────────────────────┐    ┌ ─ ─ ─ ─ ─ ─ ─ ┐\n   Partition 1                  Partition 1   │  │                     │     ┌─┬─┬─┬─┬─┐\n                                              ├──▶ SortPreservingMerge ├───▶││A│B│C│D│E│... │\n                                              │  │                     │     └─┴─┴─┴─┴─┘\n  ┌ ─ ─ ─ ─ ─ ┐   ┌────────┐   ┌ ─ ─ ─ ─ ─ ┐  │  └─────────────────────┘    └ ─ ─ ─ ─ ─ ─ ─ ┘\n   ┌─┬─┐          │        │    ┌─┬─┐         │                               Partition\n  ││E│C│ ...  │──▶│  Sort  ├──▶││C│E│ ...  │──┘\n   └─┴─┘          │        │    └─┴─┘\n  └ ─ ─ ─ ─ ─ ┘   └────────┘   └ ─ ─ ─ ─ ─ ┘\n   Partition 2                  Partition 2\n```\n\nThe latter [`SortExec`] + [`SortPreservingMergeExec`] cascade performs\nsorting first on a per-partition basis, thereby parallelizing the sort.\n\nThe outcome is that plans of the form\n```text\n     \"SortExec: expr=\\[a@0 ASC\\]\",\n     \"  ...nodes...\"\n     \"    CoalescePartitionsExec\",\n     \"      RepartitionExec: partitioning=RoundRobinBatch(8), input_partitions=1\",\n```\nare transformed into\n```text\n     \"SortPreservingMergeExec: \\[a@0 ASC\\]\",\n     \"  SortExec: expr=\\[a@0 ASC\\]\",\n     \"    ...nodes...\"\n     \"      RepartitionExec: partitioning=RoundRobinBatch(8), input_partitions=1\",\n```\nby following connections from [`CoalescePartitionsExec`]s to [`SortExec`]s.\nBy performing sorting in parallel, we can increase performance in some\nscenarios.\n\nThis optimization requires that there are no nodes between the [`SortExec`]\nand the [`CoalescePartitionsExec`], which requires single partitioning. Do\nnot parallelize when the following scenario occurs:\n```text\n     \"SortExec: expr=\\[a@0 ASC\\]\",\n     \"  ...nodes requiring single partitioning...\"\n     \"    CoalescePartitionsExec\",\n     \"      RepartitionExec: partitioning=RoundRobinBatch(8), input_partitions=1\",\n```\n\n**Steps**\n1. Checks if the plan is either a [`SortExec`], a [`SortPreservingMergeExec`],\n   or a [`CoalescePartitionsExec`]. Otherwise, does nothing.\n2. If the plan is a [`SortExec`] or a final [`SortPreservingMergeExec`]\n   (i.e. output partitioning is 1):\n     - Check for [`CoalescePartitionsExec`] in children. If found, check if\n       it can be removed (with possible [`RepartitionExec`]s). If so, remove\n       (see `remove_bottleneck_in_subplan`).\n     - If the plan is satisfying the ordering requirements, add a `SortExec`.\n     - Add an SPM above the plan and return.\n3. If the plan is a [`CoalescePartitionsExec`]:\n     - Check if it can be removed (with possible [`RepartitionExec`]s).\n       If so, remove (see `remove_bottleneck_in_subplan`).",
+    "span": {
+      "filename": "src/ensure_requirements/enforce_sorting/mod.rs",
+      "begin": [
+        319,
+        1
+      ],
+      "end": [
+        381,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "requirements",
+              {
+                "resolved_path": {
+                  "path": "PlanWithCorrespondingCoalescePartitions",
+                  "id": 195,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 63,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "datafusion_common::tree_node::Transformed",
+                          "id": 133,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "PlanWithCorrespondingCoalescePartitions",
+                                      "id": 195,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "195": "datafusion_physical_optimizer::ensure_requirements::enforce_sorting::PlanWithCorrespondingCoalescePartitions",
+      "63": "datafusion_common::error::Result",
+      "133": "datafusion_common::tree_node::Transformed"
+    },
+    "impl_context": null,
+    "links": {
+      "`SortExec`": 156,
+      "`CoalescePartitionsExec`": 194,
+      "`RepartitionExec`": 144,
+      "`SortPreservingMergeExec`": 198
+    },
+    "link_paths": {
+      "`SortExec`": "datafusion_physical_plan::sorts::sort::SortExec",
+      "`CoalescePartitionsExec`": "datafusion_physical_plan::coalesce_partitions::CoalescePartitionsExec",
+      "`RepartitionExec`": "datafusion_physical_plan::repartition::RepartitionExec",
+      "`SortPreservingMergeExec`": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec"
+    },
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "199",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.parallelize_sorts.md",
+    "record_file": "operations/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.parallelize_sorts.json",
+    "anchor": "op-9c4ca4c7ad0f37f542abdf27",
+    "aliases": [
+      "datafusion_physical_optimizer::enforce_sorting::parallelize_sorts"
+    ],
+    "resolved_doc_links": {
+      "`SortExec`": "../operations/datafusion_physical_plan.sorts.sort.SortExec.md#op-b7bc765f23cc8fb428c680af",
+      "`CoalescePartitionsExec`": "../operations/datafusion_physical_plan.coalesce_partitions.CoalescePartitionsExec.md#op-18cfd18ded60b699b669234f",
+      "`RepartitionExec`": "../operations/datafusion_physical_plan.repartition.RepartitionExec.md#op-a0cd55fc5d1d094b433c884b",
+      "`SortPreservingMergeExec`": "../operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md#op-e0ba0adb06eaa3e5277df91c"
+    }
+  }
+]

@@ -1,0 +1,499 @@
+[
+  {
+    "id": "cc7fb6cd04f88af47be9ca0d",
+    "path": "datafusion_physical_plan::joins::utils::JoinKeyComparator",
+    "name": "JoinKeyComparator",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct JoinKeyComparator",
+    "docs": "Pre-built comparator for join key columns that eliminates per-row type\ndispatch. Wraps `arrow_ord::ord::DynComparator` closures built once per\nbatch pair, used for all row comparisons within those batches.\n\nThe first key column is stored separately so that single-column joins\n(the common case) avoid Vec iteration entirely, and multi-column joins\nshort-circuit without entering the loop when the first column is\nselective.\n\nNull handling is baked into the closures at construction time:\n- `NullEqualsNull`: `make_comparator` returns `Equal` for both-null, which\n  is the desired behavior. Closures are used as-is.\n- `NullEqualsNothing`: columns where both sides contain nulls get a wrapper\n  that returns `Less` for both-null. Columns where one side has no nulls\n  skip the wrapper since both-null is impossible.\n\nBecause `NullEqualsNothing` wraps comparators to return `Less` for\nboth-null, `is_equal` will return `false` for both-null rows when that\nmode is active. Callers needing both-null == equal semantics (e.g.,\nbuffered head/tail equality in SMJ) should construct with\n`NullEqualsNull`.",
+    "span": {
+      "filename": "src/joins/utils.rs",
+      "begin": [
+        2359,
+        1
+      ],
+      "end": [
+        2362,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          3698,
+          3699,
+          3700,
+          3701,
+          3702,
+          3703,
+          3704,
+          3705,
+          3706,
+          3707,
+          3708,
+          3709,
+          3710,
+          3711,
+          3712,
+          3713,
+          3714
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3693",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.utils.JoinKeyComparator.md",
+    "record_file": "operations/datafusion_physical_plan.joins.utils.JoinKeyComparator.json",
+    "anchor": "op-cc7fb6cd04f88af47be9ca0d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2891d05a81958183786cd39b",
+    "path": "datafusion_physical_plan::joins::utils::JoinKeyComparator::compare",
+    "name": "compare",
+    "owner": "datafusion_physical_plan::joins::utils::JoinKeyComparator",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn compare(&self, left: usize, right: usize) -> Ordering",
+    "docs": "Compare row `left` (in the left arrays) with row `right` (in the right\narrays). Returns the lexicographic ordering across all key columns.",
+    "span": {
+      "filename": "src/joins/utils.rs",
+      "begin": [
+        2419,
+        5
+      ],
+      "end": [
+        2431,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "left",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "right",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Ordering",
+              "id": 3696,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3696": "core::cmp::Ordering"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "JoinKeyComparator",
+          "id": "datafusion_physical_plan::joins::utils::JoinKeyComparator",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/utils.rs",
+        "begin": [
+          2364,
+          1
+        ],
+        "end": [
+          2449,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3695",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.utils.JoinKeyComparator.md",
+    "record_file": "operations/datafusion_physical_plan.joins.utils.JoinKeyComparator.json",
+    "anchor": "op-2891d05a81958183786cd39b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "cb98de308ee02c5fe7fccb5f",
+    "path": "datafusion_physical_plan::joins::utils::JoinKeyComparator::is_equal",
+    "name": "is_equal",
+    "owner": "datafusion_physical_plan::joins::utils::JoinKeyComparator",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn is_equal(&self, left: usize, right: usize) -> bool",
+    "docs": "Check equality of row `left` (in the left arrays) with row `right`\n(in the right arrays). Both-null is treated as equal when constructed\nwith `NullEqualsNull`. With `NullEqualsNothing`, both-null returns\n`false` because the override is baked into the comparators.",
+    "span": {
+      "filename": "src/joins/utils.rs",
+      "begin": [
+        2438,
+        5
+      ],
+      "end": [
+        2448,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "left",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "right",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "JoinKeyComparator",
+          "id": "datafusion_physical_plan::joins::utils::JoinKeyComparator",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/utils.rs",
+        "begin": [
+          2364,
+          1
+        ],
+        "end": [
+          2449,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3697",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.utils.JoinKeyComparator.md",
+    "record_file": "operations/datafusion_physical_plan.joins.utils.JoinKeyComparator.json",
+    "anchor": "op-cb98de308ee02c5fe7fccb5f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f224aa21a543616fbbf4e453",
+    "path": "datafusion_physical_plan::joins::utils::JoinKeyComparator::new",
+    "name": "new",
+    "owner": "datafusion_physical_plan::joins::utils::JoinKeyComparator",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(left_arrays: &[ArrayRef], right_arrays: &[ArrayRef], sort_options: &[SortOptions], null_equality: NullEquality) -> Result<Self>",
+    "docs": "Build comparators for each join key column pair.",
+    "span": {
+      "filename": "src/joins/utils.rs",
+      "begin": [
+        2366,
+        5
+      ],
+      "end": [
+        2414,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "left_arrays",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 178,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "right_arrays",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 178,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "sort_options",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "SortOptions",
+                        "id": 3492,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "null_equality",
+              {
+                "resolved_path": {
+                  "path": "NullEquality",
+                  "id": 3164,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "178": "arrow_array::array::ArrayRef",
+      "3492": "arrow_schema::SortOptions",
+      "3164": "datafusion_common::null_equality::NullEquality",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "JoinKeyComparator",
+          "id": "datafusion_physical_plan::joins::utils::JoinKeyComparator",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/utils.rs",
+        "begin": [
+          2364,
+          1
+        ],
+        "end": [
+          2449,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3694",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.utils.JoinKeyComparator.md",
+    "record_file": "operations/datafusion_physical_plan.joins.utils.JoinKeyComparator.json",
+    "anchor": "op-f224aa21a543616fbbf4e453",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

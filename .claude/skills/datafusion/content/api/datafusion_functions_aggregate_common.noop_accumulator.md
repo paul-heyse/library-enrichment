@@ -30,6 +30,9 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, _values: &[ArrayRef]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.noop_accumulator.NoopAccumulator.md).
+
+
 [`Accumulator`] that does no work and always returns a fixed value (default
 of `NULL` but can be customized).
 

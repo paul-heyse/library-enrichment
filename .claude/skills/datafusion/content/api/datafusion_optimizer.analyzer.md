@@ -26,6 +26,9 @@ fn new() -> Self
 fn with_rules(rules: Vec<Arc<dyn AnalyzerRule + Send + Sync>>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.analyzer.Analyzer.md).
+
+
 Rule-based Analyzer.
 
 Applies [`FunctionRewrite`]s and [`AnalyzerRule`]s to transform a
@@ -58,6 +61,9 @@ trait AnalyzerRule: Debug
 fn analyze(&self, plan: LogicalPlan, config: &ConfigOptions) -> Result<LogicalPlan>
 fn name(&self) -> &str
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.analyzer.AnalyzerRule.md).
+
 
 [`AnalyzerRule`]s transform [`LogicalPlan`]s in some way to make
 the plan valid prior to the rest of the DataFusion optimization process.

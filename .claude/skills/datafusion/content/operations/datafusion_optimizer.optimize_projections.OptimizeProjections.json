@@ -1,0 +1,977 @@
+[
+  {
+    "id": "9c35e531780246e722ca5275",
+    "path": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+    "name": "OptimizeProjections",
+    "owner": null,
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct OptimizeProjections",
+    "docs": "Optimizer rule to prune unnecessary columns from intermediate schemas\ninside the [`LogicalPlan`]. This rule:\n- Removes unnecessary columns that do not appear at the output and/or are\n  not used during any computation step.\n- Adds projections to decrease table column size before operators that\n  benefit from a smaller memory footprint at its input.\n- Removes unnecessary [`LogicalPlan::Projection`]s from the [`LogicalPlan`].\n\n`OptimizeProjections` is an optimizer rule that identifies and eliminates\ncolumns from a logical plan that are not used by downstream operations.\nThis can improve query performance and reduce unnecessary data processing.\n\nThe rule analyzes the input logical plan, determines the necessary column\nindices, and then removes any unnecessary columns. It also removes any\nunnecessary projections from the plan tree.\n\n## Schema, Field Properties, and Metadata Handling\n\nThe `OptimizeProjections` rule preserves schema and field metadata in most optimization scenarios:\n\n**Schema-level metadata preservation by plan type**:\n- **Window and Aggregate plans**: Schema metadata is preserved\n- **Projection plans**: Schema metadata is preserved per [`projection_schema`](datafusion_expr::logical_plan::projection_schema).\n- **Other logical plans**: Schema metadata is preserved unless [`LogicalPlan::recompute_schema`]\n  is called on plan types that drop metadata\n\n**Field-level properties and metadata**: Individual field properties are preserved when fields\nare retained in the optimized plan, determined by [`exprlist_to_fields`](datafusion_expr::utils::exprlist_to_fields)\nand [`ExprSchemable::to_field`](datafusion_expr::expr_schema::ExprSchemable::to_field).\n\n**Field precedence**: When the same field appears multiple times, the optimizer\nmaintains one occurrence and removes duplicates (refer to `RequiredIndices::compact()`),\npreserving the properties and metadata of that occurrence.",
+    "span": {
+      "filename": "src/optimize_projections/mod.rs",
+      "begin": [
+        74,
+        1
+      ],
+      "end": [
+        74,
+        34
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": false
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          659,
+          660,
+          661,
+          662,
+          663,
+          664,
+          665,
+          666,
+          667,
+          668,
+          669,
+          670,
+          671,
+          672,
+          673,
+          674,
+          675,
+          677,
+          679,
+          684
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`LogicalPlan::Projection`": 652,
+      "`LogicalPlan::recompute_schema`": 654,
+      "`LogicalPlan`": 59,
+      "datafusion_expr::utils::exprlist_to_fields": 655,
+      "datafusion_expr::expr_schema::ExprSchemable::to_field": 656,
+      "datafusion_expr::logical_plan::projection_schema": 653
+    },
+    "link_paths": {
+      "`LogicalPlan::Projection`": "datafusion_expr::logical_plan::plan::LogicalPlan::Projection",
+      "`LogicalPlan::recompute_schema`": "datafusion_expr::logical_plan::plan::LogicalPlan::recompute_schema",
+      "`LogicalPlan`": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "datafusion_expr::utils::exprlist_to_fields": "datafusion_expr::utils::exprlist_to_fields",
+      "datafusion_expr::expr_schema::ExprSchemable::to_field": "datafusion_expr::expr_schema::ExprSchemable::to_field",
+      "datafusion_expr::logical_plan::projection_schema": "datafusion_expr::logical_plan::plan::projection_schema"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "657",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.md",
+    "record_file": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.json",
+    "anchor": "op-9c35e531780246e722ca5275",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`LogicalPlan::Projection`": "../operations/datafusion_expr.logical_plan.plan.LogicalPlan.md#op-355e9362720824ea20f96f5c",
+      "`LogicalPlan`": "../operations/datafusion_expr.logical_plan.plan.LogicalPlan.md#op-2f2092c4f87ff1cc0b33c3da",
+      "datafusion_expr::utils::exprlist_to_fields": "../operations/datafusion_expr.utils.exprlist_to_fields.md#op-3c3dc6d54191f75636f0ab8c",
+      "datafusion_expr::expr_schema::ExprSchemable::to_field": "../operations/datafusion_expr.expr_schema.ExprSchemable.md#op-f799024329b7cc4de1f89e79",
+      "datafusion_expr::logical_plan::projection_schema": "../operations/datafusion_expr.logical_plan.plan.projection_schema.md#op-bd8549e837ad73fab71e6eab"
+    }
+  },
+  {
+    "id": "845e4c121d844e4946413e9f",
+    "path": "datafusion_optimizer::optimize_projections::OptimizeProjections::apply_order",
+    "name": "apply_order",
+    "owner": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_order(&self) -> Option<ApplyOrder>",
+    "docs": "",
+    "span": {
+      "filename": "src/optimize_projections/mod.rs",
+      "begin": [
+        88,
+        5
+      ],
+      "end": [
+        90,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 220,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ApplyOrder",
+                          "id": 221,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "220": "core::option::Option",
+      "221": "datafusion_optimizer::optimizer::ApplyOrder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "OptimizeProjections",
+          "id": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/optimize_projections/mod.rs",
+        "begin": [
+          83,
+          1
+        ],
+        "end": [
+          105,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "681",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.md",
+    "record_file": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.json",
+    "anchor": "op-845e4c121d844e4946413e9f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "330204393bc6819359f7847c",
+    "path": "datafusion_optimizer::optimize_projections::OptimizeProjections::default",
+    "name": "default",
+    "owner": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn default() -> OptimizeProjections",
+    "docs": "",
+    "span": {
+      "filename": "src/optimize_projections/mod.rs",
+      "begin": [
+        73,
+        10
+      ],
+      "end": [
+        73,
+        17
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "resolved_path": {
+              "path": "OptimizeProjections",
+              "id": 657,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "657": "datafusion_optimizer::optimize_projections::OptimizeProjections"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "OptimizeProjections",
+          "id": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/optimize_projections/mod.rs",
+        "begin": [
+          73,
+          10
+        ],
+        "end": [
+          73,
+          17
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "676",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.md",
+    "record_file": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.json",
+    "anchor": "op-330204393bc6819359f7847c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "703aee721c371102672cfdf8",
+    "path": "datafusion_optimizer::optimize_projections::OptimizeProjections::fmt",
+    "name": "fmt",
+    "owner": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/optimize_projections/mod.rs",
+      "begin": [
+        73,
+        19
+      ],
+      "end": [
+        73,
+        24
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 53,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 54,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "53": "core::fmt::Formatter",
+      "54": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "OptimizeProjections",
+          "id": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/optimize_projections/mod.rs",
+        "begin": [
+          73,
+          19
+        ],
+        "end": [
+          73,
+          24
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "678",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.md",
+    "record_file": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.json",
+    "anchor": "op-703aee721c371102672cfdf8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d18085595e7862dc7b25eba6",
+    "path": "datafusion_optimizer::optimize_projections::OptimizeProjections::name",
+    "name": "name",
+    "owner": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &str",
+    "docs": "",
+    "span": {
+      "filename": "src/optimize_projections/mod.rs",
+      "begin": [
+        84,
+        5
+      ],
+      "end": [
+        86,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "OptimizeProjections",
+          "id": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/optimize_projections/mod.rs",
+        "begin": [
+          83,
+          1
+        ],
+        "end": [
+          105,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "680",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.md",
+    "record_file": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.json",
+    "anchor": "op-d18085595e7862dc7b25eba6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c9c685958a2c2c2fd8f983e0",
+    "path": "datafusion_optimizer::optimize_projections::OptimizeProjections::new",
+    "name": "new",
+    "owner": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/optimize_projections/mod.rs",
+      "begin": [
+        78,
+        5
+      ],
+      "end": [
+        80,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[expect(missing_docs)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "OptimizeProjections",
+          "id": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/optimize_projections/mod.rs",
+        "begin": [
+          76,
+          1
+        ],
+        "end": [
+          81,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "658",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.md",
+    "record_file": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.json",
+    "anchor": "op-c9c685958a2c2c2fd8f983e0",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7872a0443514bdbf080cf35f",
+    "path": "datafusion_optimizer::optimize_projections::OptimizeProjections::rewrite",
+    "name": "rewrite",
+    "owner": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/optimize_projections/mod.rs",
+      "begin": [
+        96,
+        5
+      ],
+      "end": [
+        104,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "plan",
+              {
+                "resolved_path": {
+                  "path": "LogicalPlan",
+                  "id": 59,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "OptimizerConfig",
+                            "id": 223,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Transformed",
+                          "id": 148,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "LogicalPlan",
+                                      "id": 59,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "59": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "223": "datafusion_optimizer::optimizer::OptimizerConfig",
+      "61": "datafusion_common::error::Result",
+      "148": "datafusion_common::tree_node::Transformed"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "OptimizeProjections",
+          "id": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/optimize_projections/mod.rs",
+        "begin": [
+          83,
+          1
+        ],
+        "end": [
+          105,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "683",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.md",
+    "record_file": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.json",
+    "anchor": "op-7872a0443514bdbf080cf35f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c551b1d47cc9fd77bf59689f",
+    "path": "datafusion_optimizer::optimize_projections::OptimizeProjections::supports_rewrite",
+    "name": "supports_rewrite",
+    "owner": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_rewrite(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/optimize_projections/mod.rs",
+      "begin": [
+        92,
+        5
+      ],
+      "end": [
+        94,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "OptimizeProjections",
+          "id": "datafusion_optimizer::optimize_projections::OptimizeProjections",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/optimize_projections/mod.rs",
+        "begin": [
+          83,
+          1
+        ],
+        "end": [
+          105,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "682",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.md",
+    "record_file": "operations/datafusion_optimizer.optimize_projections.OptimizeProjections.json",
+    "anchor": "op-c551b1d47cc9fd77bf59689f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

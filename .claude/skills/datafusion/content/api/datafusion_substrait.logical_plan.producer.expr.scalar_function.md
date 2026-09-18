@@ -10,6 +10,9 @@ Crate `datafusion-substrait` · 9 public items · structured records in [`model/
 fn custom_argument_handler(name: &str, args: Vec<substrait::proto::FunctionArgument>) -> Vec<substrait::proto::FunctionArgument>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.scalar_function.custom_argument_handler.md).
+
+
 ---
 
 ## from_between
@@ -19,6 +22,9 @@ fn custom_argument_handler(name: &str, args: Vec<substrait::proto::FunctionArgum
 ```rust
 fn from_between(producer: &mut impl SubstraitProducer, between: &datafusion::logical_expr::Between, schema: &datafusion::common::DFSchemaRef) -> datafusion::common::Result<substrait::proto::Expression>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.scalar_function.from_between.md).
+
 
 ---
 
@@ -30,6 +36,9 @@ fn from_between(producer: &mut impl SubstraitProducer, between: &datafusion::log
 fn from_binary_expr(producer: &mut impl SubstraitProducer, expr: &datafusion::logical_expr::BinaryExpr, schema: &datafusion::common::DFSchemaRef) -> datafusion::common::Result<substrait::proto::Expression>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.scalar_function.from_binary_expr.md).
+
+
 ---
 
 ## from_higher_order_function
@@ -39,6 +48,9 @@ fn from_binary_expr(producer: &mut impl SubstraitProducer, expr: &datafusion::lo
 ```rust
 fn from_higher_order_function(producer: &mut impl SubstraitProducer, fun: &expr::HigherOrderFunction, schema: &datafusion::common::DFSchemaRef) -> datafusion::common::Result<substrait::proto::Expression>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.scalar_function.from_higher_order_function.md).
+
 
 ---
 
@@ -50,6 +62,9 @@ fn from_higher_order_function(producer: &mut impl SubstraitProducer, fun: &expr:
 fn from_like(producer: &mut impl SubstraitProducer, like: &datafusion::logical_expr::Like, schema: &datafusion::common::DFSchemaRef) -> datafusion::common::Result<substrait::proto::Expression>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.scalar_function.from_like.md).
+
+
 ---
 
 ## from_scalar_function
@@ -59,6 +74,9 @@ fn from_like(producer: &mut impl SubstraitProducer, like: &datafusion::logical_e
 ```rust
 fn from_scalar_function(producer: &mut impl SubstraitProducer, fun: &expr::ScalarFunction, schema: &datafusion::common::DFSchemaRef) -> datafusion::common::Result<substrait::proto::Expression>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.scalar_function.from_scalar_function.md).
+
 
 ---
 
@@ -70,6 +88,9 @@ fn from_scalar_function(producer: &mut impl SubstraitProducer, fun: &expr::Scala
 fn from_unary_expr(producer: &mut impl SubstraitProducer, expr: &datafusion::logical_expr::Expr, schema: &datafusion::common::DFSchemaRef) -> datafusion::common::Result<substrait::proto::Expression>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.scalar_function.from_unary_expr.md).
+
+
 ---
 
 ## make_binary_op_scalar_func
@@ -79,6 +100,9 @@ fn from_unary_expr(producer: &mut impl SubstraitProducer, expr: &datafusion::log
 ```rust
 fn make_binary_op_scalar_func(producer: &mut impl SubstraitProducer, lhs: &substrait::proto::Expression, rhs: &substrait::proto::Expression, op: datafusion::logical_expr::Operator, output_type: &substrait::proto::Type) -> substrait::proto::Expression
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.scalar_function.make_binary_op_scalar_func.md).
+
 
 Return Substrait scalar function with two arguments
 
@@ -91,5 +115,8 @@ Return Substrait scalar function with two arguments
 ```rust
 fn operator_to_name(op: datafusion::logical_expr::Operator) -> &'static str
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.scalar_function.operator_to_name.md).
+
 
 ---

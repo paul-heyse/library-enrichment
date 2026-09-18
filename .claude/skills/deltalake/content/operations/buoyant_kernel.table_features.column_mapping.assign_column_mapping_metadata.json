@@ -1,0 +1,170 @@
+[
+  {
+    "id": "e7fc30c054b226a0cd502886",
+    "path": "buoyant_kernel::table_features::column_mapping::assign_column_mapping_metadata",
+    "name": "assign_column_mapping_metadata",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn assign_column_mapping_metadata(schema: &schema::StructType, max_id: &mut i64, assign_nested_field_ids: bool) -> DeltaResult<schema::StructType>",
+    "docs": "Assigns column mapping metadata (id and physicalName) to all fields in a schema,\nmatching delta-spark's `DeltaColumnMapping.assignColumnIdAndPhysicalName` semantics.\n\nThis function recursively processes all fields in the schema, including nested structs,\narrays, and maps. For each field:\n- If both `delta.columnMapping.id` and `delta.columnMapping.physicalName` are present, they are\n  preserved verbatim and `max_id` is advanced past the preserved id.\n- If only `id` is present, `physicalName` is filled in as `col-<uuid>` and the id is preserved.\n- If only `physicalName` is present, a new `id` is allocated as `*max_id + 1`.\n- If neither is present, both are assigned.\n\nWrong-typed annotations (`id` not a number, `physicalName` not a string), an empty\n`physicalName`, and a negative `id` error out. The latter two are stricter than\ndelta-spark: an empty physical name fails PROTOCOL.md's \"globally unique identifier\"\nrequirement and would break Parquet column resolution, and a negative id is rejected so\n`(*max_id).max(n)` cannot silently no-op below the allocator's seed.\n\nPre-populated `delta.columnMapping.nested.ids` and `parquet.field.nested.ids` annotations\nare always rejected: those payloads are kernel-managed and only emitted by the nested-ids\nassignment pass below.\n\nWhen `assign_nested_field_ids` is `true`, after the per-field flat assignment this function\nalso allocates fresh parquet field ids for the synthetic `Array.element`,\n`Map.key`, and `Map.value` slots and stores them under\n`delta.columnMapping.nested.ids` on the nearest ancestor `StructField`. Allocating these\nnested ids is a hard requirement for IcebergCompatV2/3.\n\nCallers should seed `max_id` from [`find_max_column_id_in_schema`] so newly assigned\nIDs do not collide with preserved ones. Duplicate preserved IDs are detected by\n[`crate::schema::StructType::make_physical`], which runs from\n`TableConfiguration::try_new[_with_schema]` after assignment.\n\n# Arguments\n\n* `schema` - The schema to transform.\n* `max_id` - Tracks the highest column ID. Read and updated in place. Should be seeded from\n  [`find_max_column_id_in_schema`] (or `0` for a brand-new table with no preserved IDs anywhere)\n  so newly assigned IDs cannot collide with preserved ones.\n* `assign_nested_field_ids` - When `true`, also allocates IDs for synthetic `Array.element` and\n  `Map.key`/`Map.value` fields, stores them in `delta.columnMapping.nested.ids`, and includes\n  them in `max_id`. Assigning IDs to these nested fields is a hard requirement for\n  IcebergCompatV2/3.\n\n# Returns\n\nA new schema with column mapping metadata present on every field.\n\n# Example\n\nGiven a top-level field `m: map<list<int>, int>` with no pre-existing annotations, after\ncalling with `assign_nested_field_ids = true` the field gets (`<pname>` is the assigned\nUUID-based physical name):\n\n```json\n{\n  \"delta.columnMapping.id\": 1,\n  \"delta.columnMapping.physicalName\": \"<pname>\",\n  \"delta.columnMapping.nested.ids\": {\n    \"<pname>.key\":         2,\n    \"<pname>.key.element\": 3,\n    \"<pname>.value\":       4\n  }\n}\n```\n\n`max_id` ends at `4`. With `assign_nested_field_ids = false` the same field gets only the\nflat CM metadata and `max_id` ends at `1`:\n\n```json\n{\n  \"delta.columnMapping.id\": 1,\n  \"delta.columnMapping.physicalName\": \"<pname>\"\n}\n```",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_features/column_mapping.rs",
+      "begin": [
+        383,
+        1
+      ],
+      "end": [
+        401,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"internal-api\"), span: /home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_features/column_mapping.rs:382:1: 382:37 (#6402) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::schema::StructType",
+                      "id": 343,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "max_id",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "primitive": "i64"
+                  }
+                }
+              }
+            ],
+            [
+              "assign_nested_field_ids",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "crate::DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "crate::schema::StructType",
+                          "id": 343,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "343": "buoyant_kernel::schema::StructType",
+      "239": "buoyant_kernel::error::DeltaResult"
+    },
+    "impl_context": null,
+    "links": {
+      "`find_max_column_id_in_schema`": 8319,
+      "`crate::schema::StructType::make_physical`": 6986
+    },
+    "link_paths": {
+      "`find_max_column_id_in_schema`": "buoyant_kernel::table_features::column_mapping::find_max_column_id_in_schema",
+      "`crate::schema::StructType::make_physical`": "buoyant_kernel::schema::StructType::make_physical"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8320",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_features/column_mapping.rs#L383",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "12383",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_features.column_mapping.assign_column_mapping_metadata.md",
+    "record_file": "operations/buoyant_kernel.table_features.column_mapping.assign_column_mapping_metadata.json",
+    "anchor": "op-e7fc30c054b226a0cd502886",
+    "aliases": [
+      "buoyant_kernel::table_features::assign_column_mapping_metadata",
+      "delta_kernel::table_features::column_mapping::assign_column_mapping_metadata"
+    ],
+    "resolved_doc_links": {
+      "`find_max_column_id_in_schema`": "../operations/buoyant_kernel.table_features.column_mapping.find_max_column_id_in_schema.md#op-ca539fe0c0bd760ec501c0bf",
+      "`crate::schema::StructType::make_physical`": "../operations/buoyant_kernel.schema.StructType.md#op-170d49e537dca68f8591d655"
+    }
+  }
+]

@@ -65,6 +65,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.table_constraints.TableConstraint.md).
+
+
 A table-level constraint, specified in a `CREATE TABLE` or an
 `ALTER TABLE ADD <constraint>` statement.
 
@@ -122,6 +125,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.table_constraints.CheckConstraint.md).
+
+
 A `CHECK` constraint (`[ CONSTRAINT <name> ] CHECK (<expr>) [[NOT] ENFORCED]`).
 
 ---
@@ -177,6 +183,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.table_constraints.ConstraintUsingIndex.md).
+
 
 PostgreSQL constraint that promotes an existing unique index to a table constraint.
 
@@ -239,6 +248,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.table_constraints.ForeignKeyConstraint.md).
+
+
 A referential integrity constraint (`[ CONSTRAINT <name> ] FOREIGN KEY (<columns>)
 REFERENCES <foreign_table> (<referred_columns>) [ MATCH { FULL | PARTIAL | SIMPLE } ]
 { [ON DELETE <referential_action>] [ON UPDATE <referential_action>] |
@@ -298,6 +310,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.table_constraints.FullTextOrSpatialConstraint.md).
+
 
 MySQLs [fulltext][1] definition. Since the [`SPATIAL`][2] definition is exactly the same,
 and MySQL displays both the same way, it is part of this definition as well.
@@ -367,6 +382,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.table_constraints.IndexConstraint.md).
+
+
 MySQLs [index definition][1] for index creation. Not present on ANSI so, for now, the usage
 is restricted to MySQL, as no other dialects that support this syntax were found.
 
@@ -427,6 +445,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.table_constraints.PrimaryKeyConstraint.md).
+
 
 MySQL [definition][1] for `PRIMARY KEY` constraints statements:
 * `[CONSTRAINT [<name>]] PRIMARY KEY [index_name] [index_type] (<columns>) <index_options>`
@@ -500,6 +521,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.table_constraints.UniqueConstraint.md).
+
 
 Unique constraint definition.
 

@@ -14,6 +14,9 @@ enum DiagnosticKind
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.diagnostic.DiagnosticKind.md).
+
+
 A [`Diagnostic`] can either be a hard error that prevents the query from
 being planned and executed, or a warning that indicates potential issues,
 performance problems, or causes for unexpected results, but is non-fatal.
@@ -45,6 +48,9 @@ fn new_warning(message: impl Into<String>, span: Option<Span>) -> Self
 fn with_help(self, message: impl Into<String>, span: Option<Span>) -> Self
 fn with_note(self, message: impl Into<String>, span: Option<Span>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.diagnostic.Diagnostic.md).
+
 
 Additional contextual information intended for end users, to help them
 understand what went wrong by providing human-readable messages, and
@@ -83,6 +89,9 @@ struct DiagnosticHelp
 
 **Derives**: Clone, Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.diagnostic.DiagnosticHelp.md).
+
+
 A "help" enriches a [`Diagnostic`] with extra information, possibly
 referring to different locations in the original SQL query, that helps the
 user understand how they might fix the error or warning.
@@ -104,6 +113,9 @@ struct DiagnosticNote
 **Fields**: `message`, `span`
 
 **Derives**: Clone, Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.diagnostic.DiagnosticNote.md).
+
 
 A note enriches a [`Diagnostic`] with extra information, possibly referring
 to different locations in the original SQL query, that helps contextualize

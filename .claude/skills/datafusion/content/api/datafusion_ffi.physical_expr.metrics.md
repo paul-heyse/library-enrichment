@@ -12,6 +12,9 @@ enum FFI_MetricCategory
 
 **Variants**: `Rows`, `Bytes`, `Timing`, `Uncategorized`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_expr.metrics.FFI_MetricCategory.md).
+
+
 FFI-stable mirror of [`MetricCategory`].
 
 ---
@@ -26,6 +29,9 @@ enum FFI_MetricType
 
 **Variants**: `Summary`, `Dev`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_expr.metrics.FFI_MetricType.md).
+
+
 FFI-stable mirror of [`MetricType`].
 
 ---
@@ -39,6 +45,9 @@ enum FFI_MetricValue
 ```
 
 **Variants**: `OutputRows`, `ElapsedComputeNs`, `SpillCount`, `SpilledBytes`, `OutputBytes`, `OutputBatches`, `SpilledRows`, `CurrentMemoryUsage`, `Count`, `Gauge`, `Time`, `StartTimestampNsUTC`, `EndTimestampNsUTC`, `PruningMetrics`, `Ratio`, `Custom`, `PeakMemoryUsage`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_expr.metrics.FFI_MetricValue.md).
+
 
 FFI-stable mirror of [`MetricValue`].
 
@@ -57,6 +66,9 @@ enum FFI_RatioMergeStrategy
 
 **Variants**: `AddPartAddTotal`, `AddPartSetTotal`, `SetPartAddTotal`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_expr.metrics.FFI_RatioMergeStrategy.md).
+
+
 FFI-stable mirror of [`RatioMergeStrategy`].
 
 ---
@@ -70,6 +82,9 @@ struct FFI_Label
 ```
 
 **Fields**: `name`, `value`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_expr.metrics.FFI_Label.md).
+
 
 FFI-stable mirror of [`Label`].
 
@@ -85,6 +100,9 @@ struct FFI_Metric
 
 **Fields**: `value`, `labels`, `partition`, `metric_type`, `metric_category`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_expr.metrics.FFI_Metric.md).
+
+
 FFI-stable mirror of [`Metric`].
 
 ---
@@ -98,6 +116,9 @@ struct FFI_MetricsSet
 ```
 
 **Fields**: `metrics`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_expr.metrics.FFI_MetricsSet.md).
+
 
 FFI-stable mirror of [`MetricsSet`].
 
@@ -113,6 +134,9 @@ struct FFI_PruningMetrics
 
 **Fields**: `pruned`, `matched`, `fully_matched`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_expr.metrics.FFI_PruningMetrics.md).
+
+
 FFI-stable mirror of [`PruningMetrics`]. All counts are snapshotted at
 conversion time.
 
@@ -127,6 +151,9 @@ struct FFI_RatioMetrics
 ```
 
 **Fields**: `part`, `total`, `merge_strategy`, `display_raw_values`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_expr.metrics.FFI_RatioMetrics.md).
+
 
 FFI-stable mirror of [`RatioMetrics`]. Numerator/denominator are
 snapshotted at conversion time.

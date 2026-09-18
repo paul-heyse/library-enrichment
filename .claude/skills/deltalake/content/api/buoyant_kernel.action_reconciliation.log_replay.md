@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## ActionReconciliationIterator
 
 `struct` · `buoyant_kernel::action_reconciliation::log_replay::ActionReconciliationIterator`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.action_reconciliation.log_replay.ActionReconciliationIterator.md)
 
 Also reachable as `buoyant_kernel::ActionReconciliationIterator`, `delta_kernel::action_reconciliation::log_replay::ActionReconciliationIterator`
 
@@ -38,6 +39,7 @@ counts. Used by both checkpoint and log compaction workflows.
 ## ActionReconciliationIteratorState
 
 `struct` · `buoyant_kernel::action_reconciliation::log_replay::ActionReconciliationIteratorState`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.action_reconciliation.log_replay.ActionReconciliationIteratorState.md)
 
 Also reachable as `buoyant_kernel::ActionReconciliationIteratorState`, `delta_kernel::action_reconciliation::log_replay::ActionReconciliationIteratorState`
 

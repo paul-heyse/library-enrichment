@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 2 public items · structured records in [`model/data
 fn spark_bitwise_not(args: &[ArrayRef]) -> datafusion_common::Result<ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.bitwise.bitwise_not.spark_bitwise_not.md).
+
+
 ---
 
 ## SparkBitwiseNot
@@ -39,5 +42,8 @@ fn return_field_from_args(&self, args: ReturnFieldArgs<'_>) -> Result<FieldRef>
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.bitwise.bitwise_not.SparkBitwiseNot.md).
+
 
 ---

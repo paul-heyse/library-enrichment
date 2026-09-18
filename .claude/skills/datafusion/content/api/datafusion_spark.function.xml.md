@@ -10,4 +10,7 @@ Crate `datafusion-spark` · 1 public items · structured records in [`model/data
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.xml.functions.md).
+
+
 ---

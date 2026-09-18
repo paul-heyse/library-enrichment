@@ -42,6 +42,9 @@ fn source(&self) -> Option<&dyn Error + 'static>
 fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.errors.ParquetError.md).
+
+
 Parquet error enumeration
 
 ---
@@ -53,6 +56,9 @@ Parquet error enumeration
 ```rust
 type Result<T, E = ParquetError> = result::Result<T, E>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.errors.Result.md).
+
 
 A specialized `Result` for Parquet errors.
 

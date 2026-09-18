@@ -30,6 +30,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.make_valid_utf8.SparkMakeValidUtf8.md).
+
+
 Spark-compatible `make_valid_utf8` expression
 <https://spark.apache.org/docs/latest/api/sql/index.html#make_valid_utf8>
 

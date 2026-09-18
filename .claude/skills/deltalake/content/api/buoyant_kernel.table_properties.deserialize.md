@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## ParseIntervalError
 
 `enum` · `buoyant_kernel::table_properties::deserialize::ParseIntervalError`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_properties.deserialize.ParseIntervalError.md)
 
 Also reachable as `buoyant_kernel::table_properties::ParseIntervalError`, `delta_kernel::table_properties::deserialize::ParseIntervalError`
 

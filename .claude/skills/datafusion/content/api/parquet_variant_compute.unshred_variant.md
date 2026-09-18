@@ -12,6 +12,9 @@ Also reachable as `parquet::variant::unshred_variant`, `parquet_variant_compute:
 fn unshred_variant(array: &VariantArray) -> arrow::error::Result<VariantArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.unshred_variant.unshred_variant.md).
+
+
 Removes all (nested) typed_value columns from a VariantArray by converting them back to binary
 variant and merging the resulting values back into the value column.
 

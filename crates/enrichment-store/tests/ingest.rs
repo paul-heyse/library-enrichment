@@ -25,12 +25,18 @@ fn context(
     IngestContext {
         ecosystem,
         symbol_package: owner.into(),
-        release_id: "rel_fixture".into(),
-        environment_id: "env_fixture".into(),
+        release_id: format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
+        environment_id: format!("env_{}", "a".repeat(64)).try_into().unwrap(),
         source_version_match: SourceVersionMatch::Exact,
-        producing_attempt: "attempt-fixture".into(),
+        producing_attempt: "attempt_00112233445566778899aabbccddeeff"
+            .to_owned()
+            .try_into()
+            .unwrap(),
         producer_runs: vec![ProducerRun {
-            attempt_id: "attempt-fixture".into(),
+            attempt_id: "attempt_00112233445566778899aabbccddeeff"
+                .to_owned()
+                .try_into()
+                .unwrap(),
             producer: producer.into(),
             producer_version: "2".into(),
             config_digest: enrichment_core::canonical::sha256_hex(b"configuration"),

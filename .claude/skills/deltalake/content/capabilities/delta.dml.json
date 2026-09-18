@@ -1,0 +1,172 @@
+{
+  "id": "delta.dml",
+  "title": "Update or delete through built-in Delta operations",
+  "reviewed": "2026-09-18",
+  "brief": "Use table.update or table.delete for target-only changes. Their builders and metrics differ from merge clause helpers, and an operation with no affected rows need not create a new version.",
+  "task_aliases": [
+    "update rows",
+    "delete predicate",
+    "no op version",
+    "DML metrics"
+  ],
+  "crates": [
+    "deltalake-core"
+  ],
+  "input": [
+    "DeltaTable",
+    "predicate",
+    "column expressions"
+  ],
+  "output": [
+    "(DeltaTable, UpdateMetrics)",
+    "(DeltaTable, DeleteMetrics)"
+  ],
+  "properties": [
+    "update rows",
+    "delete predicate",
+    "no op version",
+    "DML metrics"
+  ],
+  "operations": [
+    "deltalake_core::table::DeltaTable::update",
+    "deltalake_core::table::DeltaTable::delete",
+    "deltalake_core::operations::update::UpdateBuilder::with_update",
+    "deltalake_core::operations::update::UpdateBuilder::Output",
+    "deltalake_core::operations::delete::DeleteBuilder::Output"
+  ],
+  "choices": [
+    {
+      "candidate": "UpdateBuilder",
+      "choose_when": "New values derive from target expressions",
+      "tradeoff": "Set a predicate for a subset and choose cast/session policy"
+    },
+    {
+      "candidate": "DeleteBuilder",
+      "choose_when": "Rows should be removed from the logical table",
+      "tradeoff": "Physical file retention is handled separately"
+    },
+    {
+      "candidate": "MergeBuilder",
+      "choose_when": "Actions depend on another relation",
+      "tradeoff": "Requires source-target matching and clause rules"
+    }
+  ],
+  "claims": [
+    {
+      "id": "delta.dml.1",
+      "aspect": "result",
+      "statement": "Update and delete return a new table value and metrics. DeleteMetrics::num_deleted_rows is optional; absence must not be interpreted as zero.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.dml.2",
+      "aspect": "no-op",
+      "statement": "Deleting a predicate that matched no rows preserved the version in the local probe. Updating id 1 and deleting a null row reported the expected counts and rows.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "dml_noop_and_update_delete_metrics"
+    },
+    {
+      "id": "delta.dml.3",
+      "aspect": "physical/logical",
+      "statement": "A logical delete need not delete the underlying Parquet file immediately. Delta-aware scans follow log actions/deletion vectors.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "delta_snapshot_excludes_removed_parquet_files"
+    }
+  ],
+  "implementation": [
+    "Keep standalone builder types separate from merge's closure types.",
+    "Read the result table after execution and handle optional metrics as optional evidence."
+  ],
+  "effects": [
+    "logical row update/delete",
+    "possible log commit"
+  ],
+  "errors": [
+    "A stale update can conflict with an intervening rewrite even if append retries are allowed."
+  ],
+  "unknowns": [
+    "Metrics availability and rewrite/DV strategy depend on the path and table features."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "scope": "Exact git-capture full contracts for the selected operations"
+    },
+    {
+      "id": "source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/delete.rs",
+      "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+    },
+    {
+      "id": "runtime",
+      "kind": "runtime_observation",
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Named local assertions only; see profile, fixtures and source digests",
+      "tests": [
+        "dml_noop_and_update_delete_metrics",
+        "delta_snapshot_excludes_removed_parquet_files"
+      ]
+    }
+  ],
+  "resolved_operations": [
+    {
+      "path": "deltalake_core::table::DeltaTable::update",
+      "id": "4da0a0df2c2c4c5389f518ca",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.table.DeltaTable.json",
+      "page": "operations/deltalake_core.table.DeltaTable.md#op-4da0a0df2c2c4c5389f518ca",
+      "signature": "fn update(self) -> UpdateBuilder"
+    },
+    {
+      "path": "deltalake_core::table::DeltaTable::delete",
+      "id": "cc21a8977a893e16e9c6f12c",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.table.DeltaTable.json",
+      "page": "operations/deltalake_core.table.DeltaTable.md#op-cc21a8977a893e16e9c6f12c",
+      "signature": "fn delete(self) -> DeleteBuilder"
+    },
+    {
+      "path": "deltalake_core::operations::update::UpdateBuilder::with_update",
+      "id": "4ce68114cef28f80c1ce94a7",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.update.UpdateBuilder.json",
+      "page": "operations/deltalake_core.operations.update.UpdateBuilder.md#op-4ce68114cef28f80c1ce94a7",
+      "signature": "fn with_update<S: Into<DeltaColumn>, E: Into<Expression>>(self, column: S, expression: E) -> Self"
+    },
+    {
+      "path": "deltalake_core::operations::update::UpdateBuilder::Output",
+      "id": "92fb88dd0cb8c29f60b9d8d9",
+      "kind": "assoc_type",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.update.UpdateBuilder.json",
+      "page": "operations/deltalake_core.operations.update.UpdateBuilder.md#op-92fb88dd0cb8c29f60b9d8d9",
+      "signature": "type Output = Result<(DeltaTable, UpdateMetrics), DeltaTableError>"
+    },
+    {
+      "path": "deltalake_core::operations::delete::DeleteBuilder::Output",
+      "id": "e74c7e65dd2b30f69a94a0bb",
+      "kind": "assoc_type",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.delete.DeleteBuilder.json",
+      "page": "operations/deltalake_core.operations.delete.DeleteBuilder.md#op-e74c7e65dd2b30f69a94a0bb",
+      "signature": "type Output = Result<(DeltaTable, DeleteMetrics), DeltaTableError>"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/delta.dml.json"
+}

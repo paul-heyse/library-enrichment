@@ -29,6 +29,9 @@ async fn infer_schema(&self, _state: &dyn Session, store: &Arc<dyn ObjectStore>,
 async fn infer_stats(&self, _state: &dyn Session, _store: &Arc<dyn ObjectStore>, table_schema: SchemaRef, _object: &ObjectMeta) -> Result<Statistics>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_arrow.file_format.ArrowFormat.md).
+
+
 Arrow [`FileFormat`] implementation.
 
 ---
@@ -65,6 +68,9 @@ fn get_ext(&self) -> String
 fn create(&self, _state: &dyn Session, _format_options: &HashMap<String, String>) -> Result<Arc<dyn FileFormat>>
 fn default(&self) -> Arc<dyn FileFormat>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_arrow.file_format.ArrowFormatFactory.md).
+
 
 Factory struct used to create [`ArrowFormat`]
 

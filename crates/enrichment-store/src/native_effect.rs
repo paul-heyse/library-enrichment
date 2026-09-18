@@ -3,11 +3,7 @@
 //! Planning and EXPLAIN only construct the operator. The driver is taken exactly once when
 //! its output stream is first polled. Durable claims and physical cleanup remain authoritative;
 //! a completed operator means the driver returned, not that a publication succeeded.
-use arrow::{
-    array::{ArrayRef, BooleanArray, StringArray},
-    datatypes::{DataType, Field, Schema, SchemaRef},
-    record_batch::RecordBatch,
-};
+use arrow::datatypes::{Schema, SchemaRef};
 use async_trait::async_trait;
 use datafusion::{
     catalog::Session,
@@ -29,6 +25,7 @@ use datafusion::{
     physical_planner::{ExtensionPlanner, PhysicalPlanner},
     prelude::SessionContext,
 };
+use enrichment_core::native_union::{NativeStruct, Rule};
 use std::{
     cmp::Ordering,
     fmt,
@@ -39,7 +36,7 @@ use std::{
 
 #[derive(Debug)]
 struct Authority {
-    job_id: String,
+    job_id: enrichment_core::identity::JobId,
     grant: OnceLock<crate::control_jobs::Grant>,
 }
 tokio::task_local! { static AUTHORITY: Arc<Authority>; }
@@ -70,7 +67,7 @@ impl EffectContext {
 pub fn bind_claim(grant: crate::control_jobs::Grant) -> Result<()> {
     AUTHORITY
         .try_with(|authority| {
-            if authority.job_id != grant.job_id() {
+            if &authority.job_id != grant.job_id() {
                 return Err(invalid("claim belongs to another native command"));
             }
             authority
@@ -95,7 +92,7 @@ pub async fn authorize() -> Result<crate::control_jobs::Grant> {
 pub use enrichment_core::operation::CommandKind;
 
 struct Invocation {
-    job_id: String,
+    job_id: enrichment_core::identity::JobId,
     kind: CommandKind,
     driver: Mutex<Option<futures::future::BoxFuture<'static, ()>>>,
 }
@@ -133,11 +130,12 @@ impl PartialOrd for NativeCommand {
         )
     }
 }
+enrichment_core::native_struct! { struct CommandReturn {
+    job_id: enrichment_core::identity::JobId => Rule::Text,
+    driver_returned: bool => Rule::Text,
+} }
 fn schema() -> SchemaRef {
-    Arc::new(Schema::new(vec![
-        Field::new("job_id", DataType::Utf8, false),
-        Field::new("driver_returned", DataType::Boolean, false),
-    ]))
+    Arc::new(Schema::new(CommandReturn::fields()))
 }
 impl UserDefinedLogicalNodeCore for NativeCommand {
     fn name(&self) -> &str {
@@ -184,15 +182,10 @@ fn invalid(message: &str) -> DataFusionError {
 /// Only the owned command runtime constructs this source; there is no SQL registration.
 pub(crate) fn frame(
     session: &SessionContext,
-    job_id: String,
+    job_id: enrichment_core::identity::JobId,
     kind: CommandKind,
     driver: impl Future<Output = ()> + Send + 'static,
 ) -> Result<DataFrame> {
-    if job_id.is_empty() || job_id.len() > 256 {
-        return Err(invalid(
-            "native command requires a bounded durable identity",
-        ));
-    }
     let node = NativeCommand {
         invocation: Arc::new(Invocation {
             job_id,
@@ -309,7 +302,7 @@ impl ExecutionPlan for CommandExec {
                 AUTHORITY
                     .scope(
                         Arc::new(Authority {
-                            job_id: invocation.job_id.clone(),
+                            job_id: invocation.job_id,
                             grant: OnceLock::new(),
                         }),
                         driver,
@@ -317,13 +310,10 @@ impl ExecutionPlan for CommandExec {
                     .await;
                 observation.returned = true;
                 metrics.returned.add(1);
-                let batch = RecordBatch::try_new(
-                    schema(),
-                    vec![
-                        Arc::new(StringArray::from(vec![invocation.job_id.as_str()])) as ArrayRef,
-                        Arc::new(BooleanArray::from(vec![true])),
-                    ],
-                )?;
+                let batch = CommandReturn::batch(&[CommandReturn {
+                    job_id: invocation.job_id,
+                    driver_returned: true,
+                }])?;
                 metrics.output_rows.add(batch.num_rows());
                 metrics.output_bytes.add(batch.get_array_memory_size());
                 Ok(batch)
@@ -410,7 +400,7 @@ mod tests {
         let output = path.clone();
         let input = frame(
             &session,
-            "job_finite".into(),
+            enrichment_core::identity::JobId::new(),
             CommandKind::Resolve,
             async move {
                 // A real exclusive write makes duplicate execution observable independently of counters.
@@ -465,21 +455,25 @@ mod tests {
         .unwrap();
         let child = runtime.clone();
         runtime
-            .command("job_nested".into(), CommandKind::Compare, async move {
-                let frame = child
-                    .session()
-                    .sql("SELECT sum(value) FROM (VALUES (1),(2),(3)) AS n(value)")
-                    .await
-                    .unwrap();
-                let result = child.execute(frame).await.unwrap();
-                assert_eq!(result.rows, 1);
-                let value = result.batches[0]
-                    .column(0)
-                    .as_any()
-                    .downcast_ref::<arrow::array::Int64Array>()
-                    .unwrap();
-                assert_eq!(value.value(0), 6);
-            })
+            .command(
+                enrichment_core::identity::JobId::new(),
+                CommandKind::Compare,
+                async move {
+                    let frame = child
+                        .session()
+                        .sql("SELECT sum(value) FROM (VALUES (1),(2),(3)) AS n(value)")
+                        .await
+                        .unwrap();
+                    let result = child.execute(frame).await.unwrap();
+                    assert_eq!(result.rows, 1);
+                    let value = result.batches[0]
+                        .column(0)
+                        .as_any()
+                        .downcast_ref::<arrow::array::Int64Array>()
+                        .unwrap();
+                    assert_eq!(value.value(0), 6);
+                },
+            )
             .await
             .unwrap();
         assert!(

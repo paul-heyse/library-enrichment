@@ -22,4 +22,7 @@ enum FFI_ExpressionPlacement
 fn from(value: ExpressionPlacement) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.placement.FFI_ExpressionPlacement.md).
+
+
 ---

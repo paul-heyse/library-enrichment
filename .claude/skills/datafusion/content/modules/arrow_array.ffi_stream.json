@@ -1,0 +1,64 @@
+[
+  {
+    "id": "e9cf7aa86cbf6cb56dac636f",
+    "path": "arrow_array::ffi_stream",
+    "name": "ffi_stream",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod ffi_stream",
+    "docs": "Contains declarations to bind to the [C Stream Interface](https://arrow.apache.org/docs/format/CStreamInterface.html).\n\nThis module has two main interfaces:\nOne interface maps C ABI to native Rust types, i.e. convert c-pointers, c_char, to native rust.\nThis is handled by [FFI_ArrowArrayStream].\n\nThe second interface is used to import `FFI_ArrowArrayStream` as Rust implementation `RecordBatch` reader.\nThis is handled by `ArrowArrayStreamReader`.\n\n```ignore\n# use std::fs::File;\n# use std::sync::Arc;\n# use arrow::error::Result;\n# use arrow::ffi_stream::{export_reader_into_raw, ArrowArrayStreamReader, FFI_ArrowArrayStream};\n# use arrow::ipc::reader::FileReader;\n# use arrow::record_batch::RecordBatchReader;\n# fn main() -> Result<()> {\n// create an record batch reader natively\nlet file = File::open(\"arrow_file\").unwrap();\nlet reader = Box::new(FileReader::try_new(file).unwrap());\n\n// export it\nlet mut stream = FFI_ArrowArrayStream::empty();\nunsafe { export_reader_into_raw(reader, &mut stream) };\n\n// consumed and used by something else...\n\n// import it\nlet stream_reader = unsafe { ArrowArrayStreamReader::from_raw(&mut stream).unwrap() };\nlet imported_schema = stream_reader.schema();\n\nlet mut produced_batches = vec![];\nfor batch in stream_reader {\n     produced_batches.push(batch.unwrap());\n}\nOk(())\n}\n```",
+    "span": {
+      "filename": "src/ffi_stream.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        569,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"ffi\"), span: src/lib.rs:254:7: 254:22 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          3426,
+          1793
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "FFI_ArrowArrayStream": 3426
+    },
+    "link_paths": {
+      "FFI_ArrowArrayStream": "arrow_array::ffi_stream::FFI_ArrowArrayStream"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3475",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/arrow_array.ffi_stream.md",
+    "record_file": "modules/arrow_array.ffi_stream.json",
+    "anchor": "op-e9cf7aa86cbf6cb56dac636f",
+    "aliases": [],
+    "resolved_doc_links": {
+      "FFI_ArrowArrayStream": "../operations/arrow_array.ffi_stream.FFI_ArrowArrayStream.md#op-72b1ea752d3976ebd8228bf1"
+    }
+  }
+]

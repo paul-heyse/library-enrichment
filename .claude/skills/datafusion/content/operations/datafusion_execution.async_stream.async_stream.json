@@ -1,0 +1,255 @@
+[
+  {
+    "id": "134777deff59feac15c8b28e",
+    "path": "datafusion_execution::async_stream::async_stream",
+    "name": "async_stream",
+    "owner": null,
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn async_stream<T, F: Future<Output = ()>>(generator: impl FnOnce(Emitter<T>) -> F) -> impl FusedStream<Item = T>",
+    "docs": "Creates a [`Stream`] from an async generator function.\n\nThe `generator` closure receives an [`Emitter<T>`] and runs as an async\nblock. Each `emitter.emit(value).await` call suspends the generator and\nproduces the next item in the stream. The stream ends when the generator\nfuture resolves.\n\n# Example\n\n```\nuse datafusion_execution::async_stream;\nuse futures::StreamExt;\n\n# #[tokio::main(flavor = \"current_thread\")]\n# async fn main() {\nlet stream = async_stream(|mut emitter| async move {\n    for i in 0_i32..3 {\n        emitter.emit(i).await;\n    }\n});\n\nlet values: Vec<i32> = stream.collect().await;\nassert_eq!(values, vec![0, 1, 2]);\n# }\n```",
+    "span": {
+      "filename": "src/async_stream.rs",
+      "begin": [
+        53,
+        1
+      ],
+      "end": [
+        58,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "generator",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "FnOnce",
+                        "id": 3,
+                        "args": {
+                          "parenthesized": {
+                            "inputs": [
+                              {
+                                "resolved_path": {
+                                  "path": "Emitter",
+                                  "id": 1,
+                                  "args": {
+                                    "angle_bracketed": {
+                                      "args": [
+                                        {
+                                          "type": {
+                                            "generic": "T"
+                                          }
+                                        }
+                                      ],
+                                      "constraints": []
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "output": {
+                              "generic": "F"
+                            }
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "impl_trait": [
+              {
+                "trait_bound": {
+                  "trait": {
+                    "path": "FusedStream",
+                    "id": 4,
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [],
+                        "constraints": [
+                          {
+                            "name": "Item",
+                            "args": null,
+                            "binding": {
+                              "equality": {
+                                "type": {
+                                  "generic": "T"
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "generic_params": [],
+                  "modifier": "none"
+                }
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Future",
+                          "id": 5,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Output",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "tuple": []
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "impl FnOnce(Emitter<T>) -> F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "FnOnce",
+                          "id": 3,
+                          "args": {
+                            "parenthesized": {
+                              "inputs": [
+                                {
+                                  "resolved_path": {
+                                    "path": "Emitter",
+                                    "id": 1,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "generic": "T"
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "output": {
+                                "generic": "F"
+                              }
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3": "core::ops::function::FnOnce",
+      "1": "datafusion_execution::async_stream::Emitter",
+      "4": "futures_core::stream::FusedStream",
+      "5": "core::future::future::Future"
+    },
+    "impl_context": null,
+    "links": {
+      "`Emitter<T>`": 1,
+      "`Stream`": 0
+    },
+    "link_paths": {
+      "`Emitter<T>`": "datafusion_execution::async_stream::Emitter",
+      "`Stream`": "futures_core::stream::Stream"
+    },
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "2",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.async_stream.async_stream.md",
+    "record_file": "operations/datafusion_execution.async_stream.async_stream.json",
+    "anchor": "op-134777deff59feac15c8b28e",
+    "aliases": [
+      "datafusion::execution::async_stream",
+      "datafusion_execution::async_stream"
+    ],
+    "resolved_doc_links": {
+      "`Emitter<T>`": "../operations/datafusion_execution.async_stream.Emitter.md#op-8937711056e5aea84f9c72af"
+    }
+  }
+]

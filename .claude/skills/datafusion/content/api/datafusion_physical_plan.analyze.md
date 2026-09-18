@@ -47,6 +47,9 @@ fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.analyze.AnalyzeExec.md).
+
+
 `EXPLAIN ANALYZE` execution plan operator. This operator runs its input,
 discards the results, and then prints out an annotated plan with metrics
 
@@ -69,6 +72,9 @@ fn with_format(self, format: ExplainFormat) -> Self
 fn with_metric_categories(self, metric_categories: Option<Vec<MetricCategory>>) -> Self
 fn with_metric_types(self, metric_types: Vec<MetricType>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.analyze.AnalyzeExecBuilder.md).
+
 
 Builder for [`AnalyzeExec`].
 

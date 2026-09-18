@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## StructDataExt
 
 `trait` · `deltalake_core::kernel::arrow::engine_ext::StructDataExt`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.arrow.engine_ext.StructDataExt.md)
 
 Also reachable as `deltalake::kernel::StructDataExt`, `deltalake_core::kernel::StructDataExt`
 

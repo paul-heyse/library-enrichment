@@ -14,6 +14,9 @@ enum PlannerResult<T>
 
 **Derives**: Clone, Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.planner.PlannerResult.md).
+
+
 Result of planning a raw expr with [`ExprPlanner`]
 
 ---
@@ -29,6 +32,9 @@ enum RelationPlanning
 **Variants**: `Planned`, `Original`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.planner.RelationPlanning.md).
+
 
 Result of attempting to plan a relation with extension planners
 
@@ -52,6 +58,9 @@ struct PlannedRelation
 fn new(plan: LogicalPlan, alias: Option<TableAlias>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.planner.PlannedRelation.md).
+
+
 Result of planning a relation with [`RelationPlanner`]
 
 ---
@@ -67,6 +76,9 @@ struct RawAggregateExpr
 **Fields**: `func`, `args`, `distinct`, `filter`, `order_by`, `null_treatment`
 
 **Derives**: Clone, Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.planner.RawAggregateExpr.md).
+
 
 This structure is used by `AggregateFunctionPlanner` to plan operators with
 custom expressions.
@@ -84,6 +96,9 @@ struct RawBinaryExpr
 **Fields**: `op`, `left`, `right`
 
 **Derives**: Clone, Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.planner.RawBinaryExpr.md).
+
 
 An operator with two arguments to plan
 
@@ -107,6 +122,9 @@ struct RawDictionaryExpr
 
 **Derives**: Clone, Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.planner.RawDictionaryExpr.md).
+
+
 A Dictionary literal expression `{ key: value, ...}`
 
 This structure is used by [`ExprPlanner`] to plan operators with
@@ -126,6 +144,9 @@ struct RawFieldAccessExpr
 
 **Derives**: Clone, Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.planner.RawFieldAccessExpr.md).
+
+
 An expression with GetFieldAccess to plan
 
 This structure is used by [`ExprPlanner`] to plan operators with
@@ -144,6 +165,9 @@ struct RawWindowExpr
 **Fields**: `func_def`, `args`, `partition_by`, `order_by`, `window_frame`, `filter`, `null_treatment`, `distinct`
 
 **Derives**: Clone, Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.planner.RawWindowExpr.md).
+
 
 This structure is used by `WindowFunctionPlanner` to plan operators with
 custom expressions.
@@ -182,6 +206,9 @@ fn udaf_names(&self) -> Vec<String>
 fn udf_names(&self) -> Vec<String>
 fn udwf_names(&self) -> Vec<String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.planner.ContextProvider.md).
+
 
 Provides the `SQL` query planner meta-data about tables and
 functions referenced in SQL statements, without a direct dependency on the
@@ -229,6 +256,9 @@ fn plan_substring(&self, args: Vec<Expr>) -> Result<PlannerResult<Vec<Expr>>>
 fn plan_window(&self, expr: RawWindowExpr) -> Result<PlannerResult<RawWindowExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.planner.ExprPlanner.md).
+
+
 Customize planning of SQL AST expressions to [`Expr`]s
 
 For more background, please also see the [Extending SQL in DataFusion: from ->> to TABLESAMPLE blog]
@@ -250,6 +280,9 @@ trait RelationPlanner: Debug + Send + Sync
 ```rust
 fn plan_relation(&self, relation: TableFactor, context: &mut dyn RelationPlannerContext) -> Result<RelationPlanning>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.planner.RelationPlanner.md).
+
 
 Customize planning SQL table factors to [`LogicalPlan`]s.
 For more background, please also see the [Extending SQL in DataFusion: from ->> to TABLESAMPLE blog]
@@ -277,6 +310,9 @@ fn sql_expr_to_logical_expr(&mut self, expr: SQLExpr, schema: &DFSchema) -> Resu
 fn sql_to_expr(&mut self, expr: SQLExpr, schema: &DFSchema) -> Result<Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.planner.RelationPlannerContext.md).
+
+
 Provides utilities for relation planners to interact with DataFusion's SQL
 planner.
 
@@ -301,6 +337,9 @@ trait TypePlanner: Debug + Send + Sync
 fn plan_type(&self, _sql_type: &sqlparser::ast::DataType) -> Result<Option<DataType>>
 fn plan_type_field(&self, sql_type: &sqlparser::ast::DataType) -> Result<Option<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.planner.TypePlanner.md).
+
 
 Customize planning SQL types to DataFusion (Arrow) types.
 For more background, please also see the [Extending SQL in DataFusion: from ->> to TABLESAMPLE blog]

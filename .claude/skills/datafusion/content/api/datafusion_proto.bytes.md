@@ -10,6 +10,9 @@ Crate `datafusion-proto` · 17 public items · structured records in [`model/dat
 fn logical_plan_from_bytes(bytes: &[u8], ctx: &datafusion_execution::TaskContext) -> datafusion_common::Result<datafusion_expr::LogicalPlan>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.logical_plan_from_bytes.md).
+
+
 Deserialize a LogicalPlan from bytes
 
 ---
@@ -21,6 +24,9 @@ Deserialize a LogicalPlan from bytes
 ```rust
 fn logical_plan_from_bytes_with_extension_codec(bytes: &[u8], ctx: &datafusion_execution::TaskContext, extension_codec: &dyn LogicalExtensionCodec) -> datafusion_common::Result<datafusion_expr::LogicalPlan>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.logical_plan_from_bytes_with_extension_codec.md).
+
 
 Deserialize a LogicalPlan from bytes
 
@@ -34,6 +40,9 @@ Deserialize a LogicalPlan from bytes
 fn logical_plan_from_json(json: &str, ctx: &datafusion_execution::TaskContext) -> datafusion_common::Result<datafusion_expr::LogicalPlan>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.logical_plan_from_json.md).
+
+
 Deserialize a LogicalPlan from JSON
 
 ---
@@ -45,6 +54,9 @@ Deserialize a LogicalPlan from JSON
 ```rust
 fn logical_plan_from_json_with_extension_codec(json: &str, ctx: &datafusion_execution::TaskContext, extension_codec: &dyn LogicalExtensionCodec) -> datafusion_common::Result<datafusion_expr::LogicalPlan>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.logical_plan_from_json_with_extension_codec.md).
+
 
 Deserialize a LogicalPlan from JSON
 
@@ -58,6 +70,9 @@ Deserialize a LogicalPlan from JSON
 fn logical_plan_to_bytes(plan: &datafusion_expr::LogicalPlan) -> datafusion_common::Result<prost::bytes::Bytes>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.logical_plan_to_bytes.md).
+
+
 Serialize a LogicalPlan as bytes
 
 ---
@@ -69,6 +84,9 @@ Serialize a LogicalPlan as bytes
 ```rust
 fn logical_plan_to_bytes_with_extension_codec(plan: &datafusion_expr::LogicalPlan, extension_codec: &dyn LogicalExtensionCodec) -> datafusion_common::Result<prost::bytes::Bytes>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.logical_plan_to_bytes_with_extension_codec.md).
+
 
 Serialize a LogicalPlan as bytes, using the provided extension codec
 
@@ -82,6 +100,9 @@ Serialize a LogicalPlan as bytes, using the provided extension codec
 fn logical_plan_to_json(plan: &datafusion_expr::LogicalPlan) -> datafusion_common::Result<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.logical_plan_to_json.md).
+
+
 Serialize a LogicalPlan as JSON
 
 ---
@@ -93,6 +114,9 @@ Serialize a LogicalPlan as JSON
 ```rust
 fn logical_plan_to_json_with_extension_codec(plan: &datafusion_expr::LogicalPlan, extension_codec: &dyn LogicalExtensionCodec) -> datafusion_common::Result<String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.logical_plan_to_json_with_extension_codec.md).
+
 
 Serialize a LogicalPlan as JSON using the provided extension codec
 
@@ -106,6 +130,9 @@ Serialize a LogicalPlan as JSON using the provided extension codec
 fn physical_plan_from_bytes(bytes: &[u8], ctx: &datafusion_execution::TaskContext) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.physical_plan_from_bytes.md).
+
+
 Deserialize a PhysicalPlan from bytes
 
 ---
@@ -117,6 +144,9 @@ Deserialize a PhysicalPlan from bytes
 ```rust
 fn physical_plan_from_bytes_with_extension_codec(bytes: &[u8], ctx: &datafusion_execution::TaskContext, extension_codec: &dyn PhysicalExtensionCodec) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.physical_plan_from_bytes_with_extension_codec.md).
+
 
 Deserialize a PhysicalPlan from bytes
 
@@ -130,6 +160,9 @@ Deserialize a PhysicalPlan from bytes
 fn physical_plan_from_bytes_with_proto_converter(bytes: &[u8], ctx: &datafusion_execution::TaskContext, extension_codec: &dyn PhysicalExtensionCodec, proto_converter: &dyn PhysicalProtoConverterExtension) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.physical_plan_from_bytes_with_proto_converter.md).
+
+
 Deserialize a PhysicalPlan from bytes
 
 ---
@@ -141,6 +174,9 @@ Deserialize a PhysicalPlan from bytes
 ```rust
 fn physical_plan_from_json(json: &str, ctx: &datafusion_execution::TaskContext) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.physical_plan_from_json.md).
+
 
 Deserialize a PhysicalPlan from JSON
 
@@ -154,6 +190,9 @@ Deserialize a PhysicalPlan from JSON
 fn physical_plan_to_bytes(plan: std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<prost::bytes::Bytes>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.physical_plan_to_bytes.md).
+
+
 Serialize a PhysicalPlan as bytes
 
 ---
@@ -165,6 +204,9 @@ Serialize a PhysicalPlan as bytes
 ```rust
 fn physical_plan_to_bytes_with_extension_codec(plan: std::sync::Arc<dyn ExecutionPlan>, extension_codec: &dyn PhysicalExtensionCodec) -> datafusion_common::Result<prost::bytes::Bytes>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.physical_plan_to_bytes_with_extension_codec.md).
+
 
 Serialize a PhysicalPlan as bytes, using the provided extension codec
 
@@ -178,6 +220,9 @@ Serialize a PhysicalPlan as bytes, using the provided extension codec
 fn physical_plan_to_bytes_with_proto_converter(plan: std::sync::Arc<dyn ExecutionPlan>, extension_codec: &dyn PhysicalExtensionCodec, proto_converter: &dyn PhysicalProtoConverterExtension) -> datafusion_common::Result<prost::bytes::Bytes>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.physical_plan_to_bytes_with_proto_converter.md).
+
+
 Serialize a PhysicalPlan as bytes, using the provided extension codec
 and protobuf converter.
 
@@ -190,6 +235,9 @@ and protobuf converter.
 ```rust
 fn physical_plan_to_json(plan: std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.physical_plan_to_json.md).
+
 
 Serialize a PhysicalPlan as JSON
 
@@ -214,6 +262,9 @@ fn from_bytes(bytes: &[u8]) -> Result<Self>
 fn from_bytes_with_ctx(bytes: &[u8], ctx: &TaskContext) -> Result<Self>
 fn to_bytes(&self) -> Result<Bytes>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.bytes.Serializeable.md).
+
 
 Encodes something (such as [`Expr`]) to/from a stream of
 bytes.

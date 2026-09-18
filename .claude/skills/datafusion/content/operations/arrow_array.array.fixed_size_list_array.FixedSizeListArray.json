@@ -1,0 +1,4891 @@
+[
+  {
+    "id": "4772cb4965341d875c1269ee",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "name": "FixedSizeListArray",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct FixedSizeListArray",
+    "docs": "An array of [fixed length lists], similar to JSON arrays\n(e.g. `[\"A\", \"B\"]`).\n\nLists are represented using a `values` child\narray where each list has a fixed size of `value_length`.\n\nUse [`FixedSizeListBuilder`] to construct a [`FixedSizeListArray`].\n\n# Representation\n\nA [`FixedSizeListArray`] can represent a list of values of any other\nsupported Arrow type. Each element of the `FixedSizeListArray` itself is\na list which may contain NULL and non-null values,\nor may itself be NULL.\n\nFor example, this `FixedSizeListArray` stores lists of strings:\n\n```text\n┌─────────────┐\n│    [A,B]    │\n├─────────────┤\n│    NULL     │\n├─────────────┤\n│   [C,NULL]  │\n└─────────────┘\n```\n\nThe `values` of this `FixedSizeListArray`s are stored in a child\n[`StringArray`] where logical null values take up `values_length` slots in the array\nas shown in the following diagram. The logical values\nare shown on the left, and the actual `FixedSizeListArray` encoding on the right\n\n```text\n                                ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐\n                                                        ┌ ─ ─ ─ ─ ─ ─ ─ ─┐\n ┌─────────────┐                │     ┌───┐               ┌───┐ ┌──────┐      │\n │   [A,B]     │                      │ 1 │             │ │ 1 │ │  A   │ │ 0\n ├─────────────┤                │     ├───┤               ├───┤ ├──────┤      │\n │    NULL     │                      │ 0 │             │ │ 1 │ │  B   │ │ 1\n ├─────────────┤                │     ├───┤               ├───┤ ├──────┤      │\n │  [C,NULL]   │                      │ 1 │             │ │ 0 │ │ ???? │ │ 2\n └─────────────┘                │     └───┘               ├───┤ ├──────┤      │\n                                                        | │ 0 │ │ ???? │ │ 3\n Logical Values                 │   Validity              ├───┤ ├──────┤      │\n                                    (nulls)             │ │ 1 │ │  C   │ │ 4\n                                │                         ├───┤ ├──────┤      │\n                                                        │ │ 0 │ │ ???? │ │ 5\n                                │                         └───┘ └──────┘      │\n                                                        │     Values     │\n                                │   FixedSizeListArray        (Array)         │\n                                                        └ ─ ─ ─ ─ ─ ─ ─ ─┘\n                                └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘\n```\n\n# Example\n\n```\n# use std::sync::Arc;\n# use arrow_array::{Array, FixedSizeListArray, Int32Array};\n# use arrow_data::ArrayData;\n# use arrow_schema::{DataType, Field};\n# use arrow_buffer::Buffer;\n// Construct a value array\nlet value_data = ArrayData::builder(DataType::Int32)\n    .len(9)\n    .add_buffer(Buffer::from_slice_ref(&[0, 1, 2, 3, 4, 5, 6, 7, 8]))\n    .build()\n    .unwrap();\nlet list_data_type = DataType::FixedSizeList(\n    Arc::new(Field::new_list_field(DataType::Int32, false)),\n    3,\n);\nlet list_data = ArrayData::builder(list_data_type.clone())\n    .len(3)\n    .add_child_data(value_data.clone())\n    .build()\n    .unwrap();\nlet list_array = FixedSizeListArray::from(list_data);\nlet list0 = list_array.value(0);\nlet list1 = list_array.value(1);\nlet list2 = list_array.value(2);\n\nassert_eq!( &[0, 1, 2], list0.as_any().downcast_ref::<Int32Array>().unwrap().values());\nassert_eq!( &[3, 4, 5], list1.as_any().downcast_ref::<Int32Array>().unwrap().values());\nassert_eq!( &[6, 7, 8], list2.as_any().downcast_ref::<Int32Array>().unwrap().values());\n```\n\n[`StringArray`]: crate::array::StringArray\n[fixed length lists]: https://arrow.apache.org/docs/format/Columnar.html#fixed-size-list-layout",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        119,
+        1
+      ],
+      "end": [
+        125,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          558,
+          559,
+          560,
+          561,
+          562,
+          563,
+          564,
+          565,
+          566,
+          567,
+          568,
+          569,
+          570,
+          571,
+          572,
+          573,
+          574,
+          575,
+          492,
+          577,
+          579,
+          581,
+          596,
+          600,
+          606,
+          608,
+          612,
+          614,
+          617,
+          620
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`FixedSizeListArray`": 491,
+      "crate::array::StringArray": 172,
+      "`FixedSizeListBuilder`": 541
+    },
+    "link_paths": {
+      "`FixedSizeListArray`": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+      "crate::array::StringArray": "arrow_array::array::string_array::StringArray",
+      "`FixedSizeListBuilder`": "arrow_array::builder::fixed_size_list_builder::FixedSizeListBuilder"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "491",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-4772cb4965341d875c1269ee",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FixedSizeListArray`": "../operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md#op-4772cb4965341d875c1269ee",
+      "crate::array::StringArray": "../operations/arrow_array.array.string_array.StringArray.md#op-5d32f770159d415652a55945",
+      "`FixedSizeListBuilder`": "../operations/arrow_array.builder.fixed_size_list_builder.FixedSizeListBuilder.md#op-f08edffd6af5d83e255a4d2a"
+    }
+  },
+  {
+    "id": "44d689106aa23720478734d6",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::Item",
+    "name": "Item",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "assoc_type",
+    "signature": "Item",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        580,
+        5
+      ],
+      "end": [
+        580,
+        26
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "type": {
+          "resolved_path": {
+            "path": "Arc",
+            "id": 603,
+            "args": {
+              "angle_bracketed": {
+                "args": [
+                  {
+                    "type": {
+                      "dyn_trait": {
+                        "traits": [
+                          {
+                            "trait": {
+                              "path": "Array",
+                              "id": 76,
+                              "args": null
+                            },
+                            "generic_params": []
+                          }
+                        ],
+                        "lifetime": null
+                      }
+                    }
+                  }
+                ],
+                "constraints": []
+              }
+            }
+          }
+        },
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "603": "alloc::sync::Arc",
+      "76": "arrow_array::array::Array"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ArrayAccessor",
+        "id": "arrow_array::array::ArrayAccessor",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::ArrayAccessor",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          579,
+          1
+        ],
+        "end": [
+          589,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "602",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-44d689106aa23720478734d6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "82fe935f4e3a699a41177800",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::as_any",
+    "name": "as_any",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any(&self) -> &dyn Any",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        494,
+        5
+      ],
+      "end": [
+        496,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          493,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "582",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-82fe935f4e3a699a41177800",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "eebbf2ee65269a3d72315c97",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::claim",
+    "name": "claim",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn claim(&self, pool: &dyn arrow_buffer::MemoryPool)",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        559,
+        5
+      ],
+      "end": [
+        564,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"pool\"), span: src/array/fixed_size_list_array.rs:558:11: 558:27 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "pool",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "arrow_buffer::MemoryPool",
+                            "id": 138,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "138": "arrow_buffer::pool::MemoryPool"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          493,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "595",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-eebbf2ee65269a3d72315c97",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5118e8597d9a3470bb7c8a09",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::clone",
+    "name": "clone",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> FixedSizeListArray",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        118,
+        10
+      ],
+      "end": [
+        118,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "FixedSizeListArray",
+              "id": 491,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "491": "arrow_array::array::fixed_size_list_array::FixedSizeListArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          118,
+          10
+        ],
+        "end": [
+          118,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "576",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-5118e8597d9a3470bb7c8a09",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "70a7bdb87874991e218c5d36",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::data_type",
+    "name": "data_type",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn data_type(&self) -> &DataType",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        506,
+        5
+      ],
+      "end": [
+        508,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "DataType",
+                  "id": 126,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "126": "arrow_schema::datatype::DataType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          493,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "585",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-70a7bdb87874991e218c5d36",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "20a667cc1b371f8c06440c42",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::element_range",
+    "name": "element_range",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn element_range(&self, index: usize) -> std::ops::Range<usize>",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        572,
+        5
+      ],
+      "end": [
+        576,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "index",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::ops::Range",
+              "id": 599,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "599": "core::ops::range::Range"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ListLikeArray",
+        "id": "arrow_array::array::ListLikeArray",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::ListLikeArray",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          567,
+          1
+        ],
+        "end": [
+          577,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "598",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-20a667cc1b371f8c06440c42",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "28aaa96c3e13c2b142076dbf",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::eq",
+    "name": "eq",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &Self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/array/mod.rs",
+      "begin": [
+        837,
+        5
+      ],
+      "end": [
+        839,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/mod.rs",
+        "begin": [
+          836,
+          1
+        ],
+        "end": [
+          840,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "619",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-28aaa96c3e13c2b142076dbf",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1ee495db6ccf3bc74a0ea3af",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::fmt",
+    "name": "fmt",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        592,
+        5
+      ],
+      "end": [
+        598,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::fmt::Formatter",
+                      "id": 117,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 118,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "117": "core::fmt::Formatter",
+      "118": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          591,
+          1
+        ],
+        "end": [
+          599,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "607",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-1ee495db6ccf3bc74a0ea3af",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "82311c0d356f08fbc6769dea",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::from",
+    "name": "from",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from(data: ArrayData) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        457,
+        5
+      ],
+      "end": [
+        478,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data",
+              {
+                "resolved_path": {
+                  "path": "ArrayData",
+                  "id": 123,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "ArrayData",
+                    "id": "arrow_data::data::ArrayData",
+                    "args": null
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          456,
+          1
+        ],
+        "end": [
+          479,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "578",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-82311c0d356f08fbc6769dea",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8c493f9e7bdea71a2defe3d9",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::from_iter_primitive",
+    "name": "from_iter_primitive",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from_iter_primitive<T, P, I>(iter: I, length: i32) -> Self where T: ArrowPrimitiveType, P: IntoIterator<Item = Option<<T as ArrowPrimitiveType>::Native>>, I: IntoIterator<Item = Option<P>>",
+    "docs": "Creates a [`FixedSizeListArray`] from an iterator of primitive values\n# Example\n```\n# use arrow_array::FixedSizeListArray;\n# use arrow_array::types::Int32Type;\n\nlet data = vec![\n   Some(vec![Some(0), Some(1), Some(2)]),\n   None,\n   Some(vec![Some(3), None, Some(5)]),\n   Some(vec![Some(6), Some(7), Some(45)]),\n];\nlet list_array = FixedSizeListArray::from_iter_primitive::<Int32Type, _, _>(data, 3);\nprintln!(\"{:?}\", list_array);\n```",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        418,
+        5
+      ],
+      "end": [
+        448,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "iter",
+              {
+                "generic": "I"
+              }
+            ],
+            [
+              "length",
+              {
+                "primitive": "i32"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "P",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "I",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "T"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowPrimitiveType",
+                        "id": 307,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "P"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "IntoIterator",
+                        "id": 157,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [],
+                            "constraints": [
+                              {
+                                "name": "Item",
+                                "args": null,
+                                "binding": {
+                                  "equality": {
+                                    "type": {
+                                      "resolved_path": {
+                                        "path": "Option",
+                                        "id": 12,
+                                        "args": {
+                                          "angle_bracketed": {
+                                            "args": [
+                                              {
+                                                "type": {
+                                                  "qualified_path": {
+                                                    "name": "Native",
+                                                    "args": null,
+                                                    "self_type": {
+                                                      "generic": "T"
+                                                    },
+                                                    "trait": {
+                                                      "path": "ArrowPrimitiveType",
+                                                      "id": 307,
+                                                      "args": null
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            ],
+                                            "constraints": []
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "I"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "IntoIterator",
+                        "id": 157,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [],
+                            "constraints": [
+                              {
+                                "name": "Item",
+                                "args": null,
+                                "binding": {
+                                  "equality": {
+                                    "type": {
+                                      "resolved_path": {
+                                        "path": "Option",
+                                        "id": 12,
+                                        "args": {
+                                          "angle_bracketed": {
+                                            "args": [
+                                              {
+                                                "type": {
+                                                  "generic": "P"
+                                                }
+                                              }
+                                            ],
+                                            "constraints": []
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "307": "arrow_array::types::ArrowPrimitiveType",
+      "157": "core::iter::traits::collect::IntoIterator",
+      "12": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          454,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FixedSizeListArray`": 491
+    },
+    "link_paths": {
+      "`FixedSizeListArray`": "arrow_array::array::fixed_size_list_array::FixedSizeListArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "555",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-8c493f9e7bdea71a2defe3d9",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FixedSizeListArray`": "../operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md#op-4772cb4965341d875c1269ee"
+    }
+  },
+  {
+    "id": "2dc30c8511e8b6e986a3c0b9",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::get_array_memory_size",
+    "name": "get_array_memory_size",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_array_memory_size(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        550,
+        5
+      ],
+      "end": [
+        556,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          493,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "594",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-2dc30c8511e8b6e986a3c0b9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f9697311d83c07a51d3087d6",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::get_buffer_memory_size",
+    "name": "get_buffer_memory_size",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_buffer_memory_size(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        542,
+        5
+      ],
+      "end": [
+        548,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          493,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "593",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-f9697311d83c07a51d3087d6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e14ce8ed97ed7015fc040cfd",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::into_data",
+    "name": "into_data",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_data(self) -> ArrayData",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        502,
+        5
+      ],
+      "end": [
+        504,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayData",
+              "id": 123,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          493,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "584",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-e14ce8ed97ed7015fc040cfd",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e7d39bdd211d29f739e16402",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::into_parts",
+    "name": "into_parts",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_parts(self) -> (FieldRef, i32, ArrayRef, Option<NullBuffer>)",
+    "docs": "Deconstruct this array into its constituent parts",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        335,
+        5
+      ],
+      "end": [
+        341,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "tuple": [
+              {
+                "resolved_path": {
+                  "path": "FieldRef",
+                  "id": 545,
+                  "args": null
+                }
+              },
+              {
+                "primitive": "i32"
+              },
+              {
+                "resolved_path": {
+                  "path": "ArrayRef",
+                  "id": 128,
+                  "args": null
+                }
+              },
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "545": "arrow_schema::field::FieldRef",
+      "128": "arrow_array::array::ArrayRef",
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          454,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "548",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-e7d39bdd211d29f739e16402",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ea8b25442942e5b296b40b7e",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::is_empty",
+    "name": "is_empty",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        518,
+        5
+      ],
+      "end": [
+        520,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          493,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "588",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-ea8b25442942e5b296b40b7e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1fffa9fb165e176f067603e7",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::iter",
+    "name": "iter",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn iter(&self) -> FixedSizeListIter<'_>",
+    "docs": "constructs a new iterator",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        451,
+        5
+      ],
+      "end": [
+        453,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "FixedSizeListIter",
+              "id": 557,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'_"
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "557": "arrow_array::iterator::FixedSizeListIter"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          454,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "556",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-1fffa9fb165e176f067603e7",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0aa47bc6cbdace23f12bc549",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::len",
+    "name": "len",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        514,
+        5
+      ],
+      "end": [
+        516,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          493,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "587",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-0aa47bc6cbdace23f12bc549",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9985fbfd609e279975826507",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::logical_null_count",
+    "name": "logical_null_count",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn logical_null_count(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        537,
+        5
+      ],
+      "end": [
+        540,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          493,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "592",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-9985fbfd609e279975826507",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "16fc84a521d8d5b7badac796",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::new",
+    "name": "new",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(field: FieldRef, size: i32, values: ArrayRef, nulls: Option<NullBuffer>) -> Self",
+    "docs": "Create a new [`FixedSizeListArray`] with `size` element size, panicking on failure.\n\nNote that if `size == 0` and `nulls` is `None` (a degenerate, non-nullable\n`FixedSizeListArray`), this function will set the length of the array to 0.\n\nIf you would like to have a degenerate, non-nullable `FixedSizeListArray` with arbitrary\nlength, use the [`try_new_with_length()`] constructor.\n\n[`try_new_with_length()`]: Self::try_new_with_length\n\n# Panics\n\nPanics if [`Self::try_new`] returns an error",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        141,
+        5
+      ],
+      "end": [
+        143,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "field",
+              {
+                "resolved_path": {
+                  "path": "FieldRef",
+                  "id": 545,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "size",
+              {
+                "primitive": "i32"
+              }
+            ],
+            [
+              "values",
+              {
+                "resolved_path": {
+                  "path": "ArrayRef",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "nulls",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "545": "arrow_schema::field::FieldRef",
+      "128": "arrow_array::array::ArrayRef",
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          454,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self::try_new_with_length": 542,
+      "`Self::try_new`": 543,
+      "`FixedSizeListArray`": 491
+    },
+    "link_paths": {
+      "Self::try_new_with_length": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::try_new_with_length",
+      "`Self::try_new`": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::try_new",
+      "`FixedSizeListArray`": "arrow_array::array::fixed_size_list_array::FixedSizeListArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "544",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-16fc84a521d8d5b7badac796",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Self::try_new_with_length": "../operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md#op-ecc3e3b2100fb7f6ba0eab23",
+      "`Self::try_new`": "../operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md#op-e164731462b6ed4d06b49312",
+      "`FixedSizeListArray`": "../operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md#op-4772cb4965341d875c1269ee"
+    }
+  },
+  {
+    "id": "1eaeb5819cd472f72a6bd566",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::new_null",
+    "name": "new_null",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_null(field: FieldRef, size: i32, len: usize) -> Self",
+    "docs": "Create a new [`FixedSizeListArray`] of length `len` where all values are null\n\n# Panics\n\nPanics if\n\n* `size < 0`\n* `size * len` would overflow `usize`",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        323,
+        5
+      ],
+      "end": [
+        332,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "field",
+              {
+                "resolved_path": {
+                  "path": "FieldRef",
+                  "id": 545,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "size",
+              {
+                "primitive": "i32"
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "545": "arrow_schema::field::FieldRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          454,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FixedSizeListArray`": 491
+    },
+    "link_paths": {
+      "`FixedSizeListArray`": "arrow_array::array::fixed_size_list_array::FixedSizeListArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "547",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-1eaeb5819cd472f72a6bd566",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FixedSizeListArray`": "../operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md#op-4772cb4965341d875c1269ee"
+    }
+  },
+  {
+    "id": "067409bc983726b7f04c9894",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::new_unchecked",
+    "name": "new_unchecked",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn new_unchecked(field: FieldRef, size: i32, values: ArrayRef, nulls: Option<NullBuffer>, len: usize) -> Self",
+    "docs": "Create a new [`FixedSizeListArray`] from the provided parts without validation.\n\n# Safety\n- `size >= 0`\n- `values.len() == len * size as usize`\n- `nulls.len() == len` if `nulls` is `Some`\n- `field.data_type() == values.data_type()`",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        152,
+        5
+      ],
+      "end": [
+        169,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "field",
+              {
+                "resolved_path": {
+                  "path": "FieldRef",
+                  "id": 545,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "size",
+              {
+                "primitive": "i32"
+              }
+            ],
+            [
+              "values",
+              {
+                "resolved_path": {
+                  "path": "ArrayRef",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "nulls",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "545": "arrow_schema::field::FieldRef",
+      "128": "arrow_array::array::ArrayRef",
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          454,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FixedSizeListArray`": 491
+    },
+    "link_paths": {
+      "`FixedSizeListArray`": "arrow_array::array::fixed_size_list_array::FixedSizeListArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "546",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-067409bc983726b7f04c9894",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FixedSizeListArray`": "../operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md#op-4772cb4965341d875c1269ee"
+    }
+  },
+  {
+    "id": "6b13c1f2c2fe762ef10adf59",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::nulls",
+    "name": "nulls",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn nulls(&self) -> Option<&NullBuffer>",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        533,
+        5
+      ],
+      "end": [
+        535,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          493,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "591",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-6b13c1f2c2fe762ef10adf59",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0007053870288da1ff1a5f23",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::offset",
+    "name": "offset",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn offset(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        529,
+        5
+      ],
+      "end": [
+        531,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          493,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "590",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-0007053870288da1ff1a5f23",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3902a41da6eb4d6b63baa99f",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::shrink_to_fit",
+    "name": "shrink_to_fit",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn shrink_to_fit(&mut self)",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        522,
+        5
+      ],
+      "end": [
+        527,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          493,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "589",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-3902a41da6eb4d6b63baa99f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e6e1510f0f75c3fc31b70f39",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::slice",
+    "name": "slice",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn slice(&self, offset: usize, len: usize) -> Self",
+    "docs": "Returns a zero-copy slice of this array with the indicated offset and length.",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        387,
+        5
+      ],
+      "end": [
+        401,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          454,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "554",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-e6e1510f0f75c3fc31b70f39",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f65ce6e54f59a68c9665d978",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::slice",
+    "name": "slice",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn slice(&self, offset: usize, length: usize) -> ArrayRef",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        510,
+        5
+      ],
+      "end": [
+        512,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "length",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          493,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "586",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-f65ce6e54f59a68c9665d978",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a53e17a5e5da53e4e9552797",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::to_data",
+    "name": "to_data",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn to_data(&self) -> ArrayData",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        498,
+        5
+      ],
+      "end": [
+        500,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayData",
+              "id": 123,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          493,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "583",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-a53e17a5e5da53e4e9552797",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e164731462b6ed4d06b49312",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::try_new",
+    "name": "try_new",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new(field: FieldRef, size: i32, values: ArrayRef, nulls: Option<NullBuffer>) -> Result<Self, ArrowError>",
+    "docs": "Create a new [`FixedSizeListArray`] from the provided parts, returning an error on failure.\n\nNote that if `size == 0` and `nulls` is `None` (a degenerate, non-nullable\n`FixedSizeListArray`), this function will set the length of the array to 0.\n\nIf you would like to have a degenerate, non-nullable `FixedSizeListArray` with arbitrary\nlength, use the [`try_new_with_length()`] constructor.\n\n[`try_new_with_length()`]: Self::try_new_with_length\n\n# Errors\n\n* `size < 0`\n* `values.len() != nulls.len() * size` if `nulls` is `Some`\n* `values.data_type() != field.data_type()`\n* `!field.is_nullable() && !nulls.expand(size).contains(values.logical_nulls())`",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        187,
+        5
+      ],
+      "end": [
+        228,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "field",
+              {
+                "resolved_path": {
+                  "path": "FieldRef",
+                  "id": 545,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "size",
+              {
+                "primitive": "i32"
+              }
+            ],
+            [
+              "values",
+              {
+                "resolved_path": {
+                  "path": "ArrayRef",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "nulls",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "545": "arrow_schema::field::FieldRef",
+      "128": "arrow_array::array::ArrayRef",
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer",
+      "45": "core::result::Result",
+      "186": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          454,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self::try_new_with_length": 542,
+      "`FixedSizeListArray`": 491
+    },
+    "link_paths": {
+      "Self::try_new_with_length": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::try_new_with_length",
+      "`FixedSizeListArray`": "arrow_array::array::fixed_size_list_array::FixedSizeListArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "543",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-e164731462b6ed4d06b49312",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Self::try_new_with_length": "../operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md#op-ecc3e3b2100fb7f6ba0eab23",
+      "`FixedSizeListArray`": "../operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md#op-4772cb4965341d875c1269ee"
+    }
+  },
+  {
+    "id": "ecc3e3b2100fb7f6ba0eab23",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::try_new_with_length",
+    "name": "try_new_with_length",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_with_length(field: FieldRef, size: i32, values: ArrayRef, nulls: Option<NullBuffer>, len: usize) -> Result<Self, ArrowError>",
+    "docs": "Create a new [`FixedSizeListArray`] from the provided parts, returning an error on failure.\n\nThis method exists to allow the construction of arbitrary length degenerate (`size == 0`)\nand non-nullable `FixedSizeListArray`s. If you want a nullable `FixedSizeListArray`, then\nyou can use [`try_new()`] instead.\n\n[`try_new()`]: Self::try_new\n\n# Errors\n\n* `size < 0`\n* `nulls.len() != len` if `nulls` is `Some`\n* `values.len() != len * size`\n* `values.data_type() != field.data_type()`\n* `!field.is_nullable() && !nulls.expand(size).contains(values.logical_nulls())`",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        245,
+        5
+      ],
+      "end": [
+        313,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "field",
+              {
+                "resolved_path": {
+                  "path": "FieldRef",
+                  "id": 545,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "size",
+              {
+                "primitive": "i32"
+              }
+            ],
+            [
+              "values",
+              {
+                "resolved_path": {
+                  "path": "ArrayRef",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "nulls",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "545": "arrow_schema::field::FieldRef",
+      "128": "arrow_array::array::ArrayRef",
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer",
+      "45": "core::result::Result",
+      "186": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          454,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self::try_new": 543,
+      "`FixedSizeListArray`": 491
+    },
+    "link_paths": {
+      "Self::try_new": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::try_new",
+      "`FixedSizeListArray`": "arrow_array::array::fixed_size_list_array::FixedSizeListArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "542",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-ecc3e3b2100fb7f6ba0eab23",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Self::try_new": "../operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md#op-e164731462b6ed4d06b49312",
+      "`FixedSizeListArray`": "../operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md#op-4772cb4965341d875c1269ee"
+    }
+  },
+  {
+    "id": "5eb0b0ae110f4af1517aeca7",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::value",
+    "name": "value",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn value(&self, i: usize) -> ArrayRef",
+    "docs": "Returns ith value of this list array.\n\nNote: This method does not check for nulls and the value is arbitrary\n(but still well-defined) if [`is_null`](Self::is_null) returns true for the index.\n\n# Panics\nPanics if index `i` is out of bounds",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        360,
+        5
+      ],
+      "end": [
+        363,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "i",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          454,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self::is_null": 32
+    },
+    "link_paths": {
+      "Self::is_null": "arrow_array::array::Array::is_null"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "551",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-5eb0b0ae110f4af1517aeca7",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Self::is_null": "../operations/arrow_array.array.Array.md#op-fc6aff0e0247c3255575b6e1"
+    }
+  },
+  {
+    "id": "7b1028b75d2ea530643038b2",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::value",
+    "name": "value",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn value(&self, index: usize) -> Self::Item",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        582,
+        5
+      ],
+      "end": [
+        584,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "index",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "qualified_path": {
+              "name": "Item",
+              "args": null,
+              "self_type": {
+                "generic": "Self"
+              },
+              "trait": {
+                "path": "",
+                "id": 39,
+                "args": null
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "39": "arrow_array::array::ArrayAccessor"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ArrayAccessor",
+        "id": "arrow_array::array::ArrayAccessor",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::ArrayAccessor",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          579,
+          1
+        ],
+        "end": [
+          589,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "604",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-7b1028b75d2ea530643038b2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2e556ba74a00871d01f266ba",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::value_length",
+    "name": "value_length",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "const fn value_length(&self) -> i32",
+    "docs": "Returns the length for an element.\n\nAll elements have the same length as the array is a fixed size.",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        377,
+        5
+      ],
+      "end": [
+        379,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "i32"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": true,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          454,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "553",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-2e556ba74a00871d01f266ba",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a723ee0ec82a228c8ea08a60",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::value_offset",
+    "name": "value_offset",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn value_offset(&self, i: usize) -> i32",
+    "docs": "Returns the offset for value at index `i`.\n\nNote this doesn't do any bound checking, for performance reason.",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        369,
+        5
+      ],
+      "end": [
+        371,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "i",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "i32"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          454,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "552",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-a723ee0ec82a228c8ea08a60",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "44f4bf1fd8c4f21fbfaf1cea",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::value_type",
+    "name": "value_type",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn value_type(&self) -> DataType",
+    "docs": "Returns a clone of the value type of this list.",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        349,
+        5
+      ],
+      "end": [
+        351,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DataType",
+              "id": 126,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "126": "arrow_schema::datatype::DataType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          454,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "550",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-44f4bf1fd8c4f21fbfaf1cea",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5554545315910c1e21a62b7c",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::value_unchecked",
+    "name": "value_unchecked",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn value_unchecked(&self, index: usize) -> Self::Item",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        586,
+        5
+      ],
+      "end": [
+        588,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "index",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "qualified_path": {
+              "name": "Item",
+              "args": null,
+              "self_type": {
+                "generic": "Self"
+              },
+              "trait": {
+                "path": "",
+                "id": 39,
+                "args": null
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "39": "arrow_array::array::ArrayAccessor"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ArrayAccessor",
+        "id": "arrow_array::array::ArrayAccessor",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::ArrayAccessor",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          579,
+          1
+        ],
+        "end": [
+          589,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "605",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-5554545315910c1e21a62b7c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "14e15f3a59737608462c032f",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::values",
+    "name": "values",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn values(&self) -> &ArrayRef",
+    "docs": "",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        568,
+        5
+      ],
+      "end": [
+        570,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ArrayRef",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ListLikeArray",
+        "id": "arrow_array::array::ListLikeArray",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::ListLikeArray",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          567,
+          1
+        ],
+        "end": [
+          577,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "597",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-14e15f3a59737608462c032f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9177638322bf3cb1f691ed77",
+    "path": "arrow_array::array::fixed_size_list_array::FixedSizeListArray::values",
+    "name": "values",
+    "owner": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn values(&self) -> &ArrayRef",
+    "docs": "Returns a reference to the values of this list.",
+    "span": {
+      "filename": "src/array/fixed_size_list_array.rs",
+      "begin": [
+        344,
+        5
+      ],
+      "end": [
+        346,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ArrayRef",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FixedSizeListArray",
+          "id": "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/fixed_size_list_array.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          454,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "549",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.md",
+    "record_file": "operations/arrow_array.array.fixed_size_list_array.FixedSizeListArray.json",
+    "anchor": "op-9177638322bf3cb1f691ed77",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

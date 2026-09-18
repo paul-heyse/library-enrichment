@@ -24,6 +24,9 @@ fn contains_dynamic_filter(&self) -> bool
 fn watcher(&mut self) -> Option<&mut DynamicFilterTracker>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.dynamic_filters.tracker.DynamicFilterTracking.md).
+
+
 Classification of a predicate according to the dynamic filters it contains.
 
 Produced by [`DynamicFilterTracking::classify`] with a single tree walk so
@@ -49,6 +52,9 @@ struct DynamicFilterTracker
 ```rust
 fn changed(&mut self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.dynamic_filters.tracker.DynamicFilterTracker.md).
+
 
 Watches every still-incomplete [`DynamicFilterPhysicalExpr`] reachable from a
 predicate and reports, cheaply, whether any of them has been updated since

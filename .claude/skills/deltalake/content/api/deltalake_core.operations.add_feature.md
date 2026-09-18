@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## AddTableFeatureBuilder
 
 `struct` · `deltalake_core::operations::add_feature::AddTableFeatureBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.add_feature.AddTableFeatureBuilder.md)
 
 Also reachable as `deltalake::operations::add_feature::AddTableFeatureBuilder`
 
@@ -28,13 +29,6 @@ fn with_features<S: Into<TableFeatures>>(self, name: Vec<S>) -> Self
 
 ```rust
 fn into_future(self) -> Self::IntoFuture
-```
-
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
 ```
 
 Enable table features for a table

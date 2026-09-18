@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## normalize_table_url
 
 `function` · `deltalake_core::table::normalize_table_url`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.normalize_table_url.md)
 
 Also reachable as `deltalake::table::normalize_table_url`
 
@@ -28,6 +29,7 @@ equivalency failures
 ## DeltaTable
 
 `struct` · `deltalake_core::table::DeltaTable`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.DeltaTable.md)
 
 Also reachable as `deltalake::DeltaTable`, `deltalake::table::DeltaTable`, `deltalake_core::DeltaTable`
 

@@ -1,0 +1,441 @@
+[
+  {
+    "id": "b37e46224b914587014a7456",
+    "path": "arrow_avro::reader::async_reader::async_file_reader::AsyncFileReader",
+    "name": "AsyncFileReader",
+    "owner": null,
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "trait",
+    "signature": "trait AsyncFileReader: Send",
+    "docs": "The asynchronous interface used by [`super::AsyncAvroFileReader`] to read avro files\n\nNotes:\n\n1. There is a default implementation for types that implement [`AsyncRead`]\n   and [`AsyncSeek`], for example [`tokio::fs::File`].\n\n2. Implementations for remote storage, such as the [`object_store`] crate,\n   can implement this interface directly, typically by pairing a store\n   handle with an object path and delegating [`Self::get_bytes`] and\n   [`Self::get_byte_ranges`] to ranged reads. [`super::SpawnedReader`] can\n   wrap such a reader to perform its I/O on a dedicated tokio runtime.\n\n[`object_store`]: https://crates.io/crates/object_store\n\n# Example: implementing `AsyncFileReader` for the `object_store` crate\n\n```no_run\n# use std::ops::Range;\n# use std::sync::Arc;\nuse arrow_avro::errors::AvroError;\nuse arrow_avro::reader::AsyncFileReader;\nuse bytes::Bytes;\nuse futures::FutureExt;\nuse futures::future::BoxFuture;\nuse object_store::path::Path;\nuse object_store::{ObjectStore, ObjectStoreExt};\n\n#[derive(Clone, Debug)]\nstruct ObjectStoreReader {\n    store: Arc<dyn ObjectStore>,\n    path: Path,\n}\n\nimpl AsyncFileReader for ObjectStoreReader {\n    fn get_bytes(&mut self, range: Range<u64>) -> BoxFuture<'_, Result<Bytes, AvroError>> {\n        async move {\n            self.store\n                .get_range(&self.path, range)\n                .await\n                .map_err(|e| AvroError::General(e.to_string()))\n        }\n        .boxed()\n    }\n\n    fn get_byte_ranges(\n        &mut self,\n        ranges: Vec<Range<u64>>,\n    ) -> BoxFuture<'_, Result<Vec<Bytes>, AvroError>> {\n        async move {\n            self.store\n                .get_ranges(&self.path, &ranges)\n                .await\n                .map_err(|e| AvroError::General(e.to_string()))\n        }\n        .boxed()\n    }\n}\n```\n\n[`tokio::fs::File`]: https://docs.rs/tokio/latest/tokio/fs/struct.File.html",
+    "span": {
+      "filename": "src/reader/async_reader/async_file_reader.rs",
+      "begin": [
+        87,
+        1
+      ],
+      "end": [
+        108,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          82,
+          86
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 19,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": [
+          95,
+          98,
+          101,
+          104
+        ]
+      }
+    },
+    "type_references": {
+      "19": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {
+      "`super::AsyncAvroFileReader`": 88,
+      "`AsyncSeek`": 90,
+      "`Self::get_byte_ranges`": 86,
+      "`Self::get_bytes`": 82,
+      "`super::SpawnedReader`": 91,
+      "`AsyncRead`": 89
+    },
+    "link_paths": {
+      "`super::AsyncAvroFileReader`": "arrow_avro::reader::async_reader::AsyncAvroFileReader",
+      "`AsyncSeek`": "tokio::io::async_seek::AsyncSeek",
+      "`Self::get_byte_ranges`": "arrow_avro::reader::async_reader::async_file_reader::AsyncFileReader::get_byte_ranges",
+      "`Self::get_bytes`": "arrow_avro::reader::async_reader::async_file_reader::AsyncFileReader::get_bytes",
+      "`super::SpawnedReader`": "arrow_avro::reader::async_reader::spawn::SpawnedReader",
+      "`AsyncRead`": "tokio::io::async_read::AsyncRead"
+    },
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "92",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.async_reader.async_file_reader.AsyncFileReader.md",
+    "record_file": "operations/arrow_avro.reader.async_reader.async_file_reader.AsyncFileReader.json",
+    "anchor": "op-b37e46224b914587014a7456",
+    "aliases": [
+      "arrow_avro::reader::AsyncFileReader",
+      "arrow_avro::reader::async_reader::AsyncFileReader"
+    ],
+    "resolved_doc_links": {
+      "`super::AsyncAvroFileReader`": "../operations/arrow_avro.reader.async_reader.AsyncAvroFileReader.md#op-1556b0e38a5fc44a0cc6248c",
+      "`Self::get_byte_ranges`": "../operations/arrow_avro.reader.async_reader.async_file_reader.AsyncFileReader.md#op-282637cd7c3cc0eab61ebd91",
+      "`Self::get_bytes`": "../operations/arrow_avro.reader.async_reader.async_file_reader.AsyncFileReader.md#op-ff3557fbfe855f49413ddd9d",
+      "`super::SpawnedReader`": "../operations/arrow_avro.reader.async_reader.spawn.SpawnedReader.md#op-afdf2c39ce6cfca5ab90e59a"
+    }
+  },
+  {
+    "id": "282637cd7c3cc0eab61ebd91",
+    "path": "arrow_avro::reader::async_reader::async_file_reader::AsyncFileReader::get_byte_ranges",
+    "name": "get_byte_ranges",
+    "owner": "arrow_avro::reader::async_reader::async_file_reader::AsyncFileReader",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_byte_ranges(&mut self, ranges: Vec<Range<u64>>) -> BoxFuture<'_, Result<Vec<Bytes>, AvroError>>",
+    "docs": "Retrieve multiple byte ranges. The default implementation will call `get_bytes` sequentially",
+    "span": {
+      "filename": "src/reader/async_reader/async_file_reader.rs",
+      "begin": [
+        92,
+        5
+      ],
+      "end": [
+        107,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "ranges",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 87,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Range",
+                              "id": 83,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "u64"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BoxFuture",
+              "id": 84,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'_"
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Result",
+                          "id": 9,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Vec",
+                                      "id": 87,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "resolved_path": {
+                                                  "path": "Bytes",
+                                                  "id": 85,
+                                                  "args": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "AvroError",
+                                      "id": 11,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "87": "alloc::vec::Vec",
+      "83": "core::ops::range::Range",
+      "84": "futures_core::future::BoxFuture",
+      "9": "core::result::Result",
+      "85": "bytes::bytes::Bytes",
+      "11": "arrow_avro::errors::AvroError"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "86",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.async_reader.async_file_reader.AsyncFileReader.md",
+    "record_file": "operations/arrow_avro.reader.async_reader.async_file_reader.AsyncFileReader.json",
+    "anchor": "op-282637cd7c3cc0eab61ebd91",
+    "aliases": [
+      "arrow_avro::reader::AsyncFileReader::get_byte_ranges",
+      "arrow_avro::reader::async_reader::AsyncFileReader::get_byte_ranges"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ff3557fbfe855f49413ddd9d",
+    "path": "arrow_avro::reader::async_reader::async_file_reader::AsyncFileReader::get_bytes",
+    "name": "get_bytes",
+    "owner": "arrow_avro::reader::async_reader::async_file_reader::AsyncFileReader",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_bytes(&mut self, range: Range<u64>) -> BoxFuture<'_, Result<Bytes, AvroError>>",
+    "docs": "Retrieve the bytes in `range`",
+    "span": {
+      "filename": "src/reader/async_reader/async_file_reader.rs",
+      "begin": [
+        89,
+        5
+      ],
+      "end": [
+        89,
+        91
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "range",
+              {
+                "resolved_path": {
+                  "path": "Range",
+                  "id": 83,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "u64"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BoxFuture",
+              "id": 84,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'_"
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Result",
+                          "id": 9,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Bytes",
+                                      "id": 85,
+                                      "args": null
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "AvroError",
+                                      "id": 11,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "83": "core::ops::range::Range",
+      "84": "futures_core::future::BoxFuture",
+      "9": "core::result::Result",
+      "85": "bytes::bytes::Bytes",
+      "11": "arrow_avro::errors::AvroError"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "82",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.async_reader.async_file_reader.AsyncFileReader.md",
+    "record_file": "operations/arrow_avro.reader.async_reader.async_file_reader.AsyncFileReader.json",
+    "anchor": "op-ff3557fbfe855f49413ddd9d",
+    "aliases": [
+      "arrow_avro::reader::AsyncFileReader::get_bytes",
+      "arrow_avro::reader::async_reader::AsyncFileReader::get_bytes"
+    ],
+    "resolved_doc_links": {}
+  }
+]

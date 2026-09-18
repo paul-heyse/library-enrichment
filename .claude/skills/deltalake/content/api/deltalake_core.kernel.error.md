@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## Error
 
 `enum` · `deltalake_core::kernel::error::Error`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.error.Error.md)
 
 Also reachable as `deltalake::kernel::Error`, `deltalake::kernel::error::Error`, `deltalake_core::kernel::Error`
 
@@ -45,6 +46,7 @@ fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Resu
 ## DeltaResult
 
 `type_alias` · `deltalake_core::kernel::error::DeltaResult`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.error.DeltaResult.md)
 
 Also reachable as `deltalake::kernel::DeltaResult`, `deltalake::kernel::error::DeltaResult`, `deltalake_core::kernel::DeltaResult`
 

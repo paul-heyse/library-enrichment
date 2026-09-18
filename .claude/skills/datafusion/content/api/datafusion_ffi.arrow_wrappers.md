@@ -23,6 +23,9 @@ fn try_from(array: &ArrayRef) -> Result<Self, Self::Error>
 fn try_from(value: &ScalarValue) -> Result<Self, Self::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.arrow_wrappers.WrappedArray.md).
+
+
 This is a wrapper struct for FFI_ArrowArray to indicate
 that the struct is FFI Safe. For convenience, we also include the
 schema needed to create a record batch from the array.
@@ -46,6 +49,9 @@ struct WrappedSchema
 ```rust
 fn from(value: SchemaRef) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.arrow_wrappers.WrappedSchema.md).
+
 
 This is a wrapper struct around FFI_ArrowSchema simply to indicate
 that the underlying struct is FFI safe.

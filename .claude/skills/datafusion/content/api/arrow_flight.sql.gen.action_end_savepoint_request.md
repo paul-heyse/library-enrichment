@@ -12,4 +12,7 @@ enum EndSavepoint
 
 **Variants**: `Unspecified`, `Release`, `Rollback`
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.action_end_savepoint_request.EndSavepoint.md).
+
+
 ---

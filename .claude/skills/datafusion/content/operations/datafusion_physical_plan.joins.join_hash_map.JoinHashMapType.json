@@ -1,0 +1,1078 @@
+[
+  {
+    "id": "011cdd5b55a2842180d68982",
+    "path": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType",
+    "name": "JoinHashMapType",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait JoinHashMapType: Send + Sync",
+    "docs": "Maps a `u64` hash value based on the build side [\"on\" values] to a list of indices with this key's value.\n\nBy allocating a `HashMap` with capacity for *at least* the number of rows for entries at the build side,\nwe make sure that we don't have to re-hash the hashmap, which needs access to the key (the hash in this case) value.\n\nE.g. 1 -> [3, 6, 8] indicates that the column values map to rows 3, 6 and 8 for hash value 1\nAs the key is a hash value, we need to check possible hash collisions in the probe stage\nDuring this stage it might be the case that a row is contained the same hashmap value,\nbut the values don't match. Those are checked in the `equal_rows_arr` method.\n\nThe indices (values) are stored in a separate chained list stored as `Vec<u32>` or `Vec<u64>`.\n\nThe first value (+1) is stored in the hashmap, whereas the next value is stored in array at the position value.\n\nThe chain can be followed until the value \"0\" has been reached, meaning the end of the list.\nAlso see chapter 5.3 of [Balancing vectorized query execution with bandwidth-optimized storage](https://dare.uva.nl/search?identifier=5ccbb60a-38b8-4eeb-858a-e7735dd37487)\n\n# Example\n\n``` text\nSee the example below:\n\nInsert (10,1)            <-- insert hash value 10 with row index 1\nmap:\n----------\n| 10 | 2 |\n----------\nnext:\n---------------------\n| 0 | 0 | 0 | 0 | 0 |\n---------------------\nInsert (20,2)\nmap:\n----------\n| 10 | 2 |\n| 20 | 3 |\n----------\nnext:\n---------------------\n| 0 | 0 | 0 | 0 | 0 |\n---------------------\nInsert (10,3)           <-- collision! row index 3 has a hash value of 10 as well\nmap:\n----------\n| 10 | 4 |\n| 20 | 3 |\n----------\nnext:\n---------------------\n| 0 | 0 | 0 | 2 | 0 |  <--- hash value 10 maps to 4,2 (which means indices values 3,1)\n---------------------\nInsert (10,4)          <-- another collision! row index 4 ALSO has a hash value of 10\nmap:\n---------\n| 10 | 5 |\n| 20 | 3 |\n---------\nnext:\n---------------------\n| 0 | 0 | 0 | 2 | 4 | <--- hash value 10 maps to 5,4,2 (which means indices values 4,3,1)\n---------------------\n```\n\nHere we have an option between creating a `JoinHashMapType` using `u32` or `u64` indices\nbased on how many rows were being used for indices.\n\nAt runtime we choose between using `JoinHashMapU32` and `JoinHashMapU64` which oth implement\n`JoinHashMapType`.\n\n## Note on use of this trait as a public API\nThis is currently a public trait but is mainly intended for internal use within DataFusion.\nFor example, we may compare references to `JoinHashMapType` implementations by pointer equality\nrather than deep equality of contents, as deep equality would be expensive and in our usage\npatterns it is impossible for two different hash maps to have identical contents in a practical sense.",
+    "span": {
+      "filename": "src/joins/join_hash_map.rs",
+      "begin": [
+        105,
+        1
+      ],
+      "end": [
+        142,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          3758,
+          3759,
+          3761,
+          3762,
+          3764,
+          3765,
+          3766
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 7,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 9,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": [
+          3774,
+          3783
+        ]
+      }
+    },
+    "type_references": {
+      "7": "core::marker::Send",
+      "9": "core::marker::Sync"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3629",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.md",
+    "record_file": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.json",
+    "anchor": "op-011cdd5b55a2842180d68982",
+    "aliases": [
+      "datafusion_physical_plan::joins::utils::JoinHashMapType"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e9c5d998b600422ffd5c57c4",
+    "path": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType::contain_hashes",
+    "name": "contain_hashes",
+    "owner": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn contain_hashes(&self, hash_values: &[u64]) -> BooleanArray",
+    "docs": "Returns a BooleanArray indicating which of the provided hashes exist in the map.",
+    "span": {
+      "filename": "src/joins/join_hash_map.rs",
+      "begin": [
+        135,
+        5
+      ],
+      "end": [
+        135,
+        67
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "hash_values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "u64"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BooleanArray",
+              "id": 3342,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3342": "arrow_array::array::boolean_array::BooleanArray"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3764",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.md",
+    "record_file": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.json",
+    "anchor": "op-e9c5d998b600422ffd5c57c4",
+    "aliases": [
+      "datafusion_physical_plan::joins::utils::JoinHashMapType::contain_hashes"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fbe53216e9c27f010afcb6e6",
+    "path": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType::extend_zero",
+    "name": "extend_zero",
+    "owner": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn extend_zero(&mut self, len: usize)",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/join_hash_map.rs",
+      "begin": [
+        106,
+        5
+      ],
+      "end": [
+        106,
+        43
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3758",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.md",
+    "record_file": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.json",
+    "anchor": "op-fbe53216e9c27f010afcb6e6",
+    "aliases": [
+      "datafusion_physical_plan::joins::utils::JoinHashMapType::extend_zero"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ad8522e43411c0a34c86f9ec",
+    "path": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType::get_matched_indices",
+    "name": "get_matched_indices",
+    "owner": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn get_matched_indices<'a>(&self, iter: Box<dyn Iterator<Item = (usize, &'a u64)> + 'a>, deleted_offset: Option<usize>) -> (Vec<u32>, Vec<u64>)",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/join_hash_map.rs",
+      "begin": [
+        114,
+        5
+      ],
+      "end": [
+        118,
+        31
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "iter",
+              {
+                "resolved_path": {
+                  "path": "Box",
+                  "id": 186,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "Iterator",
+                                    "id": 3760,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [],
+                                        "constraints": [
+                                          {
+                                            "name": "Item",
+                                            "args": null,
+                                            "binding": {
+                                              "equality": {
+                                                "type": {
+                                                  "tuple": [
+                                                    {
+                                                      "primitive": "usize"
+                                                    },
+                                                    {
+                                                      "borrowed_ref": {
+                                                        "lifetime": "'a",
+                                                        "is_mutable": false,
+                                                        "type": {
+                                                          "primitive": "u64"
+                                                        }
+                                                      }
+                                                    }
+                                                  ]
+                                                }
+                                              }
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": "'a"
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "deleted_offset",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "tuple": [
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "u32"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              },
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "u64"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "186": "alloc::boxed::Box",
+      "3760": "core::iter::traits::iterator::Iterator",
+      "281": "core::option::Option",
+      "2": "alloc::vec::Vec"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3761",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.md",
+    "record_file": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.json",
+    "anchor": "op-ad8522e43411c0a34c86f9ec",
+    "aliases": [
+      "datafusion_physical_plan::joins::utils::JoinHashMapType::get_matched_indices"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "94bbbdb444352844bb6ddd35",
+    "path": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType::get_matched_indices_with_limit_offset",
+    "name": "get_matched_indices_with_limit_offset",
+    "owner": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn get_matched_indices_with_limit_offset(&self, hash_values: &[u64], valid_keys: Option<&NullBuffer>, limit: usize, offset: (usize, Option<u64>), input_indices: &mut Vec<u32>, match_indices: &mut Vec<u64>) -> Option<(usize, Option<u64>)>",
+    "docs": "Probe rows marked NULL in `valid_keys` are skipped without a lookup:\ntheir key contains a NULL, which cannot match any build row under\n`NullEquality::NullEqualsNothing`. Pass `None` when every probe key is\nmatchable.",
+    "span": {
+      "filename": "src/joins/join_hash_map.rs",
+      "begin": [
+        124,
+        5
+      ],
+      "end": [
+        132,
+        28
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "hash_values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "u64"
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "valid_keys",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "NullBuffer",
+                                  "id": 3763,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "limit",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "offset",
+              {
+                "tuple": [
+                  {
+                    "primitive": "usize"
+                  },
+                  {
+                    "resolved_path": {
+                      "path": "Option",
+                      "id": 281,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "primitive": "u64"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            [
+              "input_indices",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Vec",
+                      "id": 2,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "primitive": "u32"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "match_indices",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Vec",
+                      "id": 2,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "primitive": "u64"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": [
+                          {
+                            "primitive": "usize"
+                          },
+                          {
+                            "resolved_path": {
+                              "path": "Option",
+                              "id": 281,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "u64"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "3763": "arrow_buffer::buffer::null::NullBuffer",
+      "2": "alloc::vec::Vec"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3762",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.md",
+    "record_file": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.json",
+    "anchor": "op-94bbbdb444352844bb6ddd35",
+    "aliases": [
+      "datafusion_physical_plan::joins::utils::JoinHashMapType::get_matched_indices_with_limit_offset"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "04a1541f10f746e636d669d7",
+    "path": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType::is_empty",
+    "name": "is_empty",
+    "owner": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "Returns `true` if the join hash map contains no entries.",
+    "span": {
+      "filename": "src/joins/join_hash_map.rs",
+      "begin": [
+        138,
+        5
+      ],
+      "end": [
+        138,
+        32
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3765",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.md",
+    "record_file": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.json",
+    "anchor": "op-04a1541f10f746e636d669d7",
+    "aliases": [
+      "datafusion_physical_plan::joins::utils::JoinHashMapType::is_empty"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7c5cb6b9d1f92076a78d95d3",
+    "path": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType::len",
+    "name": "len",
+    "owner": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Returns the number of entries in the join hash map.",
+    "span": {
+      "filename": "src/joins/join_hash_map.rs",
+      "begin": [
+        141,
+        5
+      ],
+      "end": [
+        141,
+        28
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3766",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.md",
+    "record_file": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.json",
+    "anchor": "op-7c5cb6b9d1f92076a78d95d3",
+    "aliases": [
+      "datafusion_physical_plan::joins::utils::JoinHashMapType::len"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fe2b8907033a3b77de5928a2",
+    "path": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType::update_from_iter",
+    "name": "update_from_iter",
+    "owner": "datafusion_physical_plan::joins::join_hash_map::JoinHashMapType",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn update_from_iter<'a>(&mut self, iter: Box<dyn Iterator<Item = (usize, &'a u64)> + Send + 'a>, deleted_offset: usize)",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/join_hash_map.rs",
+      "begin": [
+        108,
+        5
+      ],
+      "end": [
+        112,
+        7
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "iter",
+              {
+                "resolved_path": {
+                  "path": "Box",
+                  "id": 186,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "Iterator",
+                                    "id": 3760,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [],
+                                        "constraints": [
+                                          {
+                                            "name": "Item",
+                                            "args": null,
+                                            "binding": {
+                                              "equality": {
+                                                "type": {
+                                                  "tuple": [
+                                                    {
+                                                      "primitive": "usize"
+                                                    },
+                                                    {
+                                                      "borrowed_ref": {
+                                                        "lifetime": "'a",
+                                                        "is_mutable": false,
+                                                        "type": {
+                                                          "primitive": "u64"
+                                                        }
+                                                      }
+                                                    }
+                                                  ]
+                                                }
+                                              }
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  },
+                                  "generic_params": []
+                                },
+                                {
+                                  "trait": {
+                                    "path": "Send",
+                                    "id": 7,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": "'a"
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "deleted_offset",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "186": "alloc::boxed::Box",
+      "3760": "core::iter::traits::iterator::Iterator",
+      "7": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3759",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.md",
+    "record_file": "operations/datafusion_physical_plan.joins.join_hash_map.JoinHashMapType.json",
+    "anchor": "op-fe2b8907033a3b77de5928a2",
+    "aliases": [
+      "datafusion_physical_plan::joins::utils::JoinHashMapType::update_from_iter"
+    ],
+    "resolved_doc_links": {}
+  }
+]

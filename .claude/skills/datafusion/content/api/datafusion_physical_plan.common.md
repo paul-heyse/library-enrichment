@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 7 public items · structured records in [`mo
 fn build_checked_file_list(dir: &str, ext: &str) -> datafusion_common::Result<Vec<String>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.common.build_checked_file_list.md).
+
+
 Recursively builds a list of files in a directory with a given extension
 
 ---
@@ -21,6 +24,9 @@ Recursively builds a list of files in a directory with a given extension
 ```rust
 fn build_file_list(dir: &str, ext: &str) -> datafusion_common::Result<Vec<String>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.common.build_file_list.md).
+
 
 Recursively builds a list of files in a directory with a given extension
 
@@ -34,6 +40,9 @@ Recursively builds a list of files in a directory with a given extension
 fn can_project(schema: &arrow::datatypes::SchemaRef, projection: Option<&[usize]>) -> datafusion_common::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.common.can_project.md).
+
+
 Checks if the given projection is valid for the given schema.
 
 ---
@@ -46,6 +55,9 @@ Checks if the given projection is valid for the given schema.
 async fn collect(stream: super::SendableRecordBatchStream) -> datafusion_common::Result<Vec<arrow::record_batch::RecordBatch>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.common.collect.md).
+
+
 Create a vector of record batches from a stream
 
 ---
@@ -57,6 +69,9 @@ Create a vector of record batches from a stream
 ```rust
 fn compute_record_batch_statistics(batches: &[Vec<arrow::record_batch::RecordBatch>], schema: &arrow::datatypes::Schema, projection: Option<Vec<usize>>) -> Statistics
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.common.compute_record_batch_statistics.md).
+
 
 Computes the statistics for an in-memory RecordBatch
 
@@ -72,6 +87,9 @@ and does not apply any kernel on the actual data.
 ```rust
 fn project_plan_to_schema(input: std::sync::Arc<dyn ExecutionPlan>, expected_schema: &arrow::datatypes::SchemaRef) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.common.project_plan_to_schema.md).
+
 
 Align `input`'s physical plan schema with `expected_schema`.
 
@@ -95,6 +113,9 @@ schema metadata, and nullability narrowing.
 ```rust
 fn spawn_buffered(input: super::SendableRecordBatchStream, buffer: usize) -> super::SendableRecordBatchStream
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.common.spawn_buffered.md).
+
 
 If running in a tokio context spawns the execution of `stream` to a separate task
 allowing it to execute in parallel with an intermediate buffer of size `buffer`.

@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::char_length`, `datafusion_functions::exp
 fn char_length(string: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.char_length.md).
+
+
 the number of characters in the `string`
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `datafusion::prelude::character_length`, `datafusion_functions
 ```rust
 fn character_length(string: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.character_length.md).
+
 
 the number of characters in the `string`
 
@@ -40,6 +46,9 @@ Also reachable as `datafusion::prelude::find_in_set`, `datafusion_functions::exp
 fn find_in_set(string: datafusion_expr::Expr, strlist: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.find_in_set.md).
+
+
 Returns a value in the range of 1 to N if the string `str` is in the string list `strlist` consisting of N substrings
 
 ---
@@ -53,6 +62,9 @@ Also reachable as `datafusion::prelude::initcap`, `datafusion_functions::expr_fn
 ```rust
 fn initcap(string: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.initcap.md).
+
 
 converts the first letter of each word in `string` in uppercase and the remaining characters in lowercase
 
@@ -68,6 +80,9 @@ Also reachable as `datafusion::prelude::instr`, `datafusion_functions::expr_fn::
 fn instr(string: datafusion_expr::Expr, substring: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.instr.md).
+
+
 finds the position from where the `substring` matches the `string`
 
 ---
@@ -81,6 +96,9 @@ Also reachable as `datafusion::prelude::left`, `datafusion_functions::expr_fn::l
 ```rust
 fn left(string: datafusion_expr::Expr, n: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.left.md).
+
 
 returns the first `n` characters in the `string`
 
@@ -96,6 +114,9 @@ Also reachable as `datafusion::prelude::length`, `datafusion_functions::expr_fn:
 fn length(string: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.length.md).
+
+
 the number of characters in the `string`
 
 ---
@@ -109,6 +130,9 @@ Also reachable as `datafusion::prelude::lpad`, `datafusion_functions::expr_fn::l
 ```rust
 fn lpad(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.lpad.md).
+
 
 fill up a string to the length by prepending the characters
 
@@ -124,6 +148,9 @@ Also reachable as `datafusion::prelude::position`, `datafusion_functions::expr_f
 fn position(string: datafusion_expr::Expr, substring: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.position.md).
+
+
 finds the position from where the `substring` matches the `string`
 
 ---
@@ -137,6 +164,9 @@ Also reachable as `datafusion::prelude::reverse`, `datafusion_functions::expr_fn
 ```rust
 fn reverse(string: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.reverse.md).
+
 
 reverses the `string`
 
@@ -152,6 +182,9 @@ Also reachable as `datafusion::prelude::right`, `datafusion_functions::expr_fn::
 fn right(string: datafusion_expr::Expr, n: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.right.md).
+
+
 returns the last `n` characters in the `string`
 
 ---
@@ -165,6 +198,9 @@ Also reachable as `datafusion::prelude::rpad`, `datafusion_functions::expr_fn::r
 ```rust
 fn rpad(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.rpad.md).
+
 
 fill up a string to the length by appending the characters
 
@@ -180,6 +216,9 @@ Also reachable as `datafusion::prelude::strpos`, `datafusion_functions::expr_fn:
 fn strpos(string: datafusion_expr::Expr, substring: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.strpos.md).
+
+
 finds the position from where the `substring` matches the `string`
 
 ---
@@ -193,6 +232,9 @@ Also reachable as `datafusion::prelude::substr`, `datafusion_functions::expr_fn:
 ```rust
 fn substr(string: datafusion_expr::Expr, position: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.substr.md).
+
 
 substring from the `position` to the end
 
@@ -208,6 +250,9 @@ Also reachable as `datafusion::prelude::substr_index`, `datafusion_functions::ex
 fn substr_index(string: datafusion_expr::Expr, delimiter: datafusion_expr::Expr, count: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.substr_index.md).
+
+
 Returns the substring from str before count occurrences of the delimiter
 
 ---
@@ -222,6 +267,9 @@ Also reachable as `datafusion::prelude::substring`, `datafusion_functions::expr_
 fn substring(string: datafusion_expr::Expr, position: datafusion_expr::Expr, length: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.substring.md).
+
+
 substring from the `position` with `length` characters
 
 ---
@@ -235,6 +283,9 @@ Also reachable as `datafusion::prelude::translate`, `datafusion_functions::expr_
 ```rust
 fn translate(string: datafusion_expr::Expr, from: datafusion_expr::Expr, to: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.expr_fn.translate.md).
+
 
 replaces the characters in `from` with the counterpart in `to`
 

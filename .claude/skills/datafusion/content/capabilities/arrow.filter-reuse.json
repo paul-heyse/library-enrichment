@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "id": "arrow.filter-reuse",
+  "title": "Reuse selection preparation when the workload warrants it",
+  "task_aliases": [
+    "same mask many arrays",
+    "filter predicate reuse",
+    "filter once",
+    "selection bitmap setup"
+  ],
+  "crates": [
+    "arrow-select"
+  ],
+  "input": [
+    "BooleanArray",
+    "Array",
+    "RecordBatch"
+  ],
+  "output": [
+    "FilterPredicate",
+    "ArrayRef",
+    "RecordBatch"
+  ],
+  "properties": [
+    "reuse",
+    "nulls",
+    "setup-cost"
+  ],
+  "operations": [
+    "arrow_select::filter::FilterBuilder",
+    "arrow_select::filter::FilterBuilder::optimize",
+    "arrow_select::filter::FilterPredicate::filter",
+    "arrow_select::filter::filter"
+  ],
+  "brief": "FilterBuilder separates mask preparation from applying it. Consider reusable preparation for many arrays sharing one mask; direct filter remains a simple one-shot choice.",
+  "choices": [
+    {
+      "candidate": "filter",
+      "choose_when": "One array or occasional selection",
+      "tradeoff": "Minimal orchestration; do not assume reusing a builder is faster for this workload.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "FilterBuilder / FilterPredicate",
+      "choose_when": "Repeated application of the same mask",
+      "tradeoff": "Preparation and optimize have costs; measure mask density, sizes and reuse count.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "arrow.filter-reuse.shape",
+      "aspect": "shape",
+      "statement": "Build from &BooleanArray, optionally optimize, then apply the predicate to arrays/batches with the corresponding row domain.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "arrow.filter-reuse.semantics",
+      "aspect": "semantics",
+      "statement": "Reuse changes preparation, not the expected selected values. False and null mask entries are excluded; selected order remains source order.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "arrow.filter-reuse.performance",
+      "aspect": "performance",
+      "statement": "The optimize documentation describes a tradeoff for repeated use; it is not a universal performance guarantee. Benchmark total setup plus application and keep a direct-filter control.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Reuse one built predicate only for arrays with the intended shared row domain.",
+    "Measure one-shot and repeated cases separately; compare exact outputs before timing."
+  ],
+  "unknowns": [
+    "No production throughput claim is established by the equality probe; target-dependent timing is separate."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "arrow_select::filter::FilterBuilder",
+        "arrow_select::filter::FilterBuilder::optimize",
+        "arrow_select::filter::FilterPredicate::filter",
+        "arrow_select::filter::filter"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    },
+    {
+      "id": "probe",
+      "kind": "runtime_observation",
+      "tests": [
+        "filter_null_is_not_selected_and_metadata_is_retained"
+      ],
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Only the named assertions in the recorded Cargo profile."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "arrow_select::filter::FilterBuilder",
+      "arrow_select::filter::FilterBuilder::optimize",
+      "arrow_select::filter::FilterPredicate::filter",
+      "arrow_select::filter::filter"
+    ],
+    "candidate_set": [
+      "filter",
+      "FilterBuilder / FilterPredicate"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  },
+  "resolved_operations": [
+    {
+      "path": "arrow_select::filter::FilterBuilder",
+      "id": "cffeb561fc559f04206cfdc3",
+      "kind": "struct",
+      "crate": "arrow-select",
+      "record": "operations/arrow_select.filter.FilterBuilder.json",
+      "page": "operations/arrow_select.filter.FilterBuilder.md#op-cffeb561fc559f04206cfdc3",
+      "signature": "struct FilterBuilder"
+    },
+    {
+      "path": "arrow_select::filter::FilterBuilder::optimize",
+      "id": "58a30c42976fa26d4bc93e1e",
+      "kind": "function",
+      "crate": "arrow-select",
+      "record": "operations/arrow_select.filter.FilterBuilder.json",
+      "page": "operations/arrow_select.filter.FilterBuilder.md#op-58a30c42976fa26d4bc93e1e",
+      "signature": "fn optimize(self) -> Self"
+    },
+    {
+      "path": "arrow_select::filter::FilterPredicate::filter",
+      "id": "5fe81cc083d413b3f0be1467",
+      "kind": "function",
+      "crate": "arrow-select",
+      "record": "operations/arrow_select.filter.FilterPredicate.json",
+      "page": "operations/arrow_select.filter.FilterPredicate.md#op-5fe81cc083d413b3f0be1467",
+      "signature": "fn filter(&self, values: &dyn Array) -> Result<ArrayRef, ArrowError>"
+    },
+    {
+      "path": "arrow_select::filter::filter",
+      "id": "81498df4434a7e4fa4ec4f9e",
+      "kind": "function",
+      "crate": "arrow-select",
+      "record": "operations/arrow_select.filter.filter.json",
+      "page": "operations/arrow_select.filter.filter.md#op-81498df4434a7e4fa4ec4f9e",
+      "signature": "fn filter(values: &dyn Array, predicate: &BooleanArray) -> Result<ArrayRef, ArrowError>"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/arrow.filter-reuse.json"
+}

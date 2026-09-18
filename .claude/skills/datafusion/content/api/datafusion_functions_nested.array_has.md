@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_has`, `datafusion_functions_nested
 fn array_has(haystack_array: datafusion_expr::Expr, element: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_has.array_has.md).
+
+
 returns true, if the element appears in the first array, otherwise false.
 
 ---
@@ -26,6 +29,9 @@ Also reachable as `datafusion::prelude::array_has_all`, `datafusion_functions_ne
 fn array_has_all(haystack_array: datafusion_expr::Expr, needle_array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_has.array_has_all.md).
+
+
 returns true if each element of the second array appears in the first array; otherwise, it returns false.
 
 ---
@@ -37,6 +43,9 @@ returns true if each element of the second array appears in the first array; oth
 ```rust
 fn array_has_all_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_has.array_has_all_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayHasAll
@@ -53,6 +62,9 @@ Also reachable as `datafusion::prelude::array_has_any`, `datafusion_functions_ne
 fn array_has_any(first_array: datafusion_expr::Expr, second_array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_has.array_has_any.md).
+
+
 returns true if at least one element of the second array appears in the first array; otherwise, it returns false.
 
 ---
@@ -64,6 +76,9 @@ returns true if at least one element of the second array appears in the first ar
 ```rust
 fn array_has_any_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_has.array_has_any_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayHasAny
@@ -77,6 +92,9 @@ ArrayHasAny
 ```rust
 fn array_has_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_has.array_has_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayHas
@@ -113,6 +131,9 @@ fn signature(&self) -> &Signature
 fn simplify(&self, args: Vec<Expr>, _info: &datafusion_expr::simplify::SimplifyContext) -> Result<ExprSimplifyResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_has.ArrayHas.md).
+
+
 ---
 
 ## ArrayHasAll
@@ -144,6 +165,9 @@ fn return_type(&self, _: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_has.ArrayHasAll.md).
+
+
 ---
 
 ## ArrayHasAny
@@ -174,5 +198,8 @@ fn name(&self) -> &str
 fn return_type(&self, _: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_has.ArrayHasAny.md).
+
 
 ---

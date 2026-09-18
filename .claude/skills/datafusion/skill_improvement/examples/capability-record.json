@@ -1,0 +1,67 @@
+{
+  "format_status": "illustrative proposed authoring record; not a deployed schema",
+  "id": "arrow.selection.gather",
+  "purpose": "Gather array values by index, preserving requested order and repeated indices.",
+  "task_aliases": ["gather rows", "reorder values", "repeat selected positions"],
+  "profile": {"package": "arrow-select", "version": "59.3.0"},
+  "operations": [
+    {
+      "canonical_path": "arrow_select::take::take",
+      "access_paths": ["arrow::compute::take"],
+      "phase": "synchronous array computation",
+      "parameters": [
+        {"name": "values", "rust_type": "&dyn Array", "semantic_role": "source values"},
+        {"name": "indices", "rust_type": "&dyn Array", "semantic_role": "integer gather indices, possibly nullable"},
+        {"name": "options", "rust_type": "Option<TakeOptions>", "semantic_role": "bounds-check policy"}
+      ],
+      "result": {
+        "rust_type": "Result<ArrayRef, ArrowError>",
+        "type_shape": {"kind": "result", "ok": {"kind": "named", "name": "ArrayRef"}, "error": {"kind": "named", "name": "ArrowError"}},
+        "type_shape_note": "Readable illustration only; implementation should retain the original rustdoc type tree and artifact-scoped identity links."
+      },
+      "source": "../evidence/sources/arrow-select-59.3.0/src/take.rs",
+      "source_locator": "function take and its documentation"
+    }
+  ],
+  "claims": [
+    {
+      "id": "gather-order-and-null-example",
+      "statement": "Indices [2, 0, 2, null] over Int32 [10, 20, 30] produce [30, 10, 30, null].",
+      "evidence_kind": "runtime_observation",
+      "conditions": ["Arrow 59.3.0", "UInt32 indices", "TakeOptions.check_bounds = true"],
+      "test": "take_preserves_requested_order_duplicates_and_null_indices",
+      "evidence": ["../evidence/probes/tests/contracts.rs", "../evidence/rust-probe-run.json"],
+      "scope_limit": "Does not establish every supported datatype or all possible index values."
+    },
+    {
+      "id": "gather-out-of-bounds",
+      "statement": "Checked out-of-range index 3 for an input of length 3 returns an error.",
+      "evidence_kind": "runtime_observation",
+      "conditions": ["Arrow 59.3.0", "Int32 input", "UInt32 indices", "TakeOptions.check_bounds = true"],
+      "test": "take_preserves_requested_order_duplicates_and_null_indices",
+      "evidence": ["../evidence/probes/tests/contracts.rs", "../evidence/logs/rust-probes.log"]
+    },
+    {
+      "id": "unchecked-gather-can-panic",
+      "statement": "The documented out-of-bounds behavior without bounds checking is a panic.",
+      "evidence_kind": "upstream_documentation",
+      "conditions": ["TakeOptions does not request bounds checking"],
+      "evidence": ["../evidence/sources/arrow-select-59.3.0/src/take.rs"],
+      "scope_limit": "This assessment did not execute an unchecked out-of-range call."
+    }
+  ],
+  "choices": [
+    {
+      "recommendation_kind": "authored_conditional_judgment",
+      "choose_when": ["The caller has index positions", "Requested order and multiplicities must be retained"],
+      "alternatives": [
+        {"capability": "arrow.selection.filter", "prefer_when": "Selection is a Boolean predicate in source-row order"},
+        {"capability": "arrow.selection.slice", "prefer_when": "Selection is one contiguous range"},
+        {"capability": "datafusion.relational.selection", "prefer_when": "Selection belongs inside an optimizable relational query"}
+      ],
+      "required_followup": "For batch output, inspect field nullability and zero-column row-count behavior separately.",
+      "dependencies": ["gather-order-and-null-example", "gather-out-of-bounds", "unchecked-gather-can-panic"],
+      "candidate_set_is_invalidation_dependency": true
+    }
+  ]
+}

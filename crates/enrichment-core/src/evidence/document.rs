@@ -1,23 +1,22 @@
 //! Mechanical document facts. Native plans supply subjects, source qualification and identities.
 use super::{FragmentKind, relational::Locator};
+use crate::native_union::{NativeStruct, Rule};
 use crate::wire::{EvidenceClass, SourceVersionMatch};
 use arrow::{array::UInt64Array, error::ArrowError, record_batch::RecordBatch};
-use serde::Serialize;
 use std::sync::Arc;
 
-#[derive(Debug, Clone, Serialize)]
-pub struct DocumentFact {
-    pub kind: FragmentKind,
-    pub subject: String,
-    pub artifact_id: String,
-    pub locator: Locator,
-    pub text: String,
-    pub evidence_class: EvidenceClass,
-    pub producer: String,
-    pub producer_version: String,
-    pub source_uri: Option<String>,
-    pub source_version_match: Option<SourceVersionMatch>,
-}
+crate::native_struct! { pub struct DocumentFact {
+    kind: FragmentKind => Rule::Text,
+    subject: String => Rule::Text,
+    artifact_id: String => Rule::Reference(crate::native_union::Domain::Artifact),
+    locator: Locator => Rule::Text,
+    text: String => Rule::Text,
+    evidence_class: EvidenceClass => Rule::Text,
+    producer: String => Rule::NonEmpty,
+    producer_version: String => Rule::NonEmpty,
+    source_uri: Option<String> => Rule::Text,
+    source_version_match: Option<SourceVersionMatch> => Rule::Text,
+} }
 impl DocumentFact {
     pub fn new(
         kind: FragmentKind,
@@ -45,101 +44,38 @@ impl DocumentFact {
         Ok(value)
     }
 }
-#[derive(Serialize)]
-pub struct Input {
-    pub ordinal: u64,
-    pub fact: DocumentFact,
-}
+crate::native_struct! { pub struct Input {
+    ordinal: u64 => Rule::Coordinate(crate::native_union::Unit::Ordinal),
+    fact: DocumentFact => Rule::Text,
+} }
+
+/// The staging layout flattens the declared fact without a second field or vocabulary
+/// inventory. `label` is the native fragment subject projection's physical input name.
 pub fn encode(rows: &[Input]) -> Result<RecordBatch, ArrowError> {
-    use super::arrow_model::{
-        cells::{batch, column, optional, text},
-        encode::locator,
-    };
-    batch(
-        "document_facts",
-        vec![
-            column(
-                "ordinal",
-                Arc::new(UInt64Array::from_iter_values(
-                    rows.iter().map(|r| r.ordinal),
-                )),
-                false,
-                "input-ordinal",
-            ),
-            column(
-                "kind",
-                text(rows.iter().map(|r| r.fact.kind.as_str())),
-                false,
-                "vocabulary:fragment-kind/1",
-            ),
-            column(
-                "label",
-                text(rows.iter().map(|r| r.fact.subject.as_str())),
-                false,
-                "document-label",
-            ),
-            column(
-                "artifact_id",
-                text(rows.iter().map(|r| r.fact.artifact_id.as_str())),
-                false,
-                "ref:artifact",
-            ),
-            column(
-                "locator",
-                locator(&rows.iter().map(|r| &r.fact.locator).collect::<Vec<_>>())?,
-                false,
-                "artifact-coordinates",
-            ),
-            column(
-                "text",
-                text(rows.iter().map(|r| r.fact.text.as_str())),
-                false,
-                "document-text",
-            ),
-            column(
-                "producer",
-                text(rows.iter().map(|r| r.fact.producer.as_str())),
-                false,
-                "extractor-name",
-            ),
-            column(
-                "producer_version",
-                text(rows.iter().map(|r| r.fact.producer_version.as_str())),
-                false,
-                "extractor-version",
-            ),
-            column(
-                "source_uri",
-                optional(rows.iter().map(|r| r.fact.source_uri.as_deref())),
-                true,
-                "acquisition-uri",
-            ),
-            column(
-                "source_version_match",
-                optional(rows.iter().map(|r| {
-                    r.fact.source_version_match.map(|v| match v {
-                        SourceVersionMatch::Exact => "exact",
-                        SourceVersionMatch::CompatibleClaimed => "compatible_claimed",
-                        SourceVersionMatch::Mismatched => "mismatched",
-                        SourceVersionMatch::Unknown => "unknown",
-                    })
-                })),
-                true,
-                "vocabulary:source-version-match/1",
-            ),
-            column(
-                "evidence_class",
-                text(rows.iter().map(|r| match r.fact.evidence_class {
-                    EvidenceClass::Declared => "declared",
-                    EvidenceClass::StaticallyExtracted => "statically_extracted",
-                    EvidenceClass::CompilerDerived => "compiler_derived",
-                    EvidenceClass::TypecheckerObserved => "typechecker_observed",
-                    EvidenceClass::RuntimeObserved => "runtime_observed",
-                    EvidenceClass::AgentInferred => "agent_inferred",
-                })),
-                false,
-                "vocabulary:evidence-class/1",
-            ),
-        ],
-    )
+    use arrow::array::AsArray;
+    let facts = DocumentFact::encode(&rows.iter().map(|r| Some(&r.fact)).collect::<Vec<_>>())?;
+    let facts = facts.as_struct();
+    let mut columns = vec![(
+        crate::native_union::field::<u64>(
+            "ordinal",
+            Rule::Coordinate(crate::native_union::Unit::Ordinal),
+        ),
+        Arc::new(UInt64Array::from_iter_values(
+            rows.iter().map(|r| r.ordinal),
+        )) as arrow::array::ArrayRef,
+    )];
+    columns.extend(
+        DocumentFact::fields()
+            .iter()
+            .zip(facts.columns())
+            .map(|(field, array)| {
+                let field = if field.name() == "subject" {
+                    field.as_ref().clone().with_name("label")
+                } else {
+                    field.as_ref().clone()
+                };
+                (field, array.clone())
+            }),
+    );
+    super::arrow_model::cells::batch("document_facts", columns)
 }

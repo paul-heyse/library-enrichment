@@ -10,6 +10,9 @@ Crate `arrow-array` · 4 public items · structured records in [`model/arrow_arr
 fn make_view(data: &[u8], block_id: u32, offset: u32) -> u128
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_bytes_view_builder.make_view.md).
+
+
 Create a view based on the given data, block id and offset.
 
 Note that the code below is carefully examined with x86_64 assembly code: <https://godbolt.org/z/685YPsd5G>
@@ -71,6 +74,9 @@ fn len(&self) -> usize
 fn extend<I: IntoIterator<Item = Option<V>>>(&mut self, iter: I)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_bytes_view_builder.GenericByteViewBuilder.md).
+
+
 A builder for [`GenericByteViewArray`]
 
 A [`GenericByteViewArray`] consists of a list of data blocks containing string data,
@@ -116,6 +122,9 @@ fn type_name() -> &'static str
 fn with_capacity(capacity: usize) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_bytes_view_builder.BinaryViewBuilder.md).
+
+
  Array builder for [`BinaryViewArray`][crate::BinaryViewArray]
 
 Values can be appended using [`GenericByteViewBuilder::append_value`], and nulls with
@@ -156,6 +165,9 @@ fn append_value(&mut self, value: &str)
 fn type_name() -> &'static str
 fn with_capacity(capacity: usize) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_bytes_view_builder.StringViewBuilder.md).
+
 
 Array builder for [`StringViewArray`][crate::StringViewArray]
 

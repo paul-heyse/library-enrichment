@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 1 public items · structured records in [`mo
 struct InProgressSpillFile
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.spill.in_progress_spill_file.InProgressSpillFile.md).
+
+
 Represents an in-progress spill file used for writing `RecordBatch`es to disk, created by `SpillManager`.
 Caller is able to use this struct to incrementally append in-memory batches to
 the file, and then finalize the file by calling the `finish` method.

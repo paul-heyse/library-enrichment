@@ -46,7 +46,7 @@
 
 ## Anti-patterns
 
-- Constructing `Expr` variants by hand where an `expr_fn` helper exists — the helper applies coercion rules you would otherwise have to repeat.
+- Treating an expr_fn helper or ScalarUDF::call as type coercion: construction, analysis/coercion, simplification and physical evaluation are separate phases.
 - Assuming `datafusion::prelude::X` tells you which crate owns `X`.
 
 ## Agent checklist

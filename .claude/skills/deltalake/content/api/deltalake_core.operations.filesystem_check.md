@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## FileSystemCheckBuilder
 
 `struct` · `deltalake_core::operations::filesystem_check::FileSystemCheckBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.filesystem_check.FileSystemCheckBuilder.md)
 
 Also reachable as `deltalake::operations::filesystem_check::FileSystemCheckBuilder`
 
@@ -28,13 +29,6 @@ fn with_dry_run(self, dry_run: bool) -> Self
 fn into_future(self) -> Self::IntoFuture
 ```
 
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
-```
-
 Audit the Delta Table's active files with the underlying file system.
 See this module's documentation for more information
 
@@ -43,6 +37,7 @@ See this module's documentation for more information
 ## FileSystemCheckMetrics
 
 `struct` · `deltalake_core::operations::filesystem_check::FileSystemCheckMetrics`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.filesystem_check.FileSystemCheckMetrics.md)
 
 Also reachable as `deltalake::operations::filesystem_check::FileSystemCheckMetrics`
 

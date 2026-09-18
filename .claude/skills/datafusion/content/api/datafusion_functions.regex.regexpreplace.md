@@ -10,6 +10,9 @@ Crate `datafusion-functions` · 2 public items · structured records in [`model/
 fn regexp_replace<'a, T: OffsetSizeTrait, U>(string_array: U, pattern_array: U, replacement_array: U, flags_array: Option<U>) -> datafusion_common::Result<arrow::array::ArrayRef> where U: ArrayAccessor<Item = &'a str>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.regex.regexpreplace.regexp_replace.md).
+
+
 Replaces substring(s) matching a PCRE-like regular expression.
 
 The full list of supported features and syntax can be found at
@@ -80,5 +83,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.regex.regexpreplace.RegexpReplaceFunc.md).
+
 
 ---

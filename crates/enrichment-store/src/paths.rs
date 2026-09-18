@@ -1,6 +1,6 @@
 //! Where regenerable cache and retained evidence live (blueprint §2.3).
 //!
-//! Two roots, resolved separately: the cache root (`downloads/`, `unpacked/`, `capsules/`) and
+//! Two roots, resolved separately: the cache root (`downloads/`, `capsules/`) and
 //! the data root (`blobs/`, `snapshots/`, `contexts/`). Production resolves to XDG paths;
 //! development is redirected to the gitignored `.dev-state/` by `scripts/env.sh`.
 //!
@@ -101,28 +101,10 @@ impl StatePaths {
         self.cache_root.join("downloads")
     }
 
-    /// Extracted archives, keyed by the archive's digest.
-    #[must_use]
-    pub fn unpacked(&self) -> PathBuf {
-        self.cache_root.join("unpacked")
-    }
-
     /// Content-addressed blobs.
     #[must_use]
     pub fn blobs(&self) -> PathBuf {
         self.data_root.join("blobs")
-    }
-
-    /// Published, immutable snapshots.
-    #[must_use]
-    pub fn snapshots(&self) -> PathBuf {
-        self.data_root.join("snapshots")
-    }
-
-    /// Where a snapshot is assembled before publication. Never read by a query.
-    #[must_use]
-    pub fn staging(&self) -> PathBuf {
-        self.data_root.join("staging")
     }
 }
 

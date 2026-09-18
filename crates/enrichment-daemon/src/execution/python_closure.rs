@@ -15,7 +15,6 @@ use enrichment_store::dependency_plan::{Frontier, Package, Work};
 use serde::Deserialize;
 use std::{
     collections::BTreeMap,
-    fs,
     path::Path,
     sync::{
         Arc,
@@ -34,9 +33,10 @@ pub async fn resolve(
     opened: &Opened,
     root: &Path,
     filename: &str,
-    metadata: &str,
+    distribution: &python::Distribution,
     cancel: Arc<AtomicBool>,
-    storage: &super::budget::Preparation,
+    storage: &Arc<super::budget::Preparation>,
+    runner: &super::Runner,
 ) -> Result<(Vec<u8>, String), PreparationError> {
     let deadline = tokio::time::Instant::now()
         + Duration::from_secs(
@@ -48,8 +48,8 @@ pub async fn resolve(
         );
     // The capsule owner admits this Linux CPython image before invoking dependency acquisition.
     let marker_environment = MarkerEnvironment {
-        python_full_version: "3.14.7".into(),
-        implementation_version: "3.14.7".into(),
+        python_full_version: enrichment_core::execution::producer::PYTHON_VERSION.into(),
+        implementation_version: enrichment_core::execution::producer::PYTHON_VERSION.into(),
         implementation_name: "cpython".into(),
         os_name: "posix".into(),
         platform_machine: "x86_64".into(),
@@ -57,7 +57,7 @@ pub async fn resolve(
         platform_python_implementation: "CPython".into(),
         sys_platform: "linux".into(),
     };
-    let headers = python::metadata_headers(metadata);
+    let headers = &distribution.metadata;
     let name = python::normalize_name(&opened.release.key.package);
     let mut frontier = Frontier::new(
         &service.repository.runtime,
@@ -192,47 +192,35 @@ pub async fn resolve(
                     return Err("dependency wheel digest differs from registry metadata".into());
                 }
                 let inspect = root.join("dependency-metadata").join(&sha);
-                python::archive::extract_zip(
-                    &bytes,
-                    &inspect,
-                    &storage.archive_policy().map_err(|e| e.to_string())?,
-                )?;
-                let mut metadata = None;
-                for path in python::archive::files(&inspect)? {
-                    if path.ends_with(".dist-info/METADATA") {
-                        if metadata.is_some() {
-                            return Err(
-                                "dependency wheel contains multiple METADATA identities".into()
-                            );
-                        }
-                        metadata = Some(
-                            fs::read_to_string(inspect.join(path)).map_err(|e| e.to_string())?,
-                        );
-                    }
-                }
-                let metadata = metadata.ok_or("dependency METADATA missing")?;
-                let headers = python::metadata_headers(&metadata);
-                let header = |key: &str| {
-                    headers
-                        .get(key)
-                        .and_then(|v| if v.len() == 1 { v.first() } else { None })
-                        .map(String::as_str)
-                };
-                if header("name").map(python::normalize_name).as_deref() != Some(name.as_str())
-                    || header("version") != Some(version.as_str())
-                {
-                    return Err(
-                        "dependency wheel identity differs from selected registry identity".into(),
-                    );
-                }
-                let distribution = python::archive::inventory(&inspect, &file.filename, &sha, "")?;
-                python::archive::validate_metadata(&inspect, &distribution, &request, &version)?;
+                let bytes = Arc::new(bytes);
+                let metadata = super::preparation::wheel_distribution(
+                    runner,
+                    storage.clone(),
+                    inspect.clone(),
+                    bytes.clone(),
+                    &file.filename,
+                    &sha,
+                )
+                .await?;
+                enrichment_store::python_distribution::admit(
+                    &service.repository.runtime,
+                    &metadata.distribution,
+                    metadata.texts(),
+                    &request,
+                    &version,
+                )
+                .await
+                .map_err(|error| error.to_string())?;
+                let headers = &metadata.distribution.metadata;
                 let requires = headers.get("requires-dist").cloned().unwrap_or_default();
                 for text in &requires {
                     Requirement::parse(text)?;
                 }
                 storage
-                    .write(&root.join("wheelhouse").join(&file.filename), &bytes)
+                    .write(
+                        &root.join("wheelhouse").join(&file.filename),
+                        bytes.as_ref(),
+                    )
                     .map_err(|e| e.to_string())?;
                 frontier
                     .acquired(Package {

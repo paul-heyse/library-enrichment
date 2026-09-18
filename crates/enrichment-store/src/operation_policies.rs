@@ -1,31 +1,12 @@
-//! Exact-version effective configuration over the shared immutable native definition contract.
-use crate::immutable_definitions::Binding;
-use crate::{control::ControlStore, immutable_definitions::Definitions, runtime::QueryRuntime};
-use datafusion::{dataframe::DataFrame, error::Result};
-use enrichment_core::{config::Config, native_key::Key};
-#[derive(Clone)]
-pub(crate) struct Policies(Definitions);
-impl Policies {
-    pub(crate) fn new(control: ControlStore, runtime: QueryRuntime) -> Self {
-        Self(Definitions::new(
-            control,
-            runtime,
-            "operation_policies",
-            Key::OperationPolicy,
-            "policy_id",
-        ))
-    }
-    pub(crate) async fn retain(&self, config: &Config) -> Result<Binding> {
-        self.0.retain(config).await
-    }
-    pub(crate) async fn read(&self, id: &str, binding: &Binding) -> Result<DataFrame> {
-        self.0.read(id, binding).await
-    }
-}
+//! Operation policy is one specialization of the shared immutable definition owner.
+pub(crate) type Policies =
+    crate::immutable_definitions::Definitions<enrichment_core::identity::OperationPolicyId>;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{control::ControlStore, runtime::QueryRuntime};
     use datafusion::prelude::col;
+    use enrichment_core::config::Config;
     #[tokio::test]
     async fn exact_policy_versions_survive_new_configuration_and_reject_wrong_identity() {
         let root = tempfile::tempdir().unwrap();
@@ -35,12 +16,14 @@ mod tests {
             runtime.clone(),
         );
         let first = Config::default();
-        let first_id = Key::OperationPolicy.record(&first).unwrap();
-        let before = policies.retain(&first).await.unwrap();
-        assert_eq!(before, policies.retain(&first).await.unwrap());
+        let (first_id, before) = policies.retain(&first).await.unwrap();
+        assert_eq!(
+            (first_id.clone(), before.clone()),
+            policies.retain(&first).await.unwrap()
+        );
         let mut changed = first;
         changed.policy.enabled_profiles = vec!["static".into()];
-        let after = policies.retain(&changed).await.unwrap();
+        let (_, after) = policies.retain(&changed).await.unwrap();
         assert!(after.version > before.version);
         let reopened = Policies::new(
             ControlStore::open(root.path(), runtime.clone()).unwrap(),
@@ -85,12 +68,16 @@ mod tests {
         let protected = retention
             .maintenance_decision(
                 &maintenance,
-                &crate::retention::TableVersion {
-                    table_uri: "operation_policies".into(),
-                    table_id: after.table_id.clone(),
-                    version: after.version,
-                    contract_id: after.contract_id.clone(),
-                    cohort_id: None,
+                &crate::retention::TableSelection {
+                    source: enrichment_core::delta_reference::DeltaVersionRef {
+                        table: enrichment_core::delta_reference::DeltaTableRef {
+                            table_uri: "operation_policies".into(),
+                            table_id: after.table.table_id.clone(),
+                            contract_id: after.table.contract_id.clone(),
+                        },
+                        version: after.version,
+                    },
+                    row: None,
                 },
             )
             .await
@@ -102,10 +89,14 @@ mod tests {
             .await
             .unwrap();
         let mut wrong = before.clone();
-        wrong.table_id = "another-table".into();
+        wrong.table.table_id = "another-table".into();
         assert!(reopened.read(&first_id, &wrong).await.is_err());
         wrong = before;
-        wrong.contract_id = "another-schema".into();
+        wrong.table.contract_id = enrichment_core::identity::SchemaContractId::try_from(
+            "schema_contract_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                .to_owned(),
+        )
+        .unwrap();
         assert!(reopened.read(&first_id, &wrong).await.is_err());
         runtime.close_diagnostics().await.unwrap();
     }

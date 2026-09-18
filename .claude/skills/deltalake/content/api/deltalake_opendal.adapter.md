@@ -5,6 +5,7 @@ Crate `deltalake-opendal` · 3 public items · structured records in [`model/del
 ## GenericAdapter
 
 `struct` · `deltalake_opendal::adapter::GenericAdapter`
+[Full member contracts, output types and access classification](../operations/deltalake_opendal.adapter.GenericAdapter.md)
 
 Also reachable as `deltalake::opendal::GenericAdapter`, `deltalake_opendal::GenericAdapter`
 
@@ -38,6 +39,7 @@ root: the URL host is the bucket and the URL path is the table prefix.
 ## OperatorSpec
 
 `struct` · `deltalake_opendal::adapter::OperatorSpec`
+[Full member contracts, output types and access classification](../operations/deltalake_opendal.adapter.OperatorSpec.md)
 
 Also reachable as `deltalake::opendal::OperatorSpec`, `deltalake_opendal::OperatorSpec`
 
@@ -58,6 +60,7 @@ lives within the resulting operator.
 ## OpendalAdapter
 
 `trait` · `deltalake_opendal::adapter::OpendalAdapter`
+[Full member contracts, output types and access classification](../operations/deltalake_opendal.adapter.OpendalAdapter.md)
 
 Also reachable as `deltalake::opendal::OpendalAdapter`, `deltalake_opendal::OpendalAdapter`
 

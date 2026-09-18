@@ -14,6 +14,9 @@ struct CacheEntryInfo<V>
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.CacheEntryInfo.md).
+
+
 ---
 
 ## SchemaFingerprint
@@ -41,6 +44,9 @@ fn from_schema(file_schema: &Schema) -> Self
 ```rust
 fn heap_size(&self, ctx: &mut DFHeapSizeCtx) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.SchemaFingerprint.md).
+
 
 A fingerprint of the `file_schema` used to compute a file's statistics.
 
@@ -86,6 +92,9 @@ fn size(&self) -> usize
 fn table_ref(&self) -> Option<&TableReference>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.TableScopedPath.md).
+
+
 Each entry is scoped to its use within a specific table so that the cache
 can differentiate between identical paths in different tables, and
 table-level cache invalidation.
@@ -125,6 +134,9 @@ fn update_cache_limit(&self, limit: usize)
 fn update_cache_ttl(&self, _ttl: Option<Duration>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.Cache.md).
+
+
 Base trait for cache implementations with common operations.
 
 This trait provides the fundamental cache operations (`get`, `put`, `remove`, etc.)
@@ -157,6 +169,9 @@ fn size(&self) -> usize
 fn table_ref(&self) -> Option<&TableReference>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.CacheKey.md).
+
+
 Key type for entries stored in a [`Cache`].
 
 ---
@@ -182,6 +197,9 @@ trait CacheValue: Clone + Send + Sync
 ```rust
 fn size(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.CacheValue.md).
+
 
 Value type for entries stored in a [`Cache`].
 

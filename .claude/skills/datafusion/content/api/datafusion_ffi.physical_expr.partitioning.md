@@ -12,6 +12,9 @@ enum FFI_Partitioning
 
 **Variants**: `RoundRobinBatch`, `Hash`, `UnknownPartitioning`, `Range`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_expr.partitioning.FFI_Partitioning.md).
+
+
 A stable struct for sharing [`Partitioning`] across FFI boundaries.
 See [`Partitioning`] for the meaning of each variant.
 
@@ -24,6 +27,9 @@ See [`Partitioning`] for the meaning of each variant.
 ```rust
 struct FFI_RangePartitioning
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_expr.partitioning.FFI_RangePartitioning.md).
+
 
 A stable struct for sharing [`RangePartitioning`] across FFI boundaries.
 See [`RangePartitioning`] for the descriptions of each field.

@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_reverse`, `datafusion_functions_ne
 fn array_reverse(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.reverse.array_reverse.md).
+
+
 reverses the order of elements in the array.
 
 ---
@@ -24,6 +27,9 @@ reverses the order of elements in the array.
 fn array_reverse_inner(arg: &[arrow::array::ArrayRef]) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.reverse.array_reverse_inner.md).
+
+
 array_reverse SQL function
 
 ---
@@ -35,6 +41,9 @@ array_reverse SQL function
 ```rust
 fn array_reverse_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.reverse.array_reverse_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayReverse
@@ -69,5 +78,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.reverse.ArrayReverse.md).
+
 
 ---

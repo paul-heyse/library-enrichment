@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## WriteContext
 
 `struct` · `buoyant_kernel::transaction::write_context::WriteContext`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.write_context.WriteContext.md)
 
 Also reachable as `buoyant_kernel::transaction::WriteContext`, `delta_kernel::transaction::write_context::WriteContext`
 

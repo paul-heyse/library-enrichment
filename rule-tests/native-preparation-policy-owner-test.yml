@@ -1,0 +1,11 @@
+id: native-preparation-policy-owner
+valid:
+  - 'async fn prepare() { preparation_plan::cargo_sources(runtime, manifest).await?; }'
+  - 'async fn acquire() { python_distribution::capture(runtime, path, owner, filename, digest, root).await?; }'
+  - 'fn copy() { std::fs::write(path, bytes)?; }'
+invalid:
+  - 'fn prepare() { validate_cargo_sources(&manifest)?; }'
+  - 'fn acquire() { python::archive::validate_metadata(root, distribution, request, version)?; }'
+  - 'fn acquire() { python::metadata_headers(text); }'
+  - 'fn prepare() { fs::read(root.join("Cargo.lock"))?; }'
+  - 'struct BuildSpec { features: Vec<String> }'

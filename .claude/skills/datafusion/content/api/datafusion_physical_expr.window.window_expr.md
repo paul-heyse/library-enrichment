@@ -12,6 +12,9 @@ enum WindowFn
 
 **Variants**: `Builtin`, `Aggregate`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.window.window_expr.WindowFn.md).
+
+
 ---
 
 ## WindowEvalContext
@@ -34,6 +37,9 @@ struct WindowEvalContext<'a>
 fn with_most_recent_row(self, batch: Option<&'a RecordBatch>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.window.window_expr.WindowEvalContext.md).
+
+
 Stream-level context passed to [`WindowExpr::evaluate_stateful`].
 
 This carries information that spans all partitions of the input, as
@@ -53,6 +59,9 @@ struct WindowPhysicalExpressions
 ```
 
 **Fields**: `args`, `partition_by_exprs`, `order_by_exprs`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.window.window_expr.WindowPhysicalExpressions.md).
+
 
 Stores the physical expressions used inside the `WindowExpr`.
 
@@ -77,6 +86,9 @@ struct WindowState
 ```rust
 fn aggregate_state(&mut self) -> Result<Option<Vec<ScalarValue>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.window.window_expr.WindowState.md).
+
 
 ---
 
@@ -117,6 +129,9 @@ fn uses_bounded_memory(&self) -> bool
 fn with_new_expressions(&self, _args: Vec<Arc<dyn PhysicalExpr>>, _partition_bys: Vec<Arc<dyn PhysicalExpr>>, _order_by_exprs: Vec<Arc<dyn PhysicalExpr>>) -> Option<Arc<dyn WindowExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.window.window_expr.WindowExpr.md).
+
+
 Common trait for [window function] implementations
 
 # Aggregate Window Expressions
@@ -155,6 +170,9 @@ Also reachable as `datafusion_physical_expr::window::PartitionBatches`
 type PartitionBatches = indexmap::IndexMap<PartitionKey, datafusion_expr::window_state::PartitionBatchState, datafusion_common::hash_utils::RandomState>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.window.window_expr.PartitionBatches.md).
+
+
 The IndexMap (i.e. an ordered HashMap) where record batches are separated for each partition.
 
 ---
@@ -168,6 +186,9 @@ Also reachable as `datafusion_physical_expr::window::PartitionKey`
 ```rust
 type PartitionKey = Vec<datafusion_common::ScalarValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.window.window_expr.PartitionKey.md).
+
 
 Key for IndexMap for each unique partition
 
@@ -185,5 +206,8 @@ Also reachable as `datafusion_physical_expr::window::PartitionWindowAggStates`
 ```rust
 type PartitionWindowAggStates = indexmap::IndexMap<PartitionKey, WindowState, datafusion_common::hash_utils::RandomState>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.window.window_expr.PartitionWindowAggStates.md).
+
 
 ---

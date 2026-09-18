@@ -1,0 +1,22 @@
+id: native-cache-status-no-enumeration
+language: Rust
+severity: error
+message: Routine cache counters must not enumerate or clone cached values.
+files:
+  - crates/enrichment-store/src/native_cache.rs
+  - crates/enrichment-store/src/snapshot_registry.rs
+  - crates/enrichment-store/src/provider_cache.rs
+  - crates/enrichment-store/src/contract_cache.rs
+rule:
+  kind: function_item
+  has:
+    field: name
+    regex: '^counters$'
+  all:
+    - has:
+        kind: call_expression
+        has:
+          field: function
+          regex: '(^|\.)list_entries$'
+        stopBy: end
+note: The upstream Cache trait still requires list_entries forwarding. This rule targets routine counters only, not explicit diagnostics or isolated fixtures.

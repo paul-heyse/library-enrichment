@@ -30,6 +30,9 @@ fn get_byte_ranges(&mut self, ranges: Vec<Range<u64>>) -> BoxFuture<'_, Result<V
 fn get_bytes(&mut self, range: Range<u64>) -> BoxFuture<'_, Result<Bytes, AvroError>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.reader.async_reader.spawn.SpawnedReader.md).
+
+
 An [`AsyncFileReader`] that performs I/O on a separate tokio runtime.
 
 Tokio is a cooperative scheduler, and relies on tasks yielding in a timely

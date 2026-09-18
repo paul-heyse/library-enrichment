@@ -1,0 +1,20 @@
+# `deltalake_core::kernel::snapshot::log_data::datafusion`
+
+Full upstream contracts; raw type trees and source locators in [structured records](deltalake_core.kernel.snapshot.log_data.datafusion.json).
+
+<a id="op-9597b410e906c29718097b93"></a>
+## datafusion
+
+`module` · `deltalake_core::kernel::snapshot::log_data::datafusion` · deltalake-core 1.0.0+58f07cd6
+
+Access: **internal_module**. Canonical source location is not automatically a valid import path.
+
+```rust
+mod datafusion
+```
+
+[Exact source](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/kernel/snapshot/log_data.rs#L112).
+
+Source: `crates/core/src/kernel/snapshot/log_data.rs:112`. [Exact documentation build](https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184).
+
+No upstream documentation on this item; consult its owner/trait contract.

@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## JsonWriter
 
 `struct` · `deltalake_core::writer::json::JsonWriter`
+[Full member contracts, output types and access classification](../operations/deltalake_core.writer.json.JsonWriter.md)
 
 Also reachable as `deltalake::writer::JsonWriter`, `deltalake::writer::json::JsonWriter`, `deltalake_core::writer::JsonWriter`
 

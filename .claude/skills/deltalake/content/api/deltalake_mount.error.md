@@ -5,6 +5,7 @@ Crate `deltalake-mount` · 1 public items · structured records in [`model/delta
 ## Error
 
 `enum` · `deltalake_mount::error::Error`
+[Full member contracts, output types and access classification](../operations/deltalake_mount.error.Error.md)
 
 ```rust
 enum Error

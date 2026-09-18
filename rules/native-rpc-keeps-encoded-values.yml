@@ -1,0 +1,23 @@
+id: native-rpc-keeps-encoded-values
+language: Rust
+severity: error
+message: Native research output stays encoded and accounted through the final RPC frame.
+files:
+  - crates/enrichment-core/src/mcp_delivery.rs
+  - crates/enrichment-daemon/src/server.rs
+rule:
+  any:
+    - kind: identifier
+    - kind: field_identifier
+  regex: '^(from_value|from_str|from_slice|from_reader|to_value|to_vec|to_string)$'
+  inside:
+    kind: function_item
+    has:
+      field: name
+      regex: '^(project|research_response|write_response)$'
+    stopBy: end
+  not:
+    inside:
+      pattern: 'mod tests { $$$BODY }'
+      stopBy: end
+note: RawValue validation belongs to the bounded JsonOutput sink; formatting and measurement never reconstruct a semantic JSON tree.

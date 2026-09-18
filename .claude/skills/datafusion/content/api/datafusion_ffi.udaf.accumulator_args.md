@@ -10,6 +10,9 @@ Crate `datafusion-ffi` · 2 public items · structured records in [`model/datafu
 struct FFI_AccumulatorArgs
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udaf.accumulator_args.FFI_AccumulatorArgs.md).
+
+
 A stable struct for sharing [`AccumulatorArgs`] across FFI boundaries.
 For an explanation of each field, see the corresponding field
 defined in [`AccumulatorArgs`].
@@ -25,6 +28,9 @@ struct ForeignAccumulatorArgs
 ```
 
 **Fields**: `return_field`, `schema`, `expr_fields`, `ignore_nulls`, `order_bys`, `is_reversed`, `name`, `is_distinct`, `exprs`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udaf.accumulator_args.ForeignAccumulatorArgs.md).
+
 
 This struct mirrors AccumulatorArgs except that it contains owned data.
 It is necessary to create this struct so that we can parse the protobuf

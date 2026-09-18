@@ -1,0 +1,119 @@
+{
+  "id": "delta.kernel",
+  "title": "Use kernel snapshots, scans and engine interfaces at the correct layer",
+  "reviewed": "2026-09-18",
+  "brief": "Use high-level DeltaTable operations for normal table work. Use the kernel and engine interfaces when implementing a scan/engine boundary and when prepared to honor its selection, schema and protocol contracts.",
+  "task_aliases": [
+    "Delta kernel engine",
+    "low level scan",
+    "selection vector",
+    "Arrow engine data",
+    "kernel fork",
+    "custom engine"
+  ],
+  "crates": [
+    "buoyant_kernel",
+    "buoyant_kernel_engine",
+    "deltalake-core"
+  ],
+  "input": [
+    "kernel schema/snapshot",
+    "Engine",
+    "EngineData"
+  ],
+  "output": [
+    "scan metadata",
+    "filtered engine data",
+    "engine I/O results"
+  ],
+  "properties": [
+    "Delta kernel engine",
+    "low level scan",
+    "selection vector",
+    "Arrow engine data",
+    "kernel fork",
+    "custom engine"
+  ],
+  "operations": [
+    "buoyant_kernel::Engine",
+    "buoyant_kernel::engine_data::EngineData::apply_selection_vector",
+    "buoyant_kernel::engine_data::FilteredEngineData::apply_selection_vector",
+    "buoyant_kernel::engine::arrow_conversion::TryIntoArrow::try_into_arrow"
+  ],
+  "choices": [
+    {
+      "candidate": "DeltaTable/provider",
+      "choose_when": "The task is querying or mutating a Delta table",
+      "tradeoff": "Already integrates protocol, storage and DataFusion semantics"
+    },
+    {
+      "candidate": "Kernel Engine/EngineData",
+      "choose_when": "You are implementing engine evaluation/I/O or consuming kernel scan primitives",
+      "tradeoff": "Own the engine contract and apply selection/deletion semantics correctly"
+    },
+    {
+      "candidate": "buoyant_kernel_engine",
+      "choose_when": "The supplied engine implementation fits the integration",
+      "tradeoff": "Keep its fork/feature/version identity aligned with delta-rs"
+    }
+  ],
+  "claims": [
+    {
+      "id": "delta.kernel.1",
+      "aspect": "identity",
+      "statement": "The package names are buoyant_kernel and buoyant_kernel_engine, used through delta_kernel/delta_kernel_default_engine aliases in delta-rs. The fork commit is part of API identity, not interchangeable with an arbitrary published delta_kernel.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.kernel.2",
+      "aspect": "representation",
+      "statement": "EngineData and FilteredEngineData carry engine-owned batches and selection semantics. A selection vector must be applied according to its contract before treating all physical rows as logical results.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.kernel.3",
+      "aspect": "scope",
+      "statement": "The capture includes internal-api-gated surfaces. Visibility under that profile does not promise stability or inclusion in a consumer with fewer features.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    }
+  ],
+  "implementation": [
+    "Start from the kernel trait's full member contracts and choose the narrowest engine seam needed.",
+    "Bind Arrow/kernel conversions and selection behavior to the actual package identities; use the DataFusion boundary notes when crossing engine representations."
+  ],
+  "effects": [
+    "engine evaluation and I/O",
+    "selection/filter application"
+  ],
+  "errors": [
+    "Kernel error and engine adapter error paths do not imply an already completed high-level table transaction."
+  ],
+  "unknowns": [
+    "Custom engine correctness and every internal-api surface are unreviewed beyond the selected contracts; no complete custom engine implementation is certified."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "scope": "Exact git-capture full contracts for the selected operations"
+    },
+    {
+      "id": "source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/kernel/mod.rs",
+      "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+    }
+  ]
+}

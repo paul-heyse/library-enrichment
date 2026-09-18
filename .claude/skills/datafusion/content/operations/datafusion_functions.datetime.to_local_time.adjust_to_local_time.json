@@ -1,0 +1,126 @@
+[
+  {
+    "id": "9d9d8c22d12aa80eb799da17",
+    "path": "datafusion_functions::datetime::to_local_time::adjust_to_local_time",
+    "name": "adjust_to_local_time",
+    "owner": null,
+    "crate": "datafusion-functions",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn adjust_to_local_time<T: ArrowTimestampType>(ts: i64, tz: arrow::array::timezone::Tz) -> datafusion_common::Result<i64>",
+    "docs": "This function converts a timestamp with a timezone to a timestamp without a timezone.\nThe display value of the adjusted timestamp remain the same, but the underlying timestamp\nrepresentation is adjusted according to the relative timezone offset to UTC.\n\nThis function uses chrono to handle daylight saving time changes.\n\nFor example,\n\n```text\n'2019-03-31T01:00:00Z'::timestamp at time zone 'Europe/Brussels'\n```\n\nis displayed as follows in datafusion-cli:\n\n```text\n2019-03-31T01:00:00+01:00\n```\n\nand is represented in DataFusion as:\n\n```text\nTimestampNanosecond(Some(1_553_990_400_000_000_000), Some(\"Europe/Brussels\"))\n```\n\nTo strip off the timezone while keeping the display value the same, we need to\nadjust the underlying timestamp with the timezone offset value using `adjust_to_local_time()`\n\n```text\nadjust_to_local_time(1_553_990_400_000_000_000, \"Europe/Brussels\") --> 1_553_994_000_000_000_000\n```\n\nThe difference between `1_553_990_400_000_000_000` and `1_553_994_000_000_000_000` is\n`3600_000_000_000` ns, which corresponds to 1 hour. This matches with the timezone\noffset for \"Europe/Brussels\" for this date.\n\nNote that the offset varies with daylight savings time (DST), which makes this tricky! For\nexample, timezone \"Europe/Brussels\" has a 2-hour offset during DST and a 1-hour offset\nwhen DST ends.\n\nConsequently, DataFusion can represent the timestamp in local time (with no offset or\ntimezone information) as\n\n```text\nTimestampNanosecond(Some(1_553_994_000_000_000_000), None)\n```\n\nwhich is displayed as follows in datafusion-cli:\n\n```text\n2019-03-31T01:00:00\n```\n\nSee `test_adjust_to_local_time()` for example",
+    "span": {
+      "filename": "src/datetime/to_local_time.rs",
+      "begin": [
+        310,
+        1
+      ],
+      "end": [
+        358,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "ts",
+              {
+                "primitive": "i64"
+              }
+            ],
+            [
+              "tz",
+              {
+                "resolved_path": {
+                  "path": "arrow::array::timezone::Tz",
+                  "id": 2643,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 90,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "i64"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ArrowTimestampType",
+                          "id": 2644,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2643": "arrow_array::timezone::private::Tz",
+      "90": "datafusion_common::error::Result",
+      "2644": "arrow_array::types::ArrowTimestampType"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e1d096725359f4276d6acc8757f0e9612b0b148678410a03da37509b2bdba1ac",
+      "format_version": 61,
+      "item_id": "2642",
+      "origin": "https://docs.rs/crate/datafusion-functions/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_functions.datetime.to_local_time.adjust_to_local_time.md",
+    "record_file": "operations/datafusion_functions.datetime.to_local_time.adjust_to_local_time.json",
+    "anchor": "op-9d9d8c22d12aa80eb799da17",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

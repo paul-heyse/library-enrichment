@@ -10,6 +10,9 @@ Crate `datafusion-datasource-avro` · 1 public items · structured records in [`
 fn read_avro_schema_from_reader<R: Read>(reader: &mut R) -> datafusion_common::Result<arrow::datatypes::Schema>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_avro.read_avro_schema_from_reader.md).
+
+
 Read Avro schema given a reader
 
 ---

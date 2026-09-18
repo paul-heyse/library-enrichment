@@ -23,7 +23,11 @@ use crate::service::Service;
 const SORT: &str = "bytes";
 
 /// Read a slice of an artifact.
-pub async fn read(service: &Service, request: ReadArtifactRequest) -> Envelope {
+pub async fn read(
+    service: &Service,
+    request: ReadArtifactRequest,
+    profile: enrichment_core::mcp_delivery::DeliveryProfile,
+) -> Envelope {
     let id = request.artifact_id.trim();
     if !is_artifact_id(id) {
         return envelope::error(
@@ -159,8 +163,12 @@ pub async fn read(service: &Service, request: ReadArtifactRequest) -> Envelope {
     } else {
         plan.window
     };
-    let budget = common::byte_budget(service, request.max_bytes);
+    let budget = match common::byte_budget(service, request.max_bytes).await {
+        Ok(value) => value,
+        Err(error) => return common::query_error(&error),
+    };
     let digest = enrichment_core::operation::selections::ArtifactSelection {
+        witness: service.selection_witness(),
         section: window.section.clone(),
         start: window.start,
         end: window.end,
@@ -212,25 +220,40 @@ pub async fn read(service: &Service, request: ReadArtifactRequest) -> Envelope {
             false,
         );
     }
-    runtime
+    let prepared = ReadBytes {
+        artifact,
+        file,
+        window,
+        slice,
+        digest,
+        is_text: plan.is_text,
+        budget,
+    };
+    let pool = runtime.session().runtime_env().memory_pool.clone();
+    let loaded = runtime
         .blocking(move || {
-            // The captured provider lease survives selection, scanning, byte copying and encoding.
-            let _pin = (pin, protection);
-            read_blocking(
-                request,
-                ReadBytes {
-                    artifact,
-                    file,
-                    window,
-                    slice,
-                    digest,
-                    is_text: plan.is_text,
-                    budget,
-                },
-            )
+            let mut prepared = prepared;
+            let end = prepared
+                .slice
+                .start
+                .checked_add(prepared.slice.read_bytes)
+                .ok_or_else(|| std::io::Error::other("artifact range overflow"))?;
+            let bytes = enrichment_store::owned_bytes::OwnedBytes::read_range(
+                &mut prepared.file,
+                prepared.slice.start as u64..end as u64,
+                &pool,
+            )?;
+            Ok::<_, std::io::Error>((prepared, bytes::Bytes::from_owner(bytes), pin, protection))
         })
-        .await
-        .unwrap_or_else(|error| common::operation_error(&error, "artifact_read"))
+        .await;
+    match loaded {
+        Ok(Ok((prepared, bytes, pin, protection))) => {
+            let _protection = (pin, protection);
+            read_native(&runtime, request, prepared, bytes, profile).await
+        }
+        Ok(Err(error)) => common::operation_error(&error, "artifact_read"),
+        Err(error) => common::operation_error(&error, "artifact_read"),
+    }
 }
 
 struct ReadBytes {
@@ -243,10 +266,16 @@ struct ReadBytes {
     budget: usize,
 }
 
-fn read_blocking(request: ReadArtifactRequest, prepared: ReadBytes) -> Envelope {
+async fn read_native(
+    runtime: &enrichment_store::runtime::QueryRuntime,
+    request: ReadArtifactRequest,
+    prepared: ReadBytes,
+    bytes: bytes::Bytes,
+    profile: enrichment_core::mcp_delivery::DeliveryProfile,
+) -> Envelope {
     let ReadBytes {
         artifact,
-        mut file,
+        file: _,
         window,
         slice,
         digest,
@@ -255,28 +284,36 @@ fn read_blocking(request: ReadArtifactRequest, prepared: ReadBytes) -> Envelope 
     } = prepared;
     let id = request.artifact_id.trim();
     let total = artifact.size_bytes;
-    let (window_start, window_end, section_name) = (window.start, window.end, window.section);
+    let (window_start, window_end, section_name) =
+        (window.start, window.end, window.section.clone());
     let start = slice.start;
-    let mut end = slice.end;
-    let bytes = match super::artifact_window::range(&mut file, start, slice.read_bytes) {
-        Ok(bytes) => bytes,
-        Err(error) => return common::operation_error(&error, "artifact_read"),
+    let prefix_plan = match enrichment_store::artifact_selection::PrefixPlan::prepare(
+        runtime,
+        bytes.clone(),
+        is_text,
+        &slice,
+        &window,
+    )
+    .await
+    {
+        Ok(plan) => plan,
+        Err(error) => return common::operation_error(&error, "artifact_prefix"),
     };
-    if is_text {
-        // Back off to a UTF-8 boundary: a continuation byte is `10xxxxxx`.
-        while end > start && end < window_end && (bytes[end - start] & 0xC0) == 0x80 {
-            end -= 1;
-        }
-    }
-    let render = |end: usize| -> std::io::Result<Envelope> {
+    let render = |end: usize, utf8: bool, with_content: bool| -> std::io::Result<Envelope> {
         let slice = &bytes[..end - start];
-        let (content, encoding) = if is_text {
-            match std::str::from_utf8(slice) {
-                Ok(text) => (text.to_owned(), SliceEncoding::Utf8),
-                Err(_) => (base64(slice), SliceEncoding::Base64),
-            }
+        let encoding = if utf8 {
+            SliceEncoding::Utf8
         } else {
-            (base64(slice), SliceEncoding::Base64)
+            SliceEncoding::Base64
+        };
+        let content = if !with_content {
+            String::new()
+        } else if utf8 {
+            std::str::from_utf8(slice)
+                .map_err(std::io::Error::other)?
+                .to_owned()
+        } else {
+            base64(slice)
         };
         let remaining = (window_end - end) as u64;
         let next_cursor = (remaining > 0)
@@ -292,7 +329,11 @@ fn read_blocking(request: ReadArtifactRequest, prepared: ReadBytes) -> Envelope 
             end: end as u64,
             total,
             content,
-            content_digest: canonical::sha256_hex(slice),
+            content_digest: if with_content {
+                canonical::sha256_hex(slice)
+            } else {
+                "0".repeat(64)
+            },
             remaining,
             section: section_name.clone(),
         };
@@ -353,53 +394,41 @@ fn read_blocking(request: ReadArtifactRequest, prepared: ReadBytes) -> Envelope 
         result.delivery.set_limits(request.max_bytes, budget);
         Ok(result)
     };
-    let full = match render(end) {
-        Ok(result) => result,
-        Err(error) => return common::operation_error(&error, "artifact_read"),
+    let classes = match prefix_plan.classes(runtime).await {
+        Ok(classes) => classes,
+        Err(error) => return common::operation_error(&error, "artifact_frame_classes"),
     };
-    if common::json_size(&full) <= budget {
-        return full;
-    }
-    // Search actual encoded sizes over valid byte boundaries; retain the largest fitting
-    // prefix instead of repeatedly discarding half a page. The full/end-of-window candidate
-    // is tested separately because dropping its cursor reduces framing size discontinuously.
-    let boundaries: Vec<usize> = (0..=end - start)
-        .filter(|offset| {
-            !is_text
-                || *offset == 0
-                || start + offset == window_end
-                || (bytes[*offset] & 0xC0) != 0x80
-        })
-        .collect();
-    let mut low = 0usize;
-    let mut high = boundaries.len();
-    let mut best = None;
-    while low < high {
-        let mid = low + (high - low) / 2;
-        let result = match render(start + boundaries[mid]) {
-            Ok(result) => result,
-            Err(error) => return common::operation_error(&error, "artifact_read"),
-        };
-        if common::json_size(&result) <= budget {
-            if boundaries[mid] > 0 {
-                best = Some(result);
-            }
-            low = mid + 1;
-        } else {
-            high = mid;
+    let mut measurements = Vec::with_capacity(classes.len());
+    for class in classes {
+        let measured = render(start + class.length as usize, class.utf8, false)
+            .and_then(|frame| profile.measure(&frame));
+        match measured {
+            Ok(bytes) => measurements.push(enrichment_store::artifact_selection::FrameMeasure {
+                class,
+                bytes: bytes as u64,
+            }),
+            Err(error) => return common::operation_error(&error, "artifact_frame_measurement"),
         }
     }
-    best.unwrap_or_else(|| {
-        let minimum = boundaries
-            .iter()
-            .copied()
-            .find(|n| *n > 0)
-            .and_then(|n| render(start + n).ok())
-            .map_or(budget.saturating_add(1), |result| {
-                common::json_size(&result)
-            });
-        crate::delivery::budget_failure(request.max_bytes, budget, minimum)
-    })
+    let resource = matches!(
+        profile,
+        enrichment_core::mcp_delivery::DeliveryProfile::McpResourceStdio { .. }
+    );
+    match prefix_plan
+        .select(runtime, measurements, budget, resource)
+        .await
+    {
+        Ok(selected) => match (selected.length, selected.utf8) {
+            (Some(length), Some(utf8)) => render(start + length as usize, utf8, true)
+                .unwrap_or_else(|error| common::operation_error(&error, "artifact_read")),
+            _ => crate::delivery::budget_failure(
+                request.max_bytes,
+                budget,
+                selected.minimum as usize,
+            ),
+        },
+        Err(error) => common::operation_error(&error, "artifact_prefix_selection"),
+    }
 }
 
 /// Standard base64 without a dependency: artifacts are the only binary the service returns.
@@ -479,7 +508,7 @@ mod tests {
         let mut last_end = None;
         let mut pages = 0;
         loop {
-            let result = read(&service, request.clone()).await;
+            let result = read(&service, request.clone(), Default::default()).await;
             assert_eq!(
                 result.status(),
                 enrichment_core::wire::Status::Ok,

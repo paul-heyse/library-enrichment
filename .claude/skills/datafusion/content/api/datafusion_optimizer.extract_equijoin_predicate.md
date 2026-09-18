@@ -29,6 +29,9 @@ fn rewrite(&self, plan: LogicalPlan, _config: &dyn OptimizerConfig) -> Result<Tr
 fn supports_rewrite(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.extract_equijoin_predicate.ExtractEquijoinPredicate.md).
+
+
 Optimizer that splits conjunctive join predicates into equijoin
 predicates and (other) filter predicates.
 

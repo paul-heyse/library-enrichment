@@ -1,0 +1,61 @@
+[
+  {
+    "id": "e9a13ff8f1943130f1ccc0ae",
+    "path": "datafusion_physical_optimizer::ensure_requirements",
+    "name": "ensure_requirements",
+    "owner": null,
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "module",
+    "signature": "mod ensure_requirements",
+    "docs": "[`EnsureRequirements`] optimizer rule that enforces distribution and\nsorting requirements together so that the two never invalidate each other.\n\nThis rule replaces the separate `EnforceDistribution` + `EnforceSorting`\nrules with a unified approach inspired by Apache Spark's `EnsureRequirements`\nand Presto/Trino's `AddExchanges`.\n\n# Motivation\n\nThe previous two-rule design (`EnforceDistribution` then `EnforceSorting`)\nsuffers from non-idempotent composition: `EnforceSorting`'s `pushdown_sorts`\ncan break distribution invariants established by `EnforceDistribution`,\nbecause `SortExec.preserve_partitioning` couples sorting and distribution\ndecisions. See <https://github.com/apache/datafusion/issues/21973> for details.\n\n# Architecture\n\n`optimize` runs several tree traversals. The defining property of this\nrule is **Phase 2**: a single combined bottom-up pass that resolves\ndistribution *and* sorting for each node together. The surrounding phases\nare independent traversals (top-down join-key reorder, then several\nfollow-up sort/order rewrites). Some of those could be consolidated\nfurther in a follow-up.\n\n```text\nEnsureRequirements::optimize(plan)\n│\n├─ Phase 1: top-down join-key reorder        (adjust_input_keys_ordering)\n│\n├─ Phase 2: combined distribution + sorting  (single bottom-up pass)\n│   └─ For each node (bottom-up), for each child:\n│       Step 1: ensure distribution requirement\n│         └─ insert RepartitionExec / CoalescePartitionsExec /\n│            SortPreservingMergeExec as needed\n│       Step 2: ensure ordering requirement (distribution-aware)\n│         └─ insert SortExec with the correct `preserve_partitioning`,\n│            with SortPreservingMergeExec on top if needed\n│\n└─ Phase 3: small follow-up passes (bottom-up unless noted)\n    ├─ parallelize_sorts\n    ├─ replace_with_order_preserving_variants\n    ├─ pushdown_sorts                         (recursive walk)\n    └─ replace_with_partial_sort\n```\n\n# Key Properties\n\n- **Idempotent across the whole rule**: Running `EnsureRequirements`\n  twice produces the same plan. This is the property that fixes\n  <https://github.com/apache/datafusion/issues/21973>, where the old\n  two-rule pipeline could regress a parallel sort plan into a serial one\n  on pass 2.\n- **Distribution before sorting**: For each child, distribution is\n  resolved before ordering, so sorting decisions always have full\n  distribution context.\n- **Sort pushdown is implicit**: Phase 2 only adds `SortExec` where the\n  child doesn't already satisfy the ordering requirement, so sorts land\n  at the deepest valid position without a separate destructive pass.\n\n# Behavior: parallelism via repartitioning\n\nPhase 2 Step 1 inserts `RepartitionExec` to satisfy distribution\nrequirements. When configuration allows, it also increases parallelism by\nrepartitioning over otherwise-serial inputs. For example, given two\n1-partition inputs feeding an operator that can run with more\nparallelism:\n\n```text\n┌─────────────────────────────────┐\n│          ExecutionPlan          │\n└─────────────────────────────────┘\n        ▲                 ▲\n        │                 │\n  ┌───────────┐     ┌───────────┐\n  │  batch A  │     │  batch B  │      Input: 2 partitions\n  └───────────┘     └───────────┘\n```\n\n`EnsureRequirements` inserts a `RepartitionExec` so the operator runs\nwith three partitions:\n\n```text\n┌─────────────────────────────────┐\n│          ExecutionPlan          │      Input now has 3 partitions\n└─────────────────────────────────┘\n        ▲      ▲       ▲\n        └──────┼───────┘\n               │\n┌─────────────────────────────────┐\n│       RepartitionExec(3)        │      batches are repartitioned\n│           RoundRobin            │\n└─────────────────────────────────┘\n        ▲                 ▲\n  ┌───────────┐     ┌───────────┐\n  │  batch A  │     │  batch B  │\n  └───────────┘     └───────────┘\n```\n\n# Behavior: joint distribution + sorting\n\nResolving distribution and sorting together lets Phase 2 produce a\nparallel sort plan in cases where the two-rule pipeline historically\nrisked a serial one. Given `Sort(DESC) ← Coalesce ← MultiPartitionSource`,\n`EnsureRequirements` rewrites it into:\n\n```text\nSortPreservingMergeExec: [a DESC]            (cheap k-way merge of sorted streams)\n  SortExec: [a DESC], preserve_partitioning=true   (N sorts run in parallel)\n    MultiPartitionSource\n```\n\nEach input partition is sorted in parallel, then a `SortPreservingMergeExec`\nat the top performs a cheap merge of pre-sorted streams. For TopK queries\n(`fetch=K`), each parallel sort only keeps K rows per partition, so total\nmemory is `N × K` rather than coalescing the entire stream first.\n\n# Behavior: strictest distribution match for joins\n\nDistribution requirements are met in the strictest way. For example, a\nhash join with keys `(a, b, c)` requires `Distribution(a, b, c)`. This\ncan in principle be satisfied by partitioning on any superset of any\nsubset of `(a, b, c)`, but this rule always partitions on the exact key\ntuple `(a, b, c)`. This is sometimes more aggressive than strictly\nnecessary, but the strictest match helps avoid data skew in joins.",
+    "span": {
+      "filename": "src/ensure_requirements/mod.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        257,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          145,
+          201,
+          203
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`EnsureRequirements`": 203
+    },
+    "link_paths": {
+      "`EnsureRequirements`": "datafusion_physical_optimizer::ensure_requirements::EnsureRequirements"
+    },
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "202",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/datafusion_physical_optimizer.ensure_requirements.md",
+    "record_file": "modules/datafusion_physical_optimizer.ensure_requirements.json",
+    "anchor": "op-e9a13ff8f1943130f1ccc0ae",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`EnsureRequirements`": "../operations/datafusion_physical_optimizer.ensure_requirements.EnsureRequirements.md#op-70914b7c2b51ad60b1d7a82d"
+    }
+  }
+]

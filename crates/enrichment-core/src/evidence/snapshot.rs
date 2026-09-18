@@ -7,7 +7,7 @@ use crate::identity::{
 };
 use std::collections::BTreeMap;
 
-pub const FORMAT: &str = "10.0";
+pub const FORMAT: &str = "16.0";
 
 crate::native_struct! {
     pub struct SnapshotMetadata {
@@ -83,13 +83,24 @@ pub struct SnapshotDescriptor {
 crate::native_struct! {
 pub struct DeltaBinding {
     relation: String => crate::native_union::Rule::NonEmpty,
-    table_uri: String => crate::native_union::Rule::NonEmpty,
-    table_id: String => crate::native_union::Rule::NonEmpty,
-    version: u64 => crate::native_union::Rule::Text,
-    cohort_id: String => crate::native_union::Rule::NonEmpty,
-    contract_id: String => crate::native_union::Rule::NonEmpty,
+    source: crate::delta_reference::DeltaVersionRef => crate::native_union::Rule::Text,
+    cohort_id: crate::identity::CohortId => crate::native_union::Rule::Text,
     rows: u64 => crate::native_union::Rule::Text,
 }
+}
+
+impl DeltaBinding {
+    pub fn selection(&self) -> crate::delta_reference::TableSelection {
+        crate::delta_reference::TableSelection {
+            source: self.source.clone(),
+            row: Some(crate::operation::retention::RowKey {
+                column: "cohort_id".into(),
+                value: crate::identity::RowValue::Cohort {
+                    value: self.cohort_id,
+                },
+            }),
+        }
+    }
 }
 
 crate::native_struct! {
@@ -148,18 +159,12 @@ impl EvidenceManifest {
             return Err("unsupported or inconsistent snapshot identity".into());
         }
         for table in &self.tables {
-            if table.table_uri != format!("evidence_{}", table.relation)
+            if table.source.table.table_uri != format!("evidence_{}", table.relation)
                 || !table
                     .relation
                     .bytes()
                     .all(|b| b.is_ascii_lowercase() || b == b'_')
-                || table.table_id.is_empty()
-                || table.cohort_id.is_empty()
-                || table.contract_id.len() != 64
-                || !table
-                    .contract_id
-                    .bytes()
-                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+                || table.source.table.table_id.is_empty()
             {
                 return Err("invalid exact Delta table binding".into());
             }

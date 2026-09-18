@@ -1,0 +1,3241 @@
+[
+  {
+    "id": "7caee2ff206563b536e983e0",
+    "path": "datafusion_expr::udf::ScalarUDFImpl",
+    "name": "ScalarUDFImpl",
+    "owner": null,
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait ScalarUDFImpl: Debug + DynEq + DynHash + Send + Sync + Any",
+    "docs": "Trait for implementing user defined scalar functions.\n\nThis trait exposes the full API for implementing user defined functions and\ncan be used to implement any function.\n\nSee [`advanced_udf.rs`] for a full example with complete implementation and\n[`ScalarUDF`] for other available options.\n\n[`advanced_udf.rs`]: https://github.com/apache/datafusion/blob/main/datafusion-examples/examples/udf/advanced_udf.rs\n\n# Basic Example\n```\n# use std::any::Any;\n# use std::sync::LazyLock;\n# use arrow::datatypes::DataType;\n# use datafusion_common::{DataFusionError, plan_err, Result};\n# use datafusion_expr::{col, ColumnarValue, Documentation, ScalarFunctionArgs, Signature, Volatility};\n# use datafusion_expr::{ScalarUDFImpl, ScalarUDF};\n# use datafusion_expr::scalar_doc_sections::DOC_SECTION_MATH;\n/// This struct for a simple UDF that adds one to an int32\n#[derive(Debug, PartialEq, Eq, Hash)]\nstruct AddOne {\n  signature: Signature,\n}\n\nimpl AddOne {\n  fn new() -> Self {\n    Self {\n      signature: Signature::uniform(1, vec![DataType::Int32], Volatility::Immutable),\n     }\n  }\n}\n\nstatic DOCUMENTATION: LazyLock<Documentation> = LazyLock::new(|| {\n        Documentation::builder(DOC_SECTION_MATH, \"Add one to an int32\", \"add_one(2)\")\n            .with_argument(\"arg1\", \"The int32 number to add one to\")\n            .build()\n    });\n\nfn get_doc() -> &'static Documentation {\n    &DOCUMENTATION\n}\n\n/// Implement the ScalarUDFImpl trait for AddOne\nimpl ScalarUDFImpl for AddOne {\n   fn name(&self) -> &str { \"add_one\" }\n   fn signature(&self) -> &Signature { &self.signature }\n   fn return_type(&self, args: &[DataType]) -> Result<DataType> {\n     if !matches!(args.get(0), Some(&DataType::Int32)) {\n       return plan_err!(\"add_one only accepts Int32 arguments\");\n     }\n     Ok(DataType::Int32)\n   }\n   // The actual implementation would add one to the argument\n   fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {\n        unimplemented!()\n   }\n   fn documentation(&self) -> Option<&Documentation> {\n        Some(get_doc())\n    }\n}\n\n// Create a new ScalarUDF from the implementation\nlet add_one = ScalarUDF::from(AddOne::new());\n\n// Call the function `add_one(col)`\nlet expr = add_one.call(vec![col(\"a\")]);\n```",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        537,
+        1
+      ],
+      "end": [
+        1066,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          846,
+          981,
+          848,
+          850,
+          855,
+          858,
+          985,
+          857,
+          987,
+          853,
+          870,
+          862,
+          867,
+          875,
+          873,
+          988,
+          989,
+          990,
+          992,
+          886,
+          888,
+          821,
+          995,
+          893
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Debug",
+                "id": 81,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "DynEq",
+                "id": 71,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "DynHash",
+                "id": 76,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 13,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 15,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Any",
+                "id": 55,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": [
+          1001,
+          1008
+        ]
+      }
+    },
+    "type_references": {
+      "81": "core::fmt::Debug",
+      "71": "datafusion_expr_common::dyn_eq::DynEq",
+      "76": "datafusion_expr_common::dyn_eq::DynHash",
+      "13": "core::marker::Send",
+      "15": "core::marker::Sync",
+      "55": "core::any::Any"
+    },
+    "impl_context": null,
+    "links": {
+      "`ScalarUDF`": 819
+    },
+    "link_paths": {
+      "`ScalarUDF`": "datafusion_expr::udf::ScalarUDF"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "840",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-7caee2ff206563b536e983e0",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl",
+      "datafusion_expr::ScalarUDFImpl"
+    ],
+    "resolved_doc_links": {
+      "`ScalarUDF`": "../operations/datafusion_expr.udf.ScalarUDF.md#op-12eb8b815a2294fbbbd085a0"
+    }
+  },
+  {
+    "id": "7271600ea359275a77293c23",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::aliases",
+    "name": "aliases",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn aliases(&self) -> &[String]",
+    "docs": "Returns any aliases (alternate names) for this function.\n\nAliases can be used to invoke the same function using different names.\nFor example in some databases `now()` and `current_timestamp()` are\naliases for the same function. This behavior can be obtained by\nreturning `current_timestamp` as an alias for the `now` function.\n\nNote: `aliases` should only include names other than [`Self::name`].\nDefaults to `[]` (no aliases)",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        550,
+        5
+      ],
+      "end": [
+        552,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "String",
+                    "id": 298,
+                    "args": null
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "298": "alloc::string::String"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::name`": 846
+    },
+    "link_paths": {
+      "`Self::name`": "datafusion_expr::udf::ScalarUDFImpl::name"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "981",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-7271600ea359275a77293c23",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::aliases",
+      "datafusion_expr::ScalarUDFImpl::aliases"
+    ],
+    "resolved_doc_links": {
+      "`Self::name`": "../operations/datafusion_expr.udf.ScalarUDFImpl.md#op-1b6686681755a5ff0c22a2d8"
+    }
+  },
+  {
+    "id": "2418bef30f1b8de36e5ac4ec",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::coerce_types",
+    "name": "coerce_types",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn coerce_types(&self, _arg_types: &[DataType]) -> Result<Vec<DataType>>",
+    "docs": "Coerce arguments of a function call to types that the function can evaluate.\n\nThis function is only called if [`ScalarUDFImpl::signature`] returns\n[`crate::TypeSignature::UserDefined`]. Most UDFs should return one of\nthe other variants of [`TypeSignature`] which handle common cases.\n\nSee the [type coercion module](crate::type_coercion)\ndocumentation for more details on type coercion\n\n[`TypeSignature`]: crate::TypeSignature\n\nFor example, if your function requires a floating point arguments, but the user calls\nit like `my_func(1::int)` (i.e. with `1` as an integer), coerce_types can return `[DataType::Float64]`\nto ensure the argument is converted to `1::double`\n\n# Parameters\n* `arg_types`: The argument types of the arguments  this function with\n\n# Return value\nA Vec the same length as `arg_types`. DataFusion will `CAST` the function call\narguments to these specific types.",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        1022,
+        5
+      ],
+      "end": [
+        1024,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_arg_types",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "DataType",
+                        "id": 10,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 6,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "DataType",
+                                      "id": 10,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "arrow_schema::datatype::DataType",
+      "188": "datafusion_common::error::Result",
+      "6": "alloc::vec::Vec"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::type_coercion": 11,
+      "`crate::TypeSignature::UserDefined`": 699,
+      "`ScalarUDFImpl::signature`": 855,
+      "crate::TypeSignature": 994
+    },
+    "link_paths": {
+      "crate::type_coercion": "datafusion_expr::type_coercion",
+      "`crate::TypeSignature::UserDefined`": "datafusion_expr_common::signature::TypeSignature::UserDefined",
+      "`ScalarUDFImpl::signature`": "datafusion_expr::udf::ScalarUDFImpl::signature",
+      "crate::TypeSignature": "datafusion_expr_common::signature::TypeSignature"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "888",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-2418bef30f1b8de36e5ac4ec",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::coerce_types",
+      "datafusion_expr::ScalarUDFImpl::coerce_types"
+    ],
+    "resolved_doc_links": {
+      "crate::type_coercion": "../modules/datafusion_expr.type_coercion.md#op-e9f5403bd846ccf38493f864",
+      "`crate::TypeSignature::UserDefined`": "../operations/datafusion_expr_common.signature.TypeSignature.md#op-9a54792c384e19dbdaacb169",
+      "`ScalarUDFImpl::signature`": "../operations/datafusion_expr.udf.ScalarUDFImpl.md#op-0b3a009ba3a69eab52444d72",
+      "crate::TypeSignature": "../operations/datafusion_expr_common.signature.TypeSignature.md#op-569c9180a7cabd6afe650cff"
+    }
+  },
+  {
+    "id": "609aba8577614f2ef39b411c",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::conditional_arguments",
+    "name": "conditional_arguments",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn conditional_arguments<'a>(&self, args: &'a [Expr]) -> Option<(Vec<&'a Expr>, Vec<&'a Expr>)>",
+    "docs": "Determines which of the arguments passed to this function are evaluated eagerly\nand which may be evaluated lazily.\n\nIf this function returns `None`, all arguments are eagerly evaluated.\nReturning `None` is a micro optimization that saves a needless `Vec`\nallocation.\n\nIf the function returns `Some`, returns (`eager`, `lazy`) where `eager`\nare the arguments that are always evaluated, and `lazy` are the\narguments that may be evaluated lazily (i.e. may not be evaluated at all\nin some cases).\n\nImplementations must ensure that the two returned `Vec`s are disjunct,\nand that each argument from `args` is present in one the two `Vec`s.\n\nWhen overriding this function, [ScalarUDFImpl::short_circuits] must\nbe overridden to return `true`.",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        905,
+        5
+      ],
+      "end": [
+        914,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "args",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'a",
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Expr",
+                        "id": 301,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 91,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": [
+                          {
+                            "resolved_path": {
+                              "path": "Vec",
+                              "id": 6,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "borrowed_ref": {
+                                          "lifetime": "'a",
+                                          "is_mutable": false,
+                                          "type": {
+                                            "resolved_path": {
+                                              "path": "Expr",
+                                              "id": 301,
+                                              "args": null
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "resolved_path": {
+                              "path": "Vec",
+                              "id": 6,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "borrowed_ref": {
+                                          "lifetime": "'a",
+                                          "is_mutable": false,
+                                          "type": {
+                                            "resolved_path": {
+                                              "path": "Expr",
+                                              "id": 301,
+                                              "args": null
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "301": "datafusion_expr::expr::Expr",
+      "91": "core::option::Option",
+      "6": "alloc::vec::Vec"
+    },
+    "impl_context": null,
+    "links": {
+      "ScalarUDFImpl::short_circuits": 875
+    },
+    "link_paths": {
+      "ScalarUDFImpl::short_circuits": "datafusion_expr::udf::ScalarUDFImpl::short_circuits"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "873",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-609aba8577614f2ef39b411c",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::conditional_arguments",
+      "datafusion_expr::ScalarUDFImpl::conditional_arguments"
+    ],
+    "resolved_doc_links": {
+      "ScalarUDFImpl::short_circuits": "../operations/datafusion_expr.udf.ScalarUDFImpl.md#op-d442484f46ac4203797da7d0"
+    }
+  },
+  {
+    "id": "11c9162f06a7f8f322590763",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::display_name",
+    "name": "display_name",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn display_name(&self, args: &[Expr]) -> Result<String>",
+    "docs": "Returns the user-defined display name of function, given the arguments\n\nThis can be used to customize the output column name generated by this\nfunction.\n\nDefaults to `name(args[0], args[1], ...)`",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        564,
+        5
+      ],
+      "end": [
+        568,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": {
+      "since": "50.0.0",
+      "note": "This method is unused and will be removed in a future release"
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Expr",
+                        "id": 301,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "String",
+                          "id": 298,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "301": "datafusion_expr::expr::Expr",
+      "188": "datafusion_common::error::Result",
+      "298": "alloc::string::String"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "848",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-11c9162f06a7f8f322590763",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::display_name",
+      "datafusion_expr::ScalarUDFImpl::display_name"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4cf61edb626d125aba9ebc72",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::documentation",
+    "name": "documentation",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn documentation(&self) -> Option<&Documentation>",
+    "docs": "Returns the documentation for this Scalar UDF.\n\nDocumentation can be accessed programmatically as well as generating\npublicly facing documentation.",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        1049,
+        5
+      ],
+      "end": [
+        1051,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 91,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Documentation",
+                              "id": 313,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "91": "core::option::Option",
+      "313": "datafusion_doc::Documentation"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "995",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-4cf61edb626d125aba9ebc72",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::documentation",
+      "datafusion_expr::ScalarUDFImpl::documentation"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1774e326b604d7d35c5cceb3",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::evaluate_bounds",
+    "name": "evaluate_bounds",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn evaluate_bounds(&self, _input: &[&Interval]) -> Result<Interval>",
+    "docs": "Computes the output [`Interval`] for a [`ScalarUDFImpl`], given the input\nintervals.\n\n# Parameters\n\n* `children` are the intervals for the children (inputs) of this function.\n\n# Example\n\nIf the function is `ABS(a)`, and the input interval is `a: [-3, 2]`,\nthen the output interval would be `[0, 3]`.",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        927,
+        5
+      ],
+      "end": [
+        930,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_input",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "borrowed_ref": {
+                        "lifetime": null,
+                        "is_mutable": false,
+                        "type": {
+                          "resolved_path": {
+                            "path": "Interval",
+                            "id": 878,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Interval",
+                          "id": 878,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "878": "datafusion_expr_common::interval_arithmetic::Interval",
+      "188": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {
+      "`Interval`": 878,
+      "`ScalarUDFImpl`": 840
+    },
+    "link_paths": {
+      "`Interval`": "datafusion_expr_common::interval_arithmetic::Interval",
+      "`ScalarUDFImpl`": "datafusion_expr::udf::ScalarUDFImpl"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "988",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-1774e326b604d7d35c5cceb3",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::evaluate_bounds",
+      "datafusion_expr::ScalarUDFImpl::evaluate_bounds"
+    ],
+    "resolved_doc_links": {
+      "`Interval`": "../operations/datafusion_expr_common.interval_arithmetic.Interval.md#op-0e8ed6898e67ba9321c8f53e",
+      "`ScalarUDFImpl`": "../operations/datafusion_expr.udf.ScalarUDFImpl.md#op-7caee2ff206563b536e983e0"
+    }
+  },
+  {
+    "id": "412be3cb5d7fb7f10c3f7a58",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::invoke_with_args",
+    "name": "invoke_with_args",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue>",
+    "docs": "Invoke the function returning the appropriate result.\n\n# Performance\n\nFor the best performance, the implementations should handle the common case\nwhen one or more of their arguments are constant values (aka\n[`ColumnarValue::Scalar`]).\n\n[`ColumnarValue::values_to_arrays`] can be used to convert the arguments\nto arrays, which will likely be simpler code, but be slower.",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        733,
+        5
+      ],
+      "end": [
+        733,
+        83
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "args",
+              {
+                "resolved_path": {
+                  "path": "ScalarFunctionArgs",
+                  "id": 872,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ColumnarValue",
+                          "id": 144,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "872": "datafusion_expr::udf::ScalarFunctionArgs",
+      "188": "datafusion_common::error::Result",
+      "144": "datafusion_expr_common::columnar_value::ColumnarValue"
+    },
+    "impl_context": null,
+    "links": {
+      "`ColumnarValue::Scalar`": 308,
+      "`ColumnarValue::values_to_arrays`": 309
+    },
+    "link_paths": {
+      "`ColumnarValue::Scalar`": "datafusion_expr_common::columnar_value::ColumnarValue::Scalar",
+      "`ColumnarValue::values_to_arrays`": "datafusion_expr_common::columnar_value::ColumnarValue::values_to_arrays"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "870",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-412be3cb5d7fb7f10c3f7a58",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::invoke_with_args",
+      "datafusion_expr::ScalarUDFImpl::invoke_with_args"
+    ],
+    "resolved_doc_links": {
+      "`ColumnarValue::Scalar`": "../operations/datafusion_expr_common.columnar_value.ColumnarValue.md#op-d6c26dcb617515197f47859d"
+    }
+  },
+  {
+    "id": "94910b8050ec4aedc3543b75",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::is_nullable",
+    "name": "is_nullable",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn is_nullable(&self, _args: &[Expr], _schema: &dyn ExprSchema) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        705,
+        5
+      ],
+      "end": [
+        707,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": {
+      "since": "45.0.0",
+      "note": "Use `return_field_from_args` instead. if you use `is_nullable` that returns non-nullable with `return_type`, you would need to switch to `return_field_from_args`, you might have error"
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Expr",
+                        "id": 301,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "ExprSchema",
+                            "id": 866,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "301": "datafusion_expr::expr::Expr",
+      "866": "datafusion_common::dfschema::ExprSchema"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "987",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-94910b8050ec4aedc3543b75",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::is_nullable",
+      "datafusion_expr::ScalarUDFImpl::is_nullable"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "cabf9d40d1fe8712d7e55eef",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::is_strict",
+    "name": "is_strict",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn is_strict(&self) -> bool",
+    "docs": "Returns true if this function always returns NULL when any argument is\nNULL.\n\nStrict functions are NULL-propagating: if any argument evaluates to\nNULL, the function result is guaranteed to be NULL. Optimizer rules can\nuse this property when reasoning about expression nullability and\nnull-rejecting filters.\n\nDefaults to `false` because user-defined functions may choose to accept\nNULL inputs and produce non-NULL results.",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        719,
+        5
+      ],
+      "end": [
+        721,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "853",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-cabf9d40d1fe8712d7e55eef",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::is_strict",
+      "datafusion_expr::ScalarUDFImpl::is_strict"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1b6686681755a5ff0c22a2d8",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::name",
+    "name": "name",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &str",
+    "docs": "Returns this function's name",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        539,
+        5
+      ],
+      "end": [
+        539,
+        28
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "846",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-1b6686681755a5ff0c22a2d8",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::name",
+      "datafusion_expr::ScalarUDFImpl::name"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "97f7c8a03d475292252eb927",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::output_ordering",
+    "name": "output_ordering",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn output_ordering(&self, inputs: &[ExprProperties]) -> Result<SortProperties>",
+    "docs": "Calculates the [`SortProperties`] of this function based on its children's properties.",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        965,
+        5
+      ],
+      "end": [
+        983,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "inputs",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ExprProperties",
+                        "id": 884,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SortProperties",
+                          "id": 882,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "884": "datafusion_expr_common::sort_properties::ExprProperties",
+      "188": "datafusion_common::error::Result",
+      "882": "datafusion_expr_common::sort_properties::SortProperties"
+    },
+    "impl_context": null,
+    "links": {
+      "`SortProperties`": 882
+    },
+    "link_paths": {
+      "`SortProperties`": "datafusion_expr_common::sort_properties::SortProperties"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "990",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-97f7c8a03d475292252eb927",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::output_ordering",
+      "datafusion_expr::ScalarUDFImpl::output_ordering"
+    ],
+    "resolved_doc_links": {
+      "`SortProperties`": "../operations/datafusion_expr_common.sort_properties.SortProperties.md#op-a357ca132b9df8290c59f5bf"
+    }
+  },
+  {
+    "id": "6e36a0acc77db21760b4a45e",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::placement",
+    "name": "placement",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn placement(&self, _args: &[ExpressionPlacement]) -> ExpressionPlacement",
+    "docs": "Returns placement information for this function.\n\nThis is used by optimizers to make decisions about expression placement,\nsuch as whether to push expressions down through projections.\n\nThe default implementation returns [`ExpressionPlacement::KeepInPlace`],\nmeaning the expression should be kept where it is in the plan.\n\nOverride this method to indicate that the function can be pushed down\ncloser to the data source.",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        1063,
+        5
+      ],
+      "end": [
+        1065,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ExpressionPlacement",
+                        "id": 895,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ExpressionPlacement",
+              "id": 895,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "895": "datafusion_expr_common::placement::ExpressionPlacement"
+    },
+    "impl_context": null,
+    "links": {
+      "`ExpressionPlacement::KeepInPlace`": 996
+    },
+    "link_paths": {
+      "`ExpressionPlacement::KeepInPlace`": "datafusion_expr_common::placement::ExpressionPlacement::KeepInPlace"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "893",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-6e36a0acc77db21760b4a45e",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::placement",
+      "datafusion_expr::ScalarUDFImpl::placement"
+    ],
+    "resolved_doc_links": {
+      "`ExpressionPlacement::KeepInPlace`": "../operations/datafusion_expr_common.placement.ExpressionPlacement.md#op-600eef0885718f7165bfa8f5"
+    }
+  },
+  {
+    "id": "0f3b7cc7d7d1203c14fd2c9f",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::preimage",
+    "name": "preimage",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn preimage(&self, _args: &[Expr], _lit_expr: &Expr, _info: &SimplifyContext) -> Result<PreimageResult>",
+    "docs": "Returns a single contiguous preimage for this function and the specified\nscalar expression, if any.\n\nCurrently only applies to `=, !=, >, >=, <, <=, is distinct from, is not distinct from` predicates\n# Return Value\n\nImplementations should return a half-open interval: inclusive lower\nbound and exclusive upper bound. This is slightly different from normal\n[`Interval`] semantics where the upper bound is closed (inclusive).\nTypically this means the upper endpoint must be adjusted to the next\nvalue not included in the preimage. See the Half-Open Intervals section\nbelow for more details.\n\n# Background\n\nInspired by the [ClickHouse Paper], a \"preimage rewrite\" transforms a\npredicate containing a function call into a predicate containing an\nequivalent set of input literal (constant) values. The resulting\npredicate can often be further optimized by other rewrites (see\nExamples).\n\nFrom the paper:\n\n> some functions can compute the preimage of a given function result.\n> This is used to replace comparisons of constants with function calls\n> on the key columns by comparing the key column value with the preimage.\n> For example, `toYear(k) = 2024` can be replaced by\n> `k >= 2024-01-01 && k < 2025-01-01`\n\nFor example, given an expression like\n```sql\ndate_part('YEAR', k) = 2024\n```\n\nThe interval `[2024-01-01, 2025-12-31`]` contains all possible input\nvalues (preimage values) for which the function `date_part(YEAR, k)`\nproduces the output value `2024` (image value). Returning the interval\n(note upper bound adjusted up) `[2024-01-01, 2025-01-01]` the expression\ncan be rewritten to\n\n```sql\nk >= '2024-01-01' AND k < '2025-01-01'\n```\n\nwhich is a simpler and a more canonical form, making it easier for other\noptimizer passes to recognize and apply further transformations.\n\n# Examples\n\nCase 1:\n\nOriginal:\n```sql\ndate_part('YEAR', k) = 2024 AND k >= '2024-06-01'\n```\n\nAfter preimage rewrite:\n```sql\nk >= '2024-01-01' AND k < '2025-01-01' AND k >= '2024-06-01'\n```\n\nSince this form is much simpler, the optimizer can combine and simplify\nsub-expressions further into:\n```sql\nk >= '2024-06-01' AND k < '2025-01-01'\n```\n\nCase 2:\n\nFor min/max pruning, simpler predicates such as:\n```sql\nk >= '2024-01-01' AND k < '2025-01-01'\n```\nare much easier for the pruner to reason about. See [PruningPredicate]\nfor the backgrounds of predicate pruning.\n\nThe trade-off with the preimage rewrite is that evaluating the rewritten\nform might be slightly more expensive than evaluating the original\nexpression. In practice, this cost is usually outweighed by the more\naggressive optimization opportunities it enables.\n\n# Half-Open Intervals\n\nThe preimage API uses half-open intervals, which makes the rewrite\neasier to implement by avoiding calculations to adjust the upper bound.\nFor example, if a function returns its input unchanged and the desired\noutput is the single value `5`, a closed interval could be represented\nas `[5, 5]`, but then the rewrite would require adjusting the upper\nbound to `6` to create a proper range predicate. With a half-open\ninterval, the same range is represented as `[5, 6)`, which already\nforms a valid predicate.\n\n[PruningPredicate]: https://docs.rs/datafusion/latest/datafusion/physical_optimizer/pruning/struct.PruningPredicate.html\n[ClickHouse Paper]:  https://www.vldb.org/pvldb/vol17/p3731-schulze.pdf\n[image]: https://en.wikipedia.org/wiki/Image_(mathematics)#Image_of_an_element\n[preimage]: https://en.wikipedia.org/wiki/Image_(mathematics)#Inverse_image",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        866,
+        5
+      ],
+      "end": [
+        873,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Expr",
+                        "id": 301,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_lit_expr",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Expr",
+                      "id": 301,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_info",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "SimplifyContext",
+                      "id": 697,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "PreimageResult",
+                          "id": 869,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "301": "datafusion_expr::expr::Expr",
+      "697": "datafusion_expr::simplify::SimplifyContext",
+      "188": "datafusion_common::error::Result",
+      "869": "datafusion_expr::preimage::PreimageResult"
+    },
+    "impl_context": null,
+    "links": {
+      "`Interval`": 878
+    },
+    "link_paths": {
+      "`Interval`": "datafusion_expr_common::interval_arithmetic::Interval"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "867",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-0f3b7cc7d7d1203c14fd2c9f",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::preimage",
+      "datafusion_expr::ScalarUDFImpl::preimage"
+    ],
+    "resolved_doc_links": {
+      "`Interval`": "../operations/datafusion_expr_common.interval_arithmetic.Interval.md#op-0e8ed6898e67ba9321c8f53e"
+    }
+  },
+  {
+    "id": "ddd814ea6d24274264defc02",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::preserves_lex_ordering",
+    "name": "preserves_lex_ordering",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn preserves_lex_ordering(&self, _inputs: &[ExprProperties]) -> Result<bool>",
+    "docs": "Returns true if the function preserves lexicographical ordering based on\nthe input ordering.\n\nSee [`ExprProperties::preserves_lex_ordering`] for more details",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        989,
+        5
+      ],
+      "end": [
+        991,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_inputs",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ExprProperties",
+                        "id": 884,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "884": "datafusion_expr_common::sort_properties::ExprProperties",
+      "188": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {
+      "`ExprProperties::preserves_lex_ordering`": 991
+    },
+    "link_paths": {
+      "`ExprProperties::preserves_lex_ordering`": "datafusion_expr_common::sort_properties::ExprProperties::preserves_lex_ordering"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "992",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-ddd814ea6d24274264defc02",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::preserves_lex_ordering",
+      "datafusion_expr::ScalarUDFImpl::preserves_lex_ordering"
+    ],
+    "resolved_doc_links": {
+      "`ExprProperties::preserves_lex_ordering`": "../operations/datafusion_expr_common.sort_properties.ExprProperties.md#op-2ba98f8a96c838499ec6bd27"
+    }
+  },
+  {
+    "id": "35b3ffb8113861b201fdf886",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::propagate_constraints",
+    "name": "propagate_constraints",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn propagate_constraints(&self, _interval: &Interval, _inputs: &[&Interval]) -> Result<Option<Vec<Interval>>>",
+    "docs": "Updates bounds for child expressions, given a known [`Interval`]s for this\nfunction.\n\nThis function is used to propagate constraints down through an\nexpression tree.\n\n# Parameters\n\n* `interval` is the currently known interval for this function.\n* `inputs` are the current intervals for the inputs (children) of this function.\n\n# Returns\n\nA `Vec` of new intervals for the children, in order.\n\nIf constraint propagation reveals an infeasibility for any child, returns\n[`None`]. If none of the children intervals change as a result of\npropagation, may return an empty vector instead of cloning `children`.\nThis is the default (and conservative) return value.\n\n# Example\n\nIf the function is `ABS(a)`, the current `interval` is `[4, 5]` and the\ninput `a` is given as `[-7, 3]`, then propagation would return `[-5, 3]`.",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        956,
+        5
+      ],
+      "end": [
+        962,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_interval",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Interval",
+                      "id": 878,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_inputs",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "borrowed_ref": {
+                        "lifetime": null,
+                        "is_mutable": false,
+                        "type": {
+                          "resolved_path": {
+                            "path": "Interval",
+                            "id": 878,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 91,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Vec",
+                                      "id": 6,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "resolved_path": {
+                                                  "path": "Interval",
+                                                  "id": 878,
+                                                  "args": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "878": "datafusion_expr_common::interval_arithmetic::Interval",
+      "188": "datafusion_common::error::Result",
+      "91": "core::option::Option",
+      "6": "alloc::vec::Vec"
+    },
+    "impl_context": null,
+    "links": {
+      "`Interval`": 878,
+      "`None`": 880
+    },
+    "link_paths": {
+      "`Interval`": "datafusion_expr_common::interval_arithmetic::Interval",
+      "`None`": "core::option::Option::None"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "989",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-35b3ffb8113861b201fdf886",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::propagate_constraints",
+      "datafusion_expr::ScalarUDFImpl::propagate_constraints"
+    ],
+    "resolved_doc_links": {
+      "`Interval`": "../operations/datafusion_expr_common.interval_arithmetic.Interval.md#op-0e8ed6898e67ba9321c8f53e"
+    }
+  },
+  {
+    "id": "efa24f895df9cedbd3cf8c2a",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::return_field_from_args",
+    "name": "return_field_from_args",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn return_field_from_args(&self, args: ReturnFieldArgs<'_>) -> Result<FieldRef>",
+    "docs": "What type will be returned by this function, given the arguments?\n\nBy default, this function calls [`Self::return_type`] with the\ntypes of each argument.\n\n# Notes\n\nFor the majority of UDFs, implementing [`Self::return_type`] is sufficient,\nas the result type is typically a deterministic function of the input types\n(e.g., `sqrt(f32)` consistently yields `f32`). Implementing this method directly\nis generally unnecessary unless the return type depends on runtime values.\n\nThis function can be used for more advanced cases such as:\n\n1. specifying nullability\n2. return types based on the **values** of the arguments (rather than\n   their **types**.\n\n# Example creating `Field`\n\nNote the name of the [`Field`] is ignored, except for structured types such as\n`DataType::Struct`.\n\n```rust\n# use std::sync::Arc;\n# use arrow::datatypes::{DataType, Field, FieldRef};\n# use datafusion_common::Result;\n# use datafusion_expr::ReturnFieldArgs;\n# struct Example{}\n# impl Example {\nfn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<FieldRef> {\n    // report output is only nullable if any one of the arguments are nullable\n    let nullable = args.arg_fields.iter().any(|f| f.is_nullable());\n    let field = Arc::new(Field::new(\"ignored_name\", DataType::Int32, nullable));\n    Ok(field)\n}\n# }\n```\n\n# Output Type based on Values\n\nFor example, the following two function calls get the same argument\ntypes (something and a `Utf8` string) but return different types based\non the value of the second argument:\n\n* `arrow_cast(x, 'Int16')` --> `Int16`\n* `arrow_cast(x, 'Float32')` --> `Float32`\n\n# Requirements\n\nThis function **must** consistently return the same type for the same\nlogical input even if the input is simplified (e.g. it must return the same\nvalue for `('foo' | 'bar')` as it does for ('foobar').",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        690,
+        5
+      ],
+      "end": [
+        699,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "args",
+              {
+                "resolved_path": {
+                  "path": "ReturnFieldArgs",
+                  "id": 861,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'_"
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "FieldRef",
+                          "id": 147,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "861": "datafusion_expr::udf::ReturnFieldArgs",
+      "188": "datafusion_common::error::Result",
+      "147": "arrow_schema::field::FieldRef"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::return_type`": 858,
+      "`Field`": 986
+    },
+    "link_paths": {
+      "`Self::return_type`": "datafusion_expr::udf::ScalarUDFImpl::return_type",
+      "`Field`": "arrow_schema::field::Field"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "857",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-efa24f895df9cedbd3cf8c2a",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::return_field_from_args",
+      "datafusion_expr::ScalarUDFImpl::return_field_from_args"
+    ],
+    "resolved_doc_links": {
+      "`Self::return_type`": "../operations/datafusion_expr.udf.ScalarUDFImpl.md#op-656507bbb7a195e311356b01",
+      "`Field`": "../operations/arrow_schema.field.Field.md#op-66eb7ef45bcc129b0a0189cf"
+    }
+  },
+  {
+    "id": "656507bbb7a195e311356b01",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::return_type",
+    "name": "return_type",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>",
+    "docs": "[`DataType`] returned by this function, given the types of the\narguments.\n\n# Arguments\n\n`arg_types` Data types of the arguments. The implementation of\n`return_type` can assume that some other part of the code has coerced\nthe actual argument types to match [`Self::signature`].\n\n# Notes\n\nIf you provide an implementation for [`Self::return_field_from_args`],\nDataFusion will not call `return_type` (this function). While it is\nvalid to put [`unimplemented!()`] or [`unreachable!()`], it is\nrecommended to return [`DataFusionError::Internal`] instead, which\nreduces the severity of symptoms if bugs occur (an error rather than a\npanic).\n\n[`DataFusionError::Internal`]: datafusion_common::DataFusionError::Internal",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        609,
+        5
+      ],
+      "end": [
+        609,
+        71
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "arg_types",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "DataType",
+                        "id": 10,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "DataType",
+                          "id": 10,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "arrow_schema::datatype::DataType",
+      "188": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {
+      "`DataType`": 10,
+      "`Self::signature`": 855,
+      "`Self::return_field_from_args`": 857,
+      "datafusion_common::DataFusionError::Internal": 984,
+      "`unimplemented!()`": 982,
+      "`unreachable!()`": 983
+    },
+    "link_paths": {
+      "`DataType`": "arrow_schema::datatype::DataType",
+      "`Self::signature`": "datafusion_expr::udf::ScalarUDFImpl::signature",
+      "`Self::return_field_from_args`": "datafusion_expr::udf::ScalarUDFImpl::return_field_from_args",
+      "datafusion_common::DataFusionError::Internal": "datafusion_common::error::DataFusionError::Internal",
+      "`unimplemented!()`": "core::unimplemented",
+      "`unreachable!()`": "core::unreachable"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "858",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-656507bbb7a195e311356b01",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::return_type",
+      "datafusion_expr::ScalarUDFImpl::return_type"
+    ],
+    "resolved_doc_links": {
+      "`DataType`": "../operations/arrow_schema.datatype.DataType.md#op-bf69df5b14436e006d3a531c",
+      "`Self::signature`": "../operations/datafusion_expr.udf.ScalarUDFImpl.md#op-0b3a009ba3a69eab52444d72",
+      "`Self::return_field_from_args`": "../operations/datafusion_expr.udf.ScalarUDFImpl.md#op-efa24f895df9cedbd3cf8c2a",
+      "datafusion_common::DataFusionError::Internal": "../operations/datafusion_common.error.DataFusionError.md#op-bdc3e1c5a07020f01c5a1dc4"
+    }
+  },
+  {
+    "id": "2594946d62d840b6b88d094f",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::schema_name",
+    "name": "schema_name",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn schema_name(&self, args: &[Expr]) -> Result<String>",
+    "docs": "Returns the name of the column this expression would create\n\nSee [`Expr::schema_name`] for details",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        573,
+        5
+      ],
+      "end": [
+        579,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Expr",
+                        "id": 301,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "String",
+                          "id": 298,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "301": "datafusion_expr::expr::Expr",
+      "188": "datafusion_common::error::Result",
+      "298": "alloc::string::String"
+    },
+    "impl_context": null,
+    "links": {
+      "`Expr::schema_name`": 299
+    },
+    "link_paths": {
+      "`Expr::schema_name`": "datafusion_expr::expr::Expr::schema_name"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "850",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-2594946d62d840b6b88d094f",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::schema_name",
+      "datafusion_expr::ScalarUDFImpl::schema_name"
+    ],
+    "resolved_doc_links": {
+      "`Expr::schema_name`": "../operations/datafusion_expr.expr.Expr.md#op-82ef8179c0d4e6c2ae471137"
+    }
+  },
+  {
+    "id": "d442484f46ac4203797da7d0",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::short_circuits",
+    "name": "short_circuits",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn short_circuits(&self) -> bool",
+    "docs": "Returns true if some of this `exprs` subexpressions may not be evaluated\nand thus any side effects (like divide by zero) may not be encountered.\n\nSetting this to true prevents certain optimizations such as common\nsubexpression elimination\n\nWhen overriding this function to return `true`, [ScalarUDFImpl::conditional_arguments] can also be\noverridden to report more accurately which arguments are eagerly evaluated and which ones\nlazily.",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        884,
+        5
+      ],
+      "end": [
+        886,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "ScalarUDFImpl::conditional_arguments": 873
+    },
+    "link_paths": {
+      "ScalarUDFImpl::conditional_arguments": "datafusion_expr::udf::ScalarUDFImpl::conditional_arguments"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "875",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-d442484f46ac4203797da7d0",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::short_circuits",
+      "datafusion_expr::ScalarUDFImpl::short_circuits"
+    ],
+    "resolved_doc_links": {
+      "ScalarUDFImpl::conditional_arguments": "../operations/datafusion_expr.udf.ScalarUDFImpl.md#op-609aba8577614f2ef39b411c"
+    }
+  },
+  {
+    "id": "0b3a009ba3a69eab52444d72",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::signature",
+    "name": "signature",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn signature(&self) -> &Signature",
+    "docs": "Returns a [`Signature`] describing the argument types for which this\nfunction has an implementation, and the function's [`Volatility`].\n\nSee [`Signature`] for more details on argument type handling\nand [`Self::return_type`] for computing the return type.\n\n[`Volatility`]: datafusion_expr_common::signature::Volatility",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        588,
+        5
+      ],
+      "end": [
+        588,
+        39
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Signature",
+                  "id": 580,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "580": "datafusion_expr_common::signature::Signature"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::return_type`": 858,
+      "`Signature`": 580,
+      "datafusion_expr_common::signature::Volatility": 98
+    },
+    "link_paths": {
+      "`Self::return_type`": "datafusion_expr::udf::ScalarUDFImpl::return_type",
+      "`Signature`": "datafusion_expr_common::signature::Signature",
+      "datafusion_expr_common::signature::Volatility": "datafusion_expr_common::signature::Volatility"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "855",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-0b3a009ba3a69eab52444d72",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::signature",
+      "datafusion_expr::ScalarUDFImpl::signature"
+    ],
+    "resolved_doc_links": {
+      "`Self::return_type`": "../operations/datafusion_expr.udf.ScalarUDFImpl.md#op-656507bbb7a195e311356b01",
+      "`Signature`": "../operations/datafusion_expr_common.signature.Signature.md#op-3501f77593554c0ab3e03e9e",
+      "datafusion_expr_common::signature::Volatility": "../operations/datafusion_expr_common.signature.Volatility.md#op-2e27042945dba7db012302a0"
+    }
+  },
+  {
+    "id": "5b09f606d091d093ed8a0aec",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::simplify",
+    "name": "simplify",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn simplify(&self, args: Vec<Expr>, _info: &SimplifyContext) -> Result<ExprSimplifyResult>",
+    "docs": "Optionally apply per-UDF simplification / rewrite rules.\n\nThis can be used to apply function specific simplification rules during\noptimization (e.g. `arrow_cast` --> `Expr::Cast`). The default\nimplementation does nothing.\n\nNote that DataFusion handles simplifying arguments and  \"constant\nfolding\" (replacing a function call with constant arguments such as\n`my_add(1,2) --> 3` ). Thus, there is no need to implement such\noptimizations manually for specific UDFs.\n\n# Arguments\n* `args`: The arguments of the function\n* `info`: The necessary information for simplification\n\n# Returns\n[`ExprSimplifyResult`] indicating the result of the simplification NOTE\nif the function cannot be simplified, the arguments *MUST* be returned\nunmodified\n\n# Notes\n\nThe returned expression must have the same schema as the original\nexpression, including both the data type and nullability. For example,\nif the original expression is nullable, the returned expression must\nalso be nullable, otherwise it may lead to schema verification errors\nlater in query planning.",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        762,
+        5
+      ],
+      "end": [
+        768,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "args",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 6,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Expr",
+                              "id": 301,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_info",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "SimplifyContext",
+                      "id": 697,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ExprSimplifyResult",
+                          "id": 864,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6": "alloc::vec::Vec",
+      "301": "datafusion_expr::expr::Expr",
+      "697": "datafusion_expr::simplify::SimplifyContext",
+      "188": "datafusion_common::error::Result",
+      "864": "datafusion_expr::simplify::ExprSimplifyResult"
+    },
+    "impl_context": null,
+    "links": {
+      "`ExprSimplifyResult`": 864
+    },
+    "link_paths": {
+      "`ExprSimplifyResult`": "datafusion_expr::simplify::ExprSimplifyResult"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "862",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-5b09f606d091d093ed8a0aec",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::simplify",
+      "datafusion_expr::ScalarUDFImpl::simplify"
+    ],
+    "resolved_doc_links": {
+      "`ExprSimplifyResult`": "../operations/datafusion_expr.simplify.ExprSimplifyResult.md#op-e99cc91e51c5aaf2a6e6620b"
+    }
+  },
+  {
+    "id": "aa3db0a55467ecf3dc3cfcab",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::strictly_order_preserving",
+    "name": "strictly_order_preserving",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn strictly_order_preserving(&self, _inputs: &[ExprProperties]) -> Result<bool>",
+    "docs": "Returns true if the function is strictly order-preserving with respect\nto its `Ordered` inputs, i.e. `a.cmp(b) == f(a).cmp(f(b))`.\n\nSee [`ExprProperties::strictly_order_preserving`] for more details",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        997,
+        5
+      ],
+      "end": [
+        999,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_inputs",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ExprProperties",
+                        "id": 884,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "884": "datafusion_expr_common::sort_properties::ExprProperties",
+      "188": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {
+      "`ExprProperties::strictly_order_preserving`": 993
+    },
+    "link_paths": {
+      "`ExprProperties::strictly_order_preserving`": "datafusion_expr_common::sort_properties::ExprProperties::strictly_order_preserving"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "886",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-aa3db0a55467ecf3dc3cfcab",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::strictly_order_preserving",
+      "datafusion_expr::ScalarUDFImpl::strictly_order_preserving"
+    ],
+    "resolved_doc_links": {
+      "`ExprProperties::strictly_order_preserving`": "../operations/datafusion_expr_common.sort_properties.ExprProperties.md#op-2ec9acd60d62113a73cd3a5f"
+    }
+  },
+  {
+    "id": "046bec345ba5869e7f1b1c29",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::struct_field_mapping",
+    "name": "struct_field_mapping",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn struct_field_mapping(&self, _literal_args: &[Option<ScalarValue>]) -> Option<StructFieldMapping>",
+    "docs": "For struct-producing functions, return how output fields map to input\narguments. This enables the optimizer to propagate orderings through\nstruct projections.\n\n`literal_args[i]` is `Some(value)` if argument `i` is a known literal,\nallowing extraction of field names from arguments like\n`named_struct('field_name', value, ...)`.\n\nFor example, `named_struct('a', col1, 'b', col2)` would return a\nmapping indicating that output field `'a'` (accessed via\n`get_field(output, 'a')`) corresponds to input argument `col1` at\nindex 1, and field `'b'` corresponds to `col2` at index 3.",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        1038,
+        5
+      ],
+      "end": [
+        1043,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_literal_args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Option",
+                        "id": 91,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "ScalarValue",
+                                    "id": 215,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 91,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "StructFieldMapping",
+                          "id": 822,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "91": "core::option::Option",
+      "215": "datafusion_common::scalar::ScalarValue",
+      "822": "datafusion_expr::udf::StructFieldMapping"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "821",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-046bec345ba5869e7f1b1c29",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::struct_field_mapping",
+      "datafusion_expr::ScalarUDFImpl::struct_field_mapping"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f0dc74cfc8974de0bebe2f8a",
+    "path": "datafusion_expr::udf::ScalarUDFImpl::with_updated_config",
+    "name": "with_updated_config",
+    "owner": "datafusion_expr::udf::ScalarUDFImpl",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_updated_config(&self, _config: &ConfigOptions) -> Option<ScalarUDF>",
+    "docs": "Create a new instance of this function with updated configuration.\n\nThis method is called when configuration options change at runtime\n(e.g., via `SET` statements) to allow functions that depend on\nconfiguration to update themselves accordingly.\n\nNote the current [`ConfigOptions`] are also passed to [`Self::invoke_with_args`] so\nthis API is not needed for functions where the values may\ndepend on the current options.\n\nThis API is useful for functions where the return\n**type** depends on the configuration options, such as the `now()` function\nwhich depends on the current timezone.\n\n# Arguments\n\n* `config` - The updated configuration options\n\n# Returns\n\n* `Some(ScalarUDF)` - A new instance of this function configured with the new settings\n* `None` - If this function does not change with new configuration settings (the default)",
+    "span": {
+      "filename": "src/udf.rs",
+      "begin": [
+        633,
+        5
+      ],
+      "end": [
+        635,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ConfigOptions",
+                      "id": 152,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 91,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ScalarUDF",
+                          "id": 819,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "152": "datafusion_common::config::ConfigOptions",
+      "91": "core::option::Option",
+      "819": "datafusion_expr::udf::ScalarUDF"
+    },
+    "impl_context": null,
+    "links": {
+      "`ConfigOptions`": 152,
+      "`Self::invoke_with_args`": 870
+    },
+    "link_paths": {
+      "`ConfigOptions`": "datafusion_common::config::ConfigOptions",
+      "`Self::invoke_with_args`": "datafusion_expr::udf::ScalarUDFImpl::invoke_with_args"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "985",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md",
+    "record_file": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+    "anchor": "op-f0dc74cfc8974de0bebe2f8a",
+    "aliases": [
+      "datafusion::logical_expr::ScalarUDFImpl::with_updated_config",
+      "datafusion_expr::ScalarUDFImpl::with_updated_config"
+    ],
+    "resolved_doc_links": {
+      "`ConfigOptions`": "../operations/datafusion_common.config.ConfigOptions.md#op-0fede8afa640e38e337e0cc4",
+      "`Self::invoke_with_args`": "../operations/datafusion_expr.udf.ScalarUDFImpl.md#op-412be3cb5d7fb7f10c3f7a58"
+    }
+  }
+]

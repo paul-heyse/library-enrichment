@@ -60,6 +60,9 @@ async fn put_part(&self, path: &Path, id: &MultipartId, part_idx: usize, data: P
 async fn signed_url(&self, method: Method, path: &Path, expires_in: Duration) -> Result<Url>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.aws.AmazonS3.md).
+
+
 Interface for [Amazon S3](https://aws.amazon.com/s3/).
 
 ---
@@ -71,6 +74,9 @@ Interface for [Amazon S3](https://aws.amazon.com/s3/).
 ```rust
 type AwsCredentialProvider = std::sync::Arc<dyn CredentialProvider<Credential = AwsCredential>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.aws.AwsCredentialProvider.md).
+
 
 [`CredentialProvider`] for [`AmazonS3`]
 

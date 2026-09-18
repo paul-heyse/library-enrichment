@@ -20,6 +20,9 @@ enum FFI_TableProviderFilterPushDown
 fn from(value: &TableProviderFilterPushDown) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.table_source.FFI_TableProviderFilterPushDown.md).
+
+
 FFI safe version of [`TableProviderFilterPushDown`].
 
 ---
@@ -43,6 +46,9 @@ enum FFI_TableType
 ```rust
 fn from(value: TableType) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.table_source.FFI_TableType.md).
+
 
 FFI safe version of [`TableType`].
 

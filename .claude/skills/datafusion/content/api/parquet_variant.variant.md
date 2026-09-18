@@ -94,6 +94,9 @@ fn try_from(value: (i64, u8)) -> Result<Self, Self::Error>
 fn try_from(value: (i128, u8)) -> Result<Self, Self::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant.variant.Variant.md).
+
+
 Represents a [Parquet Variant]
 
 The lifetimes `'m` and `'v` are for metadata and value buffers, respectively.
@@ -269,6 +272,9 @@ fn try_from(value: &'a str) -> Result<Self, Self::Error>
 ```rust
 fn deref(&self) -> &Self::Target
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant.variant.ShortString.md).
+
 
 A Variant [`ShortString`]
 

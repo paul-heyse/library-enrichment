@@ -12,6 +12,9 @@ Also reachable as `datafusion::execution::async_stream`, `datafusion_execution::
 fn async_stream<T, F: Future<Output = ()>>(generator: impl FnOnce(Emitter<T>) -> F) -> impl FusedStream<Item = T>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.async_stream.async_stream.md).
+
+
 Creates a [`Stream`] from an async generator function.
 
 The `generator` closure receives an [`Emitter<T>`] and runs as an async
@@ -49,6 +52,9 @@ Also reachable as `datafusion::execution::async_try_stream`, `datafusion_executi
 ```rust
 fn async_try_stream<T, E, F: Future<Output = Result<(), E>>>(generator: impl FnOnce(TryEmitter<T, E>) -> F) -> impl FusedStream<Item = Result<T, E>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.async_stream.async_try_stream.md).
+
 
 Creates a fallible [`Stream`] from an async generator function.
 
@@ -98,6 +104,9 @@ struct Emitter<T>
 fn emit(&mut self, value: T) -> impl FusedFuture<Output = ()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.async_stream.Emitter.md).
+
+
 A handle for emitting values from an [`async_stream`] generator.
 
 The generator closure receives an `Emitter<T>` as its argument.
@@ -119,6 +128,9 @@ struct TryEmitter<T, E>
 ```rust
 fn emit(&mut self, value: T) -> impl FusedFuture<Output = ()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.async_stream.TryEmitter.md).
+
 
 A handle for emitting values from an [`async_try_stream`] generator.
 

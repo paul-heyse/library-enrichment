@@ -1,0 +1,2639 @@
+[
+  {
+    "id": "dd3d2e82b5362ef73363ba21",
+    "path": "datafusion_common::tree_node::Transformed",
+    "name": "Transformed",
+    "owner": null,
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct Transformed<T>",
+    "docs": "Result of tree walk / transformation APIs\n\n`Transformed` is a wrapper around the tree node data (e.g. `Expr` or\n`LogicalPlan`). It is used to indicate whether the node was transformed\nand how the recursion should proceed.\n\n[`TreeNode`] API users control the transformation by returning:\n- The resulting (possibly transformed) node,\n- `transformed`: flag indicating whether any change was made to the node\n- `tnr`: [`TreeNodeRecursion`] specifying how to proceed with the recursion.\n\nAt the end of the transformation, the return value will contain:\n- The final (possibly transformed) tree,\n- `transformed`: flag indicating whether any change was made to the node\n- `tnr`: [`TreeNodeRecursion`] specifying how the recursion ended.\n\nSee also\n* [`Transformed::update_data`] to modify the node without changing the `transformed` flag\n* [`Transformed::map_data`] for fallable operation that return the same type\n* [`Transformed::transform_data`] to chain fallable transformations\n* [`TransformedResult`] for working with `Result<Transformed<U>>`\n\n# Examples\n\nUse [`Transformed::yes`] and [`Transformed::no`] to signal that a node was\nrewritten and the recursion should continue:\n\n```\n# use datafusion_common::tree_node::Transformed;\n# // note use i64 instead of Expr as Expr is not in datafusion-common\n# fn orig_expr() -> i64 { 1 }\n# fn make_new_expr(i: i64) -> i64 { 2 }\nlet expr = orig_expr();\n\n// Create a new `Transformed` object signaling the node was not rewritten\nlet ret = Transformed::no(expr.clone());\nassert!(!ret.transformed);\n\n// Create a new `Transformed` object signaling the node was rewritten\nlet ret = Transformed::yes(expr);\nassert!(ret.transformed)\n```\n\nAccess the node within the `Transformed` object:\n```\n# use datafusion_common::tree_node::Transformed;\n# // note use i64 instead of Expr as Expr is not in datafusion-common\n# fn orig_expr() -> i64 { 1 }\n# fn make_new_expr(i: i64) -> i64 { 2 }\nlet expr = orig_expr();\n\n// `Transformed` object signaling the node was not rewritten\nlet ret = Transformed::no(expr.clone());\n// Access the inner object using .data\nassert_eq!(expr, ret.data);\n```\n\nTransform the node within the `Transformed` object.\n\n```\n# use datafusion_common::tree_node::Transformed;\n# // note use i64 instead of Expr as Expr is not in datafusion-common\n# fn orig_expr() -> i64 { 1 }\n# fn make_new_expr(i: i64) -> i64 { 2 }\nlet expr = orig_expr();\nlet ret = Transformed::no(expr.clone())\n    .transform_data(|expr| {\n        // closure returns a result and potentially transforms the node\n        // in this example, it does transform the node\n        let new_expr = make_new_expr(expr);\n        Ok(Transformed::yes(new_expr))\n    })\n    .unwrap();\n// transformed flag is the union of the original ans closure's  transformed flag\nassert!(ret.transformed);\n```\n# Example APIs that use `TreeNode`\n- [`TreeNode`],\n- [`TreeNode::rewrite`],\n- [`TreeNode::transform_down`],\n- [`TreeNode::transform_up`],\n- [`TreeNode::transform_down_up`]",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        658,
+        1
+      ],
+      "end": [
+        662,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [
+              4997,
+              4998,
+              4999
+            ],
+            "has_stripped_fields": false
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          5012,
+          5013,
+          5014,
+          5015,
+          5016,
+          5017,
+          5018,
+          5019,
+          5020,
+          5021,
+          5022,
+          5023,
+          5024,
+          5025,
+          5026,
+          5027,
+          5028,
+          5030,
+          5032
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`TransformedResult`": 5003,
+      "`Transformed::update_data`": 5000,
+      "`TreeNodeRecursion`": 4938,
+      "`Transformed::no`": 5005,
+      "`TreeNode::rewrite`": 4940,
+      "`TreeNode::transform_down`": 4945,
+      "`TreeNode::transform_down_up`": 4947,
+      "`Transformed::yes`": 5004,
+      "`Transformed::map_data`": 5001,
+      "`TreeNode::transform_up`": 4948,
+      "`Transformed::transform_data`": 5002,
+      "`TreeNode`": 2565
+    },
+    "link_paths": {
+      "`TransformedResult`": "datafusion_common::tree_node::TransformedResult",
+      "`Transformed::update_data`": "datafusion_common::tree_node::Transformed::update_data",
+      "`TreeNodeRecursion`": "datafusion_common::tree_node::TreeNodeRecursion",
+      "`Transformed::no`": "datafusion_common::tree_node::Transformed::no",
+      "`TreeNode::rewrite`": "datafusion_common::tree_node::TreeNode::rewrite",
+      "`TreeNode::transform_down`": "datafusion_common::tree_node::TreeNode::transform_down",
+      "`TreeNode::transform_down_up`": "datafusion_common::tree_node::TreeNode::transform_down_up",
+      "`Transformed::yes`": "datafusion_common::tree_node::Transformed::yes",
+      "`Transformed::map_data`": "datafusion_common::tree_node::Transformed::map_data",
+      "`TreeNode::transform_up`": "datafusion_common::tree_node::TreeNode::transform_up",
+      "`Transformed::transform_data`": "datafusion_common::tree_node::Transformed::transform_data",
+      "`TreeNode`": "datafusion_common::tree_node::TreeNode"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "4949",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-dd3d2e82b5362ef73363ba21",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`TransformedResult`": "../operations/datafusion_common.tree_node.TransformedResult.md#op-908e5add91b8c1def34e590f",
+      "`Transformed::update_data`": "../operations/datafusion_common.tree_node.Transformed.md#op-88a0704cb1891d830cbd571b",
+      "`TreeNodeRecursion`": "../operations/datafusion_common.tree_node.TreeNodeRecursion.md#op-71e77b162ffdf243709ca1dc",
+      "`Transformed::no`": "../operations/datafusion_common.tree_node.Transformed.md#op-268dad84b616771bdd05cb5a",
+      "`TreeNode::rewrite`": "../operations/datafusion_common.tree_node.TreeNode.md#op-af82c9ed79a9f7ee9db9ed17",
+      "`TreeNode::transform_down`": "../operations/datafusion_common.tree_node.TreeNode.md#op-7f8f7d15d1860327f1638078",
+      "`TreeNode::transform_down_up`": "../operations/datafusion_common.tree_node.TreeNode.md#op-e30b76102a8ade63c654b8d6",
+      "`Transformed::yes`": "../operations/datafusion_common.tree_node.Transformed.md#op-f899f58948a58a086085aa10",
+      "`Transformed::map_data`": "../operations/datafusion_common.tree_node.Transformed.md#op-0661c3f826cfeb162dacb938",
+      "`TreeNode::transform_up`": "../operations/datafusion_common.tree_node.TreeNode.md#op-86d9d244e6b5fe16b173f4ed",
+      "`Transformed::transform_data`": "../operations/datafusion_common.tree_node.Transformed.md#op-762e0ad11f2a9339aa005ddc",
+      "`TreeNode`": "../operations/datafusion_common.tree_node.TreeNode.md#op-19aa424c8e392fc74e9acd29"
+    }
+  },
+  {
+    "id": "6d3e744c2fa412b2c96f1b7e",
+    "path": "datafusion_common::tree_node::Transformed::complete",
+    "name": "complete",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn complete(data: T) -> Self",
+    "docs": "Wrapper for transformed data with [`TreeNodeRecursion::Stop`] statement.",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        685,
+        5
+      ],
+      "end": [
+        687,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Transformed",
+          "id": "datafusion_common::tree_node::Transformed",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/tree_node.rs",
+        "begin": [
+          664,
+          1
+        ],
+        "end": [
+          776,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TreeNodeRecursion::Stop`": 4967
+    },
+    "link_paths": {
+      "`TreeNodeRecursion::Stop`": "datafusion_common::tree_node::TreeNodeRecursion::Stop"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5008",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-6d3e744c2fa412b2c96f1b7e",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`TreeNodeRecursion::Stop`": "../operations/datafusion_common.tree_node.TreeNodeRecursion.md#op-fbbedd1f0409ac786df535a1"
+    }
+  },
+  {
+    "id": "7429216abcb499749a996c30",
+    "path": "datafusion_common::tree_node::Transformed::data",
+    "name": "data",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "data: T",
+    "docs": "",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        659,
+        5
+      ],
+      "end": [
+        659,
+        16
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "generic": "T"
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "4997",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-7429216abcb499749a996c30",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "646cf8ea74287106de431203",
+    "path": "datafusion_common::tree_node::Transformed::eq",
+    "name": "eq",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &Transformed<T>) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        657,
+        10
+      ],
+      "end": [
+        657,
+        19
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Transformed",
+                      "id": 4949,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "T"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4949": "datafusion_common::tree_node::Transformed"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Transformed",
+          "id": "datafusion_common::tree_node::Transformed",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "$crate::cmp::PartialEq",
+                        "id": "core::cmp::PartialEq",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/tree_node.rs",
+        "begin": [
+          657,
+          10
+        ],
+        "end": [
+          657,
+          19
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5029",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-646cf8ea74287106de431203",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5e68292dc3fca0d994d9ef34",
+    "path": "datafusion_common::tree_node::Transformed::fmt",
+    "name": "fmt",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        657,
+        21
+      ],
+      "end": [
+        657,
+        26
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 108,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 109,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "108": "core::fmt::Formatter",
+      "109": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Transformed",
+          "id": "datafusion_common::tree_node::Transformed",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "$crate::fmt::Debug",
+                        "id": "core::fmt::Debug",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/tree_node.rs",
+        "begin": [
+          657,
+          21
+        ],
+        "end": [
+          657,
+          26
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5031",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-5e68292dc3fca0d994d9ef34",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0661c3f826cfeb162dacb938",
+    "path": "datafusion_common::tree_node::Transformed::map_data",
+    "name": "map_data",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn map_data<U, F: FnOnce(T) -> Result<U>>(self, f: F) -> Result<Transformed<U>>",
+    "docs": "Applies a fallible `f` (returns `Result`) to the data of this\n[`Transformed`] object, without modifying the `transformed` flag.",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        702,
+        5
+      ],
+      "end": [
+        704,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "f",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 21,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Transformed",
+                          "id": 4949,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "generic": "U"
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "U",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "FnOnce",
+                          "id": 2974,
+                          "args": {
+                            "parenthesized": {
+                              "inputs": [
+                                {
+                                  "generic": "T"
+                                }
+                              ],
+                              "output": {
+                                "resolved_path": {
+                                  "path": "Result",
+                                  "id": 21,
+                                  "args": {
+                                    "angle_bracketed": {
+                                      "args": [
+                                        {
+                                          "type": {
+                                            "generic": "U"
+                                          }
+                                        }
+                                      ],
+                                      "constraints": []
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "21": "datafusion_common::error::Result",
+      "4949": "datafusion_common::tree_node::Transformed",
+      "2974": "core::ops::function::FnOnce"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Transformed",
+          "id": "datafusion_common::tree_node::Transformed",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/tree_node.rs",
+        "begin": [
+          664,
+          1
+        ],
+        "end": [
+          776,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Transformed`": 4949
+    },
+    "link_paths": {
+      "`Transformed`": "datafusion_common::tree_node::Transformed"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5001",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-0661c3f826cfeb162dacb938",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Transformed`": "../operations/datafusion_common.tree_node.Transformed.md#op-dd3d2e82b5362ef73363ba21"
+    }
+  },
+  {
+    "id": "3fd43ca51489c67c28d9402b",
+    "path": "datafusion_common::tree_node::Transformed::new",
+    "name": "new",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(data: T, transformed: bool, tnr: TreeNodeRecursion) -> Self",
+    "docs": "Create a new `Transformed` object with the given information.",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        666,
+        5
+      ],
+      "end": [
+        672,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data",
+              {
+                "generic": "T"
+              }
+            ],
+            [
+              "transformed",
+              {
+                "primitive": "bool"
+              }
+            ],
+            [
+              "tnr",
+              {
+                "resolved_path": {
+                  "path": "TreeNodeRecursion",
+                  "id": 4938,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4938": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Transformed",
+          "id": "datafusion_common::tree_node::Transformed",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/tree_node.rs",
+        "begin": [
+          664,
+          1
+        ],
+        "end": [
+          776,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5006",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-3fd43ca51489c67c28d9402b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "aa8267b7b589fef835193f1a",
+    "path": "datafusion_common::tree_node::Transformed::new_transformed",
+    "name": "new_transformed",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new_transformed(data: T, transformed: bool) -> Self",
+    "docs": "Create a `Transformed` with `transformed` and [`TreeNodeRecursion::Continue`].",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        675,
+        5
+      ],
+      "end": [
+        677,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data",
+              {
+                "generic": "T"
+              }
+            ],
+            [
+              "transformed",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Transformed",
+          "id": "datafusion_common::tree_node::Transformed",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/tree_node.rs",
+        "begin": [
+          664,
+          1
+        ],
+        "end": [
+          776,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TreeNodeRecursion::Continue`": 4965
+    },
+    "link_paths": {
+      "`TreeNodeRecursion::Continue`": "datafusion_common::tree_node::TreeNodeRecursion::Continue"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5007",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-aa8267b7b589fef835193f1a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`TreeNodeRecursion::Continue`": "../operations/datafusion_common.tree_node.TreeNodeRecursion.md#op-128238c101f7ed2798f6d11c"
+    }
+  },
+  {
+    "id": "268dad84b616771bdd05cb5a",
+    "path": "datafusion_common::tree_node::Transformed::no",
+    "name": "no",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn no(data: T) -> Self",
+    "docs": "Wrapper for unchanged data with [`TreeNodeRecursion::Continue`] statement.",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        690,
+        5
+      ],
+      "end": [
+        692,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Transformed",
+          "id": "datafusion_common::tree_node::Transformed",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/tree_node.rs",
+        "begin": [
+          664,
+          1
+        ],
+        "end": [
+          776,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TreeNodeRecursion::Continue`": 4965
+    },
+    "link_paths": {
+      "`TreeNodeRecursion::Continue`": "datafusion_common::tree_node::TreeNodeRecursion::Continue"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5005",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-268dad84b616771bdd05cb5a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`TreeNodeRecursion::Continue`": "../operations/datafusion_common.tree_node.TreeNodeRecursion.md#op-128238c101f7ed2798f6d11c"
+    }
+  },
+  {
+    "id": "6230ccc7157309b448ccbfcf",
+    "path": "datafusion_common::tree_node::Transformed::tnr",
+    "name": "tnr",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "tnr: TreeNodeRecursion",
+    "docs": "",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        661,
+        5
+      ],
+      "end": [
+        661,
+        31
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "TreeNodeRecursion",
+          "id": 4938,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "4938": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "4999",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-6230ccc7157309b448ccbfcf",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ff61c065b103e87511464fc3",
+    "path": "datafusion_common::tree_node::Transformed::transform_children",
+    "name": "transform_children",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn transform_children<F: FnOnce(T) -> Result<Transformed<T>>>(self, f: F) -> Result<Transformed<T>>",
+    "docs": "Maps the [`Transformed`] object to the result of the given `f` depending on the\ncurrent [`TreeNodeRecursion`] value and the fact that `f` is changing the current\nnode's children.",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        724,
+        5
+      ],
+      "end": [
+        741,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "f",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 21,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Transformed",
+                          "id": 4949,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "generic": "T"
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "FnOnce",
+                          "id": 2974,
+                          "args": {
+                            "parenthesized": {
+                              "inputs": [
+                                {
+                                  "generic": "T"
+                                }
+                              ],
+                              "output": {
+                                "resolved_path": {
+                                  "path": "Result",
+                                  "id": 21,
+                                  "args": {
+                                    "angle_bracketed": {
+                                      "args": [
+                                        {
+                                          "type": {
+                                            "resolved_path": {
+                                              "path": "Transformed",
+                                              "id": 4949,
+                                              "args": {
+                                                "angle_bracketed": {
+                                                  "args": [
+                                                    {
+                                                      "type": {
+                                                        "generic": "T"
+                                                      }
+                                                    }
+                                                  ],
+                                                  "constraints": []
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      ],
+                                      "constraints": []
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "21": "datafusion_common::error::Result",
+      "4949": "datafusion_common::tree_node::Transformed",
+      "2974": "core::ops::function::FnOnce"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Transformed",
+          "id": "datafusion_common::tree_node::Transformed",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/tree_node.rs",
+        "begin": [
+          664,
+          1
+        ],
+        "end": [
+          776,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Transformed`": 4949,
+      "`TreeNodeRecursion`": 4938
+    },
+    "link_paths": {
+      "`Transformed`": "datafusion_common::tree_node::Transformed",
+      "`TreeNodeRecursion`": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5009",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-ff61c065b103e87511464fc3",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Transformed`": "../operations/datafusion_common.tree_node.Transformed.md#op-dd3d2e82b5362ef73363ba21",
+      "`TreeNodeRecursion`": "../operations/datafusion_common.tree_node.TreeNodeRecursion.md#op-71e77b162ffdf243709ca1dc"
+    }
+  },
+  {
+    "id": "762e0ad11f2a9339aa005ddc",
+    "path": "datafusion_common::tree_node::Transformed::transform_data",
+    "name": "transform_data",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn transform_data<U, F: FnOnce(T) -> Result<Transformed<U>>>(self, f: F) -> Result<Transformed<U>>",
+    "docs": "Applies a fallible transforming `f` to the data of this [`Transformed`]\nobject.\n\nThe returned `Transformed` object has the `transformed` flag set if either\n`self` or the return value of `f` have the `transformed` flag set.",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        711,
+        5
+      ],
+      "end": [
+        719,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "f",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 21,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Transformed",
+                          "id": 4949,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "generic": "U"
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "U",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "FnOnce",
+                          "id": 2974,
+                          "args": {
+                            "parenthesized": {
+                              "inputs": [
+                                {
+                                  "generic": "T"
+                                }
+                              ],
+                              "output": {
+                                "resolved_path": {
+                                  "path": "Result",
+                                  "id": 21,
+                                  "args": {
+                                    "angle_bracketed": {
+                                      "args": [
+                                        {
+                                          "type": {
+                                            "resolved_path": {
+                                              "path": "Transformed",
+                                              "id": 4949,
+                                              "args": {
+                                                "angle_bracketed": {
+                                                  "args": [
+                                                    {
+                                                      "type": {
+                                                        "generic": "U"
+                                                      }
+                                                    }
+                                                  ],
+                                                  "constraints": []
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      ],
+                                      "constraints": []
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "21": "datafusion_common::error::Result",
+      "4949": "datafusion_common::tree_node::Transformed",
+      "2974": "core::ops::function::FnOnce"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Transformed",
+          "id": "datafusion_common::tree_node::Transformed",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/tree_node.rs",
+        "begin": [
+          664,
+          1
+        ],
+        "end": [
+          776,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Transformed`": 4949
+    },
+    "link_paths": {
+      "`Transformed`": "datafusion_common::tree_node::Transformed"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5002",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-762e0ad11f2a9339aa005ddc",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Transformed`": "../operations/datafusion_common.tree_node.Transformed.md#op-dd3d2e82b5362ef73363ba21"
+    }
+  },
+  {
+    "id": "2f10118fd558f7c24145ce5a",
+    "path": "datafusion_common::tree_node::Transformed::transform_parent",
+    "name": "transform_parent",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn transform_parent<F: FnOnce(T) -> Result<Transformed<T>>>(self, f: F) -> Result<Transformed<T>>",
+    "docs": "Maps the [`Transformed`] object to the result of the given `f` depending on the\ncurrent [`TreeNodeRecursion`] value and the fact that `f` is changing the current\nnode's parent.",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        764,
+        5
+      ],
+      "end": [
+        775,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "f",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 21,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Transformed",
+                          "id": 4949,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "generic": "T"
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "FnOnce",
+                          "id": 2974,
+                          "args": {
+                            "parenthesized": {
+                              "inputs": [
+                                {
+                                  "generic": "T"
+                                }
+                              ],
+                              "output": {
+                                "resolved_path": {
+                                  "path": "Result",
+                                  "id": 21,
+                                  "args": {
+                                    "angle_bracketed": {
+                                      "args": [
+                                        {
+                                          "type": {
+                                            "resolved_path": {
+                                              "path": "Transformed",
+                                              "id": 4949,
+                                              "args": {
+                                                "angle_bracketed": {
+                                                  "args": [
+                                                    {
+                                                      "type": {
+                                                        "generic": "T"
+                                                      }
+                                                    }
+                                                  ],
+                                                  "constraints": []
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      ],
+                                      "constraints": []
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "21": "datafusion_common::error::Result",
+      "4949": "datafusion_common::tree_node::Transformed",
+      "2974": "core::ops::function::FnOnce"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Transformed",
+          "id": "datafusion_common::tree_node::Transformed",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/tree_node.rs",
+        "begin": [
+          664,
+          1
+        ],
+        "end": [
+          776,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Transformed`": 4949,
+      "`TreeNodeRecursion`": 4938
+    },
+    "link_paths": {
+      "`Transformed`": "datafusion_common::tree_node::Transformed",
+      "`TreeNodeRecursion`": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5011",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-2f10118fd558f7c24145ce5a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Transformed`": "../operations/datafusion_common.tree_node.Transformed.md#op-dd3d2e82b5362ef73363ba21",
+      "`TreeNodeRecursion`": "../operations/datafusion_common.tree_node.TreeNodeRecursion.md#op-71e77b162ffdf243709ca1dc"
+    }
+  },
+  {
+    "id": "ec1488aced780e3217f315bd",
+    "path": "datafusion_common::tree_node::Transformed::transform_sibling",
+    "name": "transform_sibling",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn transform_sibling<F: FnOnce(T) -> Result<Transformed<T>>>(self, f: F) -> Result<Transformed<T>>",
+    "docs": "Maps the [`Transformed`] object to the result of the given `f` depending on the\ncurrent [`TreeNodeRecursion`] value and the fact that `f` is changing the current\nnode's sibling.",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        746,
+        5
+      ],
+      "end": [
+        759,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "f",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 21,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Transformed",
+                          "id": 4949,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "generic": "T"
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "FnOnce",
+                          "id": 2974,
+                          "args": {
+                            "parenthesized": {
+                              "inputs": [
+                                {
+                                  "generic": "T"
+                                }
+                              ],
+                              "output": {
+                                "resolved_path": {
+                                  "path": "Result",
+                                  "id": 21,
+                                  "args": {
+                                    "angle_bracketed": {
+                                      "args": [
+                                        {
+                                          "type": {
+                                            "resolved_path": {
+                                              "path": "Transformed",
+                                              "id": 4949,
+                                              "args": {
+                                                "angle_bracketed": {
+                                                  "args": [
+                                                    {
+                                                      "type": {
+                                                        "generic": "T"
+                                                      }
+                                                    }
+                                                  ],
+                                                  "constraints": []
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      ],
+                                      "constraints": []
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "21": "datafusion_common::error::Result",
+      "4949": "datafusion_common::tree_node::Transformed",
+      "2974": "core::ops::function::FnOnce"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Transformed",
+          "id": "datafusion_common::tree_node::Transformed",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/tree_node.rs",
+        "begin": [
+          664,
+          1
+        ],
+        "end": [
+          776,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Transformed`": 4949,
+      "`TreeNodeRecursion`": 4938
+    },
+    "link_paths": {
+      "`Transformed`": "datafusion_common::tree_node::Transformed",
+      "`TreeNodeRecursion`": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5010",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-ec1488aced780e3217f315bd",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Transformed`": "../operations/datafusion_common.tree_node.Transformed.md#op-dd3d2e82b5362ef73363ba21",
+      "`TreeNodeRecursion`": "../operations/datafusion_common.tree_node.TreeNodeRecursion.md#op-71e77b162ffdf243709ca1dc"
+    }
+  },
+  {
+    "id": "1bec66bd4c374aac30f7c141",
+    "path": "datafusion_common::tree_node::Transformed::transformed",
+    "name": "transformed",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "transformed: bool",
+    "docs": "",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        660,
+        5
+      ],
+      "end": [
+        660,
+        26
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "primitive": "bool"
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "4998",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-1bec66bd4c374aac30f7c141",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "88a0704cb1891d830cbd571b",
+    "path": "datafusion_common::tree_node::Transformed::update_data",
+    "name": "update_data",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn update_data<U, F: FnOnce(T) -> U>(self, f: F) -> Transformed<U>",
+    "docs": "Applies an infallible `f` to the data of this [`Transformed`] object,\nwithout modifying the `transformed` flag.",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        696,
+        5
+      ],
+      "end": [
+        698,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "f",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Transformed",
+              "id": 4949,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "U"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "U",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "FnOnce",
+                          "id": 2974,
+                          "args": {
+                            "parenthesized": {
+                              "inputs": [
+                                {
+                                  "generic": "T"
+                                }
+                              ],
+                              "output": {
+                                "generic": "U"
+                              }
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4949": "datafusion_common::tree_node::Transformed",
+      "2974": "core::ops::function::FnOnce"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Transformed",
+          "id": "datafusion_common::tree_node::Transformed",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/tree_node.rs",
+        "begin": [
+          664,
+          1
+        ],
+        "end": [
+          776,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Transformed`": 4949
+    },
+    "link_paths": {
+      "`Transformed`": "datafusion_common::tree_node::Transformed"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5000",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-88a0704cb1891d830cbd571b",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Transformed`": "../operations/datafusion_common.tree_node.Transformed.md#op-dd3d2e82b5362ef73363ba21"
+    }
+  },
+  {
+    "id": "f899f58948a58a086085aa10",
+    "path": "datafusion_common::tree_node::Transformed::yes",
+    "name": "yes",
+    "owner": "datafusion_common::tree_node::Transformed",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn yes(data: T) -> Self",
+    "docs": "Wrapper for transformed data with [`TreeNodeRecursion::Continue`] statement.",
+    "span": {
+      "filename": "src/tree_node.rs",
+      "begin": [
+        680,
+        5
+      ],
+      "end": [
+        682,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Transformed",
+          "id": "datafusion_common::tree_node::Transformed",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/tree_node.rs",
+        "begin": [
+          664,
+          1
+        ],
+        "end": [
+          776,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TreeNodeRecursion::Continue`": 4965
+    },
+    "link_paths": {
+      "`TreeNodeRecursion::Continue`": "datafusion_common::tree_node::TreeNodeRecursion::Continue"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5004",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.tree_node.Transformed.md",
+    "record_file": "operations/datafusion_common.tree_node.Transformed.json",
+    "anchor": "op-f899f58948a58a086085aa10",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`TreeNodeRecursion::Continue`": "../operations/datafusion_common.tree_node.TreeNodeRecursion.md#op-128238c101f7ed2798f6d11c"
+    }
+  }
+]

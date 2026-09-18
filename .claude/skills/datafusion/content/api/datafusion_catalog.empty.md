@@ -31,6 +31,9 @@ fn schema(&self) -> SchemaRef
 fn table_type(&self) -> TableType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.empty.EmptyTable.md).
+
+
 An empty plan that is useful for testing and generating plans
 without mapping them to actual data.
 

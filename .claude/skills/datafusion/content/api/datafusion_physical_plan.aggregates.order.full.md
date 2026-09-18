@@ -25,6 +25,9 @@ fn remove_groups(&mut self, n: usize)
 fn reset(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.md).
+
+
 Tracks grouping state when the data is ordered entirely by its
 group keys
 

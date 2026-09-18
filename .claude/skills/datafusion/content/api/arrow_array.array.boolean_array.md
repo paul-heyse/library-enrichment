@@ -84,6 +84,9 @@ fn from(data: ArrayData) -> Self
 fn from_iter<I: IntoIterator<Item = Ptr>>(iter: I) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.boolean_array.BooleanArray.md).
+
+
 An array of [boolean values](https://arrow.apache.org/docs/format/Columnar.html#fixed-size-primitive-layout)
 
 # Example: From a Vec

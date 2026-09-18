@@ -37,6 +37,9 @@ fn target_type(args: &[&ScalarValue]) -> Result<DataType>
 fn variance(&self) -> Result<ScalarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.statistics.Distribution.md).
+
+
 This object defines probabilistic distributions that encode uncertain
 information about a single, scalar value. Currently, we support five core
 statistical distributions. New variants will be added over time.
@@ -61,6 +64,9 @@ enum StatisticsRequest
 **Variants**: `Min`, `Max`, `NullCount`, `DistinctCount`, `Sum`, `ByteSize`, `RowCount`, `TotalByteSize`
 
 **Derives**: Clone, Debug, Eq, Ord, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.statistics.StatisticsRequest.md).
+
 
 A statistic a caller would like a provider to supply, if it can do so
 cheaply.
@@ -96,6 +102,9 @@ Also reachable as `datafusion_expr::statistics::combine_bernoullis`
 fn combine_bernoullis(op: &operator::Operator, left: &BernoulliDistribution, right: &BernoulliDistribution) -> datafusion_common::Result<BernoulliDistribution>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.statistics.combine_bernoullis.md).
+
+
 This function takes a logical operator and two Bernoulli distributions,
 and it returns a new Bernoulli distribution that represents the result of
 the operation. Currently, only `AND` and `OR` operations are supported.
@@ -113,6 +122,9 @@ Also reachable as `datafusion_expr::statistics::combine_gaussians`
 ```rust
 fn combine_gaussians(op: &operator::Operator, left: &GaussianDistribution, right: &GaussianDistribution) -> datafusion_common::Result<Option<GaussianDistribution>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.statistics.combine_gaussians.md).
+
 
 Applies the given operation to the given Gaussian distributions. Currently,
 this function handles only addition and subtraction operations. If the
@@ -135,6 +147,9 @@ Also reachable as `datafusion_expr::statistics::compute_mean`
 fn compute_mean(op: &operator::Operator, left: &Distribution, right: &Distribution) -> datafusion_common::Result<datafusion_common::ScalarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.statistics.compute_mean.md).
+
+
 Computes the mean value for the result of the given binary operation on
 two unknown quantities represented by their [`Distribution`] objects.
 
@@ -151,6 +166,9 @@ Also reachable as `datafusion_expr::statistics::compute_median`
 ```rust
 fn compute_median(op: &operator::Operator, left: &Distribution, right: &Distribution) -> datafusion_common::Result<datafusion_common::ScalarValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.statistics.compute_median.md).
+
 
 Computes the median value for the result of the given binary operation on
 two unknown quantities represented by its [`Distribution`] objects. Currently,
@@ -172,6 +190,9 @@ Also reachable as `datafusion_expr::statistics::compute_variance`
 fn compute_variance(op: &operator::Operator, left: &Distribution, right: &Distribution) -> datafusion_common::Result<datafusion_common::ScalarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.statistics.compute_variance.md).
+
+
 Computes the variance value for the result of the given binary operation on
 two unknown quantities represented by their [`Distribution`] objects.
 
@@ -188,6 +209,9 @@ Also reachable as `datafusion_expr::statistics::create_bernoulli_from_comparison
 ```rust
 fn create_bernoulli_from_comparison(op: &operator::Operator, left: &Distribution, right: &Distribution) -> datafusion_common::Result<Distribution>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.statistics.create_bernoulli_from_comparison.md).
+
 
 Creates a new `Bernoulli` distribution by computing the resulting probability.
 Expects `op` to be a comparison operator, with `left` and `right` having
@@ -207,6 +231,9 @@ Also reachable as `datafusion_expr::statistics::new_generic_from_binary_op`
 ```rust
 fn new_generic_from_binary_op(op: &operator::Operator, left: &Distribution, right: &Distribution) -> datafusion_common::Result<Distribution>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.statistics.new_generic_from_binary_op.md).
+
 
 Creates a new [`Generic`] distribution that represents the result of the
 given binary operation on two unknown quantities represented by their
@@ -239,6 +266,9 @@ fn p_value(&self) -> &ScalarValue
 fn range(&self) -> Interval
 fn variance(&self) -> Result<ScalarValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.statistics.BernoulliDistribution.md).
+
 
 Bernoulli distribution with success probability `p`. If `p` has a null value,
 the success probability is unknown. For a more in-depth discussion, see:
@@ -273,6 +303,9 @@ fn range(&self) -> Result<Interval>
 fn rate(&self) -> &ScalarValue
 fn variance(&self) -> Result<ScalarValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.statistics.ExponentialDistribution.md).
+
 
 Exponential distribution with an optional shift. The probability density
 function (PDF) is defined as follows:
@@ -318,6 +351,9 @@ fn range(&self) -> Result<Interval>
 fn variance(&self) -> &ScalarValue
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.statistics.GaussianDistribution.md).
+
+
 Gaussian (normal) distribution, represented by its mean and variance.
 For a more in-depth discussion, see:
 
@@ -349,6 +385,9 @@ fn range(&self) -> &Interval
 fn variance(&self) -> &ScalarValue
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.statistics.GenericDistribution.md).
+
+
 A generic distribution whose functional form is not available, which is
 approximated via some summary statistics. For a more in-depth discussion, see:
 
@@ -379,6 +418,9 @@ fn median(&self) -> Result<ScalarValue>
 fn range(&self) -> &Interval
 fn variance(&self) -> Result<ScalarValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.statistics.UniformDistribution.md).
+
 
 Uniform distribution, represented by its range. If the given range extends
 towards infinity, the distribution will be improper -- which is OK. For a

@@ -56,6 +56,30 @@ pub struct DeliveryOptions {
     pub profile: enrichment_core::mcp_delivery::DeliveryProfile,
 }
 
+/// One native cap policy supplies both selection witnesses and the final delivery owner.
+pub async fn byte_budget(
+    runtime: &QueryRuntime,
+    configured: usize,
+    requested: Option<usize>,
+) -> Result<usize> {
+    enrichment_core::native_struct! { struct Input {
+        configured:usize => Rule::Text,
+        requested:Option<usize> => Rule::Text,
+    } }
+    enrichment_core::native_struct! { struct Budget {bytes:usize=>Rule::Text} }
+    let session = runtime.session();
+    crate::native_catalog::input(
+        &session,
+        "delivery_limits",
+        Input::batch(&[Input {
+            configured,
+            requested,
+        }])?,
+    )?;
+    runtime.records::<Budget>(session.sql("SELECT least(greatest(coalesce(requested,configured),CAST(1024 AS BIGINT UNSIGNED)),greatest(configured,CAST(1024 AS BIGINT UNSIGNED))) AS bytes FROM delivery_limits").await?,1).await?
+        .pop().map(|value|value.bytes).ok_or_else(||datafusion::common::internal_datafusion_err!("delivery budget missing"))
+}
+
 /// Inline eligibility is the same native encoded-size predicate as retained-view selection.
 /// The transport codec measures; this plan alone decides whether the full answer fits.
 pub async fn inline(
@@ -67,9 +91,11 @@ pub async fn inline(
     let input = ResultRecord::from_envelope(value)
         .map_err(datafusion::common::DataFusionError::Execution)?;
     // Capture the typed struct directly instead of rebuilding the entire payload expression.
-    let frame = runtime
-        .session()
-        .read_batch(DeliveryInput::batch(&[DeliveryInput { result: input }])?)?;
+    let frame = crate::native_catalog::batch(
+        &runtime.session(),
+        "result_delivery",
+        DeliveryInput::batch(&[DeliveryInput { result: input }])?,
+    )?;
     let measured = frame.with_column(
         "bytes",
         enrichment_core::native_transport::delivery(
@@ -141,13 +167,16 @@ pub async fn retained(
         crate::native_catalog::work(
             &session,
             "delivery_input",
-            session.read_batch(ViewInput::batch(&[input])?)?.into_view(),
+            crate::native_catalog::batch(&session, "result_delivery", ViewInput::batch(&[input])?)?
+                .into_view(),
         )?;
         crate::native_catalog::work(
             &session,
             "delivery_policy",
-            session
-                .read_batch(ViewPolicy::batch(&[
+            crate::native_catalog::batch(
+                &session,
+                "result_delivery",
+                ViewPolicy::batch(&[
                     ViewPolicy {
                         rank: 0,
                         include_handles: true,
@@ -163,8 +192,9 @@ pub async fn retained(
                         include_handles: false,
                         full_coverage: false,
                     },
-                ])?)?
-                .into_view(),
+                ])?,
+            )?
+            .into_view(),
         )?;
         let frame = session
             .sql("SELECT * FROM delivery_input CROSS JOIN delivery_policy")

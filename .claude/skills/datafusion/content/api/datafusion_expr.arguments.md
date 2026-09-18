@@ -10,6 +10,9 @@ Crate `datafusion-expr` · 2 public items · structured records in [`model/dataf
 fn resolve_function_arguments(param_names: &[String], args: Vec<Expr>, arg_names: Vec<Option<ArgumentName>>) -> datafusion_common::Result<Vec<Expr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.arguments.resolve_function_arguments.md).
+
+
 Resolves function arguments, handling named and positional notation.
 
 This function validates and reorders arguments to match the function's parameter names
@@ -50,6 +53,9 @@ struct ArgumentName
 **Fields**: `value`, `is_quoted`
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.arguments.ArgumentName.md).
+
 
 Represents a named function argument with its original case and quote information.
 

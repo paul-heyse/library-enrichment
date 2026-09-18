@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## Sealed
 
 `trait` · `buoyant_kernel::transaction::builder::alter_table::sealed::Sealed`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.builder.alter_table.sealed.Sealed.md)
 
 Also reachable as `delta_kernel::transaction::builder::alter_table::sealed::Sealed`
 

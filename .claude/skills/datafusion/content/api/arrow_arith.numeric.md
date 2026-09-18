@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::numeric::add`
 fn add(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.numeric.add.md).
+
+
 Perform `lhs + rhs`, returning an error on overflow
 
 ---
@@ -26,6 +29,9 @@ Also reachable as `arrow::compute::kernels::numeric::add_wrapping`
 fn add_wrapping(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.numeric.add_wrapping.md).
+
+
 Perform `lhs + rhs`, wrapping on overflow for [`DataType::is_integer`]
 
 ---
@@ -39,6 +45,9 @@ Also reachable as `arrow::compute::kernels::numeric::div`
 ```rust
 fn div(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.numeric.div.md).
+
 
 Perform `lhs / rhs`
 
@@ -57,6 +66,9 @@ Also reachable as `arrow::compute::kernels::numeric::mul`
 fn mul(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.numeric.mul.md).
+
+
 Perform `lhs * rhs`, returning an error on overflow
 
 ---
@@ -71,6 +83,9 @@ Also reachable as `arrow::compute::kernels::numeric::mul_wrapping`
 fn mul_wrapping(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.numeric.mul_wrapping.md).
+
+
 Perform `lhs * rhs`, wrapping on overflow for [`DataType::is_integer`]
 
 ---
@@ -84,6 +99,9 @@ Also reachable as `arrow::compute::kernels::numeric::neg`
 ```rust
 fn neg(array: &dyn Array) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.numeric.neg.md).
+
 
 Negates each element of  `array`, returning an error on overflow
 
@@ -102,6 +120,9 @@ Also reachable as `arrow::compute::kernels::numeric::neg_wrapping`
 fn neg_wrapping(array: &dyn Array) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.numeric.neg_wrapping.md).
+
+
 Negates each element of  `array`, wrapping on overflow for [`DataType::is_integer`]
 
 ---
@@ -115,6 +136,9 @@ Also reachable as `arrow::compute::kernels::numeric::rem`
 ```rust
 fn rem(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.numeric.rem.md).
+
 
 Perform `lhs % rhs`
 
@@ -135,6 +159,9 @@ Also reachable as `arrow::compute::kernels::numeric::sub`
 fn sub(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.numeric.sub.md).
+
+
 Perform `lhs - rhs`, returning an error on overflow
 
 ---
@@ -148,6 +175,9 @@ Also reachable as `arrow::compute::kernels::numeric::sub_wrapping`
 ```rust
 fn sub_wrapping(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.numeric.sub_wrapping.md).
+
 
 Perform `lhs - rhs`, wrapping on overflow for [`DataType::is_integer`]
 

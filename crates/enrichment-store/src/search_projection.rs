@@ -7,6 +7,7 @@ use arrow::{
 use datafusion::{
     dataframe::DataFrame,
     error::{DataFusionError, Result},
+    functions::core::expr_ext::FieldAccessor,
     logical_expr::JoinType,
     prelude::{SessionContext, col, lit},
 };
@@ -47,6 +48,7 @@ pub(crate) async fn admission_rules(
     let checkpoints = session.table("state.records.search_projections").await?;
     invariants.push(
         checkpoints
+            .clone()
             .filter(
                 col("projection_id")
                     .not_eq(enrichment_core::native_key::Key::Projection.expression()),
@@ -60,7 +62,30 @@ pub(crate) async fn admission_rules(
         .map(|(name, _)| format!("'{name}'"))
         .collect::<Vec<_>>()
         .join(",");
-    invariants.push(session.sql(&format!("WITH outputs AS (SELECT projection_id,unnest(outputs) AS binding FROM state.records.search_projections) SELECT projection_id FROM outputs GROUP BY projection_id HAVING count(*)<>{count} OR count(DISTINCT binding.relation)<>{count} OR count(*) FILTER (WHERE binding.relation NOT IN ({names}))>0", count=SURFACES.len())).await?, "projection_output_set", "catalog_admission")
+    invariants.push(session.sql(&format!("WITH outputs AS (SELECT projection_id,unnest(outputs) AS binding FROM state.records.search_projections) SELECT projection_id FROM outputs GROUP BY projection_id HAVING count(*)<>{count} OR count(DISTINCT binding.relation)<>{count} OR count(*) FILTER (WHERE binding.relation NOT IN ({names}))>0", count=SURFACES.len())).await?, "projection_output_set", "catalog_admission")?;
+    read_admission_rules(invariants, session, checkpoints).await
+}
+
+async fn read_admission_rules(
+    invariants: &mut crate::invariants::Invariants,
+    session: &SessionContext,
+    checkpoints: DataFrame,
+) -> Result<()> {
+    crate::native_catalog::work(session, "descriptor_checkpoints", checkpoints.into_view())?;
+    invariants.push(session.sql(&format!("SELECT projection_id FROM descriptor_checkpoints WHERE (mode='export_rebuild' AND coalesce(array_length(read_descriptors),0)<>0) OR (mode<>'export_rebuild' AND coalesce(array_length(read_descriptors),0)<>{})", SURFACES.len())).await?, "projection_read_route", "catalog_admission")?;
+    invariants.push(session.sql("WITH outputs AS (SELECT projection_id,unnest(outputs) AS binding FROM descriptor_checkpoints WHERE mode<>'export_rebuild'), descriptors AS (SELECT projection_id,unnest(read_descriptors) AS descriptor FROM descriptor_checkpoints) SELECT o.projection_id FROM outputs o LEFT JOIN descriptors d ON o.projection_id=d.projection_id AND o.binding=d.descriptor.binding GROUP BY o.projection_id,o.binding HAVING count(d.descriptor)<>1").await?, "projection_read_bijection", "catalog_admission")?;
+    let descriptors = session.sql("SELECT projection_id,unnest(read_descriptors) AS descriptor FROM descriptor_checkpoints").await?;
+    invariants.push(
+        descriptors
+            .filter(col("descriptor").field("digest").not_eq(
+                enrichment_core::native_digest::Sha256Digest::expression(
+                    col("descriptor").field("bytes"),
+                ),
+            ))?
+            .select(vec![col("projection_id")])?,
+        "projection_read_digest",
+        "catalog_admission",
+    )
 }
 
 #[derive(Clone)]
@@ -122,7 +147,8 @@ impl SearchProjection {
         history_available: bool,
     ) -> Result<ProjectionMode> {
         let session = self.runtime.session();
-        session.register_batch(
+        crate::native_catalog::input(
+            &session,
             "projection_command",
             ProjectionCommand::batch(&[ProjectionCommand {
                 revision: revision().into(),
@@ -138,8 +164,8 @@ impl SearchProjection {
             incompatible AS (
                 SELECT p.binding.relation FROM previous p FULL OUTER JOIN current c ON p.binding.relation=c.binding.relation
                 WHERE p.binding.relation IS NULL OR c.binding.relation IS NULL
-                    OR p.binding.table_uri<>c.binding.table_uri OR p.binding.table_id<>c.binding.table_id
-                    OR p.binding.contract_id<>c.binding.contract_id OR p.binding.version>c.binding.version
+                    OR p.binding.source.table.table_uri<>c.binding.source.table.table_uri OR p.binding.source.table.table_id<>c.binding.source.table.table_id
+                    OR p.binding.source.table.contract_id<>c.binding.source.table.contract_id OR p.binding.source.version>c.binding.source.version
             )
             SELECT CASE WHEN export THEN 'export_rebuild'
                 WHEN prior IS NULL THEN 'initial'
@@ -173,7 +199,7 @@ impl SearchProjection {
             ),
             None => None,
         };
-        let cohort = uuid::Uuid::new_v4().to_string();
+        let cohort = enrichment_core::identity::CohortId::new();
         let mut plans = Vec::new();
         for (name, key) in SURFACES {
             let fresh = full.table(format!("snapshot.domain.{name}")).await?;
@@ -184,15 +210,22 @@ impl SearchProjection {
         }
         let obligation = retention
             .create_obligation(
-                cohort.clone(),
+                cohort.to_string(),
                 plans
                     .iter()
-                    .map(
-                        |(_, _, _, _, name)| crate::retention::Dependency::TableScope {
-                            table_uri: name.clone(),
-                        },
-                    )
-                    .collect(),
+                    .map(|(_, _, _, contract, name)| {
+                        crate::retention::pending_row(
+                            name,
+                            contract,
+                            crate::retention::RowKey {
+                                column: "cohort_id".into(),
+                                value: enrichment_core::identity::RowValue::Cohort {
+                                    value: cohort,
+                                },
+                            },
+                        )
+                    })
+                    .collect::<Result<Vec<_>>>()?,
             )
             .await?;
         let prior_guard = match incremental {
@@ -212,10 +245,11 @@ impl SearchProjection {
             None => None,
         };
         let mut outputs = Vec::new();
+        let mut contracts = Vec::new();
         for (name, key, fresh, contract, table_name) in plans {
             let frame = if let (Some(previous), Some(changes)) = (incremental, &changes) {
                 let binding = output(previous, name)?;
-                if binding.table_uri != table_name {
+                if binding.source.table.table_uri != table_name {
                     return Err(invalid(
                         "projection schema changed without a revision rebuild",
                     ));
@@ -254,12 +288,34 @@ impl SearchProjection {
                 }
                 _ => return Err(invalid("native projection count is not an integer")),
             };
+            contracts.push(contract.clone());
             outputs.push(
                 self.delta
                     .append_cohort(&table_name, name, &cohort, &contract, frame, rows)
                     .await
                     .map_err(|error| error.context(format!("projection {name} Delta append")))?,
             );
+        }
+        let mut read_descriptors = Vec::with_capacity(outputs.len());
+        // Portable exports select exact native Delta versions. A serialized provider's
+        // absolute root and physical incarnation cannot survive copying a bundle.
+        if mode != ProjectionMode::ExportRebuild {
+            let descriptor_guard = crate::leases::ReadProtection::Durable(
+                retention
+                    .enroll(
+                        format!("projection-descriptors/{cohort}"),
+                        crate::retention::ProtectionKind::Replay,
+                        outputs.iter().map(crate::retention::dependency).collect(),
+                    )
+                    .await?,
+            );
+            for (binding, contract) in outputs.iter().zip(&contracts) {
+                read_descriptors.push(
+                    self.delta
+                        .read_descriptor(binding, contract, &descriptor_guard)
+                        .await?,
+                );
+            }
         }
         retention
             .release_obligation(
@@ -283,6 +339,7 @@ impl SearchProjection {
                 predecessor: previous.map(|p| p.projection_id.clone()),
                 inputs: manifest.tables.clone(),
                 outputs,
+                read_descriptors,
             },
         })
     }
@@ -292,6 +349,7 @@ impl SearchProjection {
         manifest: &EvidenceManifest,
         checkpoint: &Checkpoint,
         full: &SessionContext,
+        protection: &crate::leases::ReadProtection,
     ) -> Result<crate::native_catalog::Tables> {
         if checkpoint.snapshot_id != manifest.snapshot_id.clone()
             || checkpoint.inputs != manifest.tables
@@ -312,14 +370,39 @@ impl SearchProjection {
             );
             let contract = crate::delta_cohort::contract(schema)?;
             let binding = output(checkpoint, name)?;
-            if binding.table_uri != format!("search_{name}_{}", contract.identity()) {
+            if binding.source.table.table_uri != format!("search_{name}_{}", contract.identity()) {
                 return Err(invalid(
                     "search output namespace does not match its contract",
                 ));
             }
+            let provider = if checkpoint.mode == ProjectionMode::ExportRebuild {
+                if !checkpoint.read_descriptors.is_empty() {
+                    return Err(invalid(
+                        "portable export cannot carry a process-bound descriptor",
+                    ));
+                }
+                self.delta
+                    .immutable_provider(binding, &contract, protection)
+                    .await?
+            } else {
+                let descriptors = checkpoint
+                    .read_descriptors
+                    .iter()
+                    .filter(|descriptor| descriptor.binding == *binding)
+                    .collect::<Vec<_>>();
+                let [descriptor] = descriptors.as_slice() else {
+                    return Err(invalid(
+                        "search output requires one exact persisted descriptor",
+                    ));
+                };
+                self.delta
+                    .replay_provider(descriptor, binding, &contract, protection)
+                    .await?
+            };
             tables.insert(
                 name.into(),
-                self.delta.cohort(binding, &contract).await?.into_view(),
+                crate::delta_cohort::view(&self.runtime.session(), provider, binding, &contract)?
+                    .into_view(),
             );
         }
         Ok(tables)
@@ -406,4 +489,85 @@ fn invalid(message: &str) -> DataFusionError {
 }
 fn external(error: impl std::error::Error + Send + Sync + 'static) -> DataFusionError {
     DataFusionError::External(Box::new(error))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use enrichment_core::{
+        native_bytes::NativeBytes,
+        native_digest::Sha256Digest,
+        operation::projections::{ReadDescriptor, ReadNamespace},
+    };
+
+    #[tokio::test]
+    async fn plan19_descriptor_bijection_digest_and_portable_route() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let runtime = QueryRuntime::new(root.path(), Default::default())?;
+        let outputs = SURFACES
+            .iter()
+            .map(|(name, _)| DeltaBinding {source: enrichment_core::delta_reference::DeltaVersionRef { table: enrichment_core::delta_reference::DeltaTableRef { table_uri: format!("search_{name}"), table_id: (*name).into(), contract_id: enrichment_core::identity::SchemaContractId::try_from("schema_contract_cc8321d6375c494d043fdd0260f21bc0ec51dacc9f6abb7f909cdcd3041b78bf".to_owned()).unwrap() }, version: 2 }, relation: (*name).into(), cohort_id: enrichment_core::identity::CohortId::try_from("cohort_d7cbbb688b2e506c022e95cef8c4f629".to_owned()).unwrap(), rows: 1,})
+            .collect::<Vec<_>>();
+        let bytes = NativeBytes::new(vec![1, 2, 3]).map_err(|error| invalid(&error))?;
+        let digest = Sha256Digest::hash(bytes.as_slice())?;
+        let descriptors = outputs
+            .iter()
+            .map(|binding| ReadDescriptor {
+                binding: binding.clone(),
+                namespace: ReadNamespace {
+                    path: "/fixture".into(),
+                    directories: vec![],
+                },
+                codec: crate::provider_replay::CODEC.into(),
+                definition: "fixture".into(),
+                options: Default::default(),
+                digest,
+                bytes: bytes.clone(),
+            })
+            .collect();
+        let valid = Checkpoint {
+            projection_id: "fixture".into(),
+            snapshot_id: format!("snap_{}", "a".repeat(64))
+                .try_into()
+                .map_err(external)?,
+            revision: "fixture".into(),
+            sequence: 0,
+            mode: ProjectionMode::Initial,
+            predecessor: None,
+            inputs: outputs.clone(),
+            outputs,
+            read_descriptors: descriptors,
+        };
+        let mut duplicate = valid.clone();
+        duplicate.read_descriptors[1] = duplicate.read_descriptors[0].clone();
+        let mut digest = valid.clone();
+        digest.read_descriptors[0].digest = [0; 32].into();
+        let mut portable = valid.clone();
+        portable.mode = ProjectionMode::ExportRebuild;
+        portable.read_descriptors.clear();
+        let mut missing = valid.clone();
+        missing.read_descriptors.clear();
+        let mut misplaced = valid.clone();
+        misplaced.mode = ProjectionMode::ExportRebuild;
+        for (record, succeeds) in [
+            (valid, true),
+            (portable, true),
+            (duplicate, false),
+            (digest, false),
+            (missing, false),
+            (misplaced, false),
+        ] {
+            let session = runtime.session();
+            let frame = crate::native_catalog::batch(
+                &session,
+                "search_projection",
+                Checkpoint::batch(&[record])?,
+            )?;
+            let mut invariants = crate::invariants::Invariants::default();
+            read_admission_rules(&mut invariants, &session, frame).await?;
+            assert_eq!(runtime.admit(invariants).await.is_ok(), succeeds);
+        }
+        runtime.close_diagnostics().await?;
+        Ok(())
+    }
 }

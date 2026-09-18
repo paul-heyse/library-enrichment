@@ -1,0 +1,711 @@
+[
+  {
+    "id": "4d5fab838352cbb61003124f",
+    "path": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter",
+    "name": "PagePruningAccessPlanFilter",
+    "owner": null,
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct PagePruningAccessPlanFilter",
+    "docs": "Filters a [`ParquetAccessPlan`] based on the [Parquet PageIndex], if present\n\nIt does so by evaluating statistics from the [`ParquetColumnIndex`] and\n[`ParquetOffsetIndex`] and converting them to [`RowSelection`].\n\n[Parquet PageIndex]: https://github.com/apache/parquet-format/blob/master/PageIndex.md\n\nFor example, given a row group with two column (chunks) for `A`\nand `B` with the following with page level statistics:\n\n```text\n┏━━ ━━━ ━━━ ━━━ ━━━ ━━━ ━━━ ━━━ ━━━ ━━━ ━━━ ━━━ ━━━\n   ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ┃\n┃     ┌──────────────┐  │     ┌──────────────┐  │  ┃\n┃  │  │              │     │  │              │     ┃\n┃     │              │  │     │     Page     │  │\n   │  │              │     │  │      3       │     ┃\n┃     │              │  │     │   min: \"A\"   │  │  ┃\n┃  │  │              │     │  │   max: \"C\"   │     ┃\n┃     │     Page     │  │     │ first_row: 0 │  │\n   │  │      1       │     │  │              │     ┃\n┃     │   min: 10    │  │     └──────────────┘  │  ┃\n┃  │  │   max: 20    │     │  ┌──────────────┐     ┃\n┃     │ first_row: 0 │  │     │              │  │\n   │  │              │     │  │     Page     │     ┃\n┃     │              │  │     │      4       │  │  ┃\n┃  │  │              │     │  │   min: \"D\"   │     ┃\n┃     │              │  │     │   max: \"G\"   │  │\n   │  │              │     │  │first_row: 100│     ┃\n┃     └──────────────┘  │     │              │  │  ┃\n┃  │  ┌──────────────┐     │  │              │     ┃\n┃     │              │  │     └──────────────┘  │\n   │  │     Page     │     │  ┌──────────────┐     ┃\n┃     │      2       │  │     │              │  │  ┃\n┃  │  │   min: 30    │     │  │     Page     │     ┃\n┃     │   max: 40    │  │     │      5       │  │\n   │  │first_row: 200│     │  │   min: \"H\"   │     ┃\n┃     │              │  │     │   max: \"Z\"   │  │  ┃\n┃  │  │              │     │  │first_row: 250│     ┃\n┃     └──────────────┘  │     │              │  │\n   │                       │  └──────────────┘     ┃\n┃   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘  ┃\n┃       ColumnChunk            ColumnChunk         ┃\n┃            A                      B\n ━━━ ━━━ ━━━ ━━━ ━━━ ━━━ ━━━ ━━━ ━━━ ━━━ ━━━ ━━━ ━━┛\n\n  Total rows: 300\n```\n\nGiven the predicate `A > 35 AND B = 'F'`:\n\nUsing `A > 35`: can rule out all of values in Page 1 (rows 0 -> 199)\n\nUsing `B = 'F'`: can rule out all values in Page 3 and Page 5 (rows 0 -> 99, and 250 -> 299)\n\nSo we can entirely skip rows 0->199 and 250->299 as we know they\ncan not contain rows that match the predicate.\n\n# Implementation notes\n\nSingle column predicates are evaluated using the PageIndex information\nfor that column to determine which row ranges can be skipped based.\n\nThe resulting [`RowSelection`]'s are combined into a final\nrow selection that is added to the [`ParquetAccessPlan`].",
+    "span": {
+      "filename": "src/page_filter.rs",
+      "begin": [
+        112,
+        1
+      ],
+      "end": [
+        116,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          512,
+          513,
+          514,
+          515,
+          516,
+          517,
+          518,
+          519,
+          520,
+          521,
+          522,
+          523,
+          524,
+          525,
+          526,
+          527,
+          528,
+          530
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`ParquetColumnIndex`": 504,
+      "`ParquetAccessPlan`": 2,
+      "`RowSelection`": 8,
+      "`ParquetOffsetIndex`": 505
+    },
+    "link_paths": {
+      "`ParquetColumnIndex`": "parquet::file::metadata::ParquetColumnIndex",
+      "`ParquetAccessPlan`": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+      "`RowSelection`": "parquet::arrow::arrow_reader::selection::RowSelection",
+      "`ParquetOffsetIndex`": "parquet::file::metadata::ParquetOffsetIndex"
+    },
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "506",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.page_filter.PagePruningAccessPlanFilter.md",
+    "record_file": "operations/datafusion_datasource_parquet.page_filter.PagePruningAccessPlanFilter.json",
+    "anchor": "op-4d5fab838352cbb61003124f",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::PagePruningAccessPlanFilter",
+      "datafusion_datasource_parquet::PagePruningAccessPlanFilter"
+    ],
+    "resolved_doc_links": {
+      "`ParquetColumnIndex`": "../operations/parquet.file.metadata.ParquetColumnIndex.md#op-80ab0cca370795f8250c6d69",
+      "`ParquetAccessPlan`": "../operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md#op-2786e9792f5bf477380471b9",
+      "`RowSelection`": "../operations/parquet.arrow.arrow_reader.selection.RowSelection.md#op-42015b29e86ada83b6a84ed5",
+      "`ParquetOffsetIndex`": "../operations/parquet.file.metadata.ParquetOffsetIndex.md#op-ab57bc084f55b3929a33a434"
+    }
+  },
+  {
+    "id": "3ca105cedde17b3c07b8a1c7",
+    "path": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter::filter_number",
+    "name": "filter_number",
+    "owner": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn filter_number(&self) -> usize",
+    "docs": "Returns the number of filters in the [`PagePruningAccessPlanFilter`]",
+    "span": {
+      "filename": "src/page_filter.rs",
+      "begin": [
+        376,
+        5
+      ],
+      "end": [
+        378,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PagePruningAccessPlanFilter",
+          "id": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/page_filter.rs",
+        "begin": [
+          138,
+          1
+        ],
+        "end": [
+          389,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`PagePruningAccessPlanFilter`": 506
+    },
+    "link_paths": {
+      "`PagePruningAccessPlanFilter`": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter"
+    },
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "511",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.page_filter.PagePruningAccessPlanFilter.md",
+    "record_file": "operations/datafusion_datasource_parquet.page_filter.PagePruningAccessPlanFilter.json",
+    "anchor": "op-3ca105cedde17b3c07b8a1c7",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::PagePruningAccessPlanFilter::filter_number",
+      "datafusion_datasource_parquet::PagePruningAccessPlanFilter::filter_number"
+    ],
+    "resolved_doc_links": {
+      "`PagePruningAccessPlanFilter`": "../operations/datafusion_datasource_parquet.page_filter.PagePruningAccessPlanFilter.md#op-4d5fab838352cbb61003124f"
+    }
+  },
+  {
+    "id": "f75da63e8285177bd8ee5f73",
+    "path": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter::fmt",
+    "name": "fmt",
+    "owner": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/page_filter.rs",
+      "begin": [
+        111,
+        10
+      ],
+      "end": [
+        111,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 89,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 90,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "89": "core::fmt::Formatter",
+      "90": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PagePruningAccessPlanFilter",
+          "id": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/page_filter.rs",
+        "begin": [
+          111,
+          10
+        ],
+        "end": [
+          111,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "529",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.page_filter.PagePruningAccessPlanFilter.md",
+    "record_file": "operations/datafusion_datasource_parquet.page_filter.PagePruningAccessPlanFilter.json",
+    "anchor": "op-f75da63e8285177bd8ee5f73",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::PagePruningAccessPlanFilter::fmt",
+      "datafusion_datasource_parquet::PagePruningAccessPlanFilter::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "44eb17586a0b4623a495edcf",
+    "path": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter::new",
+    "name": "new",
+    "owner": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(expr: &Arc<dyn PhysicalExpr>, schema: SchemaRef) -> Self",
+    "docs": "Create a new [`PagePruningAccessPlanFilter`] from a physical\nexpression.",
+    "span": {
+      "filename": "src/page_filter.rs",
+      "begin": [
+        142,
+        5
+      ],
+      "end": [
+        172,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[expect(clippy::needless_pass_by_value)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "expr",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Arc",
+                      "id": 257,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "dyn_trait": {
+                                  "traits": [
+                                    {
+                                      "trait": {
+                                        "path": "PhysicalExpr",
+                                        "id": 508,
+                                        "args": null
+                                      },
+                                      "generic_params": []
+                                    }
+                                  ],
+                                  "lifetime": null
+                                }
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 318,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "257": "alloc::sync::Arc",
+      "508": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "318": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PagePruningAccessPlanFilter",
+          "id": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/page_filter.rs",
+        "begin": [
+          138,
+          1
+        ],
+        "end": [
+          389,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`PagePruningAccessPlanFilter`": 506
+    },
+    "link_paths": {
+      "`PagePruningAccessPlanFilter`": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter"
+    },
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "507",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.page_filter.PagePruningAccessPlanFilter.md",
+    "record_file": "operations/datafusion_datasource_parquet.page_filter.PagePruningAccessPlanFilter.json",
+    "anchor": "op-44eb17586a0b4623a495edcf",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::PagePruningAccessPlanFilter::new",
+      "datafusion_datasource_parquet::PagePruningAccessPlanFilter::new"
+    ],
+    "resolved_doc_links": {
+      "`PagePruningAccessPlanFilter`": "../operations/datafusion_datasource_parquet.page_filter.PagePruningAccessPlanFilter.md#op-4d5fab838352cbb61003124f"
+    }
+  },
+  {
+    "id": "8fa0da0d4bc0cd17c4a26128",
+    "path": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter::prune_plan_with_page_index",
+    "name": "prune_plan_with_page_index",
+    "owner": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn prune_plan_with_page_index(&self, access_plan: ParquetAccessPlan, arrow_schema: &Schema, parquet_schema: &SchemaDescriptor, parquet_metadata: &ParquetMetaData, file_metrics: &ParquetFileMetrics) -> ParquetAccessPlan",
+    "docs": "Returns an updated [`ParquetAccessPlan`] by applying predicates to the\nparquet page index, if any",
+    "span": {
+      "filename": "src/page_filter.rs",
+      "begin": [
+        176,
+        5
+      ],
+      "end": [
+        192,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "access_plan",
+              {
+                "resolved_path": {
+                  "path": "ParquetAccessPlan",
+                  "id": 2,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "arrow_schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Schema",
+                      "id": 395,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "parquet_schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "SchemaDescriptor",
+                      "id": 510,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "parquet_metadata",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ParquetMetaData",
+                      "id": 367,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "file_metrics",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ParquetFileMetrics",
+                      "id": 471,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ParquetAccessPlan",
+              "id": 2,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+      "395": "arrow_schema::schema::Schema",
+      "510": "parquet::schema::types::SchemaDescriptor",
+      "367": "parquet::file::metadata::ParquetMetaData",
+      "471": "datafusion_datasource_parquet::metrics::ParquetFileMetrics"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PagePruningAccessPlanFilter",
+          "id": "datafusion_datasource_parquet::page_filter::PagePruningAccessPlanFilter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/page_filter.rs",
+        "begin": [
+          138,
+          1
+        ],
+        "end": [
+          389,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetAccessPlan`": 2
+    },
+    "link_paths": {
+      "`ParquetAccessPlan`": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan"
+    },
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "509",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.page_filter.PagePruningAccessPlanFilter.md",
+    "record_file": "operations/datafusion_datasource_parquet.page_filter.PagePruningAccessPlanFilter.json",
+    "anchor": "op-8fa0da0d4bc0cd17c4a26128",
+    "aliases": [
+      "datafusion::datasource::physical_plan::parquet::PagePruningAccessPlanFilter::prune_plan_with_page_index",
+      "datafusion_datasource_parquet::PagePruningAccessPlanFilter::prune_plan_with_page_index"
+    ],
+    "resolved_doc_links": {
+      "`ParquetAccessPlan`": "../operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md#op-2786e9792f5bf477380471b9"
+    }
+  }
+]

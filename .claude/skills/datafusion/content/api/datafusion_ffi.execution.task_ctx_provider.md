@@ -30,6 +30,9 @@ fn from(ctx: &Arc<dyn TaskContextProvider>) -> Self
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.execution.task_ctx_provider.FFI_TaskContextProvider.md).
+
+
 Struct for accessing the [`TaskContext`]. This method contains a weak
 reference, so there are no guarantees that the [`TaskContext`] remains
 valid. This is used primarily for protobuf encoding and decoding of

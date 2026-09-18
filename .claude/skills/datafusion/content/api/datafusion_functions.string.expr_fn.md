@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::ascii`, `datafusion_functions::expr_fn::
 fn ascii(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.ascii.md).
+
+
 Returns the numeric code of the first character of the argument.
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `datafusion::prelude::bit_length`, `datafusion_functions::expr
 ```rust
 fn bit_length(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.bit_length.md).
+
 
 Returns the number of bits in the `string`
 
@@ -40,6 +46,9 @@ Also reachable as `datafusion::prelude::btrim`, `datafusion_functions::expr_fn::
 fn btrim(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.btrim.md).
+
+
 Removes all characters, spaces by default, from both sides of a string
 
 ---
@@ -53,6 +62,9 @@ Also reachable as `datafusion::prelude::chr`, `datafusion_functions::expr_fn::ch
 ```rust
 fn chr(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.chr.md).
+
 
 Converts the Unicode code point to a UTF8 character
 
@@ -68,6 +80,9 @@ Also reachable as `datafusion::prelude::concat`, `datafusion_functions::expr_fn:
 fn concat(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.concat.md).
+
+
 Concatenates the text representations of all the arguments. NULL arguments are ignored
 
 ---
@@ -81,6 +96,9 @@ Also reachable as `datafusion::prelude::concat_ws`, `datafusion_functions::expr_
 ```rust
 fn concat_ws(delimiter: datafusion_expr::Expr, args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.concat_ws.md).
+
 
 Concatenates all but the first argument, with separators. The first argument is used as the separator string, and should not be NULL. Other NULL arguments are ignored.
 
@@ -96,6 +114,9 @@ Also reachable as `datafusion::prelude::contains`, `datafusion_functions::expr_f
 fn contains(string: datafusion_expr::Expr, search_string: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.contains.md).
+
+
 Return true if `search_string` is found within `string`.
 
 ---
@@ -109,6 +130,9 @@ Also reachable as `datafusion::prelude::ends_with`, `datafusion_functions::expr_
 ```rust
 fn ends_with(string: datafusion_expr::Expr, suffix: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.ends_with.md).
+
 
 Returns true if the `string` ends with the `suffix`, false otherwise.
 
@@ -124,6 +148,9 @@ Also reachable as `datafusion::prelude::levenshtein`, `datafusion_functions::exp
 fn levenshtein(arg1: datafusion_expr::Expr, arg2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.levenshtein.md).
+
+
 Returns the Levenshtein distance between the two given strings
 
 ---
@@ -137,6 +164,9 @@ Also reachable as `datafusion::prelude::lower`, `datafusion_functions::expr_fn::
 ```rust
 fn lower(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.lower.md).
+
 
 Converts a string to lowercase.
 
@@ -152,6 +182,9 @@ Also reachable as `datafusion::prelude::ltrim`, `datafusion_functions::expr_fn::
 fn ltrim(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.ltrim.md).
+
+
 Removes all characters, spaces by default, from the beginning of a string
 
 ---
@@ -165,6 +198,9 @@ Also reachable as `datafusion::prelude::octet_length`, `datafusion_functions::ex
 ```rust
 fn octet_length(args: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.octet_length.md).
+
 
 returns the number of bytes of a string
 
@@ -180,6 +216,9 @@ Also reachable as `datafusion::prelude::repeat`, `datafusion_functions::expr_fn:
 fn repeat(string: datafusion_expr::Expr, n: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.repeat.md).
+
+
 Repeats the `string` to `n` times
 
 ---
@@ -193,6 +232,9 @@ Also reachable as `datafusion::prelude::replace`, `datafusion_functions::expr_fn
 ```rust
 fn replace(string: datafusion_expr::Expr, from: datafusion_expr::Expr, to: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.replace.md).
+
 
 Replaces all occurrences of `from` with `to` in the `string`
 
@@ -208,6 +250,9 @@ Also reachable as `datafusion::prelude::rtrim`, `datafusion_functions::expr_fn::
 fn rtrim(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.rtrim.md).
+
+
 Removes all characters, spaces by default, from the end of a string
 
 ---
@@ -221,6 +266,9 @@ Also reachable as `datafusion::prelude::split_part`, `datafusion_functions::expr
 ```rust
 fn split_part(string: datafusion_expr::Expr, delimiter: datafusion_expr::Expr, index: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.split_part.md).
+
 
 Splits a string based on a delimiter and picks out the desired field based on the index.
 
@@ -236,6 +284,9 @@ Also reachable as `datafusion::prelude::starts_with`, `datafusion_functions::exp
 fn starts_with(arg1: datafusion_expr::Expr, arg2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.starts_with.md).
+
+
 Returns true if string starts with prefix.
 
 ---
@@ -249,6 +300,9 @@ Also reachable as `datafusion::prelude::to_hex`, `datafusion_functions::expr_fn:
 ```rust
 fn to_hex(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.to_hex.md).
+
 
 Converts an integer to a hexadecimal string.
 
@@ -264,6 +318,9 @@ Also reachable as `datafusion::prelude::trim`, `datafusion_functions::expr_fn::t
 fn trim(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.trim.md).
+
+
 Removes all characters, spaces by default, from both sides of a string
 
 ---
@@ -278,6 +335,9 @@ Also reachable as `datafusion::prelude::upper`, `datafusion_functions::expr_fn::
 fn upper(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.upper.md).
+
+
 Converts a string to uppercase.
 
 ---
@@ -291,6 +351,9 @@ Also reachable as `datafusion::prelude::uuid`, `datafusion_functions::expr_fn::u
 ```rust
 fn uuid() -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.expr_fn.uuid.md).
+
 
 returns uuid v4 as a string value
 

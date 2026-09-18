@@ -16,6 +16,9 @@ enum SchemaSource
 
 **Derives**: Clone, Copy, Debug, Default, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog_listing.config.SchemaSource.md).
+
+
 Indicates the source of the schema for a [`crate::ListingTable`]
 
 ---
@@ -50,6 +53,9 @@ fn with_listing_options(self, listing_options: ListingOptions) -> Self
 fn with_schema(self, schema: SchemaRef) -> Self
 fn with_schema_adapter_factory(self, _schema_adapter_factory: Arc<dyn SchemaAdapterFactory>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog_listing.config.ListingTableConfig.md).
+
 
 Configuration for creating a [`crate::ListingTable`]
 

@@ -1,0 +1,980 @@
+[
+  {
+    "id": "6f9c0417ba94ce674dcd1cf1",
+    "path": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+    "name": "GroupOrderingFull",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct GroupOrderingFull",
+    "docs": "Tracks grouping state when the data is ordered entirely by its\ngroup keys\n\nWhen the group values are sorted, as soon as we see group `n+1` we\nknow we will never see any rows for group `n` again and thus they\ncan be emitted.\n\nFor example, given `SUM(amt) GROUP BY id` if the input is sorted\nby `id` as soon as a new `id` value is seen all previous values\ncan be emitted.\n\nThe state is tracked like this:\n\n```text\n     ┌─────┐   ┌──────────────────┐\n     │┌───┐│   │ ┌──────────────┐ │         ┏━━━━━━━━━━━━━━┓\n     ││ 0 ││   │ │     123      │ │   ┌─────┃      13      ┃\n     │└───┘│   │ └──────────────┘ │   │     ┗━━━━━━━━━━━━━━┛\n     │ ... │   │    ...           │   │\n     │┌───┐│   │ ┌──────────────┐ │   │         current\n     ││12 ││   │ │     234      │ │   │\n     │├───┤│   │ ├──────────────┤ │   │\n     ││12 ││   │ │     234      │ │   │\n     │├───┤│   │ ├──────────────┤ │   │\n     ││13 ││   │ │     456      │◀┼───┘\n     │└───┘│   │ └──────────────┘ │\n     └─────┘   └──────────────────┘\n\n group indices    group_values        current tracks the most\n(in group value                          recent group index\n     order)\n```\n\nIn this diagram, the current group is `13`, and thus groups\n`0..12` can be emitted. Note that `13` can not yet be emitted as\nthere may be more values in the next batch with the same group_id.",
+    "span": {
+      "filename": "src/aggregates/order/full.rs",
+      "begin": [
+        58,
+        1
+      ],
+      "end": [
+        60,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          388,
+          389,
+          390,
+          391,
+          392,
+          393,
+          394,
+          395,
+          396,
+          397,
+          398,
+          399,
+          400,
+          401,
+          402,
+          403,
+          404,
+          405,
+          407,
+          409
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "380",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.json",
+    "anchor": "op-6f9c0417ba94ce674dcd1cf1",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingFull"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a23928a8282ad67d51612ffa",
+    "path": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull::default",
+    "name": "default",
+    "owner": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn default() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregates/order/full.rs",
+      "begin": [
+        153,
+        5
+      ],
+      "end": [
+        155,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingFull",
+          "id": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/full.rs",
+        "begin": [
+          152,
+          1
+        ],
+        "end": [
+          156,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "408",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.json",
+    "anchor": "op-a23928a8282ad67d51612ffa",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingFull::default"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7f06ade416e84fc1e93e6013",
+    "path": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull::emit_to",
+    "name": "emit_to",
+    "owner": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn emit_to(&self) -> Option<EmitTo>",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregates/order/full.rs",
+      "begin": [
+        83,
+        5
+      ],
+      "end": [
+        97,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "EmitTo",
+                          "id": 315,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "315": "datafusion_expr_common::groups_accumulator::EmitTo"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingFull",
+          "id": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/full.rs",
+        "begin": [
+          75,
+          1
+        ],
+        "end": [
+          150,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "382",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.json",
+    "anchor": "op-7f06ade416e84fc1e93e6013",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingFull::emit_to"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "eb756183946250a7c14b3d21",
+    "path": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregates/order/full.rs",
+      "begin": [
+        57,
+        10
+      ],
+      "end": [
+        57,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingFull",
+          "id": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/full.rs",
+        "begin": [
+          57,
+          10
+        ],
+        "end": [
+          57,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "406",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.json",
+    "anchor": "op-eb756183946250a7c14b3d21",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingFull::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8fd63e7ae1e7eb70c5446067",
+    "path": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull::input_done",
+    "name": "input_done",
+    "owner": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn input_done(&mut self)",
+    "docs": "Note that the input is complete so any outstanding groups are done as well",
+    "span": {
+      "filename": "src/aggregates/order/full.rs",
+      "begin": [
+        114,
+        5
+      ],
+      "end": [
+        116,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingFull",
+          "id": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/full.rs",
+        "begin": [
+          75,
+          1
+        ],
+        "end": [
+          150,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "384",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.json",
+    "anchor": "op-8fd63e7ae1e7eb70c5446067",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingFull::input_done"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "13134672bd9cd519511f5c93",
+    "path": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull::new",
+    "name": "new",
+    "owner": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregates/order/full.rs",
+      "begin": [
+        76,
+        5
+      ],
+      "end": [
+        80,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingFull",
+          "id": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/full.rs",
+        "begin": [
+          75,
+          1
+        ],
+        "end": [
+          150,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "381",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.json",
+    "anchor": "op-13134672bd9cd519511f5c93",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingFull::new"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "744d2a49728451df9ae16db4",
+    "path": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull::new_groups",
+    "name": "new_groups",
+    "owner": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new_groups(&mut self, total_num_groups: usize)",
+    "docs": "Called when new groups are added in a batch. See documentation\non [`super::GroupOrdering::new_groups`]",
+    "span": {
+      "filename": "src/aggregates/order/full.rs",
+      "begin": [
+        125,
+        5
+      ],
+      "end": [
+        145,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "total_num_groups",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingFull",
+          "id": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/full.rs",
+        "begin": [
+          75,
+          1
+        ],
+        "end": [
+          150,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`super::GroupOrdering::new_groups`": 386
+    },
+    "link_paths": {
+      "`super::GroupOrdering::new_groups`": "datafusion_physical_plan::aggregates::order::GroupOrdering::new_groups"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "387",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.json",
+    "anchor": "op-744d2a49728451df9ae16db4",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingFull::new_groups"
+    ],
+    "resolved_doc_links": {
+      "`super::GroupOrdering::new_groups`": "../operations/datafusion_physical_plan.aggregates.order.GroupOrdering.md#op-a4917d87812169d2f40a4322"
+    }
+  },
+  {
+    "id": "5ef5db4ccb49c35ab4502a82",
+    "path": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull::remove_groups",
+    "name": "remove_groups",
+    "owner": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn remove_groups(&mut self, n: usize)",
+    "docs": "remove the first n groups from the internal state, shifting\nall existing indexes down by `n`",
+    "span": {
+      "filename": "src/aggregates/order/full.rs",
+      "begin": [
+        101,
+        5
+      ],
+      "end": [
+        111,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingFull",
+          "id": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/full.rs",
+        "begin": [
+          75,
+          1
+        ],
+        "end": [
+          150,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "383",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.json",
+    "anchor": "op-5ef5db4ccb49c35ab4502a82",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingFull::remove_groups"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "52b205a820a320b3bac728df",
+    "path": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull::reset",
+    "name": "reset",
+    "owner": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn reset(&mut self)",
+    "docs": "Starts tracking a new fully ordered input segment.",
+    "span": {
+      "filename": "src/aggregates/order/full.rs",
+      "begin": [
+        119,
+        5
+      ],
+      "end": [
+        121,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingFull",
+          "id": "datafusion_physical_plan::aggregates::order::full::GroupOrderingFull",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/full.rs",
+        "begin": [
+          75,
+          1
+        ],
+        "end": [
+          150,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "385",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.full.GroupOrderingFull.json",
+    "anchor": "op-52b205a820a320b3bac728df",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingFull::reset"
+    ],
+    "resolved_doc_links": {}
+  }
+]

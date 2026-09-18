@@ -24,6 +24,9 @@ fn put(&mut self, value: Bytes) -> Result<PageKey>
 fn take(&mut self, key: PageKey) -> Result<Bytes>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.page_store.InMemoryPageStore.md).
+
+
 The default [`PageStore`], holding blobs on the heap in a `Vec<Bytes>`.
 
 Peak memory grows with the row group size; use a spilling backend to bound
@@ -51,6 +54,9 @@ struct InMemoryPageStoreFactory
 fn create(&self, _args: &PageStoreArgs<'_>) -> Result<Box<dyn PageStore>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.page_store.InMemoryPageStoreFactory.md).
+
+
 Factory for [`InMemoryPageStore`] — the default used by
 [`ArrowWriter`](crate::arrow::arrow_writer::ArrowWriter).
 
@@ -74,6 +80,9 @@ struct PageKey
 const fn get(self) -> u64
 const fn new(raw: u64) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.page_store.PageKey.md).
+
 
 An opaque, store-allocated handle to a blob held by a [`PageStore`].
 
@@ -99,6 +108,9 @@ struct PageStoreArgs<'a>
 fn column_descriptor(&self) -> &ColumnDescriptor
 fn column_index(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.page_store.PageStoreArgs.md).
+
 
 Context for a single [`PageStoreFactory::create`] call.
 
@@ -131,6 +143,9 @@ fn memory_size(&self) -> usize
 fn put(&mut self, value: Bytes) -> Result<PageKey>
 fn take(&mut self, key: PageKey) -> Result<Bytes>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.page_store.PageStore.md).
+
 
 A pluggable store for completed, serialized page blobs.
 
@@ -171,6 +186,9 @@ trait PageStoreFactory: Send + Sync + Debug
 ```rust
 fn create(&self, args: &PageStoreArgs<'_>) -> Result<Box<dyn PageStore>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.page_store.PageStoreFactory.md).
+
 
 Creates a fresh [`PageStore`] for each column chunk.
 

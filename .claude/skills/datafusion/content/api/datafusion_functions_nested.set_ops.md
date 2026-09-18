@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_distinct`, `datafusion_functions_n
 fn array_distinct(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.set_ops.array_distinct.md).
+
+
 returns distinct values from the array after removing duplicates.
 
 ---
@@ -23,6 +26,9 @@ returns distinct values from the array after removing duplicates.
 ```rust
 fn array_distinct_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.set_ops.array_distinct_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayDistinct
@@ -39,6 +45,9 @@ Also reachable as `datafusion::prelude::array_intersect`, `datafusion_functions_
 fn array_intersect(first_array: datafusion_expr::Expr, second_array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.set_ops.array_intersect.md).
+
+
 returns an array of the elements in the intersection of array1 and array2.
 
 ---
@@ -50,6 +59,9 @@ returns an array of the elements in the intersection of array1 and array2.
 ```rust
 fn array_intersect_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.set_ops.array_intersect_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayIntersect
@@ -66,6 +78,9 @@ Also reachable as `datafusion::prelude::array_union`, `datafusion_functions_nest
 fn array_union(array1: datafusion_expr::Expr, array2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.set_ops.array_union.md).
+
+
 returns an array of the elements in the union of array1 and array2 without duplicates.
 
 ---
@@ -77,6 +92,9 @@ returns an array of the elements in the union of array1 and array2 without dupli
 ```rust
 fn array_union_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.set_ops.array_union_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayUnion
@@ -112,6 +130,9 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.set_ops.ArrayDistinct.md).
+
+
 ---
 
 ## ArrayIntersect
@@ -143,6 +164,9 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.set_ops.ArrayIntersect.md).
+
+
 ---
 
 ## ArrayUnion
@@ -173,5 +197,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.set_ops.ArrayUnion.md).
+
 
 ---

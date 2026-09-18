@@ -10,6 +10,9 @@ Crate `arrow-schema` · 3 public items · structured records in [`model/arrow_sc
 const EXTENSION_TYPE_METADATA_KEY: &str = "ARROW:extension:metadata"
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.extension.EXTENSION_TYPE_METADATA_KEY.md).
+
+
 The metadata key for a serialized representation of the [`ExtensionType`]
 necessary to reconstruct the custom type.
 
@@ -22,6 +25,9 @@ necessary to reconstruct the custom type.
 ```rust
 const EXTENSION_TYPE_NAME_KEY: &str = "ARROW:extension:name"
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.extension.EXTENSION_TYPE_NAME_KEY.md).
+
 
 The metadata key for the string name identifying an [`ExtensionType`].
 
@@ -57,6 +63,9 @@ fn try_new(data_type: &DataType, metadata: Self::Metadata) -> Result<Self, Arrow
 fn try_new_from_field_metadata(data_type: &DataType, metadata: &HashMap<String, String>) -> Result<Self, ArrowError>
 fn validate(data_type: &DataType, metadata: Self::Metadata) -> Result<(), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.extension.ExtensionType.md).
+
 
 Extension types.
 

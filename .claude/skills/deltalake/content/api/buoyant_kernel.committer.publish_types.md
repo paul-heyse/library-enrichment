@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## CatalogCommit
 
 `struct` · `buoyant_kernel::committer::publish_types::CatalogCommit`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.committer.publish_types.CatalogCommit.md)
 
 Also reachable as `buoyant_kernel::committer::CatalogCommit`, `delta_kernel::committer::publish_types::CatalogCommit`
 
@@ -37,6 +38,7 @@ See [`Committer::publish`] for details on the publish operation.
 ## PublishMetadata
 
 `struct` · `buoyant_kernel::committer::publish_types::PublishMetadata`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.committer.publish_types.PublishMetadata.md)
 
 Also reachable as `buoyant_kernel::committer::PublishMetadata`, `delta_kernel::committer::publish_types::PublishMetadata`
 

@@ -12,4 +12,7 @@ enum RequestError
 
 **Variants**: `Generic`, `Retry`
 
+[Full member, field, variant and typed contracts](../operations/object_store.aws.client.RequestError.md).
+
+
 ---

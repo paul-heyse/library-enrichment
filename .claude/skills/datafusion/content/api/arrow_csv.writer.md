@@ -14,6 +14,9 @@ enum Terminator
 
 **Derives**: Clone, Debug
 
+[Full member, field, variant and typed contracts](../operations/arrow_csv.writer.Terminator.md).
+
+
 The line terminator to use when writing CSV files.
 
 ---
@@ -46,6 +49,9 @@ fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>
 fn close(self) -> Result<(), ArrowError>
 fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_csv.writer.Writer.md).
+
 
 A CSV writer
 
@@ -101,6 +107,9 @@ fn with_time_format(self, format: String) -> Self
 fn with_timestamp_format(self, format: String) -> Self
 fn with_timestamp_tz_format(self, tz_format: String) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_csv.writer.WriterBuilder.md).
+
 
 A CSV writer builder
 

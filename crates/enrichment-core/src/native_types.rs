@@ -76,13 +76,14 @@ macro_rules! extension {
                 Ok(metadata)
             }
             fn supports_data_type(&self, kind: &DataType) -> std::result::Result<(), ArrowError> {
-                if kind == &$physical {
+                let physical = ($physical)(self.metadata.meaning());
+                if kind == &physical {
                     Ok(())
                 } else {
                     Err(ArrowError::InvalidArgumentError(format!(
                         "{} requires {}, received {kind}",
                         Self::NAME,
-                        $physical
+                        physical
                     )))
                 }
             }
@@ -118,20 +119,20 @@ extension!(
     ClockType,
     "enrichment.clock",
     ClockMeaning,
-    DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into()))
+    |_: &ClockMeaning| DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into()))
 );
 extension!(
     IdentityType,
     "enrichment.identity",
     crate::native_union::Domain,
-    DataType::FixedSizeBinary(32)
+    |domain: &crate::native_union::Domain| DataType::FixedSizeBinary(domain.byte_width())
 );
 crate::native_vocabulary! { pub enum DigestAlgorithm { Sha256 = "sha256" } }
 extension!(
     DigestType,
     "enrichment.digest",
     DigestAlgorithm,
-    DataType::FixedSizeBinary(32)
+    |_: &DigestAlgorithm| DataType::FixedSizeBinary(32)
 );
 
 /// The same finite registrations serve field admission and every native session.

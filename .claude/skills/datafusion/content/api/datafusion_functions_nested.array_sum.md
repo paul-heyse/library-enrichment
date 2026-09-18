@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_sum`, `datafusion_functions_nested
 fn array_sum(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_sum.array_sum.md).
+
+
 returns the sum of elements in a numeric array.
 
 ---
@@ -23,6 +26,9 @@ returns the sum of elements in a numeric array.
 ```rust
 fn array_sum_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_sum.array_sum_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArraySum
@@ -58,5 +64,8 @@ fn name(&self) -> &str
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_sum.ArraySum.md).
+
 
 ---

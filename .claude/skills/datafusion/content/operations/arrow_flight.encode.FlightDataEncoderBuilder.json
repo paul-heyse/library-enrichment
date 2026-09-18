@@ -1,0 +1,1379 @@
+[
+  {
+    "id": "417e00a5164d321214a222fc",
+    "path": "arrow_flight::encode::FlightDataEncoderBuilder",
+    "name": "FlightDataEncoderBuilder",
+    "owner": null,
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct FlightDataEncoderBuilder",
+    "docs": "Creates a [`Stream`] of [`FlightData`]s from a\n`Stream` of [`Result`]<[`RecordBatch`], [`FlightError`]>.\n\nThis can be used to implement [`FlightService::do_get`] in an\nArrow Flight implementation;\n\nThis structure encodes a stream of `Result`s rather than `RecordBatch`es  to\npropagate errors from streaming execution, where the generation of the\n`RecordBatch`es is incremental, and an error may occur even after\nseveral have already been successfully produced.\n\n# Caveats\n1. When [`DictionaryHandling`] is [`DictionaryHandling::Hydrate`],\n   [`DictionaryArray`]s are converted to their underlying types prior to\n   transport.\n   When [`DictionaryHandling`] is [`DictionaryHandling::Resend`], Dictionary [`FlightData`] is sent with every\n   [`RecordBatch`] that contains a [`DictionaryArray`](arrow_array::array::DictionaryArray).\n   See <https://github.com/apache/arrow-rs/issues/3389>.\n\n[`DictionaryArray`]: arrow_array::array::DictionaryArray\n\n# Example\n```no_run\n# use std::sync::Arc;\n# use arrow_array::{ArrayRef, RecordBatch, UInt32Array};\n# async fn f() {\n# let c1 = UInt32Array::from(vec![1, 2, 3, 4, 5, 6]);\n# let batch = RecordBatch::try_from_iter(vec![\n#      (\"a\", Arc::new(c1) as ArrayRef)\n#   ])\n#   .expect(\"cannot create record batch\");\nuse arrow_flight::encode::FlightDataEncoderBuilder;\n\n// Get an input stream of Result<RecordBatch, FlightError>\nlet input_stream = futures::stream::iter(vec![Ok(batch)]);\n\n// Build a stream of `Result<FlightData>` (e.g. to return for do_get)\nlet flight_data_stream = FlightDataEncoderBuilder::new()\n .build(input_stream);\n\n// Create a tonic `Response` that can be returned from a Flight server\nlet response = tonic::Response::new(flight_data_stream);\n# }\n```\n\n# Example: Sending `Vec<RecordBatch>`\n\nYou can create a [`Stream`] to pass to [`Self::build`] from an existing\n`Vec` of `RecordBatch`es like this:\n\n```\n# use std::sync::Arc;\n# use arrow_array::{ArrayRef, RecordBatch, UInt32Array};\n# async fn f() {\n# fn make_batches() -> Vec<RecordBatch> {\n#   let c1 = UInt32Array::from(vec![1, 2, 3, 4, 5, 6]);\n#   let batch = RecordBatch::try_from_iter(vec![\n#      (\"a\", Arc::new(c1) as ArrayRef)\n#   ])\n#   .expect(\"cannot create record batch\");\n#   vec![batch.clone(), batch.clone()]\n# }\nuse arrow_flight::encode::FlightDataEncoderBuilder;\n\n// Get batches that you want to send via Flight\nlet batches: Vec<RecordBatch> = make_batches();\n\n// Create an input stream of Result<RecordBatch, FlightError>\nlet input_stream = futures::stream::iter(\n  batches.into_iter().map(Ok)\n);\n\n// Build a stream of `Result<FlightData>` (e.g. to return for do_get)\nlet flight_data_stream = FlightDataEncoderBuilder::new()\n .build(input_stream);\n# }\n```\n\n# Example: Determining schema of encoded data\n\nEncoding flight data may hydrate dictionaries, see [`DictionaryHandling`] for more information,\nwhich changes the schema of the encoded data compared to the input record batches.\nThe fully hydrated schema can be accessed using the [`FlightDataEncoder::known_schema`] method\nand explicitly informing the builder of the schema using [`FlightDataEncoderBuilder::with_schema`].\n\n```\n# use std::sync::Arc;\n# use arrow_array::{ArrayRef, RecordBatch, UInt32Array};\n# async fn f() {\n# let c1 = UInt32Array::from(vec![1, 2, 3, 4, 5, 6]);\n# let batch = RecordBatch::try_from_iter(vec![\n#      (\"a\", Arc::new(c1) as ArrayRef)\n#   ])\n#   .expect(\"cannot create record batch\");\nuse arrow_flight::encode::FlightDataEncoderBuilder;\n\n// Get the schema of the input stream\nlet schema = batch.schema();\n\n// Get an input stream of Result<RecordBatch, FlightError>\nlet input_stream = futures::stream::iter(vec![Ok(batch)]);\n\n// Build a stream of `Result<FlightData>` (e.g. to return for do_get)\nlet flight_data_stream = FlightDataEncoderBuilder::new()\n // Inform the builder of the input stream schema\n .with_schema(schema)\n .build(input_stream);\n\n// Retrieve the schema of the encoded data\nlet encoded_schema = flight_data_stream.known_schema();\n# }\n```\n\n[`FlightService::do_get`]: crate::flight_service_server::FlightService::do_get\n[`FlightError`]: crate::error::FlightError",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        145,
+        1
+      ],
+      "end": [
+        160,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          1512,
+          1513,
+          1514,
+          1515,
+          1516,
+          1517,
+          1518,
+          1519,
+          1520,
+          1521,
+          1522,
+          1523,
+          1524,
+          1525,
+          1526,
+          1527,
+          1528,
+          1529,
+          1530,
+          1531,
+          1533,
+          1535
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Self::build`": 1502,
+      "`FlightData`": 161,
+      "arrow_array::array::DictionaryArray": 1500,
+      "`RecordBatch`": 1131,
+      "`DictionaryHandling`": 1498,
+      "crate::error::FlightError": 1398,
+      "`FlightDataEncoder::known_schema`": 1503,
+      "`FlightDataEncoderBuilder::with_schema`": 1504,
+      "`DictionaryHandling::Resend`": 1501,
+      "`Stream`": 203,
+      "`Result`": 1307,
+      "crate::flight_service_server::FlightService::do_get": 215,
+      "`DictionaryHandling::Hydrate`": 1499
+    },
+    "link_paths": {
+      "`Self::build`": "arrow_flight::encode::FlightDataEncoderBuilder::build",
+      "`FlightData`": "arrow_flight::gen::FlightData",
+      "arrow_array::array::DictionaryArray": "arrow_array::array::dictionary_array::DictionaryArray",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch",
+      "`DictionaryHandling`": "arrow_flight::encode::DictionaryHandling",
+      "crate::error::FlightError": "arrow_flight::error::FlightError",
+      "`FlightDataEncoder::known_schema`": "arrow_flight::encode::FlightDataEncoder::known_schema",
+      "`FlightDataEncoderBuilder::with_schema`": "arrow_flight::encode::FlightDataEncoderBuilder::with_schema",
+      "`DictionaryHandling::Resend`": "arrow_flight::encode::DictionaryHandling::Resend",
+      "`Stream`": "futures_core::stream::Stream",
+      "`Result`": "arrow_flight::error::Result",
+      "crate::flight_service_server::FlightService::do_get": "arrow_flight::gen::flight_service_server::FlightService::do_get",
+      "`DictionaryHandling::Hydrate`": "arrow_flight::encode::DictionaryHandling::Hydrate"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1130",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.FlightDataEncoderBuilder.md",
+    "record_file": "operations/arrow_flight.encode.FlightDataEncoderBuilder.json",
+    "anchor": "op-417e00a5164d321214a222fc",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::build`": "../operations/arrow_flight.encode.FlightDataEncoderBuilder.md#op-b487052b2bbe55e641cbd40b",
+      "`FlightData`": "../operations/arrow_flight.gen.FlightData.md#op-d385f038797edc1454fc35a5",
+      "arrow_array::array::DictionaryArray": "../operations/arrow_array.array.dictionary_array.DictionaryArray.md#op-761ab0c11d727f026bdc2e47",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "`DictionaryHandling`": "../operations/arrow_flight.encode.DictionaryHandling.md#op-3909e2ed806a45e433fc92ad",
+      "crate::error::FlightError": "../operations/arrow_flight.error.FlightError.md#op-6b7a963265f48d7ac8e47cdf",
+      "`FlightDataEncoder::known_schema`": "../operations/arrow_flight.encode.FlightDataEncoder.md#op-9072e717861c149fdfc554ad",
+      "`FlightDataEncoderBuilder::with_schema`": "../operations/arrow_flight.encode.FlightDataEncoderBuilder.md#op-54884f346f4f7fe90f915141",
+      "`DictionaryHandling::Resend`": "../operations/arrow_flight.encode.DictionaryHandling.md#op-4ca86ac204d7df4411001d3a",
+      "`Result`": "../operations/arrow_flight.error.Result.md#op-946b2547adca3a863c890c3c",
+      "crate::flight_service_server::FlightService::do_get": "../operations/arrow_flight.gen.flight_service_server.FlightService.md#op-d786997033d959acce74b29e",
+      "`DictionaryHandling::Hydrate`": "../operations/arrow_flight.encode.DictionaryHandling.md#op-1274858835cec039b729e6f3"
+    }
+  },
+  {
+    "id": "b487052b2bbe55e641cbd40b",
+    "path": "arrow_flight::encode::FlightDataEncoderBuilder::build",
+    "name": "build",
+    "owner": "arrow_flight::encode::FlightDataEncoderBuilder",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn build<S>(self, input: S) -> FlightDataEncoder where S: Stream<Item = Result<RecordBatch>> + Send + 'static",
+    "docs": "Takes a [`Stream`] of [`Result<RecordBatch>`] and returns a [`Stream`]\nof [`FlightData`], consuming self.\n\nSee example on [`Self`] and [`FlightDataEncoder`] for more details",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        241,
+        5
+      ],
+      "end": [
+        263,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "input",
+              {
+                "generic": "S"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "FlightDataEncoder",
+              "id": 1315,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "S",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "S"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Stream",
+                        "id": 203,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [],
+                            "constraints": [
+                              {
+                                "name": "Item",
+                                "args": null,
+                                "binding": {
+                                  "equality": {
+                                    "type": {
+                                      "resolved_path": {
+                                        "path": "Result",
+                                        "id": 1307,
+                                        "args": {
+                                          "angle_bracketed": {
+                                            "args": [
+                                              {
+                                                "type": {
+                                                  "resolved_path": {
+                                                    "path": "RecordBatch",
+                                                    "id": 1131,
+                                                    "args": null
+                                                  }
+                                                }
+                                              }
+                                            ],
+                                            "constraints": []
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": 12,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1315": "arrow_flight::encode::FlightDataEncoder",
+      "203": "futures_core::stream::Stream",
+      "1307": "arrow_flight::error::Result",
+      "1131": "arrow_array::record_batch::RecordBatch",
+      "12": "core::marker::Send"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightDataEncoderBuilder",
+          "id": "arrow_flight::encode::FlightDataEncoderBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/encode.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          264,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FlightData`": 161,
+      "`Stream`": 203,
+      "`FlightDataEncoder`": 1315,
+      "`Self`": 1130,
+      "`Result<RecordBatch>`": 1307
+    },
+    "link_paths": {
+      "`FlightData`": "arrow_flight::gen::FlightData",
+      "`Stream`": "futures_core::stream::Stream",
+      "`FlightDataEncoder`": "arrow_flight::encode::FlightDataEncoder",
+      "`Self`": "arrow_flight::encode::FlightDataEncoderBuilder",
+      "`Result<RecordBatch>`": "arrow_flight::error::Result"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1502",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.FlightDataEncoderBuilder.md",
+    "record_file": "operations/arrow_flight.encode.FlightDataEncoderBuilder.json",
+    "anchor": "op-b487052b2bbe55e641cbd40b",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FlightData`": "../operations/arrow_flight.gen.FlightData.md#op-d385f038797edc1454fc35a5",
+      "`FlightDataEncoder`": "../operations/arrow_flight.encode.FlightDataEncoder.md#op-e4d1d137c901fe86782ae657",
+      "`Self`": "../operations/arrow_flight.encode.FlightDataEncoderBuilder.md#op-417e00a5164d321214a222fc",
+      "`Result<RecordBatch>`": "../operations/arrow_flight.error.Result.md#op-946b2547adca3a863c890c3c"
+    }
+  },
+  {
+    "id": "ef5ab83060002452ed58c2a4",
+    "path": "arrow_flight::encode::FlightDataEncoderBuilder::default",
+    "name": "default",
+    "owner": "arrow_flight::encode::FlightDataEncoderBuilder",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn default() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        169,
+        5
+      ],
+      "end": [
+        178,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightDataEncoderBuilder",
+          "id": "arrow_flight::encode::FlightDataEncoderBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/encode.rs",
+        "begin": [
+          168,
+          1
+        ],
+        "end": [
+          179,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1534",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.FlightDataEncoderBuilder.md",
+    "record_file": "operations/arrow_flight.encode.FlightDataEncoderBuilder.json",
+    "anchor": "op-ef5ab83060002452ed58c2a4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4f896efecbbadd2ec8be5a8f",
+    "path": "arrow_flight::encode::FlightDataEncoderBuilder::fmt",
+    "name": "fmt",
+    "owner": "arrow_flight::encode::FlightDataEncoderBuilder",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        144,
+        10
+      ],
+      "end": [
+        144,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 95,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 96,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "95": "core::fmt::Formatter",
+      "96": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightDataEncoderBuilder",
+          "id": "arrow_flight::encode::FlightDataEncoderBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/encode.rs",
+        "begin": [
+          144,
+          10
+        ],
+        "end": [
+          144,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1532",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.FlightDataEncoderBuilder.md",
+    "record_file": "operations/arrow_flight.encode.FlightDataEncoderBuilder.json",
+    "anchor": "op-4f896efecbbadd2ec8be5a8f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ad22e330b2987d1d993801ee",
+    "path": "arrow_flight::encode::FlightDataEncoderBuilder::new",
+    "name": "new",
+    "owner": "arrow_flight::encode::FlightDataEncoderBuilder",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "Create a new [`FlightDataEncoderBuilder`].",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        183,
+        5
+      ],
+      "end": [
+        185,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightDataEncoderBuilder",
+          "id": "arrow_flight::encode::FlightDataEncoderBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/encode.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          264,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FlightDataEncoderBuilder`": 1130
+    },
+    "link_paths": {
+      "`FlightDataEncoderBuilder`": "arrow_flight::encode::FlightDataEncoderBuilder"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1505",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.FlightDataEncoderBuilder.md",
+    "record_file": "operations/arrow_flight.encode.FlightDataEncoderBuilder.json",
+    "anchor": "op-ad22e330b2987d1d993801ee",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FlightDataEncoderBuilder`": "../operations/arrow_flight.encode.FlightDataEncoderBuilder.md#op-417e00a5164d321214a222fc"
+    }
+  },
+  {
+    "id": "58c6a2c13837a7ebf197954f",
+    "path": "arrow_flight::encode::FlightDataEncoderBuilder::with_dictionary_handling",
+    "name": "with_dictionary_handling",
+    "owner": "arrow_flight::encode::FlightDataEncoderBuilder",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_dictionary_handling(self, dictionary_handling: DictionaryHandling) -> Self",
+    "docs": "Set [`DictionaryHandling`] for encoder",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        203,
+        5
+      ],
+      "end": [
+        206,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "dictionary_handling",
+              {
+                "resolved_path": {
+                  "path": "DictionaryHandling",
+                  "id": 1498,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1498": "arrow_flight::encode::DictionaryHandling"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightDataEncoderBuilder",
+          "id": "arrow_flight::encode::FlightDataEncoderBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/encode.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          264,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`DictionaryHandling`": 1498
+    },
+    "link_paths": {
+      "`DictionaryHandling`": "arrow_flight::encode::DictionaryHandling"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1507",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.FlightDataEncoderBuilder.md",
+    "record_file": "operations/arrow_flight.encode.FlightDataEncoderBuilder.json",
+    "anchor": "op-58c6a2c13837a7ebf197954f",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`DictionaryHandling`": "../operations/arrow_flight.encode.DictionaryHandling.md#op-3909e2ed806a45e433fc92ad"
+    }
+  },
+  {
+    "id": "7ad249c516e7382d5702764a",
+    "path": "arrow_flight::encode::FlightDataEncoderBuilder::with_flight_descriptor",
+    "name": "with_flight_descriptor",
+    "owner": "arrow_flight::encode::FlightDataEncoderBuilder",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_flight_descriptor(self, descriptor: Option<FlightDescriptor>) -> Self",
+    "docs": "Specify a flight descriptor in the first FlightData message.",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        232,
+        5
+      ],
+      "end": [
+        235,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "descriptor",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 6,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "FlightDescriptor",
+                              "id": 154,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6": "core::option::Option",
+      "154": "arrow_flight::gen::FlightDescriptor"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightDataEncoderBuilder",
+          "id": "arrow_flight::encode::FlightDataEncoderBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/encode.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          264,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1511",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.FlightDataEncoderBuilder.md",
+    "record_file": "operations/arrow_flight.encode.FlightDataEncoderBuilder.json",
+    "anchor": "op-7ad249c516e7382d5702764a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8a1ebf04767905b3e0ab5421",
+    "path": "arrow_flight::encode::FlightDataEncoderBuilder::with_max_flight_data_size",
+    "name": "with_max_flight_data_size",
+    "owner": "arrow_flight::encode::FlightDataEncoderBuilder",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_max_flight_data_size(self, max_flight_data_size: usize) -> Self",
+    "docs": "Set the (approximate) maximum size, in bytes, of the\n[`FlightData`] produced by this encoder. Defaults to 2MB.\n\nSince there is often a maximum message size for gRPC messages\n(typically around 4MB), this encoder splits up [`RecordBatch`]s\n(preserving order) into multiple [`FlightData`] objects to\nlimit the size individual messages sent via gRPC.\n\nThe size is approximate because of the additional encoding\noverhead on top of the underlying data buffers themselves.",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        197,
+        5
+      ],
+      "end": [
+        200,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "max_flight_data_size",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightDataEncoderBuilder",
+          "id": "arrow_flight::encode::FlightDataEncoderBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/encode.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          264,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FlightData`": 161,
+      "`RecordBatch`": 1131
+    },
+    "link_paths": {
+      "`FlightData`": "arrow_flight::gen::FlightData",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1506",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.FlightDataEncoderBuilder.md",
+    "record_file": "operations/arrow_flight.encode.FlightDataEncoderBuilder.json",
+    "anchor": "op-8a1ebf04767905b3e0ab5421",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FlightData`": "../operations/arrow_flight.gen.FlightData.md#op-d385f038797edc1454fc35a5",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "0c291bad794763267d00af68",
+    "path": "arrow_flight::encode::FlightDataEncoderBuilder::with_metadata",
+    "name": "with_metadata",
+    "owner": "arrow_flight::encode::FlightDataEncoderBuilder",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_metadata(self, app_metadata: Bytes) -> Self",
+    "docs": "Specify application specific metadata included in the\n[`FlightData::app_metadata`] field of the the first Schema\nmessage",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        211,
+        5
+      ],
+      "end": [
+        214,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "app_metadata",
+              {
+                "resolved_path": {
+                  "path": "Bytes",
+                  "id": 173,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "173": "bytes::bytes::Bytes"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightDataEncoderBuilder",
+          "id": "arrow_flight::encode::FlightDataEncoderBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/encode.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          264,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FlightData::app_metadata`": 1128
+    },
+    "link_paths": {
+      "`FlightData::app_metadata`": "arrow_flight::gen::FlightData::app_metadata"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1508",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.FlightDataEncoderBuilder.md",
+    "record_file": "operations/arrow_flight.encode.FlightDataEncoderBuilder.json",
+    "anchor": "op-0c291bad794763267d00af68",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FlightData::app_metadata`": "../operations/arrow_flight.gen.FlightData.md#op-28bbc79c13d963e87e09ea1b"
+    }
+  },
+  {
+    "id": "cf0807748a6dcd1a000ac2dd",
+    "path": "arrow_flight::encode::FlightDataEncoderBuilder::with_options",
+    "name": "with_options",
+    "owner": "arrow_flight::encode::FlightDataEncoderBuilder",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_options(self, options: IpcWriteOptions) -> Self",
+    "docs": "Set the [`IpcWriteOptions`] used to encode the [`RecordBatch`]es for transport.",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        217,
+        5
+      ],
+      "end": [
+        220,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "IpcWriteOptions",
+                  "id": 1509,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1509": "arrow_ipc::writer::IpcWriteOptions"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightDataEncoderBuilder",
+          "id": "arrow_flight::encode::FlightDataEncoderBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/encode.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          264,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`IpcWriteOptions`": 1509,
+      "`RecordBatch`": 1131
+    },
+    "link_paths": {
+      "`IpcWriteOptions`": "arrow_ipc::writer::IpcWriteOptions",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1510",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.FlightDataEncoderBuilder.md",
+    "record_file": "operations/arrow_flight.encode.FlightDataEncoderBuilder.json",
+    "anchor": "op-cf0807748a6dcd1a000ac2dd",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`IpcWriteOptions`": "../operations/arrow_ipc.writer.IpcWriteOptions.md#op-7958df777a3d4faa0bb68d5a",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "54884f346f4f7fe90f915141",
+    "path": "arrow_flight::encode::FlightDataEncoderBuilder::with_schema",
+    "name": "with_schema",
+    "owner": "arrow_flight::encode::FlightDataEncoderBuilder",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_schema(self, schema: SchemaRef) -> Self",
+    "docs": "Specify a schema for the RecordBatches being sent. If a schema\nis not specified, an encoded Schema message will be sent when\nthe first [`RecordBatch`], if any, is encoded. Some clients\nexpect a Schema message even if there is no data sent.",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        226,
+        5
+      ],
+      "end": [
+        229,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 1360,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1360": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightDataEncoderBuilder",
+          "id": "arrow_flight::encode::FlightDataEncoderBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/encode.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          264,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RecordBatch`": 1131
+    },
+    "link_paths": {
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1504",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.FlightDataEncoderBuilder.md",
+    "record_file": "operations/arrow_flight.encode.FlightDataEncoderBuilder.json",
+    "anchor": "op-54884f346f4f7fe90f915141",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  }
+]

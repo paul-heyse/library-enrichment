@@ -10,6 +10,9 @@ Crate `datafusion-expr-common` · 4 public items · structured records in [`mode
 fn is_date_narrowing_cast(from_type: &arrow::datatypes::DataType, to_type: &arrow::datatypes::DataType) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.casts.is_date_narrowing_cast.md).
+
+
 Returns true when casting a date column from `from_type` to `to_type` narrows
 `Date64` (milliseconds) to `Date32` (days).
 
@@ -30,6 +33,9 @@ see; the widening direction (`Date32 -> Date64`) is injective and stays allowed.
 fn is_supported_type(data_type: &arrow::datatypes::DataType) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.casts.is_supported_type.md).
+
+
 Returns true if unwrap_cast_in_comparison supports this data type
 
 ---
@@ -41,6 +47,9 @@ Returns true if unwrap_cast_in_comparison supports this data type
 ```rust
 fn is_timestamp_precision_narrowing_cast(from_type: &arrow::datatypes::DataType, to_type: &arrow::datatypes::DataType) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.casts.is_timestamp_precision_narrowing_cast.md).
+
 
 Returns true when casting a timestamp from `from_type` to `to_type` loses
 timestamp precision.
@@ -59,6 +68,9 @@ rewritten predicate only matches the exact millisecond boundary.
 ```rust
 fn try_cast_literal_to_type(lit_value: &datafusion_common::ScalarValue, target_type: &arrow::datatypes::DataType) -> Option<datafusion_common::ScalarValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.casts.try_cast_literal_to_type.md).
+
 
 Convert a literal [`ScalarValue`] to `target_type`, preserving the exact value.
 

@@ -10,6 +10,9 @@ Crate `parquet` · 7 public items · structured records in [`model/parquet.colum
 struct ColumnValueDecoderImpl<T: DataType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.reader.decoder.ColumnValueDecoderImpl.md).
+
+
 An implementation of [`ColumnValueDecoder`] for `[T::T]`
 
 ---
@@ -22,6 +25,9 @@ An implementation of [`ColumnValueDecoder`] for `[T::T]`
 struct DefinitionLevelDecoderImpl
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.reader.decoder.DefinitionLevelDecoderImpl.md).
+
+
 An implementation of [`DefinitionLevelDecoder`] for `[i16]`
 
 ---
@@ -33,6 +39,9 @@ An implementation of [`DefinitionLevelDecoder`] for `[i16]`
 ```rust
 struct RepetitionLevelDecoderImpl
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.reader.decoder.RepetitionLevelDecoderImpl.md).
+
 
 An implementation of [`RepetitionLevelDecoder`] for `[i16]`
 
@@ -51,6 +60,9 @@ trait ColumnLevelDecoder
 ```rust
 fn set_data(&mut self, encoding: Encoding, data: Bytes) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.reader.decoder.ColumnLevelDecoder.md).
+
 
 Decodes level data
 
@@ -74,6 +86,9 @@ fn set_dict(&mut self, buf: Bytes, num_values: u32, encoding: Encoding, is_sorte
 fn skip_values(&mut self, num_values: usize) -> Result<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.reader.decoder.ColumnValueDecoder.md).
+
+
 Decodes value data
 
 ---
@@ -93,6 +108,9 @@ fn read_def_levels(&mut self, out: &mut Self::Buffer, num_levels: usize) -> Resu
 fn skip_def_levels(&mut self, num_levels: usize) -> Result<(usize, usize)>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.reader.decoder.DefinitionLevelDecoder.md).
+
+
 ---
 
 ## RepetitionLevelDecoder
@@ -110,5 +128,8 @@ fn flush_partial(&mut self) -> bool
 fn read_rep_levels(&mut self, out: &mut Self::Buffer, num_records: usize, num_levels: usize) -> Result<(usize, usize)>
 fn skip_rep_levels(&mut self, num_records: usize, num_levels: usize) -> Result<(usize, usize)>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.reader.decoder.RepetitionLevelDecoder.md).
+
 
 ---

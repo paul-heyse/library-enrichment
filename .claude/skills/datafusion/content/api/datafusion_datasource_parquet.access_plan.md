@@ -22,6 +22,9 @@ enum RowGroupAccess
 fn should_scan(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.access_plan.RowGroupAccess.md).
+
+
 Describes how the parquet reader will access a row group
 
 ---
@@ -58,6 +61,9 @@ fn should_scan(&self, idx: usize) -> bool
 fn skip(&mut self, idx: usize)
 fn try_new_from_overall_row_selection(selection: RowSelection, row_group_meta_data: &[RowGroupMetaData]) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.access_plan.ParquetAccessPlan.md).
+
 
 A selection of rows and row groups within a ParquetFile to decode.
 
@@ -156,6 +162,9 @@ fn selection(&self) -> &RowSelection
 ```rust
 fn from(selection: RowSelection) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.access_plan.ParquetRowSelection.md).
+
 
 A file-level row selection for a parquet scan.
 

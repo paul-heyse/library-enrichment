@@ -25,7 +25,7 @@ impl EvidenceTables {
         })
     }
 
-    fn contract(relation: Relation) -> Result<StorageContract> {
+    pub(crate) fn contract(relation: Relation) -> Result<StorageContract> {
         crate::delta_cohort::contract(relation.schema()?)
     }
 
@@ -34,7 +34,7 @@ impl EvidenceTables {
     pub async fn append(
         &self,
         relation: Relation,
-        cohort: &str,
+        cohort: &enrichment_core::identity::CohortId,
         input: DataFrame,
         rows: u64,
     ) -> Result<DeltaBinding> {
@@ -46,6 +46,39 @@ impl EvidenceTables {
                 &Self::contract(relation)?,
                 input,
                 rows,
+            )
+            .await
+    }
+
+    /// Compact evidence through the same owned native maintenance path as control.
+    /// # Errors
+    /// Wrong retention scope, active writers and native maintenance failures refuse.
+    pub async fn compact(
+        &self,
+        relation: Relation,
+        retention: &crate::retention::RetentionStore,
+    ) -> Result<(u64, deltalake::operations::optimize::Metrics)> {
+        self.delta
+            .compact(
+                &format!("evidence_{}", relation.name()),
+                &Self::contract(relation)?,
+                retention,
+            )
+            .await
+    }
+
+    /// Native VACUUM/log cleanup under one exact retention generation. Horizons
+    /// apply only to unreferenced files; retained versions and DVs stay protected.
+    pub async fn reclaim(
+        &self,
+        relation: Relation,
+        retention: &crate::retention::RetentionStore,
+    ) -> Result<crate::retention::Reclamation> {
+        self.delta
+            .reclaim(
+                &format!("evidence_{}", relation.name()),
+                &Self::contract(relation)?,
+                retention,
             )
             .await
     }
@@ -65,8 +98,8 @@ impl EvidenceTables {
                 .find(|r| r.name() == binding.relation)
                 .ok_or_else(|| invalid("unknown evidence relation"))?;
             let contract = Self::contract(relation)?;
-            if binding.table_uri != format!("evidence_{}", relation.name())
-                || binding.contract_id != contract.identity()
+            if binding.source.table.table_uri != format!("evidence_{}", relation.name())
+                || &binding.source.table.contract_id != contract.identity()
                 || providers.contains_key(&relation)
             {
                 return Err(invalid("invalid evidence version vector"));
@@ -128,7 +161,10 @@ impl EvidenceTables {
                 .iter()
                 .find(|b| b.relation == relation.name())
                 .ok_or_else(|| invalid("missing new binding"))?;
-            if a.table_id != b.table_id || a.contract_id != b.contract_id || a.version > b.version {
+            if a.source.table.table_id != b.source.table.table_id
+                || a.source.table.contract_id != b.source.table.contract_id
+                || a.source.version > b.source.version
+            {
                 return Err(invalid(
                     "CDF requires an ordered pair in the same table and schema epoch",
                 ));
@@ -144,38 +180,22 @@ impl EvidenceTables {
             let key = relation.key();
             let mut inserted = right.clone().except_distinct(left.clone())?;
             let mut removed = left.except_distinct(right.clone())?;
-            if b.version > a.version {
+            if b.source.version > a.source.version {
                 let changes = self
                     .delta
                     .changes(
-                        &b.table_uri,
-                        &b.table_id,
+                        &enrichment_core::delta_reference::CdfWindow {
+                            table: b.source.table.clone(),
+                            start: a.source.version + 1,
+                            end: b.source.version,
+                        },
                         &Self::contract(relation)?,
-                        a.version + 1,
-                        b.version,
                     )
                     .await?;
-                let positive = changes
-                    .clone()
-                    .filter(
-                        col("cohort_id").eq(lit(b.cohort_id.as_str())).and(
-                            col("_change_type")
-                                .in_list(vec![lit("insert"), lit("update_postimage")], false),
-                        ),
-                    )?
-                    .select(vec![col(key)])?
-                    .distinct()?;
+                let positive = cohort_change_keys(changes.clone(), b.cohort_id, key, true)?;
                 inserted = inserted.join(positive, JoinType::LeftSemi, &[key], &[key], None)?;
                 if a.cohort_id == b.cohort_id {
-                    let negative = changes
-                        .filter(
-                            col("cohort_id").eq(lit(a.cohort_id.as_str())).and(
-                                col("_change_type")
-                                    .in_list(vec![lit("delete"), lit("update_preimage")], false),
-                            ),
-                        )?
-                        .select(vec![col(key)])?
-                        .distinct()?;
+                    let negative = cohort_change_keys(changes, a.cohort_id, key, false)?;
                     removed = removed.join(negative, JoinType::LeftSemi, &[key], &[key], None)?;
                 }
             } else if a.cohort_id == b.cohort_id {
@@ -229,7 +249,7 @@ fn cohort_view(
 ) -> Result<Arc<dyn TableProvider>> {
     Ok(session
         .read_table(provider)?
-        .filter(col("cohort_id").eq(lit(binding.cohort_id.as_str())))?
+        .filter(col("cohort_id").eq(lit(binding.cohort_id)))?
         .select(
             schema
                 .fields()
@@ -241,4 +261,78 @@ fn cohort_view(
 }
 fn invalid(message: &str) -> DataFusionError {
     DataFusionError::Execution(message.into())
+}
+
+/// CDF images select native semantic keys only within the admitted cohort.
+fn cohort_change_keys(
+    changes: DataFrame,
+    cohort: enrichment_core::identity::CohortId,
+    key: &str,
+    additions: bool,
+) -> Result<DataFrame> {
+    let images = if additions {
+        ["insert", "update_postimage"]
+    } else {
+        ["delete", "update_preimage"]
+    };
+    changes
+        .filter(
+            col("cohort_id")
+                .eq(lit(cohort))
+                .and(col("_change_type").in_list(images.into_iter().map(lit).collect(), false)),
+        )?
+        .select(vec![col(key)])?
+        .distinct()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use enrichment_core::{
+        identity::CohortId,
+        native_union::{NativeStruct, Rule},
+    };
+    enrichment_core::native_struct! { struct Change {
+        cohort_id: CohortId => Rule::Text,
+        key: String => Rule::NonEmpty,
+        _change_type: String => Rule::NonEmpty,
+    } }
+    enrichment_core::native_struct! { struct Key { key: String => Rule::NonEmpty } }
+    #[tokio::test]
+    async fn plan19_cdf_images_preserve_typed_cohort_selection() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let runtime = crate::runtime::QueryRuntime::new(root.path(), Default::default())?;
+        let cohort = CohortId::from_component("00112233445566778899aabbccddeeff").unwrap();
+        let other = CohortId::from_component("ffeeddccbbaa99887766554433221100").unwrap();
+        let rows = [
+            (cohort, "a", "insert"),
+            (cohort, "a", "insert"),
+            (cohort, "b", "update_postimage"),
+            (cohort, "c", "delete"),
+            (cohort, "d", "update_preimage"),
+            (other, "foreign", "insert"),
+            (other, "foreign", "delete"),
+        ]
+        .into_iter()
+        .map(|(cohort_id, key, image)| Change {
+            cohort_id,
+            key: key.into(),
+            _change_type: image.into(),
+        })
+        .collect::<Vec<_>>();
+        let frame =
+            crate::native_catalog::batch(&runtime.session(), "cdf_images", Change::batch(&rows)?)?;
+        for (additions, expected) in [(true, vec!["a", "b"]), (false, vec!["c", "d"])] {
+            let selected = cohort_change_keys(frame.clone(), cohort, "key", additions)?
+                .sort(vec![col("key").sort(true, false)])?;
+            let keys = runtime.records::<Key>(selected, 2).await?;
+            assert_eq!(
+                keys.iter().map(|row| row.key.as_str()).collect::<Vec<_>>(),
+                expected
+            );
+        }
+        let empty = cohort_change_keys(frame, CohortId::new(), "key", true)?;
+        assert!(runtime.records::<Key>(empty, 2).await?.is_empty());
+        runtime.close_diagnostics().await
+    }
 }

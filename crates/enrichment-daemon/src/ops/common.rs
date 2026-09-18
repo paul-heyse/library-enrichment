@@ -1,9 +1,9 @@
 //! What the retrieval operations share: opening a context's snapshot, building evidence
 //! entries and artifact handles, and the byte budget.
 
-use enrichment_core::evidence::{Artifact, TextFragment};
+use enrichment_core::evidence::Artifact;
 use enrichment_core::identity::{Context, ContextId, Environment, Release, SnapshotId};
-use enrichment_core::wire::{ArtifactHandle, Envelope, ErrorCode, Evidence};
+use enrichment_core::wire::{ArtifactHandle, Envelope, ErrorCode};
 use enrichment_store::SnapshotReader;
 
 use crate::envelope;
@@ -162,11 +162,11 @@ fn diagnostic_envelope(
 }
 
 #[must_use]
-pub fn job_error(error: std::io::Error, job_id: &str) -> Envelope {
+pub fn job_error(error: std::io::Error, job_id: &enrichment_core::identity::JobId) -> Envelope {
     let mut result = query_error(&error.into());
     let detail = result.error_mut().expect("error outcome");
     detail.diagnostic.stage = "job_lookup".into();
-    detail.diagnostic.affected_ids.push(job_id.into());
+    detail.diagnostic.affected_ids.push(job_id.to_string());
     if detail.diagnostic.cause == enrichment_core::wire::DiagnosticCause::NotFound {
         detail.next_action = "Use the job_id returned by the original submission. An unknown ID is not a storage-permission failure.".into();
         detail.diagnostic.actions = vec![enrichment_core::wire::RecoveryAction::ChangeRequest {
@@ -194,36 +194,18 @@ pub fn handle_for(artifact: &Artifact, description: String) -> Option<ArtifactHa
         })
 }
 
-/// Cite a fragment as an evidence entry, with a bounded excerpt.
-pub fn evidence_from_fragment(
-    fragment: &TextFragment,
-    excerpt_chars: usize,
-) -> Result<Evidence, enrichment_store::QueryError> {
-    Ok(Evidence::new(
-        fragment.fragment_id.clone(),
-        fragment.subject.clone(),
-        fragment.display_subject.clone(),
-        fragment.source.clone(),
-        truncate(&fragment.text, excerpt_chars),
-    )?)
-}
-
-/// Cut text to `max_chars` characters, marking the cut.
-#[must_use]
-pub fn truncate(text: &str, max_chars: usize) -> String {
-    if text.chars().count() <= max_chars {
-        return text.to_owned();
-    }
-    let mut out: String = text.chars().take(max_chars.saturating_sub(1)).collect();
-    out.push('…');
-    out
-}
-
-/// The byte budget for one inline result: the caller's request bounded by configuration.
-#[must_use]
-pub fn byte_budget(service: &Service, requested: Option<usize>) -> usize {
-    let configured = service.config.limits.inline_result_bytes.max(1024);
-    requested.map_or(configured, |r| r.clamp(1024, configured))
+/// Native delivery policy is shared by cursor selection and the final encoded reply.
+pub async fn byte_budget(
+    service: &Service,
+    requested: Option<usize>,
+) -> Result<usize, enrichment_store::QueryError> {
+    enrichment_store::result_delivery::byte_budget(
+        &service.repository.runtime,
+        service.config.limits.inline_result_bytes,
+        requested,
+    )
+    .await
+    .map_err(Into::into)
 }
 
 /// Serialized size of a value, for budget accounting.
@@ -261,6 +243,10 @@ pub async fn enforce_delivery_budget(
     requested: Option<usize>,
     profile: enrichment_core::mcp_delivery::DeliveryProfile,
 ) -> Envelope {
+    let budget = match byte_budget(service, requested).await {
+        Ok(value) => value,
+        Err(error) => return query_error(&error),
+    };
     let result = match enrichment_store::runtime::charge_result(json_size(&result)) {
         Ok(()) => result,
         Err(error) => query_error(&error.into()),
@@ -270,7 +256,7 @@ pub async fn enforce_delivery_budget(
         &service.repository.catalog,
         &service.repository.runtime,
         result,
-        byte_budget(service, requested),
+        budget,
         requested,
         profile,
     )
@@ -280,11 +266,7 @@ pub async fn enforce_delivery_budget(
             .get_ref()
             .and_then(|e| e.downcast_ref::<crate::delivery::MinimumBudget>())
         {
-            return crate::delivery::budget_failure(
-                requested,
-                byte_budget(service, requested),
-                minimum.minimum,
-            );
+            return crate::delivery::budget_failure(requested, budget, minimum.minimum);
         }
         let mut failure = query_error(&error.into());
         failure.error_mut().expect("error outcome").diagnostic.stage = "result_delivery".into();

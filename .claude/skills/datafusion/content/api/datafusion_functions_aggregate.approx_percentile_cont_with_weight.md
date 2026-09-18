@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::approx_percentile_co
 fn approx_percentile_cont_with_weight(order_by: datafusion_expr::expr::Sort, weight: datafusion_expr::Expr, percentile: datafusion_expr::Expr, centroids: Option<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.approx_percentile_cont_with_weight.approx_percentile_cont_with_weight.md).
+
+
 Computes the approximate percentile continuous with weight of a set of numbers
 
 ---
@@ -23,6 +26,9 @@ Computes the approximate percentile continuous with weight of a set of numbers
 ```rust
 fn approx_percentile_cont_with_weight_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.approx_percentile_cont_with_weight.approx_percentile_cont_with_weight_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`ApproxPercentileContWithWeight`]
 
@@ -58,6 +64,9 @@ fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 fn supports_within_group_clause(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.approx_percentile_cont_with_weight.ApproxPercentileContWithWeight.md).
+
+
 APPROX_PERCENTILE_CONT_WITH_WEIGHT aggregate expression
 
 ---
@@ -89,5 +98,8 @@ fn size(&self) -> usize
 fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.approx_percentile_cont_with_weight.ApproxPercentileWithWeightAccumulator.md).
+
 
 ---

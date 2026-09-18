@@ -33,6 +33,9 @@ fn flush(&mut self) -> Result<()>
 fn write(&mut self, buf: &[u8]) -> Result<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.string_writer.StringWriter.md).
+
+
 A writer that allows writing to a `String`
 like an `std::io::Write` object.
 

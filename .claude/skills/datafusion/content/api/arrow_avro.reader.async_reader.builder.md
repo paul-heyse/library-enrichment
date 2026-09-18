@@ -12,6 +12,9 @@ Also reachable as `arrow_avro::reader::async_reader::read_header_info`
 async fn read_header_info<R>(reader: &mut R, file_size: u64, header_size_hint: Option<u64>) -> Result<reader::header::HeaderInfo, errors::AvroError> where R: AsyncFileReader
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.reader.async_reader.builder.read_header_info.md).
+
+
 Reads the Avro file header (magic, metadata, sync marker) asynchronously from `reader`.
 
 On success, returns the parsed [`HeaderInfo`] containing the header and its length in bytes.
@@ -41,6 +44,9 @@ fn with_strict_mode(self, strict_mode: bool) -> Self
 fn with_tz(self, tz: Tz) -> Self
 fn with_utf8_view(self, utf8_view: bool) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.reader.async_reader.builder.ReaderBuilder.md).
+
 
 Builder for an asynchronous Avro file reader.
 

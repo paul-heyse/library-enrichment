@@ -6,7 +6,7 @@ actually has: "can I plug into this, how much work is it, and who already did it
 Required and provided methods are separated deliberately. That split decides how much work an
 implementation is, and it is invisible in a flat method list -- which is exactly why a reader
 working from rustdoc alone underestimates what a trait offers. The provided methods are where the
-capability hides: the default is almost always the conservative answer rather than the good one.
+capability lives: defaults must be read individually before choosing an override.
 """
 
 from __future__ import annotations
@@ -104,9 +104,9 @@ def write_traits(items: dict[str, Item], root: Path, examples: dict[str, list[st
             lines += [
                 "## Provided",
                 "",
-                "Defaulted, and this is where the capability hides. The default is the "
-                "conservative answer -- no pushdown, no statistics, no specialization -- so an "
-                "implementation that overrides none of these works correctly and performs badly.",
+                "These methods have defaults. Read each full contract before overriding: some "
+                "defaults reject unsupported operations, while others provide suitable general "
+                "behavior. Required methods alone do not prove correctness or performance.",
                 "",
                 "```rust",
             ]

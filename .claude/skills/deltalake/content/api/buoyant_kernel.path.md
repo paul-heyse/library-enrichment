@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 3 public items · structured records in [`model/buoyan
 ## LogPathFileType
 
 `enum` · `buoyant_kernel::path::LogPathFileType`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.path.LogPathFileType.md)
 
 Also reachable as `delta_kernel::path::LogPathFileType`
 
@@ -21,6 +22,7 @@ enum LogPathFileType
 ## ParsedLogPath
 
 `struct` · `buoyant_kernel::path::ParsedLogPath`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.path.ParsedLogPath.md)
 
 Also reachable as `delta_kernel::path::ParsedLogPath`
 
@@ -65,6 +67,7 @@ include those in listing, as only the catalog can tell us which are valid commit
 ## AsUrl
 
 `trait` · `buoyant_kernel::path::AsUrl`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.path.AsUrl.md)
 
 Also reachable as `delta_kernel::path::AsUrl`
 

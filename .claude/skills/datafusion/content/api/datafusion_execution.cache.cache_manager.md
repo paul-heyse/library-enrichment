@@ -10,6 +10,9 @@ Crate `datafusion-execution` · 14 public items · structured records in [`model
 const DEFAULT_FILE_STATISTICS_MEMORY_LIMIT: usize = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.cache_manager.DEFAULT_FILE_STATISTICS_MEMORY_LIMIT.md).
+
+
 ---
 
 ## DEFAULT_LIST_FILES_CACHE_MEMORY_LIMIT
@@ -19,6 +22,9 @@ const DEFAULT_FILE_STATISTICS_MEMORY_LIMIT: usize = _
 ```rust
 const DEFAULT_LIST_FILES_CACHE_MEMORY_LIMIT: usize = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.cache_manager.DEFAULT_LIST_FILES_CACHE_MEMORY_LIMIT.md).
+
 
 ---
 
@@ -30,6 +36,9 @@ const DEFAULT_LIST_FILES_CACHE_MEMORY_LIMIT: usize = _
 const DEFAULT_LIST_FILES_CACHE_TTL: Option<std::time::Duration> = None
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.cache_manager.DEFAULT_LIST_FILES_CACHE_TTL.md).
+
+
 ---
 
 ## DEFAULT_METADATA_CACHE_LIMIT
@@ -40,6 +49,9 @@ const DEFAULT_LIST_FILES_CACHE_TTL: Option<std::time::Duration> = None
 const DEFAULT_METADATA_CACHE_LIMIT: usize = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.cache_manager.DEFAULT_METADATA_CACHE_LIMIT.md).
+
+
 ---
 
 ## meta_heap_bytes
@@ -49,6 +61,9 @@ const DEFAULT_METADATA_CACHE_LIMIT: usize = _
 ```rust
 fn meta_heap_bytes(object_meta: &object_store::ObjectMeta) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.cache_manager.meta_heap_bytes.md).
+
 
 Calculates the number of bytes an [`ObjectMeta`] occupies in the heap.
 
@@ -76,6 +91,9 @@ fn get_list_files_cache_ttl(&self) -> Option<Duration>
 fn get_metadata_cache_limit(&self) -> usize
 fn try_new(config: &CacheManagerConfig) -> Result<Arc<Self>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.cache_manager.CacheManager.md).
+
 
 Manages various caches used in DataFusion.
 
@@ -110,6 +128,9 @@ fn with_list_files_cache_limit(self, limit: usize) -> Self
 fn with_list_files_cache_ttl(self, ttl: Option<Duration>) -> Self
 fn with_metadata_cache_limit(self, limit: usize) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.cache_manager.CacheManagerConfig.md).
+
 
 ---
 
@@ -152,6 +173,9 @@ fn deref(&self) -> &Self::Target
 fn size(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.cache_manager.CachedFileList.md).
+
+
 Cached file listing.
 
 TTL expiration is handled internally by the cache implementation.
@@ -191,6 +215,9 @@ fn heap_size(&self, ctx: &mut DFHeapSizeCtx) -> usize
 fn size(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.cache_manager.CachedFileMetadata.md).
+
+
 Cached metadata for a file, including statistics and ordering.
 
 This struct embeds the [`ObjectMeta`] used for cache validation,
@@ -225,6 +252,9 @@ fn new(meta: ObjectMeta, file_metadata: Arc<dyn FileMetadata>) -> Self
 fn size(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.cache_manager.CachedFileMetadataEntry.md).
+
+
 Cached file metadata entry with validation information.
 
 ---
@@ -250,6 +280,9 @@ fn extra_info(&self) -> HashMap<String, String>
 fn memory_size(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.cache_manager.FileMetadata.md).
+
+
 Generic file-embedded metadata used with [`FileMetadataCache`].
 
 For example, Parquet footers and page metadata can be represented
@@ -266,6 +299,9 @@ See [`crate::runtime_env::RuntimeEnv`] for more details
 ```rust
 type FileMetadataCache = dyn Cache<object_store::path::Path, CachedFileMetadataEntry>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.cache_manager.FileMetadataCache.md).
+
 
 A cache for storing file-embedded metadata.
 
@@ -293,6 +329,9 @@ See [`crate::runtime_env::RuntimeEnv`] for more details.
 ```rust
 type FileStatisticsCache = dyn Cache<TableScopedPath, CachedFileMetadata>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.cache_manager.FileStatisticsCache.md).
+
 
 A cache for file statistics and orderings.
 
@@ -322,6 +361,9 @@ See [`crate::runtime_env::RuntimeEnv`] for more details
 ```rust
 type ListFilesCache = dyn Cache<TableScopedPath, CachedFileList>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.cache_manager.ListFilesCache.md).
+
 
 A cache for storing the [`ObjectMeta`]s that result from listing a path.
 

@@ -1,0 +1,3391 @@
+[
+  {
+    "id": "a478f6274c9e53b0018ce559",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "name": "ScalarSubqueryExec",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct ScalarSubqueryExec",
+    "docs": "Manages execution of uncorrelated scalar subqueries for a single plan\nlevel.\n\nFrom a query-results perspective, this node is a pass-through: it yields\nthe same batches as its main input and exists only to populate scalar\nsubquery results as a side effect before those batches are produced.\n\nThe first child node is the **main input plan**, whose batches are passed\nthrough unchanged. The remaining children are **subquery plans**, each of\nwhich must produce exactly zero or one row. Before any batches from the main\ninput are yielded, all subquery plans are executed and their scalar results\nare stored in a shared [`ScalarSubqueryResults`] container owned by this\nnode. [`ScalarSubqueryExpr`] nodes embedded in the main input's expressions\nhold the same container and read from it by index.\n\nAll subqueries are evaluated eagerly when the first output partition is\nrequested, before any rows from the main input are produced.\n\nTODO: Consider overlapping computation of the subqueries with evaluating the\nmain query.\n\n[`ScalarSubqueryExpr`]: datafusion_physical_expr::scalar_subquery::ScalarSubqueryExpr",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        85,
+        1
+      ],
+      "end": [
+        97,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          4854,
+          4856,
+          4857,
+          4858,
+          4859,
+          4860,
+          4861,
+          4862,
+          4863,
+          4864,
+          4865,
+          4866,
+          4867,
+          4868,
+          4869,
+          4870,
+          4871,
+          4872,
+          4874,
+          1562,
+          2167
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "datafusion_physical_expr::scalar_subquery::ScalarSubqueryExpr": 4821,
+      "`ScalarSubqueryResults`": 4630
+    },
+    "link_paths": {
+      "datafusion_physical_expr::scalar_subquery::ScalarSubqueryExpr": "datafusion_physical_expr::scalar_subquery::ScalarSubqueryExpr",
+      "`ScalarSubqueryResults`": "datafusion_expr::physical_planning_context::ScalarSubqueryResults"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1563",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-a478f6274c9e53b0018ce559",
+    "aliases": [],
+    "resolved_doc_links": {
+      "datafusion_physical_expr::scalar_subquery::ScalarSubqueryExpr": "../operations/datafusion_physical_expr.scalar_subquery.ScalarSubqueryExpr.md#op-4ace2e23e91e08dd59fef19d",
+      "`ScalarSubqueryResults`": "../operations/datafusion_expr.physical_planning_context.ScalarSubqueryResults.md#op-6b0683e0d87a9cc813cb37e5"
+    }
+  },
+  {
+    "id": "582a9f988c05a46f7f1f4242",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::apply_expressions",
+    "name": "apply_expressions",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_expressions(&self, _f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        243,
+        5
+      ],
+      "end": [
+        248,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "FnMut",
+                            "id": 795,
+                            "args": {
+                              "parenthesized": {
+                                "inputs": [
+                                  {
+                                    "borrowed_ref": {
+                                      "lifetime": null,
+                                      "is_mutable": false,
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Arc",
+                                          "id": 94,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "dyn_trait": {
+                                                      "traits": [
+                                                        {
+                                                          "trait": {
+                                                            "path": "PhysicalExpr",
+                                                            "id": 629,
+                                                            "args": null
+                                                          },
+                                                          "generic_params": []
+                                                        }
+                                                      ],
+                                                      "lifetime": null
+                                                    }
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                "output": {
+                                  "resolved_path": {
+                                    "path": "Result",
+                                    "id": 99,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "TreeNodeRecursion",
+                                                "id": 796,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "TreeNodeRecursion",
+                          "id": 796,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "795": "core::ops::function::FnMut",
+      "94": "alloc::sync::Arc",
+      "629": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "99": "datafusion_common::error::Result",
+      "796": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          303,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2160",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-582a9f988c05a46f7f1f4242",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "905a53099df7b28dc5aa9ce3",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::benefits_from_input_partitioning",
+    "name": "benefits_from_input_partitioning",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn benefits_from_input_partitioning(&self) -> Vec<bool>",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        256,
+        5
+      ],
+      "end": [
+        260,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          303,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2162",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-905a53099df7b28dc5aa9ce3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7c4f12042918395aa5c3e58f",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::cardinality_effect",
+    "name": "cardinality_effect",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn cardinality_effect(&self) -> CardinalityEffect",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        277,
+        5
+      ],
+      "end": [
+        279,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "CardinalityEffect",
+              "id": 809,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "809": "datafusion_physical_plan::execution_plan::CardinalityEffect"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          303,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2165",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-7c4f12042918395aa5c3e58f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "23e9b47baab78fb85562eae4",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::child_stats_requests",
+    "name": "child_stats_requests",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn child_stats_requests(&self, partition: Option<usize>) -> Vec<ChildStats>",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        262,
+        5
+      ],
+      "end": [
+        267,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ChildStats",
+                          "id": 804,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "2": "alloc::vec::Vec",
+      "804": "datafusion_physical_plan::statistics::ChildStats"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          303,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2163",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-23e9b47baab78fb85562eae4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "32f1a3b1eae7e3441b78b644",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::children",
+    "name": "children",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        162,
+        5
+      ],
+      "end": [
+        168,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          303,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2155",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-32f1a3b1eae7e3441b78b644",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4c4f312a0b94de569b415ba2",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::execute",
+    "name": "execute",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        214,
+        5
+      ],
+      "end": [
+        241,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "context",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "TaskContext",
+                              "id": 800,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SendableRecordBatchStream",
+                          "id": 103,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "800": "datafusion_execution::task::TaskContext",
+      "99": "datafusion_common::error::Result",
+      "103": "datafusion_execution::stream::SendableRecordBatchStream"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          303,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2159",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-4c4f312a0b94de569b415ba2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "af3cc4ea51fc7ca9b77487f8",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        84,
+        10
+      ],
+      "end": [
+        84,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          84,
+          10
+        ],
+        "end": [
+          84,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4873",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-af3cc4ea51fc7ca9b77487f8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "31121aac8b396c2c2808d63e",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::fmt_as",
+    "name": "fmt_as",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        137,
+        5
+      ],
+      "end": [
+        150,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "t",
+              {
+                "resolved_path": {
+                  "path": "DisplayFormatType",
+                  "id": 778,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "778": "datafusion_physical_plan::display::DisplayFormatType",
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "DisplayAs",
+        "id": "datafusion_physical_plan::display::DisplayAs",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::display::DisplayAs",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          136,
+          1
+        ],
+        "end": [
+          151,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1561",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-31121aac8b396c2c2808d63e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "555f92fa8b7c62f3fa64aee9",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::input",
+    "name": "input",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn input(&self) -> &Arc<dyn ExecutionPlan>",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        115,
+        5
+      ],
+      "end": [
+        117,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          99,
+          1
+        ],
+        "end": [
+          134,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4851",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-555f92fa8b7c62f3fa64aee9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1bc24358837f3ca2a8a4a9ca",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::maintains_input_order",
+    "name": "maintains_input_order",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn maintains_input_order(&self) -> Vec<bool>",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        250,
+        5
+      ],
+      "end": [
+        254,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          303,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2161",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-1bc24358837f3ca2a8a4a9ca",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "87144731affcd6031ec6c9f5",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::name",
+    "name": "name",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &'static str",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        154,
+        5
+      ],
+      "end": [
+        156,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": "'static",
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          303,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2153",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-87144731affcd6031ec6c9f5",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0f70567e02b5f8647077be09",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::new",
+    "name": "new",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(input: Arc<dyn ExecutionPlan>, subqueries: Vec<ScalarSubqueryLink>, results: ScalarSubqueryResults) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        100,
+        5
+      ],
+      "end": [
+        113,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "input",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "subqueries",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ScalarSubqueryLink",
+                              "id": 4822,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "results",
+              {
+                "resolved_path": {
+                  "path": "ScalarSubqueryResults",
+                  "id": 4630,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "2": "alloc::vec::Vec",
+      "4822": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryLink",
+      "4630": "datafusion_expr::physical_planning_context::ScalarSubqueryResults"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          99,
+          1
+        ],
+        "end": [
+          134,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4850",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-0f70567e02b5f8647077be09",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5e33e92146457c9c7fff93b0",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::properties",
+    "name": "properties",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        158,
+        5
+      ],
+      "end": [
+        160,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "PlanProperties",
+                              "id": 730,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "730": "datafusion_physical_plan::execution_plan::PlanProperties"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          303,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2154",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-5e33e92146457c9c7fff93b0",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a4106a20ad9e625eee4b3bb2",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::replace_children",
+    "name": "replace_children",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, _: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        170,
+        5
+      ],
+      "end": [
+        191,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_",
+              {
+                "resolved_path": {
+                  "path": "ReplaceChildrenOptions",
+                  "id": 792,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "792": "datafusion_physical_plan::execution_plan::ReplaceChildrenOptions",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          303,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2156",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-a4106a20ad9e625eee4b3bb2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "feeac263930197299ee03ed3",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::reset_state",
+    "name": "reset_state",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn reset_state(Arc<self>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        203,
+        5
+      ],
+      "end": [
+        212,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "99": "datafusion_common::error::Result",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          303,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2158",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-feeac263930197299ee03ed3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a7872baec7ba7a0605039508",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::results",
+    "name": "results",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn results(&self) -> &ScalarSubqueryResults",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        123,
+        5
+      ],
+      "end": [
+        125,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ScalarSubqueryResults",
+                  "id": 4630,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4630": "datafusion_expr::physical_planning_context::ScalarSubqueryResults"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          99,
+          1
+        ],
+        "end": [
+          134,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4853",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-a7872baec7ba7a0605039508",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7cbdc514541173b4329a4a57",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::statistics_from_inputs",
+    "name": "statistics_from_inputs",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn statistics_from_inputs(&self, input_stats: &[Arc<Statistics>], _args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        269,
+        5
+      ],
+      "end": [
+        275,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "input_stats",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Arc",
+                        "id": 94,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Statistics",
+                                    "id": 806,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "StatisticsArgs",
+                      "id": 807,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Statistics",
+                                      "id": 806,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "806": "datafusion_common::stats::Statistics",
+      "807": "datafusion_physical_plan::statistics::StatisticsArgs",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          303,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2164",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-7cbdc514541173b4329a4a57",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "98bad41333ec87420892c3d0",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::subqueries",
+    "name": "subqueries",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn subqueries(&self) -> &[ScalarSubqueryLink]",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        119,
+        5
+      ],
+      "end": [
+        121,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "ScalarSubqueryLink",
+                    "id": 4822,
+                    "args": null
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4822": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryLink"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          99,
+          1
+        ],
+        "end": [
+          134,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4852",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-98bad41333ec87420892c3d0",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "eead29fee03fce1b752f2905",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::try_from_proto",
+    "name": "try_from_proto",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "Reconstruct a [`ScalarSubqueryExec`] from its protobuf representation.",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        308,
+        5
+      ],
+      "end": [
+        341,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "node",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                      "id": 752,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::proto::ExecutionPlanDecodeCtx",
+                      "id": 753,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "752": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode",
+      "753": "datafusion_physical_plan::proto::ExecutionPlanDecodeCtx",
+      "99": "datafusion_common::error::Result",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          306,
+          1
+        ],
+        "end": [
+          342,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ScalarSubqueryExec`": 1563
+    },
+    "link_paths": {
+      "`ScalarSubqueryExec`": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4855",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-eead29fee03fce1b752f2905",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ScalarSubqueryExec`": "../operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md#op-a478f6274c9e53b0018ce559"
+    }
+  },
+  {
+    "id": "a02c89548f296ca12a9e61dc",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::try_to_proto",
+    "name": "try_to_proto",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        282,
+        5
+      ],
+      "end": [
+        302,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"proto\"), span: src/scalar_subquery.rs:281:11: 281:28 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::proto::ExecutionPlanEncodeCtx",
+                      "id": 818,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 281,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                                      "id": 752,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "818": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx",
+      "99": "datafusion_common::error::Result",
+      "281": "core::option::Option",
+      "752": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          303,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2166",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-a02c89548f296ca12a9e61dc",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5381c1b9ea9f2f644d67a491",
+    "path": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec::with_new_children",
+    "name": "with_new_children",
+    "owner": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/scalar_subquery.rs",
+      "begin": [
+        193,
+        5
+      ],
+      "end": [
+        201,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ScalarSubqueryExec",
+          "id": "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/scalar_subquery.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          303,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2157",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md",
+    "record_file": "operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.json",
+    "anchor": "op-5381c1b9ea9f2f644d67a491",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

@@ -10,6 +10,9 @@ Crate `datafusion-functions` · 2 public items · structured records in [`model/
 fn ascii(args: &[arrow::array::ArrayRef]) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.ascii.ascii.md).
+
+
 Returns the numeric code of the first character of the argument.
 
 ---
@@ -41,5 +44,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.string.ascii.AsciiFunc.md).
+
 
 ---

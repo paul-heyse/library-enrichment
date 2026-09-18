@@ -38,6 +38,9 @@ fn with_validate_unique_fields(self, validate_unique_fields: bool) -> Self
 fn extend<T: IntoIterator<Item = (K, V)>>(&mut self, iter: T)
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant.builder.object.ObjectBuilder.md).
+
+
 A builder for creating [`Variant::Object`] values.
 
 See the examples on [`VariantBuilder`] for usage.
@@ -71,6 +74,9 @@ fn try_new_list(&mut self) -> Result<ListBuilder<'_, Self::State<'_>>, ArrowErro
 fn try_new_object(&mut self) -> Result<ObjectBuilder<'_, Self::State<'_>>, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant.builder.object.ObjectFieldBuilder.md).
+
+
 A [`VariantBuilderExt`] that inserts a new field into a variant object.
 
 ---
@@ -92,6 +98,9 @@ struct ObjectState<'a>
 ```rust
 fn rollback(&mut self)
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant.builder.object.ObjectState.md).
+
 
 Internal state for object building
 

@@ -42,6 +42,9 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private228::Result<Self, _
 fn serialize<__S>(&self, __serializer: __S) -> _serde::__private228::Result<__S::Ok, __S::Error> where __S: _serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.client.ClientConfigKey.md).
+
+
 Configuration keys for [`ClientOptions`]
 
 ---
@@ -65,6 +68,9 @@ fn from_der(der: &[u8]) -> Result<Self>
 fn from_pem(pem: &[u8]) -> Result<Self>
 fn from_pem_bundle(pem_bundle: &[u8]) -> Result<Vec<Self>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.client.Certificate.md).
+
 
 Represents a CA certificate provided by the user.
 
@@ -118,6 +124,9 @@ fn with_timeout_disabled(self) -> Self
 fn with_user_agent(self, agent: HeaderValue) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.client.ClientOptions.md).
+
+
 HTTP client configuration for remote object stores
 
 ---
@@ -148,6 +157,9 @@ fn new(credential: T) -> Self
 async fn get_credential(&self) -> Result<Arc<T>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.client.StaticCredentialProvider.md).
+
+
 A static set of credentials
 
 ---
@@ -171,6 +183,9 @@ trait CredentialProvider: std::fmt::Debug + Send + Sync
 ```rust
 async fn get_credential(&self) -> Result<Arc<Self::Credential>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.client.CredentialProvider.md).
+
 
 Provides credentials for use when signing requests
 

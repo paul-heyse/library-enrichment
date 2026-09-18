@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 5 public items · structured records in [`model/data
 fn crc32() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.hash.crc32.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of crc32
 
 ---
@@ -22,6 +25,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of crc32
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.hash.functions.md).
+
+
 ---
 
 ## sha1
@@ -31,6 +37,9 @@ fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```rust
 fn sha1() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.hash.sha1.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of sha1
 
@@ -44,6 +53,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of sha1
 fn sha2() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.hash.sha2.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of sha2
 
 ---
@@ -55,6 +67,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of sha2
 ```rust
 fn xxhash64() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.hash.xxhash64.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of xxhash64
 

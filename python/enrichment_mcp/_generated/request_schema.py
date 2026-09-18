@@ -80,8 +80,8 @@ class JobRequest(BaseModel):
         extra="forbid",
     )
     action: Action | None = Action.status
-    interest_token: str | None = None
-    job_id: str = Field(..., min_length=1)
+    interest_token: str | None = Field(None, pattern="^interest_[0-9a-f]{32}$")
+    job_id: str = Field(..., min_length=1, pattern="^job_[0-9a-f]{32}$")
     max_bytes: str | None = Field(
         None,
         pattern="^(?:(?:1(?:0(?:2[4-9][0-9]{0}|[3-8][0-9]{1}|9[0-9]{1})|[1-8][0-9]{2}|9[0-9]{2})|[2-8][0-9]{3}|9[0-9]{3})|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{4,18})$",
@@ -251,7 +251,7 @@ class SearchRequest(BaseModel):
     cursor: str | None = Field(None, description="Continue a previous page.")
     kinds: list[str] | None = Field(
         None,
-        description="Evidence families: `api`, `docs`, `examples`, `release_notes`, `features`, `source`.",
+        description="Evidence families: `api`, `docs`, `examples`, `release_notes`, `features`. Source requires inspection.",
     )
     max_bytes: str | None = Field(
         None,

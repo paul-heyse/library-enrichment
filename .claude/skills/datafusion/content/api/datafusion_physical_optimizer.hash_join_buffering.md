@@ -28,6 +28,9 @@ fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> data
 fn schema_check(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.hash_join_buffering.HashJoinBuffering.md).
+
+
 Looks for all the [HashJoinExec]s in the plan and places a [BufferExec] node with the
 configured capacity in the probe side:
 

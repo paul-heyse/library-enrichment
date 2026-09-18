@@ -1,0 +1,1147 @@
+[
+  {
+    "id": "28021de2fba820ec392e9ef2",
+    "path": "datafusion_expr::partition_evaluator::PartitionEvaluator",
+    "name": "PartitionEvaluator",
+    "owner": null,
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait PartitionEvaluator: Debug + Send + std::any::Any",
+    "docs": "Partition evaluator for Window Functions\n\n# Background\n\nAn implementation of this trait is created and used for each\npartition defined by an `OVER` clause and is instantiated by\nthe DataFusion runtime.\n\nFor example, evaluating `window_func(val) OVER (PARTITION BY col)`\non the following data:\n\n```text\ncol | val\n--- + ----\n A  | 10\n A  | 10\n C  | 20\n D  | 30\n D  | 30\n```\n\nWill instantiate three `PartitionEvaluator`s, one each for the\npartitions defined by `col=A`, `col=B`, and `col=C`.\n\n```text\ncol | val\n--- + ----\n A  | 10     <--- partition 1\n A  | 10\n\ncol | val\n--- + ----\n C  | 20     <--- partition 2\n\ncol | val\n--- + ----\n D  | 30     <--- partition 3\n D  | 30\n```\n\nDifferent methods on this trait will be called depending on the\ncapabilities described by [`supports_bounded_execution`],\n[`uses_window_frame`], and [`include_rank`],\n\nWhen implementing a new `PartitionEvaluator`, implement\ncorresponding evaluator according to table below.\n\n# Implementation Table\n\n|[`uses_window_frame`]|[`supports_bounded_execution`]|[`include_rank`]|function_to_implement|\n|---|---|----|----|\n|false (default)      |false (default)               |false (default)   | [`evaluate_all`]           |\n|false                |true                          |false             | [`evaluate`]               |\n|false                |true/false                    |true              | [`evaluate_all_with_rank`] |\n|true                 |true/false                    |true/false        | [`evaluate`]               |\n\n[`evaluate`]: Self::evaluate\n[`evaluate_all`]: Self::evaluate_all\n[`evaluate_all_with_rank`]: Self::evaluate_all_with_rank\n[`uses_window_frame`]: Self::uses_window_frame\n[`include_rank`]: Self::include_rank\n[`supports_bounded_execution`]: Self::supports_bounded_execution\n\nFor more background, please also see the [User defined Window Functions in DataFusion blog]\n\n[User defined Window Functions in DataFusion blog]: https://datafusion.apache.org/blog/2025/04/19/user-defined-window-functions",
+    "span": {
+      "filename": "src/partition_evaluator.rs",
+      "begin": [
+        93,
+        1
+      ],
+      "end": [
+        260,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          453,
+          454,
+          456,
+          457,
+          458,
+          459,
+          461,
+          462,
+          463
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Debug",
+                "id": 81,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 13,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "std::any::Any",
+                "id": 55,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": []
+      }
+    },
+    "type_references": {
+      "81": "core::fmt::Debug",
+      "13": "core::marker::Send",
+      "55": "core::any::Any"
+    },
+    "impl_context": null,
+    "links": {
+      "Self::supports_bounded_execution": 461,
+      "Self::include_rank": 463,
+      "Self::evaluate_all": 457,
+      "Self::uses_window_frame": 462,
+      "Self::evaluate_all_with_rank": 459,
+      "Self::evaluate": 458
+    },
+    "link_paths": {
+      "Self::supports_bounded_execution": "datafusion_expr::partition_evaluator::PartitionEvaluator::supports_bounded_execution",
+      "Self::include_rank": "datafusion_expr::partition_evaluator::PartitionEvaluator::include_rank",
+      "Self::evaluate_all": "datafusion_expr::partition_evaluator::PartitionEvaluator::evaluate_all",
+      "Self::uses_window_frame": "datafusion_expr::partition_evaluator::PartitionEvaluator::uses_window_frame",
+      "Self::evaluate_all_with_rank": "datafusion_expr::partition_evaluator::PartitionEvaluator::evaluate_all_with_rank",
+      "Self::evaluate": "datafusion_expr::partition_evaluator::PartitionEvaluator::evaluate"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "460",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md",
+    "record_file": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.json",
+    "anchor": "op-28021de2fba820ec392e9ef2",
+    "aliases": [
+      "datafusion::logical_expr::PartitionEvaluator",
+      "datafusion_expr::PartitionEvaluator"
+    ],
+    "resolved_doc_links": {
+      "Self::supports_bounded_execution": "../operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md#op-406b7e5a18bc62b1828a694f",
+      "Self::include_rank": "../operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md#op-0aeef2fe6b407e26dceb7a35",
+      "Self::evaluate_all": "../operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md#op-2b7c471ccdb273bd19e1a13a",
+      "Self::uses_window_frame": "../operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md#op-059ce0e02968bcd6f1dea033",
+      "Self::evaluate_all_with_rank": "../operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md#op-74222397d87d3d3ff34325f3",
+      "Self::evaluate": "../operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md#op-677473c31d382476473f452a"
+    }
+  },
+  {
+    "id": "677473c31d382476473f452a",
+    "path": "datafusion_expr::partition_evaluator::PartitionEvaluator::evaluate",
+    "name": "evaluate",
+    "owner": "datafusion_expr::partition_evaluator::PartitionEvaluator",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn evaluate(&mut self, _values: &[ArrayRef], _range: &Range<usize>) -> Result<ScalarValue>",
+    "docs": "Evaluate window function on a range of rows in an input\npartition.\n\nThis is the simplest and most general function to implement\nbut also the least performant as it creates output one row at\na time. It is typically much faster to implement stateful\nevaluation using one of the other specialized methods on this\ntrait.\n\nReturns a [`ScalarValue`] that is the value of the window\nfunction within `range` for the entire partition. Argument\n`values` contains the evaluation result of function arguments\nand evaluation results of ORDER BY expressions. If function has a\nsingle argument, `values[1..]` will contain ORDER BY expression results.",
+    "span": {
+      "filename": "src/partition_evaluator.rs",
+      "begin": [
+        195,
+        5
+      ],
+      "end": [
+        201,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 189,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_range",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Range",
+                      "id": 455,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "primitive": "usize"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ScalarValue",
+                          "id": 215,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "189": "arrow_array::array::ArrayRef",
+      "455": "core::ops::range::Range",
+      "188": "datafusion_common::error::Result",
+      "215": "datafusion_common::scalar::ScalarValue"
+    },
+    "impl_context": null,
+    "links": {
+      "`ScalarValue`": 215
+    },
+    "link_paths": {
+      "`ScalarValue`": "datafusion_common::scalar::ScalarValue"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "458",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md",
+    "record_file": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.json",
+    "anchor": "op-677473c31d382476473f452a",
+    "aliases": [
+      "datafusion::logical_expr::PartitionEvaluator::evaluate",
+      "datafusion_expr::PartitionEvaluator::evaluate"
+    ],
+    "resolved_doc_links": {
+      "`ScalarValue`": "../operations/datafusion_common.scalar.ScalarValue.md#op-360b267c379d0a7a93dce87b"
+    }
+  },
+  {
+    "id": "2b7c471ccdb273bd19e1a13a",
+    "path": "datafusion_expr::partition_evaluator::PartitionEvaluator::evaluate_all",
+    "name": "evaluate_all",
+    "owner": "datafusion_expr::partition_evaluator::PartitionEvaluator",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn evaluate_all(&mut self, values: &[ArrayRef], num_rows: usize) -> Result<ArrayRef>",
+    "docs": "Evaluate a window function on an entire input partition.\n\nThis function is called once per input *partition* for window\nfunctions that *do not use* values from the window frame,\nsuch as `ROW_NUMBER`, `RANK`, `DENSE_RANK`, `PERCENT_RANK`,\n`CUME_DIST`, `LEAD`, `LAG`).\n\nIt produces the result of all rows in a single pass. It\nexpects to receive the entire partition as the `value` and\nmust produce an output column with one output row for every\ninput row.\n\n`num_rows` is required to correctly compute the output in case\n`values.len() == 0`\n\nImplementing this function is an optimization: certain window\nfunctions are not affected by the window frame definition or\nthe query doesn't have a frame, and `evaluate` skips the\n(costly) window frame boundary calculation and the overhead of\ncalling `evaluate` for each output row.\n\nFor example, the `LAG` built in window function does not use\nthe values of its window frame (it can be computed in one shot\non the entire partition with `Self::evaluate_all` regardless of the\nwindow defined in the `OVER` clause)\n\n```sql\nlag(x, 1) OVER (ORDER BY z ROWS BETWEEN 2 PRECEDING AND 3 FOLLOWING)\n```\n\nHowever, `avg()` computes the average in the window and thus\ndoes use its window frame\n\n```sql\navg(x) OVER (PARTITION BY y ORDER BY z ROWS BETWEEN 2 PRECEDING AND 3 FOLLOWING)\n```",
+    "span": {
+      "filename": "src/partition_evaluator.rs",
+      "begin": [
+        166,
+        5
+      ],
+      "end": [
+        179,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 189,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "num_rows",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrayRef",
+                          "id": 189,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "189": "arrow_array::array::ArrayRef",
+      "188": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "457",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md",
+    "record_file": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.json",
+    "anchor": "op-2b7c471ccdb273bd19e1a13a",
+    "aliases": [
+      "datafusion::logical_expr::PartitionEvaluator::evaluate_all",
+      "datafusion_expr::PartitionEvaluator::evaluate_all"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "74222397d87d3d3ff34325f3",
+    "path": "datafusion_expr::partition_evaluator::PartitionEvaluator::evaluate_all_with_rank",
+    "name": "evaluate_all_with_rank",
+    "owner": "datafusion_expr::partition_evaluator::PartitionEvaluator",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn evaluate_all_with_rank(&self, _num_rows: usize, _ranks_in_partition: &[Range<usize>]) -> Result<ArrayRef>",
+    "docs": "[`PartitionEvaluator::evaluate_all_with_rank`] is called for window\nfunctions that only need the rank of a row within its window\nframe.\n\nEvaluate the partition evaluator against the partition using\nthe row ranks. For example, `RANK(col)` produces\n\n```text\ncol | rank\n--- + ----\n A  | 1\n A  | 1\n C  | 3\n D  | 4\n D  | 4\n```\n\nFor this case, `num_rows` would be `5` and the\n`ranks_in_partition` would be called with\n\n```text\n[\n  (0,1),\n  (2,2),\n  (3,4),\n]\n```",
+    "span": {
+      "filename": "src/partition_evaluator.rs",
+      "begin": [
+        230,
+        5
+      ],
+      "end": [
+        236,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_num_rows",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "_ranks_in_partition",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Range",
+                        "id": 455,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "primitive": "usize"
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrayRef",
+                          "id": 189,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "455": "core::ops::range::Range",
+      "188": "datafusion_common::error::Result",
+      "189": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": null,
+    "links": {
+      "`PartitionEvaluator::evaluate_all_with_rank`": 459
+    },
+    "link_paths": {
+      "`PartitionEvaluator::evaluate_all_with_rank`": "datafusion_expr::partition_evaluator::PartitionEvaluator::evaluate_all_with_rank"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "459",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md",
+    "record_file": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.json",
+    "anchor": "op-74222397d87d3d3ff34325f3",
+    "aliases": [
+      "datafusion::logical_expr::PartitionEvaluator::evaluate_all_with_rank",
+      "datafusion_expr::PartitionEvaluator::evaluate_all_with_rank"
+    ],
+    "resolved_doc_links": {
+      "`PartitionEvaluator::evaluate_all_with_rank`": "../operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md#op-74222397d87d3d3ff34325f3"
+    }
+  },
+  {
+    "id": "9cb571cf41f2d605287c7817",
+    "path": "datafusion_expr::partition_evaluator::PartitionEvaluator::get_range",
+    "name": "get_range",
+    "owner": "datafusion_expr::partition_evaluator::PartitionEvaluator",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn get_range(&self, idx: usize, _n_rows: usize) -> Result<Range<usize>>",
+    "docs": "If `uses_window_frame` flag is `false`. This method is used to\ncalculate required range for the window function during\nstateful execution.\n\nGenerally there is no required range, hence by default this\nreturns smallest range(current row). e.g seeing current row is\nenough to calculate window result (such as row_number, rank,\netc)",
+    "span": {
+      "filename": "src/partition_evaluator.rs",
+      "begin": [
+        114,
+        5
+      ],
+      "end": [
+        123,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "idx",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "_n_rows",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Range",
+                          "id": 455,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "primitive": "usize"
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "188": "datafusion_common::error::Result",
+      "455": "core::ops::range::Range"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "454",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md",
+    "record_file": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.json",
+    "anchor": "op-9cb571cf41f2d605287c7817",
+    "aliases": [
+      "datafusion::logical_expr::PartitionEvaluator::get_range",
+      "datafusion_expr::PartitionEvaluator::get_range"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0aeef2fe6b407e26dceb7a35",
+    "path": "datafusion_expr::partition_evaluator::PartitionEvaluator::include_rank",
+    "name": "include_rank",
+    "owner": "datafusion_expr::partition_evaluator::PartitionEvaluator",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn include_rank(&self) -> bool",
+    "docs": "Can this function be evaluated with (only) rank\n\nSee the table on [`Self`] for what functions to implement",
+    "span": {
+      "filename": "src/partition_evaluator.rs",
+      "begin": [
+        257,
+        5
+      ],
+      "end": [
+        259,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Self`": 460
+    },
+    "link_paths": {
+      "`Self`": "datafusion_expr::partition_evaluator::PartitionEvaluator"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "463",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md",
+    "record_file": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.json",
+    "anchor": "op-0aeef2fe6b407e26dceb7a35",
+    "aliases": [
+      "datafusion::logical_expr::PartitionEvaluator::include_rank",
+      "datafusion_expr::PartitionEvaluator::include_rank"
+    ],
+    "resolved_doc_links": {
+      "`Self`": "../operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md#op-28021de2fba820ec392e9ef2"
+    }
+  },
+  {
+    "id": "85f9cec84ce90d6ab3b4e6b2",
+    "path": "datafusion_expr::partition_evaluator::PartitionEvaluator::is_causal",
+    "name": "is_causal",
+    "owner": "datafusion_expr::partition_evaluator::PartitionEvaluator",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn is_causal(&self) -> bool",
+    "docs": "Get whether evaluator needs future data for its result (if so returns `false`) or not",
+    "span": {
+      "filename": "src/partition_evaluator.rs",
+      "begin": [
+        126,
+        5
+      ],
+      "end": [
+        128,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "456",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md",
+    "record_file": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.json",
+    "anchor": "op-85f9cec84ce90d6ab3b4e6b2",
+    "aliases": [
+      "datafusion::logical_expr::PartitionEvaluator::is_causal",
+      "datafusion_expr::PartitionEvaluator::is_causal"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2b8620b8bb1839ce41bc872f",
+    "path": "datafusion_expr::partition_evaluator::PartitionEvaluator::memoize",
+    "name": "memoize",
+    "owner": "datafusion_expr::partition_evaluator::PartitionEvaluator",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn memoize(&mut self, _state: &mut WindowAggState) -> Result<()>",
+    "docs": "When the window frame has a fixed beginning (e.g UNBOUNDED\nPRECEDING), some functions such as FIRST_VALUE, LAST_VALUE and\nNTH_VALUE do not need the (unbounded) input once they have\nseen a certain amount of input.\n\n`memoize` is called after each input batch is processed, and\nsuch functions can save whatever they need and modify\n[`WindowAggState`] appropriately to allow rows to be pruned",
+    "span": {
+      "filename": "src/partition_evaluator.rs",
+      "begin": [
+        102,
+        5
+      ],
+      "end": [
+        104,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_state",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "WindowAggState",
+                      "id": 452,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "452": "datafusion_expr::window_state::WindowAggState",
+      "188": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {
+      "`WindowAggState`": 452
+    },
+    "link_paths": {
+      "`WindowAggState`": "datafusion_expr::window_state::WindowAggState"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "453",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md",
+    "record_file": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.json",
+    "anchor": "op-2b8620b8bb1839ce41bc872f",
+    "aliases": [
+      "datafusion::logical_expr::PartitionEvaluator::memoize",
+      "datafusion_expr::PartitionEvaluator::memoize"
+    ],
+    "resolved_doc_links": {
+      "`WindowAggState`": "../operations/datafusion_expr.window_state.WindowAggState.md#op-f28e52b20ee037aad942edd8"
+    }
+  },
+  {
+    "id": "406b7e5a18bc62b1828a694f",
+    "path": "datafusion_expr::partition_evaluator::PartitionEvaluator::supports_bounded_execution",
+    "name": "supports_bounded_execution",
+    "owner": "datafusion_expr::partition_evaluator::PartitionEvaluator",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_bounded_execution(&self) -> bool",
+    "docs": "Can the window function be incrementally computed using\nbounded memory?\n\nSee the table on [`Self`] for what functions to implement",
+    "span": {
+      "filename": "src/partition_evaluator.rs",
+      "begin": [
+        242,
+        5
+      ],
+      "end": [
+        244,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Self`": 460
+    },
+    "link_paths": {
+      "`Self`": "datafusion_expr::partition_evaluator::PartitionEvaluator"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "461",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md",
+    "record_file": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.json",
+    "anchor": "op-406b7e5a18bc62b1828a694f",
+    "aliases": [
+      "datafusion::logical_expr::PartitionEvaluator::supports_bounded_execution",
+      "datafusion_expr::PartitionEvaluator::supports_bounded_execution"
+    ],
+    "resolved_doc_links": {
+      "`Self`": "../operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md#op-28021de2fba820ec392e9ef2"
+    }
+  },
+  {
+    "id": "059ce0e02968bcd6f1dea033",
+    "path": "datafusion_expr::partition_evaluator::PartitionEvaluator::uses_window_frame",
+    "name": "uses_window_frame",
+    "owner": "datafusion_expr::partition_evaluator::PartitionEvaluator",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn uses_window_frame(&self) -> bool",
+    "docs": "Does the window function use the values from the window frame,\nif one is specified?\n\nSee the table on [`Self`] for what functions to implement",
+    "span": {
+      "filename": "src/partition_evaluator.rs",
+      "begin": [
+        250,
+        5
+      ],
+      "end": [
+        252,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Self`": 460
+    },
+    "link_paths": {
+      "`Self`": "datafusion_expr::partition_evaluator::PartitionEvaluator"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "462",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md",
+    "record_file": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.json",
+    "anchor": "op-059ce0e02968bcd6f1dea033",
+    "aliases": [
+      "datafusion::logical_expr::PartitionEvaluator::uses_window_frame",
+      "datafusion_expr::PartitionEvaluator::uses_window_frame"
+    ],
+    "resolved_doc_links": {
+      "`Self`": "../operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md#op-28021de2fba820ec392e9ef2"
+    }
+  }
+]

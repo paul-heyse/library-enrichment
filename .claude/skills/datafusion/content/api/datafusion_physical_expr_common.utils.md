@@ -10,6 +10,9 @@ Crate `datafusion-physical-expr-common` · 4 public items · structured records 
 fn evaluate_expressions_to_arrays<'a>(exprs: impl IntoIterator<Item = &'a std::sync::Arc<dyn PhysicalExpr>>, batch: &arrow::record_batch::RecordBatch) -> datafusion_common::Result<Vec<arrow::array::ArrayRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.utils.evaluate_expressions_to_arrays.md).
+
+
 Evaluates expressions against a record batch.
 This will convert the resulting ColumnarValues to ArrayRefs,
 duplicating any ScalarValues that may have been returned,
@@ -26,6 +29,9 @@ number of rows as the input batch.
 fn evaluate_expressions_to_arrays_with_metrics<'a>(exprs: impl IntoIterator<Item = &'a std::sync::Arc<dyn PhysicalExpr>>, batch: &arrow::record_batch::RecordBatch, metrics: Option<&metrics::ExpressionEvaluatorMetrics>) -> datafusion_common::Result<Vec<arrow::array::ArrayRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.utils.evaluate_expressions_to_arrays_with_metrics.md).
+
+
 Same as [`evaluate_expressions_to_arrays`] but records optional per-expression metrics.
 
 For metrics tracking, see [`ExpressionEvaluatorMetrics`] for details.
@@ -39,6 +45,9 @@ For metrics tracking, see [`ExpressionEvaluatorMetrics`] for details.
 ```rust
 fn scatter(mask: &arrow::array::BooleanArray, truthy: &dyn Array) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.utils.scatter.md).
+
 
 Scatter `truthy` array by boolean mask. When the mask evaluates `true`, next values of `truthy`
 are taken, when the mask evaluates `false` values null values are filled.
@@ -56,6 +65,9 @@ are taken, when the mask evaluates `false` values null values are filled.
 ```rust
 type ExprPropertiesNode = tree_node::ExprContext<datafusion_expr_common::sort_properties::ExprProperties>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.utils.ExprPropertiesNode.md).
+
 
 Represents a [`PhysicalExpr`] node with associated properties (order and
 range) in a context where properties are tracked.

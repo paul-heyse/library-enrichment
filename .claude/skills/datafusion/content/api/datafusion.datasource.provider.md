@@ -26,6 +26,9 @@ fn new() -> Self
 async fn create(&self, state: &dyn Session, cmd: &CreateExternalTable) -> Result<Arc<dyn TableProvider>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.datasource.provider.DefaultTableFactory.md).
+
+
 The default [`TableProviderFactory`]
 
 If [`CreateExternalTable`] is unbounded calls [`StreamTableFactory::create`],

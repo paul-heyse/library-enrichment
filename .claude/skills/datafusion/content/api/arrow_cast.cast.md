@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::can_cast_types`, `arrow_cast::can_cast_types`
 fn can_cast_types(from_type: &DataType, to_type: &DataType) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.cast.can_cast_types.md).
+
+
 Return true if a value of type `from_type` can be cast into a value of `to_type`.
 
 See [`cast_with_options`] for more information
@@ -27,6 +30,9 @@ Also reachable as `arrow::compute::cast`, `arrow::compute::kernels::cast`, `arro
 ```rust
 fn cast(array: &dyn Array, to_type: &DataType) -> Result<ArrayRef, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.cast.cast.md).
+
 
 Cast `array` to the provided data type and return a new Array with type `to_type`, if possible.
 
@@ -44,6 +50,9 @@ Also reachable as `arrow::compute::cast_num_to_bool`, `arrow_cast::cast_num_to_b
 fn cast_num_to_bool<I>(value: I) -> bool where I: Default + PartialEq
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.cast.cast_num_to_bool.md).
+
+
 Cast numeric types to boolean
 
 ---
@@ -57,6 +66,9 @@ Also reachable as `arrow::compute::cast_with_options`, `arrow_cast::cast_with_op
 ```rust
 fn cast_with_options(array: &dyn Array, to_type: &DataType, cast_options: &CastOptions<'_>) -> Result<ArrayRef, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.cast.cast_with_options.md).
+
 
 Try to cast `array` to `to_type` if possible.
 
@@ -200,6 +212,9 @@ Also reachable as `arrow::compute::num_cast`, `arrow_cast::num_cast`
 fn num_cast<I, O>(value: I) -> Option<O> where I: NumCast, O: NumCast
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.cast.num_cast.md).
+
+
 Natural cast between numeric types
 Return None if the input `value` can't be casted to type `O`.
 
@@ -215,6 +230,9 @@ Also reachable as `arrow::compute::single_bool_to_numeric`, `arrow_cast::single_
 fn single_bool_to_numeric<O>(value: bool) -> Option<O> where O: num_traits::NumCast + Default
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.cast.single_bool_to_numeric.md).
+
+
 Cast single bool value to numeric value.
 
 ---
@@ -228,6 +246,9 @@ Also reachable as `arrow::compute::single_decimal_to_float_lossy`, `arrow_cast::
 ```rust
 fn single_decimal_to_float_lossy<D, F>(f: &F, x: D::Native, scale: i32) -> f64 where D: DecimalType, F: Fn(D::Native) -> f64
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.cast.single_decimal_to_float_lossy.md).
+
 
 Lossy conversion from decimal to float.
 
@@ -250,6 +271,9 @@ struct CastOptions<'a>
 **Fields**: `safe`, `format_options`
 
 **Derives**: Clone, Debug, Default, Eq, Hash, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.cast.CastOptions.md).
+
 
 CastOptions provides a way to override the default cast behaviors
 

@@ -1,0 +1,205 @@
+[
+  {
+    "id": "5318705f25c637abc4758b4e",
+    "path": "datafusion_physical_expr::projection::update_expr",
+    "name": "update_expr",
+    "owner": null,
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn update_expr(expr: &std::sync::Arc<dyn PhysicalExpr>, projected_exprs: &[ProjectionExpr], unproject: bool) -> datafusion_common::Result<Option<std::sync::Arc<dyn PhysicalExpr>>>",
+    "docs": "The function projects / unprojects an expression with respect to set of\nprojection expressions.\n\nSee also [`ProjectionExprs::unproject_expr`] and [`ProjectionExprs::project_expr`]\n\n1) When `unproject` is `true`:\n\n   Rewrites an expression with respect to the projection expressions,\n   effectively \"unprojecting\" it to reference the original input columns.\n\n   For example, given\n   * the expressions `a@1 + b@2` and `c@0`\n   * and projection expressions `c@2, a@0, b@1`\n\n   Then\n   * `a@1 + b@2` becomes `a@0 + b@1`\n   * `c@0` becomes `c@2`\n\n2) When `unproject` is `false`:\n\n   Rewrites the expression to reference the projected expressions,\n   effectively \"projecting\" it. The resulting expression will reference the\n   indices as they appear in the projection.\n\n   If the expression cannot be rewritten after the projection, it returns\n   `None`.\n\n   For example, given\n   * the expressions `c@0`, `a@1` and `b@2`\n   * the projection `a@1 as a, c@0 as c_new`,\n\n   Then\n   * `c@0` becomes `c_new@1`\n   * `a@1` becomes `a@0`\n   * `b@2` results in `None` since the projection does not include `b`.\n\n# Errors\nThis function returns an error if `unproject` is `true` and if any expression references\nan index that is out of bounds for `projected_exprs`.\nFor example:\n\n- `expr` is `a@3`\n- `projected_exprs` is \\[`a@0`, `b@1`\\]\n\nIn this case, `a@3` references index 3, which is out of bounds for `projected_exprs` (which has length 2).",
+    "span": {
+      "filename": "src/projection.rs",
+      "begin": [
+        1076,
+        1
+      ],
+      "end": [
+        1157,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "expr",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::sync::Arc",
+                      "id": 35,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "dyn_trait": {
+                                  "traits": [
+                                    {
+                                      "trait": {
+                                        "path": "PhysicalExpr",
+                                        "id": 38,
+                                        "args": null
+                                      },
+                                      "generic_params": []
+                                    }
+                                  ],
+                                  "lifetime": null
+                                }
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "projected_exprs",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ProjectionExpr",
+                        "id": 2138,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "unproject",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 41,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 115,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "std::sync::Arc",
+                                      "id": 35,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "PhysicalExpr",
+                                                        "id": 38,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "35": "alloc::sync::Arc",
+      "38": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "2138": "datafusion_physical_expr::projection::ProjectionExpr",
+      "41": "datafusion_common::error::Result",
+      "115": "core::option::Option"
+    },
+    "impl_context": null,
+    "links": {
+      "`ProjectionExprs::unproject_expr`": 2198,
+      "`ProjectionExprs::project_expr`": 2199
+    },
+    "link_paths": {
+      "`ProjectionExprs::unproject_expr`": "datafusion_physical_expr::projection::ProjectionExprs::unproject_expr",
+      "`ProjectionExprs::project_expr`": "datafusion_physical_expr::projection::ProjectionExprs::project_expr"
+    },
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2283",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.projection.update_expr.md",
+    "record_file": "operations/datafusion_physical_expr.projection.update_expr.json",
+    "anchor": "op-5318705f25c637abc4758b4e",
+    "aliases": [
+      "datafusion_physical_plan::projection::update_expr"
+    ],
+    "resolved_doc_links": {
+      "`ProjectionExprs::unproject_expr`": "../operations/datafusion_physical_expr.projection.ProjectionExprs.md#op-17ddaa2d6115725dd89dea92",
+      "`ProjectionExprs::project_expr`": "../operations/datafusion_physical_expr.projection.ProjectionExprs.md#op-f86f5d0b156f02cf391b34f3"
+    }
+  }
+]

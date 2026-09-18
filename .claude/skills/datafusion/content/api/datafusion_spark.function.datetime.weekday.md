@@ -30,6 +30,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.weekday.SparkWeekDay.md).
+
+
 Spark-compatible `weekday` expression.
 Returns the day of the week for a date or timestamp as an integer index where
 Monday = 0, Tuesday = 1, ..., Sunday = 6.

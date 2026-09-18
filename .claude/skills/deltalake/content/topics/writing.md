@@ -6,7 +6,7 @@ A write is a transaction: stage Parquet files, then commit `Add` actions. The bu
 
 | Type | Kind | Methods | Prose | Records |
 |---|---|---:|---|---|
-| `deltalake_core::operations::write::WriteBuilder` | struct | 22 | [prose](../api/deltalake_core.operations.write.md#writebuilder) | [records](../model/deltalake_core.operations.write.json) |
+| `deltalake_core::operations::write::WriteBuilder` | struct | 20 | [prose](../api/deltalake_core.operations.write.md#writebuilder) | [records](../model/deltalake_core.operations.write.json) |
 | `deltalake_core::writer::record_batch::RecordBatchWriter` | struct | 17 | [prose](../api/deltalake_core.writer.record_batch.md#recordbatchwriter) | [records](../model/deltalake_core.writer.record_batch.json) |
 | `deltalake_core::writer::json::JsonWriter` | struct | 11 | [prose](../api/deltalake_core.writer.json.md#jsonwriter) | [records](../model/deltalake_core.writer.json.json) |
 | `deltalake_core::protocol::SaveMode` | enum | 6 | [prose](../api/deltalake_core.protocol.md#savemode) | [records](../model/deltalake_core.protocol.json) |
@@ -38,7 +38,7 @@ constructor, which is why they are the most consistently missed part of the API.
 ## Decision rules
 
 - Set a schema mode if incoming data may carry new columns; the default neither evolves nor merges.
-- Set commit properties with an application transaction id to make a retried write idempotent.
+- Application transaction markers persist coordination metadata; repeating a marker does not suppress sequential appends at this pin. See the reviewed replay contract.
 - Partition on a low-cardinality column that queries actually filter on -- otherwise partitioning only multiplies small files.
 
 ## Anti-patterns

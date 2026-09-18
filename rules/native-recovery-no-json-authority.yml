@@ -1,0 +1,23 @@
+id: native-recovery-no-json-authority
+language: Rust
+severity: error
+message: Recovery and publication consume captured native facts; JSON logs are diagnostic projections.
+files:
+  - crates/enrichment-daemon/src/ops/*.rs
+  - crates/enrichment-store/src/job_recovery.rs
+rule:
+  any:
+    - kind: identifier
+    - kind: field_identifier
+  regex: '^(read_json|from_value|from_str|from_slice|from_reader)$'
+  inside:
+    kind: function_item
+    has:
+      field: name
+      regex: '^(recover|comparison|publish_completed)$'
+    stopBy: end
+  not:
+    inside:
+      pattern: 'mod tests { $$$BODY }'
+      stopBy: end
+note: This is a syntactic guard on native recovery owners. External format decoding remains in bounded ingress kernels, and producer log serialization remains permitted.

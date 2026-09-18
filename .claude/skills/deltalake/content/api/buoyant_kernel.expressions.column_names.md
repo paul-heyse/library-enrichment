@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## ColumnName
 
 `struct` · `buoyant_kernel::expressions::column_names::ColumnName`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.column_names.ColumnName.md)
 
 Also reachable as `buoyant_kernel::expressions::ColumnName`, `delta_kernel::expressions::column_names::ColumnName`
 

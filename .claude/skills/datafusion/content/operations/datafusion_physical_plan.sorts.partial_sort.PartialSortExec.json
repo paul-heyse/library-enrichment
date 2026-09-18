@@ -1,0 +1,3875 @@
+[
+  {
+    "id": "0ac508bb4f53820d3d249464",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "name": "PartialSortExec",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct PartialSortExec",
+    "docs": "Sort execution plan for inputs that are already partially sorted.\n\nThis operator takes input ordered by a prefix of the required ordering, and\nproduces output ordered by the required ordering, emitting rows sooner\n(streaming) and using less peak memory than [`SortExec`] which must buffer\nall rows before producing any output.\n\n[`PartialSortExec`] relies on the property that rows with the same sort\nprefix are contiguous, so it can sort one prefix group at a time, emitting\ncompleted groups without reading (and buffering) the entire input.\n\nFor example, if the required output is `(a, b, c)`, but the input is only\nordered by `(a, b)`, `PartialSortExec` sorts only within each `(a, b)`\ngroup to produce output ordered by `(a, b, c)`.\n\n```text\ninput ordered by a, b              output ordered by a, b, c\n\n+---+---+---+                      +---+---+---+\n| a | b | c |                      | a | b | c |\n+---+---+---+                      +---+---+---+\n| 0 | 0 | 3 |  --  new group  -->  | 0 | 0 | 1 |\n| 0 | 0 | 2 |                      | 0 | 0 | 2 |\n| 0 | 0 | 1 |                      | 0 | 0 | 3 |\n| 0 | 1 | 1 |  --  new group  -->  | 0 | 1 | 1 |\n| 0 | 2 | 4 |  --  new group  -->  | 0 | 2 | 0 |\n| 0 | 2 | 0 |                      | 0 | 2 | 4 |\n| 1 | 0 | 5 |  --  new group  -->  | 1 | 0 | 5 |\n+---+---+---+                      +---+---+---+\n```\n\n# Buffering and Emitting Rows\n\n[`PartialSortExec`] buffers rows only until it can *prove* a prefix group\nwill never be seen again, then sorts and emits buffered rows. A group is\nguaranteed to never be seen again once a row with a *different* prefix\nvalue arrives. This relies on the input's existing ordering guarantees.\n\nUsing the example from above, rows accumulate in the in-memory buffer in\nbatches. As long as the `(a, b)` prefix keeps repeating, more rows are\nbuffered.\n\n```text\n           Buffer\n       +---+---+---+\n       | a | b | c |\n       +---+---+---+\n       | 0 | 0 | 3 |\n       | 0 | 0 | 2 |\n       | 0 | 0 | 1 |\n       +---+---+---+\n```\n\nOnce a batch arrives that contains a new `(a, b)` prefix, e.g. `(0, 2)`:\nevery buffered row for previous prefixes may be emitted:\n\n```text\n           Buffer\n       +---+---+---+\n       | a | b | c |\n       +---+---+---+\n       | 0 | 0 | 3 |\n       | 0 | 0 | 2 |\n       | 0 | 0 | 1 |\n       | 0 | 1 | 1 |  <-- first row of new batch, new prefix\n       | 0 | 2 | 4 |  <-- new prefix\n       | 0 | 2 | 0 |\n       | 1 | 0 | 5 |  <-- last row of new batch, new prefix\n       +---+---+---+\n```\n\nOnce known complete, the buffered rows are sorted by the full `(a, b, c)`\nordering and emitted as a [`RecordBatch`]; Any rows from the most recently\nseen prefix remain buffered (as more rows with the same prefix may arrive in\nfuture batches.\n\n```text\n         Emitted      <-- fully sorted on (a, b, c)\n       +---+---+---+\n       | a | b | c |\n       +---+---+---+\n       | 0 | 0 | 1 |   <-- completed group\n       | 0 | 0 | 2 |\n       | 0 | 0 | 3 |\n       | 0 | 2 | 0 |   <-- completed group\n       | 0 | 2 | 4 |\n       | 0 | 1 | 1 |   <-- completed group\n       +---+---+---+\n\n           Buffer\n       +---+---+---+\n       | a | b | c |\n       +---+---+---+\n       | 1 | 0 | 5 |   <-- (possibly) in progress group\n       +---+---+---+\n```\n\n[`SortExec`]: crate::sorts::sort::SortExec",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        180,
+        1
+      ],
+      "end": [
+        197,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          4927,
+          4928,
+          4929,
+          4930,
+          4931,
+          4932,
+          4933,
+          4934,
+          4935,
+          4936,
+          4937,
+          4938,
+          4939,
+          4940,
+          4941,
+          4942,
+          4943,
+          4944,
+          4945,
+          4947,
+          4949,
+          1565,
+          2183
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`RecordBatch`": 101,
+      "crate::sorts::sort::SortExec": 1572,
+      "`PartialSortExec`": 1566
+    },
+    "link_paths": {
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch",
+      "crate::sorts::sort::SortExec": "datafusion_physical_plan::sorts::sort::SortExec",
+      "`PartialSortExec`": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1566",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-0ac508bb4f53820d3d249464",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "crate::sorts::sort::SortExec": "../operations/datafusion_physical_plan.sorts.sort.SortExec.md#op-b7bc765f23cc8fb428c680af",
+      "`PartialSortExec`": "../operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md#op-0ac508bb4f53820d3d249464"
+    }
+  },
+  {
+    "id": "9a8f88cff78da9da7ee710f3",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::apply_expressions",
+    "name": "apply_expressions",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        378,
+        5
+      ],
+      "end": [
+        386,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "FnMut",
+                            "id": 795,
+                            "args": {
+                              "parenthesized": {
+                                "inputs": [
+                                  {
+                                    "borrowed_ref": {
+                                      "lifetime": null,
+                                      "is_mutable": false,
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Arc",
+                                          "id": 94,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "dyn_trait": {
+                                                      "traits": [
+                                                        {
+                                                          "trait": {
+                                                            "path": "PhysicalExpr",
+                                                            "id": 629,
+                                                            "args": null
+                                                          },
+                                                          "generic_params": []
+                                                        }
+                                                      ],
+                                                      "lifetime": null
+                                                    }
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                "output": {
+                                  "resolved_path": {
+                                    "path": "Result",
+                                    "id": 99,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "TreeNodeRecursion",
+                                                "id": 796,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "TreeNodeRecursion",
+                          "id": 796,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "795": "core::ops::function::FnMut",
+      "94": "alloc::sync::Arc",
+      "629": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "99": "datafusion_common::error::Result",
+      "796": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2175",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-9a8f88cff78da9da7ee710f3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2fa7823fccd3f007a73ae30b",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::benefits_from_input_partitioning",
+    "name": "benefits_from_input_partitioning",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn benefits_from_input_partitioning(&self) -> Vec<bool>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        370,
+        5
+      ],
+      "end": [
+        372,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2173",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-2fa7823fccd3f007a73ae30b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "44b0d07d12e4c590eb8bcc22",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::child_stats_requests",
+    "name": "child_stats_requests",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn child_stats_requests(&self, partition: Option<usize>) -> Vec<ChildStats>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        469,
+        5
+      ],
+      "end": [
+        471,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ChildStats",
+                          "id": 804,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "2": "alloc::vec::Vec",
+      "804": "datafusion_physical_plan::statistics::ChildStats"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2181",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-44b0d07d12e4c590eb8bcc22",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "abf93d13df02f41bc66f40b6",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::children",
+    "name": "children",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        374,
+        5
+      ],
+      "end": [
+        376,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2174",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-abf93d13df02f41bc66f40b6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "56c1028cdc4947a2efa0ba4d",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::clone",
+    "name": "clone",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> PartialSortExec",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        179,
+        17
+      ],
+      "end": [
+        179,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "PartialSortExec",
+              "id": 1566,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1566": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          179,
+          17
+        ],
+        "end": [
+          179,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4948",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-56c1028cdc4947a2efa0ba4d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2b0bcc3e2c489f34f4b18620",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::common_prefix_length",
+    "name": "common_prefix_length",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn common_prefix_length(&self) -> usize",
+    "docs": "Common prefix length",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        268,
+        5
+      ],
+      "end": [
+        270,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          199,
+          1
+        ],
+        "end": [
+          306,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4926",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-2b0bcc3e2c489f34f4b18620",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6e27ee91e5746370cd04e40d",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::execute",
+    "name": "execute",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        434,
+        5
+      ],
+      "end": [
+        463,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "context",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "TaskContext",
+                              "id": 800,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SendableRecordBatchStream",
+                          "id": 103,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "800": "datafusion_execution::task::TaskContext",
+      "99": "datafusion_common::error::Result",
+      "103": "datafusion_execution::stream::SendableRecordBatchStream"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2179",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-6e27ee91e5746370cd04e40d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5215af53eadb222ec26adb5c",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::expr",
+    "name": "expr",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn expr(&self) -> &LexOrdering",
+    "docs": "Sort expressions",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        258,
+        5
+      ],
+      "end": [
+        260,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "LexOrdering",
+                  "id": 93,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "93": "datafusion_physical_expr_common::sort_expr::LexOrdering"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          199,
+          1
+        ],
+        "end": [
+          306,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4924",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-5215af53eadb222ec26adb5c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3096d95c610b30c386b1085b",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::fetch",
+    "name": "fetch",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fetch(&self) -> Option<usize>",
+    "docs": "If `Some(fetch)`, limits output to only the first \"fetch\" items",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        263,
+        5
+      ],
+      "end": [
+        265,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          199,
+          1
+        ],
+        "end": [
+          306,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4925",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-3096d95c610b30c386b1085b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "be3690cc268b76ebc694398d",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::fetch",
+    "name": "fetch",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fetch(&self) -> Option<usize>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        354,
+        5
+      ],
+      "end": [
+        356,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2170",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-be3690cc268b76ebc694398d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "217fe1294fc5b24e8a1b044f",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        179,
+        10
+      ],
+      "end": [
+        179,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          179,
+          10
+        ],
+        "end": [
+          179,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4946",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-217fe1294fc5b24e8a1b044f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "91c9dc32a63f3d0a325de79e",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::fmt_as",
+    "name": "fmt_as",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        309,
+        5
+      ],
+      "end": [
+        342,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "t",
+              {
+                "resolved_path": {
+                  "path": "DisplayFormatType",
+                  "id": 778,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "778": "datafusion_physical_plan::display::DisplayFormatType",
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "DisplayAs",
+        "id": "datafusion_physical_plan::display::DisplayAs",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::display::DisplayAs",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          308,
+          1
+        ],
+        "end": [
+          343,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1564",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-91c9dc32a63f3d0a325de79e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d59bf15de1cf85a57a501d97",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::input",
+    "name": "input",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn input(&self) -> &Arc<dyn ExecutionPlan>",
+    "docs": "Input schema",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        253,
+        5
+      ],
+      "end": [
+        255,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          199,
+          1
+        ],
+        "end": [
+          306,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4923",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-d59bf15de1cf85a57a501d97",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e13326233985217cb4440dc1",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::input_distribution_requirements",
+    "name": "input_distribution_requirements",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn input_distribution_requirements(&self) -> InputDistributionRequirements",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        362,
+        5
+      ],
+      "end": [
+        368,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "crate::InputDistributionRequirements",
+              "id": 786,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "786": "datafusion_physical_plan::distribution_requirements::InputDistributionRequirements"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2172",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-e13326233985217cb4440dc1",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c59c3b0b29ee1ed55a8f92cb",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::metrics",
+    "name": "metrics",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn metrics(&self) -> Option<MetricsSet>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        465,
+        5
+      ],
+      "end": [
+        467,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "MetricsSet",
+                          "id": 802,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "802": "datafusion_physical_expr_common::metrics::MetricsSet"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2180",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-c59c3b0b29ee1ed55a8f92cb",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d798d860a5196cfcbbcbbbb0",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::name",
+    "name": "name",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &'static str",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        346,
+        5
+      ],
+      "end": [
+        348,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": "'static",
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2168",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-d798d860a5196cfcbbcbbbb0",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "106ab1971b4bc82afc9475ac",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::new",
+    "name": "new",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(expr: LexOrdering, input: Arc<dyn ExecutionPlan>, common_prefix_length: usize) -> Self",
+    "docs": "Create a new partial sort execution plan",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        201,
+        5
+      ],
+      "end": [
+        219,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "expr",
+              {
+                "resolved_path": {
+                  "path": "LexOrdering",
+                  "id": 93,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "input",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "common_prefix_length",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "93": "datafusion_physical_expr_common::sort_expr::LexOrdering",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          199,
+          1
+        ],
+        "end": [
+          306,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4919",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-106ab1971b4bc82afc9475ac",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7ee62e6b1146512d22ad9a92",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::preserve_partitioning",
+    "name": "preserve_partitioning",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn preserve_partitioning(&self) -> bool",
+    "docs": "Whether this `PartialSortExec` preserves partitioning of the children",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        222,
+        5
+      ],
+      "end": [
+        224,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          199,
+          1
+        ],
+        "end": [
+          306,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4920",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-7ee62e6b1146512d22ad9a92",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ead10c9d113e55a03fc75203",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::properties",
+    "name": "properties",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        350,
+        5
+      ],
+      "end": [
+        352,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "PlanProperties",
+                              "id": 730,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "730": "datafusion_physical_plan::execution_plan::PlanProperties"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2169",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-ead10c9d113e55a03fc75203",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a138a65ddeef4a7fd2c82252",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::replace_children",
+    "name": "replace_children",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, options: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        388,
+        5
+      ],
+      "end": [
+        412,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "ReplaceChildrenOptions",
+                  "id": 792,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "792": "datafusion_physical_plan::execution_plan::ReplaceChildrenOptions",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2176",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-a138a65ddeef4a7fd2c82252",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "991ab7c2e5ad677181a22252",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::required_input_distribution",
+    "name": "required_input_distribution",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn required_input_distribution(&self) -> Vec<Distribution>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        358,
+        5
+      ],
+      "end": [
+        360,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Distribution",
+                          "id": 784,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "784": "datafusion_physical_expr::partitioning::Distribution"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2171",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-991ab7c2e5ad677181a22252",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "01ffee9ba7fc11d108f01527",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::statistics_from_inputs",
+    "name": "statistics_from_inputs",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn statistics_from_inputs(&self, input_stats: &[Arc<Statistics>], _args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        473,
+        5
+      ],
+      "end": [
+        479,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "input_stats",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Arc",
+                        "id": 94,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Statistics",
+                                    "id": 806,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "StatisticsArgs",
+                      "id": 807,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Statistics",
+                                      "id": 806,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "806": "datafusion_common::stats::Statistics",
+      "807": "datafusion_physical_plan::statistics::StatisticsArgs",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2182",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-01ffee9ba7fc11d108f01527",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f9318baba545e51b6ca91df8",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::with_fetch",
+    "name": "with_fetch",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_fetch(self, fetch: Option<usize>) -> Self",
+    "docs": "Modify how many rows to include in the result\n\nIf None, then all rows will be returned, in sorted order.\nIf Some, then only the top `fetch` rows will be returned.\nThis can reduce the memory pressure required by the sort\noperation since rows that are not going to be included\ncan be dropped.",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        247,
+        5
+      ],
+      "end": [
+        250,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "fetch",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          199,
+          1
+        ],
+        "end": [
+          306,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4922",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-f9318baba545e51b6ca91df8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1253a24182952f2edfc6dca4",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::with_new_children",
+    "name": "with_new_children",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        414,
+        5
+      ],
+      "end": [
+        422,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2177",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-1253a24182952f2edfc6dca4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3651d99c3a6d4430b89a483c",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::with_new_children_and_same_properties",
+    "name": "with_new_children_and_same_properties",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        424,
+        5
+      ],
+      "end": [
+        432,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          345,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2178",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-3651d99c3a6d4430b89a483c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b8248e1d799ca1d2d0f87066",
+    "path": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec::with_preserve_partitioning",
+    "name": "with_preserve_partitioning",
+    "owner": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_preserve_partitioning(self, preserve_partitioning: bool) -> Self",
+    "docs": "Specify the partitioning behavior of this partial sort exec\n\nIf `preserve_partitioning` is true, sorts each partition\nindividually, producing one sorted stream for each input partition.\n\nIf `preserve_partitioning` is false, sorts and merges all\ninput partitions producing a single, sorted partition.",
+    "span": {
+      "filename": "src/sorts/partial_sort.rs",
+      "begin": [
+        233,
+        5
+      ],
+      "end": [
+        238,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "preserve_partitioning",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartialSortExec",
+          "id": "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partial_sort.rs",
+        "begin": [
+          199,
+          1
+        ],
+        "end": [
+          306,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4921",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partial_sort.PartialSortExec.json",
+    "anchor": "op-b8248e1d799ca1d2d0f87066",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

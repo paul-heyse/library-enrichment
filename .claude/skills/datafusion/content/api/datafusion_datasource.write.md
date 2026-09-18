@@ -12,6 +12,9 @@ Also reachable as `datafusion::datasource::file_format::write::get_writer_schema
 fn get_writer_schema(config: &file_sink_config::FileSinkConfig) -> std::sync::Arc<arrow::datatypes::Schema>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.write.get_writer_schema.md).
+
+
 Converts table schema to writer schema, which may differ in the case
 of hive style partitioning where some columns are removed from the
 underlying files.
@@ -42,6 +45,9 @@ fn set_compression_level(&mut self, compression_level: Option<u32>)
 fn with_buffer_size(self, buffer_size: Option<usize>) -> Self
 fn with_compression_level(self, compression_level: Option<u32>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.write.ObjectWriterBuilder.md).
+
 
 A builder for an [`AsyncWrite`] that writes to an object store location.
 
@@ -83,6 +89,9 @@ fn flush(&mut self) -> std::io::Result<()>
 fn write(&mut self, buf: &[u8]) -> std::io::Result<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.write.SharedBuffer.md).
+
+
 A buffer with interior mutability shared by the SerializedFileWriter and
 ObjectStore writer
 
@@ -108,6 +117,9 @@ trait BatchSerializer: Sync + Send
 ```rust
 fn serialize(&self, batch: RecordBatch, initial: bool) -> Result<Bytes>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.write.BatchSerializer.md).
+
 
 A trait that defines the methods required for a RecordBatch serializer.
 

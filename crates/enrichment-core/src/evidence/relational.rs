@@ -491,7 +491,7 @@ impl ApiObservation {
 #[serde(deny_unknown_fields)]
 pub struct AttemptAttribution {
     pub observation_id: String,
-    pub attempt_id: String,
+    pub attempt_id: crate::identity::AttemptId,
     pub producer_binding_id: String,
 }
 
@@ -824,11 +824,11 @@ mod tests {
         assert_eq!(first.observation_id, second.observation_id);
         let a = AttemptAttribution {
             observation_id: first.observation_id.clone(),
-            attempt_id: "a".into(),
+            attempt_id: crate::identity::AttemptId::new(),
             producer_binding_id: "producer_test".into(),
         };
         let b = AttemptAttribution {
-            attempt_id: "b".into(),
+            attempt_id: crate::identity::AttemptId::new(),
             ..a.clone()
         };
         assert_ne!(a, b);

@@ -20,6 +20,9 @@ enum DoPutError
 fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.server.DoPutError.md).
+
+
 Unrecoverable errors associated with `do_put` requests
 
 ---
@@ -47,6 +50,9 @@ async fn peek(&mut self) -> Option<&Result<FlightData, Status>>
 ```rust
 fn poll_next(Pin<&mut self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.server.PeekableFlightDataStream.md).
+
 
 A wrapper around [`Streaming<FlightData>`] that allows "peeking" at the
 message at the front of the stream without consuming it.
@@ -155,6 +161,9 @@ async fn get_flight_info_xdbc_type_info(&self, _query: CommandGetXdbcTypeInfo, _
 async fn list_custom_actions(&self) -> Option<Vec<Result<ActionType, Status>>>
 async fn register_sql_info(&self, id: i32, result: &SqlInfo) -> ()
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.server.FlightSqlService.md).
+
 
 Implements FlightSqlService to handle the flight sql protocol
 

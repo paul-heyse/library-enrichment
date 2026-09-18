@@ -57,7 +57,27 @@ async fn retention_horizons_are_native_configured_and_reject_unsafe_relationship
 
 #[test]
 fn retention_policy_is_a_captured_native_contract_with_exact_transport() {
+    use enrichment_core::{
+        identity::{OperationPolicyId, RetentionPolicyId},
+        native_union::Cell,
+    };
     let policy = RetentionPolicy::default();
+    let identity = policy.identity().unwrap();
+    assert_eq!(
+        RetentionPolicyId::data_type(),
+        arrow::datatypes::DataType::FixedSizeBinary(32)
+    );
+    assert_ne!(RetentionPolicyId::metadata(), OperationPolicyId::metadata());
+    let encoded = serde_json::to_value(&identity).unwrap();
+    assert_eq!(
+        serde_json::from_value::<RetentionPolicyId>(encoded.clone()).unwrap(),
+        identity
+    );
+    assert!(serde_json::from_value::<OperationPolicyId>(encoded).is_err());
+    assert_eq!(
+        identity.parameter().value,
+        datafusion::common::ScalarValue::FixedSizeBinary(32, Some(identity.as_bytes().to_vec()))
+    );
     let mut changed = policy.clone();
     changed.log_days += 1;
     changed.transaction_days += 1;

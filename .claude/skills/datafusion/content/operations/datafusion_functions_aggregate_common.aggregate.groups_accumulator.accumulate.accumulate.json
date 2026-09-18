@@ -1,0 +1,260 @@
+[
+  {
+    "id": "1cadf90a39061182dd59f15e",
+    "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::accumulate::accumulate",
+    "name": "accumulate",
+    "owner": null,
+    "crate": "datafusion-functions-aggregate-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn accumulate<T, F>(group_indices: &[usize], values: &arrow::array::PrimitiveArray<T>, opt_filter: Option<&arrow::array::BooleanArray>, value_fn: F) where T: ArrowPrimitiveType + Send, F: FnMut(usize, T::Native) + Send",
+    "docs": "Invokes `value_fn(group_index, value)` for each non null, non\nfiltered value of `value`,\n\n# Arguments:\n\n* `group_indices`:  To which groups do the rows in `values` belong, (aka group_index)\n* `values`: the input arguments to the accumulator\n* `opt_filter`: if present, only rows for which is Some(true) are included\n* `value_fn`: function invoked for  (group_index, value) where value is non null\n\n# Example\n\n```text\n ┌─────────┐   ┌─────────┐   ┌ ─ ─ ─ ─ ┐\n │ ┌─────┐ │   │ ┌─────┐ │     ┌─────┐\n │ │  2  │ │   │ │ 200 │ │   │ │  t  │ │\n │ ├─────┤ │   │ ├─────┤ │     ├─────┤\n │ │  2  │ │   │ │ 100 │ │   │ │  f  │ │\n │ ├─────┤ │   │ ├─────┤ │     ├─────┤\n │ │  0  │ │   │ │ 200 │ │   │ │  t  │ │\n │ ├─────┤ │   │ ├─────┤ │     ├─────┤\n │ │  1  │ │   │ │ 200 │ │   │ │NULL │ │\n │ ├─────┤ │   │ ├─────┤ │     ├─────┤\n │ │  0  │ │   │ │ 300 │ │   │ │  t  │ │\n │ └─────┘ │   │ └─────┘ │     └─────┘\n └─────────┘   └─────────┘   └ ─ ─ ─ ─ ┘\n\ngroup_indices   values        opt_filter\n```\n\nIn the example above, `value_fn` is invoked for each (group_index,\nvalue) pair where `opt_filter[i]` is true and values is non null\n\n```text\nvalue_fn(2, 200)\nvalue_fn(0, 200)\nvalue_fn(0, 300)\n```",
+    "span": {
+      "filename": "src/aggregate/groups_accumulator/accumulate.rs",
+      "begin": [
+        371,
+        1
+      ],
+      "end": [
+        469,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "group_indices",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "usize"
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "arrow::array::PrimitiveArray",
+                      "id": 572,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "T"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "opt_filter",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 304,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "arrow::array::BooleanArray",
+                                  "id": 305,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "value_fn",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "T"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowPrimitiveType",
+                        "id": 146,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": 19,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "F"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "FnMut",
+                        "id": 573,
+                        "args": {
+                          "parenthesized": {
+                            "inputs": [
+                              {
+                                "primitive": "usize"
+                              },
+                              {
+                                "qualified_path": {
+                                  "name": "Native",
+                                  "args": null,
+                                  "self_type": {
+                                    "generic": "T"
+                                  },
+                                  "trait": {
+                                    "path": "",
+                                    "id": 146,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "output": null
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": 19,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "572": "arrow_array::array::primitive_array::PrimitiveArray",
+      "304": "core::option::Option",
+      "305": "arrow_array::array::boolean_array::BooleanArray",
+      "146": "arrow_array::types::ArrowPrimitiveType",
+      "19": "core::marker::Send",
+      "573": "core::ops::function::FnMut"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "81808248bf26d74d3675773ba339836571846becb6ef9669343e6f4d8b12dd2d",
+      "format_version": 61,
+      "item_id": "570",
+      "origin": "https://docs.rs/crate/datafusion-functions-aggregate-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.accumulate.accumulate.md",
+    "record_file": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.accumulate.accumulate.json",
+    "anchor": "op-1cadf90a39061182dd59f15e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

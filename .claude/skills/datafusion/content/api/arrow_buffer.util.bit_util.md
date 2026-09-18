@@ -12,6 +12,9 @@ Also reachable as `arrow::util::bit_util::apply_bitwise_binary_op`
 fn apply_bitwise_binary_op<F>(left: &mut [u8], left_offset_in_bits: usize, right: impl AsRef<[u8]>, right_offset_in_bits: usize, len_in_bits: usize, op: F) where F: FnMut(u64, u64) -> u64
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_util.apply_bitwise_binary_op.md).
+
+
 Applies a bitwise operation relative to another bit-packed byte slice
 (right) in place
 
@@ -67,6 +70,9 @@ Also reachable as `arrow::util::bit_util::apply_bitwise_unary_op`
 fn apply_bitwise_unary_op<F>(buffer: &mut [u8], offset_in_bits: usize, len_in_bits: usize, op: F) where F: FnMut(u64) -> u64
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_util.apply_bitwise_unary_op.md).
+
+
 Apply a bitwise operation to a mutable buffer, updating it in place.
 
 Note: applies the operation 64-bits (u64) at a time.
@@ -115,6 +121,9 @@ Also reachable as `arrow::util::bit_util::ceil`
 fn ceil(value: usize, divisor: usize) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_util.ceil.md).
+
+
 Returns the ceil of `value`/`divisor`
 
 ---
@@ -129,6 +138,9 @@ Also reachable as `arrow::util::bit_util::get_bit`
 fn get_bit(data: &[u8], i: usize) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_util.get_bit.md).
+
+
 Returns whether bit at position `i` in `data` is set or not
 
 ---
@@ -142,6 +154,9 @@ Also reachable as `arrow::util::bit_util::get_bit_raw`
 ```rust
 unsafe fn get_bit_raw(data: *const u8, i: usize) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_util.get_bit_raw.md).
+
 
 Returns whether bit at position `i` in `data` is set or not.
 
@@ -162,6 +177,9 @@ Also reachable as `arrow::util::bit_util::round_upto_multiple_of_64`
 fn round_upto_multiple_of_64(num: usize) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_util.round_upto_multiple_of_64.md).
+
+
 Returns the nearest number that is `>=` than `num` and is a multiple of 64
 
 ---
@@ -175,6 +193,9 @@ Also reachable as `arrow::util::bit_util::round_upto_power_of_2`
 ```rust
 fn round_upto_power_of_2(num: usize, factor: usize) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_util.round_upto_power_of_2.md).
+
 
 Returns the nearest multiple of `factor` that is `>=` than `num`. Here `factor` must
 be a power of 2.
@@ -191,6 +212,9 @@ Also reachable as `arrow::util::bit_util::set_bit`
 fn set_bit(data: &mut [u8], i: usize)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_util.set_bit.md).
+
+
 Sets bit at position `i` for `data` to 1
 
 ---
@@ -204,6 +228,9 @@ Also reachable as `arrow::util::bit_util::set_bit_raw`
 ```rust
 unsafe fn set_bit_raw(data: *mut u8, i: usize)
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_util.set_bit_raw.md).
+
 
 Sets bit at position `i` for `data`
 
@@ -224,6 +251,9 @@ Also reachable as `arrow::util::bit_util::unset_bit`
 fn unset_bit(data: &mut [u8], i: usize)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_util.unset_bit.md).
+
+
 Sets bit at position `i` for `data` to 0
 
 ---
@@ -237,6 +267,9 @@ Also reachable as `arrow::util::bit_util::unset_bit_raw`
 ```rust
 unsafe fn unset_bit_raw(data: *mut u8, i: usize)
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_util.unset_bit_raw.md).
+
 
 Sets bit at position `i` for `data` to 0
 

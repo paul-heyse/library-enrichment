@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "id": "arrow.schema",
+  "title": "Distinguish batch validity, relational schema and metadata propagation",
+  "task_aliases": [
+    "align schema",
+    "extension metadata",
+    "non nullable field",
+    "zero column row count",
+    "physical expression adapter",
+    "schema evolution"
+  ],
+  "crates": [
+    "arrow-schema",
+    "arrow-array",
+    "datafusion-common",
+    "datafusion-physical-expr-adapter"
+  ],
+  "input": [
+    "Schema",
+    "Field",
+    "ArrayRef",
+    "DFSchema"
+  ],
+  "output": [
+    "RecordBatch",
+    "DFSchema",
+    "PhysicalExpr"
+  ],
+  "properties": [
+    "schema",
+    "metadata",
+    "nulls",
+    "validation",
+    "projection"
+  ],
+  "operations": [
+    "arrow_array::record_batch::RecordBatch::try_new",
+    "arrow_array::record_batch::RecordBatch::try_new_with_options",
+    "arrow_schema::field::Field",
+    "datafusion_common::dfschema::DFSchema",
+    "datafusion_physical_expr_adapter::schema_rewriter::DefaultPhysicalExprAdapter"
+  ],
+  "brief": "Arrow Schema/Field describe physical arrays and metadata; DFSchema adds relational qualifiers. Batch construction validates structural contracts, not application meaning. Test metadata through the exact operator path.",
+  "choices": [
+    {
+      "candidate": "RecordBatch constructors",
+      "choose_when": "Assemble arrays with explicit shape/nullability",
+      "tradeoff": "Zero-column rows need explicit row count; domain validation is separate.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "DFSchema",
+      "choose_when": "Resolve qualified relational columns",
+      "tradeoff": "Do not discard qualifiers before resolution when names collide.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "DefaultPhysicalExprAdapter",
+      "choose_when": "Adapt physical expressions to table/file schema differences",
+      "tradeoff": "Inspect missing-column, casting and nested-field policy; not arbitrary domain schema migration.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "arrow.schema.validation",
+      "aspect": "validation",
+      "statement": "RecordBatch::try_new checks field/column count, datatypes and row lengths, including top-level non-nullable fields. It does not validate domain units, keys or every semantic invariant.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "arrow.schema.metadata",
+      "aspect": "metadata",
+      "statement": "Extension annotations reside in field metadata. Direct filter preserves the tested field/schema metadata; that does not prove UNION, projection, cast or custom UDF paths preserve it.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "arrow.schema.shape",
+      "aspect": "shape",
+      "statement": "Schema alignment must account for field order, type, nullability and nested structure, not only names. DFSchema qualifiers and physical Schema are different representations.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Specify which metadata is contractual versus advisory.",
+    "Carry or reconstruct fields explicitly when kernels return only arrays.",
+    "Probe each consequential logical-to-physical operator boundary, including schema plus values."
+  ],
+  "unknowns": [
+    "Nested metadata propagation and every adapter conversion remain contract-backed discovery, not an exhaustive runtime matrix."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "arrow_array::record_batch::RecordBatch::try_new",
+        "arrow_array::record_batch::RecordBatch::try_new_with_options",
+        "arrow_schema::field::Field",
+        "datafusion_common::dfschema::DFSchema",
+        "datafusion_physical_expr_adapter::schema_rewriter::DefaultPhysicalExprAdapter"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    },
+    {
+      "id": "probe",
+      "kind": "runtime_observation",
+      "tests": [
+        "batch_construction_checks_top_level_nullability",
+        "filter_null_is_not_selected_and_metadata_is_retained"
+      ],
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Only the named assertions in the recorded Cargo profile."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "arrow_array::record_batch::RecordBatch::try_new",
+      "arrow_array::record_batch::RecordBatch::try_new_with_options",
+      "arrow_schema::field::Field",
+      "datafusion_common::dfschema::DFSchema",
+      "datafusion_physical_expr_adapter::schema_rewriter::DefaultPhysicalExprAdapter"
+    ],
+    "candidate_set": [
+      "RecordBatch constructors",
+      "DFSchema",
+      "DefaultPhysicalExprAdapter"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  }
+}

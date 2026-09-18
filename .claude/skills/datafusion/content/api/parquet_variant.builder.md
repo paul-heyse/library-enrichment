@@ -30,6 +30,9 @@ fn variant(value_builder: &'a mut ValueBuilder, metadata_builder: &'a mut dyn Me
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant.builder.ParentState.md).
+
+
 Tracks information needed to correctly finalize a nested builder.
 
 A child builder has no effect on its parent unless/until its `finalize` method is called, at
@@ -64,6 +67,9 @@ fn new() -> Self
 fn offset(&self) -> usize
 fn try_append_variant<S: BuilderSpecificState>(state: ParentState<'_, S>, variant: Variant<'_, '_>) -> Result<(), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant.builder.ValueBuilder.md).
+
 
 Wrapper around a `Vec<u8>` that provides methods for appending
 primitive values, variant types, and metadata.
@@ -118,6 +124,9 @@ fn append_value<'m, 'v>(&mut self, value: impl Into<Variant<'m, 'v>>)
 fn try_new_list(&mut self) -> Result<ListBuilder<'_, Self::State<'_>>, ArrowError>
 fn try_new_object(&mut self) -> Result<ObjectBuilder<'_, Self::State<'_>>, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant.builder.VariantBuilder.md).
+
 
 Top level builder for [`Variant`] values
 
@@ -384,6 +393,9 @@ fn finish(&mut self, _metadata_builder: &mut dyn MetadataBuilder, _value_builder
 fn rollback(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant.builder.BuilderSpecificState.md).
+
+
 A trait for managing state specific to different builder types.
 
 ---
@@ -413,6 +425,9 @@ fn new_object(&mut self) -> ObjectBuilder<'_, Self::State<'_>>
 fn try_new_list(&mut self) -> Result<ListBuilder<'_, Self::State<'_>>, ArrowError>
 fn try_new_object(&mut self) -> Result<ObjectBuilder<'_, Self::State<'_>>, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant.builder.VariantBuilderExt.md).
+
 
 Extends [`VariantBuilder`] to help building nested [`Variant`]s
 

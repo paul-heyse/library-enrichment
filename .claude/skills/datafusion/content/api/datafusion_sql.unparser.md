@@ -25,6 +25,9 @@ fn with_extension_unparsers(self, extension_unparsers: Vec<Arc<dyn UserDefinedLo
 fn with_pretty(self, pretty: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.Unparser.md).
+
+
 Convert a DataFusion [`Expr`] to [`sqlparser::ast::Expr`]
 
 See [`expr_to_sql`] for background. `Unparser` allows greater control of

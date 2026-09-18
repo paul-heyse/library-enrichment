@@ -12,6 +12,9 @@ Also reachable as `datafusion_proto::protobuf::proto_error`
 fn proto_error<S: Into<String>>(message: S) -> datafusion_common::DataFusionError
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.common.proto_error.md).
+
+
 Return a `DataFusionError::Internal` with the given message
 
 ---

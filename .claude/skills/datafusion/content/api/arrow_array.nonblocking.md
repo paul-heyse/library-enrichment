@@ -16,6 +16,9 @@ trait RecordBatchStream: futures::Stream<Item = Result<record_batch::RecordBatch
 fn schema(&self) -> &SchemaRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.nonblocking.RecordBatchStream.md).
+
+
 Trait for an asynchronous stream of `RecordBatch`es.
 
 ---

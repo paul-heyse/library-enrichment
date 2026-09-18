@@ -12,6 +12,9 @@ Also reachable as `datafusion_spark::expr_fn::spark_cast`
 fn spark_cast(arg1: datafusion_expr::Expr, arg2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.conversion.expr_fn.spark_cast.md).
+
+
 Casts given value to the specified type following Spark-compatible semantics
 
 ---

@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## DeltaExtensionPlanner
 
 `struct` · `deltalake_core::delta_datafusion::planner::DeltaExtensionPlanner`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.planner.DeltaExtensionPlanner.md)
 
 Also reachable as `deltalake::delta_datafusion::planner::DeltaExtensionPlanner`
 
@@ -34,6 +35,7 @@ how to lower delta-rs custom logical nodes into executable physical plans.
 ## DeltaPlanner
 
 `struct` · `deltalake_core::delta_datafusion::planner::DeltaPlanner`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.planner.DeltaPlanner.md)
 
 Also reachable as `deltalake::delta_datafusion::planner::DeltaPlanner`
 

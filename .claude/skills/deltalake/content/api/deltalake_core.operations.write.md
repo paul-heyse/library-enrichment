@@ -5,6 +5,7 @@ Crate `deltalake-core` · 3 public items · structured records in [`model/deltal
 ## SchemaMode
 
 `enum` · `deltalake_core::operations::write::SchemaMode`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.write.SchemaMode.md)
 
 Also reachable as `deltalake::operations::write::SchemaMode`
 
@@ -31,6 +32,7 @@ Specifies how to handle schema drifts
 ## WriteBuilder
 
 `struct` · `deltalake_core::operations::write::WriteBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.write.WriteBuilder.md)
 
 Also reachable as `deltalake::operations::write::WriteBuilder`
 
@@ -70,13 +72,6 @@ fn with_writer_properties(self, writer_properties: WriterProperties) -> Self
 fn into_future(self) -> Self::IntoFuture
 ```
 
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
-```
-
 Write data into a DeltaTable
 
 ---
@@ -84,6 +79,7 @@ Write data into a DeltaTable
 ## WriteMetrics
 
 `struct` · `deltalake_core::operations::write::WriteMetrics`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.write.WriteMetrics.md)
 
 Also reachable as `deltalake::operations::write::WriteMetrics`
 

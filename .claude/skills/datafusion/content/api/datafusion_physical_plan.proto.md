@@ -34,6 +34,9 @@ fn task_ctx(&self) -> &TaskContext
 fn decode(&self, node: &PhysicalExprNode, schema: &Schema) -> Result<Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.proto.ExecutionPlanDecodeCtx.md).
+
+
 Context handed to a plan's `try_from_proto` associated function.
 
 Provides the primitives a plan needs to deserialize its children and
@@ -70,6 +73,9 @@ fn new(encoder: &'a dyn ExecutionPlanEncode) -> Self
 ```rust
 fn encode(&self, expr: &Arc<dyn PhysicalExpr>) -> Result<PhysicalExprNode>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.proto.ExecutionPlanEncodeCtx.md).
+
 
 Context handed to [`ExecutionPlan::try_to_proto`].
 

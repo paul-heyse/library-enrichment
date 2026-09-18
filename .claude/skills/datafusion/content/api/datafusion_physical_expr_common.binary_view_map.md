@@ -25,6 +25,9 @@ fn size(&self) -> usize
 fn take(&mut self) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.binary_view_map.ArrowBytesViewMap.md).
+
+
 ---
 
 ## ArrowBytesViewSet
@@ -49,6 +52,9 @@ fn non_null_len(&self) -> usize
 fn size(&self) -> usize
 fn take(&mut self) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.binary_view_map.ArrowBytesViewSet.md).
+
 
 HashSet optimized for storing string or binary values that can produce that
 the final set as a `GenericBinaryViewArray` with minimal copies.

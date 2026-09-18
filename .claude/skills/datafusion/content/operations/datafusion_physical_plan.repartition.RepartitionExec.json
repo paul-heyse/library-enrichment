@@ -1,0 +1,4880 @@
+[
+  {
+    "id": "a0cd55fc5d1d094b433c884b",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec",
+    "name": "RepartitionExec",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct RepartitionExec",
+    "docs": "Maps `N` input partitions to `M` output partitions based on a\n[`Partitioning`] scheme.\n\n# Background\n\nDataFusion, like most other commercial systems, with the\nnotable exception of DuckDB, uses the \"Exchange Operator\" based\napproach to parallelism which works well in practice given\nsufficient care in implementation.\n\nDataFusion's planner picks the target number of partitions and\nthen [`RepartitionExec`] redistributes [`RecordBatch`]es to that number\nof output partitions.\n\nFor example, given `target_partitions=3` (trying to use 3 cores)\nbut scanning an input with 2 partitions, `RepartitionExec` can be\nused to get 3 even streams of `RecordBatch`es\n\n\n```text\n       ▲                  ▲                  ▲\n       │                  │                  │\n       │                  │                  │\n       │                  │                  │\n┌───────────────┐  ┌───────────────┐  ┌───────────────┐\n│    GroupBy    │  │    GroupBy    │  │    GroupBy    │\n│   (Partial)   │  │   (Partial)   │  │   (Partial)   │\n└───────────────┘  └───────────────┘  └───────────────┘\n       ▲                  ▲                  ▲\n       └──────────────────┼──────────────────┘\n                          │\n             ┌─────────────────────────┐\n             │     RepartitionExec     │\n             │   (hash/round robin)    │\n             └─────────────────────────┘\n                        ▲   ▲\n            ┌───────────┘   └───────────┐\n            │                           │\n            │                           │\n       .─────────.                 .─────────.\n    ,─'           '─.           ,─'           '─.\n   ;      Input      :         ;      Input      :\n   :   Partition 0   ;         :   Partition 1   ;\n    ╲               ╱           ╲               ╱\n     '─.         ,─'             '─.         ,─'\n        `───────'                   `───────'\n```\n\n# Error Handling\n\nIf any of the input partitions return an error, the error is propagated to\nall output partitions and inputs are not polled again.\n\n# Output Ordering\n\nIf more than one stream is being repartitioned, the output will be some\narbitrary interleaving (and thus unordered) unless\n[`Self::with_preserve_order`] specifies otherwise.\n\n# Batch coalescing\n\nRepartitioning one [`RecordBatch`] implies creating multiple smaller batches, potentially\nas many as the number of output partitions. [`RepartitionExec`] makes sure that the returned\nbatches adhere to the configured `datafusion.execution.batch_size` for efficient operations,\nand for that, it will automatically coalesce batches right after repartitioning for bounded\ninputs. Coalescing is skipped for unbounded inputs so partial batches are emitted promptly.\n\nFor this, one shared [`LimitedBatchCoalescer`] per output partition is used:\n\n```text\n                        ┌───┐                           ┌───┐\n                     ┌─▶│   │────────▶.───────────.     │   │     ┌──────────────────┐\n                     │  └───┘ ┌───┐  ( Coalescer 0 )──▶ ├───┤ ───▶│     Output 0     │\n                     │┌──────▶│   │──▶`───────────'     │   │     └──────────────────┘\n                     ││       └───┘                     └───┘\n┌──────────────────┐ ││                                           ┌──────────────────┐\n│BatchPartitioner 0│─┘│                                           │     Output 1     │\n└──────────────────┘  │                                           └──────────────────┘\n                      │\n┌──────────────────┐  │                ...                        ┌──────────────────┐\n│BatchPartitioner 1│──┘                                           │     Output 2     │\n└──────────────────┘                                              └──────────────────┘\n\n                                                                  ┌──────────────────┐\n                                                                  │     Output 3     │\n                                                                  └──────────────────┘\n```\n\n# Spilling Architecture\n\nRepartitionExec uses [`SpillPool`](crate::spill::spill_pool) channels to handle\nmemory pressure during repartitioning. Each (input partition, output partition)\npair gets its own SpillPool channel for FIFO ordering.\n\n```text\nInput Partitions (N)          Output Partitions (M)\n────────────────────          ─────────────────────\n\n   Input 0 ──┐                      ┌──▶ Output 0\n             │  ┌──────────────┐    │\n             ├─▶│ SpillPool    │────┤\n             │  │ [In0→Out0]   │    │\n   Input 1 ──┤  └──────────────┘    ├──▶ Output 1\n             │                       │\n             │  ┌──────────────┐    │\n             ├─▶│ SpillPool    │────┤\n             │  │ [In1→Out0]   │    │\n   Input 2 ──┤  └──────────────┘    ├──▶ Output 2\n             │                      │\n             │       ... (N×M SpillPools total)\n             │                      │\n             │  ┌──────────────┐    │\n             └─▶│ SpillPool    │────┘\n                │ [InN→OutM]   │\n                └──────────────┘\n\nEach SpillPool maintains FIFO order for its (input, output) pair.\nSee `RepartitionBatch` for details on the memory/spill decision logic.\n```\n\n# Footnote\n\nThe \"Exchange Operator\" was first described in the 1989 paper\n[Encapsulation of parallelism in the Volcano query processing\nsystem Paper](https://dl.acm.org/doi/pdf/10.1145/93605.98720)\nwhich uses the term \"Exchange\" for the concept of repartitioning\ndata across threads.\n\nFor more background, please also see the [Optimizing Repartitions in DataFusion] blog.\n\n[Optimizing Repartitions in DataFusion]: https://datafusion.apache.org/blog/2025/12/15/avoid-consecutive-repartitions",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1409,
+        1
+      ],
+      "end": [
+        1422,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          4790,
+          4792,
+          4794,
+          4795,
+          4796,
+          4797,
+          4798,
+          4799,
+          4800,
+          4801,
+          4802,
+          4803,
+          4804,
+          4805,
+          4806,
+          4807,
+          4808,
+          4809,
+          4810,
+          4811,
+          4812,
+          4814,
+          4816,
+          1559,
+          2152
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Self::with_preserve_order`": 4784,
+      "`RepartitionExec`": 1560,
+      "`RecordBatch`": 101,
+      "`Partitioning`": 1833,
+      "`LimitedBatchCoalescer`": 1126,
+      "crate::spill::spill_pool": 4785
+    },
+    "link_paths": {
+      "`Self::with_preserve_order`": "datafusion_physical_plan::repartition::RepartitionExec::with_preserve_order",
+      "`RepartitionExec`": "datafusion_physical_plan::repartition::RepartitionExec",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch",
+      "`Partitioning`": "datafusion_physical_expr::partitioning::Partitioning",
+      "`LimitedBatchCoalescer`": "datafusion_physical_plan::coalesce::LimitedBatchCoalescer",
+      "crate::spill::spill_pool": "datafusion_physical_plan::spill::spill_pool"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1560",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-a0cd55fc5d1d094b433c884b",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::with_preserve_order`": "../operations/datafusion_physical_plan.repartition.RepartitionExec.md#op-61bea2b7fb9c9d0204f85945",
+      "`RepartitionExec`": "../operations/datafusion_physical_plan.repartition.RepartitionExec.md#op-a0cd55fc5d1d094b433c884b",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "`Partitioning`": "../operations/datafusion_physical_expr.partitioning.Partitioning.md#op-b631e1d1890e8ea81608b4a4",
+      "`LimitedBatchCoalescer`": "../operations/datafusion_physical_plan.coalesce.LimitedBatchCoalescer.md#op-3f1aa30591797055625df08b",
+      "crate::spill::spill_pool": "../modules/datafusion_physical_plan.spill.spill_pool.md#op-5d81b960bea19bfc10b72be1"
+    }
+  },
+  {
+    "id": "d7433fb40c1c2195e43d0587",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::apply_expressions",
+    "name": "apply_expressions",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1553,
+        5
+      ],
+      "end": [
+        1565,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "FnMut",
+                            "id": 795,
+                            "args": {
+                              "parenthesized": {
+                                "inputs": [
+                                  {
+                                    "borrowed_ref": {
+                                      "lifetime": null,
+                                      "is_mutable": false,
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Arc",
+                                          "id": 94,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "dyn_trait": {
+                                                      "traits": [
+                                                        {
+                                                          "trait": {
+                                                            "path": "PhysicalExpr",
+                                                            "id": 629,
+                                                            "args": null
+                                                          },
+                                                          "generic_params": []
+                                                        }
+                                                      ],
+                                                      "lifetime": null
+                                                    }
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                "output": {
+                                  "resolved_path": {
+                                    "path": "Result",
+                                    "id": 99,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "TreeNodeRecursion",
+                                                "id": 796,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "TreeNodeRecursion",
+                          "id": 796,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "795": "core::ops::function::FnMut",
+      "94": "alloc::sync::Arc",
+      "629": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "99": "datafusion_common::error::Result",
+      "796": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2135",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-d7433fb40c1c2195e43d0587",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "eef06bbb19f02a42786447e3",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::benefits_from_input_partitioning",
+    "name": "benefits_from_input_partitioning",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn benefits_from_input_partitioning(&self) -> Vec<bool>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1613,
+        5
+      ],
+      "end": [
+        1615,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2139",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-eef06bbb19f02a42786447e3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b6c02472d70a774481102a43",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::cardinality_effect",
+    "name": "cardinality_effect",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn cardinality_effect(&self) -> CardinalityEffect",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1821,
+        5
+      ],
+      "end": [
+        1823,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "CardinalityEffect",
+              "id": 809,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "809": "datafusion_physical_plan::execution_plan::CardinalityEffect"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2145",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-b6c02472d70a774481102a43",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e7bb5244325e6c5cede8c2e4",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::child_stats_requests",
+    "name": "child_stats_requests",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn child_stats_requests(&self, _partition: Option<usize>) -> Vec<ChildStats>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1774,
+        5
+      ],
+      "end": [
+        1776,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_partition",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ChildStats",
+                          "id": 804,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "2": "alloc::vec::Vec",
+      "804": "datafusion_physical_plan::statistics::ChildStats"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2143",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-e7bb5244325e6c5cede8c2e4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ec3746bf316229e270418ed7",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::children",
+    "name": "children",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1549,
+        5
+      ],
+      "end": [
+        1551,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2134",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-ec3746bf316229e270418ed7",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ee26075c010b8bd34691859d",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::clone",
+    "name": "clone",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> RepartitionExec",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1408,
+        17
+      ],
+      "end": [
+        1408,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "RepartitionExec",
+              "id": 1560,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1560": "datafusion_physical_plan::repartition::RepartitionExec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1408,
+          17
+        ],
+        "end": [
+          1408,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4815",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-ee26075c010b8bd34691859d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1fe83b3d84b9137ca72f852e",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::execute",
+    "name": "execute",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1621,
+        5
+      ],
+      "end": [
+        1768,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "context",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "TaskContext",
+                              "id": 800,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SendableRecordBatchStream",
+                          "id": 103,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "800": "datafusion_execution::task::TaskContext",
+      "99": "datafusion_common::error::Result",
+      "103": "datafusion_execution::stream::SendableRecordBatchStream"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2141",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-1fe83b3d84b9137ca72f852e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0be9c4ceec65cfa0b8c3e28e",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1408,
+        10
+      ],
+      "end": [
+        1408,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1408,
+          10
+        ],
+        "end": [
+          1408,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4813",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-0be9c4ceec65cfa0b8c3e28e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b53ce704891f3cd1897b5014",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::fmt_as",
+    "name": "fmt_as",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1493,
+        5
+      ],
+      "end": [
+        1536,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "t",
+              {
+                "resolved_path": {
+                  "path": "DisplayFormatType",
+                  "id": 778,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "778": "datafusion_physical_plan::display::DisplayFormatType",
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "DisplayAs",
+        "id": "datafusion_physical_plan::display::DisplayAs",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::display::DisplayAs",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1492,
+          1
+        ],
+        "end": [
+          1537,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1558",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-b53ce704891f3cd1897b5014",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ec76d324388d789ecdc7dd84",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::gather_filters_for_pushdown",
+    "name": "gather_filters_for_pushdown",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn gather_filters_for_pushdown(&self, _phase: FilterPushdownPhase, parent_filters: Vec<Arc<dyn PhysicalExpr>>, _config: &ConfigOptions) -> Result<FilterDescription>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1889,
+        5
+      ],
+      "end": [
+        1896,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_phase",
+              {
+                "resolved_path": {
+                  "path": "FilterPushdownPhase",
+                  "id": 811,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "parent_filters",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "PhysicalExpr",
+                                                "id": 629,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ConfigOptions",
+                      "id": 812,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "FilterDescription",
+                          "id": 813,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "811": "datafusion_physical_plan::filter_pushdown::FilterPushdownPhase",
+      "2": "alloc::vec::Vec",
+      "94": "alloc::sync::Arc",
+      "629": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "812": "datafusion_common::config::ConfigOptions",
+      "99": "datafusion_common::error::Result",
+      "813": "datafusion_physical_plan::filter_pushdown::FilterDescription"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2147",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-ec76d324388d789ecdc7dd84",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2fd9114d3ec184ca0186cd4a",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::handle_child_pushdown_result",
+    "name": "handle_child_pushdown_result",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn handle_child_pushdown_result(&self, _phase: FilterPushdownPhase, child_pushdown_result: ChildPushdownResult, _config: &ConfigOptions) -> Result<FilterPushdownPropagation<Arc<dyn ExecutionPlan>>>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1898,
+        5
+      ],
+      "end": [
+        1905,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_phase",
+              {
+                "resolved_path": {
+                  "path": "FilterPushdownPhase",
+                  "id": 811,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "child_pushdown_result",
+              {
+                "resolved_path": {
+                  "path": "ChildPushdownResult",
+                  "id": 815,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "_config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ConfigOptions",
+                      "id": 812,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "FilterPushdownPropagation",
+                          "id": 816,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 94,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "ExecutionPlan",
+                                                        "id": 126,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "811": "datafusion_physical_plan::filter_pushdown::FilterPushdownPhase",
+      "815": "datafusion_physical_plan::filter_pushdown::ChildPushdownResult",
+      "812": "datafusion_common::config::ConfigOptions",
+      "99": "datafusion_common::error::Result",
+      "816": "datafusion_physical_plan::filter_pushdown::FilterPushdownPropagation",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2148",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-2fd9114d3ec184ca0186cd4a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "def2abb8ade4b8e079bcca48",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::input",
+    "name": "input",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn input(&self) -> &Arc<dyn ExecutionPlan>",
+    "docs": "Input execution plan",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1471,
+        5
+      ],
+      "end": [
+        1473,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1469,
+          1
+        ],
+        "end": [
+          1490,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4786",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-def2abb8ade4b8e079bcca48",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a247e792c5f67c41fa81db08",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::maintains_input_order",
+    "name": "maintains_input_order",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn maintains_input_order(&self) -> Vec<bool>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1617,
+        5
+      ],
+      "end": [
+        1619,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2140",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-a247e792c5f67c41fa81db08",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ae8fa2976bee39e12097a94d",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::metrics",
+    "name": "metrics",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn metrics(&self) -> Option<MetricsSet>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1770,
+        5
+      ],
+      "end": [
+        1772,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "MetricsSet",
+                          "id": 802,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "802": "datafusion_physical_expr_common::metrics::MetricsSet"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2142",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-ae8fa2976bee39e12097a94d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "981631057f9124902410b04e",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::name",
+    "name": "name",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &str",
+    "docs": "Get name used to display this Exec",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1487,
+        5
+      ],
+      "end": [
+        1489,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1469,
+          1
+        ],
+        "end": [
+          1490,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4789",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-981631057f9124902410b04e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ef20abf7d177ae12c9be473c",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::name",
+    "name": "name",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &'static str",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1540,
+        5
+      ],
+      "end": [
+        1542,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": "'static",
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2132",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-ef20abf7d177ae12c9be473c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "dabe19fd3aaf6b6525cf5623",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::partitioning",
+    "name": "partitioning",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn partitioning(&self) -> &Partitioning",
+    "docs": "Partitioning scheme to use",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1476,
+        5
+      ],
+      "end": [
+        1478,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Partitioning",
+                  "id": 1833,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1833": "datafusion_physical_expr::partitioning::Partitioning"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1469,
+          1
+        ],
+        "end": [
+          1490,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4787",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-dabe19fd3aaf6b6525cf5623",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b666e64a3515b59980d02180",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::preserve_order",
+    "name": "preserve_order",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn preserve_order(&self) -> bool",
+    "docs": "Get preserve_order flag of the RepartitionExec\n`true` means `SortPreservingRepartitionExec`, `false` means `RepartitionExec`",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1482,
+        5
+      ],
+      "end": [
+        1484,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1469,
+          1
+        ],
+        "end": [
+          1490,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4788",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-b666e64a3515b59980d02180",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d17a2f4c2c75d1e1f93e7e7f",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::properties",
+    "name": "properties",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+    "docs": "Return a reference to Any that can be used for downcasting",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1545,
+        5
+      ],
+      "end": [
+        1547,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "PlanProperties",
+                              "id": 730,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "730": "datafusion_physical_plan::execution_plan::PlanProperties"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2133",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-d17a2f4c2c75d1e1f93e7e7f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bf5661434c837c3624fccebd",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::repartitioned",
+    "name": "repartitioned",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn repartitioned(&self, target_partitions: usize, _config: &ConfigOptions) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1928,
+        5
+      ],
+      "end": [
+        1951,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "target_partitions",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "_config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ConfigOptions",
+                      "id": 812,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 281,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 94,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "ExecutionPlan",
+                                                        "id": 126,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "812": "datafusion_common::config::ConfigOptions",
+      "99": "datafusion_common::error::Result",
+      "281": "core::option::Option",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2150",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-bf5661434c837c3624fccebd",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d4be577c91c18472ea23206c",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::replace_children",
+    "name": "replace_children",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, options: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1567,
+        5
+      ],
+      "end": [
+        1591,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "ReplaceChildrenOptions",
+                  "id": 792,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "792": "datafusion_physical_plan::execution_plan::ReplaceChildrenOptions",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2136",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-d4be577c91c18472ea23206c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "36dcbe911c548ddff5123337",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::statistics_from_inputs",
+    "name": "statistics_from_inputs",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn statistics_from_inputs(&self, input_stats: &[Arc<Statistics>], args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1778,
+        5
+      ],
+      "end": [
+        1819,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "input_stats",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Arc",
+                        "id": 94,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Statistics",
+                                    "id": 806,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "StatisticsArgs",
+                      "id": 807,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Statistics",
+                                      "id": 806,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "806": "datafusion_common::stats::Statistics",
+      "807": "datafusion_physical_plan::statistics::StatisticsArgs",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2144",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-36dcbe911c548ddff5123337",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6976dbd2ef3f28d890e51625",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::try_from_proto",
+    "name": "try_from_proto",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_from_proto(node: &protobuf::PhysicalPlanNode, ctx: &proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "Reconstruct a [`RepartitionExec`] from its protobuf representation.",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1979,
+        5
+      ],
+      "end": [
+        2017,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "node",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "protobuf::PhysicalPlanNode",
+                      "id": 752,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::proto::ExecutionPlanDecodeCtx",
+                      "id": 753,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "752": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode",
+      "753": "datafusion_physical_plan::proto::ExecutionPlanDecodeCtx",
+      "99": "datafusion_common::error::Result",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1977,
+          1
+        ],
+        "end": [
+          2018,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RepartitionExec`": 1560
+    },
+    "link_paths": {
+      "`RepartitionExec`": "datafusion_physical_plan::repartition::RepartitionExec"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4791",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-6976dbd2ef3f28d890e51625",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RepartitionExec`": "../operations/datafusion_physical_plan.repartition.RepartitionExec.md#op-a0cd55fc5d1d094b433c884b"
+    }
+  },
+  {
+    "id": "a74923e48a954566659b370f",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::try_new",
+    "name": "try_new",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_new(input: Arc<dyn ExecutionPlan>, partitioning: Partitioning) -> Result<Self>",
+    "docs": "Create a new RepartitionExec, that produces output `partitioning`, and\ndoes not preserve the order of the input (see [`Self::with_preserve_order`]\nfor more details)",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        2024,
+        5
+      ],
+      "end": [
+        2037,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "input",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "partitioning",
+              {
+                "resolved_path": {
+                  "path": "Partitioning",
+                  "id": 1833,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "1833": "datafusion_physical_expr::partitioning::Partitioning",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          2020,
+          1
+        ],
+        "end": [
+          2247,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::with_preserve_order`": 4784
+    },
+    "link_paths": {
+      "`Self::with_preserve_order`": "datafusion_physical_plan::repartition::RepartitionExec::with_preserve_order"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4793",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-a74923e48a954566659b370f",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::with_preserve_order`": "../operations/datafusion_physical_plan.repartition.RepartitionExec.md#op-61bea2b7fb9c9d0204f85945"
+    }
+  },
+  {
+    "id": "aef63aa26fac6e7d532ac82d",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::try_pushdown_sort",
+    "name": "try_pushdown_sort",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_pushdown_sort(&self, order: &[PhysicalSortExpr]) -> Result<SortOrderPushdownResult<Arc<dyn ExecutionPlan>>>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1907,
+        5
+      ],
+      "end": [
+        1926,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "order",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "PhysicalSortExpr",
+                        "id": 92,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SortOrderPushdownResult",
+                          "id": 1067,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 94,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "ExecutionPlan",
+                                                        "id": 126,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "92": "datafusion_physical_expr_common::sort_expr::PhysicalSortExpr",
+      "99": "datafusion_common::error::Result",
+      "1067": "datafusion_physical_plan::sort_pushdown::SortOrderPushdownResult",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2149",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-aef63aa26fac6e7d532ac82d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1a9a6d5a2fdf5a635126a57f",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::try_swapping_with_projection",
+    "name": "try_swapping_with_projection",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_swapping_with_projection(&self, projection: &ProjectionExec) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1825,
+        5
+      ],
+      "end": [
+        1887,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "projection",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ProjectionExec",
+                      "id": 1063,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 281,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 94,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "ExecutionPlan",
+                                                        "id": 126,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1063": "datafusion_physical_plan::projection::ProjectionExec",
+      "99": "datafusion_common::error::Result",
+      "281": "core::option::Option",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2146",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-1a9a6d5a2fdf5a635126a57f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "115670c35235800fe403fb1a",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::try_to_proto",
+    "name": "try_to_proto",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<protobuf::PhysicalPlanNode>>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1954,
+        5
+      ],
+      "end": [
+        1973,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"proto\"), span: src/repartition/mod.rs:1953:11: 1953:28 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::proto::ExecutionPlanEncodeCtx",
+                      "id": 818,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 281,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "protobuf::PhysicalPlanNode",
+                                      "id": 752,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "818": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx",
+      "99": "datafusion_common::error::Result",
+      "281": "core::option::Option",
+      "752": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2151",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-115670c35235800fe403fb1a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4ddae2235c852fe456ae09ba",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::with_new_children",
+    "name": "with_new_children",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1593,
+        5
+      ],
+      "end": [
+        1601,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2137",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-4ddae2235c852fe456ae09ba",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b4b16faac26517006b867c5a",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::with_new_children_and_same_properties",
+    "name": "with_new_children_and_same_properties",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        1603,
+        5
+      ],
+      "end": [
+        1611,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          1539,
+          1
+        ],
+        "end": [
+          1974,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2138",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-b4b16faac26517006b867c5a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "61bea2b7fb9c9d0204f85945",
+    "path": "datafusion_physical_plan::repartition::RepartitionExec::with_preserve_order",
+    "name": "with_preserve_order",
+    "owner": "datafusion_physical_plan::repartition::RepartitionExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_preserve_order(self) -> Self",
+    "docs": "Specify if this repartitioning operation should preserve the order of\nrows from its input when producing output. Preserving order is more\nexpensive at runtime, so should only be set if the output of this\noperator can take advantage of it.\n\nIf the input is not ordered, or has only one partition, this is a no op,\nand the node remains a `RepartitionExec`.",
+    "span": {
+      "filename": "src/repartition/mod.rs",
+      "begin": [
+        2088,
+        5
+      ],
+      "end": [
+        2098,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RepartitionExec",
+          "id": "datafusion_physical_plan::repartition::RepartitionExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/repartition/mod.rs",
+        "begin": [
+          2020,
+          1
+        ],
+        "end": [
+          2247,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4784",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.repartition.RepartitionExec.md",
+    "record_file": "operations/datafusion_physical_plan.repartition.RepartitionExec.json",
+    "anchor": "op-61bea2b7fb9c9d0204f85945",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

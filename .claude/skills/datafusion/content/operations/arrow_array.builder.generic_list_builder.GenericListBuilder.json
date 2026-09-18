@@ -1,0 +1,5598 @@
+[
+  {
+    "id": "97b03adbae152fb71b763a5d",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "name": "GenericListBuilder",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct GenericListBuilder<OffsetSize: OffsetSizeTrait, T: ArrayBuilder>",
+    "docs": "Builder for [`GenericListArray`]\n\nUse [`ListBuilder`] to build [`ListArray`]s and [`LargeListBuilder`] to build [`LargeListArray`]s.\n\n# Example\n\nHere is code that constructs a ListArray with the contents:\n`[[A,B,C], [], NULL, [D], [NULL, F]]`\n\n```\n# use std::sync::Arc;\n# use arrow_array::{builder::ListBuilder, builder::StringBuilder, ArrayRef, StringArray, Array};\n#\nlet values_builder = StringBuilder::new();\nlet mut builder = ListBuilder::new(values_builder);\n\n// [A, B, C]\nbuilder.values().append_value(\"A\");\nbuilder.values().append_value(\"B\");\nbuilder.values().append_value(\"C\");\nbuilder.append(true);\n\n// [ ] (empty list)\nbuilder.append(true);\n\n// Null\nbuilder.append(false);\n\n// [D]\nbuilder.values().append_value(\"D\");\nbuilder.append(true);\n\n// [NULL, F]\nbuilder.values().append_null();\nbuilder.values().append_value(\"F\");\nbuilder.append(true);\n\n// Build the array\nlet array = builder.finish();\n\n// Values is a string array\n// \"A\", \"B\" \"C\", \"?\", \"D\", NULL, \"F\"\nassert_eq!(\n  array.values().as_ref(),\n  &StringArray::from(vec![\n    Some(\"A\"), Some(\"B\"), Some(\"C\"),\n    Some(\"D\"), None, Some(\"F\")\n  ])\n);\n\n// Offsets are indexes into the values array\nassert_eq!(\n  array.value_offsets(),\n  &[0, 3, 3, 3, 4, 6]\n);\n```\n\n[`ListBuilder`]: crate::builder::ListBuilder\n[`ListArray`]: crate::array::ListArray\n[`LargeListBuilder`]: crate::builder::LargeListBuilder\n[`LargeListArray`]: crate::array::LargeListArray",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        88,
+        1
+      ],
+      "end": [
+        93,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "OffsetSize",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "OffsetSizeTrait",
+                          "id": 181,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ArrayBuilder",
+                          "id": 663,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          2614,
+          2626,
+          2627,
+          2628,
+          2629,
+          2630,
+          2631,
+          2632,
+          2633,
+          2634,
+          2635,
+          2636,
+          2637,
+          2638,
+          2639,
+          2640,
+          2641,
+          2643,
+          2645,
+          2653,
+          2655
+        ]
+      }
+    },
+    "type_references": {
+      "181": "arrow_array::array::list_array::OffsetSizeTrait",
+      "663": "arrow_array::builder::ArrayBuilder"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::array::LargeListArray": 626,
+      "crate::builder::LargeListBuilder": 722,
+      "`GenericListArray`": 615,
+      "crate::array::ListArray": 625,
+      "crate::builder::ListBuilder": 721
+    },
+    "link_paths": {
+      "crate::array::LargeListArray": "arrow_array::array::list_array::LargeListArray",
+      "crate::builder::LargeListBuilder": "arrow_array::builder::LargeListBuilder",
+      "`GenericListArray`": "arrow_array::array::list_array::GenericListArray",
+      "crate::array::ListArray": "arrow_array::array::list_array::ListArray",
+      "crate::builder::ListBuilder": "arrow_array::builder::ListBuilder"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "644",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-97b03adbae152fb71b763a5d",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::array::LargeListArray": "../operations/arrow_array.array.list_array.LargeListArray.md#op-e34a694617d66e91221407db",
+      "crate::builder::LargeListBuilder": "../operations/arrow_array.builder.LargeListBuilder.md#op-522c9afea40c181a380a83f7",
+      "`GenericListArray`": "../operations/arrow_array.array.list_array.GenericListArray.md#op-f5cb16d85a7337f2dafa403b",
+      "crate::array::ListArray": "../operations/arrow_array.array.list_array.ListArray.md#op-fbfbbaae30c81192ec1e4456",
+      "crate::builder::ListBuilder": "../operations/arrow_array.builder.ListBuilder.md#op-cde9abc0ccf9b02f84620bf9"
+    }
+  },
+  {
+    "id": "3f07bc2b3e088a50b27a58e0",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::append",
+    "name": "append",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append(&mut self, is_valid: bool)",
+    "docs": "Finish the current variable-length list array slot\n\n# Panics\n\nPanics if the length of [`Self::values`] exceeds `OffsetSize::MAX`",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        198,
+        5
+      ],
+      "end": [
+        201,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "is_valid",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          372,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::values`": 2615
+    },
+    "link_paths": {
+      "`Self::values`": "arrow_array::builder::generic_list_builder::GenericListBuilder::values"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2617",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-3f07bc2b3e088a50b27a58e0",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::values`": "../operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md#op-04132d2c706be111ef80cd0a"
+    }
+  },
+  {
+    "id": "27f41266b5a0b086ad09abc2",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::append_null",
+    "name": "append_null",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_null(&mut self)",
+    "docs": "Append a null to this [`GenericListBuilder`]\n\nSee [`Self::append_value`] for an example use.",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        272,
+        5
+      ],
+      "end": [
+        275,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          372,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::append_value`": 2618,
+      "`GenericListBuilder`": 644
+    },
+    "link_paths": {
+      "`Self::append_value`": "arrow_array::builder::generic_list_builder::GenericListBuilder::append_value",
+      "`GenericListBuilder`": "arrow_array::builder::generic_list_builder::GenericListBuilder"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2619",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-27f41266b5a0b086ad09abc2",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::append_value`": "../operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md#op-50f9c4572d2b52ec947f8a76",
+      "`GenericListBuilder`": "../operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md#op-97b03adbae152fb71b763a5d"
+    }
+  },
+  {
+    "id": "cadbb9905e32804954cc3e3c",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::append_nulls",
+    "name": "append_nulls",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_nulls(&mut self, n: usize)",
+    "docs": "Appends `n` `null`s into the builder.",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        279,
+        5
+      ],
+      "end": [
+        284,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          372,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2620",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-cadbb9905e32804954cc3e3c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0b72df140c7343d7f56f1903",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::append_option",
+    "name": "append_option",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_option<I, V>(&mut self, i: Option<I>) where T: Extend<Option<V>>, I: IntoIterator<Item = Option<V>>",
+    "docs": "Appends an optional value into this [`GenericListBuilder`]\n\nIf `Some` calls [`Self::append_value`] otherwise calls [`Self::append_null`]",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        290,
+        5
+      ],
+      "end": [
+        299,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "i",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "I"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "I",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "V",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "T"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Extend",
+                        "id": 664,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Option",
+                                    "id": 12,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "generic": "V"
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "I"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "IntoIterator",
+                        "id": 157,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [],
+                            "constraints": [
+                              {
+                                "name": "Item",
+                                "args": null,
+                                "binding": {
+                                  "equality": {
+                                    "type": {
+                                      "resolved_path": {
+                                        "path": "Option",
+                                        "id": 12,
+                                        "args": {
+                                          "angle_bracketed": {
+                                            "args": [
+                                              {
+                                                "type": {
+                                                  "generic": "V"
+                                                }
+                                              }
+                                            ],
+                                            "constraints": []
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "664": "core::iter::traits::collect::Extend",
+      "157": "core::iter::traits::collect::IntoIterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          372,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::append_value`": 2618,
+      "`Self::append_null`": 2619,
+      "`GenericListBuilder`": 644
+    },
+    "link_paths": {
+      "`Self::append_value`": "arrow_array::builder::generic_list_builder::GenericListBuilder::append_value",
+      "`Self::append_null`": "arrow_array::builder::generic_list_builder::GenericListBuilder::append_null",
+      "`GenericListBuilder`": "arrow_array::builder::generic_list_builder::GenericListBuilder"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2621",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-0b72df140c7343d7f56f1903",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::append_value`": "../operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md#op-50f9c4572d2b52ec947f8a76",
+      "`Self::append_null`": "../operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md#op-27f41266b5a0b086ad09abc2",
+      "`GenericListBuilder`": "../operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md#op-97b03adbae152fb71b763a5d"
+    }
+  },
+  {
+    "id": "50f9c4572d2b52ec947f8a76",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::append_value",
+    "name": "append_value",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_value<I, V>(&mut self, i: I) where T: Extend<Option<V>>, I: IntoIterator<Item = Option<V>>",
+    "docs": "Append a value to this [`GenericListBuilder`]\n\n```\n# use arrow_array::builder::{Int32Builder, ListBuilder};\n# use arrow_array::cast::AsArray;\n# use arrow_array::{Array, Int32Array};\n# use arrow_array::types::Int32Type;\nlet mut builder = ListBuilder::new(Int32Builder::new());\n\nbuilder.append_value([Some(1), Some(2), Some(3)]);\nbuilder.append_value([]);\nbuilder.append_value([None]);\n\nlet array = builder.finish();\nassert_eq!(array.len(), 3);\n\nassert_eq!(array.value_offsets(), &[0, 3, 3, 4]);\nlet values = array.values().as_primitive::<Int32Type>();\nassert_eq!(values, &Int32Array::from(vec![Some(1), Some(2), Some(3), None]));\n```\n\nThis is an alternative API to appending directly to [`Self::values`] and\ndelimiting the result with [`Self::append`]\n\n```\n# use arrow_array::builder::{Int32Builder, ListBuilder};\n# use arrow_array::cast::AsArray;\n# use arrow_array::{Array, Int32Array};\n# use arrow_array::types::Int32Type;\nlet mut builder = ListBuilder::new(Int32Builder::new());\n\nbuilder.values().append_value(1);\nbuilder.values().append_value(2);\nbuilder.values().append_value(3);\nbuilder.append(true);\nbuilder.append(true);\nbuilder.values().append_null();\nbuilder.append(true);\n\nlet array = builder.finish();\nassert_eq!(array.len(), 3);\n\nassert_eq!(array.value_offsets(), &[0, 3, 3, 4]);\nlet values = array.values().as_primitive::<Int32Type>();\nassert_eq!(values, &Int32Array::from(vec![Some(1), Some(2), Some(3), None]));\n```",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        260,
+        5
+      ],
+      "end": [
+        266,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "i",
+              {
+                "generic": "I"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "I",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "V",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "T"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Extend",
+                        "id": 664,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Option",
+                                    "id": 12,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "generic": "V"
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "I"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "IntoIterator",
+                        "id": 157,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [],
+                            "constraints": [
+                              {
+                                "name": "Item",
+                                "args": null,
+                                "binding": {
+                                  "equality": {
+                                    "type": {
+                                      "resolved_path": {
+                                        "path": "Option",
+                                        "id": 12,
+                                        "args": {
+                                          "angle_bracketed": {
+                                            "args": [
+                                              {
+                                                "type": {
+                                                  "generic": "V"
+                                                }
+                                              }
+                                            ],
+                                            "constraints": []
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "664": "core::iter::traits::collect::Extend",
+      "12": "core::option::Option",
+      "157": "core::iter::traits::collect::IntoIterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          372,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::append`": 2617,
+      "`GenericListBuilder`": 644,
+      "`Self::values`": 2615
+    },
+    "link_paths": {
+      "`Self::append`": "arrow_array::builder::generic_list_builder::GenericListBuilder::append",
+      "`GenericListBuilder`": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+      "`Self::values`": "arrow_array::builder::generic_list_builder::GenericListBuilder::values"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2618",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-50f9c4572d2b52ec947f8a76",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::append`": "../operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md#op-3f07bc2b3e088a50b27a58e0",
+      "`GenericListBuilder`": "../operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md#op-97b03adbae152fb71b763a5d",
+      "`Self::values`": "../operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md#op-04132d2c706be111ef80cd0a"
+    }
+  },
+  {
+    "id": "7e00a5400d8285ae0de1badb",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::as_any",
+    "name": "as_any",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any(&self) -> &dyn Any",
+    "docs": "Returns the builder as a non-mutable `Any` reference.",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        141,
+        5
+      ],
+      "end": [
+        143,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          173,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2646",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-7e00a5400d8285ae0de1badb",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4d7f0fc2b2995a08a9780cd8",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::as_any_mut",
+    "name": "as_any_mut",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any_mut(&mut self) -> &mut dyn Any",
+    "docs": "Returns the builder as a mutable `Any` reference.",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        146,
+        5
+      ],
+      "end": [
+        148,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          173,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2647",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-4d7f0fc2b2995a08a9780cd8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e6b909a7d62f1d19d09912b0",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::default",
+    "name": "default",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn default() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        96,
+        5
+      ],
+      "end": [
+        98,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "O"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [
+          {
+            "name": "O",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Default",
+                        "id": "core::default::Default",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          95,
+          1
+        ],
+        "end": [
+          99,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2644",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-e6b909a7d62f1d19d09912b0",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a10a9ef18b310cd346d52a84",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::extend",
+    "name": "extend",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn extend<T: IntoIterator<Item = Option<V>>>(&mut self, iter: T)",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        381,
+        5
+      ],
+      "end": [
+        391,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "iter",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "IntoIterator",
+                          "id": 157,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Option",
+                                          "id": 12,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "generic": "V"
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "157": "core::iter::traits::collect::IntoIterator",
+      "12": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "O"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "B"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Extend",
+        "id": "core::iter::traits::collect::Extend",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "Option",
+                    "id": "core::option::Option",
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "generic": "V"
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::iter::traits::collect::Extend",
+      "generics": {
+        "params": [
+          {
+            "name": "O",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "B",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "E",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "O"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "OffsetSizeTrait",
+                      "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "B"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Extend",
+                      "id": "core::iter::traits::collect::Extend",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "E"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "IntoIterator",
+                      "id": "core::iter::traits::collect::IntoIterator",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [],
+                          "constraints": [
+                            {
+                              "name": "Item",
+                              "args": null,
+                              "binding": {
+                                "equality": {
+                                  "type": {
+                                    "generic": "E"
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          374,
+          1
+        ],
+        "end": [
+          392,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2654",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-a10a9ef18b310cd346d52a84",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "27103857ca2db3b709e7a9f6",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> GenericListArray<OffsetSize>",
+    "docs": "Builds the [`GenericListArray`] and reset this builder.",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        302,
+        5
+      ],
+      "end": [
+        317,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "GenericListArray",
+              "id": 615,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "OffsetSize"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "615": "arrow_array::array::list_array::GenericListArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          372,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`GenericListArray`": 615
+    },
+    "link_paths": {
+      "`GenericListArray`": "arrow_array::array::list_array::GenericListArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2611",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-27103857ca2db3b709e7a9f6",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`GenericListArray`": "../operations/arrow_array.array.list_array.GenericListArray.md#op-f5cb16d85a7337f2dafa403b"
+    }
+  },
+  {
+    "id": "7b8cde64806b993c40d96beb",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> ArrayRef",
+    "docs": "Builds the array and reset this builder.",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        161,
+        5
+      ],
+      "end": [
+        163,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          173,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2650",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-7b8cde64806b993c40d96beb",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5c26ed72086ec331df829c45",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> GenericListArray<OffsetSize>",
+    "docs": "Builds the [`GenericListArray`] without resetting the builder.",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        320,
+        5
+      ],
+      "end": [
+        334,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "GenericListArray",
+              "id": 615,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "OffsetSize"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "615": "arrow_array::array::list_array::GenericListArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          372,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`GenericListArray`": 615
+    },
+    "link_paths": {
+      "`GenericListArray`": "arrow_array::array::list_array::GenericListArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2612",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-5c26ed72086ec331df829c45",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`GenericListArray`": "../operations/arrow_array.array.list_array.GenericListArray.md#op-f5cb16d85a7337f2dafa403b"
+    }
+  },
+  {
+    "id": "85e4e7e7c6602105aa1f0793",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> ArrayRef",
+    "docs": "Builds the array without resetting the builder.",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        166,
+        5
+      ],
+      "end": [
+        168,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          173,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2651",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-85e4e7e7c6602105aa1f0793",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "be67eac7bfbeb795b0e794a0",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::finish_preserve_values",
+    "name": "finish_preserve_values",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_preserve_values(&mut self) -> ArrayRef",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        170,
+        5
+      ],
+      "end": [
+        172,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          173,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2652",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-be67eac7bfbeb795b0e794a0",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4d6812a9ffe56ddb361f5ac5",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::fmt",
+    "name": "fmt",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        87,
+        10
+      ],
+      "end": [
+        87,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 117,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 118,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "117": "core::fmt::Formatter",
+      "118": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "$crate::fmt::Debug",
+                        "id": "core::fmt::Debug",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "$crate::fmt::Debug",
+                        "id": "core::fmt::Debug",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          87,
+          10
+        ],
+        "end": [
+          87,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2642",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-4d6812a9ffe56ddb361f5ac5",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4afc949dafc5fa9048ae8051",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::into_box_any",
+    "name": "into_box_any",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_box_any(Box<self>) -> Box<dyn Any>",
+    "docs": "Returns the boxed builder as a box of `Any`.",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        151,
+        5
+      ],
+      "end": [
+        153,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Box",
+                  "id": 1788,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Box",
+              "id": 1788,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "Any",
+                                "id": 106,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1788": "alloc::boxed::Box",
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          173,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2648",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-4afc949dafc5fa9048ae8051",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "395d2ca4eab9150b0eebfb55",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::len",
+    "name": "len",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Returns the number of array slots in the builder",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        156,
+        5
+      ],
+      "end": [
+        158,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          173,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2649",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-395d2ca4eab9150b0eebfb55",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6c334d01a991baf1bfb9e54f",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::new",
+    "name": "new",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(values_builder: T) -> Self",
+    "docs": "Creates a new [`GenericListBuilder`] from a given values array builder",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        103,
+        5
+      ],
+      "end": [
+        106,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "values_builder",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          101,
+          1
+        ],
+        "end": [
+          133,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`GenericListBuilder`": 644
+    },
+    "link_paths": {
+      "`GenericListBuilder`": "arrow_array::builder::generic_list_builder::GenericListBuilder"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2609",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-6c334d01a991baf1bfb9e54f",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`GenericListBuilder`": "../operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md#op-97b03adbae152fb71b763a5d"
+    }
+  },
+  {
+    "id": "677f3673728227b097a2015d",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::offsets_capacity",
+    "name": "offsets_capacity",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn offsets_capacity(&self) -> usize",
+    "docs": "Returns the current offsets buffer capacity, in offsets.",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        359,
+        5
+      ],
+      "end": [
+        361,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          372,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2623",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-677f3673728227b097a2015d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4beaae6cf66e960255174a44",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::offsets_slice",
+    "name": "offsets_slice",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn offsets_slice(&self) -> &[OffsetSize]",
+    "docs": "Returns the current offsets buffer as a slice",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        354,
+        5
+      ],
+      "end": [
+        356,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "generic": "OffsetSize"
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          372,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2622",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-4beaae6cf66e960255174a44",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8fbe9b54fdf7802e06a370ed",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::validity_capacity",
+    "name": "validity_capacity",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn validity_capacity(&self) -> usize",
+    "docs": "Returns the current null buffer allocated capacity, in bytes.",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        369,
+        5
+      ],
+      "end": [
+        371,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          372,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2625",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-8fbe9b54fdf7802e06a370ed",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0b7560b969682c658177a6f6",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::validity_slice",
+    "name": "validity_slice",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn validity_slice(&self) -> Option<&[u8]>",
+    "docs": "Returns the current null buffer as a slice",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        364,
+        5
+      ],
+      "end": [
+        366,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "slice": {
+                              "primitive": "u8"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          372,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2624",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-0b7560b969682c658177a6f6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "04132d2c706be111ef80cd0a",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::values",
+    "name": "values",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn values(&mut self) -> &mut T",
+    "docs": "Returns the child array builder as a mutable reference.\n\nThis mutable reference can be used to append values into the child array builder,\nbut you must call [`append`](#method.append) to delimit each distinct list value.",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        183,
+        5
+      ],
+      "end": [
+        185,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "T"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          372,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2615",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-04132d2c706be111ef80cd0a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6db0ca2a0494576445440847",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::values_ref",
+    "name": "values_ref",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn values_ref(&self) -> &T",
+    "docs": "Returns the child array builder as an immutable reference",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        188,
+        5
+      ],
+      "end": [
+        190,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "generic": "T"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "T"
+              },
+              "bounds": [
+                {
+                  "outlives": "'static"
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrayBuilder",
+                      "id": "arrow_array::builder::ArrayBuilder",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          372,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2616",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-6db0ca2a0494576445440847",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "db4a2d4b4330f281d2aeb1ec",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::with_capacity",
+    "name": "with_capacity",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_capacity(values_builder: T, capacity: usize) -> Self",
+    "docs": "Creates a new [`GenericListBuilder`] from a given values array builder\n`capacity` is the number of items to pre-allocate space for in this builder",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        110,
+        5
+      ],
+      "end": [
+        119,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "values_builder",
+              {
+                "generic": "T"
+              }
+            ],
+            [
+              "capacity",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          101,
+          1
+        ],
+        "end": [
+          133,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`GenericListBuilder`": 644
+    },
+    "link_paths": {
+      "`GenericListBuilder`": "arrow_array::builder::generic_list_builder::GenericListBuilder"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2610",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-db4a2d4b4330f281d2aeb1ec",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`GenericListBuilder`": "../operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md#op-97b03adbae152fb71b763a5d"
+    }
+  },
+  {
+    "id": "93efbbfc29e1f9d6d4ea6118",
+    "path": "arrow_array::builder::generic_list_builder::GenericListBuilder::with_field",
+    "name": "with_field",
+    "owner": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_field(self, field: impl Into<FieldRef>) -> Self",
+    "docs": "Override the field passed to [`GenericListArray::new`]\n\nBy default a nullable field is created with the name `item`\n\nNote: [`Self::finish`] and [`Self::finish_cloned`] will panic if the\nfield's data type does not match that of `T`",
+    "span": {
+      "filename": "src/builder/generic_list_builder.rs",
+      "begin": [
+        127,
+        5
+      ],
+      "end": [
+        132,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "field",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 20,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "FieldRef",
+                                    "id": 545,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Into<FieldRef>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 20,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "FieldRef",
+                                      "id": 545,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "core::convert::Into",
+      "545": "arrow_schema::field::FieldRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GenericListBuilder",
+          "id": "arrow_array::builder::generic_list_builder::GenericListBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "OffsetSize"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "OffsetSize",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/generic_list_builder.rs",
+        "begin": [
+          101,
+          1
+        ],
+        "end": [
+          133,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`GenericListArray::new`": 649,
+      "`Self::finish_cloned`": 2612,
+      "`Self::finish`": 2611
+    },
+    "link_paths": {
+      "`GenericListArray::new`": "arrow_array::array::list_array::GenericListArray::new",
+      "`Self::finish_cloned`": "arrow_array::builder::generic_list_builder::GenericListBuilder::finish_cloned",
+      "`Self::finish`": "arrow_array::builder::generic_list_builder::GenericListBuilder::finish"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2613",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_list_builder.GenericListBuilder.json",
+    "anchor": "op-93efbbfc29e1f9d6d4ea6118",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`GenericListArray::new`": "../operations/arrow_array.array.list_array.GenericListArray.md#op-b9bece8511b73316b0612d22",
+      "`Self::finish_cloned`": "../operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md#op-5c26ed72086ec331df829c45",
+      "`Self::finish`": "../operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md#op-27103857ca2db3b709e7a9f6"
+    }
+  }
+]

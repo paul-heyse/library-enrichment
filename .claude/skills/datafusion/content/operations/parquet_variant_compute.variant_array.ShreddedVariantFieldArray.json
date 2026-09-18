@@ -1,0 +1,59 @@
+[
+  {
+    "id": "87433f5e5843ee17c6ce4390",
+    "path": "parquet_variant_compute::variant_array::ShreddedVariantFieldArray",
+    "name": "ShreddedVariantFieldArray",
+    "owner": null,
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct ShreddedVariantFieldArray",
+    "docs": "One shredded field of a partially or perfectly shredded variant. For example, suppose the\nshredding schema for variant `v` treats it as an object with a single field `a`, where `a` is\nitself a struct with the single field `b` of type INT. Then the physical layout of the column\nis:\n\n```text\nv: VARIANT {\n    metadata: BINARY,\n    value: BINARY,\n    typed_value: STRUCT {\n        a: SHREDDED_VARIANT_FIELD {\n            value: BINARY,\n            typed_value: STRUCT {\n                a: SHREDDED_VARIANT_FIELD {\n                    value: BINARY,\n                    typed_value: INT,\n                },\n            },\n        },\n    },\n}\n```\n\nIn the above, each row of `v.value` is either a variant value (shredding failed, `v` was not an\nobject at all) or a variant object (partial shredding, `v` was an object but included unexpected\nfields other than `a`), or is NULL (perfect shredding, `v` was an object containing only the\nsingle expected field `a`).\n\nA similar story unfolds for each `v.typed_value.a.value` -- a variant value if shredding failed\n(`v:a` was not an object at all), or a variant object (`v:a` was an object with unexpected\nadditional fields), or NULL (`v:a` was an object containing only the single expected field `b`).\n\nFinally, `v.typed_value.a.typed_value.b.value` is either NULL (`v:a.b` was an integer) or else a\nvariant value (which could be `Variant::Null`).",
+    "span": {
+      "filename": "src/variant_array.rs",
+      "begin": [
+        667,
+        1
+      ],
+      "end": [
+        671,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": []
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "202",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.variant_array.ShreddedVariantFieldArray.md",
+    "record_file": "operations/parquet_variant_compute.variant_array.ShreddedVariantFieldArray.json",
+    "anchor": "op-87433f5e5843ee17c6ce4390",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

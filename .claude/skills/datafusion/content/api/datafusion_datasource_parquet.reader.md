@@ -26,6 +26,9 @@ fn new(store: Arc<dyn ObjectStore>, metadata_cache: Arc<FileMetadataCache>) -> S
 fn create_reader(&self, partition_index: usize, partitioned_file: PartitionedFile, metadata_size_hint: Option<usize>, metrics: &ExecutionPlanMetricsSet) -> datafusion_common::Result<Box<dyn AsyncFileReader + Send>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.reader.CachedParquetFileReaderFactory.md).
+
+
 Implementation of [`ParquetFileReaderFactory`] supporting the caching of footer and page
 metadata. Reads and updates the [`FileMetadataCache`] with the [`ParquetMetaData`] data.
 
@@ -60,6 +63,9 @@ fn extra_info(&self) -> HashMap<String, String>
 fn memory_size(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.reader.CachedParquetMetaData.md).
+
+
 Wrapper to implement [`FileMetadata`] for [`ParquetMetaData`].
 
 ---
@@ -87,6 +93,9 @@ fn new(store: Arc<dyn ObjectStore>) -> Self
 ```rust
 fn create_reader(&self, partition_index: usize, partitioned_file: PartitionedFile, metadata_size_hint: Option<usize>, metrics: &ExecutionPlanMetricsSet) -> datafusion_common::Result<Box<dyn AsyncFileReader + Send>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.reader.DefaultParquetFileReaderFactory.md).
+
 
 Default implementation of [`ParquetFileReaderFactory`]
 
@@ -130,6 +139,9 @@ fn get_bytes(&mut self, range: Range<u64>) -> BoxFuture<'_, parquet::errors::Res
 fn get_metadata<'a>(&'a mut self, options: Option<&'a ArrowReaderOptions>) -> BoxFuture<'a, parquet::errors::Result<Arc<ParquetMetaData>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.reader.ParquetFileReader.md).
+
+
 Implements [`AsyncFileReader`] for a parquet file in object storage.
 
 This implementation reads data directly from the underlying [`ObjectStore`]
@@ -167,6 +179,9 @@ trait ParquetFileReaderFactory: Debug + Send + Sync + 'static
 ```rust
 fn create_reader(&self, partition_index: usize, partitioned_file: PartitionedFile, metadata_size_hint: Option<usize>, metrics: &ExecutionPlanMetricsSet) -> datafusion_common::Result<Box<dyn AsyncFileReader + Send>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.reader.ParquetFileReaderFactory.md).
+
 
 Interface for reading Apache Parquet files.
 

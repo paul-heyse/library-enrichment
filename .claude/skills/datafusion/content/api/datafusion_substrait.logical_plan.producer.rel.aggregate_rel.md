@@ -10,6 +10,9 @@ Crate `datafusion-substrait` · 5 public items · structured records in [`model/
 fn from_aggregate(producer: &mut impl SubstraitProducer, agg: &datafusion::logical_expr::Aggregate) -> datafusion::common::Result<Box<substrait::proto::Rel>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.rel.aggregate_rel.from_aggregate.md).
+
+
 ---
 
 ## from_distinct
@@ -19,6 +22,9 @@ fn from_aggregate(producer: &mut impl SubstraitProducer, agg: &datafusion::logic
 ```rust
 fn from_distinct(producer: &mut impl SubstraitProducer, distinct: &datafusion::logical_expr::Distinct) -> datafusion::common::Result<Box<substrait::proto::Rel>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.rel.aggregate_rel.from_distinct.md).
+
 
 ---
 
@@ -30,6 +36,9 @@ fn from_distinct(producer: &mut impl SubstraitProducer, distinct: &datafusion::l
 fn parse_flat_grouping_exprs(producer: &mut impl SubstraitProducer, exprs: &[datafusion::logical_expr::Expr], schema: &datafusion::common::DFSchemaRef, ref_group_exprs: &mut Vec<substrait::proto::Expression>) -> datafusion::common::Result<substrait::proto::aggregate_rel::Grouping>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.rel.aggregate_rel.parse_flat_grouping_exprs.md).
+
+
 ---
 
 ## to_substrait_agg_measure
@@ -40,6 +49,9 @@ fn parse_flat_grouping_exprs(producer: &mut impl SubstraitProducer, exprs: &[dat
 fn to_substrait_agg_measure(producer: &mut impl SubstraitProducer, expr: &datafusion::logical_expr::Expr, schema: &datafusion::common::DFSchemaRef) -> datafusion::common::Result<substrait::proto::aggregate_rel::Measure>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.rel.aggregate_rel.to_substrait_agg_measure.md).
+
+
 ---
 
 ## to_substrait_groupings
@@ -49,5 +61,8 @@ fn to_substrait_agg_measure(producer: &mut impl SubstraitProducer, expr: &datafu
 ```rust
 fn to_substrait_groupings(producer: &mut impl SubstraitProducer, exprs: &[datafusion::logical_expr::Expr], schema: &datafusion::common::DFSchemaRef) -> datafusion::common::Result<(Vec<substrait::proto::Expression>, Vec<substrait::proto::aggregate_rel::Grouping>)>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.rel.aggregate_rel.to_substrait_groupings.md).
+
 
 ---

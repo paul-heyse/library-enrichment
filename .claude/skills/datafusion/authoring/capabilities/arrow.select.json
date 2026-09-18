@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "id": "arrow.select",
+  "title": "Choose a row or column selection representation",
+  "task_aliases": [
+    "filter rows",
+    "Boolean mask",
+    "gather indices",
+    "reorder duplicate positions",
+    "slice contiguous range",
+    "project columns",
+    "zero columns"
+  ],
+  "crates": [
+    "arrow-select",
+    "arrow-array"
+  ],
+  "input": [
+    "RecordBatch",
+    "Array",
+    "BooleanArray",
+    "integer indices"
+  ],
+  "output": [
+    "RecordBatch",
+    "ArrayRef"
+  ],
+  "properties": [
+    "nulls",
+    "order",
+    "duplicates",
+    "bounds",
+    "metadata",
+    "zero-column"
+  ],
+  "operations": [
+    "arrow_select::filter::filter_record_batch",
+    "arrow_select::take::take",
+    "arrow_select::take::take_record_batch",
+    "arrow_array::record_batch::RecordBatch::slice",
+    "arrow_array::record_batch::RecordBatch::project",
+    "arrow_array::record_batch::RecordBatch::try_new_with_options",
+    "arrow_select::take::take_arrays"
+  ],
+  "brief": "Select by the representation you have: mask, indices, contiguous range, or column positions. Nullable indices, non-nullable fields and zero-column batches change the valid composition.",
+  "choices": [
+    {
+      "candidate": "filter_record_batch",
+      "choose_when": "Keep true mask positions in source order",
+      "tradeoff": "False and null mask positions are excluded.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "take / take_arrays / take_record_batch",
+      "choose_when": "Gather in requested order, including repeated indices",
+      "tradeoff": "Array take and multi-array take_arrays expose checked bounds; the batch helper does not expose options.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "RecordBatch::slice / project",
+      "choose_when": "Contiguous rows / selected columns",
+      "tradeoff": "Slice may retain shared source allocations; projection does not select rows.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "DataFrame filter/select",
+      "choose_when": "Selection belongs within an optimizable relation",
+      "tradeoff": "Avoid hiding pushdown opportunities by selecting only after collection.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "arrow.select.shape",
+      "aspect": "shape",
+      "statement": "filter_record_batch takes a batch and BooleanArray and returns Result<RecordBatch>. Array take takes values, integer indices and optional TakeOptions and returns Result<ArrayRef>. Mask length must fit the source selection domain.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "arrow.select.null-order",
+      "aspect": "null-order",
+      "statement": "Filter keeps source order and excludes false/null mask entries. Take preserves index order and multiplicity; null indices introduce null values.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "arrow.select.bounds",
+      "aspect": "bounds",
+      "statement": "TakeOptions.check_bounds=true requests checked errors. With unchecked indices, out-of-bounds access can panic despite Result. take_record_batch calls array take with None in this pin.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream",
+        "source"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "arrow.select.schema",
+      "aspect": "schema",
+      "statement": "Gathering null indices may violate a non-nullable output field. RecordBatch construction checks top-level nullability. Choose compatible output fields; an array result alone does not carry schema metadata.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "arrow.select.empty-shape",
+      "aspect": "empty-shape",
+      "statement": "A zero-column batch can have rows via RecordBatchOptions.row_count. filter_record_batch retains the selected count; take_record_batch in 59.3.0 reconstructs with try_new and errors. For zero columns, validate non-null indices against input row count and build the output with explicit indices.len() row count.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream",
+        "source"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "arrow.select.ownership",
+      "aspect": "ownership",
+      "statement": "Slices and some selection paths share buffers. Logical output size does not bound retained allocation size.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Choose mask/index/range/column semantics before the API.",
+    "Check indices and output nullability, preserving field/schema metadata deliberately.",
+    "For zero columns, use explicit row-count construction and retain the same index-domain validation.",
+    "Use take_arrays for a shared gather across columns before constructing a batch with the desired output fields/options."
+  ],
+  "unknowns": [
+    "Tests cover Int32/UInt32 and tested metadata; nested/view layouts and every datatype are not qualified."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "arrow_select::filter::filter_record_batch",
+        "arrow_select::take::take",
+        "arrow_select::take::take_record_batch",
+        "arrow_array::record_batch::RecordBatch::slice",
+        "arrow_array::record_batch::RecordBatch::project",
+        "arrow_array::record_batch::RecordBatch::try_new_with_options"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    },
+    {
+      "id": "probe",
+      "kind": "runtime_observation",
+      "tests": [
+        "filter_null_is_not_selected_and_metadata_is_retained",
+        "take_preserves_requested_order_duplicates_and_null_indices",
+        "empty_schema_exposes_different_batch_selection_contracts",
+        "batch_construction_checks_top_level_nullability"
+      ],
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Only the named assertions in the recorded Cargo profile."
+    },
+    {
+      "id": "source",
+      "kind": "upstream_source",
+      "path": "skill_improvement/evidence/sources/arrow-select-59.3.0/src/take.rs",
+      "scope": "Selected exact published source; source-manifest.json retains provenance."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "arrow_select::filter::filter_record_batch",
+      "arrow_select::take::take",
+      "arrow_select::take::take_record_batch",
+      "arrow_array::record_batch::RecordBatch::slice",
+      "arrow_array::record_batch::RecordBatch::project",
+      "arrow_array::record_batch::RecordBatch::try_new_with_options"
+    ],
+    "candidate_set": [
+      "filter_record_batch",
+      "take / take_record_batch",
+      "RecordBatch::slice / project",
+      "DataFrame filter/select"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  }
+}

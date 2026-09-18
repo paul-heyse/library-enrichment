@@ -8,11 +8,11 @@
 
 pub mod cratesio;
 pub mod docsrs;
+mod run;
 pub mod rustdoc;
 pub mod source;
-pub mod spec;
 
-pub use spec::{ProducerPlan, ProducerRun, ProducerSpec, RunOutcome};
+pub use run::{ProducerAttempt, ProducerRun, RunOutcome};
 
 /// Why a producer refused an artifact.
 ///

@@ -146,6 +146,9 @@ fn task_ctx(&self) -> Arc<TaskContext>
 fn window_functions(&self) -> &HashMap<String, Arc<WindowUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.execution.session_state.SessionState.md).
+
+
 `SessionState` contains all the necessary state to plan and execute queries,
 such as configuration, functions, and runtime environment. Please see the
 documentation on [`SessionContext`] for more information.
@@ -278,6 +281,9 @@ fn from(state: SessionState) -> Self
 fn from(session: SessionContext) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.execution.session_state.SessionStateBuilder.md).
+
+
 A builder to be used for building [`SessionState`]'s. Defaults will
 be used for all values unless explicitly provided.
 
@@ -298,6 +304,9 @@ trait CacheFactory: Debug + Send + Sync
 ```rust
 fn create(&self, plan: LogicalPlan, session_state: &SessionState) -> datafusion_common::Result<LogicalPlan>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.execution.session_state.CacheFactory.md).
+
 
 A [`CacheFactory`] can be registered via [`SessionState`]
 to create a custom logical plan for [`crate::dataframe::DataFrame::cache`].

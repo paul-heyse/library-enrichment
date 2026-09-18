@@ -22,6 +22,9 @@ fn new() -> Self
 fn with_state(&self, state: Weak<RwLock<dyn Session>>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_session.session.SessionStore.md).
+
+
 The state store that stores the reference of the runtime session state.
 
 ---
@@ -67,6 +70,9 @@ fn table_options_mut(&mut self) -> &mut TableOptions
 fn task_ctx(&self) -> Arc<TaskContext>
 fn window_functions(&self) -> &HashMap<String, Arc<WindowUDF>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_session.session.Session.md).
+
 
 Interface for accessing [`SessionState`] from the catalog and data source.
 

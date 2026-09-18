@@ -30,6 +30,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.ascii.SparkAscii.md).
+
+
 Spark compatible version of the [ascii] function. Differs from the [default ascii function]
 in that it is more permissive of input types, for example casting numeric input to string
 before executing the function (default version doesn't allow numeric input).

@@ -44,6 +44,9 @@ fn from(value: ArrayRef) -> Self
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.columnar_value.ColumnarValue.md).
+
+
 The result of evaluating an expression.
 
 [`ColumnarValue::Scalar`] represents a single value repeated any number of

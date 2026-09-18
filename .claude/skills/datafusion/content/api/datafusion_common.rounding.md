@@ -10,6 +10,9 @@ Crate `datafusion-common` · 4 public items · structured records in [`model/dat
 fn alter_fp_rounding_mode<const UPPER: bool, F>(lhs: &ScalarValue, rhs: &ScalarValue, operation: F) -> Result<ScalarValue> where F: FnOnce(&ScalarValue, &ScalarValue) -> Result<ScalarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.rounding.alter_fp_rounding_mode.md).
+
+
 ---
 
 ## next_down
@@ -19,6 +22,9 @@ fn alter_fp_rounding_mode<const UPPER: bool, F>(lhs: &ScalarValue, rhs: &ScalarV
 ```rust
 fn next_down<F: FloatBits + Copy>(float: F) -> F
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.rounding.next_down.md).
+
 
 Returns the next representable floating-point value smaller than the input value.
 
@@ -46,6 +52,9 @@ assert_eq!(next_f, 0.99999994);
 ```rust
 fn next_up<F: FloatBits + Copy>(float: F) -> F
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.rounding.next_up.md).
+
 
 Returns the next representable floating-point value greater than the input value.
 
@@ -83,6 +92,9 @@ fn infinity() -> Self
 fn neg_infinity() -> Self
 fn to_bits(self) -> Self::Item
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.rounding.FloatBits.md).
+
 
 A trait to manipulate floating-point types with bitwise operations.
 Provides functions to convert a floating-point value to/from its bitwise

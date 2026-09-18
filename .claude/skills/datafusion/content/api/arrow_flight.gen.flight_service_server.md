@@ -35,6 +35,9 @@ fn call(&mut self, req: http::Request<B>) -> Self::Future
 fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<std::result::Result<(), Self::Error>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.flight_service_server.FlightServiceServer.md).
+
+
 
 A flight service is an endpoint for retrieving or storing Arrow data. A
 flight service can expose one or more predefined endpoints that can be
@@ -67,6 +70,9 @@ async fn list_actions(&self, request: tonic::Request<super::Empty>) -> std::resu
 async fn list_flights(&self, request: tonic::Request<super::Criteria>) -> std::result::Result<tonic::Response<Self::ListFlightsStream>, tonic::Status>
 async fn poll_flight_info(&self, request: tonic::Request<super::FlightDescriptor>) -> std::result::Result<tonic::Response<super::PollInfo>, tonic::Status>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.flight_service_server.FlightService.md).
+
 
 Generated trait containing gRPC methods that should be implemented for use with FlightServiceServer.
 

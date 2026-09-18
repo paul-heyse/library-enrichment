@@ -20,16 +20,13 @@ pub const MAX_ROWS: u64 = 4_000_000;
 pub const BATCH_ROWS: usize = 128;
 pub const BATCH_BYTES: usize = 2 * 1024 * 1024;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum Fact {
-    Header,
-    Items,
-    Links,
-    Paths,
-    Externals,
-    Signatures,
-    Missing,
+crate::native_vocabulary! {
+    #[derive(PartialOrd, Ord)]
+    pub enum Fact {
+        Header = "rust_header", Items = "rust_items", Links = "rust_links",
+        Paths = "rust_paths", Externals = "rust_externals", Signatures = "rust_signatures",
+        Missing = "rust_missing",
+    }
 }
 impl Fact {
     pub const ALL: [Self; 7] = [
@@ -42,15 +39,7 @@ impl Fact {
         Self::Missing,
     ];
     pub fn name(self) -> &'static str {
-        match self {
-            Self::Header => "rust_header",
-            Self::Items => "rust_items",
-            Self::Links => "rust_links",
-            Self::Paths => "rust_paths",
-            Self::Externals => "rust_externals",
-            Self::Signatures => "rust_signatures",
-            Self::Missing => "rust_missing",
-        }
+        self.as_str()
     }
     pub fn schema(self) -> SchemaRef {
         let fields = match self {

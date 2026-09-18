@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 4 public items · structured records in [`model/buoyan
 ## DeletionVectorStorageType
 
 `enum` · `buoyant_kernel::actions::deletion_vector::DeletionVectorStorageType`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.deletion_vector.DeletionVectorStorageType.md)
 
 Also reachable as `delta_kernel::actions::deletion_vector::DeletionVectorStorageType`
 
@@ -41,6 +42,7 @@ fn from_str(s: &str) -> DeltaResult<Self>
 ## split_vector
 
 `function` · `buoyant_kernel::actions::deletion_vector::split_vector`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.deletion_vector.split_vector.md)
 
 Also reachable as `delta_kernel::actions::deletion_vector::split_vector`
 
@@ -63,6 +65,7 @@ If the passed `vector` is `None`, do nothing and return None
 ## DeletionVectorDescriptor
 
 `struct` · `buoyant_kernel::actions::deletion_vector::DeletionVectorDescriptor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.deletion_vector.DeletionVectorDescriptor.md)
 
 Also reachable as `delta_kernel::actions::deletion_vector::DeletionVectorDescriptor`
 
@@ -97,6 +100,7 @@ fn to_schema() -> delta_kernel::schema::StructType
 ## DeletionVectorPath
 
 `struct` · `buoyant_kernel::actions::deletion_vector::DeletionVectorPath`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.deletion_vector.DeletionVectorPath.md)
 
 Also reachable as `delta_kernel::actions::deletion_vector::DeletionVectorPath`
 

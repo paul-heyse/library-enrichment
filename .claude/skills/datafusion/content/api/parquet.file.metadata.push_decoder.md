@@ -30,6 +30,9 @@ fn with_offset_index_policy(self, offset_index_policy: PageIndexPolicy) -> Self
 fn with_page_index_policy(self, page_index_policy: PageIndexPolicy) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md).
+
+
 A push decoder for [`ParquetMetaData`].
 
 This structure implements a push API for decoding Parquet metadata, which

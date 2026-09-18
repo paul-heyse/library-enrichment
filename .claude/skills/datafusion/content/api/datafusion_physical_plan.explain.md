@@ -42,6 +42,9 @@ fn try_to_proto(&self, _ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Optio
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.explain.ExplainExec.md).
+
+
 Explain execution plan operator. This operator contains the string
 values of the various plans it has when it is created, and passes
 them to its output.

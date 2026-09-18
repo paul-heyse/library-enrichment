@@ -24,6 +24,9 @@ fn with_retry(self, retry_config: RetryConfig) -> Self
 fn with_url(self, url: impl Into<String>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.http.HttpBuilder.md).
+
+
 Configure a connection to a generic HTTP server
 
 ---
@@ -57,6 +60,9 @@ async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult>
 async fn put_multipart_opts(&self, _location: &Path, _opts: PutMultipartOptions) -> Result<Box<dyn MultipartUpload>>
 async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.http.HttpStore.md).
+
 
 An [`ObjectStore`] implementation for generic HTTP servers
 

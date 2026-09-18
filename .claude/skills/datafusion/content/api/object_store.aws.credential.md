@@ -23,6 +23,9 @@ fn with_request_payer(self, request_payer: bool) -> Self
 fn with_sign_payload(self, signed: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.aws.credential.AwsAuthorizer.md).
+
+
 Authorize a [`HttpRequest`] with an [`AwsCredential`] using [AWS SigV4]
 
 [AWS SigV4]: https://docs.aws.amazon.com/general/latest/gr/sigv4-calculate-signature.html
@@ -42,6 +45,9 @@ struct AwsCredential
 **Fields**: `key_id`, `secret_key`, `token`
 
 **Derives**: Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/object_store.aws.credential.AwsCredential.md).
+
 
 A set of AWS security credentials
 

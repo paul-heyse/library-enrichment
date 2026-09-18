@@ -1,0 +1,661 @@
+[
+  {
+    "id": "d1bf78ac32fe2ad950a9d5d0",
+    "path": "object_store::upload::MultipartUpload",
+    "name": "MultipartUpload",
+    "owner": null,
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "trait",
+    "signature": "trait MultipartUpload: Send + std::fmt::Debug",
+    "docs": "A trait allowing writing an object in fixed size chunks\n\nConsecutive chunks of data can be written by calling [`MultipartUpload::put_part`] and polling\nthe returned futures to completion. Multiple futures returned by [`MultipartUpload::put_part`]\nmay be polled in parallel, allowing for concurrent uploads.\n\nOnce all part uploads have been polled to completion, the upload can be completed by\ncalling [`MultipartUpload::complete`]. This will make the entire uploaded object visible\nas an atomic operation.It is implementation behind behaviour if [`MultipartUpload::complete`]\nis called before all [`UploadPart`] have been polled to completion.",
+    "span": {
+      "filename": "src/upload.rs",
+      "begin": [
+        43,
+        1
+      ],
+      "end": [
+        95,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          2997,
+          1354,
+          576
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 88,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "std::fmt::Debug",
+                "id": 156,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": [
+          1508,
+          3001
+        ]
+      }
+    },
+    "type_references": {
+      "88": "core::marker::Send",
+      "156": "core::fmt::Debug"
+    },
+    "impl_context": null,
+    "links": {
+      "`MultipartUpload::complete`": 1354,
+      "`MultipartUpload::put_part`": 2997,
+      "`UploadPart`": 1505
+    },
+    "link_paths": {
+      "`MultipartUpload::complete`": null,
+      "`MultipartUpload::put_part`": null,
+      "`UploadPart`": "object_store::upload::UploadPart"
+    },
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "500",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.upload.MultipartUpload.md",
+    "record_file": "operations/object_store.upload.MultipartUpload.json",
+    "anchor": "op-d1bf78ac32fe2ad950a9d5d0",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MultipartUpload::complete`": "../operations/object_store.upload.MultipartUpload.md#op-a1a4e1e4e03df4fa1f4622b1",
+      "`MultipartUpload::put_part`": "../operations/object_store.upload.MultipartUpload.md#op-81347236585009acee547d0a",
+      "`UploadPart`": "../operations/object_store.upload.UploadPart.md#op-b21b01cdc9dcbe60e8c4f765"
+    }
+  },
+  {
+    "id": "d0ab4a61fdda48f1d5be2d47",
+    "path": "object_store::upload::MultipartUpload::abort",
+    "name": "abort",
+    "owner": "object_store::upload::MultipartUpload",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn abort(&mut self) -> Result<()>",
+    "docs": "Abort the multipart upload\n\nIf a [`MultipartUpload`] is dropped without calling [`MultipartUpload::complete`],\nsome object stores will automatically clean up any previously uploaded parts.\nHowever, some stores, such as S3 and GCS, cannot perform cleanup on drop.\nAs such [`MultipartUpload::abort`] can be invoked to perform this cleanup.\n\nIt will not be possible to call `abort` in all failure scenarios, for example\nnon-graceful shutdown of the calling application. It is therefore recommended\nobject stores are configured with lifecycle rules to automatically cleanup\nunused parts older than some threshold. See [crate::aws] and [crate::gcp]\nfor more information.\n\nIt is implementation defined behaviour to call [`MultipartUpload::abort`]\non an already completed or aborted [`MultipartUpload`]",
+    "span": {
+      "filename": "src/upload.rs",
+      "begin": [
+        94,
+        5
+      ],
+      "end": [
+        94,
+        45
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds)]"
+      },
+      {
+        "must_use": {
+          "reason": null
+        }
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "tuple": []
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false
+      }
+    },
+    "type_references": {
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "88": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::gcp": 1356,
+      "`MultipartUpload::complete`": 1354,
+      "`MultipartUpload::abort`": 576,
+      "crate::aws": 395,
+      "`MultipartUpload`": 500
+    },
+    "link_paths": {
+      "crate::gcp": "object_store::gcp",
+      "`MultipartUpload::complete`": null,
+      "`MultipartUpload::abort`": null,
+      "crate::aws": "object_store::aws",
+      "`MultipartUpload`": "object_store::upload::MultipartUpload"
+    },
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "576",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.upload.MultipartUpload.md",
+    "record_file": "operations/object_store.upload.MultipartUpload.json",
+    "anchor": "op-d0ab4a61fdda48f1d5be2d47",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::gcp": "../modules/object_store.gcp.md#op-397cb506fa80f7a4f9953b4d",
+      "`MultipartUpload::complete`": "../operations/object_store.upload.MultipartUpload.md#op-a1a4e1e4e03df4fa1f4622b1",
+      "`MultipartUpload::abort`": "../operations/object_store.upload.MultipartUpload.md#op-d0ab4a61fdda48f1d5be2d47",
+      "crate::aws": "../modules/object_store.aws.md#op-91f16db41cdd768042f8c13f",
+      "`MultipartUpload`": "../operations/object_store.upload.MultipartUpload.md#op-d1bf78ac32fe2ad950a9d5d0"
+    }
+  },
+  {
+    "id": "a1a4e1e4e03df4fa1f4622b1",
+    "path": "object_store::upload::MultipartUpload::complete",
+    "name": "complete",
+    "owner": "object_store::upload::MultipartUpload",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn complete(&mut self) -> Result<PutResult>",
+    "docs": "Complete the multipart upload\n\nIt is implementation defined behaviour if this method is called before polling\nall [`UploadPart`] returned by [`MultipartUpload::put_part`] to completion. Additionally,\nit is implementation defined behaviour to call [`MultipartUpload::complete`]\non an already completed or aborted [`MultipartUpload`].",
+    "span": {
+      "filename": "src/upload.rs",
+      "begin": [
+        77,
+        5
+      ],
+      "end": [
+        77,
+        55
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds)]"
+      },
+      {
+        "must_use": {
+          "reason": null
+        }
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "PutResult",
+                                                                        "id": 497,
+                                                                        "args": null
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false
+      }
+    },
+    "type_references": {
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "497": "object_store::PutResult",
+      "88": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {
+      "`MultipartUpload`": 500,
+      "`MultipartUpload::complete`": 1354,
+      "`UploadPart`": 1505,
+      "`MultipartUpload::put_part`": 2997
+    },
+    "link_paths": {
+      "`MultipartUpload`": "object_store::upload::MultipartUpload",
+      "`MultipartUpload::complete`": null,
+      "`UploadPart`": "object_store::upload::UploadPart",
+      "`MultipartUpload::put_part`": null
+    },
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "1354",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.upload.MultipartUpload.md",
+    "record_file": "operations/object_store.upload.MultipartUpload.json",
+    "anchor": "op-a1a4e1e4e03df4fa1f4622b1",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MultipartUpload`": "../operations/object_store.upload.MultipartUpload.md#op-d1bf78ac32fe2ad950a9d5d0",
+      "`MultipartUpload::complete`": "../operations/object_store.upload.MultipartUpload.md#op-a1a4e1e4e03df4fa1f4622b1",
+      "`UploadPart`": "../operations/object_store.upload.UploadPart.md#op-b21b01cdc9dcbe60e8c4f765",
+      "`MultipartUpload::put_part`": "../operations/object_store.upload.MultipartUpload.md#op-81347236585009acee547d0a"
+    }
+  },
+  {
+    "id": "81347236585009acee547d0a",
+    "path": "object_store::upload::MultipartUpload::put_part",
+    "name": "put_part",
+    "owner": "object_store::upload::MultipartUpload",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn put_part(&mut self, data: PutPayload) -> UploadPart",
+    "docs": "Upload the next part\n\nMost stores require that all parts excluding the last are at least 5 MiB, and some\nfurther require that all parts excluding the last be the same size, e.g. [R2].\nClients wanting to maximise compatibility should therefore perform writes in\nfixed size blocks larger than 5 MiB.\n\nImplementations may invoke this method multiple times and then await on the\nreturned futures in parallel\n\n```no_run\n# use futures_util::StreamExt;\n# use object_store::MultipartUpload;\n#\n# async fn test() {\n#\nlet mut upload: Box<&dyn MultipartUpload> = todo!();\nlet p1 = upload.put_part(vec![0; 10 * 1024 * 1024].into());\nlet p2 = upload.put_part(vec![1; 10 * 1024 * 1024].into());\nfutures_util::future::try_join(p1, p2).await.unwrap();\nupload.complete().await.unwrap();\n# }\n```\n\n[R2]: https://developers.cloudflare.com/r2/objects/multipart-objects/#limitations",
+    "span": {
+      "filename": "src/upload.rs",
+      "begin": [
+        69,
+        5
+      ],
+      "end": [
+        69,
+        60
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "data",
+              {
+                "resolved_path": {
+                  "path": "PutPayload",
+                  "id": 496,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "UploadPart",
+              "id": 1505,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false
+      }
+    },
+    "type_references": {
+      "496": "object_store::payload::PutPayload",
+      "1505": "object_store::upload::UploadPart"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "2997",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.upload.MultipartUpload.md",
+    "record_file": "operations/object_store.upload.MultipartUpload.json",
+    "anchor": "op-81347236585009acee547d0a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

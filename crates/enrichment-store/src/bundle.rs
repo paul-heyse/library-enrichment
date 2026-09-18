@@ -2,18 +2,16 @@
 use crate::{
     BlobStore, SnapshotReader, StatePaths,
     admission::AdmissionLimits,
-    projection,
     repository::EvidenceRepository,
     runtime::{QueryLimits, QueryRuntime},
 };
-use datafusion::prelude::col;
+use enrichment_core::native_union::NativeStruct;
 use enrichment_core::{
     canonical,
     identity::{ContextId, SnapshotId},
 };
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::BTreeMap,
     fs::{self, File},
     io::{self, Read},
     path::{Component, Path, PathBuf},
@@ -21,9 +19,10 @@ use std::{
 
 pub const MANIFEST: &str = "MANIFEST.sha256";
 pub const BUNDLE: &str = "bundle.json";
-const FILE_LIMIT: u64 = 256 * 1024 * 1024;
-const TOTAL_LIMIT: u64 = 4 * 1024 * 1024 * 1024;
-const FILE_COUNT: usize = 16384;
+use crate::bundle_plan::{FILE_COUNT, FILE_LIMIT, TEXT_LIMIT, TOTAL_LIMIT};
+// Each bounded file path has at most 16 parent components. Includes incomplete writes,
+// the staging owner and bundle root. Physical cleanup refuses an unbounded inventory.
+pub(crate) const MAX_STAGING_ENTRIES: usize = FILE_COUNT * 17 + 2;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Exported {
@@ -34,31 +33,79 @@ pub struct Exported {
     pub files: usize,
 }
 
-#[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-struct Description {
-    bundle_version: String,
-    context_id: ContextId,
-    snapshot_id: SnapshotId,
-    source_control: String,
-    control: String,
-    exported_at: enrichment_core::native_time::ObservationTime,
-}
+enrichment_core::native_struct! { pub(crate) struct Description {
+    bundle_version: String => enrichment_core::native_union::Rule::Vocabulary(vec![crate::bundle_plan::VERSION.into()]),
+    context_id: ContextId => enrichment_core::native_union::Rule::Text,
+    snapshot_id: SnapshotId => enrichment_core::native_union::Rule::Text,
+    source_control: String => enrichment_core::native_union::Rule::NonEmpty,
+    control: String => enrichment_core::native_union::Rule::NonEmpty,
+    exported_at: enrichment_core::native_time::ObservationTime => enrichment_core::native_union::Rule::Text
+} }
 
 fn error(error: impl std::fmt::Display) -> io::Error {
     io::Error::other(error.to_string())
 }
 
-fn read_small(path: &Path, limit: u64) -> io::Result<Vec<u8>> {
-    let mut bytes = Vec::new();
-    File::open(path)
-        .map_err(|e| error(format!("{}: {e}", path.display())))?
-        .take(limit + 1)
-        .read_to_end(&mut bytes)?;
-    if bytes.len() as u64 > limit {
-        return Err(error("bundle descriptor exceeds byte budget"));
-    }
-    Ok(bytes)
+async fn read_descriptor(
+    runtime: &QueryRuntime,
+    root: std::sync::Arc<crate::immutable_root::ImmutableRoot>,
+    path: PathBuf,
+) -> io::Result<crate::owned_bytes::OwnedBytes> {
+    let pool = runtime.session().runtime_env().memory_pool.clone();
+    runtime
+        .blocking(move || {
+            root.validate()?;
+            crate::owned_bytes::OwnedBytes::read_file(&path, TEXT_LIMIT, &pool, "bundle-descriptor")
+        })
+        .await
+        .map_err(error)?
+}
+
+fn observe(root: &Path, files: Vec<String>) -> Vec<crate::bundle_plan::Observation> {
+    files
+        .into_iter()
+        .map(|path| {
+            let result = (|| {
+                let mut options = File::options();
+                options.read(true);
+                #[cfg(target_os = "linux")]
+                {
+                    use std::os::unix::fs::OpenOptionsExt;
+                    options.custom_flags(0x20000 | 0x800);
+                }
+                let file = options.open(root.join(&path))?;
+                let before = file.metadata()?;
+                if !before.is_file() || before.len() > FILE_LIMIT {
+                    return Err(io::Error::other(
+                        "bundle file is not a bounded regular file",
+                    ));
+                }
+                let (digest, bytes) = canonical::sha256_reader(&file, FILE_LIMIT)?;
+                let after = file.metadata()?;
+                if before.len() != bytes
+                    || before.len() != after.len()
+                    || before.modified()? != after.modified()?
+                {
+                    return Err(io::Error::other("bundle file changed during capture"));
+                }
+                Ok((digest, bytes))
+            })();
+            match result {
+                Ok((digest, bytes)) => crate::bundle_plan::Observation {
+                    path,
+                    digest: Some(digest),
+                    bytes: Some(bytes),
+                    error: None,
+                },
+                Err(error) => crate::bundle_plan::Observation {
+                    path,
+                    digest: None,
+                    bytes: None,
+                    error: Some(error.to_string()),
+                },
+            }
+        })
+        .collect()
 }
 
 /// Export one selected snapshot and its complete catalog/provenance/blob closure.
@@ -123,17 +170,47 @@ async fn export_owned(
         .filter(|p| !p.as_os_str().is_empty())
         .unwrap_or(Path::new("."));
     fs::create_dir_all(parent)?;
-    let staging = tempfile::Builder::new()
-        .prefix(".evidence-bundle-")
-        .tempdir_in(parent)?;
+    let retention = crate::retention::RetentionStore::new(
+        crate::control::ControlStore::open(&paths.data_root, runtime.clone())?,
+        runtime.clone(),
+    );
+    let staging = crate::PrivateDirectory::export(&retention, runtime, parent.to_owned())
+        .await
+        .map_err(error)?;
     let root = staging.path().join("bundle");
+    let out = staging
+        .path()
+        .parent()
+        .ok_or_else(|| error("export parent"))?
+        .join(
+            out.file_name()
+                .ok_or_else(|| error("export destination name"))?,
+        );
     fs::create_dir(&root)?;
-    let repository =
-        EvidenceRepository::read_only(paths.clone(), runtime.clone(), AdmissionLimits::default())
-            .map_err(error)?;
+    crate::task_context::InputContext::owned(staging.clone())
+        .scope(export_staged(
+            paths, id, &out, runtime, scratch, root, staging,
+        ))
+        .await
+}
+
+async fn build_export(
+    paths: &StatePaths,
+    id: &ContextId,
+    root: &Path,
+    runtime: &QueryRuntime,
+    staging: std::sync::Arc<crate::PrivateDirectory>,
+) -> io::Result<(SnapshotId, usize, String)> {
+    let repository = EvidenceRepository::new(
+        paths.clone(),
+        runtime.clone(),
+        Default::default(),
+        AdmissionLimits::default(),
+    )
+    .map_err(error)?;
     let catalog = repository.catalog.pin().await.map_err(error)?;
     let snapshot = catalog
-        .current(runtime, &id)
+        .current(runtime, id)
         .await
         .map_err(error)?
         .ok_or_else(|| error("context has no selected snapshot"))?;
@@ -145,8 +222,11 @@ async fn export_owned(
     crate::leases::initialize(&root.join("data"))?;
     let blobs = BlobStore::read_only(&paths.data_root)?;
     fs::create_dir_all(root.join("data/blobs/sha256"))?;
-    let mut artifact_count = 0usize;
-    let mut artifact_bytes = 0u64;
+    let mut copy_inputs = Vec::new();
+    let source_roots = snapshots
+        .iter()
+        .map(ToString::to_string)
+        .collect::<Vec<_>>();
     let native =
         crate::delta_evidence::EvidenceTables::new(&root.join("data/delta"), runtime.clone())
             .map_err(error)?;
@@ -164,12 +244,12 @@ async fn export_owned(
         let reader = SnapshotReader::open(&repository, catalog.clone(), &input_snapshot)
             .await
             .map_err(error)?;
-        if input_snapshot == snapshot && reader.manifest().context_id != id {
+        if input_snapshot == snapshot && reader.manifest().context_id != *id {
             return Err(error("snapshot does not belong to this context"));
         }
         let mut publication = reader.manifest().clone();
         let mut tables = Vec::new();
-        let cohort = uuid::Uuid::new_v4().to_string();
+        let cohort = enrichment_core::identity::CohortId::new();
         for binding in &publication.tables {
             let relation = crate::admission::Relation::ALL
                 .into_iter()
@@ -212,99 +292,86 @@ async fn export_owned(
             context_id: publication.context_id.clone(),
             publication,
         });
-        let inputs = reader
-            .session()
-            .table("snapshot.evidence.input_artifacts")
-            .await
-            .map_err(error)?
-            .select(vec![col("sha256"), col("size_bytes")])
-            .map_err(error)?
-            .distinct()
-            .map_err(error)?;
-        runtime
-            .visit(inputs, 1_000_000, |batch| {
-                let digests = projection::TextColumn::new(
-                    batch
-                        .column_by_name("sha256")
-                        .ok_or_else(|| {
-                            datafusion::error::DataFusionError::Execution(
-                                "missing blob digest".into(),
-                            )
-                        })?
-                        .as_ref(),
-                )?;
-                let sizes = batch
-                    .column_by_name("size_bytes")
-                    .and_then(|a| a.as_any().downcast_ref::<arrow::array::UInt64Array>())
-                    .ok_or_else(|| {
-                        datafusion::error::DataFusionError::Execution("invalid blob sizes".into())
-                    })?;
-                for row in 0..batch.num_rows() {
-                    let digest = digests.get(row).ok_or_else(|| {
-                        datafusion::error::DataFusionError::Execution("null blob digest".into())
-                    })?;
-                    let target = root
-                        .join("data/blobs/sha256")
-                        .join(&digest[..2])
-                        .join(digest);
-                    if !target.try_exists()? {
-                        artifact_bytes = artifact_bytes
-                            .checked_add(sizes.value(row))
-                            .filter(|n| *n <= 512 * 1024 * 1024)
-                            .ok_or_else(|| {
-                                datafusion::error::DataFusionError::ResourcesExhausted(
-                                    "bundle blob closure exceeds 512 MiB".into(),
-                                )
-                            })?;
-                        fs::create_dir_all(
-                            target
-                                .parent()
-                                .ok_or_else(|| error("blob destination has no parent"))?,
-                        )?;
-                        copy_exact(&blobs.path_for(digest), &target, digest, sizes.value(row))?;
-                        artifact_count += 1;
-                    }
-                }
-                Ok(())
-            })
-            .await
-            .map_err(error)?;
+        copy_inputs.push(
+            reader
+                .session()
+                .table("snapshot.evidence.input_artifacts")
+                .await
+                .map_err(error)?,
+        );
         // Attempt logs are operational outputs, outside semantic snapshot identity, but are
         // mandatory offline provenance with exact acquisition descriptors and retained bytes.
         let mut operational = reader.attempt_logs().await.map_err(error)?;
-        for delivery in reader.job_deliveries().await.map_err(error)? {
-            operational.extend(
-                catalog
-                    .result_dependencies(runtime, &blobs, &delivery)
-                    .await
-                    .map_err(error)?,
-            );
-            operational.push(delivery);
-        }
-        for log in operational {
-            let target = root
-                .join("data/blobs/sha256")
-                .join(&log.sha256[..2])
-                .join(&log.sha256);
-            if !target.try_exists()? {
-                artifact_bytes = artifact_bytes
-                    .checked_add(log.size_bytes)
-                    .filter(|n| *n <= 512 * 1024 * 1024)
-                    .ok_or_else(|| error("bundle blob closure exceeds 512 MiB"))?;
-                fs::create_dir_all(
-                    target
-                        .parent()
-                        .ok_or_else(|| error("log destination has no parent"))?,
-                )?;
-                copy_exact(
-                    &blobs.path_for(&log.sha256),
-                    &target,
-                    &log.sha256,
-                    log.size_bytes,
-                )?;
-                artifact_count += 1;
-            }
-        }
+        operational.extend(
+            catalog
+                .result_artifacts(
+                    runtime,
+                    &blobs,
+                    &reader.job_deliveries().await.map_err(error)?,
+                )
+                .await
+                .map_err(error)?,
+        );
+        copy_inputs.push(
+            crate::native_catalog::batch(
+                &runtime.session(),
+                "bundle",
+                enrichment_core::evidence::Artifact::batch(&operational).map_err(error)?,
+            )
+            .map_err(error)?,
+        );
+    }
+    let copies = crate::bundle_plan::copies(runtime, copy_inputs)
+        .await
+        .map_err(error)?;
+    let artifact_count = copies.len();
+    // Enrollment precedes the physical copy and survives cancellation of this waiter.
+    // Root removal can refuse a new chunk but cannot revoke already admitted readers.
+    for chunk in copies.chunks(1024) {
+        let guard = repository
+            .retention()
+            .enroll_rooted(
+                format!("export/{}", snapshot),
+                crate::retention::ProtectionKind::Export,
+                chunk
+                    .iter()
+                    .map(|copy| crate::retention::Dependency::Artifact {
+                        artifact_id: copy.artifact_id.clone(),
+                    })
+                    .collect(),
+                &source_roots,
+            )
+            .await
+            .map_err(error)?;
+        let copies = chunk.to_vec();
+        let source = blobs.clone();
+        let destination = root.to_owned();
+        let owner = staging.clone();
+        runtime
+            .blocking(move || {
+                let _guard = guard;
+                owner.export_directory(owner.path())?;
+                for copy in copies {
+                    let target = destination
+                        .join("data/blobs/sha256")
+                        .join(&copy.sha256[..2])
+                        .join(&copy.sha256);
+                    fs::create_dir_all(
+                        target
+                            .parent()
+                            .ok_or_else(|| error("blob destination parent"))?,
+                    )?;
+                    copy_exact(
+                        &source.path_for(&copy.sha256),
+                        &target,
+                        &copy.sha256,
+                        copy.size_bytes,
+                    )?;
+                }
+                Ok::<_, io::Error>(())
+            })
+            .await
+            .map_err(error)??;
     }
     catalog
         .export_snapshot(
@@ -319,26 +386,52 @@ async fn export_owned(
     for obligation in &obligations {
         retention.settle_selected(obligation).await.map_err(error)?;
     }
-    let target_control =
-        crate::control::ControlStore::read_only(&root.join("data"), runtime.clone())?
-            .pin()
-            .await
-            .map_err(error)?;
+    Ok((snapshot, artifact_count, catalog.identity().into()))
+}
+
+async fn export_staged(
+    paths: &StatePaths,
+    id: ContextId,
+    out: &Path,
+    runtime: &QueryRuntime,
+    scratch: &Path,
+    root: PathBuf,
+    staging: std::sync::Arc<crate::PrivateDirectory>,
+) -> io::Result<Exported> {
+    let (snapshot, artifact_count, source_control) =
+        build_export(paths, &id, &root, runtime, staging.clone()).await?;
+    // All mutable target consumers have left scope. Join their final writes before taking
+    // the control identity and immutable manifest. Read-only verification adds no writes.
+    runtime.flush_releases().await.map_err(error)?;
+    crate::immutable_root::ImmutableRoot::seal(&root.join("data"))?;
+    let immutable = crate::immutable_root::ImmutableRoot::open(&root.join("data"))?;
+    let control = crate::control::ControlStore::immutable(immutable, runtime.clone())?
+        .pin()
+        .await
+        .map_err(error)?
+        .identity()
+        .to_owned();
     let description = Description {
-        bundle_version: "delta-evidence-bundle/1".into(),
+        bundle_version: crate::bundle_plan::VERSION.into(),
         context_id: id.clone(),
         snapshot_id: snapshot.clone(),
-        source_control: catalog.identity().into(),
-        control: target_control.identity().into(),
+        source_control,
+        control,
         exported_at: enrichment_core::native_time::ObservationTime::now().map_err(error)?,
     };
     fs::write(root.join(BUNDLE), serde_json::to_vec_pretty(&description)?)?;
-    let files = inventory(&root)?;
-    let mut checksums = String::new();
-    for path in &files {
-        let (digest, _) = canonical::sha256_reader(File::open(root.join(path))?, FILE_LIMIT)?;
-        checksums.push_str(&format!("{digest}  {path}\n"));
-    }
+    let directory = root.clone();
+    let owner = staging.clone();
+    let observed = runtime
+        .blocking(move || {
+            owner.export_directory(owner.path())?;
+            Ok::<_, io::Error>(observe(&directory, inventory(&directory)?))
+        })
+        .await
+        .map_err(error)??;
+    let checksums = crate::bundle_plan::manifest(runtime, &observed)
+        .await
+        .map_err(error)?;
     fs::write(root.join(MANIFEST), checksums)?;
     let problems = verify_owned(&root, runtime, scratch).await?;
     if !problems.is_empty() {
@@ -347,15 +440,30 @@ async fn export_owned(
             problems.join("; ")
         )));
     }
-    sync_tree(&root)?;
-    fs::rename(&root, out)?;
-    File::open(parent)?.sync_all()?;
+    let published_root = root.clone();
+    let destination = out.to_owned();
+    runtime
+        .blocking(move || {
+            // Cancellation cannot drop this staging owner while synchronization/rename runs.
+            staging.export_directory(staging.path())?;
+            sync_tree(&published_root)?;
+            fs::rename(&published_root, &destination)?;
+            File::open(
+                destination
+                    .parent()
+                    .filter(|p| !p.as_os_str().is_empty())
+                    .unwrap_or(Path::new(".")),
+            )?
+            .sync_all()
+        })
+        .await
+        .map_err(error)??;
     Ok(Exported {
         root: out.to_path_buf(),
         context_id: id.to_string(),
         snapshot_id: Some(snapshot.to_string()),
         artifacts: artifact_count,
-        files: files.len(),
+        files: observed.len(),
     })
 }
 
@@ -403,52 +511,32 @@ async fn verify_owned(
     runtime: &QueryRuntime,
     scratch: &Path,
 ) -> io::Result<Vec<String>> {
-    let files = inventory(root)?;
-    let text =
-        String::from_utf8(read_small(&root.join(MANIFEST), 4 * 1024 * 1024)?).map_err(error)?;
-    let mut listed = BTreeMap::new();
-    for line in text.lines() {
-        let (digest, path) = line
-            .split_once("  ")
-            .ok_or_else(|| error("malformed checksum manifest"))?;
-        safe_path(path)?;
-        if digest.len() != 64
-            || !digest
-                .bytes()
-                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
-            || path == MANIFEST
-            || listed.insert(path.to_owned(), digest.to_owned()).is_some()
-        {
-            return Err(error("invalid or duplicate checksum manifest entry"));
-        }
-    }
-    if listed.is_empty() || listed.len() > FILE_COUNT {
-        return Err(error("invalid checksum entry count"));
-    }
-    let mut problems = Vec::new();
-    for (path, expected) in &listed {
-        match File::open(root.join(path))
-            .and_then(|file| canonical::sha256_reader(file, FILE_LIMIT))
-        {
-            Ok((actual, _)) if &actual == expected => {}
-            Ok(_) => problems.push(format!("{path}: content does not match recorded digest")),
-            Err(e) => problems.push(format!("{path}: {e}")),
-        }
-    }
-    for path in files {
-        if path != MANIFEST && !listed.contains_key(&path) {
-            problems.push(format!("{path}: present but not listed"));
-        }
-    }
+    let immutable = crate::immutable_root::ImmutableRoot::open(&root.join("data"))?;
+    let text = read_descriptor(runtime, immutable.clone(), root.join(MANIFEST)).await?;
+    let expected =
+        crate::bundle_plan::checksums(runtime, std::str::from_utf8(&text).map_err(error)?)
+            .await
+            .map_err(error)?;
+    let held = immutable.clone();
+    let directory = root.to_owned();
+    let observed = runtime
+        .blocking(move || {
+            held.validate()?;
+            Ok::<_, io::Error>(observe(&directory, inventory(&directory)?))
+        })
+        .await
+        .map_err(error)??;
+    let problems = crate::bundle_plan::problems(runtime, &expected, &observed)
+        .await
+        .map_err(error)?;
     if !problems.is_empty() {
-        return Ok(problems);
+        return Ok(problems.into_iter().map(|problem| problem.text).collect());
     }
-    let description: Description =
-        serde_json::from_slice(&read_small(&root.join(BUNDLE), 4 * 1024 * 1024)?)?;
-    if description.bundle_version != "delta-evidence-bundle/1" {
-        return Err(error("unsupported bundle contract"));
-    }
-    let repository = EvidenceRepository::read_only(
+    let description: Description = serde_json::from_slice(
+        &read_descriptor(runtime, immutable.clone(), root.join(BUNDLE)).await?,
+    )?;
+    let repository = EvidenceRepository::immutable(
+        immutable,
         StatePaths {
             data_root: root.join("data"),
             cache_root: scratch.to_path_buf(),
@@ -458,16 +546,14 @@ async fn verify_owned(
     )
     .map_err(error)?;
     let catalog = repository.catalog.pin().await.map_err(error)?;
-    if catalog.identity() != description.control
-        || catalog
-            .current(runtime, &description.context_id)
-            .await
-            .map_err(error)?
-            .as_ref()
-            != Some(&description.snapshot_id)
-    {
-        return Err(error("bundle identity and catalog selection disagree"));
-    }
+    crate::bundle_plan::admit_catalog(
+        runtime,
+        &catalog.session(runtime).await.map_err(error)?,
+        &description,
+        catalog.identity(),
+    )
+    .await
+    .map_err(error)?;
     for input in catalog
         .comparison_closure(runtime, &description.snapshot_id)
         .await
@@ -477,12 +563,9 @@ async fn verify_owned(
             .open_snapshot(catalog.clone(), &input)
             .await
             .map_err(error)?;
-        if input == description.snapshot_id && opened.manifest.context_id != description.context_id
-        {
-            return Err(error("bundle context and snapshot disagree"));
-        }
+        drop(opened);
     }
-    Ok(problems)
+    Ok(Vec::new())
 }
 
 fn safe_path(path: &str) -> io::Result<()> {
@@ -504,6 +587,7 @@ fn inventory(root: &Path) -> io::Result<Vec<String>> {
         depth: usize,
         files: &mut Vec<String>,
         bytes: &mut u64,
+        path_bytes: &mut usize,
     ) -> io::Result<()> {
         if depth > 16 {
             return Err(error("bundle directory depth exceeds limit"));
@@ -512,7 +596,7 @@ fn inventory(root: &Path) -> io::Result<Vec<String>> {
             let entry = entry?;
             let metadata = fs::symlink_metadata(entry.path())?;
             if metadata.is_dir() {
-                visit(root, &entry.path(), depth + 1, files, bytes)?;
+                visit(root, &entry.path(), depth + 1, files, bytes, path_bytes)?;
             } else if metadata.is_file() {
                 *bytes = bytes
                     .checked_add(metadata.len())
@@ -529,6 +613,10 @@ fn inventory(root: &Path) -> io::Result<Vec<String>> {
                     .ok_or_else(|| error("non-UTF8 bundle path"))?
                     .to_owned();
                 safe_path(&relative)?;
+                *path_bytes = path_bytes
+                    .checked_add(relative.len() + 67)
+                    .filter(|bytes| *bytes <= TEXT_LIMIT as usize)
+                    .ok_or_else(|| error("bundle manifest path byte bound"))?;
                 files.push(relative);
             } else {
                 return Err(error("bundle contains a symlink or special file"));
@@ -540,7 +628,7 @@ fn inventory(root: &Path) -> io::Result<Vec<String>> {
         return Err(error("bundle root is not a directory"));
     }
     let mut files = Vec::new();
-    visit(root, root, 0, &mut files, &mut 0)?;
+    visit(root, root, 0, &mut files, &mut 0, &mut 0)?;
     files.sort();
     Ok(files)
 }

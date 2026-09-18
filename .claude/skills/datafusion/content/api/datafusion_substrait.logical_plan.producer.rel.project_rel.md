@@ -10,6 +10,9 @@ Crate `datafusion-substrait` · 2 public items · structured records in [`model/
 fn from_projection(producer: &mut impl SubstraitProducer, p: &datafusion::logical_expr::Projection) -> datafusion::common::Result<Box<substrait::proto::Rel>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.rel.project_rel.from_projection.md).
+
+
 ---
 
 ## from_window
@@ -19,5 +22,8 @@ fn from_projection(producer: &mut impl SubstraitProducer, p: &datafusion::logica
 ```rust
 fn from_window(producer: &mut impl SubstraitProducer, window: &datafusion::logical_expr::Window) -> datafusion::common::Result<Box<substrait::proto::Rel>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.rel.project_rel.from_window.md).
+
 
 ---

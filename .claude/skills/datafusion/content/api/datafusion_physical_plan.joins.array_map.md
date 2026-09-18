@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 1 public items · structured records in [`mo
 struct ArrayMap
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.array_map.ArrayMap.md).
+
+
 A dense map for single-column integer join keys within a limited range.
 
 Maps join keys to build-side indices using direct array indexing:

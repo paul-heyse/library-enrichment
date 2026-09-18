@@ -1,0 +1,19 @@
+id: native-export-staging-owner
+language: Rust
+severity: error
+message: Export sibling staging requires primary durable ownership, not TempDir cleanup.
+files:
+  - crates/enrichment-store/src/bundle.rs
+rule:
+  kind: call_expression
+  has:
+    field: function
+    regex: '(^|::)remove_dir_all$|\.tempdir_in$'
+  not:
+    inside:
+      kind: mod_item
+      has:
+        field: name
+        regex: '(^tests$|_tests$)'
+      stopBy: end
+note: Anonymous supervisor spill may remain temporary. This guard covers the sibling bundle staging owner and does not resolve aliases.

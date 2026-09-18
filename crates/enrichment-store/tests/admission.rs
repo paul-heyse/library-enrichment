@@ -81,8 +81,8 @@ fn scope() -> EvidenceScope {
     EvidenceScope {
         ecosystem: Ecosystem::Rust,
         symbol_package: "p".into(),
-        release_id: "rel_fixture".into(),
-        environment_id: "env_fixture".into(),
+        release_id: format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
+        environment_id: format!("env_{}", "a".repeat(64)).try_into().unwrap(),
     }
 }
 
@@ -186,7 +186,10 @@ async fn duplicate_keys_and_conditional_foreign_keys_are_rejected_before_constra
         .err()
         .expect("reject dangling")
         .to_string();
-    assert!(error.contains("symbol_definition"), "{error}");
+    assert!(
+        error.contains("declared reference") && error.contains("definition_id"),
+        "{error}"
+    );
 }
 
 #[tokio::test]
@@ -271,197 +274,5 @@ async fn resource_exhaustion_is_an_error_and_never_a_successful_empty_result() {
             .expect("valid empty")
             .rows,
         0
-    );
-}
-
-#[tokio::test]
-async fn native_field_contracts_reject_bad_coordinates_without_decoding_domain_rows() {
-    use enrichment_core::evidence::arrow_model::{cells, checks, encode};
-    use enrichment_core::{
-        evidence::relational::{FactSource, Locator},
-        wire::{EvidenceClass, SourceVersionMatch},
-    };
-    let root = tempfile::tempdir().unwrap();
-    let runtime = runtime(root.path());
-    let cases = vec![
-        (
-            "valid_lines",
-            Locator::Lines {
-                file: Some("pkg/β.rs".into()),
-                start: 1,
-                end: 2,
-            },
-        ),
-        (
-            "zero",
-            Locator::Lines {
-                file: None,
-                start: 0,
-                end: 2,
-            },
-        ),
-        ("reverse", Locator::Bytes { start: 2, end: 1 }),
-        ("empty_bytes", Locator::Bytes { start: 0, end: 0 }),
-        (
-            "escape",
-            Locator::ArchiveMember {
-                path: "pkg/../file.rs".into(),
-            },
-        ),
-        (
-            "absolute",
-            Locator::ArchiveMember {
-                path: "/file.rs".into(),
-            },
-        ),
-        (
-            "backslash",
-            Locator::ArchiveMember {
-                path: "pkg\\file.rs".into(),
-            },
-        ),
-        (
-            "control",
-            Locator::RustdocItem {
-                item: 1,
-                reported_file: Some("pkg\nfile".into()),
-                reported_line: None,
-            },
-        ),
-        (
-            "valid_reported",
-            Locator::RustdocItem {
-                item: 1,
-                reported_file: Some("/upstream/build/file.rs".into()),
-                reported_line: None,
-            },
-        ),
-        (
-            "wrong_python_origin",
-            Locator::PythonDeclaration {
-                file: "pkg.py".into(),
-                declaration: "pkg".into(),
-                line: None,
-                origin: enrichment_core::evidence::relational::ApiOrigin::Rustdoc,
-                overload: None,
-            },
-        ),
-    ];
-    let sources = cases
-        .iter()
-        .map(|(_, locator)| FactSource {
-            extractor: "fixture".into(),
-            extractor_version: "1".into(),
-            producer_binding_id: "producer_fixture".into(),
-            artifact_id: "art_fixture".into(),
-            source_uri: None,
-            source_version_match: SourceVersionMatch::Exact,
-            evidence_class: EvidenceClass::Declared,
-            locator: locator.clone(),
-        })
-        .collect::<Vec<_>>();
-    let batch = cells::batch(
-        "coordinate_probe",
-        vec![
-            cells::column(
-                "id",
-                cells::text(cases.iter().map(|(id, _)| *id)),
-                false,
-                "key:probe",
-            ),
-            cells::column(
-                "source",
-                encode::source(&sources.iter().collect::<Vec<_>>()).unwrap(),
-                false,
-                "fact-source",
-            ),
-        ],
-    )
-    .unwrap();
-    let schema = batch.schema();
-    let frame = runtime.session().read_batch(batch).unwrap();
-    let mut observed = std::collections::BTreeSet::new();
-    for (_, plan) in checks::violations(frame, &schema, "id").unwrap() {
-        for batch in runtime.execute(plan).await.unwrap().batches {
-            let text = cells::TextColumn::new(batch.column(0).as_ref()).unwrap();
-            for row in 0..batch.num_rows() {
-                observed.insert(text.required(row).unwrap().to_owned());
-            }
-        }
-    }
-    assert_eq!(
-        observed,
-        [
-            "zero",
-            "reverse",
-            "escape",
-            "absolute",
-            "backslash",
-            "control",
-            "wrong_python_origin"
-        ]
-        .into_iter()
-        .map(str::to_owned)
-        .collect()
-    );
-}
-
-#[tokio::test]
-async fn nullable_nested_read_layout_still_enforces_required_semantic_fields() {
-    use arrow::array::{Array, StringArray, StructArray};
-    use enrichment_core::evidence::arrow_model::{cells, checks};
-    let root = tempfile::tempdir().unwrap();
-    let runtime = runtime(root.path());
-    let batch = cells::batch(
-        "presence_probe",
-        vec![
-            cells::column("id", cells::text(["valid", "missing"]), false, "key:probe"),
-            cells::column(
-                "source",
-                cells::structure(
-                    vec![cells::column(
-                        "extractor",
-                        cells::text(["extractor", "extractor"]),
-                        false,
-                        "extractor-name",
-                    )],
-                    None,
-                )
-                .unwrap(),
-                false,
-                "source",
-            ),
-        ],
-    )
-    .unwrap();
-    let values = batch
-        .column(1)
-        .as_any()
-        .downcast_ref::<StructArray>()
-        .unwrap();
-    assert!(values.fields()[0].is_nullable());
-    assert!(checks::required(&values.fields()[0]));
-    let corrupted = Arc::new(
-        StructArray::try_new(
-            values.fields().clone(),
-            vec![Arc::new(StringArray::from(vec![Some("extractor"), None]))],
-            values.nulls().cloned(),
-        )
-        .unwrap(),
-    );
-    let batch =
-        RecordBatch::try_new(batch.schema(), vec![batch.column(0).clone(), corrupted]).unwrap();
-    let schema = batch.schema();
-    let violations =
-        checks::violations(runtime.session().read_batch(batch).unwrap(), &schema, "id").unwrap();
-    assert_eq!(violations.len(), 1);
-    let output = runtime.execute(violations[0].1.clone()).await.unwrap();
-    assert_eq!(output.rows, 1);
-    assert_eq!(
-        cells::TextColumn::new(output.batches[0].column(0).as_ref())
-            .unwrap()
-            .required(0)
-            .unwrap(),
-        "missing"
     );
 }

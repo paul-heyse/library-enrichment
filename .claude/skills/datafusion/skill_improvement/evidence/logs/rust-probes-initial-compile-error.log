@@ -1,0 +1,64 @@
+     Locking 75 packages to latest Rust 1.98.1 compatible versions
+   Compiling libm v0.2.16
+   Compiling autocfg v1.5.1
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.26
+   Compiling quote v1.0.47
+   Compiling zerocopy v0.8.57
+   Compiling cfg-if v1.0.5
+   Compiling libc v0.2.189
+   Compiling version_check v0.9.5
+   Compiling getrandom v0.3.4
+   Compiling bytes v1.12.1
+   Compiling lexical-util v1.0.7
+   Compiling arrow-schema v59.3.0
+   Compiling once_cell v1.21.4
+   Compiling iana-time-zone v0.1.65
+   Compiling hashbrown v0.17.1
+   Compiling base64 v0.23.1
+   Compiling ryu v1.0.23
+   Compiling ahash v0.8.12
+   Compiling num-traits v0.2.19
+   Compiling lexical-write-integer v1.0.6
+   Compiling lexical-parse-integer v1.0.6
+   Compiling lexical-parse-float v1.0.6
+   Compiling lexical-write-float v1.0.6
+   Compiling syn v2.0.119
+   Compiling lexical-core v1.0.6
+   Compiling num-integer v0.1.47
+   Compiling chrono v0.4.45
+   Compiling num-complex v0.4.6
+   Compiling atoi v2.0.0
+   Compiling num-bigint v0.5.1
+   Compiling zerocopy-derive v0.8.57
+   Compiling half v2.7.1
+   Compiling arrow-buffer v59.3.0
+   Compiling arrow-data v59.3.0
+   Compiling arrow-array v59.3.0
+   Compiling arrow-select v59.3.0
+   Compiling arrow-row v59.3.0
+   Compiling arrow-ord v59.3.0
+   Compiling arrow-cast v59.3.0
+   Compiling datafusion-skill-contract-probes v0.1.0 (/home/paul/library-enrichment/.claude/skills/datafusion/skill_improvement/evidence/probes)
+error[E0271]: type mismatch resolving `<Vec<(&str, Arc<PrimitiveArray<Int32Type>>)> as IntoIterator>::Item == (&str, Arc<dyn Array>)`
+   --> tests/contracts.rs:108:47
+    |
+108 |     let ordinary = RecordBatch::try_from_iter(vec![("x", Arc::new(Int32Array::from(vec![1, 2, 3])))])
+    |                    -------------------------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `(&str, Arc<dyn Array>)`, found `(&str, Arc<PrimitiveArray<Int32Type>>)`
+    |                    |
+    |                    required by a bound introduced by this call
+    |
+    = note: expected tuple `(&_, Arc<(dyn arrow_array::Array + 'static)>)`
+               found tuple `(&_, Arc<PrimitiveArray<Int32Type>>)`
+    = help: `PrimitiveArray<Int32Type>` implements `Array` so you could box the found value and coerce it to the trait object `Box<dyn Array>`, you will have to change the expected type as well
+note: required by a bound in `RecordBatch::try_from_iter`
+   --> /home/paul/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/arrow-array-59.3.0/src/record_batch.rs:735:25
+    |
+733 |     pub fn try_from_iter<I, F>(value: I) -> Result<Self, ArrowError>
+    |            ------------- required by a bound in this associated function
+734 |     where
+735 |         I: IntoIterator<Item = (F, ArrayRef)>,
+    |                         ^^^^^^^^^^^^^^^^^^^^ required by this bound in `RecordBatch::try_from_iter`
+
+For more information about this error, try `rustc --explain E0271`.
+error: could not compile `datafusion-skill-contract-probes` (test "contracts") due to 1 previous error

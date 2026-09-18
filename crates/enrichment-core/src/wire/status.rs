@@ -39,30 +39,6 @@ pub struct ComponentStatus {
 }
 }
 
-impl ComponentStatus {
-    /// A component that is not implemented yet, naming the phase that will implement it.
-    #[must_use]
-    pub fn not_implemented(name: &str, phase: u8) -> Self {
-        Self {
-            name: name.to_owned(),
-            available: false,
-            version: None,
-            detail: format!("not implemented; scheduled for phase {phase}"),
-        }
-    }
-
-    /// A component that is installed and usable.
-    #[must_use]
-    pub fn available(name: &str, version: &str, detail: &str) -> Self {
-        Self {
-            name: name.to_owned(),
-            available: true,
-            version: Some(version.to_owned()),
-            detail: detail.to_owned(),
-        }
-    }
-}
-
 crate::native_struct! {
 /// Versions of the daemon and its toolchain.
 pub struct Versions {
@@ -232,6 +208,39 @@ pub struct NativeCacheCounters {
     limit_bytes: usize => crate::native_union::Rule::Text,
     /// Absent when the upstream trait has no allocation-free occupancy query.
     occupied_bytes: Option<usize> => crate::native_union::Rule::Text,
+    /// Snapshot reservations by ownership phase; absent for caches without this measurement.
+    ownership: Option<NativeCacheOwnership> => crate::native_union::Rule::Text,
+    activity: NativeCacheActivity => crate::native_union::Rule::Text,
+}
+}
+
+crate::native_struct! {
+/// Declared snapshot reservation sizes, including the kernel's best-effort estimate.
+/// These values are neither allocator measurements nor process RSS.
+#[derive(Default)]
+pub struct NativeCacheOwnership {
+    in_flight_bytes: usize => crate::native_union::Rule::Text,
+    live_value_bytes: usize => crate::native_union::Rule::Text,
+    resident_value_bytes: usize => crate::native_union::Rule::Text,
+}
+}
+
+crate::native_struct! {
+/// Mechanical runtime observations. None means this native cache does not expose that
+/// measurement; it never means zero traffic or a durable publication acknowledgement.
+#[derive(Default)]
+pub struct NativeCacheActivity {
+    /// For file metadata this counts a returned entry before reader validation;
+    /// it does not assert that the entry was accepted or that I/O was avoided.
+    hits: Option<u64> => crate::native_union::Rule::Text,
+    misses: Option<u64> => crate::native_union::Rule::Text,
+    waits: Option<u64> => crate::native_union::Rule::Text,
+    cold_loads: Option<u64> => crate::native_union::Rule::Text,
+    incremental_refreshes: Option<u64> => crate::native_union::Rule::Text,
+    unchanged_refreshes: Option<u64> => crate::native_union::Rule::Text,
+    writer_publications: Option<u64> => crate::native_union::Rule::Text,
+    invalidations: Option<u64> => crate::native_union::Rule::Text,
+    oversize_bypasses: Option<u64> => crate::native_union::Rule::Text,
 }
 }
 
@@ -239,8 +248,8 @@ crate::native_vocabulary! {
 pub enum NativeCacheFamily {
     ImmutableProviders = "immutable_providers",
     FileMetadata = "file_metadata",
-    FileStatistics = "file_statistics",
-    FileListings = "file_listings",
+    DeltaSnapshots = "delta_snapshots",
+    VerifiedContracts = "verified_contracts",
 }
 }
 

@@ -1,0 +1,4450 @@
+[
+  {
+    "id": "dfabfc6e02e65fdcdbb664da",
+    "path": "datafusion_physical_plan::buffer::BufferExec",
+    "name": "BufferExec",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct BufferExec",
+    "docs": "WARNING: EXPERIMENTAL\n\nDecouples production and consumption of record batches with an internal queue per partition,\neagerly filling up the capacity of the queues even before any message is requested.\n\n```text\n            ┌───────────────────────────┐\n            │        BufferExec         │\n            │                           │\n            │┌────── Partition 0 ──────┐│\n            ││            ┌────┐ ┌────┐││       ┌────┐\n──background poll────────▶│    │ │    ├┼┼───────▶    │\n            ││            └────┘ └────┘││       └────┘\n            │└─────────────────────────┘│\n            │┌────── Partition 1 ──────┐│\n            ││     ┌────┐ ┌────┐ ┌────┐││       ┌────┐\n──background poll─▶│    │ │    │ │    ├┼┼───────▶    │\n            ││     └────┘ └────┘ └────┘││       └────┘\n            │└─────────────────────────┘│\n            │                           │\n            │           ...             │\n            │                           │\n            │┌────── Partition N ──────┐│\n            ││                   ┌────┐││       ┌────┐\n──background poll───────────────▶│    ├┼┼───────▶    │\n            ││                   └────┘││       └────┘\n            │└─────────────────────────┘│\n            └───────────────────────────┘\n```\n\nThe capacity is provided in bytes, and for each buffered record batch it will take into account\nthe size reported by [RecordBatch::get_array_memory_size].\n\nIf a single record batch exceeds the maximum capacity set in the `capacity` argument, it's still\nallowed to pass in order to not deadlock the buffer.\n\nThis is useful for operators that conditionally start polling one of their children only after\nother child has finished, allowing to perform some early work and accumulating batches in\nmemory so that they can be served immediately when requested.",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        98,
+        1
+      ],
+      "end": [
+        103,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          1020,
+          1022,
+          1023,
+          1024,
+          1025,
+          1026,
+          1027,
+          1028,
+          1029,
+          1030,
+          1031,
+          1032,
+          1033,
+          1034,
+          1035,
+          1036,
+          1037,
+          1038,
+          1039,
+          1040,
+          1042,
+          1044,
+          1046,
+          1069
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "RecordBatch::get_array_memory_size": 1015
+    },
+    "link_paths": {
+      "RecordBatch::get_array_memory_size": "arrow_array::record_batch::RecordBatch::get_array_memory_size"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1016",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-dfabfc6e02e65fdcdbb664da",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "884368547db7b5574566127a",
+    "path": "datafusion_physical_plan::buffer::BufferExec::apply_expressions",
+    "name": "apply_expressions",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_expressions(&self, _f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        165,
+        5
+      ],
+      "end": [
+        170,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "FnMut",
+                            "id": 795,
+                            "args": {
+                              "parenthesized": {
+                                "inputs": [
+                                  {
+                                    "borrowed_ref": {
+                                      "lifetime": null,
+                                      "is_mutable": false,
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Arc",
+                                          "id": 94,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "dyn_trait": {
+                                                      "traits": [
+                                                        {
+                                                          "trait": {
+                                                            "path": "PhysicalExpr",
+                                                            "id": 629,
+                                                            "args": null
+                                                          },
+                                                          "generic_params": []
+                                                        }
+                                                      ],
+                                                      "lifetime": null
+                                                    }
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                "output": {
+                                  "resolved_path": {
+                                    "path": "Result",
+                                    "id": 99,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "TreeNodeRecursion",
+                                                "id": 796,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "TreeNodeRecursion",
+                          "id": 796,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "795": "core::ops::function::FnMut",
+      "94": "alloc::sync::Arc",
+      "629": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "99": "datafusion_common::error::Result",
+      "796": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1052",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-884368547db7b5574566127a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6c47324508d2f7a333ba4001",
+    "path": "datafusion_physical_plan::buffer::BufferExec::benefits_from_input_partitioning",
+    "name": "benefits_from_input_partitioning",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn benefits_from_input_partitioning(&self) -> Vec<bool>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        157,
+        5
+      ],
+      "end": [
+        159,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1050",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-6c47324508d2f7a333ba4001",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5ab32d605de44590eb77897f",
+    "path": "datafusion_physical_plan::buffer::BufferExec::capacity",
+    "name": "capacity",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn capacity(&self) -> usize",
+    "docs": "Returns the per-partition capacity in bytes for this [BufferExec].",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        126,
+        5
+      ],
+      "end": [
+        128,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          129,
+          2
+        ]
+      }
+    },
+    "links": {
+      "BufferExec": 1016
+    },
+    "link_paths": {
+      "BufferExec": "datafusion_physical_plan::buffer::BufferExec"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1019",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-5ab32d605de44590eb77897f",
+    "aliases": [],
+    "resolved_doc_links": {
+      "BufferExec": "../operations/datafusion_physical_plan.buffer.BufferExec.md#op-dfabfc6e02e65fdcdbb664da"
+    }
+  },
+  {
+    "id": "cebbd6727020a3512f71b0c6",
+    "path": "datafusion_physical_plan::buffer::BufferExec::cardinality_effect",
+    "name": "cardinality_effect",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn cardinality_effect(&self) -> CardinalityEffect",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        283,
+        5
+      ],
+      "end": [
+        285,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "CardinalityEffect",
+              "id": 809,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "809": "datafusion_physical_plan::execution_plan::CardinalityEffect"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1061",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-cebbd6727020a3512f71b0c6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ea5ab74b20b0c6dd9a2be8aa",
+    "path": "datafusion_physical_plan::buffer::BufferExec::child_stats_requests",
+    "name": "child_stats_requests",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn child_stats_requests(&self, partition: Option<usize>) -> Vec<ChildStats>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        267,
+        5
+      ],
+      "end": [
+        269,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ChildStats",
+                          "id": 804,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "2": "alloc::vec::Vec",
+      "804": "datafusion_physical_plan::statistics::ChildStats"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1058",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-ea5ab74b20b0c6dd9a2be8aa",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f9a5116b351bbae4e1ce7437",
+    "path": "datafusion_physical_plan::buffer::BufferExec::children",
+    "name": "children",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        161,
+        5
+      ],
+      "end": [
+        163,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1051",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-f9a5116b351bbae4e1ce7437",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "aa8bb89803d54bf4bf911a55",
+    "path": "datafusion_physical_plan::buffer::BufferExec::clone",
+    "name": "clone",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> BufferExec",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        97,
+        17
+      ],
+      "end": [
+        97,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BufferExec",
+              "id": 1016,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1016": "datafusion_physical_plan::buffer::BufferExec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          97,
+          17
+        ],
+        "end": [
+          97,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1043",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-aa8bb89803d54bf4bf911a55",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "aa6b2b605b4b53a4c66d4f67",
+    "path": "datafusion_physical_plan::buffer::BufferExec::execute",
+    "name": "execute",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        210,
+        5
+      ],
+      "end": [
+        261,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "context",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "TaskContext",
+                              "id": 800,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SendableRecordBatchStream",
+                          "id": 103,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "800": "datafusion_execution::task::TaskContext",
+      "99": "datafusion_common::error::Result",
+      "103": "datafusion_execution::stream::SendableRecordBatchStream"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1056",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-aa6b2b605b4b53a4c66d4f67",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "691b2e45a35295143241bff8",
+    "path": "datafusion_physical_plan::buffer::BufferExec::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        97,
+        10
+      ],
+      "end": [
+        97,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          97,
+          10
+        ],
+        "end": [
+          97,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1041",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-691b2e45a35295143241bff8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ca6b61dcc4794e497bd9210e",
+    "path": "datafusion_physical_plan::buffer::BufferExec::fmt_as",
+    "name": "fmt_as",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        132,
+        5
+      ],
+      "end": [
+        141,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "t",
+              {
+                "resolved_path": {
+                  "path": "DisplayFormatType",
+                  "id": 778,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "778": "datafusion_physical_plan::display::DisplayFormatType",
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "DisplayAs",
+        "id": "datafusion_physical_plan::display::DisplayAs",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::display::DisplayAs",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          131,
+          1
+        ],
+        "end": [
+          142,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1045",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-ca6b61dcc4794e497bd9210e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b71eb73d68f8e81093e4f091",
+    "path": "datafusion_physical_plan::buffer::BufferExec::gather_filters_for_pushdown",
+    "name": "gather_filters_for_pushdown",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn gather_filters_for_pushdown(&self, _phase: FilterPushdownPhase, parent_filters: Vec<Arc<dyn PhysicalExpr>>, _config: &ConfigOptions) -> Result<FilterDescription>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        300,
+        5
+      ],
+      "end": [
+        307,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_phase",
+              {
+                "resolved_path": {
+                  "path": "FilterPushdownPhase",
+                  "id": 811,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "parent_filters",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "PhysicalExpr",
+                                                "id": 629,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ConfigOptions",
+                      "id": 812,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "FilterDescription",
+                          "id": 813,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "811": "datafusion_physical_plan::filter_pushdown::FilterPushdownPhase",
+      "2": "alloc::vec::Vec",
+      "94": "alloc::sync::Arc",
+      "629": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "812": "datafusion_common::config::ConfigOptions",
+      "99": "datafusion_common::error::Result",
+      "813": "datafusion_physical_plan::filter_pushdown::FilterDescription"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1064",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-b71eb73d68f8e81093e4f091",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fe529b95d20ae235748977fe",
+    "path": "datafusion_physical_plan::buffer::BufferExec::handle_child_pushdown_result",
+    "name": "handle_child_pushdown_result",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn handle_child_pushdown_result(&self, _phase: FilterPushdownPhase, child_pushdown_result: ChildPushdownResult, _config: &ConfigOptions) -> Result<FilterPushdownPropagation<Arc<dyn ExecutionPlan>>>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        309,
+        5
+      ],
+      "end": [
+        316,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_phase",
+              {
+                "resolved_path": {
+                  "path": "FilterPushdownPhase",
+                  "id": 811,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "child_pushdown_result",
+              {
+                "resolved_path": {
+                  "path": "ChildPushdownResult",
+                  "id": 815,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "_config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ConfigOptions",
+                      "id": 812,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "FilterPushdownPropagation",
+                          "id": 816,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 94,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "ExecutionPlan",
+                                                        "id": 126,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "811": "datafusion_physical_plan::filter_pushdown::FilterPushdownPhase",
+      "815": "datafusion_physical_plan::filter_pushdown::ChildPushdownResult",
+      "812": "datafusion_common::config::ConfigOptions",
+      "99": "datafusion_common::error::Result",
+      "816": "datafusion_physical_plan::filter_pushdown::FilterPushdownPropagation",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1065",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-fe529b95d20ae235748977fe",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "98be17851af484c5b713202e",
+    "path": "datafusion_physical_plan::buffer::BufferExec::input",
+    "name": "input",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn input(&self) -> &Arc<dyn ExecutionPlan>",
+    "docs": "Returns the input [ExecutionPlan] of this [BufferExec].",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        121,
+        5
+      ],
+      "end": [
+        123,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          129,
+          2
+        ]
+      }
+    },
+    "links": {
+      "ExecutionPlan": 126,
+      "BufferExec": 1016
+    },
+    "link_paths": {
+      "ExecutionPlan": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "BufferExec": "datafusion_physical_plan::buffer::BufferExec"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1018",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-98be17851af484c5b713202e",
+    "aliases": [],
+    "resolved_doc_links": {
+      "ExecutionPlan": "../operations/datafusion_physical_plan.execution_plan.ExecutionPlan.md#op-ac09436cd73f869917923673",
+      "BufferExec": "../operations/datafusion_physical_plan.buffer.BufferExec.md#op-dfabfc6e02e65fdcdbb664da"
+    }
+  },
+  {
+    "id": "30be7e544c9d2386ebaf58a8",
+    "path": "datafusion_physical_plan::buffer::BufferExec::maintains_input_order",
+    "name": "maintains_input_order",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn maintains_input_order(&self) -> Vec<bool>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        153,
+        5
+      ],
+      "end": [
+        155,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1049",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-30be7e544c9d2386ebaf58a8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "534685baf2a965877bd355a1",
+    "path": "datafusion_physical_plan::buffer::BufferExec::metrics",
+    "name": "metrics",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn metrics(&self) -> Option<MetricsSet>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        263,
+        5
+      ],
+      "end": [
+        265,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "MetricsSet",
+                          "id": 802,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "802": "datafusion_physical_expr_common::metrics::MetricsSet"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1057",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-534685baf2a965877bd355a1",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e27610340e091ef836d86a0b",
+    "path": "datafusion_physical_plan::buffer::BufferExec::name",
+    "name": "name",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &str",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        145,
+        5
+      ],
+      "end": [
+        147,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1047",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-e27610340e091ef836d86a0b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7519277c64563b9cc6a3354a",
+    "path": "datafusion_physical_plan::buffer::BufferExec::new",
+    "name": "new",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(input: Arc<dyn ExecutionPlan>, capacity: usize) -> Self",
+    "docs": "Builds a new [BufferExec] with the provided capacity in bytes.",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        107,
+        5
+      ],
+      "end": [
+        118,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "input",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "capacity",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          129,
+          2
+        ]
+      }
+    },
+    "links": {
+      "BufferExec": 1016
+    },
+    "link_paths": {
+      "BufferExec": "datafusion_physical_plan::buffer::BufferExec"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1017",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-7519277c64563b9cc6a3354a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "BufferExec": "../operations/datafusion_physical_plan.buffer.BufferExec.md#op-dfabfc6e02e65fdcdbb664da"
+    }
+  },
+  {
+    "id": "d88bdd8c0db9457326c94368",
+    "path": "datafusion_physical_plan::buffer::BufferExec::properties",
+    "name": "properties",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        149,
+        5
+      ],
+      "end": [
+        151,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "PlanProperties",
+                              "id": 730,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "730": "datafusion_physical_plan::execution_plan::PlanProperties"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1048",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-d88bdd8c0db9457326c94368",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8ea6c7551099ebc9ff913e6b",
+    "path": "datafusion_physical_plan::buffer::BufferExec::replace_children",
+    "name": "replace_children",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, options: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        172,
+        5
+      ],
+      "end": [
+        188,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "ReplaceChildrenOptions",
+                  "id": 792,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "792": "datafusion_physical_plan::execution_plan::ReplaceChildrenOptions",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1053",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-8ea6c7551099ebc9ff913e6b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "39d53c2625b0c75e1667b596",
+    "path": "datafusion_physical_plan::buffer::BufferExec::statistics_from_inputs",
+    "name": "statistics_from_inputs",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn statistics_from_inputs(&self, input_stats: &[Arc<Statistics>], _args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        271,
+        5
+      ],
+      "end": [
+        277,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "input_stats",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Arc",
+                        "id": 94,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Statistics",
+                                    "id": 806,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "StatisticsArgs",
+                      "id": 807,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Statistics",
+                                      "id": 806,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "806": "datafusion_common::stats::Statistics",
+      "807": "datafusion_physical_plan::statistics::StatisticsArgs",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1059",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-39d53c2625b0c75e1667b596",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "649a8b0c06f50acf0cb315ac",
+    "path": "datafusion_physical_plan::buffer::BufferExec::supports_limit_pushdown",
+    "name": "supports_limit_pushdown",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_limit_pushdown(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        279,
+        5
+      ],
+      "end": [
+        281,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1060",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-649a8b0c06f50acf0cb315ac",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "96a63084c5d40fc9d5bfe37d",
+    "path": "datafusion_physical_plan::buffer::BufferExec::try_from_proto",
+    "name": "try_from_proto",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "Reconstruct a [`BufferExec`] from its protobuf representation.\n\nThe exact inverse of [`ExecutionPlan::try_to_proto`].\n\n[`ExecutionPlan::try_to_proto`]: crate::ExecutionPlan::try_to_proto",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        356,
+        5
+      ],
+      "end": [
+        369,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "node",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                      "id": 752,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::proto::ExecutionPlanDecodeCtx",
+                      "id": 753,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "752": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode",
+      "753": "datafusion_physical_plan::proto::ExecutionPlanDecodeCtx",
+      "99": "datafusion_common::error::Result",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          350,
+          1
+        ],
+        "end": [
+          370,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BufferExec`": 1016,
+      "crate::ExecutionPlan::try_to_proto": 943
+    },
+    "link_paths": {
+      "`BufferExec`": "datafusion_physical_plan::buffer::BufferExec",
+      "crate::ExecutionPlan::try_to_proto": "datafusion_physical_plan::execution_plan::ExecutionPlan::try_to_proto"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1021",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-96a63084c5d40fc9d5bfe37d",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BufferExec`": "../operations/datafusion_physical_plan.buffer.BufferExec.md#op-dfabfc6e02e65fdcdbb664da",
+      "crate::ExecutionPlan::try_to_proto": "../operations/datafusion_physical_plan.execution_plan.ExecutionPlan.md#op-759ee1c728536c82a93b9a30"
+    }
+  },
+  {
+    "id": "fe18c20d94dc09f425bc7e4a",
+    "path": "datafusion_physical_plan::buffer::BufferExec::try_pushdown_sort",
+    "name": "try_pushdown_sort",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_pushdown_sort(&self, order: &[PhysicalSortExpr]) -> Result<SortOrderPushdownResult<Arc<dyn ExecutionPlan>>>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        318,
+        5
+      ],
+      "end": [
+        327,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "order",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "PhysicalSortExpr",
+                        "id": 92,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SortOrderPushdownResult",
+                          "id": 1067,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 94,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "ExecutionPlan",
+                                                        "id": 126,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "92": "datafusion_physical_expr_common::sort_expr::PhysicalSortExpr",
+      "99": "datafusion_common::error::Result",
+      "1067": "datafusion_physical_plan::sort_pushdown::SortOrderPushdownResult",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1066",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-fe18c20d94dc09f425bc7e4a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "91cb0f1b68c35c75be819209",
+    "path": "datafusion_physical_plan::buffer::BufferExec::try_swapping_with_projection",
+    "name": "try_swapping_with_projection",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_swapping_with_projection(&self, projection: &ProjectionExec) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        287,
+        5
+      ],
+      "end": [
+        298,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "projection",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ProjectionExec",
+                      "id": 1063,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 281,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 94,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "ExecutionPlan",
+                                                        "id": 126,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1063": "datafusion_physical_plan::projection::ProjectionExec",
+      "99": "datafusion_common::error::Result",
+      "281": "core::option::Option",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1062",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-91cb0f1b68c35c75be819209",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9ec7b6863ad799ce3934bb0e",
+    "path": "datafusion_physical_plan::buffer::BufferExec::try_to_proto",
+    "name": "try_to_proto",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        330,
+        5
+      ],
+      "end": [
+        346,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"proto\"), span: src/buffer.rs:329:11: 329:28 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::proto::ExecutionPlanEncodeCtx",
+                      "id": 818,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 281,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                                      "id": 752,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "818": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx",
+      "99": "datafusion_common::error::Result",
+      "281": "core::option::Option",
+      "752": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1068",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-9ec7b6863ad799ce3934bb0e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ccb720e0c5a8c7ac64bcfc0f",
+    "path": "datafusion_physical_plan::buffer::BufferExec::with_new_children",
+    "name": "with_new_children",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        190,
+        5
+      ],
+      "end": [
+        198,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1054",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-ccb720e0c5a8c7ac64bcfc0f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ce716157145aa6ecccd60c9b",
+    "path": "datafusion_physical_plan::buffer::BufferExec::with_new_children_and_same_properties",
+    "name": "with_new_children_and_same_properties",
+    "owner": "datafusion_physical_plan::buffer::BufferExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer.rs",
+      "begin": [
+        200,
+        5
+      ],
+      "end": [
+        208,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BufferExec",
+          "id": "datafusion_physical_plan::buffer::BufferExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer.rs",
+        "begin": [
+          144,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1055",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.buffer.BufferExec.md",
+    "record_file": "operations/datafusion_physical_plan.buffer.BufferExec.json",
+    "anchor": "op-ce716157145aa6ecccd60c9b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

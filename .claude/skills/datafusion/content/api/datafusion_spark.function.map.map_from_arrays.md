@@ -30,6 +30,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.map.map_from_arrays.MapFromArrays.md).
+
+
 Spark-compatible `map_from_arrays` expression
 <https://spark.apache.org/docs/latest/api/sql/index.html#map_from_arrays>
 

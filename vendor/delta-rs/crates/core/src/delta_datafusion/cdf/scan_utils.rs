@@ -104,6 +104,22 @@ pub fn create_spec_partition_values<F: FileAction>(
     spec_partition_values
 }
 
+/// Resolve Delta's URL-encoded action path to the same root-store key used by
+/// the ordinary native scan. Cross-store shallow-clone files need separate groups;
+/// refuse them here rather than mixing authorities in the path-only metadata cache.
+pub(crate) fn cdf_file_path(root: &Url, action: &str) -> DeltaResult<Path> {
+    use crate::delta_datafusion::engine::AsObjectStoreUrl;
+    let file = root
+        .join(action)
+        .map_err(|error| DeltaTableError::Generic(error.to_string()))?;
+    if file.as_object_store_url() != root.as_object_store_url() {
+        return Err(DeltaTableError::Generic(
+            "CDF file belongs to a different object store".into(),
+        ));
+    }
+    Ok(Path::from_url_path(file.path())?)
+}
+
 pub async fn extend_groups_with_pairs(
     schema: SchemaRef,
     pairs: Vec<ResolvedPair>,
@@ -134,6 +150,7 @@ pub async fn extend_groups_with_pairs(
             remove_groups,
             &pair,
             &table_partition_values,
+            &table_root,
             Arc::clone(&cache),
             &metrics,
         )
@@ -144,6 +161,7 @@ pub async fn extend_groups_with_pairs(
             add_groups,
             &pair,
             &table_partition_values,
+            &table_root,
             Arc::clone(&cache),
             &metrics,
         )
@@ -158,6 +176,7 @@ async fn push_pair_selection(
     groups: &mut HashMap<Vec<ScalarValue>, Vec<PartitionedFile>>,
     pair: &ResolvedPair,
     table_partition_values: &[ScalarValue],
+    table_root: &Url,
     cache: Arc<CachedParquetFileReaderFactory>,
     metrics: &ExecutionPlanMetricsSet,
 ) -> DeltaResult<()> {
@@ -166,7 +185,7 @@ async fn push_pair_selection(
     }
     let access_plan = access_plan_for_selection(
         selection,
-        &pair.add.path,
+        cdf_file_path(table_root, &pair.add.path)?,
         pair.add.size as u64,
         Arc::clone(&cache),
         metrics,
@@ -180,9 +199,12 @@ async fn push_pair_selection(
     ];
     part_values.extend_from_slice(table_partition_values);
 
-    let part_file = PartitionedFile::new(&pair.add.path, pair.add.size as u64)
-        .with_partition_values(part_values.clone())
-        .with_extension(access_plan);
+    let part_file = PartitionedFile::new(
+        cdf_file_path(table_root, &pair.add.path)?,
+        pair.add.size as u64,
+    )
+    .with_partition_values(part_values.clone())
+    .with_extension(access_plan);
     groups.entry(part_values).or_default().push(part_file);
     Ok(())
 }
@@ -427,12 +449,11 @@ fn access_plan_from_treemap(
 
 async fn access_plan_for_selection(
     selection: roaring::RoaringTreemap,
-    file_path_str: &str,
+    file_path: Path,
     file_size: u64,
     cache: Arc<CachedParquetFileReaderFactory>,
     metrics: &ExecutionPlanMetricsSet,
 ) -> DeltaResult<ParquetAccessPlan> {
-    let file_path = Path::parse(file_path_str)?;
     let parquet_metadata = read_parquet_metadata(cache, metrics, file_path, file_size).await?;
     Ok(access_plan_from_treemap(
         &selection,
@@ -455,7 +476,7 @@ pub async fn create_file_scan_plan<F: FileAction>(
         return Ok(Some(
             access_plan_for_selection(
                 tree_map,
-                &file_action.path(),
+                cdf_file_path(&table_root_url, &file_action.path())?,
                 file_action.size()? as u64,
                 cache,
                 metrics,
@@ -473,6 +494,22 @@ mod tests {
     use datafusion::logical_expr::{col, lit};
     use datafusion::prelude::SessionContext;
     use std::collections::HashMap;
+
+    #[test]
+    fn cdf_metadata_keys_are_root_scoped_and_url_decoded() -> DeltaResult<()> {
+        let first = Url::parse("file:///first%20root/table/").unwrap();
+        let second = Url::parse("file:///second/table/").unwrap();
+        let relative = "part%20one.parquet";
+        let path = cdf_file_path(&first, relative)?;
+        assert_eq!(path.as_ref(), "first root/table/part one.parquet");
+        assert_ne!(path, cdf_file_path(&second, relative)?);
+        assert_eq!(
+            path,
+            cdf_file_path(&first, "file:///first%20root/table/part%20one.parquet")?
+        );
+        assert!(cdf_file_path(&first, "s3://foreign/part.parquet").is_err());
+        Ok(())
+    }
 
     /// A constant `false` pruning predicate over an empty schema.
     fn constant_false_predicate() -> PartitionPruningPredicate {

@@ -10,6 +10,9 @@ Crate `datafusion-expr` · 36 public items · structured records in [`model/data
 fn add_filter(plan: LogicalPlan, predicates: &[&Expr]) -> datafusion_common::Result<LogicalPlan>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.add_filter.md).
+
+
 Returns a new [LogicalPlan] that filters the output of  `plan` with a
 [LogicalPlan::Filter] with all `predicates` ANDed.
 
@@ -35,6 +38,9 @@ Filter(predicate)
 fn can_hash(data_type: &arrow::datatypes::DataType) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.can_hash.md).
+
+
 Can this data type be used in hash join equal conditions??
 Data types here come from function 'equal_rows', if more data types are supported
 in create_hashes, add those data types here to generate join logical plan.
@@ -49,6 +55,9 @@ in create_hashes, add those data types here to generate join logical plan.
 fn check_all_columns_from_schema(columns: &std::collections::HashSet<&datafusion_common::Column>, schema: &datafusion_common::DFSchema) -> datafusion_common::Result<bool>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.check_all_columns_from_schema.md).
+
+
 Check whether all columns are from the schema.
 
 ---
@@ -61,6 +70,9 @@ Check whether all columns are from the schema.
 fn collect_subquery_cols(exprs: &[Expr], subquery_schema: &datafusion_common::DFSchema) -> datafusion_common::Result<std::collections::BTreeSet<datafusion_common::Column>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.collect_subquery_cols.md).
+
+
 Determine the set of [`Column`]s produced by the subquery.
 
 ---
@@ -72,6 +84,9 @@ Determine the set of [`Column`]s produced by the subquery.
 ```rust
 fn columnize_expr(e: Expr, input: &LogicalPlan) -> datafusion_common::Result<Expr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.columnize_expr.md).
+
 
 Convert an expression into Column expression if it's already provided as input plan.
 
@@ -99,6 +114,9 @@ Into:
 fn compare_sort_expr(sort_expr_a: &expr::Sort, sort_expr_b: &expr::Sort, schema: &datafusion_common::DFSchemaRef) -> std::cmp::Ordering
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.compare_sort_expr.md).
+
+
 Compare the sort expr as PostgreSQL's common_prefix_cmp():
 <https://github.com/postgres/postgres/blob/master/src/backend/optimizer/plan/planner.c>
 
@@ -111,6 +129,9 @@ Compare the sort expr as PostgreSQL's common_prefix_cmp():
 ```rust
 fn conjunction(filters: impl IntoIterator<Item = Expr>) -> Option<Expr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.conjunction.md).
+
 
 Combines an array of filter expressions into a single filter
 expression consisting of the input filter expressions joined with
@@ -142,6 +163,9 @@ assert_eq!(conjunction(split), Some(expr));
 fn disjunction(filters: impl IntoIterator<Item = Expr>) -> Option<Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.disjunction.md).
+
+
 Combines an array of filter expressions into a single filter
 expression consisting of the input filter expressions joined with
 logical OR.
@@ -171,6 +195,9 @@ assert_eq!(disjunction(split), Some(expr));
 ```rust
 fn enumerate_grouping_sets(group_expr: Vec<Expr>) -> datafusion_common::Result<Vec<Expr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.enumerate_grouping_sets.md).
+
 
 Convert multiple grouping expressions into one [`GroupingSet::GroupingSets`],\
 if the grouping expression does not contain [`Expr::GroupingSet`] or only has one expression,\
@@ -203,6 +230,9 @@ GROUPING SETS (\
 fn expand_qualified_wildcard(qualifier: &datafusion_common::TableReference, schema: &datafusion_common::DFSchema, wildcard_options: Option<&expr::WildcardOptions>) -> datafusion_common::Result<Vec<Expr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.expand_qualified_wildcard.md).
+
+
 Resolves an `Expr::Wildcard` to a collection of qualified `Expr::Column`'s.
 
 ---
@@ -214,6 +244,9 @@ Resolves an `Expr::Wildcard` to a collection of qualified `Expr::Column`'s.
 ```rust
 fn expand_wildcard(schema: &datafusion_common::DFSchema, plan: &LogicalPlan, wildcard_options: Option<&expr::WildcardOptions>) -> datafusion_common::Result<Vec<Expr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.expand_wildcard.md).
+
 
 Resolves an `Expr::Wildcard` to a collection of `Expr::Column`'s.
 
@@ -227,6 +260,9 @@ Resolves an `Expr::Wildcard` to a collection of `Expr::Column`'s.
 fn expr_as_column_expr(expr: &Expr, plan: &LogicalPlan) -> datafusion_common::Result<Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.expr_as_column_expr.md).
+
+
 Convert any `Expr` to an `Expr::Column`.
 
 ---
@@ -238,6 +274,9 @@ Convert any `Expr` to an `Expr::Column`.
 ```rust
 fn expr_to_columns(expr: &Expr, accum: &mut std::collections::HashSet<datafusion_common::Column>) -> datafusion_common::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.expr_to_columns.md).
+
 
 Recursively walk an expression tree, collecting the unique set of columns
 referenced in the expression
@@ -251,6 +290,9 @@ referenced in the expression
 ```rust
 fn exprlist_to_fields<'a>(exprs: impl IntoIterator<Item = &'a Expr>, plan: &LogicalPlan) -> datafusion_common::Result<Vec<(Option<datafusion_common::TableReference>, std::sync::Arc<arrow::datatypes::Field>)>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.exprlist_to_fields.md).
+
 
 Create schema fields from an expression list, for use in result set schema construction
 
@@ -280,6 +322,9 @@ and proper table reference scoping for the corresponding expression.
 fn find_aggregate_exprs<'a>(exprs: impl IntoIterator<Item = &'a Expr>) -> Vec<Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.find_aggregate_exprs.md).
+
+
 Collect all deeply nested `Expr::AggregateFunction`.
 They are returned in order of occurrence (depth
 first), with duplicates omitted.
@@ -294,6 +339,9 @@ first), with duplicates omitted.
 fn find_column_exprs(exprs: &[Expr]) -> Vec<Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.find_column_exprs.md).
+
+
 Collect all deeply nested `Expr::Column`'s. They are returned in order of
 appearance (depth first), and may contain duplicates.
 
@@ -306,6 +354,9 @@ appearance (depth first), and may contain duplicates.
 ```rust
 fn find_join_exprs(exprs: Vec<&Expr>) -> datafusion_common::Result<(Vec<Expr>, Vec<Expr>)>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.find_join_exprs.md).
+
 
 Looks for correlating expressions: for example, a binary expression with one field from the subquery, and
 one not in the subquery (closed upon from outer scope)
@@ -328,6 +379,9 @@ Tuple of (expressions containing joins, remaining non-join expressions)
 fn find_out_reference_exprs(expr: &Expr) -> Vec<Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.find_out_reference_exprs.md).
+
+
 Collect all deeply nested `Expr::OuterReferenceColumn`. They are returned in order of occurrence
 (depth first), with duplicates omitted.
 
@@ -340,6 +394,9 @@ Collect all deeply nested `Expr::OuterReferenceColumn`. They are returned in ord
 ```rust
 fn find_valid_equijoin_key_pair(left_key: &Expr, right_key: &Expr, left_schema: &datafusion_common::DFSchema, right_schema: &datafusion_common::DFSchema) -> datafusion_common::Result<Option<(Expr, Expr)>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.find_valid_equijoin_key_pair.md).
+
 
 Give two sides of the equijoin predicate, return a valid join key pair.
 If there is no valid join key pair, return None.
@@ -360,6 +417,9 @@ A valid join means:
 fn find_window_exprs<'a>(exprs: impl IntoIterator<Item = &'a Expr>) -> Vec<Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.find_window_exprs.md).
+
+
 Collect all deeply nested `Expr::WindowFunction`. They are returned in order of occurrence
 (depth first), with duplicates omitted.
 
@@ -375,6 +435,9 @@ Also reachable as `datafusion_physical_expr::expressions::format_state_name`, `d
 fn format_state_name(name: &str, state_name: &str) -> String
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.format_state_name.md).
+
+
 Build state name. State is the intermediate state of the aggregate function.
 
 ---
@@ -388,6 +451,9 @@ Build state name. State is the intermediate state of the aggregate function.
 ```rust
 fn generate_signature_error_msg(func_name: &str, func_signature: datafusion_expr_common::signature::Signature, input_expr_types: &[arrow::datatypes::DataType]) -> String
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.generate_signature_error_msg.md).
+
 
 Creates a detailed error message for a function with wrong signature.
 
@@ -411,6 +477,9 @@ Error during planning: No function matches 'round(Float64, Float64)'. You might 
 fn generate_sort_key(partition_by: &[Expr], order_by: &[expr::Sort]) -> datafusion_common::Result<Vec<(expr::Sort, bool)>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.generate_sort_key.md).
+
+
 Generate a sort key for a given window expr's partition_by and order_by expr
 
 ---
@@ -423,6 +492,9 @@ Generate a sort key for a given window expr's partition_by and order_by expr
 fn group_window_expr_by_sort_keys(window_expr: impl IntoIterator<Item = Expr>) -> datafusion_common::Result<Vec<(Vec<(expr::Sort, bool)>, Vec<Expr>)>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.group_window_expr_by_sort_keys.md).
+
+
 Group a slice of window expression expr by their order by expressions
 
 ---
@@ -434,6 +506,9 @@ Group a slice of window expression expr by their order by expressions
 ```rust
 fn grouping_set_expr_count(group_expr: &[Expr]) -> datafusion_common::Result<usize>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.grouping_set_expr_count.md).
+
 
 Count the number of distinct exprs in a list of group by expressions. If the
 first element is a `GroupingSet` expression then it must be the only expr.
@@ -448,6 +523,9 @@ first element is a `GroupingSet` expression then it must be the only expr.
 fn grouping_set_to_exprlist(group_expr: &[Expr]) -> datafusion_common::Result<Vec<&Expr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.grouping_set_to_exprlist.md).
+
+
 Find all distinct exprs in a list of group by expressions. If the
 first element is a `GroupingSet` expression then it must be the only expr.
 
@@ -461,6 +539,9 @@ first element is a `GroupingSet` expression then it must be the only expr.
 fn inspect_expr_pre<F, E>(expr: &Expr, f: F) -> datafusion_common::Result<(), E> where F: FnMut(&Expr) -> datafusion_common::Result<(), E>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.inspect_expr_pre.md).
+
+
 Recursively inspect an [`Expr`] and all its children.
 
 ---
@@ -472,6 +553,9 @@ Recursively inspect an [`Expr`] and all its children.
 ```rust
 fn iter_conjunction(expr: &Expr) -> impl Iterator<Item = &Expr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.iter_conjunction.md).
+
 
 Iterate parts in a conjunctive [`Expr`] such as `A AND B AND C` => `[A, B, C]`
 
@@ -487,6 +571,9 @@ See [`split_conjunction_owned`] for more details and an example.
 fn iter_conjunction_owned(expr: Expr) -> impl Iterator<Item = Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.iter_conjunction_owned.md).
+
+
 Iterate parts in a conjunctive [`Expr`] such as `A AND B AND C` => `[A, B, C]`
 
 See [`split_conjunction_owned`] for more details and an example.
@@ -500,6 +587,9 @@ See [`split_conjunction_owned`] for more details and an example.
 ```rust
 fn merge_schema(inputs: &[&LogicalPlan]) -> datafusion_common::DFSchema
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.merge_schema.md).
+
 
 merge inputs schema into a single schema.
 
@@ -515,6 +605,9 @@ Refer to that documentation for details on precedence and metadata handling.
 ```rust
 fn only_or_err<T>(slice: &[T]) -> datafusion_common::Result<&T>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.only_or_err.md).
+
 
 Returns the first (and only) element in a slice, or an error
 
@@ -535,6 +628,9 @@ The first element, or an error
 ```rust
 fn powerset<T>(slice: &[T]) -> datafusion_common::Result<Vec<Vec<&T>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.powerset.md).
+
 
 The [power set] (or powerset) of a set S is the set of all subsets of S, \
 including the empty set and S itself.
@@ -564,6 +660,9 @@ If S is the set {x, y, z}, then all the subsets of S are \
 fn split_binary(expr: &Expr, op: Operator) -> Vec<&Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.split_binary.md).
+
+
 Splits an binary operator tree [`Expr`] such as `A <OP> B <OP> C` => `[A, B, C]`
 
 See [`split_binary_owned`] for more details and an example.
@@ -577,6 +676,9 @@ See [`split_binary_owned`] for more details and an example.
 ```rust
 fn split_binary_owned(expr: Expr, op: Operator) -> Vec<Expr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.split_binary_owned.md).
+
 
 Splits an owned binary operator tree [`Expr`] such as `A <OP> B <OP> C` => `[A, B, C]`
 
@@ -608,6 +710,9 @@ assert_eq!(split_binary_owned(expr, Operator::Plus), split);
 fn split_conjunction(expr: &Expr) -> Vec<&Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.split_conjunction.md).
+
+
 Splits a conjunctive [`Expr`] such as `A AND B AND C` => `[A, B, C]`
 
 See [`split_conjunction_owned`] for more details and an example.
@@ -621,6 +726,9 @@ See [`split_conjunction_owned`] for more details and an example.
 ```rust
 fn split_conjunction_owned(expr: Expr) -> Vec<Expr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.utils.split_conjunction_owned.md).
+
 
 Splits an owned conjunctive [`Expr`] such as `A AND B AND C` => `[A, B, C]`
 

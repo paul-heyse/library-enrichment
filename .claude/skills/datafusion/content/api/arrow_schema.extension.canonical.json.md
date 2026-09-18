@@ -25,6 +25,9 @@ fn try_new(data_type: &DataType, metadata: Self::Metadata) -> Result<Self, Arrow
 fn validate(data_type: &DataType, _metadata: Self::Metadata) -> Result<(), ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.extension.canonical.json.Json.md).
+
+
 The extension type for `JSON`.
 
 Extension name: `arrow.json`.
@@ -52,6 +55,9 @@ struct JsonMetadata
 ```
 
 **Derives**: Clone, Debug, Default, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.extension.canonical.json.JsonMetadata.md).
+
 
 Extension type metadata for [`Json`].
 

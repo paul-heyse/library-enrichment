@@ -1,6 +1,6 @@
 # Transactions and commits
 
-A commit is an atomic rename of a numbered log entry: exactly one writer wins version N. A loser retries against the new version, which is where conflict resolution lives. An application transaction id makes a retried write idempotent -- without one, a retry after an ambiguous failure appends the data twice.
+Log publication is delegated to the selected LogStore. Optimistic conflict checking and retries operate against intervening commits. Application transaction markers do not alone provide replay suppression at this pin, and errors can occur after a log entry is visible. Inspect the reviewed commit and replay contracts before designing recovery.
 
 ## Entry points
 

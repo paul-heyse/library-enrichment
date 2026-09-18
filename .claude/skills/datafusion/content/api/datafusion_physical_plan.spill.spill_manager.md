@@ -27,6 +27,9 @@ fn with_batch_read_buffer_capacity(self, batch_read_buffer_capacity: usize) -> S
 fn with_compression_type(self, spill_compression: SpillCompression) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.spill.spill_manager.SpillManager.md).
+
+
 The `SpillManager` is responsible for the following tasks:
 - Reading and writing `RecordBatch`es to raw files based on the provided configurations.
 - Updating the associated metrics.

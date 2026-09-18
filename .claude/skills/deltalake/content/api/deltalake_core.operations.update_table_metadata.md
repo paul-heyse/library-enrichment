@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## TableMetadataUpdate
 
 `struct` · `deltalake_core::operations::update_table_metadata::TableMetadataUpdate`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.update_table_metadata.TableMetadataUpdate.md)
 
 Also reachable as `deltalake::operations::update_table_metadata::TableMetadataUpdate`
 
@@ -51,6 +52,7 @@ At least one field must be provided; lengths are validated to stay within Delta'
 ## UpdateTableMetadataBuilder
 
 `struct` · `deltalake_core::operations::update_table_metadata::UpdateTableMetadataBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.update_table_metadata.UpdateTableMetadataBuilder.md)
 
 Also reachable as `deltalake::operations::update_table_metadata::UpdateTableMetadataBuilder`
 
@@ -72,13 +74,6 @@ fn with_update(self, update: TableMetadataUpdate) -> Self
 
 ```rust
 fn into_future(self) -> Self::IntoFuture
-```
-
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
 ```
 
 Update table metadata operation

@@ -29,6 +29,9 @@ fn reserve(&self, size: usize) -> Box<dyn arrow_buffer::MemoryReservation>
 fn used(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.memory_pool.arrow.ArrowMemoryPool.md).
+
+
 An adapter that implements Arrow's [`arrow_buffer::MemoryPool`] trait
 by wrapping a DataFusion [`MemoryPool`].
 

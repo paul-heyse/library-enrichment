@@ -27,6 +27,9 @@ fn analyze(&self, plan: LogicalPlan, options: &ConfigOptions) -> Result<LogicalP
 fn name(&self) -> &str
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.analyzer.function_rewrite.ApplyFunctionRewrites.md).
+
+
 Analyzer rule that invokes [`FunctionRewrite`]s on expressions
 
 ---

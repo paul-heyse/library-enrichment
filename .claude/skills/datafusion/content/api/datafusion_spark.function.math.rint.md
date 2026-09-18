@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 2 public items · structured records in [`model/data
 fn spark_rint(args: &[arrow::array::ArrayRef]) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.rint.spark_rint.md).
+
+
 ---
 
 ## SparkRint
@@ -39,5 +42,8 @@ fn output_ordering(&self, input: &[ExprProperties]) -> Result<SortProperties>
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.rint.SparkRint.md).
+
 
 ---

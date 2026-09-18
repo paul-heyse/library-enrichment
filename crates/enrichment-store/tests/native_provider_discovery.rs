@@ -141,13 +141,16 @@ async fn native_factory_capture_and_discovery_preserve_version_and_fields() -> R
     let captured = store.provider(&table, &contract).await?;
     let first = store.discover(256, 8).await?;
     let capture = first.captures.iter().find(|c| c.name == "facts").unwrap();
-    assert_eq!(capture.version, table.version().unwrap());
-    assert_eq!(capture.contract_id, contract.identity());
-    assert_eq!(capture.table_id, table.snapshot().unwrap().metadata().id());
+    assert_eq!(capture.source.version, table.version().unwrap());
+    assert_eq!(&capture.source.table.contract_id, contract.identity());
+    assert_eq!(
+        capture.source.table.table_id,
+        table.snapshot().unwrap().metadata().id()
+    );
     assert_eq!(captured.schema().fields(), schema.fields());
     assert_eq!(first.tables["facts"].schema().fields(), schema.fields());
     let advanced = store.append(table, &contract, frame(2)?, vec![]).await?;
-    assert!(advanced.version().unwrap() > capture.version);
+    assert!(advanced.version().unwrap() > capture.source.version);
     assert_eq!(
         runtime
             .execute(runtime.session().read_table(captured)?)

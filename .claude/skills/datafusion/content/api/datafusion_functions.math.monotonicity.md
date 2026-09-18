@@ -10,6 +10,9 @@ Crate `datafusion-functions` · 44 public items · structured records in [`model
 fn acos_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.acos_order.md).
+
+
 Non-increasing on the interval \[−1, 1\], undefined otherwise.
 
 ---
@@ -21,6 +24,9 @@ Non-increasing on the interval \[−1, 1\], undefined otherwise.
 ```rust
 fn acosh_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.acosh_order.md).
+
 
 Non-decreasing for x ≥ 1, undefined otherwise.
 
@@ -34,6 +40,9 @@ Non-decreasing for x ≥ 1, undefined otherwise.
 fn asin_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.asin_order.md).
+
+
 Non-decreasing on the interval \[−1, 1\], undefined otherwise.
 
 ---
@@ -45,6 +54,9 @@ Non-decreasing on the interval \[−1, 1\], undefined otherwise.
 ```rust
 fn asinh_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.asinh_order.md).
+
 
 Non-decreasing for all real numbers.
 
@@ -58,6 +70,9 @@ Non-decreasing for all real numbers.
 fn atan2_order(_input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.atan2_order.md).
+
+
 Order depends on the quadrant.
 
 ---
@@ -69,6 +84,9 @@ Order depends on the quadrant.
 ```rust
 fn atan_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.atan_order.md).
+
 
 Non-decreasing for all real numbers.
 
@@ -82,6 +100,9 @@ Non-decreasing for all real numbers.
 fn atanh_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.atanh_order.md).
+
+
 Non-decreasing on the interval \[−1, 1\], undefined otherwise.
 
 ---
@@ -93,6 +114,9 @@ Non-decreasing on the interval \[−1, 1\], undefined otherwise.
 ```rust
 fn cbrt_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.cbrt_order.md).
+
 
 Non-decreasing for all real numbers.
 
@@ -106,6 +130,9 @@ Non-decreasing for all real numbers.
 fn ceil_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.ceil_order.md).
+
+
 Non-decreasing for all real numbers.
 
 ---
@@ -117,6 +144,9 @@ Non-decreasing for all real numbers.
 ```rust
 fn cos_order(_input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.cos_order.md).
+
 
 Non-increasing on \[0, π\] and then non-decreasing on \[π, 2π\].
 This pattern repeats periodically with a period of 2π.
@@ -131,6 +161,9 @@ This pattern repeats periodically with a period of 2π.
 fn cosh_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.cosh_order.md).
+
+
 Non-decreasing for x ≥ 0 and symmetrically non-increasing for x ≤ 0.
 
 ---
@@ -142,6 +175,9 @@ Non-decreasing for x ≥ 0 and symmetrically non-increasing for x ≤ 0.
 ```rust
 fn degrees_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.degrees_order.md).
+
 
 Non-decreasing function that converts radians to degrees.
 
@@ -155,6 +191,9 @@ Non-decreasing function that converts radians to degrees.
 fn exp_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.exp_order.md).
+
+
 Non-decreasing for all real numbers.
 
 ---
@@ -166,6 +205,9 @@ Non-decreasing for all real numbers.
 ```rust
 fn floor_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.floor_order.md).
+
 
 Non-decreasing for all real numbers.
 
@@ -179,6 +221,9 @@ Non-decreasing for all real numbers.
 fn get_acos_doc() -> &'static datafusion_expr::Documentation
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_acos_doc.md).
+
+
 ---
 
 ## get_acosh_doc
@@ -188,6 +233,9 @@ fn get_acos_doc() -> &'static datafusion_expr::Documentation
 ```rust
 fn get_acosh_doc() -> &'static datafusion_expr::Documentation
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_acosh_doc.md).
+
 
 ---
 
@@ -199,6 +247,9 @@ fn get_acosh_doc() -> &'static datafusion_expr::Documentation
 fn get_asin_doc() -> &'static datafusion_expr::Documentation
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_asin_doc.md).
+
+
 ---
 
 ## get_asinh_doc
@@ -208,6 +259,9 @@ fn get_asin_doc() -> &'static datafusion_expr::Documentation
 ```rust
 fn get_asinh_doc() -> &'static datafusion_expr::Documentation
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_asinh_doc.md).
+
 
 ---
 
@@ -219,6 +273,9 @@ fn get_asinh_doc() -> &'static datafusion_expr::Documentation
 fn get_atan2_doc() -> &'static datafusion_expr::Documentation
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_atan2_doc.md).
+
+
 ---
 
 ## get_atan_doc
@@ -228,6 +285,9 @@ fn get_atan2_doc() -> &'static datafusion_expr::Documentation
 ```rust
 fn get_atan_doc() -> &'static datafusion_expr::Documentation
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_atan_doc.md).
+
 
 ---
 
@@ -239,6 +299,9 @@ fn get_atan_doc() -> &'static datafusion_expr::Documentation
 fn get_atanh_doc() -> &'static datafusion_expr::Documentation
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_atanh_doc.md).
+
+
 ---
 
 ## get_cbrt_doc
@@ -248,6 +311,9 @@ fn get_atanh_doc() -> &'static datafusion_expr::Documentation
 ```rust
 fn get_cbrt_doc() -> &'static datafusion_expr::Documentation
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_cbrt_doc.md).
+
 
 ---
 
@@ -259,6 +325,9 @@ fn get_cbrt_doc() -> &'static datafusion_expr::Documentation
 fn get_cos_doc() -> &'static datafusion_expr::Documentation
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_cos_doc.md).
+
+
 ---
 
 ## get_cosh_doc
@@ -268,6 +337,9 @@ fn get_cos_doc() -> &'static datafusion_expr::Documentation
 ```rust
 fn get_cosh_doc() -> &'static datafusion_expr::Documentation
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_cosh_doc.md).
+
 
 ---
 
@@ -279,6 +351,9 @@ fn get_cosh_doc() -> &'static datafusion_expr::Documentation
 fn get_degrees_doc() -> &'static datafusion_expr::Documentation
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_degrees_doc.md).
+
+
 ---
 
 ## get_exp_doc
@@ -288,6 +363,9 @@ fn get_degrees_doc() -> &'static datafusion_expr::Documentation
 ```rust
 fn get_exp_doc() -> &'static datafusion_expr::Documentation
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_exp_doc.md).
+
 
 ---
 
@@ -299,6 +377,9 @@ fn get_exp_doc() -> &'static datafusion_expr::Documentation
 fn get_ln_doc() -> &'static datafusion_expr::Documentation
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_ln_doc.md).
+
+
 ---
 
 ## get_log10_doc
@@ -308,6 +389,9 @@ fn get_ln_doc() -> &'static datafusion_expr::Documentation
 ```rust
 fn get_log10_doc() -> &'static datafusion_expr::Documentation
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_log10_doc.md).
+
 
 ---
 
@@ -319,6 +403,9 @@ fn get_log10_doc() -> &'static datafusion_expr::Documentation
 fn get_log2_doc() -> &'static datafusion_expr::Documentation
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_log2_doc.md).
+
+
 ---
 
 ## get_radians_doc
@@ -328,6 +415,9 @@ fn get_log2_doc() -> &'static datafusion_expr::Documentation
 ```rust
 fn get_radians_doc() -> &'static datafusion_expr::Documentation
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_radians_doc.md).
+
 
 ---
 
@@ -339,6 +429,9 @@ fn get_radians_doc() -> &'static datafusion_expr::Documentation
 fn get_sin_doc() -> &'static datafusion_expr::Documentation
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_sin_doc.md).
+
+
 ---
 
 ## get_sinh_doc
@@ -348,6 +441,9 @@ fn get_sin_doc() -> &'static datafusion_expr::Documentation
 ```rust
 fn get_sinh_doc() -> &'static datafusion_expr::Documentation
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_sinh_doc.md).
+
 
 ---
 
@@ -359,6 +455,9 @@ fn get_sinh_doc() -> &'static datafusion_expr::Documentation
 fn get_sqrt_doc() -> &'static datafusion_expr::Documentation
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_sqrt_doc.md).
+
+
 ---
 
 ## get_tan_doc
@@ -368,6 +467,9 @@ fn get_sqrt_doc() -> &'static datafusion_expr::Documentation
 ```rust
 fn get_tan_doc() -> &'static datafusion_expr::Documentation
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_tan_doc.md).
+
 
 ---
 
@@ -379,6 +481,9 @@ fn get_tan_doc() -> &'static datafusion_expr::Documentation
 fn get_tanh_doc() -> &'static datafusion_expr::Documentation
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.get_tanh_doc.md).
+
+
 ---
 
 ## ln_order
@@ -388,6 +493,9 @@ fn get_tanh_doc() -> &'static datafusion_expr::Documentation
 ```rust
 fn ln_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.ln_order.md).
+
 
 Non-decreasing for x ≥ 0, undefined otherwise.
 
@@ -401,6 +509,9 @@ Non-decreasing for x ≥ 0, undefined otherwise.
 fn log10_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.log10_order.md).
+
+
 Non-decreasing for x ≥ 0, undefined otherwise.
 
 ---
@@ -412,6 +523,9 @@ Non-decreasing for x ≥ 0, undefined otherwise.
 ```rust
 fn log2_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.log2_order.md).
+
 
 Non-decreasing for x ≥ 0, undefined otherwise.
 
@@ -425,6 +539,9 @@ Non-decreasing for x ≥ 0, undefined otherwise.
 fn radians_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.radians_order.md).
+
+
 Non-decreasing for all real numbers x.
 
 ---
@@ -436,6 +553,9 @@ Non-decreasing for all real numbers x.
 ```rust
 fn sin_order(_input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.sin_order.md).
+
 
 Non-decreasing on \[0, π\] and then non-increasing on \[π, 2π\].
 This pattern repeats periodically with a period of 2π.
@@ -450,6 +570,9 @@ This pattern repeats periodically with a period of 2π.
 fn sinh_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.sinh_order.md).
+
+
 Non-decreasing for all real numbers.
 
 ---
@@ -461,6 +584,9 @@ Non-decreasing for all real numbers.
 ```rust
 fn sqrt_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.sqrt_order.md).
+
 
 Non-decreasing for x ≥ 0, undefined otherwise.
 
@@ -474,6 +600,9 @@ Non-decreasing for x ≥ 0, undefined otherwise.
 fn tan_order(_input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.tan_order.md).
+
+
 Non-decreasing between vertical asymptotes at x = k * π ± π / 2 for any
 integer k.
 
@@ -486,6 +615,9 @@ integer k.
 ```rust
 fn tanh_order(input: &[datafusion_expr::sort_properties::ExprProperties]) -> datafusion_common::Result<datafusion_expr::sort_properties::SortProperties>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.math.monotonicity.tanh_order.md).
+
 
 Non-decreasing for all real numbers.
 

@@ -5,6 +5,7 @@ Crate `deltalake-core` · 7 public items · structured records in [`model/deltal
 ## SessionFallbackPolicy
 
 `enum` · `deltalake_core::delta_datafusion::session::SessionFallbackPolicy`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.session.SessionFallbackPolicy.md)
 
 Also reachable as `deltalake::delta_datafusion::SessionFallbackPolicy`, `deltalake_core::delta_datafusion::SessionFallbackPolicy`
 
@@ -26,6 +27,7 @@ This is an opt-in knob on operations that accept `with_session_state(...)`. Defa
 ## create_session
 
 `function` · `deltalake_core::delta_datafusion::session::create_session`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.session.create_session.md)
 
 Also reachable as `deltalake::delta_datafusion::create_session`, `deltalake_core::delta_datafusion::create_session`
 
@@ -41,6 +43,7 @@ settings delta-rs relies on (custom planner, object-store registration, etc.).
 ## create_session_state_with_spill_config
 
 `function` · `deltalake_core::delta_datafusion::session::create_session_state_with_spill_config`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.session.create_session_state_with_spill_config.md)
 
 Also reachable as `deltalake::delta_datafusion::create_session_state_with_spill_config`, `deltalake_core::delta_datafusion::create_session_state_with_spill_config`
 
@@ -64,6 +67,7 @@ memory.
 ## DeltaParserOptions
 
 `struct` · `deltalake_core::delta_datafusion::session::DeltaParserOptions`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.session.DeltaParserOptions.md)
 
 Also reachable as `deltalake::delta_datafusion::DeltaParserOptions`, `deltalake_core::delta_datafusion::DeltaParserOptions`
 
@@ -80,6 +84,7 @@ A wrapper for sql_parser's ParserOptions to capture sane default table defaults
 ## DeltaRuntimeEnvBuilder
 
 `struct` · `deltalake_core::delta_datafusion::session::DeltaRuntimeEnvBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.session.DeltaRuntimeEnvBuilder.md)
 
 Also reachable as `deltalake::delta_datafusion::DeltaRuntimeEnvBuilder`, `deltalake_core::delta_datafusion::DeltaRuntimeEnvBuilder`
 
@@ -105,6 +110,7 @@ A builder for configuring DataFusion RuntimeEnv with Delta-specific defaults
 ## DeltaSessionConfig
 
 `struct` · `deltalake_core::delta_datafusion::session::DeltaSessionConfig`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.session.DeltaSessionConfig.md)
 
 Also reachable as `deltalake::delta_datafusion::DeltaSessionConfig`, `deltalake_core::delta_datafusion::DeltaSessionConfig`
 
@@ -121,6 +127,7 @@ A wrapper for Deltafusion's SessionConfig to capture sane default table defaults
 ## DeltaSessionContext
 
 `struct` · `deltalake_core::delta_datafusion::session::DeltaSessionContext`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.session.DeltaSessionContext.md)
 
 Also reachable as `deltalake::delta_datafusion::DeltaSessionContext`, `deltalake_core::delta_datafusion::DeltaSessionContext`
 

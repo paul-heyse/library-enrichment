@@ -475,6 +475,8 @@ one. No producer emits `agent_inferred`, which is correct: that class is the cal
 
 ### 6.3 Schema ownership
 
+> Decision: ADR-0056 (proposed) — comparison values retain declared native variants through wire delivery.
+
 > Decision: ADR-0047 — Plan 17 generates semantic, storage/read and wire contracts from one native declaration; see §17.
 
 > Decision: ADR-0043 — Plan 15 replaces the previous execution/storage mechanism; see §16.
@@ -573,6 +575,8 @@ reads, durable pending completion and explicit policy-controlled execution.*
 
 ### 7.2 Common response envelope
 
+> Decision: ADR-0056 (proposed) — comparison values retain declared native variants through wire delivery.
+
 > Decision: ADR-0054 — Wire 5.0 native projections measure complete admitted MCP tool/resource stdio responses; application qualification remains open.
 
 > Decision: ADR-0047 — Plan 17 generates semantic, storage/read and wire contracts from one native declaration; see §17.
@@ -586,14 +590,41 @@ within its evaluated domain. Each requested aspect and alternative set has its o
 There is no root pagination field. Errors carry a typed cause, stage, rule, affected identities,
 limits and recovery actions. Nullable root fields remain required even when their value is null.
 
-The current wire 5.0 contract is generated from Rust into `schemas/generated/`. The older
+The current wire 9.0 contract is generated from Rust into `schemas/generated/`. The older
 `contracts/research-v2/research-envelope.schema.json` is frozen provenance, with no compatibility reader.
 Authored Pydantic presentation models use generated domain types and validate actual inline,
 artifact, pending and error outputs. Individual comparison values are tagged inline/artifact;
 artifact variants retain complete JSON, digest, size and original alternative FactSource.
-Comparison values remain native Arrow cells until a bounded final sink selects inline JSON or
-streams a complete artifact. Indexed result dependency closure is verified and included in
+Comparison values remain declared native variants through bounded final delivery. The native
+prefix plan selects inline or artifact output; the sink only decodes/encodes that selection.
+Schema-derived field facts carry typed paths (including declared parameter ordinals) and exact
+canonical native bytes; DataFusion set operators select differences without JSON or hash equality.
+Parent paths retain complete-alternative correlation and whole-sequence ordering. The bounded
+Arrow lowering kernel is an immutable UDF, avoiding a separate optimizer branch per field.
+Plan 19 comparison uses one `ComparisonValue` declaration for native set equality and inline or
+artifact output. API observations reuse typed `ApiPayload` callable facts; documentation fields
+are excluded from the API axis. Source qualification stays separate. Wire 9.0 / state 23 refuses
+obsolete state and has no compatibility decoder. Durable/installed qualification remains open. Indexed result dependency closure is verified and included in
 catalog admission/export, with descriptors for offline reads of presentation-only artifacts.
+
+Job, caller-interest and producer-attempt identities have separate 16-byte Arrow domains. Typed
+SQL parameters retain their complete Fields; only boundary formatting produces prefixed text.
+The producer-attempt change advances the evidence snapshot schema to 12.0. Qualification and
+job clocks share declared timestamp meanings. Wire epoch identity comes from one vocabulary.
+Telemetry retains the native Diagnostic and tagged recovery actions directly, with the same
+sequence semantics as delivery; no separate failure JSON record interprets those fields.
+
+
+Plan 19 native delivery measurement borrows complete Arrow results, including scalar Structs,
+and streams nested JSON text without hydrating an owned result DTO. The envelope field declaration
+also generates its native wire projection; a common MCP formatter serves measurement and selected
+RPC output. Selected JSON bytes and the complete RPC frame retain separate DataFusion pool
+reservations through socket delivery. Serde RawValue preserves the encoded payload without a
+semantic JSON-tree round trip, and response metrics use the counting sink.
+Research citations, excerpt limits, overview counts/coverage/summary and fragment recovery presence
+are native plans over declared records. Fragment completeness travels in the same typed record as
+its text/source, and empty-page outcomes are qualified by native coverage before claiming absence.
+Inspection source absence, execution limitations and missing kinds are composed in a native relation.
 
 *Evidence: Tested for the cases recorded in the Plan 13 ledger; final client and deployment
 qualification remains open.*
@@ -628,7 +659,13 @@ Configurable initial limits, explicitly **not measured performance claims**: a 1
 response budget, 12 search results per page, an 800-character excerpt, an 80-line source
 excerpt, a 2-second inline wait then a job receipt, Rust-configured producer concurrency and warm-session capacity. Machine JSON is never truncated mid-object — fewer complete entries are returned
 with a cursor or an artifact handle, and mandatory coverage and error fields are preserved.
-Cursors bind the query digest, snapshot, sort and position; a mismatched cursor is rejected.
+Cursors bind the query digest, snapshot, sort and position plus the complete service-policy identity
+and a captured runtime witness (effective session options, compiled source/function/codec closure and
+resource settings). A mismatched cursor is rejected. Native page plans select counts, sentinel state
+and continuation. Requested coverage and comparison confounders/disposition are relational projections;
+comparison scopes obtain their evidence mapping from the immutable declaration catalog. A borrowed-Arrow
+JSON-size kernel supplies exact value costs, and native cumulative aggregates select each alternative
+prefix before artifact writing. Physical sinks check the selected byte witness.
 blueprint §7.3.
 
 *Evidence: Implemented — budgets, pagination cursors bound to the query digest and snapshot,
@@ -645,8 +682,10 @@ defaults, **not measured performance claims**.*
 
 Typed Pydantic request and result models generated from or checked against the wire schemas; a
 small human-readable summary plus compact structured data, never the same long document twice.
-Four resource templates delegate to the same core read operations as the tools, taking IDs
-rather than paths. The default adapter does not depend on MCP background-task support: expensive
+One Rust resource declaration generates the four resource templates and static workflow resource,
+including names, URIs, operation bindings and parameter schemas. Templates delegate to the same
+core read operations as the tools, taking IDs rather than paths. Python only constructs FastMCP
+components from those bindings. The default adapter does not depend on MCP background-task support: expensive
 operations return an ordinary `pending` envelope and `job_control` works with any client that
 supports ordinary tools. Annotations are assigned deliberately — `verify_usage` is not portrayed
 as read-only. **All logs go to stderr or daemon logs, never MCP stdout.** blueprint §7.4
@@ -729,6 +768,8 @@ marked interrupted with an actionable error; restart does not silently re-execut
 of precommit work, cleanup supervision and retained leases through confirmed resource removal.*
 
 ### 8.4 Cache invalidation
+
+> Decision: ADR-0055 (proposed) — native shared cache ownership; see §17 for current implementation and open qualification.
 
 > Decision: ADR-0045 — Plan 15 replaces the previous execution/storage mechanism; see §16.
 
@@ -1071,15 +1112,51 @@ blueprint §16, unchanged.
 
 ## 17. Unified native execution and Delta authority
 
-> Decision: ADR-0053 (proposed; final application conformance pending).
 
-**Implemented, 2026-09-17:** exact evidence reads consume a restricted DeltaLogicalCodec
-provider cache backed by DataFusion DefaultCache. Cache hits validate snapshot and semantic/CHECK
-contracts and rebind the current owned runtime; each read supplies fresh protection before opening
-providers. Native anti-joins verify exact durable table/cohort dependency membership. Codec values
-carry no read authority, and accounted resources outlive eviction while native readers retain them.
-Persisted descriptors, complete external allocation accounting, durable read-only enrollment and
-fresh-process qualification remain open in Plan 18.
+> Decision: ADR-0055 (proposed) — shared committed snapshots, positive contracts and canonical metadata ownership.
+> Decision: ADR-0053 (proposed) — typed resident ingredients, restricted binary persistence and portable native export reads.
+
+**Source implementation, 2026-09-17:** one runtime owns bounded native DefaultCache families for
+metadata, snapshots, verified contracts and immutable provider ingredients. Native incremental
+refresh discovers current heads; exact-version values and acknowledged writer results share
+accounted allocations. Changed root incarnations invalidate reuse. Contract manifests are compared
+natively before positive insertion; failures never become cached absence. Effective session options
+and actual function bindings have one immutable witness shared by cache consumers.
+
+In-process provider reuse never serializes. Every provider entry point checks exact read protection
+and rebinds a fresh provider from typed native state. Service search checkpoints persist bounded
+CBOR descriptors with raw IPC buffers; native admission checks their bijection and digests. Every provider preparation, including a previously verified descriptor hit, reconstructs exact
+metadata-only history under fresh read protection. Exact-version snapshot-registry hits use the
+same version/metadata/protocol check. A missing durable commit cannot be supplied by a cached
+full snapshot. Full active-file allocations remain shared; metadata-only authority never enters
+the scan registry. Restoration reuses native EagerSnapshot reconstruction.
+Export checkpoints explicitly select portable Delta log reads and contain no absolute-root provider
+payload. Copying or atomically renaming a bundle therefore does not change its read contract.
+
+CDF reader construction receives the session's shared metadata cache and canonical root-store
+paths. Unconsumed statistics/listing caches are disabled. Concrete occupancy uses native accounting,
+not copying all cache entries or claiming RSS. Snapshot and provider reservations remain held by
+live physical consumers after eviction. Read-only captures carry both exact dependency vectors and
+a matching immutable-root lock. Private export-stage removal uses the durable object store,
+namespace invalidation and a retained cleanup receipt.
+
+Native retention now uses one exact table/version/contract plus optional `RowKey` selection for
+cohorts, retained results and definitions. `PendingRow` captures the target contract and field/value
+before writing; an exited process's intent is resolved against native Delta state before cleanup.
+A missing table is not sufficient evidence of absent output: incomplete files keep the obligation
+open. Root removal, product visibility and new-reader admission share the native retention catalog.
+Standalone artifact receipts select their own roots atomically with receipt publication. Artifact
+reclamation anti-joins live roots/readers/writers, then holds a durable maintenance fence and an
+exclusive root lock through acknowledged unlink and directory synchronization.
+
+Lease, temporary-input and quarantine owners reserve release capacity before physical admission.
+Closing drains admitted releases, including descendants; surviving physical owners refuse closure
+before diagnostics or caches are torn down. Native schema registration/discovery share a bounded
+schema-only IPC preflight before Arrow conversion. These are implementation facts; complete physical
+restart, partial-failure, corruption and installed qualification remain Plan 19 work.
+
+The complete mutation, retention, replay, external-allocation, fresh-process and installed matrices
+remain open in Plan 19. Source implementation and isolated units do not certify those journeys.
 
 > Decision: ADR-0051 — every Delta kernel path uses explicitly owned I/O handlers; separate compute and I/O scheduling prevents synchronous callers from exhausting the pool needed for their awaited filesystem work.
 
@@ -1161,6 +1238,13 @@ versions and complete source offsets together. Revision/source changes and nativ
 conditions select an explicit full recomputation; I/O, identity, schema and resource errors remain
 failures. The real publication fixture proves incremental/full multiset equality, fresh export,
 missing-history rebuild through a native Delta checkpoint, and isolation of unselected output.
+Plan 19 persists an immutable maintenance selection before physical work: exact table identity,
+protected versions, log floor, observed clock and cutoff. Native enrollment rejects below-floor
+history even after failed or interrupted reclamation. Completed uncommitted writers can be removed
+only under native eligibility and a physical root fence, after Delta's log-path parser proves no
+committed history exists. Private and incomplete trees share bounded, no-symlink durable deletion.
+State 15 is the required hard cutover for this witness; physical fault qualification remains open.
+
 The complete mutation/fault matrix, replay and durable retention remain open Plan 15 work.
 
 Exact-source follow-up, 2026-09-15: the pinned CDF builder clamps an explicit end version to
@@ -1269,11 +1353,14 @@ independent semantic decoders passed; full daemon, scale and installed qualifica
 
 ## Revision history
 
+
 Every amendment adds a row here naming the revision, the date, what changed, and the ADR that
 decided it. See [`README.md`](README.md) for the amendment rule.
 
 | Revision | Date | Change | Decided by |
 |---|---|---|---|
+| 33 | 2026-09-17 | Governed native caches, typed snapshot ownership, shared CDF metadata, binary service replay and portable export reads. | ADR-0053/0055 (proposed) |
+| 33 | 2026-09-17 | Closed typed comparison alternatives, full native fields and generated wire 7.0; hard state-14 cutover. | ADR-0056 (proposed) |
 | 32 | 2026-09-17 | Native wire 5.0 tool/resource projection, exact SDK framing facts and native inline/retained byte-fit selection. | ADR-0054 (proposed) |
 | 31 | 2026-09-17 | Consume restricted immutable Delta descriptors with current read protection and native bounded cache ownership. | ADR-0053 (proposed) |
 | 30 | 2026-09-17 | Bind declared operation reuse through CacheFactory and owned native spill execution; application qualification remains open. | ADR-0052 (proposed) |
@@ -1652,12 +1739,27 @@ durable reconciliation before a state root can be reopened; transient settlement
 physical ownership installed while reconciliation retries under the configured drain deadline.
 
 
-### Native contained process definitions (Plan 15, 2026-09-16)
+### Snapshot allocation phases (Plan 19, 2026-09-17)
+
+Snapshot reservations follow full/metadata-only loads, incremental writes, decoded replay and the
+last physical provider/reader. A separate native-cache residency token observes eviction without
+releasing shared live state. Status exposes fixed-size in-flight, live-value and resident-value
+reservation counters; absent measurements for other cache families remain absent. The counters
+include the kernel's best-effort owned-heap estimate and declared overhead, and do not measure RSS.
+
+A snapshot larger than the configured per-entry residency limit may execute uncached when the
+native pool admits its full reservation. Both snapshot and provider-ingredient caches bypass it;
+current head identity/version tracking remains in force. Admission beyond the initial replay
+reservation is a checked resize after capture, not proof that every upstream allocation was
+pre-reserved. External parser, metadata/predicate and writer accounting still requires completion.
+
+### Native contained process definitions (Plan 19, 2026-09-17)
 
 Policy configuration, executor operations and process effects use one immutable Delta definition
 implementation, with separate finite tables and exact table/version/contract references. Core
 Arrow contracts and native SHA expressions replace executor operation and image/containment JSON
-identities. Protocol version 3 carries the new operation identity; no old protocol fallback exists.
+identities. Executor protocol 5 carries one native launch declaration with exact image, containment, environment,
+network and resource/output/deadline values; no old protocol fallback exists.
 Input inventories include paths, kinds, permissions, lengths and complete byte digests. Native
 `map_entries` and `array_sort` canonicalize maps while preserving command argument order.
 
@@ -1670,11 +1772,55 @@ inputs/outputs and no acquisition network. Its authority cannot run target code.
 servers retain resource ownership; reuse requires the new job's native admission, and every
 request/notification checks the bound live grant. Cleanup retains responsibility on refusal.
 
+Container creation consumes the retained launch values. The helper clears inherited environment
+before target execution. Native actual-value comparisons include every resource and environment
+entry; a matching digest alone is insufficient. Process-effect retention depends on the exact
+operation definition row. Operator qualification uses this same declaration and fixed probe scope.
+
+Each warm semantic conversation derives new authority from the retained inspection request and
+an exact snapshot/context/environment. Native symbol selection and a finite immutable source
+constructor produce the document, anchor and methods; retained-result lookup shares the constructor.
+A native coordinate function emits explicit UTF-8 byte or UTF-16 code-unit fields. The persisted
+conversation binds process/effect/grant, snapshot dependencies and the negotiated encoding. The
+transport frames these selected values and exposes only the finite semantic-method vocabulary;
+it rechecks current authority and native method membership before dispatch. Physical document
+owners retain the exact lease. Server-request replies also recheck authority.
+
 These changes are source implementation. Real container/worker, warm-session/revocation and
-installed-client qualification, full derived-environment linkage and retention enrollment remain
+installed-client qualification, full derived-environment linkage and all retention consumers remain
 required. Native diagnostic state is implemented as described below; final lifecycle and retention
 qualification remains open.
 
+
+### Native producer and recovery plans (Plan 19, 2026-09-17)
+
+Executor protocol 7 carries one finite invocation declaration. DataFusion derives command bytes,
+network and output roots; Rust performs the admitted physical handoff. Native admission verifies
+complete values and required files and binds the invocation to the current durable command.
+Verification additionally compares the captured snippet digest, and rustdoc binds target, feature
+selection and opt-in. The private operator qualification path accepts only its fixed probe set.
+PreparedCapsule is the shared installed-input declaration for reuse, process operations and warm
+sessions. Native rules validate its parent identities, pinned target/image, resolved environment,
+lock digest and captured lock file. Exact actual inventory permits only the finite producer's
+consumer/helper overlays. Command/claim/selected-context joins bind that parent scope before effect
+retention. A shared native encoder produces runtime selection transport and its admission witness;
+compiled observer source is owned by core and checked before dispatch. Acquisition lineage and
+final physical qualification remain open. Real operator containment fixtures have a private test-only
+exact-contract constructor, with no production arbitrary-command API.
+
+One native environment rule serves preparation and retained child selection. Static-input identity
+is relational equality of complete digest/locator pairs. Typed process and runtime-object captures
+feed native payload/outcome lowering; bounded format parsing occurs at a declared decoder UDF.
+Native recovery joins command/publication/result/snapshot/attempt and artifact-role closure, checks
+canonical argument values, and retains physical result protection through final delivery. JSON
+transcripts are supporting artifacts and are not semantic recovery authority. Bounded native LSP
+response decoding and typed protocol-coordinate UDFs feed native outcome/limitation/evidence-class
+selection. A file-URI format UDF and native source route select consumer, installed, external or refused
+locations. Native admission compares captured text against the installed digest/size and enforces
+source closure bounds. The daemon retains bounded physical reads on the owned lane and framing.
+Pending protocol I/O polls fresh authority, checks before replies and before accepting an answer,
+and drops revoked conversations so the manager awaits physical cleanup. Broader acquisition/source
+lineage, handler composition and the complete lifecycle matrix still require work.
 
 ### Native diagnostic event authority (Plan 15, 2026-09-16)
 
@@ -1699,3 +1845,296 @@ shutdown path includes the barrier; complete writer stop/fault and retention gat
 The focused runtime contract target passed all 14 cases (2026-09-16, 0.84 s), including retained
 failure restart, operation correlation, memory exhaustion and owned timeout cleanup. This is
 source evidence, not installed or full Plan 15 acceptance.
+
+
+### Native source reads and private acquisition ownership — 2026-09-17
+
+Source consensus, coordinates, line-window policy, archive suffix candidates and member selection
+are DataFusion plans over qualified input descriptors and bounded filesystem observations. NULL
+ancillary observations do not suppress a unanimous non-NULL value. Rust parses source delimiters
+and executes the selected confined read on the shared blocking lane, retaining exact protection.
+
+One durable PrivateDirectory mechanism owns document IPC, source/revision extraction and worker
+Arrow output. It records obligations before creating bytes and reserves final release capacity.
+Source-bearing worker requests follow enrollment of the observed direct child for input and output.
+Native cleanup excludes any directory with a surviving process owner; a parent's death alone is
+insufficient. Archive physical-entry bounds include implicit parents. Durable removal rechecks
+file/directory identity and refuses links. State 16 drops the prior input-owner grammar and cache
+layout. Source implementation is not crash/process/restart qualification; export staging, full
+producer grants/supervision and external allocation/lifetime closure remain Plan 19 obligations.
+
+### Native static extraction contract — 2026-09-17
+
+One `source_capture` relation supplies file classification and source roles for Rust package,
+revision and Python capture. The physical walker reports filenames; native joins and predicates
+select artifacts, document kinds and media types. The previous `source::text_files` and handler
+classification loops are deleted.
+
+The static Python extractor consumes a private grant derived from the current Python resolution.
+Its immutable Delta effect records job/policy, archive identity, complete physical input inventory,
+compiled implementation identity and the native launch/request. Native inventory differences
+refuse dispatch after any path/mode/length/digest change. Private source/output owners supply
+confinement; the native declaration supplies argv, the complete environment, protocol and bounds.
+The installed interpreter path must be absolute. No daemon PATH is inherited. The worker reads its
+request-byte ceiling from the generated Arrow contract instead of a second Python constant.
+
+Revocation is checked during parsing and before accepting results. A pre-admitted child cleanup
+owner retains the paid producer permit and input/output owners until the actual child is reaped.
+Pending Tokio file operations retain output ownership until flush joins them. Unknown reaping
+does not become quiescence. Rust decoding shares the async child supervisor; capture and receipt I/O use the shared blocking lane.
+These source mechanisms do not prove matching installed package/producer closure, complete
+acquisition-to-effect lineage, process failure/restart behavior or the CP11 deletion barrier.
+
+
+### Primary export staging and immutable sealing — 2026-09-17
+
+Export uses the same durable private-directory owner as native producer inputs. An external
+sibling directory records its canonical parent identity and generated child name in the primary
+control namespace before creation. Native anti-joins require physical exit and matching dependency
+vectors; the mechanical remover checks the actual parent and every inventoried entry. Target-local
+obligations are not the only record of an unpublished export. State 18 introduces that dependency.
+
+Native async/blocking descendants and submitted release writes carry the input owner until exit.
+After target writers/providers leave scope, a nonclosing release barrier joins their submitted
+writes before the final control identity and manifest. Synchronization and rename keep the same
+owner; cleanup after an unknown rename acknowledgement can remove only remaining private staging.
+Full crash, retention, physical publication and installed qualification stay in Plan 19 CP12.
+
+
+### Retained resolution and acquisition freshness — 2026-09-17
+
+Complete metadata values reconcile under native canonical-value expressions and consensus, with
+qualification separate from value equality. NULL/empty, Map values and ordered repeated headers
+remain distinct. Native gap and artifact selection precedes typed output. Rendering time is never
+registry observation time: the freshness projection uses recorded acquisition clocks and the
+native index/version/mode scope. Retained note replacement addresses its exact policy text and
+preserves unrelated limitations. Final byte-fit governs complete artifact handles.
+
+Operator whole-root removal checks live native leases, cleanup obligations and maintenance runs.
+Unsettled private directories retain their recovery authority; private recovery precedes removal.
+The separate export process coordinates physical root deletion through the existing root fence
+until cleanup settles. Exact-version query authority remains native and independent of that lock.
+
+
+### Native decoder, document and component declarations (Plan 19)
+
+The Rust decoder request/effect/report is generated from `execution::rustdoc_decoder`, including
+artifact identity, stream vocabulary, exact launch, output bounds and build witness. A retained
+native effect ties dispatch to the current Rust resolve claim; asynchronous revocation and owned
+child reaping preserve resource lifetime. Both parser kinds reserve an external address-space
+envelope against the shared pool before spawn. This is conservative admission capacity, not RSS.
+Kernel stream tasks propagate the same private-input owner as native query/release descendants.
+
+Document facts use generated Arrow and wire fields. Native relations select distinct navigation
+pages, inventory-version qualification and Unicode windows while complete fetched artifacts remain
+retained. Component declarations likewise feed native readiness over actual execution routes;
+image qualification does not independently enable a route. A missing configured Python interpreter
+is explicit absence, with no PATH fallback. These source contract changes require fresh state 19.
+
+Metadata cache observation delegates all eviction and TTL to DefaultCache. Counters describe raw
+lookup hits/misses and resident accounted size without enumerating values. Reader validation and
+Parquet allocations surviving eviction remain distinct and are not inferred from those counters.
+
+
+### Native inspection and execution publication (Plan 19, 2026-09-18)
+
+Inspection routes and fragment policies are catalog declarations. Native plans derive required
+observations, ordered aspect outcomes and pinned recovery, retaining every failure reason instead
+of overwriting a previous stage. One semantic-method declaration serves initial production and
+retained reuse. Reuse checks exact runtime selectors or every requested method; independent
+qualified contexts produce explicit exact-snapshot choices. Native admission selects the actual
+public binding, snapshot and required profile before physical readiness and effect admission.
+
+Inspection completeness, payloads, coverage and artifact handles are native relational projections.
+A full receipt identity breaks artifact ties without discarding acquisition provenance. Verification
+likewise projects initial and settled outcomes from the same captured process facts; only the
+physical supervisor supplies settled cleanup. It never rewrites original process observations.
+
+Execution publication shares one native fact constructor and admission relation across inspection,
+verification and ingestion. The actual run supplies producer binding; canonical result bytes,
+class/profile, intrinsic contracts and cross-field payload scope admit before ordered identities
+are returned. Per-row handler fact constructors and the unused procedural producer-plan scaffold
+are removed. Public bounded codec checks are still available at external record boundaries.
+
+Consumer dependency captures come from the prepared inventory, using native path/byte/digest
+selection and closure bounds. Equal content does not erase independent acquisition origins. The
+physical reader reserves its exact buffer, verifies the admitted bytes, and retains its execution
+permit and capsule locks through blocking exit. Cancelling the waiting future cannot authorize
+input deletion or terminal cleanup. This source mechanism still requires the deferred complete
+producer, restart, retention and installed qualification in Plan 19 CP12.
+
+
+### Shared preparation and producer provenance — 2026-09-18
+
+Producer attempts and semantic runs share one field declaration. Native run composition preserves
+qualified acquisitions separately from canonical input meaning and applies the same clocks, logs and
+closure rules at control, ingest and attempt admission. Local build configuration identity uses the
+native record codec, separate from its stored artifact digest.
+
+Cargo source admission, package/version/library identity, configuration removal, options and consumer
+manifest generation are native plans over bounded, segment-valued TOML facts. Python distribution
+selection, import mapping, metadata authority, interpreter requirements and wheel-tag agreement share
+one native owner between acquisition and execution preparation. Narrow format UDFs decode syntax;
+native expressions and set operators decide meaning. Preparation readiness binds the declared argv,
+observed producer identity, physical exit and confirmed cleanup. It never grants execution authority.
+
+Physical archive/read callbacks retain cleanup and storage ownership through exit. Exact file buffers
+reserve native-pool bytes before allocation; captured metadata text retains a separate reservation.
+These charges cover the declared buffers, not allocator RSS or complete parser/worker/kernel memory.
+The former unbounded blob read and duplicate Cargo/Python policy implementations are removed.
+
+Semantic admission runs before coercion, after analysis and in the shared native planner after
+optimization. Physical traversal checks all child schemas and executable invariants. The complete
+operator/mutation/physical-expression and actual worker/storage/client matrices remain unqualified
+until Plan 19 CP11 permits terminal integration.
+
+
+### Explicit immutable bundle and native export policy — 2026-09-18
+
+`bundle_plan` selects exact checksum/file coverage, canonical ordering, catalog scope and the
+complete deduplicated blob copy inventory. Physical capture/hashing and copying remain bounded
+owned I/O. Live-source export enrolls exact durable artifact dependencies and current source roots;
+its blocking copies retain those leases and primary staging ownership through physical exit.
+
+After target writers and releases drain, an exclusive fence seals the target data root. The seal
+belongs to the bundle's checksum inventory and `delta-evidence-bundle/2` contract. `ImmutableRoot`
+is required by immutable control/evidence opening; the exact vector and seal survive native
+provider/plan/stream retention. Normal blob and Delta mutation entry points reject sealed roots,
+including already opened writers. Foreign table namespaces are refused before Delta mutation.
+Root-lock-only captured-read and generic read-only repository APIs are removed. Control inspection
+can read its own records but cannot grant dependent artifact/result reads. Bundles remain bytewise
+unchanged by verification. Version 1 has no compatibility route.
+
+Native/physical-mechanism units pass. Complete export/storage/crash/lifetime qualification remains
+Plan 19 CP12 after the deletion barrier; this is implemented source, not activated acceptance.
+
+
+### Shared positive storage and evidence proof cache — 2026-09-18
+
+The runtime's native positive-contract cache also owns successful file, snapshot and attempt
+validation proofs. It replaces three repository-local map/threshold implementations and uses
+one existing byte budget. Proof keys include physical file/table incarnation, exact descriptor
+and catalog identity, runtime meaning and effective validation limits as applicable. Current
+read authority stays outside the cache. Warm attempt proofs still validate their physical bytes.
+Authority invalidation clears the bounded proof cache; no inventory is copied. Proof/log-vector
+reservations survive eviction while a caller owns the proof. Occupancy remains declared native
+accounting, separate from allocator/RSS and unfinished external-allocation qualification.
+
+
+### Native retained validation and owned reader descendants — 2026-09-18
+
+`execution_documents` selects retained payload/document closure and coordinates in native plans;
+`semantic_utf8_range` is the bounded syntax kernel. `snapshot_validation` composes native semantic
+component, coverage, count and input-size admission. Exact artifact protection travels into hash,
+document and retained-result readers; positive proof reuse does not replace it. Contract-verification
+providers additionally retain their namespace flight and shared snapshot reservation.
+
+Provider planning/execution and stream polling compose retention with the current physical input
+scope. DataFusion async/blocking descendants inherit the owners through its existing task hooks,
+including after cancellation of the caller or stream. The shared local object store captures file
+ranges into pool-admitted `OwnedBytes`; `Bytes::from_owner` carries reservations through clones and
+slices. File metadata/preconditions remain the upstream implementation, invoked on the I/O lane;
+owned byte reads and synchronization use that lane's blocking pool. A full-file get is one lazy
+admitted buffer, while selective range reads remain selective. Decoded metadata, predicate and
+writer allocations are separate unfinished accounting work; none of these figures claims RSS.
+
+### Native assembled results and paid acquisition/Arrow outputs — 2026-09-18
+
+Overview namespace, child and kind-count assembly is relational, including ordering, typed empty
+values and paired map entries. The two declared overview materializations retain their shared native
+base. A materialization is a logical source whose binding seals the admitted input and session;
+its extension planner prepares the physical child without executing it. Consumer optimization
+cannot rewrite the captured base. See proposed ADR-0052; complete CF qualification remains open.
+
+Producer binding, qualified input receipt selection and publication fact provenance share one native
+owner. Receipt-vector order never resolves conflicting semantic descriptors. Acquisition summaries,
+coverage, gaps and ordered handles use one native presentation plan across Rust, Python and revision
+inputs. Hosted fallback honors explicit request settings and preserves missing-versus-empty values.
+All selected retained result roots use one bounded native dependency union for validation and export.
+
+HTTP response/cache bodies and artifact byte ranges use shared paid bytes. Incremental input growth
+reserves both old and replacement capacities before allocating; byte clones/slices share the owner.
+Exact artifact leases follow cache/Rustdoc reads through cancelled blocking work. Arrow's `pool`
+feature and DataFusion execution's `arrow_buffer_pool` feature provide buffer-level ownership at
+native result/fold/cache-output handoff. The adapter prepays the native buffer traversal before
+splitting reservations into Arrow's shared buffers. Arrow aliases replace their prior claim, and
+retained buffers remain charged after their stream is dropped. This does not bound every upstream
+allocation: decoder, metadata/predicate, kernel/writer and external process/transport workspace
+remain separately governed and require completion/qualification. No pool figure is an RSS claim.
+
+
+Source metadata policy is native: typed PyPI/revision facts feed release identity/metadata,
+single distinct import-root binding and commit/tree admission. Unknown external source fields
+remain available in immutable raw artifacts. `control/admission.rs` owns publication replay,
+selection predecessor conflicts, claim scope and transaction-key selection. The physical control
+writer interprets its finite disposition and appends admitted Arrow rows. Unknown acknowledgement
+reconciliation refreshes the same incarnation and uses complete semantic row fingerprints with
+native occurrence counts. It does not infer success from a cache hit or transaction-marker TTL,
+and a failed reconciliation cannot initiate a write retry. Actual fault/restart proof remains CP12.
+
+
+The shared finite Arrow ingress is an immutable captured-batch provider with shared buffer claims.
+It exposes no mutable MemTable handle and makes no unproved relational-constraint claim. Comparison
+and search consume this same boundary; their real native reconciliation/ranking/count/page consumers
+now have isolated Arrow/cache evidence. Comparison registers its typed alternative relations once and
+uses one changed-key materialization for every consumer. Native input mutability refusal remains
+part of cache admission. Installed, storage and retention qualification remain separate CP12 work.
+
+Field declarations now also own relation-reference targets and scope keys. Evidence/control native
+anti-joins, rule discovery and semantic manifests consume that one declaration. Intrinsic admission
+uses one parent-aware compiler; presentation roles are descriptive only. Type vocabularies and
+contextual field rules cannot overwrite each other. Encoded Arrow values use native decoding/union
+selection with full-field projections, preserving semantic children through admission. Set fields
+declare uniqueness in both native admission and generated wire schemas; sequences preserve repeats.
+These source capabilities are distinct from the deferred complete provider/storage/client matrices.
+
+
+### Typed immutable definitions and retention selection — 2026-09-18
+
+> Decision: ADR-0047. Native field declarations own identity domains and their storage contracts.
+
+Eight sealed definition families bind their payload, native key/domain, Delta table and identity
+column once. `Definitions<D>` materializes one admitted Arrow record and returns a typed binary
+identity with its exact binding; policy and execution consumers retain that domain. Policy
+retention is a specialization of this owner, with no separate implementation or string reader.
+
+Retention row selection is a tagged native value, with explicit text only for declared text
+columns. One compiler admits its complete semantic Field before generating equality predicates.
+Only the admitted Delta representation boundary lowers FixedSizeBinary identities to Binary.
+The native analyzer verifies collection composition and overlap fields before allowing DataFusion
+set/concat/overlap operations on nested identity-bearing dependencies; structural emptiness uses
+the concrete native ArrayEmpty implementation. No private collection evaluator is introduced.
+
+Source epochs are state 24, snapshot 14.0, wire 10.0 and executor 9. The decoder subprocess
+protocol remains native-rustdoc-arrow/4. Scoped units and compile/schema checks establish the
+implemented boundary; storage, restart, reclamation and client qualification remain CP12 work.
+
+
+### Typed physical ownership and native cleanup — 2026-09-18
+
+> Decision: ADR-0047. Native declarations own lifecycle identities and cleanup scope.
+
+Retention leases, cleanup obligations, maintenance runs, private directories, physical execution
+owners and storage reservations each carry a distinct FixedSizeBinary(16) identity. The existing
+retention-policy native key produces a FixedSizeBinary(32) RetentionPolicyId over the captured
+inline policy. No extra policy table or cache is introduced. Lifecycle labels are descriptive;
+selection uses typed identity, exact process witnesses, immutable scope and monotone state.
+
+A private-directory dependency is one declared union: local ID plus purpose, or export ID plus
+observed parent path/device/inode. DataFusion joins group owners by directory ID and refuse
+conflicting scope, malformed cardinality, live readers and retired-identity resurrection. Child
+processes retain separate obligations for the same exact directory. Directory purpose, export
+location and cleanup authority are not inferred from labels, path prefixes or dependency positions.
+Different lifecycle domains are rendered through the shared native diagnostic projection before
+combining removal blockers.
+
+Container supervision and durable physical-owner observations keep the typed owner ID through
+exit and recovery. Broker names are derived only when constructing broker arguments or operation
+filenames. Quarantine leaves are derived from StorageReservationId; recovery captures canonical
+components under the observed owned cache and uses a native reservation/inventory selection.
+Redundant stored child/quarantine strings and the old physical-owner/external-directory dependency
+variants are deleted. Mechanical filesystem checks and remove/sync-before-release ordering remain.
+
+Source epochs are state 25, snapshot 15.0 and wire 11.0. Executor 9 and decoder
+native-rustdoc-arrow/4 remain unchanged. This bounded source slice does not close Plan 19's CP11
+deletion barrier or qualify its deferred storage, restart, publication and client journeys.

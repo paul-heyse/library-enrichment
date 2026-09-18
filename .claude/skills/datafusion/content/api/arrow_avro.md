@@ -18,6 +18,9 @@ trait AvroFieldExt
 fn with_utf8view(&self) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.AvroFieldExt.md).
+
+
 Extension trait for AvroField to add Utf8View support
 
 This trait adds methods for working with Utf8View support to the AvroField struct.

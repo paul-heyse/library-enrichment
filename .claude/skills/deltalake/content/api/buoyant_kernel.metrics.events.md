@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 25 public items · structured records in [`model/buoya
 ## CommitFailureReason
 
 `enum` · `buoyant_kernel::metrics::events::CommitFailureReason`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.CommitFailureReason.md)
 
 Also reachable as `buoyant_kernel::metrics::CommitFailureReason`, `delta_kernel::metrics::events::CommitFailureReason`
 
@@ -52,6 +53,7 @@ Serializes to its `snake_case` name for the `failure_reason` span field (e.g.
 ## MetricEvent
 
 `enum` · `buoyant_kernel::metrics::events::MetricEvent`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.MetricEvent.md)
 
 Also reachable as `buoyant_kernel::metrics::MetricEvent`, `delta_kernel::metrics::events::MetricEvent`
 
@@ -78,6 +80,7 @@ Metric events emitted during Delta Kernel operations.
 ## ScanType
 
 `enum` · `buoyant_kernel::metrics::events::ScanType`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.ScanType.md)
 
 Also reachable as `buoyant_kernel::metrics::ScanType`, `delta_kernel::metrics::events::ScanType`
 
@@ -125,6 +128,7 @@ Serializes to the explicit `serialize` name on each variant for the `scan_type` 
 ## TableType
 
 `enum` · `buoyant_kernel::metrics::events::TableType`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.TableType.md)
 
 Also reachable as `buoyant_kernel::metrics::TableType`, `delta_kernel::metrics::events::TableType`
 
@@ -169,6 +173,7 @@ Whether a table is path-based or catalog-managed.
 ## emit_json_read_completed
 
 `function` · `buoyant_kernel::metrics::events::emit_json_read_completed`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.emit_json_read_completed.md)
 
 Also reachable as `buoyant_kernel::metrics::emit_json_read_completed`, `delta_kernel::metrics::events::emit_json_read_completed`
 
@@ -186,6 +191,7 @@ drop.
 ## emit_parquet_read_completed
 
 `function` · `buoyant_kernel::metrics::events::emit_parquet_read_completed`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.emit_parquet_read_completed.md)
 
 Also reachable as `buoyant_kernel::metrics::emit_parquet_read_completed`, `delta_kernel::metrics::events::emit_parquet_read_completed`
 
@@ -203,6 +209,7 @@ or drop.
 ## CrcReadSuccess
 
 `struct` · `buoyant_kernel::metrics::events::CrcReadSuccess`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.CrcReadSuccess.md)
 
 Also reachable as `buoyant_kernel::metrics::CrcReadSuccess`, `delta_kernel::metrics::events::CrcReadSuccess`
 
@@ -229,6 +236,7 @@ A CRC file was read and parsed successfully. `bytes_read` is the raw byte count 
 ## DomainMetadataLoadSuccess
 
 `struct` · `buoyant_kernel::metrics::events::DomainMetadataLoadSuccess`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.DomainMetadataLoadSuccess.md)
 
 Also reachable as `buoyant_kernel::metrics::DomainMetadataLoadSuccess`, `delta_kernel::metrics::events::DomainMetadataLoadSuccess`
 
@@ -257,6 +265,7 @@ system (`delta.*`) domains such as clustering or row tracking.
 ## JsonReadCompleted
 
 `struct` · `buoyant_kernel::metrics::events::JsonReadCompleted`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.JsonReadCompleted.md)
 
 Also reachable as `buoyant_kernel::metrics::JsonReadCompleted`, `delta_kernel::metrics::events::JsonReadCompleted`
 
@@ -285,6 +294,7 @@ deserialized payload size.
 ## LogSegmentLoadFailure
 
 `struct` · `buoyant_kernel::metrics::events::LogSegmentLoadFailure`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.LogSegmentLoadFailure.md)
 
 Also reachable as `buoyant_kernel::metrics::LogSegmentLoadFailure`, `delta_kernel::metrics::events::LogSegmentLoadFailure`
 
@@ -311,6 +321,7 @@ Listing the log segment for a snapshot failed.
 ## LogSegmentLoadSuccess
 
 `struct` · `buoyant_kernel::metrics::events::LogSegmentLoadSuccess`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.LogSegmentLoadSuccess.md)
 
 Also reachable as `buoyant_kernel::metrics::LogSegmentLoadSuccess`, `delta_kernel::metrics::events::LogSegmentLoadSuccess`
 
@@ -337,6 +348,7 @@ A log segment was listed and assembled for a snapshot.
 ## MetricId
 
 `struct` · `buoyant_kernel::metrics::events::MetricId`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.MetricId.md)
 
 Also reachable as `buoyant_kernel::metrics::MetricId`, `delta_kernel::metrics::events::MetricId`
 
@@ -371,6 +383,7 @@ events emitted from that operation.
 ## ParquetReadCompleted
 
 `struct` · `buoyant_kernel::metrics::events::ParquetReadCompleted`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.ParquetReadCompleted.md)
 
 Also reachable as `buoyant_kernel::metrics::ParquetReadCompleted`, `delta_kernel::metrics::events::ParquetReadCompleted`
 
@@ -399,6 +412,7 @@ deserialized payload size.
 ## ProtocolMetadataLoadFailure
 
 `struct` · `buoyant_kernel::metrics::events::ProtocolMetadataLoadFailure`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.ProtocolMetadataLoadFailure.md)
 
 Also reachable as `buoyant_kernel::metrics::ProtocolMetadataLoadFailure`, `delta_kernel::metrics::events::ProtocolMetadataLoadFailure`
 
@@ -425,6 +439,7 @@ Reading protocol and metadata from the log failed.
 ## ProtocolMetadataLoadSuccess
 
 `struct` · `buoyant_kernel::metrics::events::ProtocolMetadataLoadSuccess`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.ProtocolMetadataLoadSuccess.md)
 
 Also reachable as `buoyant_kernel::metrics::ProtocolMetadataLoadSuccess`, `delta_kernel::metrics::events::ProtocolMetadataLoadSuccess`
 
@@ -451,6 +466,7 @@ Protocol and metadata actions were read from the log.
 ## ScanMetadataCompleted
 
 `struct` · `buoyant_kernel::metrics::events::ScanMetadataCompleted`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.ScanMetadataCompleted.md)
 
 Also reachable as `buoyant_kernel::metrics::ScanMetadataCompleted`, `delta_kernel::metrics::events::ScanMetadataCompleted`
 
@@ -478,6 +494,7 @@ A `parallel_scan_metadata` scan emits **two** events (one per phase) sharing the
 ## SetTransactionLoadSuccess
 
 `struct` · `buoyant_kernel::metrics::events::SetTransactionLoadSuccess`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.SetTransactionLoadSuccess.md)
 
 Also reachable as `buoyant_kernel::metrics::SetTransactionLoadSuccess`, `delta_kernel::metrics::events::SetTransactionLoadSuccess`
 
@@ -506,6 +523,7 @@ transaction version, false when none exists or the existing one is expired.
 ## SnapshotBuildFailure
 
 `struct` · `buoyant_kernel::metrics::events::SnapshotBuildFailure`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.SnapshotBuildFailure.md)
 
 Also reachable as `buoyant_kernel::metrics::SnapshotBuildFailure`, `delta_kernel::metrics::events::SnapshotBuildFailure`
 
@@ -532,6 +550,7 @@ Building a snapshot failed.
 ## SnapshotBuildSuccess
 
 `struct` · `buoyant_kernel::metrics::events::SnapshotBuildSuccess`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.SnapshotBuildSuccess.md)
 
 Also reachable as `buoyant_kernel::metrics::SnapshotBuildSuccess`, `delta_kernel::metrics::events::SnapshotBuildSuccess`
 
@@ -558,6 +577,7 @@ A snapshot was built successfully.
 ## SnapshotLoadMetricContext
 
 `struct` · `buoyant_kernel::metrics::events::SnapshotLoadMetricContext`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.SnapshotLoadMetricContext.md)
 
 Also reachable as `buoyant_kernel::metrics::SnapshotLoadMetricContext`, `delta_kernel::metrics::events::SnapshotLoadMetricContext`
 
@@ -574,6 +594,7 @@ Operation-scoped values threaded through the snapshot-load chain to label its me
 ## StorageCopyCompleted
 
 `struct` · `buoyant_kernel::metrics::events::StorageCopyCompleted`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.StorageCopyCompleted.md)
 
 Also reachable as `buoyant_kernel::metrics::StorageCopyCompleted`, `delta_kernel::metrics::events::StorageCopyCompleted`
 
@@ -600,6 +621,7 @@ A storage copy or rename operation completed.
 ## StorageListCompleted
 
 `struct` · `buoyant_kernel::metrics::events::StorageListCompleted`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.StorageListCompleted.md)
 
 Also reachable as `buoyant_kernel::metrics::StorageListCompleted`, `delta_kernel::metrics::events::StorageListCompleted`
 
@@ -626,6 +648,7 @@ A storage list operation completed.
 ## StorageReadCompleted
 
 `struct` · `buoyant_kernel::metrics::events::StorageReadCompleted`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.StorageReadCompleted.md)
 
 Also reachable as `buoyant_kernel::metrics::StorageReadCompleted`, `delta_kernel::metrics::events::StorageReadCompleted`
 
@@ -652,6 +675,7 @@ A storage read operation completed.
 ## TransactionCommitFailure
 
 `struct` · `buoyant_kernel::metrics::events::TransactionCommitFailure`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.TransactionCommitFailure.md)
 
 Also reachable as `buoyant_kernel::metrics::TransactionCommitFailure`, `delta_kernel::metrics::events::TransactionCommitFailure`
 
@@ -679,6 +703,7 @@ terminal errors.
 ## TransactionCommitSuccess
 
 `struct` · `buoyant_kernel::metrics::events::TransactionCommitSuccess`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.events.TransactionCommitSuccess.md)
 
 Also reachable as `buoyant_kernel::metrics::TransactionCommitSuccess`, `delta_kernel::metrics::events::TransactionCommitSuccess`
 

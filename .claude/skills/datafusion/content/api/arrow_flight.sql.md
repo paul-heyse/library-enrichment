@@ -29,6 +29,9 @@ fn type_url(&self) -> &str
 fn try_from(any: Any) -> Result<Self, Self::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.Command.md).
+
+
 Helper to convert to/from protobuf [`Any`] message
 to a specific FlightSQL command message.
 
@@ -82,6 +85,9 @@ fn unpack<M: ProstMessageExt>(&self) -> Result<Option<M>, ArrowError>
 fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.Any.md).
+
 
 An implementation of the protobuf [`Any`] message type
 
@@ -151,6 +157,9 @@ trait ProstMessageExt: prost::Message + Default
 fn as_any(&self) -> Any
 fn type_url() -> &'static str
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.ProstMessageExt.md).
+
 
 ProstMessageExt are useful utility methods for prost::Message types
 

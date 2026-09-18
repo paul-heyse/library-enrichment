@@ -1,0 +1,76 @@
+[
+  {
+    "id": "661d0febb503222365f1b4d8",
+    "path": "parquet::variant",
+    "name": "variant",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod variant",
+    "docs": "⚠️ Experimental Support for reading and writing [`Variant`]s to / from Parquet files ⚠️\n\nThis is a 🚧 Work In Progress\n\nNote: Requires the `variant_experimental` feature of the `parquet` crate to be enabled.\n\n# Features\n* Representation of [`Variant`], and [`VariantArray`] for working with\n  Variant values (see [`parquet_variant`] for more details)\n* Kernels for working with arrays of Variant values\n  such as conversion between `Variant` and JSON, and shredding/unshredding\n  (see [`parquet_variant_compute`] for more details)\n\n# Example: Writing a Parquet file with Variant column\n```rust\n# use parquet::variant::{VariantArray, VariantType, VariantArrayBuilder, VariantBuilderExt};\n# use std::sync::Arc;\n# use arrow_array::{Array, ArrayRef, RecordBatch};\n# use arrow_schema::{DataType, Field, Schema};\n# use parquet::arrow::ArrowWriter;\n# fn main() -> Result<(), parquet::errors::ParquetError> {\n // Use the VariantArrayBuilder to build a VariantArray\n let mut builder = VariantArrayBuilder::new(3);\n builder.new_object().with_field(\"name\", \"Alice\").finish(); // row 1: {\"name\": \"Alice\"}\n builder.append_value(\"such wow\"); // row 2: \"such wow\" (a string)\n let array = builder.build();\n\n // Since VariantArray is an ExtensionType, it needs to be converted\n // to an ArrayRef and Field with the appropriate metadata\n // before it can be written to a Parquet file\n let field = array.field(\"data\");\n let array = ArrayRef::from(array);\n // create a RecordBatch with the VariantArray\n let schema = Schema::new(vec![field]);\n let batch = RecordBatch::try_new(Arc::new(schema), vec![array])?;\n\n // Now you can write the RecordBatch to the Parquet file, as normal\n let file = std::fs::File::create(\"variant.parquet\")?;\n let mut writer = ArrowWriter::try_new(file, batch.schema(), None)?;\n writer.write(&batch)?;\n writer.close()?;\n\n# std::fs::remove_file(\"variant.parquet\")?;\n# Ok(())\n# }\n```\n\n# Example: Writing JSON into a Parquet file with Variant column\n```rust\n# use std::sync::Arc;\n# use arrow_array::{ArrayRef, RecordBatch, StringArray};\n# use arrow_schema::Schema;\n# use parquet::variant::{json_to_variant, VariantArray};\n# use parquet::arrow::ArrowWriter;\n# fn main() -> Result<(), parquet::errors::ParquetError> {\n // Create an array of JSON strings, simulating a column of JSON data\n let input_array: ArrayRef = Arc::new(StringArray::from(vec![\n  Some(r#\"{\"name\": \"Alice\", \"age\": 30}\"#),\n  Some(r#\"{\"name\": \"Bob\", \"age\": 25, \"address\": {\"city\": \"New York\"}}\"#),\n  None,\n  Some(\"{}\"),\n ]));\n\n // Convert the JSON strings to a VariantArray\n let array: VariantArray = json_to_variant(&input_array)?;\n // create a RecordBatch with the VariantArray\n let schema = Schema::new(vec![array.field(\"data\")]);\n let batch = RecordBatch::try_new(Arc::new(schema), vec![ArrayRef::from(array)])?;\n\n // write the RecordBatch to a Parquet file as normal\n let file = std::fs::File::create(\"variant-json.parquet\")?;\n let mut writer = ArrowWriter::try_new(file, batch.schema(), None)?;\n writer.write(&batch)?;\n writer.close()?;\n# std::fs::remove_file(\"variant-json.parquet\")?;\n# Ok(())\n# }\n```\n\n# Example: Reading a Parquet file with Variant column\n\nUse the [`VariantType`] extension type to find the Variant column:\n\n```\n# use std::sync::Arc;\n# use std::path::PathBuf;\n# use arrow_array::{ArrayRef, RecordBatch, RecordBatchReader};\n# use parquet::variant::{Variant, VariantArray, VariantType};\n# use parquet::arrow::arrow_reader::ArrowReaderBuilder;\n# fn main() -> Result<(), parquet::errors::ParquetError> {\n# use arrow_array::StructArray;\n# fn file_path() -> PathBuf { // return a testing file path\n#    PathBuf::from(arrow::util::test_util::parquet_test_data())\n#   .join(\"..\")\n#   .join(\"shredded_variant\")\n#   .join(\"case-075.parquet\")\n# }\n// Read the Parquet file using standard Arrow Parquet reader.\n// Note this file has 2 columns: \"id\", \"var\", and the \"var\" column\nlet file = std::fs::File::open(file_path())?;\nlet mut reader = ArrowReaderBuilder::try_new(file)?.build()?;\n\n// You can check if a column contains a Variant using\n// the VariantType extension type\nlet schema = reader.schema();\nlet field = schema.field_with_name(\"var\")?;\nassert!(field.has_valid_extension_type::<VariantType>());\n\n// The reader will yield RecordBatches with a StructArray\n// to convert them to VariantArray, use VariantArray::try_new\nlet batch = reader.next().unwrap().unwrap();\n\nlet col = batch.column_by_name(\"var\").unwrap();\nlet var_array = VariantArray::try_new(col)?;\nassert_eq!(var_array.len(), 1);\nlet var_value: Variant = var_array.value(0);\nassert_eq!(var_value, Variant::from(\"iceberg\")); // the value in case-075.parquet\n# Ok(())\n# }\n```",
+    "span": {
+      "filename": "src/variant.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        299,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"variant_experimental\"), span: src/lib.rs:228:7: 228:39 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          7905,
+          7907
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`parquet_variant_compute`": 7908,
+      "`VariantType`": 7911,
+      "`Variant`": 7909,
+      "`parquet_variant`": 7906,
+      "`VariantArray`": 7910
+    },
+    "link_paths": {
+      "`parquet_variant_compute`": "parquet_variant_compute",
+      "`VariantType`": "parquet_variant_compute::variant_array::VariantType",
+      "`Variant`": "parquet_variant::variant::Variant",
+      "`parquet_variant`": "parquet_variant",
+      "`VariantArray`": "parquet_variant_compute::variant_array::VariantArray"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "7912",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/parquet.variant.md",
+    "record_file": "modules/parquet.variant.json",
+    "anchor": "op-661d0febb503222365f1b4d8",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`parquet_variant_compute`": "../modules/parquet_variant_compute.md#op-72154b4e4751c8223991ae4d",
+      "`VariantType`": "../operations/parquet_variant_compute.variant_array.VariantType.md#op-88d7342856958a338cda9720",
+      "`Variant`": "../operations/parquet_variant.variant.Variant.md#op-56d8e2cab45de055ef39f43d",
+      "`parquet_variant`": "../modules/parquet_variant.md#op-6469913707cd0592bc49d8dc",
+      "`VariantArray`": "../operations/parquet_variant_compute.variant_array.VariantArray.md#op-0730efce8ca33e866d425d18"
+    }
+  }
+]

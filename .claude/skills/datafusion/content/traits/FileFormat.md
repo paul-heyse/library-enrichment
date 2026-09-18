@@ -26,7 +26,7 @@ async fn infer_stats(&self, state: &dyn Session, store: &Arc<dyn ObjectStore>, t
 
 ## Provided
 
-Defaulted, and this is where the capability hides. The default is the conservative answer -- no pushdown, no statistics, no specialization -- so an implementation that overrides none of these works correctly and performs badly.
+These methods have defaults. Read each full contract before overriding: some defaults reject unsupported operations, while others provide suitable general behavior. Required methods alone do not prove correctness or performance.
 
 ```rust
 async fn create_writer_physical_plan(&self, _input: Arc<dyn ExecutionPlan>, _state: &dyn Session, _conf: FileSinkConfig, _order_requirements: Option<LexRequirement>) -> Result<Arc<dyn ExecutionPlan>>

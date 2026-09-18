@@ -36,6 +36,9 @@ fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 fn from_str(s: &str) -> Result<Self, Self::Err>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.aws.checksum.Checksum.md).
+
+
 Enum representing checksum algorithm supported by S3.
 
 ---

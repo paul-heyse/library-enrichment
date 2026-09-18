@@ -23,6 +23,9 @@ fn with_require_alignment(self, require_alignment: bool) -> Self
 unsafe fn with_skip_validation(self, skip_validation: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.reader.stream.StreamDecoder.md).
+
+
 A low-level interface for reading [`RecordBatch`] data from a stream of bytes
 
 See [StreamReader](crate::reader::StreamReader) for a higher-level interface

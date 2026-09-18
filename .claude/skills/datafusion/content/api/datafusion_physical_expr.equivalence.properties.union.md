@@ -12,6 +12,9 @@ Also reachable as `datafusion::physical_expr::calculate_union`, `datafusion_phys
 fn calculate_union(eqps: Vec<super::EquivalenceProperties>, schema: arrow::datatypes::SchemaRef) -> datafusion_common::Result<super::EquivalenceProperties>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.equivalence.properties.union.calculate_union.md).
+
+
 Calculates the union (in the sense of `UnionExec`) `EquivalenceProperties`
 of the given `EquivalenceProperties` in `eqps` according to the given
 output `schema` (which need not be the same with those of `lhs` and `rhs`

@@ -10,6 +10,9 @@ Crate `arrow-flight` · 1 public items · structured records in [`model/arrow_fl
 struct GetTableTypesBuilder
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.metadata.table_types.GetTableTypesBuilder.md).
+
+
 A builder for a [`CommandGetTableTypes`] response.
 
 Builds rows like this:

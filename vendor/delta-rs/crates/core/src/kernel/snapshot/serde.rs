@@ -76,6 +76,7 @@ impl MaterializedFilesPolicyWire {
 struct MaterializedFilesWire {
     version: delta_kernel::Version,
     scope: MaterializedFilesScopeWire,
+    #[serde(with = "ipc_bytes")]
     batches: Vec<u8>,
     #[serde(default)]
     identity: Option<SnapshotIdentity>,
@@ -123,18 +124,6 @@ impl MaterializedFilesWire {
                 };
                 (identity, policy)
             }
-            (None, None) => {
-                // Snapshot serde is a trusted persistence format, not an authentication boundary.
-                // Payloads written before cache identity and policy existed contain neither field,
-                // so derive both from the owning snapshot to preserve wire compatibility. Identity
-                // and policy still guard current-format caches against accidental reuse; they do
-                // not prove the provenance of caller-supplied serialized bytes.
-                tracing::trace!(
-                    snapshot_version = owning_snapshot.version(),
-                    "accepting trusted pre-identity materialized snapshot cache"
-                );
-                (owning_snapshot.identity(), expected_policy)
-            }
             _ => {
                 tracing::trace!(
                     snapshot_version = owning_snapshot.version(),
@@ -171,36 +160,12 @@ impl MaterializedFilesWire {
     }
 }
 
-fn materialized_files_from_legacy_eager_payload(
-    snapshot: &Snapshot,
-    legacy_payload: Option<Vec<u8>>,
-) -> Result<Option<Arc<MaterializedFiles>>, String> {
-    if let Some(materialized_files) = snapshot.materialized_files().cloned() {
-        return Ok(Some(materialized_files));
-    }
-
-    let Some(legacy_payload) = legacy_payload else {
-        return Ok(None);
-    };
-
-    if legacy_payload.is_empty()
-        && snapshot.materialization_mode() == SnapshotMaterializationMode::Lazy
-    {
-        return Ok(None);
-    }
-
-    Ok(Some(Arc::new(MaterializedFiles::full(
-        snapshot,
-        deserialize_batches(legacy_payload)?,
-    ))))
-}
-
 fn serialize_batches(batches: &[arrow_array::RecordBatch]) -> Result<Vec<u8>, String> {
     if batches.is_empty() {
         return Ok(vec![]);
     }
 
-    let mut buffer = vec![];
+    let mut buffer = super::bounded_ipc::Output::default();
     let mut writer = FileWriter::try_new(&mut buffer, batches[0].schema().as_ref())
         .map_err(|e| format!("failed to create ipc writer: {e}"))?;
     for batch in batches {
@@ -212,7 +177,7 @@ fn serialize_batches(batches: &[arrow_array::RecordBatch]) -> Result<Vec<u8>, St
         .finish()
         .map_err(|e| format!("failed to finish ipc writer: {e}"))?;
     drop(writer);
-    Ok(buffer)
+    Ok(buffer.bytes)
 }
 
 fn deserialize_batches(data: Vec<u8>) -> Result<Vec<arrow_array::RecordBatch>, String> {
@@ -220,6 +185,7 @@ fn deserialize_batches(data: Vec<u8>) -> Result<Vec<arrow_array::RecordBatch>, S
         return Ok(vec![]);
     }
 
+    super::bounded_ipc::validate(&data)?;
     FileReader::try_new(std::io::Cursor::new(data), None)
         .map_err(|e| format!("failed to read ipc record batch: {e}"))?
         .try_collect()
@@ -270,7 +236,7 @@ impl Serialize for Snapshot {
             .as_ref()
             .map(|f| FileMetaSerde::from(&f.location));
 
-        let mut seq = serializer.serialize_seq(None)?;
+        let mut seq = serializer.serialize_seq(Some(11))?;
 
         seq.serialize_element(&self.version())?;
         seq.serialize_element(&self.inner.table_root())?;
@@ -367,7 +333,15 @@ impl<'de> Visitor<'de> for SnapshotVisitor {
         let config: DeltaTableConfig = seq
             .next_element()?
             .ok_or_else(|| de::Error::invalid_length(9, &self))?;
-        let materialized_files: Option<MaterializedFilesWire> = seq.next_element()?.unwrap_or(None);
+        let materialized_files: Option<MaterializedFilesWire> = seq
+            .next_element()?
+            .ok_or_else(|| de::Error::invalid_length(10, &self))?;
+        if seq.next_element::<de::IgnoredAny>()?.is_some() {
+            return Err(de::Error::custom("unexpected snapshot element"));
+        }
+        if version < 0 {
+            return Err(de::Error::custom("negative snapshot version"));
+        }
 
         let ascending_commit_files = ascending_commit_files
             .into_iter()
@@ -466,7 +440,7 @@ impl Serialize for EagerSnapshot {
     where
         S: serde::Serializer,
     {
-        let mut seq = serializer.serialize_seq(None)?;
+        let mut seq = serializer.serialize_seq(Some(1))?;
         seq.serialize_element(&self.snapshot)?;
         seq.end()
     }
@@ -489,16 +463,9 @@ impl<'de> Visitor<'de> for EagerSnapshotVisitor {
         let snapshot: Arc<Snapshot> = seq
             .next_element()?
             .ok_or_else(|| de::Error::invalid_length(0, &self))?;
-        let legacy_payload: Option<Vec<u8>> = seq.next_element()?;
-        let snapshot =
-            match materialized_files_from_legacy_eager_payload(snapshot.as_ref(), legacy_payload)
-                .map_err(de::Error::custom)?
-            {
-                Some(materialized_files) if snapshot.materialized_files().is_none() => {
-                    Arc::new(snapshot.with_materialized_files(Some(materialized_files)))
-                }
-                _ => snapshot,
-            };
+        if seq.next_element::<de::IgnoredAny>()?.is_some() {
+            return Err(de::Error::custom("unexpected eager snapshot element"));
+        }
         if snapshot.materialization_mode() == SnapshotMaterializationMode::Eager
             && snapshot.materialized_files().is_none()
         {
@@ -516,5 +483,40 @@ impl<'de> Deserialize<'de> for EagerSnapshot {
         D: Deserializer<'de>,
     {
         deserializer.deserialize_seq(EagerSnapshotVisitor)
+    }
+}
+
+/// Current native IPC payload is a byte string, not a sequence of CBOR integers.
+mod ipc_bytes {
+    use serde::{
+        Deserializer, Serializer,
+        de::{self, Visitor},
+    };
+    pub(super) fn serialize<S: Serializer>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_bytes(bytes)
+    }
+    pub(super) fn deserialize<'de, D: Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Vec<u8>, D::Error> {
+        struct Bytes;
+        impl<'de> Visitor<'de> for Bytes {
+            type Value = Vec<u8>;
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("bounded raw Arrow IPC bytes")
+            }
+            fn visit_byte_buf<E: de::Error>(self, bytes: Vec<u8>) -> Result<Vec<u8>, E> {
+                if bytes.len() > super::super::bounded_ipc::MAX_BYTES {
+                    return Err(E::custom("IPC byte bound"));
+                }
+                Ok(bytes)
+            }
+            fn visit_bytes<E: de::Error>(self, bytes: &[u8]) -> Result<Vec<u8>, E> {
+                if bytes.len() > super::super::bounded_ipc::MAX_BYTES {
+                    return Err(E::custom("IPC byte bound"));
+                }
+                Ok(bytes.to_vec())
+            }
+        }
+        deserializer.deserialize_byte_buf(Bytes)
     }
 }

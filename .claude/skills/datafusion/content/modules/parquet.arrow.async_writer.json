@@ -1,0 +1,79 @@
+[
+  {
+    "id": "7658fdf69eb303596f1af00d",
+    "path": "parquet::arrow::async_writer",
+    "name": "async_writer",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod async_writer",
+    "docs": "`async` API for writing [`RecordBatch`]es to Parquet files\n\nSee the [crate-level documentation](crate) for more details.\n\nThe `async` API for writing [`RecordBatch`]es is\nsimilar to the [`sync` API](ArrowWriter), so please\nread the documentation there before using this API.\n\nHere is an example for using [`AsyncArrowWriter`]:\n\n```\n# #[tokio::main(flavor=\"current_thread\")]\n# async fn main() {\n#\n# use std::sync::Arc;\n# use arrow_array::{ArrayRef, Int64Array, RecordBatch, RecordBatchReader};\n# use bytes::Bytes;\n# use parquet::arrow::{AsyncArrowWriter, arrow_reader::ParquetRecordBatchReaderBuilder};\n#\nlet col = Arc::new(Int64Array::from_iter_values([1, 2, 3])) as ArrayRef;\nlet to_write = RecordBatch::try_from_iter([(\"col\", col)]).unwrap();\n\nlet mut buffer = Vec::new();\nlet mut writer = AsyncArrowWriter::try_new(&mut buffer, to_write.schema(), None).unwrap();\nwriter.write(&to_write).await.unwrap();\nwriter.close().await.unwrap();\n\nlet buffer = Bytes::from(buffer);\nlet mut reader = ParquetRecordBatchReaderBuilder::try_new(buffer.clone())\n    .unwrap()\n    .build()\n    .unwrap();\nlet read = reader.next().unwrap().unwrap();\n\nassert_eq!(to_write, read);\n# }\n```\n\nThere is a blanket implementation of [`AsyncFileWriter`] for all types that\nimplement [`AsyncWrite`], so writers such as `tokio::fs::File`, or\n`object_store::buffered::BufWriter` for writing to object storage, can be\npassed to [`AsyncArrowWriter`] directly.",
+    "span": {
+      "filename": "src/arrow/async_writer/mod.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        474,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"async\"), span: src/arrow/mod.rs:190:7: 190:24 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          3552,
+          3551,
+          3618
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`AsyncArrowWriter`": 3551,
+      "`RecordBatch`": 2524,
+      "`AsyncFileWriter`": 3552,
+      "ArrowWriter": 3205,
+      "crate": 3546,
+      "`AsyncWrite`": 3550
+    },
+    "link_paths": {
+      "`AsyncArrowWriter`": "parquet::arrow::async_writer::AsyncArrowWriter",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch",
+      "`AsyncFileWriter`": "parquet::arrow::async_writer::AsyncFileWriter",
+      "ArrowWriter": "parquet::arrow::arrow_writer::ArrowWriter",
+      "crate": "parquet",
+      "`AsyncWrite`": "tokio::io::async_write::AsyncWrite"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3579",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/parquet.arrow.async_writer.md",
+    "record_file": "modules/parquet.arrow.async_writer.json",
+    "anchor": "op-7658fdf69eb303596f1af00d",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`AsyncArrowWriter`": "../operations/parquet.arrow.async_writer.AsyncArrowWriter.md#op-d9df4726e3133f2ae1d81ca9",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "`AsyncFileWriter`": "../operations/parquet.arrow.async_writer.AsyncFileWriter.md#op-d1acaf94f7f04028351c03f9",
+      "ArrowWriter": "../operations/parquet.arrow.arrow_writer.ArrowWriter.md#op-dc781972049f13083eb8f4f3",
+      "crate": "../modules/parquet.md#op-a2a0c4ff17ff9b4865c11f69"
+    }
+  }
+]

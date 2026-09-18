@@ -1,0 +1,4800 @@
+[
+  {
+    "id": "2cb4803ec228a018e60491ee",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "name": "ArrowReaderBuilder",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct ArrowReaderBuilder<T>",
+    "docs": "Builder for constructing Parquet readers that decode into [Apache Arrow]\narrays.\n\nMost users should use one of the following specializations:\n\n* synchronous API: [`ParquetRecordBatchReaderBuilder`]\n* `async` API: [`ParquetRecordBatchStreamBuilder`]\n* decoder API: [`ParquetPushDecoderBuilder`]\n\n# Features\n* Projection pushdown: [`Self::with_projection`]\n* Cached metadata: [`ArrowReaderMetadata::load`]\n* Offset skipping: [`Self::with_offset`] and [`Self::with_limit`]\n* Row group filtering: [`Self::with_row_groups`]\n* Range filtering: [`Self::with_row_selection`]\n* Row level filtering: [`Self::with_row_filter`]\n\n# Implementing Predicate Pushdown\n\n[`Self::with_row_filter`] permits filter evaluation *during* the decoding\nprocess, which is efficient and allows the most low level optimizations.\n\nHowever, most Parquet based systems will apply filters at many steps prior\nto decoding such as pruning files, row groups and data pages. This crate\nprovides the low level APIs needed to implement such filtering, but does not\ninclude any logic to actually evaluate predicates. For example:\n\n* [`Self::with_row_groups`] for Row Group pruning\n* [`Self::with_row_selection`] for data page pruning\n* [`StatisticsConverter`] to convert Parquet statistics to Arrow arrays\n\nThe rationale for this design is that implementing predicate pushdown is a\ncomplex topic and varies significantly from system to system. For example\n\n1. Predicates supported (do you support predicates like prefix matching, user defined functions, etc)\n2. Evaluating predicates on multiple files (with potentially different but compatible schemas)\n3. Evaluating predicates using information from an external metadata catalog (e.g. Apache Iceberg or similar)\n4. Interleaving fetching metadata, evaluating predicates, and decoding files\n\nYou can read more about this design in the [Querying Parquet with\nMillisecond Latency] Arrow blog post.\n\n[`ParquetRecordBatchStreamBuilder`]: crate::arrow::async_reader::ParquetRecordBatchStreamBuilder\n[`ParquetPushDecoderBuilder`]: crate::arrow::push_decoder::ParquetPushDecoderBuilder\n[Apache Arrow]: https://arrow.apache.org/\n[`StatisticsConverter`]: statistics::StatisticsConverter\n[Querying Parquet with Millisecond Latency]: https://arrow.apache.org/blog/2022/12/26/querying-parquet-with-millisecond-latency/",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        114,
+        1
+      ],
+      "end": [
+        150,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          3014,
+          3023,
+          3033,
+          3044,
+          3046,
+          3047,
+          3048,
+          3049,
+          3050,
+          3051,
+          3052,
+          3053,
+          3054,
+          3055,
+          3056,
+          3057,
+          3058,
+          3059,
+          3061
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "crate::arrow::push_decoder::ParquetPushDecoderBuilder": 2996,
+      "`ParquetRecordBatchReaderBuilder`": 2994,
+      "`ArrowReaderMetadata::load`": 2998,
+      "`Self::with_row_groups`": 3001,
+      "`Self::with_projection`": 2997,
+      "`Self::with_row_filter`": 2553,
+      "statistics::StatisticsConverter": 2927,
+      "`Self::with_row_selection`": 3002,
+      "`Self::with_limit`": 3000,
+      "`Self::with_offset`": 2999,
+      "crate::arrow::async_reader::ParquetRecordBatchStreamBuilder": 2995
+    },
+    "link_paths": {
+      "crate::arrow::push_decoder::ParquetPushDecoderBuilder": "parquet::arrow::push_decoder::ParquetPushDecoderBuilder",
+      "`ParquetRecordBatchReaderBuilder`": "parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder",
+      "`ArrowReaderMetadata::load`": "parquet::arrow::arrow_reader::ArrowReaderMetadata::load",
+      "`Self::with_row_groups`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_groups",
+      "`Self::with_projection`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_projection",
+      "`Self::with_row_filter`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_filter",
+      "statistics::StatisticsConverter": "parquet::arrow::arrow_reader::statistics::StatisticsConverter",
+      "`Self::with_row_selection`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+      "`Self::with_limit`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_limit",
+      "`Self::with_offset`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_offset",
+      "crate::arrow::async_reader::ParquetRecordBatchStreamBuilder": "parquet::arrow::async_reader::ParquetRecordBatchStreamBuilder"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3003",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-2cb4803ec228a018e60491ee",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::arrow::push_decoder::ParquetPushDecoderBuilder": "../operations/parquet.arrow.push_decoder.ParquetPushDecoderBuilder.md#op-be5e1b449f8e3584201abd08",
+      "`ParquetRecordBatchReaderBuilder`": "../operations/parquet.arrow.arrow_reader.ParquetRecordBatchReaderBuilder.md#op-1638827d919dceda05d4f2dd",
+      "`ArrowReaderMetadata::load`": "../operations/parquet.arrow.arrow_reader.ArrowReaderMetadata.md#op-af27598b22047b6ad64b6068",
+      "`Self::with_row_groups`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-a242cc258e7519b5c6886ed9",
+      "`Self::with_projection`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-5bbdcadc7d33ef95704f8b2d",
+      "`Self::with_row_filter`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-8bea3b5ddc8fa0db0c89f3ec",
+      "statistics::StatisticsConverter": "../operations/parquet.arrow.arrow_reader.statistics.StatisticsConverter.md#op-c25ef84c92a9151936db232f",
+      "`Self::with_row_selection`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-521e662260c093bdc9d5c113",
+      "`Self::with_limit`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-0b821f958a1e445121d8eac5",
+      "`Self::with_offset`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-782bde4062d02d2d645c13f6",
+      "crate::arrow::async_reader::ParquetRecordBatchStreamBuilder": "../operations/parquet.arrow.async_reader.ParquetRecordBatchStreamBuilder.md#op-36119f71505f76bb82a22932"
+    }
+  },
+  {
+    "id": "026643d1cd87940830282c85",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::build",
+    "name": "build",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn build(self) -> Result<ParquetPushDecoder, ParquetError>",
+    "docs": "Create a [`ParquetPushDecoder`] with the configured options",
+    "span": {
+      "filename": "src/arrow/push_decoder/mod.rs",
+      "begin": [
+        253,
+        5
+      ],
+      "end": [
+        309,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 52,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetPushDecoder",
+                          "id": 3042,
+                          "args": null
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetError",
+                          "id": 23,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "52": "core::result::Result",
+      "3042": "parquet::arrow::push_decoder::ParquetPushDecoder",
+      "23": "parquet::errors::ParquetError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "PushDecoderInput",
+                      "id": "parquet::arrow::push_decoder::PushDecoderInput",
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/push_decoder/mod.rs",
+        "begin": [
+          209,
+          1
+        ],
+        "end": [
+          310,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetPushDecoder`": 3042
+    },
+    "link_paths": {
+      "`ParquetPushDecoder`": "parquet::arrow::push_decoder::ParquetPushDecoder"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3043",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-026643d1cd87940830282c85",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ParquetPushDecoder`": "../operations/parquet.arrow.push_decoder.ParquetPushDecoder.md#op-4c043486cf5c22ecde7f148a"
+    }
+  },
+  {
+    "id": "2f9b94ed70e7f0f64445661e",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::build",
+    "name": "build",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn build(self) -> Result<ParquetRecordBatchStream<T>>",
+    "docs": "Build a new [`ParquetRecordBatchStream`]\n\nSee examples on [`ParquetRecordBatchStreamBuilder::new`]",
+    "span": {
+      "filename": "src/arrow/async_reader/mod.rs",
+      "begin": [
+        650,
+        5
+      ],
+      "end": [
+        701,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetRecordBatchStream",
+                          "id": 3026,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "generic": "T"
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3026": "parquet::arrow::async_reader::ParquetRecordBatchStream"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "AsyncReader",
+                      "id": "unresolved",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "T"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileReader",
+                        "id": "parquet::arrow::async_reader::AsyncFileReader",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_reader/mod.rs",
+        "begin": [
+          304,
+          1
+        ],
+        "end": [
+          702,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetRecordBatchStreamBuilder::new`": 3028,
+      "`ParquetRecordBatchStream`": 3026
+    },
+    "link_paths": {
+      "`ParquetRecordBatchStreamBuilder::new`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::new",
+      "`ParquetRecordBatchStream`": "parquet::arrow::async_reader::ParquetRecordBatchStream"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3032",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-2f9b94ed70e7f0f64445661e",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ParquetRecordBatchStreamBuilder::new`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-a1314ec698521a426652f8d3",
+      "`ParquetRecordBatchStream`": "../operations/parquet.arrow.async_reader.ParquetRecordBatchStream.md#op-5aaf529c72b40fe254f58220"
+    }
+  },
+  {
+    "id": "81f883140218260103436973",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::build",
+    "name": "build",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn build(self) -> Result<ParquetRecordBatchReader>",
+    "docs": "Build a [`ParquetRecordBatchReader`]\n\nNote: this will eagerly evaluate any `RowFilter` before returning",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        1224,
+        5
+      ],
+      "end": [
+        1291,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetRecordBatchReader",
+                          "id": 2666,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "2666": "parquet::arrow::arrow_reader::ParquetRecordBatchReader"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "SyncReader",
+                      "id": "unresolved",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "T"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ChunkReader",
+                        "id": "parquet::file::reader::ChunkReader",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          1075,
+          1
+        ],
+        "end": [
+          1292,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetRecordBatchReader`": 2666
+    },
+    "link_paths": {
+      "`ParquetRecordBatchReader`": "parquet::arrow::arrow_reader::ParquetRecordBatchReader"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3022",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-81f883140218260103436973",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ParquetRecordBatchReader`": "../operations/parquet.arrow.arrow_reader.ParquetRecordBatchReader.md#op-d346feb61c9116e17f0cd9c3"
+    }
+  },
+  {
+    "id": "5f1a0c06b3631139e7d596a6",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::fmt",
+    "name": "fmt",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        153,
+        5
+      ],
+      "end": [
+        169,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Formatter",
+                      "id": 67,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 68,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "67": "core::fmt::Formatter",
+      "68": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Debug",
+                        "id": "core::fmt::Debug",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          152,
+          1
+        ],
+        "end": [
+          170,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3060",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-5f1a0c06b3631139e7d596a6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5aa1f4ff93594bc163536d27",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::get_row_group_column_bloom_filter",
+    "name": "get_row_group_column_bloom_filter",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "async fn get_row_group_column_bloom_filter(&mut self, row_group_idx: usize, column_idx: usize) -> Result<Option<Sbbf>>",
+    "docs": "Read bloom filter for a column in a row group\n\nReturns `None` if the column does not have a bloom filter\n\nWe should call this function after other forms pruning, such as projection and predicate pushdown.",
+    "span": {
+      "filename": "src/arrow/async_reader/mod.rs",
+      "begin": [
+        585,
+        5
+      ],
+      "end": [
+        645,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "row_group_idx",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "column_idx",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 74,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Sbbf",
+                                      "id": 3021,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": true,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "74": "core::option::Option",
+      "3021": "parquet::bloom_filter::Sbbf"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "AsyncReader",
+                      "id": "unresolved",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "T"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileReader",
+                        "id": "parquet::arrow::async_reader::AsyncFileReader",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_reader/mod.rs",
+        "begin": [
+          304,
+          1
+        ],
+        "end": [
+          702,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3031",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-5aa1f4ff93594bc163536d27",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8695eaac95a2c9ba4c1f958e",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::get_row_group_column_bloom_filter",
+    "name": "get_row_group_column_bloom_filter",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_row_group_column_bloom_filter(&self, row_group_idx: usize, column_idx: usize) -> Result<Option<Sbbf>>",
+    "docs": "Read bloom filter for a column in a row group\n\nReturns `None` if the column does not have a bloom filter\n\nWe should call this function after other forms pruning, such as projection and predicate pushdown.",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        1166,
+        5
+      ],
+      "end": [
+        1219,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "row_group_idx",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "column_idx",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 74,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Sbbf",
+                                      "id": 3021,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "74": "core::option::Option",
+      "3021": "parquet::bloom_filter::Sbbf"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "SyncReader",
+                      "id": "unresolved",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "T"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ChunkReader",
+                        "id": "parquet::file::reader::ChunkReader",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          1075,
+          1
+        ],
+        "end": [
+          1292,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3020",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-8695eaac95a2c9ba4c1f958e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8ff55f79679ef0bb8c26fbf7",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::metadata",
+    "name": "metadata",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn metadata(&self) -> &Arc<ParquetMetaData>",
+    "docs": "Returns a reference to the [`ParquetMetaData`] for this parquet file",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        193,
+        5
+      ],
+      "end": [
+        195,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 2578,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ParquetMetaData",
+                              "id": 3004,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2578": "alloc::sync::Arc",
+      "3004": "parquet::file::metadata::ParquetMetaData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          172,
+          1
+        ],
+        "end": [
+          445,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetMetaData`": 3004
+    },
+    "link_paths": {
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3005",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-8ff55f79679ef0bb8c26fbf7",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b"
+    }
+  },
+  {
+    "id": "a1314ec698521a426652f8d3",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::new",
+    "name": "new",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "async fn new(input: T) -> Result<Self>",
+    "docs": "Create a new [`ParquetRecordBatchStreamBuilder`] for reading from the\nspecified source.\n\n# Examples:\n* [Basic example reading from an async source](#example)\n* [Configuring options and reading metadata](#example-configuring-options-and-reading-metadata)\n* [Reading Row Groups in Parallel](#example-reading-row-groups-in-parallel)\n\n# Example\n```\n# #[tokio::main(flavor=\"current_thread\")]\n# async fn main() {\n#\n# use arrow_array::RecordBatch;\n# use arrow::util::pretty::pretty_format_batches;\n# use futures::TryStreamExt;\n#\n# use parquet::arrow::{ParquetRecordBatchStreamBuilder, ProjectionMask};\n#\n# fn assert_batches_eq(batches: &[RecordBatch], expected_lines: &[&str]) {\n#     let formatted = pretty_format_batches(batches).unwrap().to_string();\n#     let actual_lines: Vec<_> = formatted.trim().lines().collect();\n#     assert_eq!(\n#          &actual_lines, expected_lines,\n#          \"\\n\\nexpected:\\n\\n{:#?}\\nactual:\\n\\n{:#?}\\n\\n\",\n#          expected_lines, actual_lines\n#      );\n#  }\n#\n# let testdata = arrow::util::test_util::parquet_test_data();\n# let path = format!(\"{}/alltypes_plain.parquet\", testdata);\n// Use tokio::fs::File to read data using an async I/O. This can be replaced with\n// another async I/O reader such as a reader from an object store.\nlet file = tokio::fs::File::open(path).await.unwrap();\n\n// Configure options for reading from the async source\nlet builder = ParquetRecordBatchStreamBuilder::new(file)\n    .await\n    .unwrap();\n// Building the stream opens the parquet file (reads metadata, etc) and returns\n// a stream that can be used to incrementally read the data in batches\nlet stream = builder.build().unwrap();\n// In this example, we collect the stream into a Vec<RecordBatch>\n// but real applications would likely process the batches as they are read\nlet results = stream.try_collect::<Vec<_>>().await.unwrap();\n// Demonstrate the results are as expected\nassert_batches_eq(\n    &results,\n    &[\n      \"+----+----------+-------------+--------------+---------+------------+-----------+------------+------------------+------------+---------------------+\",\n      \"| id | bool_col | tinyint_col | smallint_col | int_col | bigint_col | float_col | double_col | date_string_col  | string_col | timestamp_col       |\",\n      \"+----+----------+-------------+--------------+---------+------------+-----------+------------+------------------+------------+---------------------+\",\n      \"| 4  | true     | 0           | 0            | 0       | 0          | 0.0       | 0.0        | 30332f30312f3039 | 30         | 2009-03-01T00:00:00 |\",\n      \"| 5  | false    | 1           | 1            | 1       | 10         | 1.1       | 10.1       | 30332f30312f3039 | 31         | 2009-03-01T00:01:00 |\",\n      \"| 6  | true     | 0           | 0            | 0       | 0          | 0.0       | 0.0        | 30342f30312f3039 | 30         | 2009-04-01T00:00:00 |\",\n      \"| 7  | false    | 1           | 1            | 1       | 10         | 1.1       | 10.1       | 30342f30312f3039 | 31         | 2009-04-01T00:01:00 |\",\n      \"| 2  | true     | 0           | 0            | 0       | 0          | 0.0       | 0.0        | 30322f30312f3039 | 30         | 2009-02-01T00:00:00 |\",\n      \"| 3  | false    | 1           | 1            | 1       | 10         | 1.1       | 10.1       | 30322f30312f3039 | 31         | 2009-02-01T00:01:00 |\",\n      \"| 0  | true     | 0           | 0            | 0       | 0          | 0.0       | 0.0        | 30312f30312f3039 | 30         | 2009-01-01T00:00:00 |\",\n      \"| 1  | false    | 1           | 1            | 1       | 10         | 1.1       | 10.1       | 30312f30312f3039 | 31         | 2009-01-01T00:01:00 |\",\n      \"+----+----------+-------------+--------------+---------+------------+-----------+------------+------------------+------------+---------------------+\",\n     ],\n );\n# }\n```\n\n# Example Configuring Options and Reading Metadata\n\nThere are many options that control the behavior of the reader, such as\n`with_batch_size`, `with_projection`, `with_filter`, etc...\n\n```\n# #[tokio::main(flavor=\"current_thread\")]\n# async fn main() {\n#\n# use arrow_array::RecordBatch;\n# use arrow::util::pretty::pretty_format_batches;\n# use futures::TryStreamExt;\n#\n# use parquet::arrow::{ParquetRecordBatchStreamBuilder, ProjectionMask};\n#\n# fn assert_batches_eq(batches: &[RecordBatch], expected_lines: &[&str]) {\n#     let formatted = pretty_format_batches(batches).unwrap().to_string();\n#     let actual_lines: Vec<_> = formatted.trim().lines().collect();\n#     assert_eq!(\n#          &actual_lines, expected_lines,\n#          \"\\n\\nexpected:\\n\\n{:#?}\\nactual:\\n\\n{:#?}\\n\\n\",\n#          expected_lines, actual_lines\n#      );\n#  }\n#\n# let testdata = arrow::util::test_util::parquet_test_data();\n# let path = format!(\"{}/alltypes_plain.parquet\", testdata);\n// As before, use tokio::fs::File to read data using an async I/O.\nlet file = tokio::fs::File::open(path).await.unwrap();\n\n// Configure options for reading from the async source, in this case we set the batch size\n// to 3 which produces 3 rows at a time.\nlet builder = ParquetRecordBatchStreamBuilder::new(file)\n    .await\n    .unwrap()\n    .with_batch_size(3);\n\n// We can also read the metadata to inspect the schema and other metadata\n// before actually reading the data\nlet file_metadata = builder.metadata().file_metadata();\n// Specify that we only want to read the 1st, 2nd, and 6th columns\nlet mask = ProjectionMask::roots(file_metadata.schema_descr(), [1, 2, 6]);\n\nlet stream = builder.with_projection(mask).build().unwrap();\nlet results = stream.try_collect::<Vec<_>>().await.unwrap();\n// Print out the results\nassert_batches_eq(\n    &results,\n    &[\n        \"+----------+-------------+-----------+\",\n        \"| bool_col | tinyint_col | float_col |\",\n        \"+----------+-------------+-----------+\",\n        \"| true     | 0           | 0.0       |\",\n        \"| false    | 1           | 1.1       |\",\n        \"| true     | 0           | 0.0       |\",\n        \"| false    | 1           | 1.1       |\",\n        \"| true     | 0           | 0.0       |\",\n        \"| false    | 1           | 1.1       |\",\n        \"| true     | 0           | 0.0       |\",\n        \"| false    | 1           | 1.1       |\",\n        \"+----------+-------------+-----------+\",\n     ],\n );\n\n// The results has 8 rows, so since we set the batch size to 3, we expect\n// 3 batches, two with 3 rows each and the last batch with 2 rows.\nassert_eq!(results.len(), 3);\n# }\n```\n\n# Example reading Row Groups in Parallel\n\nEach [`ParquetRecordBatchStream`] is independent and can be used to read\nfrom the same underlying source in parallel. Use\n[`ParquetRecordBatchStream::next_row_group`] with a single stream to\nbegin prefetching the next Row Group. To read a file in parallel, create\na stream for each subset of the file. For example, you can read each\nrow group in parallel by creating a stream for each row group using the\n[`ParquetRecordBatchStreamBuilder::with_row_groups`] API as shown below\n\n```\n# use std::sync::Arc;\n# use arrow_array::{ArrayRef, Int32Array, RecordBatch};\n# use arrow::util::pretty::pretty_format_batches;\n# use futures::{StreamExt, TryStreamExt};\n# use tempfile::NamedTempFile;\n# use parquet::arrow::{ArrowWriter, ParquetRecordBatchStreamBuilder, ProjectionMask};\n# use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions};\n# use parquet::file::metadata::ParquetMetaDataReader;\n# use parquet::file::properties::{WriterProperties};\n# // write to a temporary file with 10 RowGroups and read back with async API\n# fn write_file() -> parquet::errors::Result<NamedTempFile> {\n#   let mut file = NamedTempFile::new().unwrap();\n#   let small_batch = RecordBatch::try_from_iter([\n#      (\"id\", Arc::new(Int32Array::from(vec![0, 1, 2, 3, 4])) as ArrayRef),\n#   ]).unwrap();\n#   let props = WriterProperties::builder()\n#     .set_max_row_group_row_count(Some(5))\n#     .set_write_batch_size(5)\n#     .build();\n#   let mut writer = ArrowWriter::try_new(&mut file, small_batch.schema(), Some(props))?;\n#   for i in 0..10 {\n#     writer.write(&small_batch)?\n#   };\n#   writer.close()?;\n#   Ok(file)\n# }\n# #[tokio::main(flavor=\"current_thread\")]\n# async fn main() -> parquet::errors::Result<()> {\n# let t = write_file()?;\n# let path = t.path();\n// This example uses a tokio::fs::File as the async source, but it\n// could be any async source such as an object store reader)\nlet mut file = tokio::fs::File::open(path).await?;\n// To read Row Groups in parallel, create a separate stream builder for each Row Group.\n// First get the metadata to find the row group information\nlet file_size = file.metadata().await?.len();\nlet metadata = ParquetMetaDataReader::new().load_and_finish(&mut file, file_size).await?;\nassert_eq!(metadata.num_row_groups(), 10); // file has 10 row groups with 5 rows each\n// Create a stream reader for each row group\nlet reader_metadata = ArrowReaderMetadata::try_new(\n  Arc::new(metadata),\n  ArrowReaderOptions::new()\n)?;\nlet mut streams = vec![];\n for row_group_index in 0..10 {\n  // Each stream needs its own source instance to issue\n  // parallel IO requests, so clone the file for each stream\n  let this_file = file.try_clone().await?;\n  let stream = ParquetRecordBatchStreamBuilder::new_with_metadata(\n       this_file,\n       reader_metadata.clone()\n     )\n     .with_row_groups(vec![row_group_index]) // read only this row group\n     .build()?;\n    streams.push(stream);\n}\n// Each reader can now be polled independently and in parallel, for\n// example using StreamExt::buffered to read from 3 at a time\nlet results = futures::stream::iter(streams)\n .map(|stream| async move { stream })\n .buffered(3)\n .flatten()\n .try_collect::<Vec<_>>().await?;\n// read all 50 rows (10 row groups x 5 rows per group)\nassert_eq!(50, results.iter().map(|s| s.num_rows()).sum::<usize>());\n# Ok(())\n# }\n```",
+    "span": {
+      "filename": "src/arrow/async_reader/mod.rs",
+      "begin": [
+        520,
+        5
+      ],
+      "end": [
+        522,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "input",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": true,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "AsyncReader",
+                      "id": "unresolved",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "T"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileReader",
+                        "id": "parquet::arrow::async_reader::AsyncFileReader",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_reader/mod.rs",
+        "begin": [
+          304,
+          1
+        ],
+        "end": [
+          702,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetRecordBatchStreamBuilder::with_row_groups`": 3001,
+      "`ParquetRecordBatchStream`": 3026,
+      "`ParquetRecordBatchStreamBuilder`": 2995,
+      "`ParquetRecordBatchStream::next_row_group`": 3027
+    },
+    "link_paths": {
+      "`ParquetRecordBatchStreamBuilder::with_row_groups`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_groups",
+      "`ParquetRecordBatchStream`": "parquet::arrow::async_reader::ParquetRecordBatchStream",
+      "`ParquetRecordBatchStreamBuilder`": "parquet::arrow::async_reader::ParquetRecordBatchStreamBuilder",
+      "`ParquetRecordBatchStream::next_row_group`": "parquet::arrow::async_reader::ParquetRecordBatchStream::next_row_group"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3028",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-a1314ec698521a426652f8d3",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ParquetRecordBatchStreamBuilder::with_row_groups`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-a242cc258e7519b5c6886ed9",
+      "`ParquetRecordBatchStream`": "../operations/parquet.arrow.async_reader.ParquetRecordBatchStream.md#op-5aaf529c72b40fe254f58220",
+      "`ParquetRecordBatchStreamBuilder`": "../operations/parquet.arrow.async_reader.ParquetRecordBatchStreamBuilder.md#op-36119f71505f76bb82a22932",
+      "`ParquetRecordBatchStream::next_row_group`": "../operations/parquet.arrow.async_reader.ParquetRecordBatchStream.md#op-6a7b74ccf9b4191804415952"
+    }
+  },
+  {
+    "id": "59906ce44f5eaa0ba521c48e",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::new_with_metadata",
+    "name": "new_with_metadata",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_with_metadata(input: T, metadata: ArrowReaderMetadata) -> Self",
+    "docs": "Create a [`ParquetRecordBatchStreamBuilder`] from the provided [`ArrowReaderMetadata`]\n\nThis allows loading metadata once and using it to create multiple builders with\npotentially different settings, that can be read in parallel.\n\n# Example of reading from multiple streams in parallel\n\n```\n# use std::fs::metadata;\n# use std::sync::Arc;\n# use bytes::Bytes;\n# use arrow_array::{Int32Array, RecordBatch};\n# use arrow_schema::{DataType, Field, Schema};\n# use parquet::arrow::arrow_reader::ArrowReaderMetadata;\n# use parquet::arrow::{ArrowWriter, ParquetRecordBatchStreamBuilder};\n# use tempfile::tempfile;\n# use futures::StreamExt;\n# #[tokio::main(flavor=\"current_thread\")]\n# async fn main() {\n#\n# let mut file = tempfile().unwrap();\n# let schema = Arc::new(Schema::new(vec![Field::new(\"i32\", DataType::Int32, false)]));\n# let mut writer = ArrowWriter::try_new(&mut file, schema.clone(), None).unwrap();\n# let batch = RecordBatch::try_new(schema, vec![Arc::new(Int32Array::from(vec![1, 2, 3]))]).unwrap();\n# writer.write(&batch).unwrap();\n# writer.close().unwrap();\n// open file with parquet data\nlet mut file = tokio::fs::File::from_std(file);\n// load metadata once\nlet meta = ArrowReaderMetadata::load_async(&mut file, Default::default()).await.unwrap();\n// create two readers, a and b, from the same underlying file\n// without reading the metadata again\nlet mut a = ParquetRecordBatchStreamBuilder::new_with_metadata(\n    file.try_clone().await.unwrap(),\n    meta.clone()\n).build().unwrap();\nlet mut b = ParquetRecordBatchStreamBuilder::new_with_metadata(file, meta).build().unwrap();\n\n// Can read batches from both readers in parallel\nassert_eq!(\n  a.next().await.unwrap().unwrap(),\n  b.next().await.unwrap().unwrap(),\n);\n# }\n```",
+    "span": {
+      "filename": "src/arrow/async_reader/mod.rs",
+      "begin": [
+        576,
+        5
+      ],
+      "end": [
+        578,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "input",
+              {
+                "generic": "T"
+              }
+            ],
+            [
+              "metadata",
+              {
+                "resolved_path": {
+                  "path": "ArrowReaderMetadata",
+                  "id": 3018,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3018": "parquet::arrow::arrow_reader::ArrowReaderMetadata"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "AsyncReader",
+                      "id": "unresolved",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "T"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileReader",
+                        "id": "parquet::arrow::async_reader::AsyncFileReader",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_reader/mod.rs",
+        "begin": [
+          304,
+          1
+        ],
+        "end": [
+          702,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetRecordBatchStreamBuilder`": 2995,
+      "`ArrowReaderMetadata`": 3018
+    },
+    "link_paths": {
+      "`ParquetRecordBatchStreamBuilder`": "parquet::arrow::async_reader::ParquetRecordBatchStreamBuilder",
+      "`ArrowReaderMetadata`": "parquet::arrow::arrow_reader::ArrowReaderMetadata"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3030",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-59906ce44f5eaa0ba521c48e",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ParquetRecordBatchStreamBuilder`": "../operations/parquet.arrow.async_reader.ParquetRecordBatchStreamBuilder.md#op-36119f71505f76bb82a22932",
+      "`ArrowReaderMetadata`": "../operations/parquet.arrow.arrow_reader.ArrowReaderMetadata.md#op-c28319e4a1a2024ec909ac17"
+    }
+  },
+  {
+    "id": "c2a20ea33d287eead67a9673",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::new_with_metadata",
+    "name": "new_with_metadata",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_with_metadata(arrow_reader_metadata: ArrowReaderMetadata) -> Self",
+    "docs": "Create a new `ParquetDecoderBuilder` given [`ArrowReaderMetadata`].\n\nSee [`ArrowReaderMetadata::try_new`] for how to create the metadata from\nthe Parquet metadata and reader options.",
+    "span": {
+      "filename": "src/arrow/push_decoder/mod.rs",
+      "begin": [
+        239,
+        5
+      ],
+      "end": [
+        241,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "arrow_reader_metadata",
+              {
+                "resolved_path": {
+                  "path": "ArrowReaderMetadata",
+                  "id": 3018,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3018": "parquet::arrow::arrow_reader::ArrowReaderMetadata"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "PushDecoderInput",
+                      "id": "parquet::arrow::push_decoder::PushDecoderInput",
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/push_decoder/mod.rs",
+        "begin": [
+          209,
+          1
+        ],
+        "end": [
+          310,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrowReaderMetadata`": 3018,
+      "`ArrowReaderMetadata::try_new`": 3039
+    },
+    "link_paths": {
+      "`ArrowReaderMetadata`": "parquet::arrow::arrow_reader::ArrowReaderMetadata",
+      "`ArrowReaderMetadata::try_new`": "parquet::arrow::arrow_reader::ArrowReaderMetadata::try_new"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3040",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-c2a20ea33d287eead67a9673",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ArrowReaderMetadata`": "../operations/parquet.arrow.arrow_reader.ArrowReaderMetadata.md#op-c28319e4a1a2024ec909ac17",
+      "`ArrowReaderMetadata::try_new`": "../operations/parquet.arrow.arrow_reader.ArrowReaderMetadata.md#op-885196b08a0102c7b2b48506"
+    }
+  },
+  {
+    "id": "d99349eb3adc8af58b40d077",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::new_with_metadata",
+    "name": "new_with_metadata",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_with_metadata(input: T, metadata: ArrowReaderMetadata) -> Self",
+    "docs": "Create a [`ParquetRecordBatchReaderBuilder`] from the provided [`ArrowReaderMetadata`]\n\nUse this method if you already have [`ParquetMetaData`] for a file.\nThis interface allows:\n\n1. Loading metadata once and using it to create multiple builders with\n   potentially different settings or run on different threads\n\n2. Using a cached copy of the metadata rather than re-reading it from the\n   file each time a reader is constructed.\n\nSee the docs on [`ArrowReaderMetadata`] for more details\n\n# Example\n```\n# use std::fs::metadata;\n# use std::sync::Arc;\n# use bytes::Bytes;\n# use arrow_array::{Int32Array, RecordBatch};\n# use arrow_schema::{DataType, Field, Schema};\n# use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ParquetRecordBatchReader, ParquetRecordBatchReaderBuilder};\n# use parquet::arrow::ArrowWriter;\n#\n# let mut file: Vec<u8> = Vec::with_capacity(1024);\n# let schema = Arc::new(Schema::new(vec![Field::new(\"i32\", DataType::Int32, false)]));\n# let mut writer = ArrowWriter::try_new(&mut file, schema.clone(), None).unwrap();\n# let batch = RecordBatch::try_new(schema, vec![Arc::new(Int32Array::from(vec![1, 2, 3]))]).unwrap();\n# writer.write(&batch).unwrap();\n# writer.close().unwrap();\n# let file = Bytes::from(file);\n#\nlet metadata = ArrowReaderMetadata::load(&file, Default::default()).unwrap();\nlet mut a = ParquetRecordBatchReaderBuilder::new_with_metadata(file.clone(), metadata.clone()).build().unwrap();\nlet mut b = ParquetRecordBatchReaderBuilder::new_with_metadata(file, metadata).build().unwrap();\n\n// Should be able to read from both in parallel\nassert_eq!(a.next().unwrap().unwrap(), b.next().unwrap().unwrap());\n```",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        1157,
+        5
+      ],
+      "end": [
+        1159,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "input",
+              {
+                "generic": "T"
+              }
+            ],
+            [
+              "metadata",
+              {
+                "resolved_path": {
+                  "path": "ArrowReaderMetadata",
+                  "id": 3018,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3018": "parquet::arrow::arrow_reader::ArrowReaderMetadata"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "SyncReader",
+                      "id": "unresolved",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "T"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ChunkReader",
+                        "id": "parquet::file::reader::ChunkReader",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          1075,
+          1
+        ],
+        "end": [
+          1292,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetRecordBatchReaderBuilder`": 2994,
+      "`ArrowReaderMetadata`": 3018,
+      "`ParquetMetaData`": 3004
+    },
+    "link_paths": {
+      "`ParquetRecordBatchReaderBuilder`": "parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder",
+      "`ArrowReaderMetadata`": "parquet::arrow::arrow_reader::ArrowReaderMetadata",
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3019",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-d99349eb3adc8af58b40d077",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ParquetRecordBatchReaderBuilder`": "../operations/parquet.arrow.arrow_reader.ParquetRecordBatchReaderBuilder.md#op-1638827d919dceda05d4f2dd",
+      "`ArrowReaderMetadata`": "../operations/parquet.arrow.arrow_reader.ArrowReaderMetadata.md#op-c28319e4a1a2024ec909ac17",
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b"
+    }
+  },
+  {
+    "id": "91d756a485ec20ec374490b6",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::new_with_options",
+    "name": "new_with_options",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "async fn new_with_options(input: T, options: ArrowReaderOptions) -> Result<Self>",
+    "docs": "Create a new [`ParquetRecordBatchStreamBuilder`] with the provided async source\nand [`ArrowReaderOptions`].",
+    "span": {
+      "filename": "src/arrow/async_reader/mod.rs",
+      "begin": [
+        526,
+        5
+      ],
+      "end": [
+        529,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "input",
+              {
+                "generic": "T"
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "ArrowReaderOptions",
+                  "id": 3016,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": true,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3016": "parquet::arrow::arrow_reader::ArrowReaderOptions",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "AsyncReader",
+                      "id": "unresolved",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "T"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileReader",
+                        "id": "parquet::arrow::async_reader::AsyncFileReader",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_reader/mod.rs",
+        "begin": [
+          304,
+          1
+        ],
+        "end": [
+          702,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetRecordBatchStreamBuilder`": 2995,
+      "`ArrowReaderOptions`": 3016
+    },
+    "link_paths": {
+      "`ParquetRecordBatchStreamBuilder`": "parquet::arrow::async_reader::ParquetRecordBatchStreamBuilder",
+      "`ArrowReaderOptions`": "parquet::arrow::arrow_reader::ArrowReaderOptions"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3029",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-91d756a485ec20ec374490b6",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ParquetRecordBatchStreamBuilder`": "../operations/parquet.arrow.async_reader.ParquetRecordBatchStreamBuilder.md#op-36119f71505f76bb82a22932",
+      "`ArrowReaderOptions`": "../operations/parquet.arrow.arrow_reader.ArrowReaderOptions.md#op-d1d83f9f3dc4572b085ef8a4"
+    }
+  },
+  {
+    "id": "a307ef2af1043b4c2cabbde8",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::parquet_schema",
+    "name": "parquet_schema",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn parquet_schema(&self) -> &SchemaDescriptor",
+    "docs": "Returns the parquet [`SchemaDescriptor`] for this parquet file",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        198,
+        5
+      ],
+      "end": [
+        200,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "SchemaDescriptor",
+                  "id": 2937,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2937": "parquet::schema::types::SchemaDescriptor"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          172,
+          1
+        ],
+        "end": [
+          445,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`SchemaDescriptor`": 2937
+    },
+    "link_paths": {
+      "`SchemaDescriptor`": "parquet::schema::types::SchemaDescriptor"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3006",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-a307ef2af1043b4c2cabbde8",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`SchemaDescriptor`": "../operations/parquet.schema.types.SchemaDescriptor.md#op-cb960d451851ace5640135f7"
+    }
+  },
+  {
+    "id": "c408c3639fc9a3227bf40394",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::schema",
+    "name": "schema",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn schema(&self) -> &SchemaRef",
+    "docs": "Returns the arrow [`SchemaRef`] for this parquet file",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        203,
+        5
+      ],
+      "end": [
+        205,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 3007,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3007": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          172,
+          1
+        ],
+        "end": [
+          445,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`SchemaRef`": 3007
+    },
+    "link_paths": {
+      "`SchemaRef`": "arrow_schema::schema::SchemaRef"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3008",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-c408c3639fc9a3227bf40394",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`SchemaRef`": "../operations/arrow_schema.schema.SchemaRef.md#op-e48a1bb89d62307cfab4093a"
+    }
+  },
+  {
+    "id": "f9cc54e8e1dc746c9785bdfe",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::try_new",
+    "name": "try_new",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new(reader: T) -> Result<Self>",
+    "docs": "Create a new [`ParquetRecordBatchReaderBuilder`]\n\n```\n# use std::sync::Arc;\n# use bytes::Bytes;\n# use arrow_array::{Int32Array, RecordBatch};\n# use arrow_schema::{DataType, Field, Schema};\n# use parquet::arrow::arrow_reader::{ParquetRecordBatchReader, ParquetRecordBatchReaderBuilder};\n# use parquet::arrow::ArrowWriter;\n# let mut file: Vec<u8> = Vec::with_capacity(1024);\n# let schema = Arc::new(Schema::new(vec![Field::new(\"i32\", DataType::Int32, false)]));\n# let mut writer = ArrowWriter::try_new(&mut file, schema.clone(), None).unwrap();\n# let batch = RecordBatch::try_new(schema, vec![Arc::new(Int32Array::from(vec![1, 2, 3]))]).unwrap();\n# writer.write(&batch).unwrap();\n# writer.close().unwrap();\n# let file = Bytes::from(file);\n// Build the reader from anything that implements `ChunkReader`\n// such as a `File`, or `Bytes`\nlet mut builder = ParquetRecordBatchReaderBuilder::try_new(file).unwrap();\n// The builder has access to ParquetMetaData such\n// as the number and layout of row groups\nassert_eq!(builder.metadata().num_row_groups(), 1);\n// Call build to create the reader\nlet mut reader: ParquetRecordBatchReader = builder.build().unwrap();\n// Read data\nwhile let Some(batch) = reader.next().transpose()? {\n    println!(\"Read {} rows\", batch.num_rows());\n}\n# Ok::<(), parquet::errors::ParquetError>(())\n```",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        1106,
+        5
+      ],
+      "end": [
+        1108,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "reader",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "SyncReader",
+                      "id": "unresolved",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "T"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ChunkReader",
+                        "id": "parquet::file::reader::ChunkReader",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          1075,
+          1
+        ],
+        "end": [
+          1292,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetRecordBatchReaderBuilder`": 2994
+    },
+    "link_paths": {
+      "`ParquetRecordBatchReaderBuilder`": "parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3015",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-f9cc54e8e1dc746c9785bdfe",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ParquetRecordBatchReaderBuilder`": "../operations/parquet.arrow.arrow_reader.ParquetRecordBatchReaderBuilder.md#op-1638827d919dceda05d4f2dd"
+    }
+  },
+  {
+    "id": "9e58acd79ec0c339224c26c5",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::try_new_decoder",
+    "name": "try_new_decoder",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_decoder(parquet_metadata: Arc<ParquetMetaData>) -> Result<Self, ParquetError>",
+    "docs": "Create a new `ParquetDecoderBuilder` for configuring a Parquet decoder for the given file.\n\nSee [`ParquetMetadataDecoder`] for a builder that can read the metadata from a Parquet file.\n\n[`ParquetMetadataDecoder`]: crate::file::metadata::ParquetMetaDataPushDecoder\n\nSee example on [`ParquetPushDecoderBuilder`]",
+    "span": {
+      "filename": "src/arrow/push_decoder/mod.rs",
+      "begin": [
+        217,
+        5
+      ],
+      "end": [
+        219,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "parquet_metadata",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 2578,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ParquetMetaData",
+                              "id": 3004,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 52,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetError",
+                          "id": 23,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2578": "alloc::sync::Arc",
+      "3004": "parquet::file::metadata::ParquetMetaData",
+      "52": "core::result::Result",
+      "23": "parquet::errors::ParquetError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "PushDecoderInput",
+                      "id": "parquet::arrow::push_decoder::PushDecoderInput",
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/push_decoder/mod.rs",
+        "begin": [
+          209,
+          1
+        ],
+        "end": [
+          310,
+          2
+        ]
+      }
+    },
+    "links": {
+      "crate::file::metadata::ParquetMetaDataPushDecoder": 3036,
+      "`ParquetPushDecoderBuilder`": 2996
+    },
+    "link_paths": {
+      "crate::file::metadata::ParquetMetaDataPushDecoder": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+      "`ParquetPushDecoderBuilder`": "parquet::arrow::push_decoder::ParquetPushDecoderBuilder"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3037",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-9e58acd79ec0c339224c26c5",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::file::metadata::ParquetMetaDataPushDecoder": "../operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md#op-e00d43ab5b4fd446b342b085",
+      "`ParquetPushDecoderBuilder`": "../operations/parquet.arrow.push_decoder.ParquetPushDecoderBuilder.md#op-be5e1b449f8e3584201abd08"
+    }
+  },
+  {
+    "id": "f3d0c97d9eb290d1ebb16c60",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::try_new_decoder_with_options",
+    "name": "try_new_decoder_with_options",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_decoder_with_options(parquet_metadata: Arc<ParquetMetaData>, arrow_reader_options: ArrowReaderOptions) -> Result<Self, ParquetError>",
+    "docs": "Create a new `ParquetDecoderBuilder` for configuring a Parquet decoder for the given file\nwith the given reader options.\n\nThis is similar to [`Self::try_new_decoder`] but allows configuring\noptions such as Arrow schema",
+    "span": {
+      "filename": "src/arrow/push_decoder/mod.rs",
+      "begin": [
+        226,
+        5
+      ],
+      "end": [
+        233,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "parquet_metadata",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 2578,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ParquetMetaData",
+                              "id": 3004,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "arrow_reader_options",
+              {
+                "resolved_path": {
+                  "path": "ArrowReaderOptions",
+                  "id": 3016,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 52,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetError",
+                          "id": 23,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2578": "alloc::sync::Arc",
+      "3004": "parquet::file::metadata::ParquetMetaData",
+      "3016": "parquet::arrow::arrow_reader::ArrowReaderOptions",
+      "52": "core::result::Result",
+      "23": "parquet::errors::ParquetError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "PushDecoderInput",
+                      "id": "parquet::arrow::push_decoder::PushDecoderInput",
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/push_decoder/mod.rs",
+        "begin": [
+          209,
+          1
+        ],
+        "end": [
+          310,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::try_new_decoder`": 3037
+    },
+    "link_paths": {
+      "`Self::try_new_decoder`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::try_new_decoder"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3038",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-f3d0c97d9eb290d1ebb16c60",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::try_new_decoder`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-9e58acd79ec0c339224c26c5"
+    }
+  },
+  {
+    "id": "61bc90b220729954175c1066",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::try_new_with_options",
+    "name": "try_new_with_options",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_with_options(reader: T, options: ArrowReaderOptions) -> Result<Self>",
+    "docs": "Create a new [`ParquetRecordBatchReaderBuilder`] with [`ArrowReaderOptions`]\n\nUse this method if you want to control the options for reading the\n[`ParquetMetaData`]",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        1114,
+        5
+      ],
+      "end": [
+        1117,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "reader",
+              {
+                "generic": "T"
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "ArrowReaderOptions",
+                  "id": 3016,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3016": "parquet::arrow::arrow_reader::ArrowReaderOptions",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "SyncReader",
+                      "id": "unresolved",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "T"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ChunkReader",
+                        "id": "parquet::file::reader::ChunkReader",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          1075,
+          1
+        ],
+        "end": [
+          1292,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetRecordBatchReaderBuilder`": 2994,
+      "`ArrowReaderOptions`": 3016,
+      "`ParquetMetaData`": 3004
+    },
+    "link_paths": {
+      "`ParquetRecordBatchReaderBuilder`": "parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder",
+      "`ArrowReaderOptions`": "parquet::arrow::arrow_reader::ArrowReaderOptions",
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3017",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-61bc90b220729954175c1066",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ParquetRecordBatchReaderBuilder`": "../operations/parquet.arrow.arrow_reader.ParquetRecordBatchReaderBuilder.md#op-1638827d919dceda05d4f2dd",
+      "`ArrowReaderOptions`": "../operations/parquet.arrow.arrow_reader.ArrowReaderOptions.md#op-d1d83f9f3dc4572b085ef8a4",
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b"
+    }
+  },
+  {
+    "id": "63bb8da413e75548489f7d3a",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_batch_size",
+    "name": "with_batch_size",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_batch_size(self, batch_size: usize) -> Self",
+    "docs": "Set the size of [`RecordBatch`] to produce. Defaults to [`DEFAULT_BATCH_SIZE`].\n\nThis may be used as a hint for internal allocations, but does not\nguarantee exact internal buffer capacities.\n\nIf `batch_size` is more than the file row count, use the file row count.",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        213,
+        5
+      ],
+      "end": [
+        217,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "batch_size",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          172,
+          1
+        ],
+        "end": [
+          445,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`DEFAULT_BATCH_SIZE`": 2979,
+      "`RecordBatch`": 2524
+    },
+    "link_paths": {
+      "`DEFAULT_BATCH_SIZE`": "parquet::arrow::arrow_reader::DEFAULT_BATCH_SIZE",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3009",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-63bb8da413e75548489f7d3a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`DEFAULT_BATCH_SIZE`": "../operations/parquet.arrow.arrow_reader.DEFAULT_BATCH_SIZE.md#op-60f9465f51232ce044a698df",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "d418d65b26297e8565f36c66",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_buffers",
+    "name": "with_buffers",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_buffers(self, buffers: PushBuffers) -> Self",
+    "docs": "Provide a preexisting [`PushBuffers`] for the built decoder to read\nfrom, so bytes already fetched are not requested again.",
+    "span": {
+      "filename": "src/arrow/push_decoder/mod.rs",
+      "begin": [
+        245,
+        5
+      ],
+      "end": [
+        250,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "buffers",
+              {
+                "resolved_path": {
+                  "path": "PushBuffers",
+                  "id": 1769,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1769": null
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "PushDecoderInput",
+                      "id": "parquet::arrow::push_decoder::PushDecoderInput",
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/push_decoder/mod.rs",
+        "begin": [
+          209,
+          1
+        ],
+        "end": [
+          310,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`PushBuffers`": 1769
+    },
+    "link_paths": {
+      "`PushBuffers`": null
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3041",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-d418d65b26297e8565f36c66",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0b821f958a1e445121d8eac5",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_limit",
+    "name": "with_limit",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_limit(self, limit: usize) -> Self",
+    "docs": "Provide a limit to the number of rows to be read\n\nThe limit will be applied after any [`Self::with_row_selection`] and [`Self::with_row_filter`]\nallowing it to limit the final set of rows decoded after any pushed down predicates\n\nIt is recommended to enable reading the page index if using this functionality, to allow\nmore efficient skipping over data pages. See [`ArrowReaderOptions::with_page_index`]",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        366,
+        5
+      ],
+      "end": [
+        371,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "limit",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          172,
+          1
+        ],
+        "end": [
+          445,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::with_row_selection`": 3002,
+      "`Self::with_row_filter`": 2553,
+      "`ArrowReaderOptions::with_page_index`": 3011
+    },
+    "link_paths": {
+      "`Self::with_row_selection`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+      "`Self::with_row_filter`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_filter",
+      "`ArrowReaderOptions::with_page_index`": "parquet::arrow::arrow_reader::ArrowReaderOptions::with_page_index"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3000",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-0b821f958a1e445121d8eac5",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::with_row_selection`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-521e662260c093bdc9d5c113",
+      "`Self::with_row_filter`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-8bea3b5ddc8fa0db0c89f3ec",
+      "`ArrowReaderOptions::with_page_index`": "../operations/parquet.arrow.arrow_reader.ArrowReaderOptions.md#op-4c872ea4ae6007c2db6ecd25"
+    }
+  },
+  {
+    "id": "496a367160b66b5da37fafbc",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_max_predicate_cache_size",
+    "name": "with_max_predicate_cache_size",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_max_predicate_cache_size(self, max_predicate_cache_size: usize) -> Self",
+    "docs": "Set the maximum size (per row group) of the predicate cache in bytes for\nthe async decoder.\n\nDefaults to 100MB (across all columns). Set to `usize::MAX` to use\nunlimited cache size.\n\nThis cache is used to store decoded arrays that are used in\npredicate evaluation ([`Self::with_row_filter`]).\n\nThis cache is only used for the \"async\" decoder, [`ParquetRecordBatchStream`]. See\n[this ticket] for more details and alternatives.\n\n[`ParquetRecordBatchStream`]: https://docs.rs/parquet/latest/parquet/arrow/async_reader/struct.ParquetRecordBatchStream.html\n[this ticket]: https://github.com/apache/arrow-rs/issues/8000",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        439,
+        5
+      ],
+      "end": [
+        444,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "max_predicate_cache_size",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          172,
+          1
+        ],
+        "end": [
+          445,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::with_row_filter`": 2553
+    },
+    "link_paths": {
+      "`Self::with_row_filter`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_filter"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3013",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-496a367160b66b5da37fafbc",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::with_row_filter`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-8bea3b5ddc8fa0db0c89f3ec"
+    }
+  },
+  {
+    "id": "b5e5ab0625e34d213a5f04cf",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_metrics",
+    "name": "with_metrics",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_metrics(self, metrics: ArrowReaderMetrics) -> Self",
+    "docs": "Specify metrics collection during reading\n\nTo access the metrics, create an [`ArrowReaderMetrics`] and pass a\nclone of the provided metrics to the builder.\n\nFor example:\n\n```rust\n# use std::sync::Arc;\n# use bytes::Bytes;\n# use arrow_array::{Int32Array, RecordBatch};\n# use arrow_schema::{DataType, Field, Schema};\n# use parquet::arrow::arrow_reader::{ParquetRecordBatchReader, ParquetRecordBatchReaderBuilder};\nuse parquet::arrow::arrow_reader::metrics::ArrowReaderMetrics;\n# use parquet::arrow::ArrowWriter;\n# let mut file: Vec<u8> = Vec::with_capacity(1024);\n# let schema = Arc::new(Schema::new(vec![Field::new(\"i32\", DataType::Int32, false)]));\n# let mut writer = ArrowWriter::try_new(&mut file, schema.clone(), None).unwrap();\n# let batch = RecordBatch::try_new(schema, vec![Arc::new(Int32Array::from(vec![1, 2, 3]))]).unwrap();\n# writer.write(&batch).unwrap();\n# writer.close().unwrap();\n# let file = Bytes::from(file);\n// Create metrics object to pass into the reader\nlet metrics = ArrowReaderMetrics::enabled();\nlet reader = ParquetRecordBatchReaderBuilder::try_new(file).unwrap()\n  // Configure the builder to use the metrics by passing a clone\n  .with_metrics(metrics.clone())\n  // Build the reader\n  .build().unwrap();\n// .. read data from the reader ..\n\n// check the metrics\nassert!(metrics.records_read_from_inner().is_some());\n```",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        421,
+        5
+      ],
+      "end": [
+        423,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "metrics",
+              {
+                "resolved_path": {
+                  "path": "ArrowReaderMetrics",
+                  "id": 2582,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2582": "parquet::arrow::arrow_reader::metrics::ArrowReaderMetrics"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          172,
+          1
+        ],
+        "end": [
+          445,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrowReaderMetrics`": 2582
+    },
+    "link_paths": {
+      "`ArrowReaderMetrics`": "parquet::arrow::arrow_reader::metrics::ArrowReaderMetrics"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3012",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-b5e5ab0625e34d213a5f04cf",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ArrowReaderMetrics`": "../operations/parquet.arrow.arrow_reader.metrics.ArrowReaderMetrics.md#op-c2424d6c9242ce925e8a9bf7"
+    }
+  },
+  {
+    "id": "782bde4062d02d2d645c13f6",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_offset",
+    "name": "with_offset",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_offset(self, offset: usize) -> Self",
+    "docs": "Provide an offset to skip over the given number of rows\n\nThe offset will be applied after any [`Self::with_row_selection`] and [`Self::with_row_filter`]\nallowing it to skip rows after any pushed down predicates\n\nIt is recommended to enable reading the page index if using this functionality, to allow\nmore efficient skipping over data pages. See [`ArrowReaderOptions::with_page_index`]",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        380,
+        5
+      ],
+      "end": [
+        385,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "offset",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          172,
+          1
+        ],
+        "end": [
+          445,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::with_row_selection`": 3002,
+      "`Self::with_row_filter`": 2553,
+      "`ArrowReaderOptions::with_page_index`": 3011
+    },
+    "link_paths": {
+      "`Self::with_row_selection`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+      "`Self::with_row_filter`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_filter",
+      "`ArrowReaderOptions::with_page_index`": "parquet::arrow::arrow_reader::ArrowReaderOptions::with_page_index"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "2999",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-782bde4062d02d2d645c13f6",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::with_row_selection`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-521e662260c093bdc9d5c113",
+      "`Self::with_row_filter`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-8bea3b5ddc8fa0db0c89f3ec",
+      "`ArrowReaderOptions::with_page_index`": "../operations/parquet.arrow.arrow_reader.ArrowReaderOptions.md#op-4c872ea4ae6007c2db6ecd25"
+    }
+  },
+  {
+    "id": "5bbdcadc7d33ef95704f8b2d",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_projection",
+    "name": "with_projection",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_projection(self, mask: ProjectionMask) -> Self",
+    "docs": "Only read data from the provided column indexes",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        230,
+        5
+      ],
+      "end": [
+        235,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "mask",
+              {
+                "resolved_path": {
+                  "path": "ProjectionMask",
+                  "id": 2521,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2521": "parquet::arrow::ProjectionMask"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          172,
+          1
+        ],
+        "end": [
+          445,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "2997",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-5bbdcadc7d33ef95704f8b2d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8bea3b5ddc8fa0db0c89f3ec",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_filter",
+    "name": "with_row_filter",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_row_filter(self, filter: RowFilter) -> Self",
+    "docs": "Provide a [`RowFilter`] to skip decoding rows\n\nRow filters are applied after row group selection and row selection\n\nIt is recommended to enable reading the page index if using this functionality, to allow\nmore efficient skipping over data pages. See [`ArrowReaderOptions::with_page_index`].\n\nSee the [blog post on late materialization] for a more technical explanation.\n\n[blog post on late materialization]: https://arrow.apache.org/blog/2025/12/11/parquet-late-materialization-deep-dive\n\n# Example\n```rust\n# use std::fs::File;\n# use arrow_array::Int32Array;\n# use parquet::arrow::ProjectionMask;\n# use parquet::arrow::arrow_reader::{ArrowPredicateFn, ParquetRecordBatchReaderBuilder, RowFilter};\n# fn main() -> Result<(), parquet::errors::ParquetError> {\n# let testdata = arrow::util::test_util::parquet_test_data();\n# let path = format!(\"{testdata}/alltypes_plain.parquet\");\n# let file = File::open(&path)?;\nlet builder = ParquetRecordBatchReaderBuilder::try_new(file)?;\nlet schema_desc = builder.metadata().file_metadata().schema_descr_ptr();\n// Create predicate that evaluates `int_col != 1`.\n// `int_col` column has index 4 (zero based) in the schema\nlet projection = ProjectionMask::leaves(&schema_desc, [4]);\n// Only the projection columns are passed to the predicate so\n// int_col is column 0 in the predicate\nlet predicate = ArrowPredicateFn::new(projection, |batch| {\n    let int_col = batch.column(0);\n    arrow::compute::kernels::cmp::neq(int_col, &Int32Array::new_scalar(1))\n});\nlet row_filter = RowFilter::new(vec![Box::new(predicate)]);\n// The filter will be invoked during the reading process\nlet reader = builder.with_row_filter(row_filter).build()?;\n# for b in reader { let _ = b?; }\n# Ok(())\n# }\n```",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        352,
+        5
+      ],
+      "end": [
+        357,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "filter",
+              {
+                "resolved_path": {
+                  "path": "RowFilter",
+                  "id": 2526,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2526": "parquet::arrow::arrow_reader::filter::RowFilter"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          172,
+          1
+        ],
+        "end": [
+          445,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrowReaderOptions::with_page_index`": 3011,
+      "`RowFilter`": 2526
+    },
+    "link_paths": {
+      "`ArrowReaderOptions::with_page_index`": "parquet::arrow::arrow_reader::ArrowReaderOptions::with_page_index",
+      "`RowFilter`": "parquet::arrow::arrow_reader::filter::RowFilter"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "2553",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-8bea3b5ddc8fa0db0c89f3ec",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ArrowReaderOptions::with_page_index`": "../operations/parquet.arrow.arrow_reader.ArrowReaderOptions.md#op-4c872ea4ae6007c2db6ecd25",
+      "`RowFilter`": "../operations/parquet.arrow.arrow_reader.filter.RowFilter.md#op-a310d73e2b8ee5aca56c0c1f"
+    }
+  },
+  {
+    "id": "a242cc258e7519b5c6886ed9",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_groups",
+    "name": "with_row_groups",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_row_groups(self, row_groups: Vec<usize>) -> Self",
+    "docs": "Only read data from the provided row group indexes\n\nThis is also called row group filtering",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        222,
+        5
+      ],
+      "end": [
+        227,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "row_groups",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 1171,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1171": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          172,
+          1
+        ],
+        "end": [
+          445,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3001",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-a242cc258e7519b5c6886ed9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "521e662260c093bdc9d5c113",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+    "name": "with_row_selection",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_row_selection(self, selection: RowSelection) -> Self",
+    "docs": "Provide a [`RowSelection`] to filter out rows, and avoid fetching their\ndata into memory.\n\nThis feature is used to restrict which rows are decoded within row\ngroups, skipping ranges of rows that are not needed. Such selections\ncould be determined by evaluating predicates against the parquet page\n[`Index`] or some other external information available to a query\nengine.\n\n# Notes\n\nRow group filtering (see [`Self::with_row_groups`]) is applied prior to\napplying the row selection, and therefore rows from skipped row groups\nshould not be included in the [`RowSelection`] (see example below)\n\nIt is recommended to enable writing the page index if using this\nfunctionality, to allow more efficient skipping over data pages. See\n[`ArrowReaderOptions::with_page_index`].\n\n# Example\n\nGiven a parquet file with 4 row groups, and a row group filter of `[0,\n2, 3]`, in order to scan rows 50-100 in row group 2 and rows 200-300 in\nrow group 3:\n\n```text\n  Row Group 0, 1000 rows (selected)\n  Row Group 1, 1000 rows (skipped)\n  Row Group 2, 1000 rows (selected, but want to only scan rows 50-100)\n  Row Group 3, 1000 rows (selected, but want to only scan rows 200-300)\n```\n\nYou could pass the following [`RowSelection`]:\n\n```text\n Select 1000    (scan all rows in row group 0)\n Skip 50        (skip the first 50 rows in row group 2)\n Select 50      (scan rows 50-100 in row group 2)\n Skip 900       (skip the remaining rows in row group 2)\n Skip 200       (skip the first 200 rows in row group 3)\n Select 100     (scan rows 200-300 in row group 3)\n Skip 700       (skip the remaining rows in row group 3)\n```\nNote there is no entry for the (entirely) skipped row group 1.\n\nNote you can represent the same selection with fewer entries. Instead of\n\n```text\n Skip 900       (skip the remaining rows in row group 2)\n Skip 200       (skip the first 200 rows in row group 3)\n```\n\nyou could use\n\n```text\nSkip 1100      (skip the remaining 900 rows in row group 2 and the first 200 rows in row group 3)\n```\n\n[`Index`]: crate::file::page_index::column_index::ColumnIndexMetaData",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        306,
+        5
+      ],
+      "end": [
+        311,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "selection",
+              {
+                "resolved_path": {
+                  "path": "RowSelection",
+                  "id": 2554,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2554": "parquet::arrow::arrow_reader::selection::RowSelection"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          172,
+          1
+        ],
+        "end": [
+          445,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrowReaderOptions::with_page_index`": 3011,
+      "`RowSelection`": 2554,
+      "`Self::with_row_groups`": 3001,
+      "crate::file::page_index::column_index::ColumnIndexMetaData": 1182
+    },
+    "link_paths": {
+      "`ArrowReaderOptions::with_page_index`": "parquet::arrow::arrow_reader::ArrowReaderOptions::with_page_index",
+      "`RowSelection`": "parquet::arrow::arrow_reader::selection::RowSelection",
+      "`Self::with_row_groups`": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_groups",
+      "crate::file::page_index::column_index::ColumnIndexMetaData": "parquet::file::page_index::column_index::ColumnIndexMetaData"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3002",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-521e662260c093bdc9d5c113",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ArrowReaderOptions::with_page_index`": "../operations/parquet.arrow.arrow_reader.ArrowReaderOptions.md#op-4c872ea4ae6007c2db6ecd25",
+      "`RowSelection`": "../operations/parquet.arrow.arrow_reader.selection.RowSelection.md#op-42015b29e86ada83b6a84ed5",
+      "`Self::with_row_groups`": "../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-a242cc258e7519b5c6886ed9",
+      "crate::file::page_index::column_index::ColumnIndexMetaData": "../operations/parquet.file.page_index.column_index.ColumnIndexMetaData.md#op-6700acf40da7fd4eab386f3e"
+    }
+  },
+  {
+    "id": "48f4a93c44669da8125e4195",
+    "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection_policy",
+    "name": "with_row_selection_policy",
+    "owner": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_row_selection_policy(self, policy: RowSelectionPolicy) -> Self",
+    "docs": "Configure how row selections should be materialised during execution\n\nSee [`RowSelectionPolicy`] for more details",
+    "span": {
+      "filename": "src/arrow/arrow_reader/mod.rs",
+      "begin": [
+        240,
+        5
+      ],
+      "end": [
+        245,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "policy",
+              {
+                "resolved_path": {
+                  "path": "RowSelectionPolicy",
+                  "id": 2661,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2661": "parquet::arrow::arrow_reader::selection::cursor::RowSelectionPolicy"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowReaderBuilder",
+          "id": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "T"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "T",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_reader/mod.rs",
+        "begin": [
+          172,
+          1
+        ],
+        "end": [
+          445,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RowSelectionPolicy`": 2661
+    },
+    "link_paths": {
+      "`RowSelectionPolicy`": "parquet::arrow::arrow_reader::selection::cursor::RowSelectionPolicy"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3010",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+    "anchor": "op-48f4a93c44669da8125e4195",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RowSelectionPolicy`": "../operations/parquet.arrow.arrow_reader.selection.cursor.RowSelectionPolicy.md#op-8c879ac1c58e2c50914ced8e"
+    }
+  }
+]

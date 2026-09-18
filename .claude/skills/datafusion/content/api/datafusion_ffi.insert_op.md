@@ -20,6 +20,9 @@ enum FFI_InsertOp
 fn from(value: InsertOp) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.insert_op.FFI_InsertOp.md).
+
+
 FFI safe version of [`InsertOp`].
 
 ---

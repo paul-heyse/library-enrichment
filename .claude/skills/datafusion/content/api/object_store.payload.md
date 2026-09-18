@@ -54,6 +54,9 @@ fn from_iter<T: IntoIterator<Item = u8>>(iter: T) -> Self
 fn into_iter(self) -> Self::IntoIter
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.payload.PutPayload.md).
+
+
 A cheaply cloneable, ordered collection of [`Bytes`]
 
 ---
@@ -77,6 +80,9 @@ fn next(&mut self) -> Option<Self::Item>
 fn size_hint(&self) -> (usize, Option<usize>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.payload.PutPayloadIntoIter.md).
+
+
 An owning iterator of [`PutPayload`]
 
 ---
@@ -99,6 +105,9 @@ struct PutPayloadIter<'a>
 fn next(&mut self) -> Option<Self::Item>
 fn size_hint(&self) -> (usize, Option<usize>)
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.payload.PutPayloadIter.md).
+
 
 An iterator over [`PutPayload`]
 
@@ -125,6 +134,9 @@ fn new() -> Self
 fn push(&mut self, bytes: Bytes)
 fn with_block_size(self, block_size: usize) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.payload.PutPayloadMut.md).
+
 
 A builder for [`PutPayload`] that avoids reallocating memory
 

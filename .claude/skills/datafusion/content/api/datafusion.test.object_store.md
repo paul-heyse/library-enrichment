@@ -10,6 +10,9 @@ Crate `datafusion` · 4 public items · structured records in [`model/datafusion
 fn ensure_head_concurrency(object_store: std::sync::Arc<dyn ObjectStore>, concurrency: usize) -> std::sync::Arc<dyn ObjectStore>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.test.object_store.ensure_head_concurrency.md).
+
+
 Blocks the object_store `head` call until `concurrency` number of calls are pending.
 
 ---
@@ -21,6 +24,9 @@ Blocks the object_store `head` call until `concurrency` number of calls are pend
 ```rust
 fn local_unpartitioned_file(path: impl AsRef<std::path::Path>) -> object_store::ObjectMeta
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.test.object_store.local_unpartitioned_file.md).
+
 
 Helper method to fetch the file size and date at given path and create a `ObjectMeta`
 
@@ -34,6 +40,9 @@ Helper method to fetch the file size and date at given path and create a `Object
 fn make_test_store_and_state(files: &[(&str, u64)]) -> (std::sync::Arc<object_store::memory::InMemory>, execution::context::SessionState)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.test.object_store.make_test_store_and_state.md).
+
+
 Create a test object store with the provided files
 
 ---
@@ -45,6 +54,9 @@ Create a test object store with the provided files
 ```rust
 fn register_test_store(ctx: &prelude::SessionContext, files: &[(&str, u64)])
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.test.object_store.register_test_store.md).
+
 
 Registers a test object store with the provided `ctx`
 

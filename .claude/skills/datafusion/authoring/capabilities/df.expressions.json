@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "id": "df.expressions",
+  "title": "Separate expression construction, coercion and evaluation",
+  "task_aliases": [
+    "build expression",
+    "incompatible types",
+    "simplify direct expression",
+    "coalesce constructor",
+    "type coercion"
+  ],
+  "crates": [
+    "datafusion-expr",
+    "datafusion-optimizer",
+    "datafusion-physical-expr",
+    "datafusion-functions"
+  ],
+  "input": [
+    "Expr",
+    "DFSchema",
+    "ScalarUDF"
+  ],
+  "output": [
+    "Expr",
+    "PhysicalExpr",
+    "ColumnarValue"
+  ],
+  "properties": [
+    "coercion",
+    "nulls",
+    "errors",
+    "planning"
+  ],
+  "operations": [
+    "datafusion_expr::udf::ScalarUDF::call",
+    "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::coerce",
+    "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::simplify",
+    "datafusion::execution::context::SessionContext::create_physical_expr"
+  ],
+  "brief": "expr_fn helpers and ScalarUDF::call construct expressions. Ordinary analysis supplies type coercion; a direct simplifier call has type preconditions and may leave an incompatible expression unsimplified or fail.",
+  "choices": [
+    {
+      "candidate": "SQL / DataFrame analysis",
+      "choose_when": "Ordinary query construction",
+      "tradeoff": "Uses the session analyzer/planner pipeline; still inspect inferred output fields.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "ExprSimplifier::coerce then simplify",
+      "choose_when": "Direct expression processing outside analysis",
+      "tradeoff": "Provide the correct DFSchema and SimplifyContext; not every incompatible pair has a coercion.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "physical expression evaluation",
+      "choose_when": "Typed expression applied to batches",
+      "tradeoff": "ColumnarValue may be scalar or array; field/type/length context matters.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "df.expressions.construction",
+      "aspect": "construction",
+      "statement": "ScalarUDF::call(Vec<Expr>) -> Expr does not promise validation or casts. ExprSchemable can infer type/nullability against a schema; it is not execution.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.expressions.simplification",
+      "aspect": "simplification",
+      "statement": "simplify expects types compatible with operator requirements. coerce(expr, schema) -> Result<Expr> is separate. An uncoerced call need not always error; it may remain unsimplified.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.expressions.evaluation",
+      "aspect": "evaluation",
+      "statement": "Use planning context and registry appropriate to the query. Failures can occur during coercion, physical planning or evaluation; test all relevant boundaries.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Identify whether the caller enters normal analysis or bypasses it.",
+    "For direct processing, coerce with the intended schema, then simplify and plan.",
+    "Check both output datatype and value; include an unsupported pair control."
+  ],
+  "unknowns": [
+    "Mixed integer addition is the runtime example; it is not a complete coercion matrix."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "datafusion_expr::udf::ScalarUDF::call",
+        "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::coerce",
+        "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::simplify",
+        "datafusion::execution::context::SessionContext::create_physical_expr"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    },
+    {
+      "id": "probe",
+      "kind": "runtime_observation",
+      "tests": [
+        "expressions_require_coercion_before_direct_simplification"
+      ],
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Only the named assertions in the recorded Cargo profile."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "datafusion_expr::udf::ScalarUDF::call",
+      "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::coerce",
+      "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::simplify",
+      "datafusion::execution::context::SessionContext::create_physical_expr"
+    ],
+    "candidate_set": [
+      "SQL / DataFrame analysis",
+      "ExprSimplifier::coerce then simplify",
+      "physical expression evaluation"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  }
+}

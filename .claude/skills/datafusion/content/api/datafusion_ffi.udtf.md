@@ -29,6 +29,9 @@ fn new_with_ffi_codec(udtf: Arc<dyn TableFunctionImpl>, runtime: Option<Handle>,
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udtf.FFI_TableFunction.md).
+
+
 A stable struct for sharing a [`TableFunctionImpl`] across FFI boundaries.
 
 ---
@@ -52,6 +55,9 @@ fn call(&self, args: &[datafusion_expr::Expr]) -> Result<Arc<dyn TableProvider>>
 fn call_with_args(&self, args: TableFunctionArgs<'_, '_>) -> Result<Arc<dyn TableProvider>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udtf.ForeignTableFunction.md).
+
+
 This struct is used to access an UDTF provided by a foreign
 library across a FFI boundary.
 
@@ -68,5 +74,8 @@ must occur through the functions defined in FFI_TableFunction.
 ```rust
 struct TableFunctionPrivateData
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udtf.TableFunctionPrivateData.md).
+
 
 ---

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## CommitOrdering
 
 `enum` · `buoyant_kernel::commit_range::builder::CommitOrdering`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.commit_range.builder.CommitOrdering.md)
 
 Also reachable as `buoyant_kernel::commit_range::CommitOrdering`, `delta_kernel::commit_range::builder::CommitOrdering`
 
@@ -24,6 +25,7 @@ Default is [`CommitOrdering::AscendingOrder`]
 ## CommitRangeBuilder
 
 `struct` · `buoyant_kernel::commit_range::builder::CommitRangeBuilder`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.commit_range.builder.CommitRangeBuilder.md)
 
 Also reachable as `buoyant_kernel::commit_range::CommitRangeBuilder`, `delta_kernel::commit_range::builder::CommitRangeBuilder`
 

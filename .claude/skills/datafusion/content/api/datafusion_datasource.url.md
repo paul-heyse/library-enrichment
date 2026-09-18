@@ -52,6 +52,9 @@ fn as_ref(&self) -> &Url
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.url.ListingTableUrl.md).
+
+
 A parsed URL identifying files for a listing table, see [`ListingTableUrl::parse`]
 for more information on the supported expressions
 

@@ -10,6 +10,9 @@ Crate `arrow-json` · 3 public items · structured records in [`model/arrow_json
 fn infer_json_schema<R: BufRead>(reader: R, max_read_records: Option<usize>) -> Result<(arrow_schema::Schema, usize), arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.reader.schema.infer_json_schema.md).
+
+
 Infer the fields of a JSON file by reading the first n records of the buffer, with
 `max_read_records` controlling the maximum number of records to read.
 
@@ -58,6 +61,9 @@ file.seek(SeekFrom::Start(0)).unwrap();
 fn infer_json_schema_from_iterator<I, V>(value_iter: I) -> Result<arrow_schema::Schema, arrow_schema::ArrowError> where I: Iterator<Item = Result<V, arrow_schema::ArrowError>>, V: Borrow<serde_json::Value>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.reader.schema.infer_json_schema_from_iterator.md).
+
+
 Infer the fields of a JSON file by reading all items from the JSON Value Iterator.
 
 The following type coercion logic is implemented:
@@ -81,6 +87,9 @@ kernels in the future.
 ```rust
 fn infer_json_schema_from_seekable<R: BufRead + Seek>(reader: R, max_read_records: Option<usize>) -> Result<(arrow_schema::Schema, usize), arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_json.reader.schema.infer_json_schema_from_seekable.md).
+
 
 Infer the fields of a JSON file by reading the first n records of the file, with
 `max_read_records` controlling the maximum number of records to read.

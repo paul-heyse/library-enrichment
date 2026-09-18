@@ -1,0 +1,23 @@
+id: native-semantic-response-owner
+language: Rust
+severity: error
+message: Semantic payload decoding, coordinate conversion and outcome policy belong to native response kernels/plans.
+files:
+  - crates/enrichment-daemon/src/ops/semantics.rs
+  - crates/enrichment-daemon/src/lsp/*.rs
+rule:
+  any:
+    - all:
+        - kind: function_item
+        - has:
+            field: name
+            regex: '^(normalize_answer|byte_position|range|markup)$'
+    - all:
+        - kind: struct_expression
+        - has:
+            field: name
+            regex: '^SemanticQuery$'
+  not:
+    inside:
+      pattern: 'mod tests { $$$BODY }'
+      stopBy: end

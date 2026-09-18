@@ -47,6 +47,9 @@ fn required_input_distribution(&self) -> Vec<Distribution>
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.recursive_query.RecursiveQueryExec.md).
+
+
 Recursive query execution plan.
 
 This plan has two components: a base part (the static term) and

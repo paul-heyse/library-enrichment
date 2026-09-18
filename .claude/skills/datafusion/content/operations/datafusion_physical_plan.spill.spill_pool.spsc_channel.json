@@ -1,0 +1,125 @@
+[
+  {
+    "id": "334be7f1fdba1ab78f028f38",
+    "path": "datafusion_physical_plan::spill::spill_pool::spsc_channel",
+    "name": "spsc_channel",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn spsc_channel(max_file_size_bytes: usize, spill_manager: std::sync::Arc<super::spill_manager::SpillManager>) -> (SpillPoolSink, datafusion_execution::SendableRecordBatchStream)",
+    "docs": "Creates a paired writer and reader for a spill pool with SPSC (single-producer,\nsingle-consumer) semantics and strict FIFO ordering.\n\nIf you need a spill pool that supports several producers, use [`mpsc_channel`] instead.\n\nThe reader can start reading immediately after the writer appends a batch\nto the spill file, without waiting for the file to be sealed, while the writer continues to\nwrite more data.\n\nInternally this coordinates rotating spill files based on size limits, and\nhandles asynchronous notification between the writer and reader using wakers.\nThis ensures that we manage disk usage efficiently while allowing concurrent\nI/O between the writer and reader.\n\n# Data Flow Overview\n\n1. Writer write batch `B0` to F1\n2. Writer write batch `B1` to F1, notices the size limit exceeded, finishes F1.\n3. Reader read `B0` from F1\n4. Reader read `B1`, no more batch to read -> wait on the waker\n5. Writer write batch `B2` to a new file `F2`, wake up the waiting reader.\n6. Reader read `B2` from F2.\n7. Repeat until writer is dropped.\n\n# Architecture\n\n```text\n┌─────────────────────────────────────────────────────────────────────────┐\n│                            SpillPool                                    │\n│                                                                         │\n│  Writer Side              Shared State              Reader Side         │\n│  ───────────              ────────────              ───────────         │\n│                                                                         │\n│  SpillPoolSink      ┌────────────────────┐    RecordBatchStream         │\n│       │             │  VecDeque<File>    │          │                   │\n│       │             │  ┌────┐┌────┐      │          │                   │\n│  push_batch()       │  │ F1 ││ F2 │ ...  │      next().await            │\n│       │             │  └────┘└────┘      │          │                   │\n│       ▼             │                    │          ▼                   │\n│  ┌─────────┐        │                    │    ┌──────────┐              │\n│  │Current  │───────▶│ Coordination:      │◀───│ Current  │              │\n│  │Write    │        │ - Wakers           │    │ Read     │              │\n│  │File     │        │ - Batch counts     │    │ File     │              │\n│  └─────────┘        │ - Writer status    │    └──────────┘              │\n│       │             └────────────────────┘           │                  │\n│       │                                              │                  │\n│  Size > limit?                                Read all batches?         │\n│       │                                              │                  │\n│       ▼                                              ▼                  │\n│  Rotate to new file                            Pop from queue           │\n└─────────────────────────────────────────────────────────────────────────┘\n\nWriter produces → Shared queue → Reader consumes\n```\n\n# File State Machine\n\nEach file in the pool coordinates between writer and reader:\n\n```text\n               Writer View              Reader View\n               ───────────              ───────────\n\nCreated        writer: Some(..)         batches_read: 0\n               batches_written: 0       (waiting for data)\n                      │\n                      ▼\nWriting        append_batch()           Can read if:\n               batches_written++        batches_read < batches_written\n               wake readers\n                      │                        │\n                      │                        ▼\n               ┌──────┴──────┐          poll_next() → batch\n               │             │          batches_read++\n               ▼             ▼\n         Size > limit?  More data?\n               │             │\n               │             └─▶ Yes ──▶ Continue writing\n               ▼\n         finish()                   Reader catches up:\n         writer_finished = true     batches_read == batches_written\n         wake readers                       │\n               │                            ▼\n               └─────────────────────▶ Returns Poll::Ready(None)\n                                      File complete, pop from queue\n```\n\n# Arguments\n\n* `max_file_size_bytes` - Maximum size per file before rotation. When a file\n  exceeds this size, the writer automatically rotates to a new file.\n* `spill_manager` - Manager for file creation and metrics tracking\n\n# Returns\n\nA tuple of `(SpillPoolSink, SendableRecordBatchStream)` that share the same\nunderlying pool. The reader is returned as a stream for immediate use with\nasync stream combinators.\n\n# Example\n\n```\nuse std::sync::Arc;\nuse arrow::array::{ArrayRef, Int32Array};\nuse arrow::datatypes::{DataType, Field, Schema};\nuse arrow::record_batch::RecordBatch;\nuse datafusion_execution::runtime_env::RuntimeEnv;\nuse futures::StreamExt;\n\n# use datafusion_physical_plan::spill::spill_pool;\n# use datafusion_physical_plan::spill::SpillManager; // Re-exported for doctests\n# use datafusion_physical_plan::metrics::{ExecutionPlanMetricsSet, SpillMetrics};\n#\n# #[tokio::main]\n# async fn main() -> datafusion_common::Result<()> {\n# // Setup for the example (typically comes from TaskContext in production)\n# let env = Arc::new(RuntimeEnv::default());\n# let metrics = SpillMetrics::new(&ExecutionPlanMetricsSet::new(), 0);\n# let schema = Arc::new(Schema::new(vec![Field::new(\"a\", DataType::Int32, false)]));\n# let spill_manager = Arc::new(SpillManager::new(env, metrics, schema.clone()));\n#\n// Create channel with 1MB file size limit\nlet (writer, mut reader) = spill_pool::spsc_channel(1024 * 1024, spill_manager);\n\n// Spawn writer and reader concurrently; writer wakes reader via wakers\nlet writer_task = tokio::spawn(async move {\n    for i in 0..5 {\n        let array: ArrayRef = Arc::new(Int32Array::from(vec![i; 100]));\n        let batch = RecordBatch::try_new(schema.clone(), vec![array]).unwrap();\n        writer.push_batch(&batch)?;\n    }\n    // Explicitly drop writer to finalize the spill file and wake the reader\n    drop(writer);\n    datafusion_common::Result::<()>::Ok(())\n});\n\nlet reader_task = tokio::spawn(async move {\n    let mut batches_read = 0;\n    while let Some(result) = reader.next().await {\n        let _batch = result?;\n        batches_read += 1;\n    }\n    datafusion_common::Result::<usize>::Ok(batches_read)\n});\n\nlet (writer_res, reader_res) = tokio::join!(writer_task, reader_task);\nwriter_res\n    .map_err(|e| datafusion_common::DataFusionError::Execution(e.to_string()))??;\nlet batches_read = reader_res\n    .map_err(|e| datafusion_common::DataFusionError::Execution(e.to_string()))??;\n\nassert_eq!(batches_read, 5);\n# Ok(())\n# }\n```\n\n# Why rotate files?\n\nFile rotation ensures we don't end up with unreferenced disk usage.\nIf we used a single file for all spilled data, we would end up with\nunreferenced data at the beginning of the file that has already been read\nby readers but we can't delete because you can't truncate from the start of a file.\n\nConsider the case of a query like `SELECT * FROM large_table WHERE false`.\nObviously this query produces no output rows, but if we had a spilling operator\nin the middle of this query between the scan and the filter it would see the entire\n`large_table` flow through it and thus would spill all of that data to disk.\nSo we'd end up using up to `size(large_table)` bytes of disk space.\nIf instead we use file rotation, and as long as the readers can keep up with the writer,\nthen we can ensure that once a file is fully read by all readers it can be deleted,\nthus bounding the maximum disk usage to roughly `max_file_size_bytes`.",
+    "span": {
+      "filename": "src/spill/spill_pool.rs",
+      "begin": [
+        461,
+        1
+      ],
+      "end": [
+        476,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "max_file_size_bytes",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "spill_manager",
+              {
+                "resolved_path": {
+                  "path": "std::sync::Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "super::spill_manager::SpillManager",
+                              "id": 5144,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "tuple": [
+              {
+                "resolved_path": {
+                  "path": "SpillPoolSink",
+                  "id": 5226,
+                  "args": null
+                }
+              },
+              {
+                "resolved_path": {
+                  "path": "datafusion_execution::SendableRecordBatchStream",
+                  "id": 103,
+                  "args": null
+                }
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "5144": "datafusion_physical_plan::spill::spill_manager::SpillManager",
+      "5226": "datafusion_physical_plan::spill::spill_pool::SpillPoolSink",
+      "103": "datafusion_execution::stream::SendableRecordBatchStream"
+    },
+    "impl_context": null,
+    "links": {
+      "`mpsc_channel`": 5220
+    },
+    "link_paths": {
+      "`mpsc_channel`": "datafusion_physical_plan::spill::spill_pool::mpsc_channel"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5224",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.spill.spill_pool.spsc_channel.md",
+    "record_file": "operations/datafusion_physical_plan.spill.spill_pool.spsc_channel.json",
+    "anchor": "op-334be7f1fdba1ab78f028f38",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`mpsc_channel`": "../operations/datafusion_physical_plan.spill.spill_pool.mpsc_channel.md#op-03f7c46cd235c8bd43a84cfe"
+    }
+  }
+]

@@ -28,6 +28,9 @@ fn from(session: &SessionConfig) -> Self
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.session.config.FFI_SessionConfig.md).
+
+
 A stable struct for sharing [`SessionConfig`] across FFI boundaries.
 Instead of attempting to expose the entire SessionConfig interface, we
 convert the config options into a map from a string to string and pass

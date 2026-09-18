@@ -37,6 +37,9 @@ fn try_done(&self)
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.baseline.BaselineMetrics.md).
+
+
 Helper for creating and tracking common "baseline" metrics for
 each operator
 
@@ -81,6 +84,9 @@ struct SpillMetrics
 fn new(metrics: &ExecutionPlanMetricsSet, partition: usize) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.baseline.SpillMetrics.md).
+
+
 Helper for creating and tracking spill-related metrics for
 each operator
 
@@ -105,6 +111,9 @@ struct SplitMetrics
 ```rust
 fn new(metrics: &ExecutionPlanMetricsSet, partition: usize) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.baseline.SplitMetrics.md).
+
 
 Metrics for tracking batch splitting activity
 
@@ -131,6 +140,9 @@ trait RecordOutput
 ```rust
 fn record_output(self, bm: &BaselineMetrics) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.baseline.RecordOutput.md).
+
 
 Trait for things that produce output rows as a result of execution.
 

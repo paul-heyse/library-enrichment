@@ -16,6 +16,62 @@ use crate::{native_key::Key, native_union::Rule};
 pub mod page;
 pub mod row_page;
 
+crate::native_struct! {
+    /// One declaration binds lexical families to source fragments and coverage requirements.
+    pub struct FamilyDefinition {
+        name: String => Rule::NonEmpty,
+        api: bool => Rule::Text,
+        evidence_kind: crate::evidence::EvidenceKind => Rule::Text,
+        fragments: Vec<crate::evidence::FragmentKind> => Rule::Set,
+    }
+}
+pub fn families() -> Vec<FamilyDefinition> {
+    use crate::evidence::{EvidenceKind, FragmentKind};
+    [
+        ("api", true, EvidenceKind::PublicApi, vec![]),
+        (
+            "docs",
+            false,
+            EvidenceKind::Documentation,
+            vec![FragmentKind::DocText, FragmentKind::ReadmeSection],
+        ),
+        (
+            "examples",
+            false,
+            EvidenceKind::Examples,
+            vec![FragmentKind::Example],
+        ),
+        (
+            "release_notes",
+            false,
+            EvidenceKind::ReleaseNotes,
+            vec![FragmentKind::ChangelogSection],
+        ),
+        (
+            "features",
+            false,
+            EvidenceKind::RegistryMetadata,
+            vec![FragmentKind::FeatureDefinition],
+        ),
+    ]
+    .into_iter()
+    .map(|(name, api, evidence_kind, fragments)| FamilyDefinition {
+        name: name.into(),
+        api,
+        evidence_kind,
+        fragments,
+    })
+    .collect()
+}
+
+crate::native_struct! {
+    /// Total and ordered explanation are one native ranking record.
+    pub struct Ranking {
+        score: u32 => Rule::Text,
+        factors: Vec<crate::wire::data::ScoreFactor> => Rule::Sequence,
+    }
+}
+
 /// The scoring table, in rank order. Exposed so a response can carry the legend.
 pub const FACTORS: &[(&str, u32)] = &[
     ("exact_path", 1000),
@@ -88,7 +144,7 @@ impl Cursor {
     /// # Errors
     /// Serialization failure cannot become an empty valid-looking cursor.
     pub fn encode(&self) -> Result<String, serde_json::Error> {
-        Ok(format!("artifact10_{}", hex(&serde_json::to_vec(self)?)))
+        crate::native_cursor::Kind::Artifact.encode(self)
     }
 
     /// Parse and check a cursor against what the caller is paging now.
@@ -102,14 +158,7 @@ impl Cursor {
         query_digest: &str,
         sort: &str,
     ) -> Result<Self, CursorError> {
-        if text.len() > 32768 {
-            return Err(CursorError::Malformed);
-        }
-        let body = text
-            .strip_prefix("artifact10_")
-            .ok_or(CursorError::Malformed)?;
-        let bytes = unhex(body).ok_or(CursorError::Malformed)?;
-        let cursor: Self = serde_json::from_slice(&bytes).map_err(|_| CursorError::Malformed)?;
+        let cursor: Self = crate::native_cursor::Kind::Artifact.decode(text)?;
         if cursor.contract != crate::request::Operation::ReadArtifact.contract_id()
             || cursor.check
                 != Self::checksum(
@@ -138,60 +187,40 @@ impl Cursor {
     }
 }
 
-pub(crate) fn hex(bytes: &[u8]) -> String {
-    const DIGITS: &[u8; 16] = b"0123456789abcdef";
-    let mut out = String::with_capacity(bytes.len() * 2);
-    for b in bytes {
-        out.push(DIGITS[usize::from(b >> 4)] as char);
-        out.push(DIGITS[usize::from(b & 0x0f)] as char);
-    }
-    out
-}
-
-pub(crate) fn unhex(text: &str) -> Option<Vec<u8>> {
-    if !text.len().is_multiple_of(2) {
-        return None;
-    }
-    (0..text.len())
-        .step_by(2)
-        .map(|i| u8::from_str_radix(text.get(i..i + 2)?, 16).ok())
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
     fn cursors_bind_scope_query_and_sort() {
         let digest = "query-api";
-        let cursor = Cursor::new("snap_x", &digest, "score", 12);
+        let cursor = Cursor::new("snap_x", digest, "score", 12);
         let text = cursor.encode().expect("cursor serializes");
         assert!(text.starts_with("artifact10_"));
         assert_eq!(
-            Cursor::decode(&text, "snap_x", &digest, "score")
+            Cursor::decode(&text, "snap_x", digest, "score")
                 .expect("ok")
                 .offset,
             12
         );
         assert!(matches!(
-            Cursor::decode(&text, "snap_y", &digest, "score"),
+            Cursor::decode(&text, "snap_y", digest, "score"),
             Err(CursorError::Mismatch {
                 field: "snapshot or artifact"
             })
         ));
         let other = "query-docs";
         assert!(matches!(
-            Cursor::decode(&text, "snap_x", &other, "score"),
+            Cursor::decode(&text, "snap_x", other, "score"),
             Err(CursorError::Mismatch {
                 field: "query or filters"
             })
         ));
         assert!(matches!(
-            Cursor::decode("artifact10_zz", "snap_x", &digest, "score"),
+            Cursor::decode("artifact10_zz", "snap_x", digest, "score"),
             Err(CursorError::Malformed)
         ));
         assert!(matches!(
-            Cursor::decode("/etc/passwd", "snap_x", &digest, "score"),
+            Cursor::decode("/etc/passwd", "snap_x", digest, "score"),
             Err(CursorError::Malformed)
         ));
         // A tampered offset fails the checksum.
@@ -199,7 +228,7 @@ mod tests {
             Cursor::decode(
                 &text.replacen("artifact10_", "cur_", 1),
                 "snap_x",
-                &digest,
+                digest,
                 "score"
             )
             .is_err()
@@ -210,7 +239,7 @@ mod tests {
             Cursor::decode(
                 &tampered.encode().expect("cursor serializes"),
                 "snap_x",
-                &digest,
+                digest,
                 "score"
             ),
             Err(CursorError::Malformed)

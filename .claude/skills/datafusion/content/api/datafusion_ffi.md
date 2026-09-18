@@ -10,6 +10,9 @@ Crate `datafusion-ffi` · 5 public items · structured records in [`model/datafu
 extern "C" fn get_library_marker_id() -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.get_library_marker_id.md).
+
+
 This utility is used to determine if two FFI structs are within
 the same library. It is possible that the interplay between
 foreign and local functions calls create one FFI struct that
@@ -36,6 +39,9 @@ See the crate's `README.md` for additional information.
 extern "C" fn version() -> u64
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.version.md).
+
+
 Returns the major version of the FFI implementation. If the API evolves,
 we use the major version to identify compatibility over the unsafe
 boundary. This call is intended to be used by implementers to validate
@@ -51,6 +57,9 @@ they have compatible libraries.
 macro_rules! df_result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.df_result.md).
+
+
 This macro is a helpful conversion utility to convert from an FFI_Result to a
 DataFusion result.
 
@@ -64,6 +73,9 @@ DataFusion result.
 macro_rules! sresult
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.sresult.md).
+
+
 This macro is a helpful conversion utility to convert from a DataFusion Result to an FFI_Result.
 
 ---
@@ -75,6 +87,9 @@ This macro is a helpful conversion utility to convert from a DataFusion Result t
 ```rust
 macro_rules! sresult_return
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.sresult_return.md).
+
 
 This macro is a helpful conversion utility to convert from a DataFusion Result to an FFI_Result
 and to also call return when it is an error. Since you cannot use `?` on an FFI_Result, this is designed

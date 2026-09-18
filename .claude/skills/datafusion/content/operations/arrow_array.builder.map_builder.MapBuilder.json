@@ -1,0 +1,4000 @@
+[
+  {
+    "id": "29b3c25b26b6ef8ae009ae70",
+    "path": "arrow_array::builder::map_builder::MapBuilder",
+    "name": "MapBuilder",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct MapBuilder<K: ArrayBuilder, V: ArrayBuilder>",
+    "docs": "Builder for [`MapArray`]\n\n```\n# use arrow_array::builder::{Int32Builder, MapBuilder, StringBuilder};\n# use arrow_array::{Int32Array, StringArray};\n\nlet string_builder = StringBuilder::new();\nlet int_builder = Int32Builder::with_capacity(4);\n\n// Construct `[{\"joe\": 1}, {\"blogs\": 2, \"foo\": 4}, {}, null]`\nlet mut builder = MapBuilder::new(None, string_builder, int_builder);\n\nbuilder.keys().append_value(\"joe\");\nbuilder.values().append_value(1);\nbuilder.append(true).unwrap();\n\nbuilder.keys().append_value(\"blogs\");\nbuilder.values().append_value(2);\nbuilder.keys().append_value(\"foo\");\nbuilder.values().append_value(4);\nbuilder.append(true).unwrap();\nbuilder.append(true).unwrap();\nbuilder.append(false).unwrap();\n\nlet array = builder.finish();\nassert_eq!(array.value_offsets(), &[0, 1, 3, 3, 3]);\nassert_eq!(array.values().as_ref(), &Int32Array::from(vec![1, 2, 4]));\nassert_eq!(array.keys().as_ref(), &StringArray::from(vec![\"joe\", \"blogs\", \"foo\"]));\n\n```",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        58,
+        1
+      ],
+      "end": [
+        66,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "K",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ArrayBuilder",
+                          "id": 663,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "V",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ArrayBuilder",
+                          "id": 663,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          2677,
+          2678,
+          2679,
+          2680,
+          2681,
+          2682,
+          2683,
+          2684,
+          2685,
+          2686,
+          2687,
+          2688,
+          2689,
+          2690,
+          2691,
+          2692,
+          2694,
+          2702
+        ]
+      }
+    },
+    "type_references": {
+      "663": "arrow_array::builder::ArrayBuilder"
+    },
+    "impl_context": null,
+    "links": {
+      "`MapArray`": 728
+    },
+    "link_paths": {
+      "`MapArray`": "arrow_array::array::map_array::MapArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "730",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-29b3c25b26b6ef8ae009ae70",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MapArray`": "../operations/arrow_array.array.map_array.MapArray.md#op-2c9f2f57a7578a4beb5adb8f"
+    }
+  },
+  {
+    "id": "784e75e7851be4892a914020",
+    "path": "arrow_array::builder::map_builder::MapBuilder::append",
+    "name": "append",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append(&mut self, is_valid: bool) -> Result<(), ArrowError>",
+    "docs": "Finish the current map array slot\n\nReturns an error if the key and values builders are in an inconsistent state.",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        174,
+        5
+      ],
+      "end": [
+        179,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "is_valid",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "45": "core::result::Result",
+      "186": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          286,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2674",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-784e75e7851be4892a914020",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "792d01b3ceb8de246e934ef0",
+    "path": "arrow_array::builder::map_builder::MapBuilder::append_nulls",
+    "name": "append_nulls",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_nulls(&mut self, n: usize) -> Result<(), ArrowError>",
+    "docs": "Append `n` nulls to this [`MapBuilder`]\n\nReturns an error if the key and values builders are in an inconsistent state.",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        185,
+        5
+      ],
+      "end": [
+        191,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "45": "core::result::Result",
+      "186": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          286,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MapBuilder`": 730
+    },
+    "link_paths": {
+      "`MapBuilder`": "arrow_array::builder::map_builder::MapBuilder"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2675",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-792d01b3ceb8de246e934ef0",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MapBuilder`": "../operations/arrow_array.builder.map_builder.MapBuilder.md#op-29b3c25b26b6ef8ae009ae70"
+    }
+  },
+  {
+    "id": "c8ae1d2a306d201bfac1154d",
+    "path": "arrow_array::builder::map_builder::MapBuilder::as_any",
+    "name": "as_any",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any(&self) -> &dyn Any",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        306,
+        5
+      ],
+      "end": [
+        308,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          288,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2699",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-c8ae1d2a306d201bfac1154d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9c8e8a04a5b84ebbf2b08662",
+    "path": "arrow_array::builder::map_builder::MapBuilder::as_any_mut",
+    "name": "as_any_mut",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any_mut(&mut self) -> &mut dyn Any",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        310,
+        5
+      ],
+      "end": [
+        312,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          288,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2700",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-9c8e8a04a5b84ebbf2b08662",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "26ec9897a532213746001c63",
+    "path": "arrow_array::builder::map_builder::MapBuilder::entries",
+    "name": "entries",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn entries(&mut self) -> (&mut K, &mut V)",
+    "docs": "Returns both the key and value array builders of the map",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        153,
+        5
+      ],
+      "end": [
+        155,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "tuple": [
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "K"
+                  }
+                }
+              },
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          286,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2673",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-26ec9897a532213746001c63",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0abbce9c9a105561bf6c54a4",
+    "path": "arrow_array::builder::map_builder::MapBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> ArrayRef",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        293,
+        5
+      ],
+      "end": [
+        295,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          288,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2696",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-0abbce9c9a105561bf6c54a4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5804b9c5cc71c96d359e5e76",
+    "path": "arrow_array::builder::map_builder::MapBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> MapArray",
+    "docs": "Builds the [`MapArray`]",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        194,
+        5
+      ],
+      "end": [
+        204,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "MapArray",
+              "id": 728,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "728": "arrow_array::array::map_array::MapArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          286,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MapArray`": 728
+    },
+    "link_paths": {
+      "`MapArray`": "arrow_array::array::map_array::MapArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2667",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-5804b9c5cc71c96d359e5e76",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MapArray`": "../operations/arrow_array.array.map_array.MapArray.md#op-2c9f2f57a7578a4beb5adb8f"
+    }
+  },
+  {
+    "id": "2e1de6d63db26de373395c79",
+    "path": "arrow_array::builder::map_builder::MapBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> MapArray",
+    "docs": "Builds the [`MapArray`] without resetting the builder.",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        207,
+        5
+      ],
+      "end": [
+        215,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "MapArray",
+              "id": 728,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "728": "arrow_array::array::map_array::MapArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          286,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MapArray`": 728
+    },
+    "link_paths": {
+      "`MapArray`": "arrow_array::array::map_array::MapArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2668",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-2e1de6d63db26de373395c79",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MapArray`": "../operations/arrow_array.array.map_array.MapArray.md#op-2c9f2f57a7578a4beb5adb8f"
+    }
+  },
+  {
+    "id": "8f7b80fc6b037a1b1c706a6b",
+    "path": "arrow_array::builder::map_builder::MapBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> ArrayRef",
+    "docs": "Builds the array without resetting the builder.",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        298,
+        5
+      ],
+      "end": [
+        300,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          288,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2697",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-8f7b80fc6b037a1b1c706a6b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b2de7fb30e40b287462614e6",
+    "path": "arrow_array::builder::map_builder::MapBuilder::finish_preserve_values",
+    "name": "finish_preserve_values",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_preserve_values(&mut self) -> ArrayRef",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        302,
+        5
+      ],
+      "end": [
+        304,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          288,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2698",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-b2de7fb30e40b287462614e6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b14176e95edb706ddbb4bca2",
+    "path": "arrow_array::builder::map_builder::MapBuilder::fmt",
+    "name": "fmt",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        57,
+        10
+      ],
+      "end": [
+        57,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 117,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 118,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "117": "core::fmt::Formatter",
+      "118": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "$crate::fmt::Debug",
+                        "id": "core::fmt::Debug",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "$crate::fmt::Debug",
+                        "id": "core::fmt::Debug",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          57,
+          10
+        ],
+        "end": [
+          57,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2693",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-b14176e95edb706ddbb4bca2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "35ebdef717087a289934f24f",
+    "path": "arrow_array::builder::map_builder::MapBuilder::into_box_any",
+    "name": "into_box_any",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_box_any(Box<self>) -> Box<dyn Any>",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        314,
+        5
+      ],
+      "end": [
+        316,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Box",
+                  "id": 1788,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Box",
+              "id": 1788,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "Any",
+                                "id": 106,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1788": "alloc::boxed::Box",
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          288,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2701",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-35ebdef717087a289934f24f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6fe951c30fe01b87d3d54579",
+    "path": "arrow_array::builder::map_builder::MapBuilder::keys",
+    "name": "keys",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn keys(&mut self) -> &mut K",
+    "docs": "Returns the key array builder of the map",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        143,
+        5
+      ],
+      "end": [
+        145,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "K"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          286,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2671",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-6fe951c30fe01b87d3d54579",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "714d958a22581f458db11b32",
+    "path": "arrow_array::builder::map_builder::MapBuilder::len",
+    "name": "len",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        289,
+        5
+      ],
+      "end": [
+        291,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          288,
+          1
+        ],
+        "end": [
+          317,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2695",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-714d958a22581f458db11b32",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "30efa23d9c442d4a2314472f",
+    "path": "arrow_array::builder::map_builder::MapBuilder::new",
+    "name": "new",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(field_names: Option<MapFieldNames>, key_builder: K, value_builder: V) -> Self",
+    "docs": "Creates a new `MapBuilder`",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        91,
+        5
+      ],
+      "end": [
+        94,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "field_names",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "MapFieldNames",
+                              "id": 2665,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "key_builder",
+              {
+                "generic": "K"
+              }
+            ],
+            [
+              "value_builder",
+              {
+                "generic": "V"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "2665": "arrow_array::builder::map_builder::MapFieldNames"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          286,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2664",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-30efa23d9c442d4a2314472f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "77696c89d098743e5d30b3df",
+    "path": "arrow_array::builder::map_builder::MapBuilder::validity_slice",
+    "name": "validity_slice",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn validity_slice(&self) -> Option<&[u8]>",
+    "docs": "Returns the current null buffer as a slice",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        283,
+        5
+      ],
+      "end": [
+        285,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "slice": {
+                              "primitive": "u8"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          286,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2676",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-77696c89d098743e5d30b3df",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "aa1a8aa37c3027dd1d595249",
+    "path": "arrow_array::builder::map_builder::MapBuilder::values",
+    "name": "values",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn values(&mut self) -> &mut V",
+    "docs": "Returns the value array builder of the map",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        148,
+        5
+      ],
+      "end": [
+        150,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "V"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          286,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2672",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-aa1a8aa37c3027dd1d595249",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d34dc88817639e855e4388b4",
+    "path": "arrow_array::builder::map_builder::MapBuilder::with_capacity",
+    "name": "with_capacity",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_capacity(field_names: Option<MapFieldNames>, key_builder: K, value_builder: V, capacity: usize) -> Self",
+    "docs": "Creates a new `MapBuilder` with capacity",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        97,
+        5
+      ],
+      "end": [
+        114,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "field_names",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "MapFieldNames",
+                              "id": 2665,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "key_builder",
+              {
+                "generic": "K"
+              }
+            ],
+            [
+              "value_builder",
+              {
+                "generic": "V"
+              }
+            ],
+            [
+              "capacity",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "2665": "arrow_array::builder::map_builder::MapFieldNames"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          286,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2666",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-d34dc88817639e855e4388b4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "346d9295dc15cf192e6e7b84",
+    "path": "arrow_array::builder::map_builder::MapBuilder::with_keys_field",
+    "name": "with_keys_field",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_keys_field(self, field: impl Into<FieldRef>) -> Self",
+    "docs": "Override the field passed to [`MapBuilder::new`]\n\nBy default, a non-nullable field is created with the name `keys`\n\nNote: [`Self::finish`] and [`Self::finish_cloned`] will panic if the\nfield's data type does not match that of `K` or the field is nullable",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        122,
+        5
+      ],
+      "end": [
+        127,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "field",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 20,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "FieldRef",
+                                    "id": 545,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Into<FieldRef>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 20,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "FieldRef",
+                                      "id": 545,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "core::convert::Into",
+      "545": "arrow_schema::field::FieldRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          286,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MapBuilder::new`": 2664,
+      "`Self::finish_cloned`": 2668,
+      "`Self::finish`": 2667
+    },
+    "link_paths": {
+      "`MapBuilder::new`": "arrow_array::builder::map_builder::MapBuilder::new",
+      "`Self::finish_cloned`": "arrow_array::builder::map_builder::MapBuilder::finish_cloned",
+      "`Self::finish`": "arrow_array::builder::map_builder::MapBuilder::finish"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2669",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-346d9295dc15cf192e6e7b84",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MapBuilder::new`": "../operations/arrow_array.builder.map_builder.MapBuilder.md#op-30efa23d9c442d4a2314472f",
+      "`Self::finish_cloned`": "../operations/arrow_array.builder.map_builder.MapBuilder.md#op-2e1de6d63db26de373395c79",
+      "`Self::finish`": "../operations/arrow_array.builder.map_builder.MapBuilder.md#op-5804b9c5cc71c96d359e5e76"
+    }
+  },
+  {
+    "id": "d99c08329598eb0254ce8c1d",
+    "path": "arrow_array::builder::map_builder::MapBuilder::with_values_field",
+    "name": "with_values_field",
+    "owner": "arrow_array::builder::map_builder::MapBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_values_field(self, field: impl Into<FieldRef>) -> Self",
+    "docs": "Override the field passed to [`MapBuilder::new`]\n\nBy default, a nullable field is created with the name `values`\n\nNote: [`Self::finish`] and [`Self::finish_cloned`] will panic if the\nfield's data type does not match that of `V`",
+    "span": {
+      "filename": "src/builder/map_builder.rs",
+      "begin": [
+        135,
+        5
+      ],
+      "end": [
+        140,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "field",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 20,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "FieldRef",
+                                    "id": 545,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Into<FieldRef>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 20,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "FieldRef",
+                                      "id": 545,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "core::convert::Into",
+      "545": "arrow_schema::field::FieldRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "MapBuilder",
+          "id": "arrow_array::builder::map_builder::MapBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrayBuilder",
+                        "id": "arrow_array::builder::ArrayBuilder",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/map_builder.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          286,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`MapBuilder::new`": 2664,
+      "`Self::finish_cloned`": 2668,
+      "`Self::finish`": 2667
+    },
+    "link_paths": {
+      "`MapBuilder::new`": "arrow_array::builder::map_builder::MapBuilder::new",
+      "`Self::finish_cloned`": "arrow_array::builder::map_builder::MapBuilder::finish_cloned",
+      "`Self::finish`": "arrow_array::builder::map_builder::MapBuilder::finish"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2670",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.map_builder.MapBuilder.md",
+    "record_file": "operations/arrow_array.builder.map_builder.MapBuilder.json",
+    "anchor": "op-d99c08329598eb0254ce8c1d",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MapBuilder::new`": "../operations/arrow_array.builder.map_builder.MapBuilder.md#op-30efa23d9c442d4a2314472f",
+      "`Self::finish_cloned`": "../operations/arrow_array.builder.map_builder.MapBuilder.md#op-2e1de6d63db26de373395c79",
+      "`Self::finish`": "../operations/arrow_array.builder.map_builder.MapBuilder.md#op-5804b9c5cc71c96d359e5e76"
+    }
+  }
+]

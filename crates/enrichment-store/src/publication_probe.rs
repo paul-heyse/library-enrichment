@@ -8,6 +8,7 @@ use std::{io, path::Path};
 pub enum Point {
     EvidenceCohortsDurable,
     ControlCandidateValidated,
+    ControlAppendDurable,
     ControlCommitAcknowledged,
 }
 

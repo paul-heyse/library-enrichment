@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::covar_pop`
 fn covar_pop(y: datafusion_expr::Expr, x: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.covariance.covar_pop.md).
+
+
 Computes the population covariance.
 
 ---
@@ -23,6 +26,9 @@ Computes the population covariance.
 ```rust
 fn covar_pop_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.covariance.covar_pop_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`CovariancePopulation`]
 
@@ -38,6 +44,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::covar_samp`
 fn covar_samp(y: datafusion_expr::Expr, x: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.covariance.covar_samp.md).
+
+
 Computes the sample covariance.
 
 ---
@@ -49,6 +58,9 @@ Computes the sample covariance.
 ```rust
 fn covar_samp_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.covariance.covar_samp_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`CovarianceSample`]
 
@@ -87,6 +99,9 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn supports_retract_batch(&self) -> bool
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.covariance.CovarianceAccumulator.md).
+
 
 An accumulator to compute covariance
 The algorithm used is an online implementation and numerically stable. It is derived from the following paper
@@ -132,6 +147,9 @@ fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.covariance.CovariancePopulation.md).
+
+
 ---
 
 ## CovarianceSample
@@ -163,5 +181,8 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.covariance.CovarianceSample.md).
+
 
 ---

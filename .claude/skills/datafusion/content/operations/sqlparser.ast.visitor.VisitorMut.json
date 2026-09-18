@@ -1,0 +1,1887 @@
+[
+  {
+    "id": "9e92737f109af5e41462ab8b",
+    "path": "sqlparser::ast::visitor::VisitorMut",
+    "name": "VisitorMut",
+    "owner": null,
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "trait",
+    "signature": "trait VisitorMut",
+    "docs": "A visitor that can be used to mutate an AST tree.\n\n`pre_visit_` methods are invoked before visiting all children of the\nnode and `post_visit_` methods are invoked after visiting all\nchildren of the node.\n\n# See also\n\nThese methods provide a more concise way of visiting nodes of a certain type:\n* [visit_relations_mut]\n* [visit_expressions_mut]\n* [visit_statements_mut]\n\n# Example\n```\n# use sqlparser::parser::Parser;\n# use sqlparser::dialect::GenericDialect;\n# use sqlparser::ast::{VisitMut, VisitorMut, ObjectName, Expr, Ident};\n# use core::ops::ControlFlow;\n\n// A visitor that replaces \"to_replace\" with \"replaced\" in all expressions\nstruct Replacer;\n\n// Visit each expression after its children have been visited\nimpl VisitorMut for Replacer {\n  type Break = ();\n\n  fn post_visit_expr(&mut self, expr: &mut Expr) -> ControlFlow<Self::Break> {\n    if let Expr::Identifier(Ident{ value, ..}) = expr {\n        *value = value.replace(\"to_replace\", \"replaced\")\n    }\n    ControlFlow::Continue(())\n  }\n}\n\nlet sql = \"SELECT to_replace FROM foo where to_replace IN (SELECT to_replace FROM bar)\";\nlet mut statements = Parser::parse_sql(&GenericDialect{}, sql).unwrap();\n\n// Drive the visitor through the AST\nstatements.visit(&mut Replacer);\n\nassert_eq!(statements[0].to_string(), \"SELECT replaced FROM foo WHERE replaced IN (SELECT replaced FROM bar)\");\n```",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        314,
+        1
+      ],
+      "end": [
+        397,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          16050,
+          16051,
+          16052,
+          16053,
+          16054,
+          16055,
+          16056,
+          16057,
+          16058,
+          16059,
+          16060,
+          16061,
+          16062,
+          16063,
+          16064
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "implementations": []
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "visit_expressions_mut": 16066,
+      "visit_statements_mut": 16067,
+      "visit_relations_mut": 16065
+    },
+    "link_paths": {
+      "visit_expressions_mut": "sqlparser::ast::visitor::visit_expressions_mut",
+      "visit_statements_mut": "sqlparser::ast::visitor::visit_statements_mut",
+      "visit_relations_mut": "sqlparser::ast::visitor::visit_relations_mut"
+    },
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "67",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-9e92737f109af5e41462ab8b",
+    "aliases": [],
+    "resolved_doc_links": {
+      "visit_expressions_mut": "../operations/sqlparser.ast.visitor.visit_expressions_mut.md#op-5aea00478f8cd79b07e7eac1",
+      "visit_statements_mut": "../operations/sqlparser.ast.visitor.visit_statements_mut.md#op-c82f8742aa640331023e0cd0",
+      "visit_relations_mut": "../operations/sqlparser.ast.visitor.visit_relations_mut.md#op-ddf3ceab2afdc24fefd8bb6d"
+    }
+  },
+  {
+    "id": "7298ab4f894f3bfdcab2914b",
+    "path": "sqlparser::ast::visitor::VisitorMut::Break",
+    "name": "Break",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "assoc_type",
+    "signature": "Break",
+    "docs": "Type returned when the recursion returns early.\n\nImportant note: The `Break` type should be kept as small as possible to prevent\nstack overflow during recursion. If you need to return an error, consider\nboxing it with `Box` to minimize stack usage.",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        320,
+        5
+      ],
+      "end": [
+        320,
+        16
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "type": null,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16050",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-7298ab4f894f3bfdcab2914b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6f494d9117e7b4893da57cee",
+    "path": "sqlparser::ast::visitor::VisitorMut::post_visit_expr",
+    "name": "post_visit_expr",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn post_visit_expr(&mut self, _expr: &mut Expr) -> ControlFlow<Self::Break>",
+    "docs": "Invoked for any expressions that appear in the AST",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        374,
+        5
+      ],
+      "end": [
+        376,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_expr",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Expr",
+                      "id": 5,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Break",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 67,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "5": "sqlparser::ast::Expr",
+      "62": "core::ops::control_flow::ControlFlow",
+      "67": "sqlparser::ast::visitor::VisitorMut"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16060",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-6f494d9117e7b4893da57cee",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7393749132e16762a5c7382f",
+    "path": "sqlparser::ast::visitor::VisitorMut::post_visit_query",
+    "name": "post_visit_query",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn post_visit_query(&mut self, _query: &mut Query) -> ControlFlow<Self::Break>",
+    "docs": "Invoked for any queries that appear in the AST after visiting children",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        328,
+        5
+      ],
+      "end": [
+        330,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_query",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Query",
+                      "id": 4107,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Break",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 67,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4107": "sqlparser::ast::query::Query",
+      "62": "core::ops::control_flow::ControlFlow",
+      "67": "sqlparser::ast::visitor::VisitorMut"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16052",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-7393749132e16762a5c7382f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "09070c7980368d06435b006f",
+    "path": "sqlparser::ast::visitor::VisitorMut::post_visit_relation",
+    "name": "post_visit_relation",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn post_visit_relation(&mut self, _relation: &mut ObjectName) -> ControlFlow<Self::Break>",
+    "docs": "Invoked for any relations (e.g. tables) that appear in the AST after visiting children",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        348,
+        5
+      ],
+      "end": [
+        350,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_relation",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ObjectName",
+                      "id": 108,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Break",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 67,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "108": "sqlparser::ast::ObjectName",
+      "62": "core::ops::control_flow::ControlFlow",
+      "67": "sqlparser::ast::visitor::VisitorMut"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16056",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-09070c7980368d06435b006f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4d13a7e42315f1f7fedf64bf",
+    "path": "sqlparser::ast::visitor::VisitorMut::post_visit_select",
+    "name": "post_visit_select",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn post_visit_select(&mut self, _select: &mut Select) -> ControlFlow<Self::Break>",
+    "docs": "Invoked for any [Select] that appear in the AST after visiting children",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        338,
+        5
+      ],
+      "end": [
+        340,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_select",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Select",
+                      "id": 8989,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Break",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 67,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8989": "sqlparser::ast::query::Select",
+      "62": "core::ops::control_flow::ControlFlow",
+      "67": "sqlparser::ast::visitor::VisitorMut"
+    },
+    "impl_context": null,
+    "links": {
+      "Select": 8989
+    },
+    "link_paths": {
+      "Select": "sqlparser::ast::query::Select"
+    },
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16054",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-4d13a7e42315f1f7fedf64bf",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Select": "../operations/sqlparser.ast.query.Select.md#op-10b575bc5d4cbdd9ae434f0d"
+    }
+  },
+  {
+    "id": "a8c3d50bb784794c32c3c1de",
+    "path": "sqlparser::ast::visitor::VisitorMut::post_visit_statement",
+    "name": "post_visit_statement",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn post_visit_statement(&mut self, _statement: &mut Statement) -> ControlFlow<Self::Break>",
+    "docs": "Invoked for any statements that appear in the AST after visiting children",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        384,
+        5
+      ],
+      "end": [
+        386,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_statement",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Statement",
+                      "id": 1063,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Break",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 67,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1063": "sqlparser::ast::Statement",
+      "62": "core::ops::control_flow::ControlFlow",
+      "67": "sqlparser::ast::visitor::VisitorMut"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16062",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-a8c3d50bb784794c32c3c1de",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e3a3a8245f92e85243614c24",
+    "path": "sqlparser::ast::visitor::VisitorMut::post_visit_table_factor",
+    "name": "post_visit_table_factor",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn post_visit_table_factor(&mut self, _table_factor: &mut TableFactor) -> ControlFlow<Self::Break>",
+    "docs": "Invoked for any table factors that appear in the AST after visiting children",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        361,
+        5
+      ],
+      "end": [
+        366,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_table_factor",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "TableFactor",
+                      "id": 6992,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Break",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 67,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6992": "sqlparser::ast::query::TableFactor",
+      "62": "core::ops::control_flow::ControlFlow",
+      "67": "sqlparser::ast::visitor::VisitorMut"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16058",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-e3a3a8245f92e85243614c24",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "903ef9ddcc467fa96ee87197",
+    "path": "sqlparser::ast::visitor::VisitorMut::post_visit_value",
+    "name": "post_visit_value",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn post_visit_value(&mut self, _value: &mut ValueWithSpan) -> ControlFlow<Self::Break>",
+    "docs": "Invoked for any statements that appear in the AST after visiting children",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        394,
+        5
+      ],
+      "end": [
+        396,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_value",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ValueWithSpan",
+                      "id": 1522,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Break",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 67,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1522": "sqlparser::ast::value::ValueWithSpan",
+      "62": "core::ops::control_flow::ControlFlow",
+      "67": "sqlparser::ast::visitor::VisitorMut"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16064",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-903ef9ddcc467fa96ee87197",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bfd954e0e10f8ce6475158db",
+    "path": "sqlparser::ast::visitor::VisitorMut::pre_visit_expr",
+    "name": "pre_visit_expr",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn pre_visit_expr(&mut self, _expr: &mut Expr) -> ControlFlow<Self::Break>",
+    "docs": "Invoked for any expressions that appear in the AST before visiting children",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        369,
+        5
+      ],
+      "end": [
+        371,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_expr",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Expr",
+                      "id": 5,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Break",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 67,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "5": "sqlparser::ast::Expr",
+      "62": "core::ops::control_flow::ControlFlow",
+      "67": "sqlparser::ast::visitor::VisitorMut"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16059",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-bfd954e0e10f8ce6475158db",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ed9fcf03ef56d73e3d2f33db",
+    "path": "sqlparser::ast::visitor::VisitorMut::pre_visit_query",
+    "name": "pre_visit_query",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn pre_visit_query(&mut self, _query: &mut Query) -> ControlFlow<Self::Break>",
+    "docs": "Invoked for any queries that appear in the AST before visiting children",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        323,
+        5
+      ],
+      "end": [
+        325,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_query",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Query",
+                      "id": 4107,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Break",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 67,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4107": "sqlparser::ast::query::Query",
+      "62": "core::ops::control_flow::ControlFlow",
+      "67": "sqlparser::ast::visitor::VisitorMut"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16051",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-ed9fcf03ef56d73e3d2f33db",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "42f414d93b0ea1d27f5e5f95",
+    "path": "sqlparser::ast::visitor::VisitorMut::pre_visit_relation",
+    "name": "pre_visit_relation",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn pre_visit_relation(&mut self, _relation: &mut ObjectName) -> ControlFlow<Self::Break>",
+    "docs": "Invoked for any relations (e.g. tables) that appear in the AST before visiting children",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        343,
+        5
+      ],
+      "end": [
+        345,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_relation",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ObjectName",
+                      "id": 108,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Break",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 67,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "108": "sqlparser::ast::ObjectName",
+      "62": "core::ops::control_flow::ControlFlow",
+      "67": "sqlparser::ast::visitor::VisitorMut"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16055",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-42f414d93b0ea1d27f5e5f95",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ccac86ad671f5d0ba6bd7740",
+    "path": "sqlparser::ast::visitor::VisitorMut::pre_visit_select",
+    "name": "pre_visit_select",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn pre_visit_select(&mut self, _select: &mut Select) -> ControlFlow<Self::Break>",
+    "docs": "Invoked for any [Select] that appear in the AST before visiting children",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        333,
+        5
+      ],
+      "end": [
+        335,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_select",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Select",
+                      "id": 8989,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Break",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 67,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8989": "sqlparser::ast::query::Select",
+      "62": "core::ops::control_flow::ControlFlow",
+      "67": "sqlparser::ast::visitor::VisitorMut"
+    },
+    "impl_context": null,
+    "links": {
+      "Select": 8989
+    },
+    "link_paths": {
+      "Select": "sqlparser::ast::query::Select"
+    },
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16053",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-ccac86ad671f5d0ba6bd7740",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Select": "../operations/sqlparser.ast.query.Select.md#op-10b575bc5d4cbdd9ae434f0d"
+    }
+  },
+  {
+    "id": "80c5c7336761c9192e170c56",
+    "path": "sqlparser::ast::visitor::VisitorMut::pre_visit_statement",
+    "name": "pre_visit_statement",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn pre_visit_statement(&mut self, _statement: &mut Statement) -> ControlFlow<Self::Break>",
+    "docs": "Invoked for any statements that appear in the AST before visiting children",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        379,
+        5
+      ],
+      "end": [
+        381,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_statement",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Statement",
+                      "id": 1063,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Break",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 67,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1063": "sqlparser::ast::Statement",
+      "62": "core::ops::control_flow::ControlFlow",
+      "67": "sqlparser::ast::visitor::VisitorMut"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16061",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-80c5c7336761c9192e170c56",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "115d2e5891b570c945dbaa32",
+    "path": "sqlparser::ast::visitor::VisitorMut::pre_visit_table_factor",
+    "name": "pre_visit_table_factor",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn pre_visit_table_factor(&mut self, _table_factor: &mut TableFactor) -> ControlFlow<Self::Break>",
+    "docs": "Invoked for any table factors that appear in the AST before visiting children",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        353,
+        5
+      ],
+      "end": [
+        358,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_table_factor",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "TableFactor",
+                      "id": 6992,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Break",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 67,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6992": "sqlparser::ast::query::TableFactor",
+      "62": "core::ops::control_flow::ControlFlow",
+      "67": "sqlparser::ast::visitor::VisitorMut"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16057",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-115d2e5891b570c945dbaa32",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "efcb21f2329fa26f284286c4",
+    "path": "sqlparser::ast::visitor::VisitorMut::pre_visit_value",
+    "name": "pre_visit_value",
+    "owner": "sqlparser::ast::visitor::VisitorMut",
+    "crate": "sqlparser",
+    "version": "0.62.0",
+    "kind": "function",
+    "signature": "fn pre_visit_value(&mut self, _value: &mut ValueWithSpan) -> ControlFlow<Self::Break>",
+    "docs": "Invoked for any value that appear in the AST before visiting children",
+    "span": {
+      "filename": "src/ast/visitor.rs",
+      "begin": [
+        389,
+        5
+      ],
+      "end": [
+        391,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_value",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ValueWithSpan",
+                      "id": 1522,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ControlFlow",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Break",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 67,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1522": "sqlparser::ast::value::ValueWithSpan",
+      "62": "core::ops::control_flow::ControlFlow",
+      "67": "sqlparser::ast::visitor::VisitorMut"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "3f20fa6cc58673fb8fd2f8de7c727f8e8da6b90728359324646bc86ac295bfea",
+      "format_version": 60,
+      "item_id": "16063",
+      "origin": "https://docs.rs/crate/sqlparser/0.62.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/sqlparser.ast.visitor.VisitorMut.md",
+    "record_file": "operations/sqlparser.ast.visitor.VisitorMut.json",
+    "anchor": "op-efcb21f2329fa26f284286c4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

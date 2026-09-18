@@ -10,6 +10,9 @@ Crate `datafusion-optimizer` · 1 public items · structured records in [`model/
 fn parse_literal<T>(expr: &datafusion_expr::Expr) -> datafusion_common::Result<T::Native> where T: ArrowPrimitiveType, T::Native: TryFrom<datafusion_common::ScalarValue, Error = datafusion_common::DataFusionError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.simplify_expressions.simplify_literal.parse_literal.md).
+
+
 Parse and simplifies an expression to a numeric literal,
 corresponding to an arrow primitive type `T` (for example, Float64Type).
 

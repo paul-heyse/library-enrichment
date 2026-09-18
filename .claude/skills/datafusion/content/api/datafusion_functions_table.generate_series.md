@@ -14,6 +14,9 @@ enum GenSeriesArgs
 
 **Derives**: Clone, Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_table.generate_series.GenSeriesArgs.md).
+
+
 Indicates the arguments used for generating a series.
 
 ---
@@ -50,6 +53,9 @@ fn generate_next_batch(&mut self) -> Result<Option<RecordBatch>>
 fn reset_state(&self) -> Arc<RwLock<dyn LazyBatchGenerator>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_table.generate_series.Empty.md).
+
+
 Empty generator that produces no rows - used when series arguments contain null values
 
 ---
@@ -71,6 +77,9 @@ struct GenerateSeriesFunc
 ```rust
 fn call_with_args(&self, args: TableFunctionArgs<'_, '_>) -> Result<Arc<dyn TableProvider>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_table.generate_series.GenerateSeriesFunc.md).
+
 
 ---
 
@@ -100,6 +109,9 @@ async fn scan(&self, state: &dyn Session, projection: Option<&Vec<usize>>, _filt
 fn schema(&self) -> SchemaRef
 fn table_type(&self) -> TableType
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_table.generate_series.GenerateSeriesTable.md).
+
 
 Table that generates a series of integers/timestamps from `start`(inclusive) to `end`, incrementing by step
 
@@ -143,6 +155,9 @@ fn generate_next_batch(&mut self) -> Result<Option<RecordBatch>>
 fn reset_state(&self) -> Arc<RwLock<dyn LazyBatchGenerator>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_table.generate_series.GenericSeriesState.md).
+
+
 ---
 
 ## RangeFunc
@@ -162,6 +177,9 @@ struct RangeFunc
 ```rust
 fn call_with_args(&self, args: TableFunctionArgs<'_, '_>) -> Result<Arc<dyn TableProvider>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_table.generate_series.RangeFunc.md).
+
 
 ---
 
@@ -195,6 +213,9 @@ fn should_stop(&self, end: Self, step: &Self::StepType, include_end: bool) -> bo
 fn to_value_type(&self) -> Self::ValueType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_table.generate_series.TimestampValue.md).
+
+
 ---
 
 ## SeriesValue
@@ -219,6 +240,9 @@ fn display_value(&self) -> String
 fn should_stop(&self, end: Self, step: &Self::StepType, include_end: bool) -> bool
 fn to_value_type(&self) -> Self::ValueType
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_table.generate_series.SeriesValue.md).
+
 
 Trait for values that can be generated in a series
 

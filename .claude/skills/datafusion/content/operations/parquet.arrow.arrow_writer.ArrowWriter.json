@@ -1,0 +1,4163 @@
+[
+  {
+    "id": "dc781972049f13083eb8f4f3",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter",
+    "name": "ArrowWriter",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct ArrowWriter<W: Write>",
+    "docs": "Encodes [`RecordBatch`] to parquet\n\nWrites Arrow `RecordBatch`es to a Parquet writer. Multiple [`RecordBatch`] will be encoded\nto the same row group, up to `max_row_group_size` rows. Any remaining rows will be\nflushed on close, leading the final row group in the output file to potentially\ncontain fewer than `max_row_group_size` rows\n\n# Example: Writing `RecordBatch`es\n```\n# use std::sync::Arc;\n# use bytes::Bytes;\n# use arrow_array::{ArrayRef, Int64Array};\n# use arrow_array::RecordBatch;\n# use parquet::arrow::arrow_writer::ArrowWriter;\n# use parquet::arrow::arrow_reader::ParquetRecordBatchReader;\nlet col = Arc::new(Int64Array::from_iter_values([1, 2, 3])) as ArrayRef;\nlet to_write = RecordBatch::try_from_iter([(\"col\", col)]).unwrap();\n\nlet mut buffer = Vec::new();\nlet mut writer = ArrowWriter::try_new(&mut buffer, to_write.schema(), None).unwrap();\nwriter.write(&to_write).unwrap();\nwriter.close().unwrap();\n\nlet mut reader = ParquetRecordBatchReader::try_new(Bytes::from(buffer), 1024).unwrap();\nlet read = reader.next().unwrap().unwrap();\n\nassert_eq!(to_write, read);\n```\n\n# Memory Usage and Limiting\n\nThe nature of Parquet requires buffering of an entire row group before it can\nbe flushed to the underlying writer. Data is mostly buffered in its encoded\nform, reducing memory usage. However, some data such as dictionary keys,\nlarge strings or very nested data may still result in non-trivial memory\nusage.\n\nSee Also:\n* [`ArrowWriter::memory_size`]: the current memory usage of the writer.\n* [`ArrowWriter::in_progress_size`]: Estimated size of the buffered row group,\n\nCall [`Self::flush`] to trigger an early flush of a row group based on a\nmemory threshold and/or global memory pressure. However,  smaller row groups\nresult in higher metadata overheads, and thus may worsen compression ratios\nand query performance.\n\n```no_run\n# use std::io::Write;\n# use arrow_array::RecordBatch;\n# use parquet::arrow::ArrowWriter;\n# let mut writer: ArrowWriter<Vec<u8>> = todo!();\n# let batch: RecordBatch = todo!();\nwriter.write(&batch).unwrap();\n// Trigger an early flush if anticipated size exceeds 1_000_000\nif writer.in_progress_size() > 1_000_000 {\n    writer.flush().unwrap();\n}\n```\n\n## Type Support\n\nThe writer supports writing all Arrow [`DataType`]s that have a direct mapping to\nParquet types including  [`StructArray`] and [`ListArray`].\n\nThe following are not supported:\n\n* [`IntervalMonthDayNanoArray`]: Parquet does not [support nanosecond intervals].\n\n[`DataType`]: https://docs.rs/arrow/latest/arrow/datatypes/enum.DataType.html\n[`StructArray`]: https://docs.rs/arrow/latest/arrow/array/struct.StructArray.html\n[`ListArray`]: https://docs.rs/arrow/latest/arrow/array/type.ListArray.html\n[`IntervalMonthDayNanoArray`]: https://docs.rs/arrow/latest/arrow/array/type.IntervalMonthDayNanoArray.html\n[support nanosecond intervals]: https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#interval\n\n## Type Compatibility\nThe writer can write Arrow [`RecordBatch`]s that are logically equivalent. This means that for\na  given column, the writer can accept multiple Arrow [`DataType`]s that contain the same\nvalue type.\n\nFor example, the following [`DataType`]s are all logically equivalent and can be written\nto the same column:\n* String, LargeString, StringView\n* Binary, LargeBinary, BinaryView\n\nThe writer can will also accept both native and dictionary encoded arrays if the dictionaries\ncontain compatible values.\n```\n# use std::sync::Arc;\n# use arrow_array::{DictionaryArray, LargeStringArray, RecordBatch, StringArray, UInt8Array};\n# use arrow_schema::{DataType, Field, Schema};\n# use parquet::arrow::arrow_writer::ArrowWriter;\nlet record_batch1 = RecordBatch::try_new(\n   Arc::new(Schema::new(vec![Field::new(\"col\", DataType::LargeUtf8, false)])),\n   vec![Arc::new(LargeStringArray::from_iter_values(vec![\"a\", \"b\"]))]\n )\n.unwrap();\n\nlet mut buffer = Vec::new();\nlet mut writer = ArrowWriter::try_new(&mut buffer, record_batch1.schema(), None).unwrap();\nwriter.write(&record_batch1).unwrap();\n\nlet record_batch2 = RecordBatch::try_new(\n    Arc::new(Schema::new(vec![Field::new(\n        \"col\",\n        DataType::Dictionary(Box::new(DataType::UInt8), Box::new(DataType::Utf8)),\n         false,\n    )])),\n    vec![Arc::new(DictionaryArray::new(\n         UInt8Array::from_iter_values(vec![0, 1]),\n         Arc::new(StringArray::from_iter_values(vec![\"b\", \"c\"])),\n     ))],\n )\n .unwrap();\n writer.write(&record_batch2).unwrap();\n writer.close();\n```",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        182,
+        1
+      ],
+      "end": [
+        205,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "W",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Write",
+                          "id": 1102,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          3235,
+          3236,
+          3237,
+          3238,
+          3239,
+          3240,
+          3241,
+          3242,
+          3243,
+          3244,
+          3245,
+          3246,
+          3247,
+          3248,
+          3249,
+          3251,
+          3254
+        ]
+      }
+    },
+    "type_references": {
+      "1102": "core::io::write::Write"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::flush`": 3204,
+      "`ArrowWriter::in_progress_size`": 3203,
+      "`RecordBatch`": 2524,
+      "`ArrowWriter::memory_size`": 3202
+    },
+    "link_paths": {
+      "`Self::flush`": "parquet::arrow::arrow_writer::ArrowWriter::flush",
+      "`ArrowWriter::in_progress_size`": "parquet::arrow::arrow_writer::ArrowWriter::in_progress_size",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch",
+      "`ArrowWriter::memory_size`": "parquet::arrow::arrow_writer::ArrowWriter::memory_size"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3205",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-dc781972049f13083eb8f4f3",
+    "aliases": [
+      "parquet::arrow::ArrowWriter"
+    ],
+    "resolved_doc_links": {
+      "`Self::flush`": "../operations/parquet.arrow.arrow_writer.ArrowWriter.md#op-c06abc1686305492cd99b210",
+      "`ArrowWriter::in_progress_size`": "../operations/parquet.arrow.arrow_writer.ArrowWriter.md#op-e5bc300f0e45d170e7ac1bfd",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "`ArrowWriter::memory_size`": "../operations/parquet.arrow.arrow_writer.ArrowWriter.md#op-a9f0f6c5417870b05921e32c"
+    }
+  },
+  {
+    "id": "fbf50c26d753cc4de4779022",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::append_key_value_metadata",
+    "name": "append_key_value_metadata",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_key_value_metadata(&mut self, kv_metadata: KeyValue)",
+    "docs": "Additional [`KeyValue`] metadata to be written in addition to those from [`WriterProperties`]\n\nThis method provide a way to append kv_metadata after write RecordBatch",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        467,
+        5
+      ],
+      "end": [
+        469,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "kv_metadata",
+              {
+                "resolved_path": {
+                  "path": "KeyValue",
+                  "id": 3221,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3221": "parquet::file::metadata::KeyValue"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`KeyValue`": 3221,
+      "`WriterProperties`": 3207
+    },
+    "link_paths": {
+      "`KeyValue`": "parquet::file::metadata::KeyValue",
+      "`WriterProperties`": "parquet::file::properties::WriterProperties"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3222",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-fbf50c26d753cc4de4779022",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::append_key_value_metadata"
+    ],
+    "resolved_doc_links": {
+      "`KeyValue`": "../operations/parquet.file.metadata.KeyValue.md#op-c5f599a409980a2c03049085",
+      "`WriterProperties`": "../operations/parquet.file.properties.WriterProperties.md#op-1a8b0462c7a132d1d5004af2"
+    }
+  },
+  {
+    "id": "665df59d128b89ebf3584148",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::append_row_group",
+    "name": "append_row_group",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_row_group(&mut self, chunks: Vec<ArrowColumnChunk>) -> Result<()>",
+    "docs": "Append the given column chunks to the file as a new row group.",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        527,
+        5
+      ],
+      "end": [
+        534,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": {
+      "since": "56.2.0",
+      "note": "Use `SerializedFileWriter` directly instead, see `ArrowColumnWriter` for an example"
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "chunks",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 1171,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrowColumnChunk",
+                              "id": 3231,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1171": "alloc::vec::Vec",
+      "3231": "parquet::arrow::arrow_writer::ArrowColumnChunk",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3230",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-665df59d128b89ebf3584148",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::append_row_group"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "da99d85d4f466db2b344f0d6",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::bytes_written",
+    "name": "bytes_written",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn bytes_written(&self) -> usize",
+    "docs": "Returns the number of bytes written by this instance",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        343,
+        5
+      ],
+      "end": [
+        345,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3214",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-da99d85d4f466db2b344f0d6",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::bytes_written"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "942c23b9c24bb46c35faf1c3",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::close",
+    "name": "close",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn close(self) -> Result<ParquetMetaData>",
+    "docs": "Close and finalize the underlying Parquet writer",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        505,
+        5
+      ],
+      "end": [
+        507,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetMetaData",
+                          "id": 3004,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3004": "parquet::file::metadata::ParquetMetaData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3226",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-942c23b9c24bb46c35faf1c3",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::close"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e37828f200d6f337e59bb822",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::close",
+    "name": "close",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn close(self) -> std::result::Result<(), ArrowError>",
+    "docs": "",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        555,
+        5
+      ],
+      "end": [
+        558,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::result::Result",
+              "id": 52,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 95,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "52": "core::result::Result",
+      "95": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "RecordBatchWriter",
+        "id": "arrow_array::record_batch::RecordBatchWriter",
+        "args": null
+      },
+      "trait_path": "arrow_array::record_batch::RecordBatchWriter",
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          550,
+          1
+        ],
+        "end": [
+          559,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3253",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-e37828f200d6f337e59bb822",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::close"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c3ffe6df4f328bbea3f62e5a",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::finish",
+    "name": "finish",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> Result<ParquetMetaData>",
+    "docs": "Close and finalize the underlying Parquet writer\n\nUnlike [`Self::close`] this does not consume self\n\nAttempting to write after calling finish will result in an error",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        499,
+        5
+      ],
+      "end": [
+        502,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetMetaData",
+                          "id": 3004,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3004": "parquet::file::metadata::ParquetMetaData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::close`": 3226
+    },
+    "link_paths": {
+      "`Self::close`": "parquet::arrow::arrow_writer::ArrowWriter::close"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3227",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-c3ffe6df4f328bbea3f62e5a",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::finish"
+    ],
+    "resolved_doc_links": {
+      "`Self::close`": "../operations/parquet.arrow.arrow_writer.ArrowWriter.md#op-942c23b9c24bb46c35faf1c3"
+    }
+  },
+  {
+    "id": "c06abc1686305492cd99b210",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::flush",
+    "name": "flush",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn flush(&mut self) -> Result<()>",
+    "docs": "Flushes all buffered rows into a new row group\n\nNote the underlying writer is not flushed with this call.\nIf this is a desired behavior, please call [`ArrowWriter::sync`].",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        450,
+        5
+      ],
+      "end": [
+        462,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrowWriter::sync`": 3220
+    },
+    "link_paths": {
+      "`ArrowWriter::sync`": "parquet::arrow::arrow_writer::ArrowWriter::sync"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3204",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-c06abc1686305492cd99b210",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::flush"
+    ],
+    "resolved_doc_links": {
+      "`ArrowWriter::sync`": "../operations/parquet.arrow.arrow_writer.ArrowWriter.md#op-bae112dc69b4f4b452201a5d"
+    }
+  },
+  {
+    "id": "dbc631961177743fe3fde6f6",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::flushed_row_groups",
+    "name": "flushed_row_groups",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn flushed_row_groups(&self) -> &[RowGroupMetaData]",
+    "docs": "Returns metadata for any flushed row groups",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        302,
+        5
+      ],
+      "end": [
+        304,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "RowGroupMetaData",
+                    "id": 2934,
+                    "args": null
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2934": "parquet::file::metadata::RowGroupMetaData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3210",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-dbc631961177743fe3fde6f6",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::flushed_row_groups"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "001078c30aaff866ba152c1d",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::fmt",
+    "name": "fmt",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        208,
+        5
+      ],
+      "end": [
+        218,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::fmt::Formatter",
+                      "id": 67,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 68,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "67": "core::fmt::Formatter",
+      "68": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          207,
+          1
+        ],
+        "end": [
+          219,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3250",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-001078c30aaff866ba152c1d",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "11c269cc106cf6fdb4385189",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::get_column_writers",
+    "name": "get_column_writers",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_column_writers(&mut self) -> Result<Vec<ArrowColumnWriter>>",
+    "docs": "Create a new row group writer and return its column writers.",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        514,
+        5
+      ],
+      "end": [
+        520,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": {
+      "since": "56.2.0",
+      "note": "Use `ArrowRowGroupWriterFactory` instead, see `ArrowColumnWriter` for an example"
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 1171,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "ArrowColumnWriter",
+                                      "id": 3229,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "1171": "alloc::vec::Vec",
+      "3229": "parquet::arrow::arrow_writer::ArrowColumnWriter"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3228",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-11c269cc106cf6fdb4385189",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::get_column_writers"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6073a5d9bc2cbdea9490fb8d",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::in_progress_rows",
+    "name": "in_progress_rows",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn in_progress_rows(&self) -> usize",
+    "docs": "Returns the number of rows buffered in the in progress row group",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        335,
+        5
+      ],
+      "end": [
+        340,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3213",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-6073a5d9bc2cbdea9490fb8d",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::in_progress_rows"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e5bc300f0e45d170e7ac1bfd",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::in_progress_size",
+    "name": "in_progress_size",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn in_progress_size(&self) -> usize",
+    "docs": "Anticipated encoded size of the in progress row group.\n\nThis estimate the row group size after being completely encoded is,\nformed by summing the values of\n[`ArrowColumnWriter::get_estimated_total_bytes`] for all in progress\ncolumns.",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        323,
+        5
+      ],
+      "end": [
+        332,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrowColumnWriter::get_estimated_total_bytes`": 3212
+    },
+    "link_paths": {
+      "`ArrowColumnWriter::get_estimated_total_bytes`": "parquet::arrow::arrow_writer::ArrowColumnWriter::get_estimated_total_bytes"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3203",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-e5bc300f0e45d170e7ac1bfd",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::in_progress_size"
+    ],
+    "resolved_doc_links": {
+      "`ArrowColumnWriter::get_estimated_total_bytes`": "../operations/parquet.arrow.arrow_writer.ArrowColumnWriter.md#op-ea8a3380edb269c669c04508"
+    }
+  },
+  {
+    "id": "edc3366b89b6bf4e2442529a",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::inner",
+    "name": "inner",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn inner(&self) -> &W",
+    "docs": "Returns a reference to the underlying writer.",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        472,
+        5
+      ],
+      "end": [
+        474,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "generic": "W"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3223",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-edc3366b89b6bf4e2442529a",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::inner"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5b7923eab4a891091ab455d2",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::inner_mut",
+    "name": "inner_mut",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn inner_mut(&mut self) -> &mut W",
+    "docs": "Returns a mutable reference to the underlying writer.\n\n**Warning**: if you write directly to this writer, you will skip\nthe `TrackedWrite` buffering and byte‐counting layers. That’ll cause\nthe file footer’s recorded offsets and sizes to diverge from reality,\nresulting in an unreadable or corrupted Parquet file.\n\nIf you want to write safely to the underlying writer, use [`Self::write_all`].",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        484,
+        5
+      ],
+      "end": [
+        486,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "W"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::write_all`": 3218
+    },
+    "link_paths": {
+      "`Self::write_all`": "parquet::arrow::arrow_writer::ArrowWriter::write_all"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3224",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-5b7923eab4a891091ab455d2",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::inner_mut"
+    ],
+    "resolved_doc_links": {
+      "`Self::write_all`": "../operations/parquet.arrow.arrow_writer.ArrowWriter.md#op-76feae78e2a66be382a7c260"
+    }
+  },
+  {
+    "id": "40b9d7ee4cfd8cde1e8c6f8b",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::into_inner",
+    "name": "into_inner",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_inner(self) -> Result<W>",
+    "docs": "Flushes any outstanding data and returns the underlying writer.",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        489,
+        5
+      ],
+      "end": [
+        492,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "W"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3225",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-40b9d7ee4cfd8cde1e8c6f8b",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::into_inner"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6087fb00683dd3af12093f58",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::into_serialized_writer",
+    "name": "into_serialized_writer",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_serialized_writer(self) -> Result<(SerializedFileWriter<W>, ArrowRowGroupWriterFactory)>",
+    "docs": "Converts this writer into a lower-level [`SerializedFileWriter`] and [`ArrowRowGroupWriterFactory`].\n\nFlushes any outstanding data before returning.\n\nThis can be useful to provide more control over how files are written, for example\nto write columns in parallel. See the example on [`ArrowColumnWriter`].",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        542,
+        5
+      ],
+      "end": [
+        547,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": [
+                          {
+                            "resolved_path": {
+                              "path": "SerializedFileWriter",
+                              "id": 3232,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "generic": "W"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "resolved_path": {
+                              "path": "ArrowRowGroupWriterFactory",
+                              "id": 3233,
+                              "args": null
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3232": "parquet::file::writer::SerializedFileWriter",
+      "3233": "parquet::arrow::arrow_writer::ArrowRowGroupWriterFactory"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`SerializedFileWriter`": 3232,
+      "`ArrowRowGroupWriterFactory`": 3233,
+      "`ArrowColumnWriter`": 3229
+    },
+    "link_paths": {
+      "`SerializedFileWriter`": "parquet::file::writer::SerializedFileWriter",
+      "`ArrowRowGroupWriterFactory`": "parquet::arrow::arrow_writer::ArrowRowGroupWriterFactory",
+      "`ArrowColumnWriter`": "parquet::arrow::arrow_writer::ArrowColumnWriter"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3234",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-6087fb00683dd3af12093f58",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::into_serialized_writer"
+    ],
+    "resolved_doc_links": {
+      "`SerializedFileWriter`": "../operations/parquet.file.writer.SerializedFileWriter.md#op-0b9cc37c23222f2e8aef5d0f",
+      "`ArrowRowGroupWriterFactory`": "../operations/parquet.arrow.arrow_writer.ArrowRowGroupWriterFactory.md#op-94cdff34b1d4b2324c1c0d54",
+      "`ArrowColumnWriter`": "../operations/parquet.arrow.arrow_writer.ArrowColumnWriter.md#op-b2f79c40222ecdd56db8aa79"
+    }
+  },
+  {
+    "id": "a9f0f6c5417870b05921e32c",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::memory_size",
+    "name": "memory_size",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn memory_size(&self) -> usize",
+    "docs": "Estimated memory usage, in bytes, of this `ArrowWriter`\n\nThis estimate is formed bu summing the values of\n[`ArrowColumnWriter::memory_size`] all in progress columns.",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        310,
+        5
+      ],
+      "end": [
+        315,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrowColumnWriter::memory_size`": 3211
+    },
+    "link_paths": {
+      "`ArrowColumnWriter::memory_size`": "parquet::arrow::arrow_writer::ArrowColumnWriter::memory_size"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3202",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-a9f0f6c5417870b05921e32c",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::memory_size"
+    ],
+    "resolved_doc_links": {
+      "`ArrowColumnWriter::memory_size`": "../operations/parquet.arrow.arrow_writer.ArrowColumnWriter.md#op-7bf58191e4f4ed1395186064"
+    }
+  },
+  {
+    "id": "bae112dc69b4f4b452201a5d",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::sync",
+    "name": "sync",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn sync(&mut self) -> std::io::Result<()>",
+    "docs": "Flushes underlying writer",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        442,
+        5
+      ],
+      "end": [
+        444,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::io::Result",
+              "id": 3219,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3219": "core::io::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3220",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-bae112dc69b4f4b452201a5d",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::sync"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b1a094922dc9e224e14c2823",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::try_new",
+    "name": "try_new",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new(writer: W, arrow_schema: SchemaRef, props: Option<WriterProperties>) -> Result<Self>",
+    "docs": "Try to create a new Arrow writer\n\nThe writer will fail if:\n * a `SerializedFileWriter` cannot be created from the ParquetWriter\n * the Arrow schema contains unsupported datatypes such as Unions",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        227,
+        5
+      ],
+      "end": [
+        234,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "writer",
+              {
+                "generic": "W"
+              }
+            ],
+            [
+              "arrow_schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 3007,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "props",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 74,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "WriterProperties",
+                              "id": 3207,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3007": "arrow_schema::schema::SchemaRef",
+      "74": "core::option::Option",
+      "3207": "parquet::file::properties::WriterProperties",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3206",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-b1a094922dc9e224e14c2823",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::try_new"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d7bcdaf15cee96f668d89f38",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::try_new_with_options",
+    "name": "try_new_with_options",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_with_options(writer: W, arrow_schema: SchemaRef, options: ArrowWriterOptions) -> Result<Self>",
+    "docs": "Try to create a new Arrow writer with [`ArrowWriterOptions`].\n\nThe writer will fail if:\n * a `SerializedFileWriter` cannot be created from the ParquetWriter\n * the Arrow schema contains unsupported datatypes such as Unions",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        241,
+        5
+      ],
+      "end": [
+        299,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "writer",
+              {
+                "generic": "W"
+              }
+            ],
+            [
+              "arrow_schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 3007,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "ArrowWriterOptions",
+                  "id": 3208,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3007": "arrow_schema::schema::SchemaRef",
+      "3208": "parquet::arrow::arrow_writer::ArrowWriterOptions",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrowWriterOptions`": 3208
+    },
+    "link_paths": {
+      "`ArrowWriterOptions`": "parquet::arrow::arrow_writer::ArrowWriterOptions"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3209",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-d7bcdaf15cee96f668d89f38",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::try_new_with_options"
+    ],
+    "resolved_doc_links": {
+      "`ArrowWriterOptions`": "../operations/parquet.arrow.arrow_writer.ArrowWriterOptions.md#op-74a6b6dbd93b8f0178eea49c"
+    }
+  },
+  {
+    "id": "4ac1f80718d1c2a5b981b4c5",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::write",
+    "name": "write",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn write(&mut self, batch: &RecordBatch) -> Result<()>",
+    "docs": "Encodes the provided [`RecordBatch`]\n\nIf this would cause the current row group to exceed [`WriterProperties::max_row_group_row_count`]\nrows or [`WriterProperties::max_row_group_bytes`] bytes, the contents of `batch` will be\nwritten to one or more row groups such that limits are respected.\n\nIf both limits are `None`, all data is written to a single row group.\nIf one limit is set, that limit is respected.\nIf both limits are set, the lower bound (whichever triggers first) is respected.\n\nThis will fail if the `batch`'s schema does not match the writer's schema.",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        358,
+        5
+      ],
+      "end": [
+        431,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "RecordBatch",
+                      "id": 2524,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2524": "arrow_array::record_batch::RecordBatch",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`WriterProperties::max_row_group_row_count`": 3215,
+      "`WriterProperties::max_row_group_bytes`": 3216,
+      "`RecordBatch`": 2524
+    },
+    "link_paths": {
+      "`WriterProperties::max_row_group_row_count`": "parquet::file::properties::WriterProperties::max_row_group_row_count",
+      "`WriterProperties::max_row_group_bytes`": "parquet::file::properties::WriterProperties::max_row_group_bytes",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3217",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-4ac1f80718d1c2a5b981b4c5",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::write"
+    ],
+    "resolved_doc_links": {
+      "`WriterProperties::max_row_group_row_count`": "../operations/parquet.file.properties.WriterProperties.md#op-59c83d225f83bcf8d0c3dbd2",
+      "`WriterProperties::max_row_group_bytes`": "../operations/parquet.file.properties.WriterProperties.md#op-48d7f3ca1609a19a044b460d",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "8913d2632255af6ca0cdfcc8",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::write",
+    "name": "write",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>",
+    "docs": "",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        551,
+        5
+      ],
+      "end": [
+        553,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "RecordBatch",
+                      "id": 2524,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 95,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2524": "arrow_array::record_batch::RecordBatch",
+      "107": "parquet::errors::Result",
+      "95": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "RecordBatchWriter",
+        "id": "arrow_array::record_batch::RecordBatchWriter",
+        "args": null
+      },
+      "trait_path": "arrow_array::record_batch::RecordBatchWriter",
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          550,
+          1
+        ],
+        "end": [
+          559,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3252",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-8913d2632255af6ca0cdfcc8",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::write"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "76feae78e2a66be382a7c260",
+    "path": "parquet::arrow::arrow_writer::ArrowWriter::write_all",
+    "name": "write_all",
+    "owner": "parquet::arrow::arrow_writer::ArrowWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn write_all(&mut self, buf: &[u8]) -> std::io::Result<()>",
+    "docs": "Writes the given buf bytes to the internal buffer.\n\nIt's safe to use this method to write data to the underlying writer,\nbecause it will ensure that the buffering and byte‐counting layers are used.",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        437,
+        5
+      ],
+      "end": [
+        439,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "buf",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "u8"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::io::Result",
+              "id": 3219,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3219": "core::io::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          221,
+          1
+        ],
+        "end": [
+          548,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3218",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowWriter.json",
+    "anchor": "op-76feae78e2a66be382a7c260",
+    "aliases": [
+      "parquet::arrow::ArrowWriter::write_all"
+    ],
+    "resolved_doc_links": {}
+  }
+]

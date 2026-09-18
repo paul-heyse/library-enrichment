@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::array_agg`
 fn array_agg(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.array_agg.array_agg.md).
+
+
 input values, including nulls, concatenated into an array
 
 ---
@@ -23,6 +26,9 @@ input values, including nulls, concatenated into an array
 ```rust
 fn array_agg_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.array_agg.array_agg_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`ArrayAgg`]
 
@@ -56,6 +62,9 @@ fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 fn supports_null_handling_clause(&self) -> bool
 fn with_beneficial_ordering(Arc<self>, beneficial_ordering: bool) -> Result<Option<Arc<dyn AggregateUDFImpl>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.array_agg.ArrayAgg.md).
+
 
 ARRAY_AGG aggregate expression
 
@@ -91,6 +100,9 @@ fn supports_retract_batch(&self) -> bool
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.array_agg.ArrayAggAccumulator.md).
+
+
 ---
 
 ## DistinctArrayAggAccumulator
@@ -122,5 +134,8 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn supports_retract_batch(&self) -> bool
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.array_agg.DistinctArrayAggAccumulator.md).
+
 
 ---

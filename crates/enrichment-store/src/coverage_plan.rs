@@ -11,7 +11,7 @@ pub(crate) struct Summary {
     pub missing: Vec<EvidenceKind>,
 }
 
-pub(crate) async fn summarize(runtime: &QueryRuntime, session: &SessionContext) -> Result<Summary> {
+pub(crate) async fn plan(session: &SessionContext) -> Result<datafusion::dataframe::DataFrame> {
     // Enum order is a contract, not lexical order. Both parsing and this native expression
     // derive from the same finite vocabulary; no independently maintained SQL list exists.
     let order = EvidenceKind::VALUES
@@ -20,7 +20,11 @@ pub(crate) async fn summarize(runtime: &QueryRuntime, session: &SessionContext) 
         .map(|(index, kind)| format!("WHEN '{}' THEN {index}", kind))
         .collect::<Vec<_>>()
         .join(" ");
-    let plan = session.sql(&format!("WITH kinds AS (SELECT kind, bool_or(outcome <> 'missing') AS present FROM snapshot.evidence.coverage GROUP BY kind) SELECT array_agg(kind ORDER BY CASE kind {order} END) FILTER (WHERE present) AS indexed, array_agg(kind ORDER BY CASE kind {order} END) FILTER (WHERE NOT present) AS missing FROM kinds")).await?;
+    session.sql(&format!("WITH kinds AS (SELECT kind, bool_or(outcome <> 'missing') AS present FROM snapshot.evidence.coverage GROUP BY kind) SELECT array_agg(kind ORDER BY CASE kind {order} END) FILTER (WHERE present) AS indexed, array_agg(kind ORDER BY CASE kind {order} END) FILTER (WHERE NOT present) AS missing FROM kinds")).await
+}
+
+pub(crate) async fn summarize(runtime: &QueryRuntime, session: &SessionContext) -> Result<Summary> {
+    let plan = plan(session).await?;
     enrichment_core::native_struct! {
     struct Row {
         indexed: Option<Vec<EvidenceKind>> => enrichment_core::native_union::Rule::Text,

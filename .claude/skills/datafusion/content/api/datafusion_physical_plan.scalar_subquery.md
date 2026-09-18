@@ -49,6 +49,9 @@ fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryExec.md).
+
+
 Manages execution of uncorrelated scalar subqueries for a single plan
 level.
 
@@ -85,6 +88,9 @@ struct ScalarSubqueryLink
 **Fields**: `plan`, `index`
 
 **Derives**: Clone, Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.scalar_subquery.ScalarSubqueryLink.md).
+
 
 Links a scalar subquery's execution plan to its index in the shared results
 container. The [`ScalarSubqueryExec`] that owns these links populates

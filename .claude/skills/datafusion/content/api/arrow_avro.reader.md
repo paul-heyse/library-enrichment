@@ -24,6 +24,9 @@ fn flush(&mut self) -> Result<Option<RecordBatch>, AvroError>
 fn schema(&self) -> SchemaRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.reader.Decoder.md).
+
+
 A low‑level, push‑based decoder from Avro bytes to Arrow `RecordBatch`.
 
 `Decoder` is designed for **streaming** scenarios:
@@ -180,6 +183,9 @@ fn schema(&self) -> SchemaRef
 fn next(&mut self) -> Option<Self::Item>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.reader.Reader.md).
+
+
 A high‑level Avro **Object Container File** reader.
 
 `Reader` pulls blocks from a `BufRead` source, handles optional block compression,
@@ -217,6 +223,9 @@ fn with_tz(self, tz: Tz) -> Self
 fn with_utf8_view(self, utf8_view: bool) -> Self
 fn with_writer_schema_store(self, store: SchemaStore) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.reader.ReaderBuilder.md).
+
 
 A builder that configures and constructs Avro readers and decoders.
 

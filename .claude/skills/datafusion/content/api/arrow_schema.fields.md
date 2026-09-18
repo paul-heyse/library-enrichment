@@ -61,6 +61,9 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.fields.Fields.md).
+
+
 A cheaply cloneable, owned slice of [`FieldRef`]
 
 Similar to `Arc<Vec<FieldRef>>` or `Arc<[FieldRef]>`
@@ -151,6 +154,9 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 ```rust
 fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.fields.UnionFields.md).
+
 
 A cheaply cloneable, owned collection of [`FieldRef`] and their corresponding type ids
 

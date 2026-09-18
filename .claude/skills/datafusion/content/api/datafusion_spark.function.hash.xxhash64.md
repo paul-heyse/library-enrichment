@@ -30,6 +30,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.hash.xxhash64.SparkXxhash64.md).
+
+
 Spark-compatible xxhash64 function.
 <https://spark.apache.org/docs/latest/api/sql/index.html#xxhash64>
 

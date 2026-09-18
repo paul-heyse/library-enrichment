@@ -1,0 +1,145 @@
+{
+  "id": "delta.storage",
+  "title": "Choose object storage and log publication adapters",
+  "reviewed": "2026-09-18",
+  "brief": "Storage configuration, object access and log publication are distinct seams. Route by URL/service and compiled features, then inspect the adapter's options and registration requirements.",
+  "task_aliases": [
+    "S3 Azure GCS HDFS LakeFS OpenDAL mount",
+    "object store registration",
+    "credentials",
+    "storage backend",
+    "atomic commit"
+  ],
+  "crates": [
+    "deltalake-core",
+    "deltalake-aws",
+    "deltalake-azure",
+    "deltalake-gcp",
+    "deltalake-hdfs",
+    "deltalake-lakefs",
+    "deltalake-mount",
+    "deltalake-opendal"
+  ],
+  "input": [
+    "URL scheme",
+    "StorageOptions",
+    "ObjectStore",
+    "LogStore"
+  ],
+  "output": [
+    "configured table storage",
+    "backend publication behavior"
+  ],
+  "properties": [
+    "S3 Azure GCS HDFS LakeFS OpenDAL mount",
+    "object store registration",
+    "credentials",
+    "storage backend",
+    "atomic commit"
+  ],
+  "operations": [
+    "deltalake_core::table::builder::DeltaTableBuilder::with_storage_options",
+    "deltalake_aws::register_handlers",
+    "deltalake_azure::register_handlers",
+    "deltalake_gcp::register_handlers",
+    "deltalake_opendal::register_handlers",
+    "deltalake_core::logstore::LogStore"
+  ],
+  "choices": [
+    {
+      "candidate": "Built-in backend crate",
+      "choose_when": "Its supported scheme/service matches deployment",
+      "tradeoff": "Credentials, handler registration and native environment remain prerequisites"
+    },
+    {
+      "candidate": "Explicit custom ObjectStore/LogStore integration",
+      "choose_when": "You have a concrete nonstandard storage need",
+      "tradeoff": "Match root URL/path scoping and transactional publication semantics"
+    },
+    {
+      "candidate": "OpenDAL adapter",
+      "choose_when": "An enabled OpenDAL service fits the required backend",
+      "tradeoff": "The opendal+ scheme and compiled service set prevent assuming every service is available"
+    }
+  ],
+  "claims": [
+    {
+      "id": "delta.storage.1",
+      "aspect": "registration",
+      "statement": "Session store-registration helpers preserve an existing mapping rather than replacing it. A stale mapping requires an explicit RuntimeEnv::register_object_store override; check-and-register is not an atomic concurrency guarantee.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.storage.2",
+      "aspect": "backend",
+      "statement": "LogStore delegates commit publication to backend-specific behavior. Local-memory/filesystem probes do not prove S3/Azure/GCS atomicity, auth or listing semantics.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.storage.3",
+      "aspect": "features",
+      "statement": "Use the complete crate/feature routes for AWS, Azure, GCP, HDFS, LakeFS, mount and OpenDAL; documentation inclusion is separate from a successfully deployed backend.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.storage.4",
+      "aspect": "registration",
+      "statement": "An existing wrong runtime store mapping survived provider execution and caused a read error. Explicitly replacing it with the table root store restored the expected row.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "existing_object_store_mapping_needs_explicit_replacement"
+    }
+  ],
+  "implementation": [
+    "Resolve scheme, backend features, authentication and root-prefix behavior before constructing the table.",
+    "Keep secrets out of retained evidence; retain option names and sanitized outcomes.",
+    "Check object_store and DataFusion crate identities so trait objects belong to the same dependency graph."
+  ],
+  "effects": [
+    "remote or local object I/O",
+    "configure backend factories",
+    "publish log through selected backend"
+  ],
+  "errors": [
+    "Unsupported scheme, absent feature/handler, credentials, network/native dependency and conflict errors are separate prerequisites."
+  ],
+  "unknowns": [
+    "Cloud/native-service integration is not_run without its environment. No backend-wide durability or concurrency claim is made."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "scope": "Exact git-capture full contracts for the selected operations"
+    },
+    {
+      "id": "source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/delta_datafusion/session.rs",
+      "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+    },
+    {
+      "id": "runtime",
+      "kind": "runtime_observation",
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Named local assertions only",
+      "tests": [
+        "existing_object_store_mapping_needs_explicit_replacement"
+      ]
+    }
+  ]
+}

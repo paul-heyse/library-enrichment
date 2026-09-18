@@ -50,6 +50,9 @@ fn try_to_proto(&self, ctx: &datafusion_physical_expr_common::physical_expr::pro
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.dynamic_filters.DynamicFilterPhysicalExpr.md).
+
+
 A dynamic [`PhysicalExpr`] that can be updated by anyone with a reference to it.
 
 Any `ExecutionPlan` that uses this expression and holds a reference to it internally should probably also

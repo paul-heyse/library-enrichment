@@ -12,6 +12,9 @@ Also reachable as `parquet::variant::shred_variant`, `parquet_variant_compute::s
 fn shred_variant(array: &VariantArray, as_type: &arrow::datatypes::DataType) -> arrow::error::Result<VariantArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.shred_variant.shred_variant.md).
+
+
 Shreds the input binary variant using a target shredding schema derived from the requested data type.
 
 For example, requesting `DataType::Int64` would produce an output variant array with the schema:
@@ -69,6 +72,9 @@ fn new() -> Self
 fn with_path<'a, P, F>(self, path: P, field: F) -> Result<Self> where P: TryInto<VariantPath<'a>>, P::Error: std::fmt::Debug, F: IntoShreddingField
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.shred_variant.ShreddedSchemaBuilder.md).
+
+
 Builder for constructing a variant shredding schema.
 
 The builder pattern makes it easy to incrementally define which fields
@@ -120,6 +126,9 @@ fn main() -> Result<(), arrow::error::ArrowError> {
 struct ShreddingField
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.shred_variant.ShreddingField.md).
+
+
 Field configuration captured by the builder (data type + nullability).
 
 ---
@@ -144,6 +153,9 @@ trait IntoShreddingField
 ```rust
 fn into_shredding_field(self) -> ShreddingField
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.shred_variant.IntoShreddingField.md).
+
 
 Convenience conversion to allow passing either `FieldRef`, `DataType`, or `(DataType, bool)`.
 

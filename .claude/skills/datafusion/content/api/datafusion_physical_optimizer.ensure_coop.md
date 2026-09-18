@@ -28,6 +28,9 @@ fn optimize(&self, plan: Arc<dyn ExecutionPlan>, _config: &ConfigOptions) -> Res
 fn schema_check(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_coop.EnsureCooperative.md).
+
+
 `EnsureCooperative` is a [`PhysicalOptimizerRule`] that inspects the physical plan for
 sub plans that do not participate in cooperative scheduling. The plan is subdivided into sub
 plans on eager evaluation boundaries. Leaf nodes and eager evaluation roots are checked

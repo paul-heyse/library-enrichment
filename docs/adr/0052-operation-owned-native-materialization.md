@@ -52,10 +52,15 @@ families are admitted. The immutable binding retains its exact logical input, fu
 function objects, effective session configuration, source/build identity and operation capability.
 An operation capability is the actual admitted owner, not its correlation string.
 
+The logical materialization exposes no rewritable children: its binding owns the admitted base.
+The composed extension planner prepares that captured base using its captured session and exposes
+the resulting physical child for physical admission. This is preparation, not a fill. Consumer
+optimization cannot remove an admitted base's ordering or fetch boundary by rewriting its child.
+
 The first polled reader starts one native owned fill. All physical plans prepared from that logical
 binding share its terminal result. Input narrowing stays outside the shared base. Unknown/effectful,
-volatile and unprotected mutable inputs are refused. Input replacement must preserve the admitted
-meaning; a changed input needs a new binding. Native aggregation computes counts over the same base.
+volatile and unprotected mutable inputs are refused. Input replacement requires a new binding.
+Native aggregation computes counts over the same base.
 
 Use DataFusion SpillManager, DiskManager, SpillFile and SpillMetrics for incremental IPC and replay.
 Reserve writer/reader workspace explicitly; the native reader's maximum-batch argument is a hint.
@@ -107,3 +112,8 @@ grant and cannot change publication or retained-evidence authority.
 ## Status history
 
 - 2026-09-17 — proposed; exact interfaces checked, application conformance pending.
+- 2026-09-18 — the native overview unit exposed a consumer optimizer rewriting the captured base's
+  `Sort(fetch=2)`. Sealed logical input preparation repairs that ownership boundary. Five focused
+  cache/overview/provenance/fallback units passed in
+  `.dev-state/plan19/execution/native-consumer-sealed-cache-units.log`; full CF/Q qualification
+  remains open. This record remains proposed.

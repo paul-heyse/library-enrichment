@@ -44,6 +44,9 @@ fn len(&self) -> usize
 fn extend<T: IntoIterator<Item = Option<V::Native>>>(&mut self, iter: T)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md).
+
+
 Builder for [`RunArray`] of [`PrimitiveArray`](crate::array::PrimitiveArray)
 
 # Example:

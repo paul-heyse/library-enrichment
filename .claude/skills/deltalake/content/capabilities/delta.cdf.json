@@ -1,0 +1,225 @@
+{
+  "id": "delta.cdf",
+  "title": "Read change data with explicit bounds, images and residual filtering",
+  "reviewed": "2026-09-18",
+  "brief": "CDF uses an explicit build path or DeltaCdfTableProvider rather than IntoFuture. Plan for inclusive version ranges, change images, retention and operation-specific feature restrictions.",
+  "task_aliases": [
+    "change data feed",
+    "CDC incremental",
+    "CDF resume checkpoint",
+    "starting ending version",
+    "update preimage",
+    "residual filter"
+  ],
+  "crates": [
+    "deltalake-core"
+  ],
+  "input": [
+    "loaded table",
+    "starting version or timestamp",
+    "optional ending bound"
+  ],
+  "output": [
+    "Arc<dyn ExecutionPlan>",
+    "DeltaCdfTableProvider",
+    "change rows and metadata columns"
+  ],
+  "properties": [
+    "change data feed",
+    "CDC incremental",
+    "CDF resume checkpoint",
+    "starting ending version",
+    "update preimage",
+    "residual filter"
+  ],
+  "operations": [
+    "deltalake_core::table::DeltaTable::scan_cdf",
+    "deltalake_core::operations::load_cdf::CdfLoadBuilder::build",
+    "deltalake_core::operations::load_cdf::CdfLoadBuilder::build_with_metrics",
+    "deltalake_core::operations::load_cdf::CdfLoadBuilder::with_allow_out_of_range",
+    "deltalake_core::delta_datafusion::cdf::scan::DeltaCdfTableProvider::try_new"
+  ],
+  "choices": [
+    {
+      "candidate": "DeltaCdfTableProvider",
+      "choose_when": "CDF should be queried as a DataFusion relation",
+      "tradeoff": "Its scan applies residual row filtering; register it in a compatible context"
+    },
+    {
+      "candidate": "CdfLoadBuilder::build",
+      "choose_when": "You need a physical plan directly",
+      "tradeoff": "Execute the returned plan with the appropriate TaskContext and preserve required residual filtering"
+    },
+    {
+      "candidate": "Snapshot comparison / application log",
+      "choose_when": "Required historical change data is unavailable",
+      "tradeoff": "Define a different recovery contract; do not invent missing CDF history"
+    }
+  ],
+  "claims": [
+    {
+      "id": "delta.cdf.1",
+      "aspect": "bounds",
+      "statement": "Version start/end are inclusive. At this pin an ending version beyond head is clamped even without allow_out_of_range; an invalid beyond-head start is rejected unless the opt-in empty-range policy applies.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "cdf_bounds_images_and_residual_filter"
+    },
+    {
+      "id": "delta.cdf.2",
+      "aspect": "images",
+      "statement": "An update produced update_preimage and update_postimage rows with commit version metadata. Filtering id > 5 through the provider retained only the matching postimage.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "cdf_bounds_images_and_residual_filter"
+    },
+    {
+      "id": "delta.cdf.3",
+      "aspect": "features",
+      "statement": "The column-mapping fixture reads normally through Delta scan but CDF build rejects non-None column mapping.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "column_mapping_reads_logical_names_but_cdf_rejects_mapping"
+    },
+    {
+      "id": "delta.cdf.4",
+      "aspect": "resume",
+      "statement": "Checkpoint the processed commit interval only after downstream success. Explicitly distinguish a clamped end from the originally requested future version; do not advance a checkpoint over unobserved commits.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.cdf.5",
+      "aspect": "retention",
+      "statement": "Enablement, available log/data and requested interval jointly determine CDF availability. A table's current configuration alone does not prove historical changes were recorded.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.cdf.6",
+      "aspect": "historical enablement",
+      "statement": "After CDF was enabled on a previously written table, a read starting at the earlier disabled version failed, while an interval beginning at enablement returned the later insert.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "competing_marker_writers_conflict_and_cdf_enablement_is_historical"
+    },
+    {
+      "id": "delta.cdf.7",
+      "aspect": "Arrow metadata schema",
+      "statement": "The CDF base schema defines nullable _change_type as Utf8, _commit_version as UInt64 and _commit_timestamp as Timestamp(Millisecond, None). The direct query probe returns UInt64 commit versions. Inspect the actual result schema before downcasting, especially after further DataFusion expressions.",
+      "kind": "source_observation",
+      "evidence": [
+        "cdf_schema",
+        "runtime"
+      ]
+    }
+  ],
+  "implementation": [
+    "Pass a starting version or timestamp; use a bounded interval when reproducibility matters.",
+    "Preserve _change_type, _commit_version and _commit_timestamp in downstream semantics.",
+    "Partition pruning is a candidate reduction, not a substitute for a row-level residual predicate."
+  ],
+  "effects": [
+    "read log interval and data/change files",
+    "produce insert/delete/preimage/postimage rows"
+  ],
+  "errors": [
+    "Missing start, disabled/unrecorded CDF, invalid range, mapping restrictions, missing retained files and planning errors are distinct failure modes."
+  ],
+  "unknowns": [
+    "An ORDER BY id query over the tiny update fixture encountered DataFusion SinglePartition/UnknownPartitioning(0) planning failure; the unordered query followed by caller sorting succeeded. Timestamp boundary and all enablement-transition combinations are not exhaustively tested."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "scope": "Exact git-capture full contracts for the selected operations"
+    },
+    {
+      "id": "source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/load_cdf.rs",
+      "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+    },
+    {
+      "id": "runtime",
+      "kind": "runtime_observation",
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Named local assertions only; see profile, fixtures and source digests",
+      "tests": [
+        "cdf_bounds_images_and_residual_filter",
+        "column_mapping_reads_logical_names_but_cdf_rejects_mapping",
+        "competing_marker_writers_conflict_and_cdf_enablement_is_historical"
+      ]
+    },
+    {
+      "id": "cdf_schema",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/delta_datafusion/cdf/mod.rs",
+      "scope": "Exact CDF metadata field definitions"
+    }
+  ],
+  "resolved_operations": [
+    {
+      "path": "deltalake_core::table::DeltaTable::scan_cdf",
+      "id": "27518198c8dfbfd4c30b341f",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.table.DeltaTable.json",
+      "page": "operations/deltalake_core.table.DeltaTable.md#op-27518198c8dfbfd4c30b341f",
+      "signature": "fn scan_cdf(self) -> CdfLoadBuilder"
+    },
+    {
+      "path": "deltalake_core::operations::load_cdf::CdfLoadBuilder::build",
+      "id": "c42fdd7acb1de4224cf941c2",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.load_cdf.CdfLoadBuilder.json",
+      "page": "operations/deltalake_core.operations.load_cdf.CdfLoadBuilder.md#op-c42fdd7acb1de4224cf941c2",
+      "signature": "async fn build(&self, session: &dyn Session, filters: Option<&Arc<dyn PhysicalExpr>>) -> DeltaResult<Arc<dyn ExecutionPlan>>"
+    },
+    {
+      "path": "deltalake_core::operations::load_cdf::CdfLoadBuilder::build_with_metrics",
+      "id": "52940ee116097799a600f742",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.load_cdf.CdfLoadBuilder.json",
+      "page": "operations/deltalake_core.operations.load_cdf.CdfLoadBuilder.md#op-52940ee116097799a600f742",
+      "signature": "async fn build_with_metrics(&self, session: &dyn Session, filters: Option<&Arc<dyn PhysicalExpr>>, metrics: Option<ExecutionPlanMetricsSet>) -> DeltaResult<Arc<dyn ExecutionPlan>>"
+    },
+    {
+      "path": "deltalake_core::operations::load_cdf::CdfLoadBuilder::with_allow_out_of_range",
+      "id": "ba2fd6c37af303a8f4036c61",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.load_cdf.CdfLoadBuilder.json",
+      "page": "operations/deltalake_core.operations.load_cdf.CdfLoadBuilder.md#op-ba2fd6c37af303a8f4036c61",
+      "signature": "fn with_allow_out_of_range(self) -> Self"
+    },
+    {
+      "path": "deltalake_core::delta_datafusion::cdf::scan::DeltaCdfTableProvider::try_new",
+      "id": "76590db94c2c43f9d137eeea",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.delta_datafusion.cdf.scan.DeltaCdfTableProvider.json",
+      "page": "operations/deltalake_core.delta_datafusion.cdf.scan.DeltaCdfTableProvider.md#op-76590db94c2c43f9d137eeea",
+      "signature": "fn try_new(cdf_builder: CdfLoadBuilder) -> DeltaResult<Self>"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/delta.cdf.json"
+}

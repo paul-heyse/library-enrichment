@@ -1,0 +1,224 @@
+[
+  {
+    "id": "75e3192888d61e52d84762e9",
+    "path": "datafusion_datasource::morsel::MorselPlanner",
+    "name": "MorselPlanner",
+    "owner": null,
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait MorselPlanner: Send + Debug",
+    "docs": "A Morsel Planner is responsible for creating morsels for a given scan.\n\nThe [`MorselPlanner`] is the unit of I/O. There is only ever a single I/O\noutstanding for a specific planner. DataFusion may run\nmultiple planners in parallel, which corresponds to multiple parallel\nI/O requests.\n\nIt is not a Rust `Stream` so that it can explicitly separate CPU bound\nwork from I/O work.\n\nThe design is similar to `ParquetPushDecoder`: when `plan` is called, it\nshould do CPU work to produce the next morsels or discover the next I/O\nphase.\n\nBest practice is to spawn I/O in a Tokio task on a separate runtime to\nensure that CPU work doesn't block or slow down I/O work, but this is not\nstrictly required by the API.",
+    "span": {
+      "filename": "src/morsel/mod.rs",
+      "begin": [
+        88,
+        1
+      ],
+      "end": [
+        111,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          1009
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 19,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Debug",
+                "id": 111,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": []
+      }
+    },
+    "type_references": {
+      "19": "core::marker::Send",
+      "111": "core::fmt::Debug"
+    },
+    "impl_context": null,
+    "links": {
+      "`MorselPlanner`": 1005
+    },
+    "link_paths": {
+      "`MorselPlanner`": "datafusion_datasource::morsel::MorselPlanner"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1005",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.morsel.MorselPlanner.md",
+    "record_file": "operations/datafusion_datasource.morsel.MorselPlanner.json",
+    "anchor": "op-75e3192888d61e52d84762e9",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MorselPlanner`": "../operations/datafusion_datasource.morsel.MorselPlanner.md#op-75e3192888d61e52d84762e9"
+    }
+  },
+  {
+    "id": "14db0580d35832f565a1984f",
+    "path": "datafusion_datasource::morsel::MorselPlanner::plan",
+    "name": "plan",
+    "owner": "datafusion_datasource::morsel::MorselPlanner",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn plan(Box<self>) -> Result<Option<MorselPlan>>",
+    "docs": "Attempt to plan morsels. This may involve CPU work, such as parsing\nparquet metadata and evaluating pruning predicates.\n\nIt should NOT do any I/O work, such as reading from the file. If I/O is\nrequired, the returned [`MorselPlan`] should contain a pending planner\nfuture that the caller polls to drive the I/O work to completion. Once\nthat future resolves, it yields a planner ready for work.\n\nNote this function is **not async** to make it explicitly clear that if\nI/O is required, it should be done in the returned `io_future`.\n\nReturns `None` if the planner has no more work to do.\n\n# Empty Morsel Plans\n\nIt may return `None`, which means no batches will be read from the file\n(e.g. due to late-pruning based on statistics).\n\n# Output Ordering\n\nSee the comments on [`MorselPlan`] for the logical output order.",
+    "span": {
+      "filename": "src/morsel/mod.rs",
+      "begin": [
+        110,
+        5
+      ],
+      "end": [
+        110,
+        60
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Box",
+                  "id": 196,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 119,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 64,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "MorselPlan",
+                                      "id": 1008,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "196": "alloc::boxed::Box",
+      "119": "datafusion_common::error::Result",
+      "64": "core::option::Option",
+      "1008": "datafusion_datasource::morsel::MorselPlan"
+    },
+    "impl_context": null,
+    "links": {
+      "`MorselPlan`": 1008
+    },
+    "link_paths": {
+      "`MorselPlan`": "datafusion_datasource::morsel::MorselPlan"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1009",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.morsel.MorselPlanner.md",
+    "record_file": "operations/datafusion_datasource.morsel.MorselPlanner.json",
+    "anchor": "op-14db0580d35832f565a1984f",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MorselPlan`": "../operations/datafusion_datasource.morsel.MorselPlan.md#op-5accb7e9b2b1602fe2da379e"
+    }
+  }
+]

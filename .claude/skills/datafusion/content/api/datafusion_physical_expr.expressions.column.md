@@ -12,6 +12,9 @@ Also reachable as `datafusion_physical_expr::expressions::col`, `datafusion_phys
 fn col(name: &str, schema: &arrow::datatypes::Schema) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.column.col.md).
+
+
 Create a column expression
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `datafusion_physical_expr::expressions::with_new_schema`, `dat
 ```rust
 fn with_new_schema(expr: std::sync::Arc<dyn PhysicalExpr>, schema: &arrow::datatypes::SchemaRef) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.column.with_new_schema.md).
+
 
 Rewrites an expression according to new schema; i.e. changes the columns it
 refers to with the column at corresponding index in the new schema. Returns
@@ -83,6 +89,9 @@ fn return_field(&self, input_schema: &Schema) -> Result<FieldRef>
 fn try_to_proto(&self, _ctx: &datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalExprNode>>
 fn with_new_children(Arc<self>, _children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.column.Column.md).
+
 
 Represents the column at a given index in a RecordBatch
 

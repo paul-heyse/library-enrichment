@@ -5,6 +5,7 @@ Crate `deltalake-catalog-unity` · 3 public items · structured records in [`mod
 ## UnityCatalogList
 
 `struct` · `deltalake_catalog_unity::datafusion::UnityCatalogList`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.datafusion.UnityCatalogList.md)
 
 Also reachable as `deltalake_catalog_unity::prelude::UnityCatalogList`
 
@@ -39,6 +40,7 @@ In-memory list of catalogs populated by unity catalog
 ## UnityCatalogProvider
 
 `struct` · `deltalake_catalog_unity::datafusion::UnityCatalogProvider`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.datafusion.UnityCatalogProvider.md)
 
 Also reachable as `deltalake_catalog_unity::prelude::UnityCatalogProvider`
 
@@ -72,6 +74,7 @@ A datafusion [`CatalogProvider`] backed by Databricks UnityCatalog
 ## UnitySchemaProvider
 
 `struct` · `deltalake_catalog_unity::datafusion::UnitySchemaProvider`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.datafusion.UnitySchemaProvider.md)
 
 Also reachable as `deltalake_catalog_unity::prelude::UnitySchemaProvider`
 

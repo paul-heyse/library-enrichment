@@ -31,6 +31,9 @@ fn get_bytes(&mut self, range: Range<u64>) -> BoxFuture<'_, Result<Bytes>>
 fn get_metadata<'a>(&'a mut self, options: Option<&'a ArrowReaderOptions>) -> BoxFuture<'a, Result<Arc<ParquetMetaData>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.async_reader.spawn.SpawnedReader.md).
+
+
 An [`AsyncFileReader`] that performs I/O on a separate tokio runtime.
 
 Tokio is a cooperative scheduler, and relies on tasks yielding in a timely

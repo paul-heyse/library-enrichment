@@ -12,6 +12,9 @@ Also reachable as `datafusion::physical_plan::accept`, `datafusion_physical_plan
 fn accept<V: ExecutionPlanVisitor>(plan: &dyn ExecutionPlan, visitor: &mut V) -> Result<(), V::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.visitor.accept.md).
+
+
 Visit all children of this plan, according to the order defined on `ExecutionPlanVisitor`.
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `datafusion::physical_plan::visit_execution_plan`, `datafusion
 ```rust
 fn visit_execution_plan<V: ExecutionPlanVisitor>(plan: &dyn ExecutionPlan, visitor: &mut V) -> Result<(), V::Error>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.visitor.visit_execution_plan.md).
+
 
 Recursively calls `pre_visit` and `post_visit` for this node and
 all of its children, as described on [`ExecutionPlanVisitor`]
@@ -47,6 +53,9 @@ trait ExecutionPlanVisitor
 fn post_visit(&mut self, _plan: &dyn ExecutionPlan) -> Result<bool, Self::Error>
 fn pre_visit(&mut self, plan: &dyn ExecutionPlan) -> Result<bool, Self::Error>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.visitor.ExecutionPlanVisitor.md).
+
 
 Trait that implements the [Visitor
 pattern](https://en.wikipedia.org/wiki/Visitor_pattern) for a

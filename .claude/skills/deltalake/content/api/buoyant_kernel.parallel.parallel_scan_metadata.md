@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 4 public items · structured records in [`model/buoyan
 ## AfterSequentialScanMetadata
 
 `enum` · `buoyant_kernel::parallel::parallel_scan_metadata::AfterSequentialScanMetadata`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.parallel.parallel_scan_metadata.AfterSequentialScanMetadata.md)
 
 Also reachable as `buoyant_kernel::scan::AfterSequentialScanMetadata`, `delta_kernel::parallel::parallel_scan_metadata::AfterSequentialScanMetadata`
 
@@ -25,6 +26,7 @@ This enum indicates whether distributed processing is needed:
 ## ParallelScanMetadata
 
 `struct` · `buoyant_kernel::parallel::parallel_scan_metadata::ParallelScanMetadata`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.parallel.parallel_scan_metadata.ParallelScanMetadata.md)
 
 Also reachable as `buoyant_kernel::scan::ParallelScanMetadata`, `delta_kernel::parallel::parallel_scan_metadata::ParallelScanMetadata`
 
@@ -52,6 +54,7 @@ fn next(&mut self) -> Option<Self::Item>
 ## ParallelState
 
 `struct` · `buoyant_kernel::parallel::parallel_scan_metadata::ParallelState`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.parallel.parallel_scan_metadata.ParallelState.md)
 
 Also reachable as `buoyant_kernel::scan::ParallelState`, `delta_kernel::parallel::parallel_scan_metadata::ParallelState`
 
@@ -80,6 +83,7 @@ in Arc and shared across threads for local parallel processing.
 ## SequentialScanMetadata
 
 `struct` · `buoyant_kernel::parallel::parallel_scan_metadata::SequentialScanMetadata`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.parallel.parallel_scan_metadata.SequentialScanMetadata.md)
 
 Also reachable as `buoyant_kernel::scan::SequentialScanMetadata`, `delta_kernel::parallel::parallel_scan_metadata::SequentialScanMetadata`
 

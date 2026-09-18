@@ -20,6 +20,9 @@ fn new_arc(name: impl Into<String>, factory: impl Fn(&DataType, Option<&str>) ->
 fn type_name(&self) -> &str
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.registry.ExtensionTypeRegistration.md).
+
+
 The registration of an extension type. Implementations of this trait are responsible for
 *creating* instances of [`DFExtensionType`] that represent the entire semantics of an extension
 type.
@@ -76,6 +79,9 @@ fn extension_type_registrations(&self) -> Vec<ExtensionTypeRegistrationRef>
 fn remove_extension_type_registration(&self, name: &str) -> Result<Option<ExtensionTypeRegistrationRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.registry.MemoryExtensionTypeRegistry.md).
+
+
 An [`ExtensionTypeRegistry`] that uses in memory [`HashMap`]s.
 
 ---
@@ -118,6 +124,9 @@ fn udwf(&self, name: &str) -> Result<Arc<WindowUDF>>
 fn udwfs(&self) -> HashSet<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.registry.MemoryFunctionRegistry.md).
+
+
 A  [`FunctionRegistry`] that uses in memory [`HashMap`]s
 
 ---
@@ -144,6 +153,9 @@ fn extension_type_registration(&self, name: &str) -> Result<ExtensionTypeRegistr
 fn extension_type_registrations(&self) -> Vec<ExtensionTypeRegistrationRef>
 fn remove_extension_type_registration(&self, name: &str) -> Result<Option<ExtensionTypeRegistrationRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.registry.ExtensionTypeRegistry.md).
+
 
 Manages [`ExtensionTypeRegistration`]s, which allow users to register custom behavior for
 extension types.
@@ -194,6 +206,9 @@ fn udwf(&self, name: &str) -> Result<Arc<WindowUDF>>
 fn udwfs(&self) -> HashSet<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.registry.FunctionRegistry.md).
+
+
 A registry knows how to build logical expressions out of user-defined function' names
 
 ---
@@ -219,6 +234,9 @@ fn deserialize_logical_plan(&self, name: &str, bytes: &[u8]) -> Result<Arc<dyn U
 fn serialize_logical_plan(&self, node: &dyn UserDefinedLogicalNode) -> Result<Vec<u8>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.registry.SerializerRegistry.md).
+
+
 Serializer and deserializer registry for extensions like [UserDefinedLogicalNode].
 
 ---
@@ -230,6 +248,9 @@ Serializer and deserializer registry for extensions like [UserDefinedLogicalNode
 ```rust
 type ExtensionTypeFactory = dyn Fn(&arrow_schema::DataType, Option<&str>) -> datafusion_common::Result<datafusion_common::types::DFExtensionTypeRef> + Send + Sync
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.registry.ExtensionTypeFactory.md).
+
 
 A factory that creates instances of extension types from a storage [`DataType`] and the
 metadata.
@@ -244,6 +265,9 @@ metadata.
 type ExtensionTypeRegistrationRef = std::sync::Arc<ExtensionTypeRegistration>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.registry.ExtensionTypeRegistrationRef.md).
+
+
 A cheaply cloneable pointer to an [ExtensionTypeRegistration].
 
 ---
@@ -255,6 +279,9 @@ A cheaply cloneable pointer to an [ExtensionTypeRegistration].
 ```rust
 type ExtensionTypeRegistryRef = std::sync::Arc<dyn ExtensionTypeRegistry>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.registry.ExtensionTypeRegistryRef.md).
+
 
 A cheaply cloneable pointer to an [ExtensionTypeRegistry].
 

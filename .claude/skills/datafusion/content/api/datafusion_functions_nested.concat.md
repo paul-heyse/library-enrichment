@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_append`, `datafusion_functions_nes
 fn array_append(array: datafusion_expr::Expr, element: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.concat.array_append.md).
+
+
 appends an element to the end of an array.
 
 ---
@@ -23,6 +26,9 @@ appends an element to the end of an array.
 ```rust
 fn array_append_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.concat.array_append_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayAppend
@@ -39,6 +45,9 @@ Also reachable as `datafusion::prelude::array_concat`, `datafusion_functions_nes
 fn array_concat(arg: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.concat.array_concat.md).
+
+
 Concatenates arrays.
 
 ---
@@ -51,6 +60,9 @@ Concatenates arrays.
 fn array_concat_inner(args: &[arrow::array::ArrayRef]) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.concat.array_concat_inner.md).
+
+
 ---
 
 ## array_concat_udf
@@ -60,6 +72,9 @@ fn array_concat_inner(args: &[arrow::array::ArrayRef]) -> datafusion_common::Res
 ```rust
 fn array_concat_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.concat.array_concat_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayConcat
@@ -76,6 +91,9 @@ Also reachable as `datafusion::prelude::array_prepend`, `datafusion_functions_ne
 fn array_prepend(element: datafusion_expr::Expr, array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.concat.array_prepend.md).
+
+
 Prepends an element to the beginning of an array.
 
 ---
@@ -87,6 +105,9 @@ Prepends an element to the beginning of an array.
 ```rust
 fn array_prepend_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.concat.array_prepend_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayPrepend
@@ -123,6 +144,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.concat.ArrayAppend.md).
+
+
 ---
 
 ## ArrayConcat
@@ -155,6 +179,9 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.concat.ArrayConcat.md).
+
+
 ---
 
 ## ArrayPrepend
@@ -186,5 +213,8 @@ fn return_field_from_args(&self, args: ReturnFieldArgs<'_>) -> Result<FieldRef>
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.concat.ArrayPrepend.md).
+
 
 ---

@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## Expression
 
 `enum` · `deltalake_core::delta_datafusion::utils::Expression`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.utils.Expression.md)
 
 ```rust
 enum Expression

@@ -12,6 +12,9 @@ struct ExecutionPlanPrivateData
 
 **Fields**: `plan`, `runtime`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.execution_plan.ExecutionPlanPrivateData.md).
+
+
 ---
 
 ## FFI_ExecutionPlan
@@ -39,6 +42,9 @@ fn new(plan: Arc<dyn ExecutionPlan>, runtime: Option<Handle>) -> Self
 ```rust
 fn drop(&mut self)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.execution_plan.FFI_ExecutionPlan.md).
+
 
 A stable struct for sharing a [`ExecutionPlan`] across FFI boundaries.
 
@@ -83,6 +89,9 @@ fn repartitioned(&self, target_partitions: usize, config: &ConfigOptions) -> Res
 fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, _: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.execution_plan.ForeignExecutionPlan.md).
+
 
 This struct is used to access an execution plan provided by a foreign
 library across a FFI boundary.

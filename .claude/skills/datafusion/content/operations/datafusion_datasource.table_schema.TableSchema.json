@@ -1,0 +1,1762 @@
+[
+  {
+    "id": "edcf381c15c6591908c8608e",
+    "path": "datafusion_datasource::table_schema::TableSchema",
+    "name": "TableSchema",
+    "owner": null,
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct TableSchema",
+    "docs": "The overall schema for potentially partitioned data sources.\n\nWhen reading partitioned data (such as Hive-style partitioning), a [`TableSchema`]\nconsists of up to three parts:\n1. **File schema**: The schema of the actual data files on disk\n2. **Partition columns**: Columns whose values are encoded in the directory structure,\n   but not stored in the files themselves\n3. **Virtual columns**: Columns produced by the file reader (e.g. Parquet\n   `row_number`) that are not stored in the files\n\nThe full table schema is composed in that order: file columns, then\npartition columns, then virtual columns. Consumers that need a different\noutput ordering should use a projection on top of\n[`TableSchema::table_schema`].\n\n# Example: Partitioned Table\n\nConsider a table with the following directory structure:\n```text\n/data/date=2025-10-10/region=us-west/data.parquet\n/data/date=2025-10-11/region=us-east/data.parquet\n```\n\nIn this case:\n- **File schema**: The schema of `data.parquet` files (e.g., `[user_id, amount]`)\n- **Partition columns**: `[date, region]` extracted from the directory path\n- **Table schema**: The full schema combining both (e.g., `[user_id, amount, date, region]`)\n\n# When to Use\n\nUse `TableSchema` when:\n- Reading partitioned data sources (Parquet, CSV, etc. with Hive-style partitioning)\n- You need to efficiently access different schema representations without reconstructing them\n- You want to avoid repeatedly concatenating file and partition schemas\n\nFor non-partitioned data or when working with a single schema representation,\nworking directly with Arrow's `Schema` or `SchemaRef` is simpler.\n\n# Performance\n\nThis struct pre-computes and caches the full table schema, allowing cheap references\nto any representation without repeated allocations or reconstructions.",
+    "span": {
+      "filename": "src/table_schema.rs",
+      "begin": [
+        66,
+        1
+      ],
+      "end": [
+        112,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          1428,
+          1429,
+          1430,
+          1431,
+          1432,
+          1433,
+          1434,
+          1435,
+          1436,
+          1437,
+          1438,
+          1439,
+          1440,
+          1441,
+          1442,
+          1443,
+          1444,
+          1445,
+          1446,
+          1447,
+          1449,
+          1451,
+          1453,
+          1455
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`TableSchema`": 200,
+      "`TableSchema::table_schema`": 1415
+    },
+    "link_paths": {
+      "`TableSchema`": "datafusion_datasource::table_schema::TableSchema",
+      "`TableSchema::table_schema`": "datafusion_datasource::table_schema::TableSchema::table_schema"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "200",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.table_schema.TableSchema.md",
+    "record_file": "operations/datafusion_datasource.table_schema.TableSchema.json",
+    "anchor": "op-edcf381c15c6591908c8608e",
+    "aliases": [
+      "datafusion::datasource::table_schema::TableSchema",
+      "datafusion_datasource::TableSchema"
+    ],
+    "resolved_doc_links": {
+      "`TableSchema`": "../operations/datafusion_datasource.table_schema.TableSchema.md#op-edcf381c15c6591908c8608e",
+      "`TableSchema::table_schema`": "../operations/datafusion_datasource.table_schema.TableSchema.md#op-d44cdfea14aa48a2665079e1"
+    }
+  },
+  {
+    "id": "bcae8cd4c0f4d79bfeded60b",
+    "path": "datafusion_datasource::table_schema::TableSchema::builder",
+    "name": "builder",
+    "owner": "datafusion_datasource::table_schema::TableSchema",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn builder(file_schema: SchemaRef) -> TableSchemaBuilder",
+    "docs": "Start building a [`TableSchema`] from its (required) file schema.\n\nPartition columns are optional and added with\n[`TableSchemaBuilder::with_table_partition_cols`]; the full table schema\nis computed once by [`TableSchemaBuilder::build`]. This is the preferred\nway to construct a `TableSchema`.\n\n# Example\n\n```\n# use std::sync::Arc;\n# use arrow::datatypes::{Schema, Field, DataType};\n# use datafusion_datasource::TableSchema;\nlet file_schema = Arc::new(Schema::new(vec![\n    Field::new(\"user_id\", DataType::Int64, false),\n    Field::new(\"amount\", DataType::Float64, false),\n]));\n\nlet table_schema = TableSchema::builder(file_schema)\n    .with_table_partition_cols(vec![\n        Arc::new(Field::new(\"date\", DataType::Utf8, false)),\n        Arc::new(Field::new(\"region\", DataType::Utf8, false)),\n    ])\n    .build();\n\n// Table schema will have 4 columns: user_id, amount, date, region\nassert_eq!(table_schema.table_schema().fields().len(), 4);\n```",
+    "span": {
+      "filename": "src/table_schema.rs",
+      "begin": [
+        143,
+        5
+      ],
+      "end": [
+        145,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "file_schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 365,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "TableSchemaBuilder",
+              "id": 1419,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "365": "arrow_schema::schema::SchemaRef",
+      "1419": "datafusion_datasource::table_schema::TableSchemaBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableSchema",
+          "id": "datafusion_datasource::table_schema::TableSchema",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_schema.rs",
+        "begin": [
+          114,
+          1
+        ],
+        "end": [
+          230,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TableSchemaBuilder::build`": 1417,
+      "`TableSchema`": 200,
+      "`TableSchemaBuilder::with_table_partition_cols`": 1416
+    },
+    "link_paths": {
+      "`TableSchemaBuilder::build`": "datafusion_datasource::table_schema::TableSchemaBuilder::build",
+      "`TableSchema`": "datafusion_datasource::table_schema::TableSchema",
+      "`TableSchemaBuilder::with_table_partition_cols`": "datafusion_datasource::table_schema::TableSchemaBuilder::with_table_partition_cols"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1418",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.table_schema.TableSchema.md",
+    "record_file": "operations/datafusion_datasource.table_schema.TableSchema.json",
+    "anchor": "op-bcae8cd4c0f4d79bfeded60b",
+    "aliases": [
+      "datafusion::datasource::table_schema::TableSchema::builder",
+      "datafusion_datasource::TableSchema::builder"
+    ],
+    "resolved_doc_links": {
+      "`TableSchemaBuilder::build`": "../operations/datafusion_datasource.table_schema.TableSchemaBuilder.md#op-74d96a3ee774430aafeed6a3",
+      "`TableSchema`": "../operations/datafusion_datasource.table_schema.TableSchema.md#op-edcf381c15c6591908c8608e",
+      "`TableSchemaBuilder::with_table_partition_cols`": "../operations/datafusion_datasource.table_schema.TableSchemaBuilder.md#op-1708a4f87360b4c97fbe1586"
+    }
+  },
+  {
+    "id": "e9c2d5039f9af61159fad66e",
+    "path": "datafusion_datasource::table_schema::TableSchema::clone",
+    "name": "clone",
+    "owner": "datafusion_datasource::table_schema::TableSchema",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> TableSchema",
+    "docs": "",
+    "span": {
+      "filename": "src/table_schema.rs",
+      "begin": [
+        65,
+        17
+      ],
+      "end": [
+        65,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "TableSchema",
+              "id": 200,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "200": "datafusion_datasource::table_schema::TableSchema"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableSchema",
+          "id": "datafusion_datasource::table_schema::TableSchema",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_schema.rs",
+        "begin": [
+          65,
+          17
+        ],
+        "end": [
+          65,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1450",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.table_schema.TableSchema.md",
+    "record_file": "operations/datafusion_datasource.table_schema.TableSchema.json",
+    "anchor": "op-e9c2d5039f9af61159fad66e",
+    "aliases": [
+      "datafusion::datasource::table_schema::TableSchema::clone",
+      "datafusion_datasource::TableSchema::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4df68a9947942b5f05e16f17",
+    "path": "datafusion_datasource::table_schema::TableSchema::file_schema",
+    "name": "file_schema",
+    "owner": "datafusion_datasource::table_schema::TableSchema",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn file_schema(&self) -> &SchemaRef",
+    "docs": "Get the file schema (without partition columns).\n\nThis is the schema of the actual data files on disk.",
+    "span": {
+      "filename": "src/table_schema.rs",
+      "begin": [
+        186,
+        5
+      ],
+      "end": [
+        188,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 365,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "365": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableSchema",
+          "id": "datafusion_datasource::table_schema::TableSchema",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_schema.rs",
+        "begin": [
+          114,
+          1
+        ],
+        "end": [
+          230,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1424",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.table_schema.TableSchema.md",
+    "record_file": "operations/datafusion_datasource.table_schema.TableSchema.json",
+    "anchor": "op-4df68a9947942b5f05e16f17",
+    "aliases": [
+      "datafusion::datasource::table_schema::TableSchema::file_schema",
+      "datafusion_datasource::TableSchema::file_schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7fa00a39eb99a58c477fe7ba",
+    "path": "datafusion_datasource::table_schema::TableSchema::fmt",
+    "name": "fmt",
+    "owner": "datafusion_datasource::table_schema::TableSchema",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/table_schema.rs",
+      "begin": [
+        65,
+        10
+      ],
+      "end": [
+        65,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 108,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 109,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "108": "core::fmt::Formatter",
+      "109": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableSchema",
+          "id": "datafusion_datasource::table_schema::TableSchema",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_schema.rs",
+        "begin": [
+          65,
+          10
+        ],
+        "end": [
+          65,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1448",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.table_schema.TableSchema.md",
+    "record_file": "operations/datafusion_datasource.table_schema.TableSchema.json",
+    "anchor": "op-7fa00a39eb99a58c477fe7ba",
+    "aliases": [
+      "datafusion::datasource::table_schema::TableSchema::fmt",
+      "datafusion_datasource::TableSchema::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "605e3dbc16c25075ba8024f3",
+    "path": "datafusion_datasource::table_schema::TableSchema::from",
+    "name": "from",
+    "owner": "datafusion_datasource::table_schema::TableSchema",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn from(schema: SchemaRef) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/table_schema.rs",
+      "begin": [
+        233,
+        5
+      ],
+      "end": [
+        235,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 365,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "365": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableSchema",
+          "id": "datafusion_datasource::table_schema::TableSchema",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "Arc",
+                    "id": "alloc::sync::Arc",
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "resolved_path": {
+                                "path": "Schema",
+                                "id": "arrow_schema::schema::Schema",
+                                "args": null
+                              }
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_schema.rs",
+        "begin": [
+          232,
+          1
+        ],
+        "end": [
+          236,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1452",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.table_schema.TableSchema.md",
+    "record_file": "operations/datafusion_datasource.table_schema.TableSchema.json",
+    "anchor": "op-605e3dbc16c25075ba8024f3",
+    "aliases": [
+      "datafusion::datasource::table_schema::TableSchema::from",
+      "datafusion_datasource::TableSchema::from"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ad1737028877d2daa3cefb95",
+    "path": "datafusion_datasource::table_schema::TableSchema::from",
+    "name": "from",
+    "owner": "datafusion_datasource::table_schema::TableSchema",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn from(schema: &SchemaRef) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/table_schema.rs",
+      "begin": [
+        239,
+        5
+      ],
+      "end": [
+        241,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "SchemaRef",
+                      "id": 365,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "365": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableSchema",
+          "id": "datafusion_datasource::table_schema::TableSchema",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "borrowed_ref": {
+                    "lifetime": null,
+                    "is_mutable": false,
+                    "type": {
+                      "resolved_path": {
+                        "path": "Arc",
+                        "id": "alloc::sync::Arc",
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Schema",
+                                    "id": "arrow_schema::schema::Schema",
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_schema.rs",
+        "begin": [
+          238,
+          1
+        ],
+        "end": [
+          242,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1454",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.table_schema.TableSchema.md",
+    "record_file": "operations/datafusion_datasource.table_schema.TableSchema.json",
+    "anchor": "op-ad1737028877d2daa3cefb95",
+    "aliases": [
+      "datafusion::datasource::table_schema::TableSchema::from",
+      "datafusion_datasource::TableSchema::from"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3b762a8f755b9f6f16eeebdd",
+    "path": "datafusion_datasource::table_schema::TableSchema::from_file_schema",
+    "name": "from_file_schema",
+    "owner": "datafusion_datasource::table_schema::TableSchema",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn from_file_schema(file_schema: SchemaRef) -> Self",
+    "docs": "Create a new TableSchema with no partition columns.",
+    "span": {
+      "filename": "src/table_schema.rs",
+      "begin": [
+        166,
+        5
+      ],
+      "end": [
+        168,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": {
+      "since": "55.0.0",
+      "note": "use TableSchema::from(file_schema) / file_schema.into()"
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "file_schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 365,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "365": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableSchema",
+          "id": "datafusion_datasource::table_schema::TableSchema",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_schema.rs",
+        "begin": [
+          114,
+          1
+        ],
+        "end": [
+          230,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1422",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.table_schema.TableSchema.md",
+    "record_file": "operations/datafusion_datasource.table_schema.TableSchema.json",
+    "anchor": "op-3b762a8f755b9f6f16eeebdd",
+    "aliases": [
+      "datafusion::datasource::table_schema::TableSchema::from_file_schema",
+      "datafusion_datasource::TableSchema::from_file_schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "468d0c741f41b7c526f68a4f",
+    "path": "datafusion_datasource::table_schema::TableSchema::new",
+    "name": "new",
+    "owner": "datafusion_datasource::table_schema::TableSchema",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(file_schema: SchemaRef, table_partition_cols: Vec<FieldRef>) -> Self",
+    "docs": "Create a new TableSchema from a file schema and partition columns.\n\nThis is a convenience for\n`TableSchema::builder(file_schema).with_table_partition_cols(cols).build()`.",
+    "span": {
+      "filename": "src/table_schema.rs",
+      "begin": [
+        155,
+        5
+      ],
+      "end": [
+        159,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": {
+      "since": "55.0.0",
+      "note": "use TableSchema::builder(file_schema).with_table_partition_cols(cols).build() (or TableSchema::from(file_schema) for no partition columns)"
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "file_schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 365,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "table_partition_cols",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 215,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "FieldRef",
+                              "id": 1421,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "365": "arrow_schema::schema::SchemaRef",
+      "215": "alloc::vec::Vec",
+      "1421": "arrow_schema::field::FieldRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableSchema",
+          "id": "datafusion_datasource::table_schema::TableSchema",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_schema.rs",
+        "begin": [
+          114,
+          1
+        ],
+        "end": [
+          230,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1420",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.table_schema.TableSchema.md",
+    "record_file": "operations/datafusion_datasource.table_schema.TableSchema.json",
+    "anchor": "op-468d0c741f41b7c526f68a4f",
+    "aliases": [
+      "datafusion::datasource::table_schema::TableSchema::new",
+      "datafusion_datasource::TableSchema::new"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b380e06628d8454e54e6ac3e",
+    "path": "datafusion_datasource::table_schema::TableSchema::schema_without_virtual_columns",
+    "name": "schema_without_virtual_columns",
+    "owner": "datafusion_datasource::table_schema::TableSchema",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn schema_without_virtual_columns(&self) -> &SchemaRef",
+    "docs": "Schema of columns that can be referenced by predicates pushed into the\nfile reader: file columns plus partition columns, excluding virtual\ncolumns.\n\nVirtual columns are produced by the reader itself (e.g. Parquet\n`row_number`) and cannot be referenced inside the reader's row filter,\nso predicates that reference them must stay above the scan. Callers\ndeciding which filters to push down should check against this schema\nrather than [`Self::table_schema`].\n\nWhen there are no virtual columns this returns the same schema as\n[`Self::table_schema`].",
+    "span": {
+      "filename": "src/table_schema.rs",
+      "begin": [
+        227,
+        5
+      ],
+      "end": [
+        229,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 365,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "365": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableSchema",
+          "id": "datafusion_datasource::table_schema::TableSchema",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_schema.rs",
+        "begin": [
+          114,
+          1
+        ],
+        "end": [
+          230,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::table_schema`": 1415
+    },
+    "link_paths": {
+      "`Self::table_schema`": "datafusion_datasource::table_schema::TableSchema::table_schema"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1427",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.table_schema.TableSchema.md",
+    "record_file": "operations/datafusion_datasource.table_schema.TableSchema.json",
+    "anchor": "op-b380e06628d8454e54e6ac3e",
+    "aliases": [
+      "datafusion::datasource::table_schema::TableSchema::schema_without_virtual_columns",
+      "datafusion_datasource::TableSchema::schema_without_virtual_columns"
+    ],
+    "resolved_doc_links": {
+      "`Self::table_schema`": "../operations/datafusion_datasource.table_schema.TableSchema.md#op-d44cdfea14aa48a2665079e1"
+    }
+  },
+  {
+    "id": "4f933ba9c148699284538ca7",
+    "path": "datafusion_datasource::table_schema::TableSchema::table_partition_cols",
+    "name": "table_partition_cols",
+    "owner": "datafusion_datasource::table_schema::TableSchema",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn table_partition_cols(&self) -> &Fields",
+    "docs": "Get the table partition columns.\n\nThese are the columns derived from the directory structure that\nwill be appended to each row during query execution.",
+    "span": {
+      "filename": "src/table_schema.rs",
+      "begin": [
+        194,
+        5
+      ],
+      "end": [
+        196,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Fields",
+                  "id": 547,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "547": "arrow_schema::fields::Fields"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableSchema",
+          "id": "datafusion_datasource::table_schema::TableSchema",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_schema.rs",
+        "begin": [
+          114,
+          1
+        ],
+        "end": [
+          230,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1425",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.table_schema.TableSchema.md",
+    "record_file": "operations/datafusion_datasource.table_schema.TableSchema.json",
+    "anchor": "op-4f933ba9c148699284538ca7",
+    "aliases": [
+      "datafusion::datasource::table_schema::TableSchema::table_partition_cols",
+      "datafusion_datasource::TableSchema::table_partition_cols"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d44cdfea14aa48a2665079e1",
+    "path": "datafusion_datasource::table_schema::TableSchema::table_schema",
+    "name": "table_schema",
+    "owner": "datafusion_datasource::table_schema::TableSchema",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn table_schema(&self) -> &SchemaRef",
+    "docs": "Get the full table schema (file schema + partition columns + virtual columns).\n\nThis is the complete schema that will be seen by queries. Fields appear\nin the order: file columns, partition columns, virtual columns.",
+    "span": {
+      "filename": "src/table_schema.rs",
+      "begin": [
+        211,
+        5
+      ],
+      "end": [
+        213,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 365,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "365": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableSchema",
+          "id": "datafusion_datasource::table_schema::TableSchema",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_schema.rs",
+        "begin": [
+          114,
+          1
+        ],
+        "end": [
+          230,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1415",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.table_schema.TableSchema.md",
+    "record_file": "operations/datafusion_datasource.table_schema.TableSchema.json",
+    "anchor": "op-d44cdfea14aa48a2665079e1",
+    "aliases": [
+      "datafusion::datasource::table_schema::TableSchema::table_schema",
+      "datafusion_datasource::TableSchema::table_schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4a2ec4983bfc1e8a768b2f22",
+    "path": "datafusion_datasource::table_schema::TableSchema::virtual_columns",
+    "name": "virtual_columns",
+    "owner": "datafusion_datasource::table_schema::TableSchema",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn virtual_columns(&self) -> &Fields",
+    "docs": "Get the virtual columns.\n\nVirtual columns are produced by the file reader (e.g. Parquet\n`row_number`) and are not stored in the data files or derived from\npartition paths.",
+    "span": {
+      "filename": "src/table_schema.rs",
+      "begin": [
+        203,
+        5
+      ],
+      "end": [
+        205,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Fields",
+                  "id": 547,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "547": "arrow_schema::fields::Fields"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableSchema",
+          "id": "datafusion_datasource::table_schema::TableSchema",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_schema.rs",
+        "begin": [
+          114,
+          1
+        ],
+        "end": [
+          230,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1426",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.table_schema.TableSchema.md",
+    "record_file": "operations/datafusion_datasource.table_schema.TableSchema.json",
+    "anchor": "op-4a2ec4983bfc1e8a768b2f22",
+    "aliases": [
+      "datafusion::datasource::table_schema::TableSchema::virtual_columns",
+      "datafusion_datasource::TableSchema::virtual_columns"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6d31ec85a696858a778874b9",
+    "path": "datafusion_datasource::table_schema::TableSchema::with_table_partition_cols",
+    "name": "with_table_partition_cols",
+    "owner": "datafusion_datasource::table_schema::TableSchema",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_table_partition_cols(self, partition_cols: Vec<FieldRef>) -> Self",
+    "docs": "Return a new `TableSchema` with `partition_cols` as its partition columns,\nreplacing any existing ones. Existing virtual columns are preserved.",
+    "span": {
+      "filename": "src/table_schema.rs",
+      "begin": [
+        176,
+        5
+      ],
+      "end": [
+        181,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": {
+      "since": "55.0.0",
+      "note": "use TableSchema::builder(file_schema).with_table_partition_cols(cols).build()"
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "partition_cols",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 215,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "FieldRef",
+                              "id": 1421,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "215": "alloc::vec::Vec",
+      "1421": "arrow_schema::field::FieldRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableSchema",
+          "id": "datafusion_datasource::table_schema::TableSchema",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_schema.rs",
+        "begin": [
+          114,
+          1
+        ],
+        "end": [
+          230,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "1423",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.table_schema.TableSchema.md",
+    "record_file": "operations/datafusion_datasource.table_schema.TableSchema.json",
+    "anchor": "op-6d31ec85a696858a778874b9",
+    "aliases": [
+      "datafusion::datasource::table_schema::TableSchema::with_table_partition_cols",
+      "datafusion_datasource::TableSchema::with_table_partition_cols"
+    ],
+    "resolved_doc_links": {}
+  }
+]

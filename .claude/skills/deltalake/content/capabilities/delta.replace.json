@@ -1,0 +1,162 @@
+{
+  "id": "delta.replace",
+  "title": "Choose full overwrite, predicate replacement or merge",
+  "reviewed": "2026-09-18",
+  "brief": "Use Overwrite plus replace_where for predicate-scoped replacement. Validate incoming rows against that predicate; use merge when changes depend on matching source and target keys.",
+  "task_aliases": [
+    "replace where",
+    "overwrite partition",
+    "predicate overwrite",
+    "replace subset"
+  ],
+  "crates": [
+    "deltalake-core"
+  ],
+  "input": [
+    "replacement batches",
+    "predicate Expr or SQL",
+    "loaded table"
+  ],
+  "output": [
+    "new DeltaTable version",
+    "preserved rows outside predicate"
+  ],
+  "properties": [
+    "replace where",
+    "overwrite partition",
+    "predicate overwrite",
+    "replace subset"
+  ],
+  "operations": [
+    "deltalake_core::operations::write::WriteBuilder::with_replace_where",
+    "deltalake_core::operations::write::WriteBuilder::with_save_mode",
+    "deltalake_core::operations::write::WriteBuilder::with_partition_columns",
+    "deltalake_core::operations::write::WriteBuilder::with_schema_mode"
+  ],
+  "choices": [
+    {
+      "candidate": "Overwrite + replace_where",
+      "choose_when": "Incoming data fully replaces the selected logical slice",
+      "tradeoff": "Incoming rows outside the predicate are invalid"
+    },
+    {
+      "candidate": "Full Overwrite",
+      "choose_when": "The entire current table relation is being replaced",
+      "tradeoff": "Old data files may remain physically present until retention cleanup"
+    },
+    {
+      "candidate": "Merge",
+      "choose_when": "Insert/update/delete decisions depend on source-target matching",
+      "tradeoff": "Requires explicit key/null/duplicate/clause semantics"
+    }
+  ],
+  "claims": [
+    {
+      "id": "delta.replace.1",
+      "aspect": "predicate",
+      "statement": "The probe rejected an out-of-predicate row without advancing the observed version. Replacing id >= 2 with id 20 preserved id 1; full overwrite then left only id 9.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "save_modes_replace_where_and_validation_before_commit"
+    },
+    {
+      "id": "delta.replace.2",
+      "aspect": "schema",
+      "statement": "SchemaMode::Overwrite is allowed with SaveMode::Overwrite, not append. Existing column-mapped tables reject schema evolution on the examined write precondition path.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.replace.3",
+      "aspect": "partitions",
+      "statement": "Partition metadata is part of table layout; do not treat a new with_partition_columns value as an independent per-write reshuffle option. Inspect the existing partition schema and the exact overwrite path.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    }
+  ],
+  "implementation": [
+    "Express the logical slice in the replacement predicate and assert all incoming rows belong to it.",
+    "Test retained rows and resulting metadata/version, not only the number of new files."
+  ],
+  "effects": [
+    "remove existing logical data",
+    "add replacement files",
+    "publish log version"
+  ],
+  "errors": [
+    "Predicate, append-only/protocol, partition or schema validation can reject an operation before publication."
+  ],
+  "unknowns": [
+    "All partition-layout changes and every mapped-schema overwrite combination are not covered by the local probe."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "scope": "Exact git-capture full contracts for the selected operations"
+    },
+    {
+      "id": "source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/write/mod.rs",
+      "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+    },
+    {
+      "id": "runtime",
+      "kind": "runtime_observation",
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Named local assertions only; see profile, fixtures and source digests",
+      "tests": [
+        "save_modes_replace_where_and_validation_before_commit"
+      ]
+    }
+  ],
+  "resolved_operations": [
+    {
+      "path": "deltalake_core::operations::write::WriteBuilder::with_replace_where",
+      "id": "fe70b99393fab335b2454bd5",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+      "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-fe70b99393fab335b2454bd5",
+      "signature": "fn with_replace_where(self, predicate: impl Into<Expression>) -> Self"
+    },
+    {
+      "path": "deltalake_core::operations::write::WriteBuilder::with_save_mode",
+      "id": "a2d377816dc436cf1c93443b",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+      "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-a2d377816dc436cf1c93443b",
+      "signature": "fn with_save_mode(self, save_mode: SaveMode) -> Self"
+    },
+    {
+      "path": "deltalake_core::operations::write::WriteBuilder::with_partition_columns",
+      "id": "3c7a11e509dfe629ee2c3f13",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+      "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-3c7a11e509dfe629ee2c3f13",
+      "signature": "fn with_partition_columns(self, partition_columns: impl IntoIterator<Item = impl Into<String>>) -> Self"
+    },
+    {
+      "path": "deltalake_core::operations::write::WriteBuilder::with_schema_mode",
+      "id": "290b8fe3fd386ffca8f17f0b",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.write.WriteBuilder.json",
+      "page": "operations/deltalake_core.operations.write.WriteBuilder.md#op-290b8fe3fd386ffca8f17f0b",
+      "signature": "fn with_schema_mode(self, schema_mode: SchemaMode) -> Self"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/delta.replace.json"
+}

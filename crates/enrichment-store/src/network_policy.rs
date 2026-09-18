@@ -28,7 +28,8 @@ impl NetworkPolicy {
     }
     fn session(&self) -> Result<SessionContext> {
         let session = self.runtime.session();
-        session.register_batch(
+        crate::native_catalog::input(
+            &session,
             "trusted_endpoints",
             RecordBatch::try_new(
                 Arc::new(Schema::new(vec![Field::new(

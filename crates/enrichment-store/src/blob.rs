@@ -42,16 +42,67 @@ impl BlobStore {
     ///
     /// Fails if the directories cannot be created.
     pub fn open(data_root: &Path) -> io::Result<Self> {
+        crate::immutable_root::require_mutable(data_root)?;
         let root = data_root.join("blobs");
         fs::create_dir_all(root.join("sha256"))?;
         fs::create_dir_all(root.join(".staging"))?;
         Ok(Self { root })
     }
 
+    fn require_mutable(&self) -> io::Result<()> {
+        crate::immutable_root::require_mutable(
+            self.root
+                .parent()
+                .ok_or_else(|| io::Error::other("blob data root"))?,
+        )
+    }
+
     /// The directory this store writes under.
     #[must_use]
     pub fn root(&self) -> &Path {
         &self.root
+    }
+
+    /// Physical driver for a native-selected unreferenced content identity. The
+    /// caller holds exclusive root protection and a durable artifact maintenance fence.
+    pub(crate) fn remove_unreferenced(&self, artifact_id: &str) -> io::Result<Option<u64>> {
+        self.require_mutable()?;
+        use std::os::unix::fs::MetadataExt;
+        if !enrichment_core::evidence::is_artifact_id(artifact_id) {
+            return Err(io::Error::other("invalid artifact cleanup identity"));
+        }
+        let digest = artifact_id
+            .strip_prefix("art_")
+            .ok_or_else(|| io::Error::other("artifact identity prefix"))?;
+        let path = self.path_for(digest);
+        let parent = path
+            .parent()
+            .ok_or_else(|| io::Error::other("artifact shard"))?;
+        for directory in [
+            self.root.as_path(),
+            self.root.join("sha256").as_path(),
+            parent,
+        ] {
+            match fs::symlink_metadata(directory) {
+                Ok(metadata) if metadata.is_dir() => {}
+                Ok(_) => return Err(io::Error::other("artifact cleanup ancestor replaced")),
+                Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+                Err(error) => return Err(error),
+            }
+        }
+        let before = match fs::symlink_metadata(&path) {
+            Ok(metadata) => metadata,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+            Err(error) => return Err(error),
+        };
+        if !before.is_file() || before.nlink() != 1 {
+            return Err(io::Error::other(
+                "artifact cleanup target is not an owned regular file",
+            ));
+        }
+        fs::remove_file(&path)?;
+        fs::File::open(parent)?.sync_all()?;
+        Ok(Some(before.len()))
     }
 
     /// Stream bounded output to private staging, then admit its digest and metadata together.
@@ -64,6 +115,7 @@ impl BlobStore {
         write: impl FnOnce(&mut dyn io::Write) -> io::Result<()>,
         describe: impl FnOnce(&str, u64) -> Artifact,
     ) -> io::Result<StoredBlob> {
+        self.require_mutable()?;
         use io::{Seek, Write};
         struct Bounded<'a> {
             writer: io::BufWriter<&'a mut fs::File>,
@@ -162,13 +214,43 @@ impl BlobStore {
         self.root.join("sha256").join(shard).join(sha256_hex)
     }
 
-    /// Read a blob's bytes.
-    ///
-    /// # Errors
-    ///
-    /// Fails if the blob is absent or unreadable.
-    pub fn read(&self, sha256_hex: &str) -> io::Result<Vec<u8>> {
-        fs::read(self.path_for(sha256_hex))
+    /// Exact acquired content in a paid buffer. Admission/retention remains with the caller;
+    /// reading verifies bytes and preserves the reservation until the returned buffer drops.
+    pub fn read_owned(
+        &self,
+        artifact: &Artifact,
+        limit: u64,
+        pool: &std::sync::Arc<dyn datafusion::execution::memory_pool::MemoryPool>,
+    ) -> io::Result<crate::owned_bytes::OwnedBytes> {
+        self.read_content_owned(
+            &artifact.artifact_id,
+            &artifact.sha256,
+            artifact.size_bytes,
+            limit,
+            pool,
+        )
+    }
+
+    pub(crate) fn read_content_owned(
+        &self,
+        artifact_id: &str,
+        digest: &str,
+        size: u64,
+        limit: u64,
+        pool: &std::sync::Arc<dyn datafusion::execution::memory_pool::MemoryPool>,
+    ) -> io::Result<crate::owned_bytes::OwnedBytes> {
+        let bytes = crate::owned_bytes::OwnedBytes::read(
+            self.open_content(artifact_id, digest, size, limit)?,
+            limit,
+            pool,
+            "retained-artifact-input",
+        )?;
+        if bytes.len() as u64 != size || canonical::sha256_hex(&bytes) != digest {
+            return Err(io::Error::other(
+                "owned artifact differs from its acquired content",
+            ));
+        }
+        Ok(bytes)
     }
 
     /// Capture a verified, bounded stream for range/section reads. The private descriptor
@@ -301,7 +383,7 @@ impl BlobStore {
         )
     }
 
-    fn open_content(
+    pub(crate) fn open_content(
         &self,
         artifact_id: &str,
         digest: &str,
@@ -354,6 +436,31 @@ impl BlobStore {
 mod tests {
     use super::*;
     use enrichment_core::evidence::ArtifactKind;
+
+    #[test]
+    fn plan19_artifact_unlink_is_idempotent_and_refuses_links() -> io::Result<()> {
+        let (_root, blobs) = store();
+        let digest = "a".repeat(64);
+        let path = blobs.path_for(&digest);
+        fs::create_dir_all(path.parent().unwrap())?;
+        fs::write(&path, b"unreferenced")?;
+        assert_eq!(
+            blobs.remove_unreferenced(&artifact_id_for(&digest))?,
+            Some(12)
+        );
+        assert_eq!(blobs.remove_unreferenced(&artifact_id_for(&digest))?, None);
+        let other = blobs.root().join("other");
+        fs::write(&other, b"keep")?;
+        std::os::unix::fs::symlink(&other, &path)?;
+        assert!(
+            blobs
+                .remove_unreferenced(&artifact_id_for(&digest))
+                .is_err()
+        );
+        assert_eq!(fs::read(other)?, b"keep");
+        assert!(blobs.remove_unreferenced("../outside").is_err());
+        Ok(())
+    }
 
     fn store() -> (tempfile::TempDir, BlobStore) {
         let dir = tempfile::tempdir().expect("temp dir");
@@ -491,7 +598,17 @@ mod tests {
                 .path
                 .starts_with(store.root().join("sha256").join("2c"))
         );
-        assert_eq!(store.read(&stored.acquired.sha256).expect("read"), b"hello");
+        let pool: std::sync::Arc<dyn datafusion::execution::memory_pool::MemoryPool> =
+            std::sync::Arc::new(datafusion::execution::memory_pool::GreedyMemoryPool::new(
+                1024,
+            ));
+        let read = store
+            .read_owned(&stored.acquired, 1024, &pool)
+            .expect("owned read");
+        assert_eq!(read.as_ref(), b"hello");
+        assert_eq!(pool.reserved(), 5);
+        drop(read);
+        assert_eq!(pool.reserved(), 0);
         let files = fs::read_dir(stored.path.parent().unwrap()).unwrap().count();
         assert_eq!(files, 1, "only immutable bytes, no metadata sidecar");
     }
@@ -536,6 +653,13 @@ mod tests {
     fn a_missing_blob_is_absent_not_an_error() {
         let (_dir, store) = store();
         assert!(!store.contains(&"0".repeat(64)));
-        assert!(store.read(&"0".repeat(64)).is_err());
+        let artifact = Artifact::describe(
+            b"missing",
+            ArtifactKind::Other,
+            "text/plain",
+            "x://missing",
+            enrichment_core::native_time::AcquisitionTime::from_micros(1).unwrap(),
+        );
+        assert!(store.open_input(&artifact, 1024).is_err());
     }
 }

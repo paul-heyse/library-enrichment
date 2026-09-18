@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## LogPath
 
 `struct` · `buoyant_kernel::log_path::LogPath`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.log_path.LogPath.md)
 
 Also reachable as `buoyant_kernel::LogPath`, `delta_kernel::log_path::LogPath`
 

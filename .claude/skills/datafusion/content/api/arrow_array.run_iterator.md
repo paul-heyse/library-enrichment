@@ -33,6 +33,9 @@ fn next(&mut self) -> Option<Self::Item>
 fn size_hint(&self) -> (usize, Option<usize>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.run_iterator.RunArrayIter.md).
+
+
 The [`RunArrayIter`] provides an idiomatic way to iterate over the run array.
 It returns Some(T) if there is a value or None if the value is null.
 

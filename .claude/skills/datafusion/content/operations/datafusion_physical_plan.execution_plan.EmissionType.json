@@ -1,0 +1,625 @@
+[
+  {
+    "id": "05c5e3937550b6fc12eae8da",
+    "path": "datafusion_physical_plan::execution_plan::EmissionType",
+    "name": "EmissionType",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "enum",
+    "signature": "enum EmissionType",
+    "docs": "Represents how an operator emits its output records.\n\nThis is used to determine whether an operator emits records incrementally as they arrive,\nonly emits a final result at the end, or can do both. Note that it generates the output -- record batch with `batch_size` rows\nbut it may still buffer data internally until it has enough data to emit a record batch or the source is exhausted.\n\nFor example, in the following plan:\n```text\n  SortExec [EmissionType::Final]\n    |_ on: [col1 ASC]\n    FilterExec [EmissionType::Incremental]\n      |_ pred: col2 > 100\n      DataSourceExec [EmissionType::Incremental]\n        |_ file: \"data.csv\"\n```\n- DataSourceExec emits records incrementally as it reads from the file\n- FilterExec processes and emits filtered records incrementally as they arrive\n- SortExec must wait for all input records before it can emit the sorted result,\n  since it needs to see all values to determine their final order\n\nLeft joins can emit both incrementally and finally:\n- Incrementally emit matches as they are found\n- Finally emit non-matches after all input is processed",
+    "span": {
+      "filename": "src/execution_plan.rs",
+      "begin": [
+        1346,
+        1
+      ],
+      "end": [
+        1353,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "enum": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "has_stripped_variants": false,
+        "variants": [
+          2572,
+          2573,
+          2574
+        ],
+        "impls": [
+          2575,
+          2576,
+          2577,
+          2578,
+          2579,
+          2580,
+          2581,
+          2582,
+          2583,
+          2584,
+          2585,
+          2586,
+          2587,
+          2588,
+          2589,
+          2590,
+          2591,
+          2592,
+          2593,
+          2594,
+          2595,
+          2596,
+          2597,
+          2599,
+          2601,
+          2602,
+          2603,
+          2605,
+          2606
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2520",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.execution_plan.EmissionType.md",
+    "record_file": "operations/datafusion_physical_plan.execution_plan.EmissionType.json",
+    "anchor": "op-05c5e3937550b6fc12eae8da",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ff29ff29955a04b7e9d8267d",
+    "path": "datafusion_physical_plan::execution_plan::EmissionType::Both",
+    "name": "Both",
+    "owner": "datafusion_physical_plan::execution_plan::EmissionType",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Both",
+    "docs": "Records can be emitted both incrementally and as a final result",
+    "span": {
+      "filename": "src/execution_plan.rs",
+      "begin": [
+        1352,
+        5
+      ],
+      "end": [
+        1352,
+        9
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": "plain",
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2574",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.execution_plan.EmissionType.md",
+    "record_file": "operations/datafusion_physical_plan.execution_plan.EmissionType.json",
+    "anchor": "op-ff29ff29955a04b7e9d8267d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "625804c3976566fc01a64050",
+    "path": "datafusion_physical_plan::execution_plan::EmissionType::Final",
+    "name": "Final",
+    "owner": "datafusion_physical_plan::execution_plan::EmissionType",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Final",
+    "docs": "Records are only emitted once all input has been processed",
+    "span": {
+      "filename": "src/execution_plan.rs",
+      "begin": [
+        1350,
+        5
+      ],
+      "end": [
+        1350,
+        10
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": "plain",
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2573",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.execution_plan.EmissionType.md",
+    "record_file": "operations/datafusion_physical_plan.execution_plan.EmissionType.json",
+    "anchor": "op-625804c3976566fc01a64050",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "34dfb60f79b6c701b6ed56b0",
+    "path": "datafusion_physical_plan::execution_plan::EmissionType::Incremental",
+    "name": "Incremental",
+    "owner": "datafusion_physical_plan::execution_plan::EmissionType",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Incremental",
+    "docs": "Records are emitted incrementally as they arrive and are processed",
+    "span": {
+      "filename": "src/execution_plan.rs",
+      "begin": [
+        1348,
+        5
+      ],
+      "end": [
+        1348,
+        16
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": "plain",
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2572",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.execution_plan.EmissionType.md",
+    "record_file": "operations/datafusion_physical_plan.execution_plan.EmissionType.json",
+    "anchor": "op-34dfb60f79b6c701b6ed56b0",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e58b2bde7146591c3f65407e",
+    "path": "datafusion_physical_plan::execution_plan::EmissionType::clone",
+    "name": "clone",
+    "owner": "datafusion_physical_plan::execution_plan::EmissionType",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> EmissionType",
+    "docs": "",
+    "span": {
+      "filename": "src/execution_plan.rs",
+      "begin": [
+        1345,
+        17
+      ],
+      "end": [
+        1345,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "EmissionType",
+              "id": 2520,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2520": "datafusion_physical_plan::execution_plan::EmissionType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "EmissionType",
+          "id": "datafusion_physical_plan::execution_plan::EmissionType",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/execution_plan.rs",
+        "begin": [
+          1345,
+          17
+        ],
+        "end": [
+          1345,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2600",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.execution_plan.EmissionType.md",
+    "record_file": "operations/datafusion_physical_plan.execution_plan.EmissionType.json",
+    "anchor": "op-e58b2bde7146591c3f65407e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1ec1f95d5542cd7c9197080f",
+    "path": "datafusion_physical_plan::execution_plan::EmissionType::eq",
+    "name": "eq",
+    "owner": "datafusion_physical_plan::execution_plan::EmissionType",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &EmissionType) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/execution_plan.rs",
+      "begin": [
+        1345,
+        30
+      ],
+      "end": [
+        1345,
+        39
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "EmissionType",
+                      "id": 2520,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2520": "datafusion_physical_plan::execution_plan::EmissionType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "EmissionType",
+          "id": "datafusion_physical_plan::execution_plan::EmissionType",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/execution_plan.rs",
+        "begin": [
+          1345,
+          30
+        ],
+        "end": [
+          1345,
+          39
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2604",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.execution_plan.EmissionType.md",
+    "record_file": "operations/datafusion_physical_plan.execution_plan.EmissionType.json",
+    "anchor": "op-1ec1f95d5542cd7c9197080f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4f78814da45ef81ddfd68d18",
+    "path": "datafusion_physical_plan::execution_plan::EmissionType::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_plan::execution_plan::EmissionType",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/execution_plan.rs",
+      "begin": [
+        1345,
+        10
+      ],
+      "end": [
+        1345,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "EmissionType",
+          "id": "datafusion_physical_plan::execution_plan::EmissionType",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/execution_plan.rs",
+        "begin": [
+          1345,
+          10
+        ],
+        "end": [
+          1345,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2598",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.execution_plan.EmissionType.md",
+    "record_file": "operations/datafusion_physical_plan.execution_plan.EmissionType.json",
+    "anchor": "op-4f78814da45ef81ddfd68d18",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

@@ -54,13 +54,6 @@ impl Contract {
         crate::native_key::Key::OperationContract.record(self)
     }
 }
-crate::native_struct! {
-    pub struct DefinitionBinding {
-        table_id: String => crate::native_union::Rule::NonEmpty,
-        version: u64 => crate::native_union::Rule::Text,
-        contract_id: String => crate::native_union::Rule::NonEmpty,
-    }
-}
 impl From<VerifyRequest> for Arguments {
     fn from(request: VerifyRequest) -> Self {
         Self::Verify { request }
@@ -102,24 +95,8 @@ pub fn execution_schema() -> SchemaRef {
         <crate::config::Execution as crate::native_union::NativeStruct>::fields(),
     ))
 }
-pub fn process_schema() -> SchemaRef {
-    Arc::new(Schema::new(
-        <crate::capsule_protocol::Operation as crate::native_union::NativeStruct>::fields(),
-    ))
-}
-pub fn process_effect_schema() -> SchemaRef {
-    Arc::new(Schema::new(
-        <jobs::Effect as crate::native_union::NativeStruct>::fields(),
-    ))
-}
 pub fn definition_binding_type() -> DataType {
-    <DefinitionBinding as crate::native_union::Cell>::data_type()
-}
-
-pub fn policy_schema() -> SchemaRef {
-    Arc::new(Schema::new(
-        <crate::config::Config as crate::native_union::NativeStruct>::fields(),
-    ))
+    <crate::delta_reference::DeltaVersionRef as crate::native_union::Cell>::data_type()
 }
 
 #[cfg(test)]
@@ -147,18 +124,24 @@ mod tests {
         let config = Config::default();
         complete(
             &serde_json::to_value(&config).unwrap(),
-            &DataType::Struct(policy_schema().fields().clone()),
+            &DataType::Struct(<Config as crate::native_union::NativeStruct>::fields()),
         );
-        let identity = Key::OperationPolicy.record(&config).unwrap();
+        let identity = crate::identity::OperationPolicyId::try_from_record(&config).unwrap();
         let mut changed = config.clone();
         changed.network.max_redirects += 1;
-        assert_ne!(identity, Key::OperationPolicy.record(&changed).unwrap());
+        assert_ne!(
+            identity,
+            crate::identity::OperationPolicyId::try_from_record(&changed).unwrap()
+        );
         changed = config;
         changed.policy.enabled_profiles.clear();
-        assert_ne!(identity, Key::OperationPolicy.record(&changed).unwrap());
+        assert_ne!(
+            identity,
+            crate::identity::OperationPolicyId::try_from_record(&changed).unwrap()
+        );
         crate::native_struct! { struct Input {
             operation_revision: String => crate::native_union::Rule::Text,
-            policy_id: String => crate::native_union::Rule::Text,
+            policy_id: crate::identity::OperationPolicyId => crate::native_union::Rule::Text,
             arguments: Arguments => crate::native_union::Rule::Text,
         } }
         use crate::native_union::NativeStruct;
@@ -200,8 +183,6 @@ mod tests {
 crate::native_struct! {
 pub struct StorageCapture {
     name: String => crate::native_union::Rule::NonEmpty,
-    table_id: String => crate::native_union::Rule::NonEmpty,
-    version: u64 => crate::native_union::Rule::Text,
-    contract_id: String => crate::native_union::Rule::NonEmpty,
+    source: crate::delta_reference::DeltaVersionRef => crate::native_union::Rule::Text,
 }
 }

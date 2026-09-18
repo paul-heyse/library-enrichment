@@ -1,0 +1,3107 @@
+[
+  {
+    "id": "8c1b19f80ea0c73466216a63",
+    "path": "datafusion_datasource::file::FileSource",
+    "name": "FileSource",
+    "owner": null,
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait FileSource: Any + Send + Sync",
+    "docs": "File format specific behaviors for [`DataSource`]\n\n# Schema information\nThere are two important schemas for a [`FileSource`]:\n1. [`Self::table_schema`] -- the schema for the overall table\n   (file data plus partition columns)\n2. The logical output schema, comprised of [`Self::table_schema`] with\n   [`Self::projection`] applied\n\nSee more details on specific implementations:\n* [`ArrowSource`](https://docs.rs/datafusion/latest/datafusion/datasource/physical_plan/struct.ArrowSource.html)\n* [`AvroSource`](https://docs.rs/datafusion/latest/datafusion/datasource/physical_plan/struct.AvroSource.html)\n* [`CsvSource`](https://docs.rs/datafusion/latest/datafusion/datasource/physical_plan/struct.CsvSource.html)\n* [`JsonSource`](https://docs.rs/datafusion/latest/datafusion/datasource/physical_plan/struct.JsonSource.html)\n* [`ParquetSource`](https://docs.rs/datafusion/latest/datafusion/datasource/physical_plan/struct.ParquetSource.html)\n\n[`DataSource`]: crate::source::DataSource",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        66,
+        1
+      ],
+      "end": [
+        397,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          192,
+          191,
+          199,
+          201,
+          202,
+          197,
+          205,
+          207,
+          208,
+          209,
+          211,
+          214,
+          219,
+          218,
+          224,
+          228,
+          229,
+          231,
+          234,
+          239
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Any",
+                "id": 57,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 19,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 21,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": []
+      }
+    },
+    "type_references": {
+      "57": "core::any::Any",
+      "19": "core::marker::Send",
+      "21": "core::marker::Sync"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::table_schema`": 199,
+      "crate::source::DataSource": 241,
+      "`FileSource`": 189,
+      "`Self::projection`": 197
+    },
+    "link_paths": {
+      "`Self::table_schema`": "datafusion_datasource::file::FileSource::table_schema",
+      "crate::source::DataSource": "datafusion_datasource::source::DataSource",
+      "`FileSource`": "datafusion_datasource::file::FileSource",
+      "`Self::projection`": "datafusion_datasource::file::FileSource::projection"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "189",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-8c1b19f80ea0c73466216a63",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource"
+    ],
+    "resolved_doc_links": {
+      "`Self::table_schema`": "../operations/datafusion_datasource.file.FileSource.md#op-5d12d1eeea4656c1e1a3bf3e",
+      "crate::source::DataSource": "../operations/datafusion_datasource.source.DataSource.md#op-9da841d166501739a52bf7ac",
+      "`FileSource`": "../operations/datafusion_datasource.file.FileSource.md#op-8c1b19f80ea0c73466216a63",
+      "`Self::projection`": "../operations/datafusion_datasource.file.FileSource.md#op-0222a3b6073f25c90ced3f20"
+    }
+  },
+  {
+    "id": "54278e73514d98c4a5081400",
+    "path": "datafusion_datasource::file::FileSource::apply_expressions",
+    "name": "apply_expressions",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+    "docs": "Apply a function to all physical expressions used by this file source.\n\nThis includes:\n- Filter predicates (which may contain dynamic filters)\n- Projection expressions\n\nThe function `f` should be called once per expression unless the function returns\n[`TreeNodeRecursion::Stop`] to stop iteration.\n\nSee [`ExecutionPlan::apply_expressions`] for more details and implementation examples.\n\n[`ExecutionPlan::apply_expressions`]: datafusion_physical_plan::ExecutionPlan::apply_expressions",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        368,
+        5
+      ],
+      "end": [
+        371,
+        36
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "FnMut",
+                            "id": 235,
+                            "args": {
+                              "parenthesized": {
+                                "inputs": [
+                                  {
+                                    "borrowed_ref": {
+                                      "lifetime": null,
+                                      "is_mutable": false,
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Arc",
+                                          "id": 13,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "dyn_trait": {
+                                                      "traits": [
+                                                        {
+                                                          "trait": {
+                                                            "path": "PhysicalExpr",
+                                                            "id": 203,
+                                                            "args": null
+                                                          },
+                                                          "generic_params": []
+                                                        }
+                                                      ],
+                                                      "lifetime": null
+                                                    }
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                "output": {
+                                  "resolved_path": {
+                                    "path": "Result",
+                                    "id": 119,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "TreeNodeRecursion",
+                                                "id": 236,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 119,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "TreeNodeRecursion",
+                          "id": 236,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "235": "core::ops::function::FnMut",
+      "13": "alloc::sync::Arc",
+      "203": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "119": "datafusion_common::error::Result",
+      "236": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "impl_context": null,
+    "links": {
+      "`TreeNodeRecursion::Stop`": 232,
+      "datafusion_physical_plan::ExecutionPlan::apply_expressions": 233
+    },
+    "link_paths": {
+      "`TreeNodeRecursion::Stop`": "datafusion_common::tree_node::TreeNodeRecursion::Stop",
+      "datafusion_physical_plan::ExecutionPlan::apply_expressions": "datafusion_physical_plan::execution_plan::ExecutionPlan::apply_expressions"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "234",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-54278e73514d98c4a5081400",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::apply_expressions"
+    ],
+    "resolved_doc_links": {
+      "`TreeNodeRecursion::Stop`": "../operations/datafusion_common.tree_node.TreeNodeRecursion.md#op-fbbedd1f0409ac786df535a1",
+      "datafusion_physical_plan::ExecutionPlan::apply_expressions": "../operations/datafusion_physical_plan.execution_plan.ExecutionPlan.md#op-b548b61205d0cb45f3ae084e"
+    }
+  },
+  {
+    "id": "04948e3f4428189d061797ac",
+    "path": "datafusion_datasource::file::FileSource::create_file_opener",
+    "name": "create_file_opener",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn create_file_opener(&self, object_store: Arc<dyn ObjectStore>, base_config: &FileScanConfig, partition: usize) -> Result<Arc<dyn FileOpener>>",
+    "docs": "Creates a `dyn FileOpener` based on given parameters.\n\nNote: File sources with a native morsel implementation should return an\nerror from this method and implementing [`Self::create_morselizer`] instead.",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        71,
+        5
+      ],
+      "end": [
+        76,
+        38
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "object_store",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 13,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ObjectStore",
+                                    "id": 14,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "base_config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "FileScanConfig",
+                      "id": 193,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 119,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 13,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "FileOpener",
+                                            "id": 194,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "13": "alloc::sync::Arc",
+      "14": "object_store::ObjectStore",
+      "193": "datafusion_datasource::file_scan_config::FileScanConfig",
+      "119": "datafusion_common::error::Result",
+      "194": "datafusion_datasource::file_stream::FileOpener"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::create_morselizer`": 191
+    },
+    "link_paths": {
+      "`Self::create_morselizer`": "datafusion_datasource::file::FileSource::create_morselizer"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "192",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-04948e3f4428189d061797ac",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::create_file_opener"
+    ],
+    "resolved_doc_links": {
+      "`Self::create_morselizer`": "../operations/datafusion_datasource.file.FileSource.md#op-e372eb95110decaac1ab248e"
+    }
+  },
+  {
+    "id": "e372eb95110decaac1ab248e",
+    "path": "datafusion_datasource::file::FileSource::create_morselizer",
+    "name": "create_morselizer",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn create_morselizer(&self, object_store: Arc<dyn ObjectStore>, base_config: &FileScanConfig, partition: usize) -> Result<Box<dyn Morselizer>>",
+    "docs": "Creates a `dyn Morselizer` based on given parameters.\n\nThe default implementation preserves existing behavior by adapting the\nlegacy [`FileOpener`] API into a [`Morselizer`].\n\nIt is preferred to implement the [`Morselizer`] API directly by\nimplementing this method.",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        85,
+        5
+      ],
+      "end": [
+        93,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "object_store",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 13,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ObjectStore",
+                                    "id": 14,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "base_config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "FileScanConfig",
+                      "id": 193,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 119,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 196,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "Morselizer",
+                                            "id": 195,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "13": "alloc::sync::Arc",
+      "14": "object_store::ObjectStore",
+      "193": "datafusion_datasource::file_scan_config::FileScanConfig",
+      "119": "datafusion_common::error::Result",
+      "196": "alloc::boxed::Box",
+      "195": "datafusion_datasource::morsel::Morselizer"
+    },
+    "impl_context": null,
+    "links": {
+      "`FileOpener`": 194,
+      "`Morselizer`": 195
+    },
+    "link_paths": {
+      "`FileOpener`": "datafusion_datasource::file_stream::FileOpener",
+      "`Morselizer`": "datafusion_datasource::morsel::Morselizer"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "191",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-e372eb95110decaac1ab248e",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::create_morselizer"
+    ],
+    "resolved_doc_links": {
+      "`FileOpener`": "../operations/datafusion_datasource.file_stream.FileOpener.md#op-de9e825a0c7367b18e03d6f1",
+      "`Morselizer`": "../operations/datafusion_datasource.morsel.Morselizer.md#op-4dc8c6c12cccc0db0eec6703"
+    }
+  },
+  {
+    "id": "2e0e153662dee3e71f2fbd3f",
+    "path": "datafusion_datasource::file::FileSource::file_type",
+    "name": "file_type",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn file_type(&self) -> &str",
+    "docs": "String representation of file source such as \"csv\", \"json\", \"parquet\"",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        130,
+        5
+      ],
+      "end": [
+        130,
+        33
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "207",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-2e0e153662dee3e71f2fbd3f",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::file_type"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "09dcb4160e6584441ae99415",
+    "path": "datafusion_datasource::file::FileSource::filter",
+    "name": "filter",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn filter(&self) -> Option<Arc<dyn PhysicalExpr>>",
+    "docs": "Returns the filter expression that will be applied *during* the file scan.\n\nThese expressions are in terms of the unprojected [`Self::table_schema`].",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        113,
+        5
+      ],
+      "end": [
+        115,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 64,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 13,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "PhysicalExpr",
+                                            "id": 203,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::option::Option",
+      "13": "alloc::sync::Arc",
+      "203": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::table_schema`": 199
+    },
+    "link_paths": {
+      "`Self::table_schema`": "datafusion_datasource::file::FileSource::table_schema"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "202",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-09dcb4160e6584441ae99415",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::filter"
+    ],
+    "resolved_doc_links": {
+      "`Self::table_schema`": "../operations/datafusion_datasource.file.FileSource.md#op-5d12d1eeea4656c1e1a3bf3e"
+    }
+  },
+  {
+    "id": "25ec6a31dece3afe968c8bd1",
+    "path": "datafusion_datasource::file::FileSource::fmt_extra",
+    "name": "fmt_extra",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt_extra(&self, _t: DisplayFormatType, _f: &mut Formatter<'_>) -> fmt::Result",
+    "docs": "Format FileType specific information",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        133,
+        5
+      ],
+      "end": [
+        135,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_t",
+              {
+                "resolved_path": {
+                  "path": "DisplayFormatType",
+                  "id": 185,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "_f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Formatter",
+                      "id": 108,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "fmt::Result",
+              "id": 109,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "185": "datafusion_physical_plan::display::DisplayFormatType",
+      "108": "core::fmt::Formatter",
+      "109": "core::fmt::Result"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "208",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-25ec6a31dece3afe968c8bd1",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::fmt_extra"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bf9bc0bd742e7e6e34b6d452",
+    "path": "datafusion_datasource::file::FileSource::metrics",
+    "name": "metrics",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn metrics(&self) -> &ExecutionPlanMetricsSet",
+    "docs": "Return execution plan metrics",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        127,
+        5
+      ],
+      "end": [
+        127,
+        51
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ExecutionPlanMetricsSet",
+                  "id": 206,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "206": "datafusion_physical_expr_common::metrics::ExecutionPlanMetricsSet"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "205",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-bf9bc0bd742e7e6e34b6d452",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::metrics"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0222a3b6073f25c90ced3f20",
+    "path": "datafusion_datasource::file::FileSource::projection",
+    "name": "projection",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn projection(&self) -> Option<&ProjectionExprs>",
+    "docs": "Return the projection that will be applied to the output stream on top\nof [`Self::table_schema`].\n\nNote you can use [`ProjectionExprs::project_schema`] on the table\nschema to get the effective output schema of this source.",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        122,
+        5
+      ],
+      "end": [
+        124,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 64,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "ProjectionExprs",
+                              "id": 204,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::option::Option",
+      "204": "datafusion_physical_expr::projection::ProjectionExprs"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::table_schema`": 199,
+      "`ProjectionExprs::project_schema`": 198
+    },
+    "link_paths": {
+      "`Self::table_schema`": "datafusion_datasource::file::FileSource::table_schema",
+      "`ProjectionExprs::project_schema`": "datafusion_physical_expr::projection::ProjectionExprs::project_schema"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "197",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-0222a3b6073f25c90ced3f20",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::projection"
+    ],
+    "resolved_doc_links": {
+      "`Self::table_schema`": "../operations/datafusion_datasource.file.FileSource.md#op-5d12d1eeea4656c1e1a3bf3e"
+    }
+  },
+  {
+    "id": "970b3f8908b16de658e1f7ed",
+    "path": "datafusion_datasource::file::FileSource::reorder_files",
+    "name": "reorder_files",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn reorder_files(&self, files: Vec<PartitionedFile>) -> Vec<PartitionedFile>",
+    "docs": "Reorder files in the shared work queue to optimize query performance.\n\nFor example, TopK queries benefit from reading files with the best\nstatistics first, so the dynamic filter threshold tightens quickly.\n\nThe default implementation returns files unchanged (no reordering).",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        289,
+        5
+      ],
+      "end": [
+        294,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "files",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 215,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "crate::PartitionedFile",
+                              "id": 225,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 215,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "crate::PartitionedFile",
+                          "id": 225,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "215": "alloc::vec::Vec",
+      "225": "datafusion_datasource::PartitionedFile"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "224",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-970b3f8908b16de658e1f7ed",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::reorder_files"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "31968499ac7eeb39834010b2",
+    "path": "datafusion_datasource::file::FileSource::repartitioned",
+    "name": "repartitioned",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn repartitioned(&self, target_partitions: usize, repartition_file_min_size: usize, output_ordering: Option<LexOrdering>, config: &FileScanConfig) -> Result<Option<FileScanConfig>>",
+    "docs": "If supported by the [`FileSource`], redistribute files across partitions\naccording to their size. Allows custom file formats to implement their\nown repartitioning logic.\n\nThe default implementation uses [`FileGroupPartitioner`]. See that\nstruct for more details.",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        158,
+        5
+      ],
+      "end": [
+        182,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "target_partitions",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "repartition_file_min_size",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "output_ordering",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 64,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "LexOrdering",
+                              "id": 212,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "FileScanConfig",
+                      "id": 193,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 119,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 64,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "FileScanConfig",
+                                      "id": 193,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::option::Option",
+      "212": "datafusion_physical_expr_common::sort_expr::LexOrdering",
+      "193": "datafusion_datasource::file_scan_config::FileScanConfig",
+      "119": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {
+      "`FileGroupPartitioner`": 210,
+      "`FileSource`": 189
+    },
+    "link_paths": {
+      "`FileGroupPartitioner`": "datafusion_datasource::file_groups::FileGroupPartitioner",
+      "`FileSource`": "datafusion_datasource::file::FileSource"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "211",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-31968499ac7eeb39834010b2",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::repartitioned"
+    ],
+    "resolved_doc_links": {
+      "`FileGroupPartitioner`": "../operations/datafusion_datasource.file_groups.FileGroupPartitioner.md#op-7b24c3a42bf8f20212e4a135",
+      "`FileSource`": "../operations/datafusion_datasource.file.FileSource.md#op-8c1b19f80ea0c73466216a63"
+    }
+  },
+  {
+    "id": "83110f8216b0e926a2816eea",
+    "path": "datafusion_datasource::file::FileSource::schema_adapter_factory",
+    "name": "schema_adapter_factory",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn schema_adapter_factory(&self) -> Option<Arc<dyn SchemaAdapterFactory>>",
+    "docs": "Deprecated: Returns the current schema adapter factory if set.\n\n`SchemaAdapterFactory` has been removed. Use `PhysicalExprAdapterFactory` instead.\nSee `upgrading.md` for more details.",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        352,
+        5
+      ],
+      "end": [
+        354,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[expect(deprecated)]"
+      }
+    ],
+    "deprecation": {
+      "since": "53.0.0",
+      "note": "SchemaAdapterFactory has been removed. Use PhysicalExprAdapterFactory instead. See upgrading.md for more details."
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 64,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 13,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "SchemaAdapterFactory",
+                                            "id": 230,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::option::Option",
+      "13": "alloc::sync::Arc",
+      "230": "datafusion_datasource::schema_adapter::SchemaAdapterFactory"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "231",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-83110f8216b0e926a2816eea",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::schema_adapter_factory"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "01963ce766d3917b03f28775",
+    "path": "datafusion_datasource::file::FileSource::supports_repartitioning",
+    "name": "supports_repartitioning",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_repartitioning(&self) -> bool",
+    "docs": "Returns whether this file source supports repartitioning files by byte ranges.\n\nWhen this returns `true`, files can be split into multiple partitions\nbased on byte offsets for parallel reading.\n\nWhen this returns `false`, files cannot be repartitioned (e.g., CSV files\nwith `newlines_in_values` enabled cannot be split because record boundaries\ncannot be determined by byte offset alone).\n\nThe default implementation returns `true`. File sources that cannot support\nrepartitioning should override this method.",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        148,
+        5
+      ],
+      "end": [
+        150,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "209",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-01963ce766d3917b03f28775",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::supports_repartitioning"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5d12d1eeea4656c1e1a3bf3e",
+    "path": "datafusion_datasource::file::FileSource::table_schema",
+    "name": "table_schema",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn table_schema(&self) -> &table_schema::TableSchema",
+    "docs": "Returns the table schema for the overall table (including partition columns, if any)\n\nThis method returns the unprojected schema: the full schema of the data\nwithout [`Self::projection`] applied.\n\nThe output schema of this `FileSource` is this TableSchema\nwith [`Self::projection`] applied.\n\nUse [`ProjectionExprs::project_schema`] to get the projected schema\nafter applying the projection.",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        105,
+        5
+      ],
+      "end": [
+        105,
+        65
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "crate::table_schema::TableSchema",
+                  "id": 200,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "200": "datafusion_datasource::table_schema::TableSchema"
+    },
+    "impl_context": null,
+    "links": {
+      "`ProjectionExprs::project_schema`": 198,
+      "`Self::projection`": 197
+    },
+    "link_paths": {
+      "`ProjectionExprs::project_schema`": "datafusion_physical_expr::projection::ProjectionExprs::project_schema",
+      "`Self::projection`": "datafusion_datasource::file::FileSource::projection"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "199",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-5d12d1eeea4656c1e1a3bf3e",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::table_schema"
+    ],
+    "resolved_doc_links": {
+      "`Self::projection`": "../operations/datafusion_datasource.file.FileSource.md#op-0222a3b6073f25c90ced3f20"
+    }
+  },
+  {
+    "id": "712b05c66a4b7e2a866163fe",
+    "path": "datafusion_datasource::file::FileSource::try_pushdown_filters",
+    "name": "try_pushdown_filters",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_pushdown_filters(&self, filters: Vec<Arc<dyn PhysicalExpr>>, _config: &ConfigOptions) -> Result<FilterPushdownPropagation<Arc<dyn FileSource>>>",
+    "docs": "Try to push down filters into this FileSource.\n\n`filters` must be in terms of the unprojected table schema (file schema\nplus partition columns), before any projection is applied.\n\nAny filters that this FileSource chooses to evaluate itself should be\nreturned as `PushedDown::Yes` in the result, along with a FileSource\ninstance that incorporates those filters. Such filters are logically\napplied \"during\" the file scan, meaning they may refer to columns not\nincluded in the final output projection.\n\nFilters that cannot be pushed down should be marked as `PushedDown::No`,\nand will be evaluated by an execution plan after the file source.\n\nSee [`ExecutionPlan::handle_child_pushdown_result`] for more details.\n\n[`ExecutionPlan::handle_child_pushdown_result`]: datafusion_physical_plan::ExecutionPlan::handle_child_pushdown_result",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        201,
+        5
+      ],
+      "end": [
+        209,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "filters",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 215,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 13,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "PhysicalExpr",
+                                                "id": 203,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ConfigOptions",
+                      "id": 216,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 119,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "FilterPushdownPropagation",
+                          "id": 217,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 13,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "FileSource",
+                                                        "id": 189,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "215": "alloc::vec::Vec",
+      "13": "alloc::sync::Arc",
+      "203": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "216": "datafusion_common::config::ConfigOptions",
+      "119": "datafusion_common::error::Result",
+      "217": "datafusion_physical_plan::filter_pushdown::FilterPushdownPropagation",
+      "189": "datafusion_datasource::file::FileSource"
+    },
+    "impl_context": null,
+    "links": {
+      "datafusion_physical_plan::ExecutionPlan::handle_child_pushdown_result": 213
+    },
+    "link_paths": {
+      "datafusion_physical_plan::ExecutionPlan::handle_child_pushdown_result": "datafusion_physical_plan::execution_plan::ExecutionPlan::handle_child_pushdown_result"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "214",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-712b05c66a4b7e2a866163fe",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::try_pushdown_filters"
+    ],
+    "resolved_doc_links": {
+      "datafusion_physical_plan::ExecutionPlan::handle_child_pushdown_result": "../operations/datafusion_physical_plan.execution_plan.ExecutionPlan.md#op-be5acc8664105339204cc270"
+    }
+  },
+  {
+    "id": "7fc5dc0ef450b149553f4e72",
+    "path": "datafusion_datasource::file::FileSource::try_pushdown_projection",
+    "name": "try_pushdown_projection",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_pushdown_projection(&self, _projection: &ProjectionExprs) -> Result<Option<Arc<dyn FileSource>>>",
+    "docs": "Try to push down a projection into this FileSource.\n\n`FileSource` implementations that support projection pushdown should\noverride this method and return a new `FileSource` instance with the\nprojection incorporated.\n\nIf a `FileSource` does accept a projection it is expected to handle\nthe projection in it's entirety, including partition columns.\nFor example, the `FileSource` may translate that projection into a\nfile format specific projection (e.g. Parquet can push down struct field access,\nsome other file formats like Vortex can push down computed expressions into un-decoded data)\nand also need to handle partition column projection (generally done by replacing partition column\nreferences with literal values derived from each files partition values).\n\nNot all FileSource's can handle complex expression pushdowns. For example,\na CSV file source may only support simple column selections. In such cases,\nthe `FileSource` can use [`SplitProjection`] and [`ProjectionOpener`]\nto split the projection into a pushdownable part and a non-pushdownable part.\nThese helpers also handle partition column projection.\n\n[`SplitProjection`]: crate::projection::SplitProjection\n[`ProjectionOpener`]: crate::projection::ProjectionOpener",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        318,
+        5
+      ],
+      "end": [
+        323,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_projection",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ProjectionExprs",
+                      "id": 204,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 119,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 64,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 13,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "FileSource",
+                                                        "id": 189,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "204": "datafusion_physical_expr::projection::ProjectionExprs",
+      "119": "datafusion_common::error::Result",
+      "64": "core::option::Option",
+      "13": "alloc::sync::Arc",
+      "189": "datafusion_datasource::file::FileSource"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::projection::ProjectionOpener": 227,
+      "crate::projection::SplitProjection": 226
+    },
+    "link_paths": {
+      "crate::projection::ProjectionOpener": "datafusion_datasource::projection::ProjectionOpener",
+      "crate::projection::SplitProjection": "datafusion_datasource::projection::SplitProjection"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "228",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-7fc5dc0ef450b149553f4e72",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::try_pushdown_projection"
+    ],
+    "resolved_doc_links": {
+      "crate::projection::ProjectionOpener": "../operations/datafusion_datasource.projection.ProjectionOpener.md#op-331d2f61348c5625701ec83d",
+      "crate::projection::SplitProjection": "../operations/datafusion_datasource.projection.SplitProjection.md#op-96e2e4a1d0fd5ad62b84edc5"
+    }
+  },
+  {
+    "id": "140ec04e9bfe3fe1e1e09b41",
+    "path": "datafusion_datasource::file::FileSource::try_pushdown_sort",
+    "name": "try_pushdown_sort",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_pushdown_sort(&self, order: &[PhysicalSortExpr], eq_properties: &EquivalenceProperties) -> Result<SortOrderPushdownResult<Arc<dyn FileSource>>>",
+    "docs": "Try to create a new FileSource that can produce data in the specified sort order.\n\nThis method attempts to optimize data retrieval to match the requested ordering.\nIt receives both the requested ordering and equivalence properties that describe\nthe output data from this file source.\n\n# Parameters\n* `order` - The requested sort ordering from the query\n* `eq_properties` - Equivalence properties of the data that will be produced by this\n  file source. These properties describe the ordering, constant columns, and other\n  relationships in the output data, allowing the implementation to determine if\n  optimizations like reversed scanning can help satisfy the requested ordering.\n  This includes information about:\n  - The file's natural ordering (from output_ordering in FileScanConfig)\n  - Constant columns (e.g., from filters like `ticker = 'AAPL'`)\n  - Monotonic functions (e.g., `extract_year_month(timestamp)`)\n  - Other equivalence relationships\n\n# Examples\n\n## Example 1: Simple reverse\n```text\nFile ordering: [a ASC, b DESC]\nRequested:     [a DESC]\nReversed file: [a DESC, b ASC]\nResult: Satisfies request (prefix match) → Inexact\n```\n\n## Example 2: Monotonic function\n```text\nFile ordering: [extract_year_month(ts) ASC, ts ASC]\nRequested:     [ts DESC]\nReversed file: [extract_year_month(ts) DESC, ts DESC]\nResult: Through monotonicity, satisfies [ts DESC] → Inexact\n```\n\n# Returns\n* `Exact` - Created a source that guarantees perfect ordering\n* `Inexact` - Created a source optimized for ordering (e.g., reversed row groups) but not perfectly sorted\n* `Unsupported` - Cannot optimize for this ordering\n\n# Deprecation / migration notes\n- [`Self::try_reverse_output`] was renamed to this method and deprecated since `53.0.0`.\n  Per DataFusion's deprecation guidelines, it will be removed in `59.0.0` or later\n  (6 major versions or 6 months, whichever is longer).\n- New implementations should override [`Self::try_pushdown_sort`] directly.\n- For backwards compatibility, the default implementation of\n  [`Self::try_pushdown_sort`] delegates to the deprecated\n  [`Self::try_reverse_output`] until it is removed. After that point, the\n  default implementation will return [`SortOrderPushdownResult::Unsupported`].",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        261,
+        5
+      ],
+      "end": [
+        268,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "order",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "PhysicalSortExpr",
+                        "id": 221,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "eq_properties",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "EquivalenceProperties",
+                      "id": 222,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 119,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SortOrderPushdownResult",
+                          "id": 223,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 13,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "FileSource",
+                                                        "id": 189,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "221": "datafusion_physical_expr_common::sort_expr::PhysicalSortExpr",
+      "222": "datafusion_physical_expr::equivalence::properties::EquivalenceProperties",
+      "119": "datafusion_common::error::Result",
+      "223": "datafusion_physical_plan::sort_pushdown::SortOrderPushdownResult",
+      "13": "alloc::sync::Arc",
+      "189": "datafusion_datasource::file::FileSource"
+    },
+    "impl_context": null,
+    "links": {
+      "`SortOrderPushdownResult::Unsupported`": 220,
+      "`Self::try_reverse_output`": 218,
+      "`Self::try_pushdown_sort`": 219
+    },
+    "link_paths": {
+      "`SortOrderPushdownResult::Unsupported`": "datafusion_physical_plan::sort_pushdown::SortOrderPushdownResult::Unsupported",
+      "`Self::try_reverse_output`": "datafusion_datasource::file::FileSource::try_reverse_output",
+      "`Self::try_pushdown_sort`": "datafusion_datasource::file::FileSource::try_pushdown_sort"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "219",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-140ec04e9bfe3fe1e1e09b41",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::try_pushdown_sort"
+    ],
+    "resolved_doc_links": {
+      "`SortOrderPushdownResult::Unsupported`": "../operations/datafusion_physical_plan.sort_pushdown.SortOrderPushdownResult.md#op-2741d2a02b139c9a94076044",
+      "`Self::try_reverse_output`": "../operations/datafusion_datasource.file.FileSource.md#op-cc25f64751ac02f8fa05460b",
+      "`Self::try_pushdown_sort`": "../operations/datafusion_datasource.file.FileSource.md#op-140ec04e9bfe3fe1e1e09b41"
+    }
+  },
+  {
+    "id": "cc25f64751ac02f8fa05460b",
+    "path": "datafusion_datasource::file::FileSource::try_reverse_output",
+    "name": "try_reverse_output",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_reverse_output(&self, _order: &[PhysicalSortExpr], _eq_properties: &EquivalenceProperties) -> Result<SortOrderPushdownResult<Arc<dyn FileSource>>>",
+    "docs": "Deprecated: Renamed to [`Self::try_pushdown_sort`].",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        275,
+        5
+      ],
+      "end": [
+        281,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": {
+      "since": "53.0.0",
+      "note": "Renamed to try_pushdown_sort. This method was never limited to reversing output. It will be removed in 59.0.0 or later."
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_order",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "PhysicalSortExpr",
+                        "id": 221,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_eq_properties",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "EquivalenceProperties",
+                      "id": 222,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 119,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SortOrderPushdownResult",
+                          "id": 223,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 13,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "FileSource",
+                                                        "id": 189,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "221": "datafusion_physical_expr_common::sort_expr::PhysicalSortExpr",
+      "222": "datafusion_physical_expr::equivalence::properties::EquivalenceProperties",
+      "119": "datafusion_common::error::Result",
+      "223": "datafusion_physical_plan::sort_pushdown::SortOrderPushdownResult",
+      "13": "alloc::sync::Arc",
+      "189": "datafusion_datasource::file::FileSource"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::try_pushdown_sort`": 219
+    },
+    "link_paths": {
+      "`Self::try_pushdown_sort`": "datafusion_datasource::file::FileSource::try_pushdown_sort"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "218",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-cc25f64751ac02f8fa05460b",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::try_reverse_output"
+    ],
+    "resolved_doc_links": {
+      "`Self::try_pushdown_sort`": "../operations/datafusion_datasource.file.FileSource.md#op-140ec04e9bfe3fe1e1e09b41"
+    }
+  },
+  {
+    "id": "83152ed75bb6a4e441648c13",
+    "path": "datafusion_datasource::file::FileSource::try_to_proto",
+    "name": "try_to_proto",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_to_proto(&self, _base: &FileScanConfig, _ctx: &datafusion_physical_plan::proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+    "docs": "Serialize this file source into a full [`PhysicalPlanNode`] (a\n`DataSourceExec` wrapping the `FileScanConfig`), if it knows how.\n\n`base` is the shared [`FileScanConfig`] this source is wrapped in; the\nformat-agnostic parts (file groups, schema, statistics, ordering,\nprojection, …) are encoded via\n[`FileScanConfig::try_to_proto`](crate::file_scan_config::FileScanConfig::try_to_proto),\nand the concrete source appends its format-specific fields (e.g. CSV\ndelimiter/quote) around it.\n\n* `Ok(None)` (the default) — this source has no proto hook yet; the\n  caller falls back to the central downcast chain in `datafusion-proto`.\n* `Ok(Some(node))` — fully serialized; the caller must not fall back.\n\n[`PhysicalPlanNode`]: datafusion_proto_models::protobuf::PhysicalPlanNode\n[`FileScanConfig`]: crate::file_scan_config::FileScanConfig",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        390,
+        5
+      ],
+      "end": [
+        396,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"proto\"), span: src/file.rs:389:11: 389:28 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_base",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "FileScanConfig",
+                      "id": 193,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx",
+                      "id": 240,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 119,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 64,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                                      "id": 237,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "193": "datafusion_datasource::file_scan_config::FileScanConfig",
+      "240": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx",
+      "119": "datafusion_common::error::Result",
+      "64": "core::option::Option",
+      "237": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::file_scan_config::FileScanConfig::try_to_proto": 238,
+      "datafusion_proto_models::protobuf::PhysicalPlanNode": 237,
+      "crate::file_scan_config::FileScanConfig": 193
+    },
+    "link_paths": {
+      "crate::file_scan_config::FileScanConfig::try_to_proto": "datafusion_datasource::file_scan_config::FileScanConfig::try_to_proto",
+      "datafusion_proto_models::protobuf::PhysicalPlanNode": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode",
+      "crate::file_scan_config::FileScanConfig": "datafusion_datasource::file_scan_config::FileScanConfig"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "239",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-83152ed75bb6a4e441648c13",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::try_to_proto"
+    ],
+    "resolved_doc_links": {
+      "crate::file_scan_config::FileScanConfig::try_to_proto": "../operations/datafusion_datasource.file_scan_config.FileScanConfig.md#op-947d8c6473bca5401d05e193",
+      "datafusion_proto_models::protobuf::PhysicalPlanNode": "../operations/datafusion_proto_models.generated.datafusion.PhysicalPlanNode.md#op-5e215028df0efda21d0133c8",
+      "crate::file_scan_config::FileScanConfig": "../operations/datafusion_datasource.file_scan_config.FileScanConfig.md#op-d7aa66cd63851cc944f55f57"
+    }
+  },
+  {
+    "id": "f16c55d10a8ff97c8f4cac12",
+    "path": "datafusion_datasource::file::FileSource::with_batch_size",
+    "name": "with_batch_size",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_batch_size(&self, batch_size: usize) -> Arc<dyn FileSource>",
+    "docs": "Initialize new type with batch size configuration",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        108,
+        5
+      ],
+      "end": [
+        108,
+        73
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch_size",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Arc",
+              "id": 13,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "FileSource",
+                                "id": 189,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "13": "alloc::sync::Arc",
+      "189": "datafusion_datasource::file::FileSource"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "201",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-f16c55d10a8ff97c8f4cac12",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::with_batch_size"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d8ed3228c2ec0899c5db3e4f",
+    "path": "datafusion_datasource::file::FileSource::with_schema_adapter_factory",
+    "name": "with_schema_adapter_factory",
+    "owner": "datafusion_datasource::file::FileSource",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_schema_adapter_factory(&self, _factory: Arc<dyn SchemaAdapterFactory>) -> Result<Arc<dyn FileSource>>",
+    "docs": "Deprecated: Set optional schema adapter factory.\n\n`SchemaAdapterFactory` has been removed. Use `PhysicalExprAdapterFactory` instead.\nSee `upgrading.md` for more details.",
+    "span": {
+      "filename": "src/file.rs",
+      "begin": [
+        334,
+        5
+      ],
+      "end": [
+        341,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[expect(deprecated)]"
+      }
+    ],
+    "deprecation": {
+      "since": "53.0.0",
+      "note": "SchemaAdapterFactory has been removed. Use PhysicalExprAdapterFactory instead. See upgrading.md for more details."
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_factory",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 13,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "SchemaAdapterFactory",
+                                    "id": 230,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 119,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 13,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "FileSource",
+                                            "id": 189,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "13": "alloc::sync::Arc",
+      "230": "datafusion_datasource::schema_adapter::SchemaAdapterFactory",
+      "119": "datafusion_common::error::Result",
+      "189": "datafusion_datasource::file::FileSource"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "229",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file.FileSource.md",
+    "record_file": "operations/datafusion_datasource.file.FileSource.json",
+    "anchor": "op-d8ed3228c2ec0899c5db3e4f",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileSource::with_schema_adapter_factory"
+    ],
+    "resolved_doc_links": {}
+  }
+]

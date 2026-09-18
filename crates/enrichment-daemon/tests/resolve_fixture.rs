@@ -96,7 +96,11 @@ async fn resolve(service: &Service, params: serde_json::Value) -> serde_json::Va
         .response
         .expect("a response");
     assert!(response.error.is_none(), "{:?}", response.error);
-    complete_answer::wait_for_answer(service, response.result.expect("an envelope")).await
+    complete_answer::wait_for_answer(
+        service,
+        serde_json::to_value(response.result.expect("an envelope")).expect("RPC JSON projection"),
+    )
+    .await
 }
 
 fn strings(value: &serde_json::Value) -> Vec<String> {
@@ -272,8 +276,21 @@ async fn a_release_with_hosted_json_stores_it_and_never_runs_cargo() {
     assert_eq!(json_artifact["compression"], "zstd");
     assert_eq!(json_artifact["media_type"], "application/json");
     // The stored bytes are the decompressed JSON, readable by digest.
-    let sha = json_artifact["sha256"].as_str().expect("digest");
-    let bytes = service.blobs.read(sha).expect("blob is readable");
+    let artifact: enrichment_core::evidence::Artifact =
+        serde_json::from_value(json_artifact.clone()).expect("artifact receipt");
+    let bytes = service
+        .blobs
+        .read_owned(
+            &artifact,
+            268_435_456,
+            &service
+                .repository
+                .runtime
+                .session()
+                .runtime_env()
+                .memory_pool,
+        )
+        .expect("owned blob input");
     assert!(bytes.starts_with(b"{"));
     assert_eq!(data["upstream"]["resolved_is_newest_stable"], true);
 
@@ -451,7 +468,7 @@ async fn owned_fetch(
     let id = record.snapshot.job_id;
     let fetcher = service.fetcher.clone();
     let (send, receive) = tokio::sync::oneshot::channel();
-    jobs.spawn(&service.repository.runtime, id.clone(), async move {
+    jobs.spawn(&service.repository.runtime, id, async move {
         assert!(driver_jobs.start(&id).await.unwrap());
         let result = fetcher.get(&url, None).await;
         send.send(result).unwrap();

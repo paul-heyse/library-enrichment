@@ -31,6 +31,9 @@ fn return_type(&self, _args: &[DataType]) -> datafusion_common::Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.length.SparkLengthFunc.md).
+
+
 Spark-compatible `length` expression
 <https://spark.apache.org/docs/latest/api/sql/index.html#length>
 

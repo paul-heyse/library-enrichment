@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## ParquetRowGroupSkipping
 
 `trait` · `buoyant_kernel::engine::parquet_row_group_skipping::ParquetRowGroupSkipping`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.parquet_row_group_skipping.ParquetRowGroupSkipping.md)
 
 Also reachable as `delta_kernel::engine::parquet_row_group_skipping::ParquetRowGroupSkipping`
 

@@ -1,0 +1,4252 @@
+[
+  {
+    "id": "1dc6ecdedb87f64e3b8474da",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "name": "KernelPredicateEvaluator",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "trait",
+    "signature": "trait KernelPredicateEvaluator",
+    "docs": "Uses kernel (not engine) logic to evaluate a predicate tree against column names that resolve as\nscalars. Useful for testing/debugging but also serves as a reference implementation that\ndocuments the expression semantics that kernel relies on for data skipping.\n\n# Inverted expression semantics\n\nBecause inversion (`NOT` operator) has special semantics and can often be optimized away by\npushing it down, most methods take an `inverted` flag. That allows operations like [`Pred::Not`]\nto simply evaluate their operand with a flipped `inverted` flag, and greatly simplifies the\nimplementations of most operators (other than those which have to directly implement NOT\nsemantics, which are unavoidably complex in that regard).\n\n# Parameterized output type\n\nThe types involved in predicate evaluation are parameterized and implementation-specific. For\nexample, a [`DirectDataSkippingPredicateEvaluator`] directly evaluates the predicate (e.g. using\nparquet footer stats) and returns boolean results, while\n[`IndirectDataSkippingPredicateEvaluator`] instead transforms the input predicate to a data\nskipping predicate that the engine can evaluated directly against Delta data skipping stats\nduring log replay. Although this approach is harder to read and reason about at first, the\nmajority of predicates can be implemented generically, which greatly reduces redundancy and\nensures that all flavors of predicate evaluation have the same semantics.\n\n# NULL and error semantics\n\nLiteral NULL values almost always produce cascading changes in the predicate's structure, so we\nrepresent them by `Option::None` rather than `Scalar::Null`. This allows e.g. `A < NULL` to be\nrewritten as `NULL`, or `AND(NULL, FALSE)` to be rewritten as `FALSE`.\n\nAlmost all operations produce NULL output if any input is `NULL`. Any resolution failures also\nproduce NULL (such as missing columns or type mismatch between a column and the scalar it is\ncompared against). NULL-checking operations like `IS [NOT] NULL` and `DISTINCT` are special, and\nrely on nullcount stats for their work (NULL/missing nullcount stats makes them output NULL).\n\nFor safety reasons, NULL-checking operations only accept literal and column inputs where\nstats-based skipping is well-defined. If an arbitrary data skipping predicate evaluates to\nNULL, there is no way to tell whether the original predicate really evaluated to NULL (safe to\nuse), or the data skipping version evaluated to NULL due to missing stats (very unsafe to use).\n\nNOTE: The error-handling semantics of this trait's scalar-based predicate evaluation may differ\nfrom those of the engine's predicate evaluation, because kernel predicates don't include the\nnecessary type information to reliably detect all type errors.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        87,
+        1
+      ],
+      "end": [
+        502,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          9779,
+          9780,
+          9781,
+          9782,
+          9783,
+          9784,
+          9785,
+          9786,
+          9787,
+          9788,
+          9789,
+          9791,
+          9792,
+          9793,
+          9794,
+          9795,
+          9796,
+          9797,
+          9798,
+          9790,
+          9799,
+          9800,
+          9801,
+          9802
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "implementations": [
+          9815
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`IndirectDataSkippingPredicateEvaluator`": 3778,
+      "`Pred::Not`": 4302,
+      "`DirectDataSkippingPredicateEvaluator`": 3779
+    },
+    "link_paths": {
+      "`IndirectDataSkippingPredicateEvaluator`": "buoyant_kernel::kernel_predicates::IndirectDataSkippingPredicateEvaluator",
+      "`Pred::Not`": "buoyant_kernel::expressions::Predicate::Not",
+      "`DirectDataSkippingPredicateEvaluator`": "buoyant_kernel::kernel_predicates::DirectDataSkippingPredicateEvaluator"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9777",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L87",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "8430",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-1dc6ecdedb87f64e3b8474da",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator"
+    ],
+    "resolved_doc_links": {
+      "`IndirectDataSkippingPredicateEvaluator`": "../operations/buoyant_kernel.kernel_predicates.IndirectDataSkippingPredicateEvaluator.md#op-c35596042fd4d3b57c5f5523",
+      "`Pred::Not`": "../operations/buoyant_kernel.expressions.Predicate.md#op-1e98d189910f98d1378713b1",
+      "`DirectDataSkippingPredicateEvaluator`": "../operations/buoyant_kernel.kernel_predicates.DirectDataSkippingPredicateEvaluator.md#op-55861932ef47a08b45ec2d61"
+    }
+  },
+  {
+    "id": "0f59ec25ff69223532cf2f47",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::Output",
+    "name": "Output",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "assoc_type",
+    "signature": "type Output",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        88,
+        5
+      ],
+      "end": [
+        88,
+        17
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "type": null,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9779",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L88",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15005",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-0f59ec25ff69223532cf2f47",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::Output"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "57f59849aae4361e9e9749e6",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval",
+    "name": "eval",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval(&self, pred: &Pred) -> Option<Self::Output>",
+    "docs": "A convenient non-inverted wrapper for [`Self::eval_pred`]",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        494,
+        5
+      ],
+      "end": [
+        496,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(unused)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "pred",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Pred",
+                      "id": 3067,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3067": "buoyant_kernel::expressions::Predicate",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::eval_pred`": 9799
+    },
+    "link_paths": {
+      "`Self::eval_pred`": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9801",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L494",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15027",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-57f59849aae4361e9e9749e6",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval"
+    ],
+    "resolved_doc_links": {
+      "`Self::eval_pred`": "../operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md#op-cadd45808fb9b9ca2fdc225a"
+    }
+  },
+  {
+    "id": "cadd45808fb9b9ca2fdc225a",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred",
+    "name": "eval_pred",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred(&self, pred: &Pred, inverted: bool) -> Option<Self::Output>",
+    "docs": "Dispatches a predicate to the specific implementation for each predicate variant.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        314,
+        5
+      ],
+      "end": [
+        329,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "pred",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Pred",
+                      "id": 3067,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3067": "buoyant_kernel::expressions::Predicate",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9799",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L314",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15025",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-cadd45808fb9b9ca2fdc225a",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "10182bed19635a02e0457f48",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_binary",
+    "name": "eval_pred_binary",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_binary(&self, op: BinaryPredicateOp, left: &Expr, right: &Expr, inverted: bool) -> Option<Self::Output>",
+    "docs": "Dispatches a (possibly inverted) binary expression to each operator's specific\nimplementation.\n\nNOTE: Only binary operators that produce boolean outputs are supported.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        266,
+        5
+      ],
+      "end": [
+        299,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "op",
+              {
+                "resolved_path": {
+                  "path": "BinaryPredicateOp",
+                  "id": 3507,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "left",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Expr",
+                      "id": 3064,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "right",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Expr",
+                      "id": 3064,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3507": "buoyant_kernel::expressions::BinaryPredicateOp",
+      "3064": "buoyant_kernel::expressions::Expression",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9798",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L266",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15024",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-10182bed19635a02e0457f48",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_binary"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7d78a3236edae7cbeae05b01",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_binary_columns",
+    "name": "eval_pred_binary_columns",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_binary_columns(&self, op: BinaryPredicateOp, a: &ColumnName, b: &ColumnName, inverted: bool) -> Option<Self::Output>",
+    "docs": "A (possibly inverted) comparison between two columns, e.g. `<colA> != <colB>`.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        121,
+        5
+      ],
+      "end": [
+        127,
+        31
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "op",
+              {
+                "resolved_path": {
+                  "path": "BinaryPredicateOp",
+                  "id": 3507,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "a",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ColumnName",
+                      "id": 520,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ColumnName",
+                      "id": 520,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3507": "buoyant_kernel::expressions::BinaryPredicateOp",
+      "520": "buoyant_kernel::expressions::column_names::ColumnName",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9787",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L121",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15013",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-7d78a3236edae7cbeae05b01",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_binary_columns"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1da9dd1156dc513bb7d27b4a",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_binary_scalars",
+    "name": "eval_pred_binary_scalars",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_binary_scalars(&self, op: BinaryPredicateOp, left: &Scalar, right: &Scalar, inverted: bool) -> Option<Self::Output>",
+    "docs": "A (possibly inverted) comparison between two scalars, e.g. `<valueA> != <valueB>`.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        112,
+        5
+      ],
+      "end": [
+        118,
+        31
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "op",
+              {
+                "resolved_path": {
+                  "path": "BinaryPredicateOp",
+                  "id": 3507,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "left",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Scalar",
+                      "id": 850,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "right",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Scalar",
+                      "id": 850,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3507": "buoyant_kernel::expressions::BinaryPredicateOp",
+      "850": "buoyant_kernel::expressions::scalars::Scalar",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9786",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L112",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15012",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-1da9dd1156dc513bb7d27b4a",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_binary_scalars"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "41f26763e60b4f1f9d9c676c",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_column",
+    "name": "eval_pred_column",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_column(&self, col: &ColumnName, inverted: bool) -> Option<Self::Output>",
+    "docs": "A (possibly inverted) boolean column access, e.g. `[NOT] <col>`.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        160,
+        5
+      ],
+      "end": [
+        164,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "col",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ColumnName",
+                      "id": 520,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "520": "buoyant_kernel::expressions::column_names::ColumnName",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9792",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L160",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15018",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-41f26763e60b4f1f9d9c676c",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_column"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "56498eec1fdcce2498db5a3c",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_distinct",
+    "name": "eval_pred_distinct",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_distinct(&self, col: &ColumnName, val: &Scalar, inverted: bool) -> Option<Self::Output>",
+    "docs": "A (possibly inverted) DISTINCT test, e.g. `[NOT] DISTINCT(<col>, false)`. DISTINCT can be\nseen as one of two operations, depending on the input:\n\n1. `DISTINCT(<col>, NULL)` is equivalent to `<col> IS NOT NULL`\n2. `DISTINCT(<col>, <value>)` is equivalent to `OR(<col> IS NULL, <col> != <value>)`",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        232,
+        5
+      ],
+      "end": [
+        248,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "col",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ColumnName",
+                      "id": 520,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "val",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Scalar",
+                      "id": 850,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "520": "buoyant_kernel::expressions::column_names::ColumnName",
+      "850": "buoyant_kernel::expressions::scalars::Scalar",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9796",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L232",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15022",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-56498eec1fdcce2498db5a3c",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_distinct"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "289effecc0f85f6dfd5fb993",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_eq",
+    "name": "eval_pred_eq",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_eq(&self, col: &ColumnName, val: &Scalar, inverted: bool) -> Option<Self::Output>",
+    "docs": "A (possibly inverted) equality comparison, e.g. `<col> = <value>` or `<col> != <value>`.\n\nNOTE: Caller is responsible to commute the operation if needed, e.g. `<value> != <col>`\nbecomes `<col> != <value>`.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        109,
+        5
+      ],
+      "end": [
+        109,
+        100
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "col",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ColumnName",
+                      "id": 520,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "val",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Scalar",
+                      "id": 850,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "520": "buoyant_kernel::expressions::column_names::ColumnName",
+      "850": "buoyant_kernel::expressions::scalars::Scalar",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9785",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L109",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15011",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-289effecc0f85f6dfd5fb993",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_eq"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a1ee7eee5bee23ddc1eee90b",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_expr",
+    "name": "eval_pred_expr",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_expr(&self, expr: &Expr, inverted: bool) -> Option<Self::Output>",
+    "docs": "Dispatches a (possibly inverted) boolean expression used as a predicate",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        172,
+        5
+      ],
+      "end": [
+        191,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "expr",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Expr",
+                      "id": 3064,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3064": "buoyant_kernel::expressions::Expression",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9794",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L172",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15020",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-a1ee7eee5bee23ddc1eee90b",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_expr"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a5e2246749588dca4b33a433",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_expr_opaque",
+    "name": "eval_pred_expr_opaque",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_expr_opaque(&self, op: &OpaqueExpressionOpRef, exprs: &[Expr], inverted: bool) -> Option<Self::Output>",
+    "docs": "Dispatches an opaque expression used as a predicate",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        138,
+        5
+      ],
+      "end": [
+        143,
+        31
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "op",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "OpaqueExpressionOpRef",
+                      "id": 3783,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "exprs",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Expr",
+                        "id": 3064,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3783": "buoyant_kernel::expressions::OpaqueExpressionOpRef",
+      "3064": "buoyant_kernel::expressions::Expression",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9789",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L138",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15015",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-a5e2246749588dca4b33a433",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_expr_opaque"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "68551f2464605fe81c3257e5",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_gt",
+    "name": "eval_pred_gt",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_gt(&self, col: &ColumnName, val: &Scalar, inverted: bool) -> Option<Self::Output>",
+    "docs": "A (possibly inverted) greater-than comparison, e.g. `<col> > <value>`",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        103,
+        5
+      ],
+      "end": [
+        103,
+        100
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "col",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ColumnName",
+                      "id": 520,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "val",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Scalar",
+                      "id": 850,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "520": "buoyant_kernel::expressions::column_names::ColumnName",
+      "850": "buoyant_kernel::expressions::scalars::Scalar",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9784",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L103",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15010",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-68551f2464605fe81c3257e5",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_gt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c7c87f133b2c52c096ca27f5",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_in",
+    "name": "eval_pred_in",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_in(&self, _col: &ColumnName, _val: &Scalar, _inverted: bool) -> Option<Self::Output>",
+    "docs": "A (possibly inverted) IN-list check, e.g. `<col> [NOT] IN <array-value>`.\n\nUnsupported by default, but implementations can override it if they wish.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        253,
+        5
+      ],
+      "end": [
+        260,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_col",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ColumnName",
+                      "id": 520,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_val",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Scalar",
+                      "id": 850,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "520": "buoyant_kernel::expressions::column_names::ColumnName",
+      "850": "buoyant_kernel::expressions::scalars::Scalar",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9797",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L253",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15023",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-c7c87f133b2c52c096ca27f5",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_in"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9343709f6c2f30a8f1984bc2",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_is_null",
+    "name": "eval_pred_is_null",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_is_null(&self, col: &ColumnName, inverted: bool) -> Option<Self::Output>",
+    "docs": "A (possibly inverted) NULL check, e.g. `<expr> IS [NOT] NULL`.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        97,
+        5
+      ],
+      "end": [
+        97,
+        91
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "col",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ColumnName",
+                      "id": 520,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "520": "buoyant_kernel::expressions::column_names::ColumnName",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9782",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L97",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15008",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-9343709f6c2f30a8f1984bc2",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_is_null"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "61c5cf8194238e89aec3971c",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_junction",
+    "name": "eval_pred_junction",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_junction(&self, op: JunctionPredicateOp, preds: &[Pred], inverted: bool) -> Option<Self::Output>",
+    "docs": "Dispatches a predicate junction operation (AND or OR), leveraging each implementation's\n[`Self::finish_eval_pred_junction`].",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        303,
+        5
+      ],
+      "end": [
+        311,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "op",
+              {
+                "resolved_path": {
+                  "path": "JunctionPredicateOp",
+                  "id": 3724,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "preds",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Pred",
+                        "id": 3067,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3724": "buoyant_kernel::expressions::JunctionPredicateOp",
+      "3067": "buoyant_kernel::expressions::Predicate",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::finish_eval_pred_junction`": 9791
+    },
+    "link_paths": {
+      "`Self::finish_eval_pred_junction`": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::finish_eval_pred_junction"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9790",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L303",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15016",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-61c5cf8194238e89aec3971c",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_junction"
+    ],
+    "resolved_doc_links": {
+      "`Self::finish_eval_pred_junction`": "../operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md#op-0ee991f832c056b15d36ce28"
+    }
+  },
+  {
+    "id": "0651dedc7ebf7c50809f49c4",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_lt",
+    "name": "eval_pred_lt",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_lt(&self, col: &ColumnName, val: &Scalar, inverted: bool) -> Option<Self::Output>",
+    "docs": "A (possibly inverted) less-than comparison, e.g. `<col> < <value>`.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        100,
+        5
+      ],
+      "end": [
+        100,
+        100
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "col",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ColumnName",
+                      "id": 520,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "val",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Scalar",
+                      "id": 850,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "520": "buoyant_kernel::expressions::column_names::ColumnName",
+      "850": "buoyant_kernel::expressions::scalars::Scalar",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9783",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L100",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15009",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-0651dedc7ebf7c50809f49c4",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_lt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a3044e463a3efacf51a559c4",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_not",
+    "name": "eval_pred_not",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_not(&self, pred: &Pred, inverted: bool) -> Option<Self::Output>",
+    "docs": "Dispatches a (possibly inverted) NOT predicate",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        167,
+        5
+      ],
+      "end": [
+        169,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "pred",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Pred",
+                      "id": 3067,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3067": "buoyant_kernel::expressions::Predicate",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9793",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L167",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15019",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-a3044e463a3efacf51a559c4",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_not"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7049b694c2404d487d9852d7",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_opaque",
+    "name": "eval_pred_opaque",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_opaque(&self, op: &OpaquePredicateOpRef, exprs: &[Expr], inverted: bool) -> Option<Self::Output>",
+    "docs": "Dispatches an opaque predicate.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        130,
+        5
+      ],
+      "end": [
+        135,
+        31
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "op",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "OpaquePredicateOpRef",
+                      "id": 3784,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "exprs",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Expr",
+                        "id": 3064,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3784": "buoyant_kernel::expressions::OpaquePredicateOpRef",
+      "3064": "buoyant_kernel::expressions::Expression",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9788",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L130",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15014",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-7049b694c2404d487d9852d7",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_opaque"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "43819d3f9c8df9f0fc23a842",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_scalar",
+    "name": "eval_pred_scalar",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_scalar(&self, val: &Scalar, inverted: bool) -> Option<Self::Output>",
+    "docs": "A (possibly inverted) boolean scalar value, e.g. `[NOT] <value>`.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        91,
+        5
+      ],
+      "end": [
+        91,
+        86
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "val",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Scalar",
+                      "id": 850,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "850": "buoyant_kernel::expressions::scalars::Scalar",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9780",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L91",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15006",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-43819d3f9c8df9f0fc23a842",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_scalar"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "279e486aa8a990294c509fe9",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_scalar_is_null",
+    "name": "eval_pred_scalar_is_null",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_scalar_is_null(&self, val: &Scalar, inverted: bool) -> Option<Self::Output>",
+    "docs": "A (possibly inverted) scalar NULL test, e.g. `<value> IS [NOT] NULL`.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        94,
+        5
+      ],
+      "end": [
+        94,
+        94
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "val",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Scalar",
+                      "id": 850,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "850": "buoyant_kernel::expressions::scalars::Scalar",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9781",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L94",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15007",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-279e486aa8a990294c509fe9",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_scalar_is_null"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f28210f863ed9143e1821ff4",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_sql_where",
+    "name": "eval_pred_sql_where",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_sql_where(&self, pred: &Pred, inverted: bool) -> Option<Self::Output>",
+    "docs": "Evaluates a (possibly inverted) predicate with SQL WHERE semantics.\n\nNOTE: A NULL literal in a boolean position is treated as unknown (not false), because\ncallers like `build_actions_meta_predicate` use NULL as a sentinel for unsupported arms.\nTreating it as false would let `AND(supported, NULL)` incorrectly prune files.\n\nBy default, [`Self::eval_pred`] behaves badly for comparisons involving NULL columns\n(e.g. `a < 10` when `a` is NULL), because the comparison correctly evaluates to NULL, but\nNULL values are interpreted as \"stats missing\" (= cannot skip). This ambiguity can \"poison\"\nthe entire predicate, causing it to return NULL instead of FALSE that would allow skipping:\n\n```text\nWHERE a < 10 -- NULL (can't skip file)\nWHERE a < 10 AND TRUE -- NULL (can't skip file)\nWHERE a < 10 OR FALSE -- NULL (can't skip file)\n```\n\nMeanwhile, SQL WHERE semantics only keeps rows for which the filter evaluates to\nTRUE (discarding rows that evaluate to FALSE or NULL):\n\n```text\nWHERE a < 10 -- NULL (discard row)\nWHERE a < 10 AND TRUE -- NULL (discard row)\nWHERE a < 10 OR FALSE -- NULL (discard row)\n```\n\nConceptually, the behavior difference between data skipping and SQL WHERE semantics can be\naddressed by evaluating with null-safe semantics, as if by `<expr> IS NOT NULL AND <expr>`:\n\n```text\nWHERE (a < 10) IS NOT NULL AND (a < 10) -- FALSE (skip file)\nWHERE (a < 10 AND TRUE) IS NOT NULL AND (a < 10 AND TRUE) -- FALSE (skip file)\nWHERE (a < 10 OR FALSE) IS NOT NULL AND (a < 10 OR FALSE) -- FALSE (skip file)\n```\n\nHOWEVER, we cannot safely NULL-check the result of an arbitrary data skipping predicate\nbecause a predicate will also produce NULL if the value is just plain missing (e.g. data\nskipping over a column that lacks stats), and if that NULL should propagate all the way to\ntop-level, it would be wrongly interpreted as FALSE (= skippable).\n\nTo prevent wrong data skipping, the predicate evaluator always returns NULL for a NULL check\nover anything except for literals and columns with known values. So we must push the NULL\ncheck down through supported operations (AND as well as null-intolerant comparisons like\n`<`, `!=`, etc) until it reaches columns and literals where it can do some good, e.g.:\n\n```text\nWHERE a < 10 AND (b < 20 OR c < 30)\n```\n\nwould conceptually be interpreted as\n\n```text\nWHERE\n  (a < 10 AND (b < 20 OR c < 30)) IS NOT NULL AND\n  (a < 10 AND (b < 20 OR c < 30))\n```\n\nWe then push the NULL check down through the top-level AND:\n\n```text\nWHERE\n  (a < 10 IS NOT NULL AND a < 10) AND\n  ((b < 20 OR c < 30) IS NOT NULL AND (b < 20 OR c < 30))\n```\n\nand attempt to push it further into the `a < 10` and `OR` clauses:\n\n```text\nWHERE\n  (a IS NOT NULL AND 10 IS NOT NULL AND a < 10) AND\n  (b < 20 OR c < 30)\n```\n\nAny time the push-down reaches an operator that does not support push-down (such as OR), we\nsimply drop the NULL check. This way, the top-level NULL check only applies to\nsub-predicates that can safely implement it, while ignoring other sub-predicates. The\nunsupported sub-predicates could produce nulls at runtime that prevent skipping, but false\npositives are OK -- the query will still correctly filter out the unwanted rows that result.\n\nAt predicate evaluation time, a NULL value of `a` (from our example) would evaluate as:\n\n```text\nAND(..., AND(a IS NOT NULL, 10 IS NOT NULL, a < 10), ...)\nAND(..., AND(FALSE, TRUE, NULL), ...)\nAND(..., FALSE, ...)\nFALSE\n```\n\nWhile a non-NULL value of `a` would instead evaluate as:\n\n```text\nAND(..., AND(a IS NOT NULL, 10 IS NOT NULL, a < 10), ...)\nAND(..., AND(TRUE, TRUE, <result>), ...)\nAND(..., <result>, ...)\n```\n\nAnd a missing value for `a` would safely disable the clause:\n\n```text\nAND(..., AND(a IS NOT NULL, 10 IS NOT NULL, a < 10), ...)\nAND(..., AND(NULL, TRUE, NULL), ...)\nAND(..., NULL, ...)\n```\n\nWARNING: Not an idempotent transform. If data skipping eval produces a sql predicate,\nevaluating the result with sql semantics has undefined behavior.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        437,
+        5
+      ],
+      "end": [
+        490,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "pred",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Pred",
+                      "id": 3067,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3067": "buoyant_kernel::expressions::Predicate",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::eval_pred`": 9799
+    },
+    "link_paths": {
+      "`Self::eval_pred`": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9800",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L437",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15026",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-f28210f863ed9143e1821ff4",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_sql_where"
+    ],
+    "resolved_doc_links": {
+      "`Self::eval_pred`": "../operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md#op-cadd45808fb9b9ca2fdc225a"
+    }
+  },
+  {
+    "id": "ba435f74e66c13bc7e534406",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_unary",
+    "name": "eval_pred_unary",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_pred_unary(&self, op: UnaryPredicateOp, expr: &Expr, inverted: bool) -> Option<Self::Output>",
+    "docs": "Dispatches a (possibly inverted) unary expression to each operator's specific\nimplementation.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        195,
+        5
+      ],
+      "end": [
+        225,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "op",
+              {
+                "resolved_path": {
+                  "path": "UnaryPredicateOp",
+                  "id": 3457,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "expr",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Expr",
+                      "id": 3064,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3457": "buoyant_kernel::expressions::UnaryPredicateOp",
+      "3064": "buoyant_kernel::expressions::Expression",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9795",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L195",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15021",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-ba435f74e66c13bc7e534406",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_unary"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d5cb83328275180b4540b092",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_sql_where",
+    "name": "eval_sql_where",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn eval_sql_where(&self, pred: &Pred) -> Option<Self::Output>",
+    "docs": "A convenient non-inverted wrapper for [`Self::eval_pred_sql_where`].",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        499,
+        5
+      ],
+      "end": [
+        501,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "pred",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Pred",
+                      "id": 3067,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3067": "buoyant_kernel::expressions::Predicate",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::eval_pred_sql_where`": 9800
+    },
+    "link_paths": {
+      "`Self::eval_pred_sql_where`": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_sql_where"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9802",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L499",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15028",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-d5cb83328275180b4540b092",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::eval_sql_where"
+    ],
+    "resolved_doc_links": {
+      "`Self::eval_pred_sql_where`": "../operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md#op-f28210f863ed9143e1821ff4"
+    }
+  },
+  {
+    "id": "0ee991f832c056b15d36ce28",
+    "path": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::finish_eval_pred_junction",
+    "name": "finish_eval_pred_junction",
+    "owner": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn finish_eval_pred_junction(&self, op: JunctionPredicateOp, preds: &mut dyn Iterator<Item = Option<Self::Output>>, inverted: bool) -> Option<Self::Output>",
+    "docs": "Completes evaluation of a (possibly inverted) junction predicate.\n\nAND and OR are implemented by first evaluating its (possibly inverted) inputs. This part is\nalways the same, provided by [`Self::eval_pred_junction`]). The results are then combined to\nbecome the predicate's output in some implementation-defined way (this method).",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/kernel_predicates/mod.rs",
+      "begin": [
+        150,
+        5
+      ],
+      "end": [
+        155,
+        31
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "op",
+              {
+                "resolved_path": {
+                  "path": "JunctionPredicateOp",
+                  "id": 3724,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "preds",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Iterator",
+                            "id": 138,
+                            "args": {
+                              "angle_bracketed": {
+                                "args": [],
+                                "constraints": [
+                                  {
+                                    "name": "Item",
+                                    "args": null,
+                                    "binding": {
+                                      "equality": {
+                                        "type": {
+                                          "resolved_path": {
+                                            "path": "Option",
+                                            "id": 23,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [
+                                                  {
+                                                    "type": {
+                                                      "qualified_path": {
+                                                        "name": "Output",
+                                                        "args": null,
+                                                        "self_type": {
+                                                          "generic": "Self"
+                                                        },
+                                                        "trait": {
+                                                          "path": "",
+                                                          "id": 9777,
+                                                          "args": null
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ],
+                                                "constraints": []
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "inverted",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 9777,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3724": "buoyant_kernel::expressions::JunctionPredicateOp",
+      "138": "core::iter::traits::iterator::Iterator",
+      "23": "core::option::Option",
+      "9777": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::eval_pred_junction`": 9790
+    },
+    "link_paths": {
+      "`Self::eval_pred_junction`": "buoyant_kernel::kernel_predicates::KernelPredicateEvaluator::eval_pred_junction"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "9791",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/kernel_predicates/mod.rs#L150",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15017",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md",
+    "record_file": "operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.json",
+    "anchor": "op-0ee991f832c056b15d36ce28",
+    "aliases": [
+      "delta_kernel::kernel_predicates::KernelPredicateEvaluator::finish_eval_pred_junction"
+    ],
+    "resolved_doc_links": {
+      "`Self::eval_pred_junction`": "../operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md#op-61c5cf8194238e89aec3971c"
+    }
+  }
+]

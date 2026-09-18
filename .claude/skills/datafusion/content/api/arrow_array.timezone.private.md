@@ -38,6 +38,9 @@ fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 fn from_str(tz: &str) -> Result<Self, Self::Err>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.timezone.private.Tz.md).
+
+
 An Arrow [`TimeZone`]
 
 ---
@@ -67,6 +70,9 @@ fn fix(&self) -> FixedOffset
 ```rust
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.timezone.private.TzOffset.md).
+
 
 An [`Offset`] for [`Tz`]
 

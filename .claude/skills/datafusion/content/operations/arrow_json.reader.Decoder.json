@@ -1,0 +1,1047 @@
+[
+  {
+    "id": "9a10b6ca230ecd7bed81532a",
+    "path": "arrow_json::reader::Decoder",
+    "name": "Decoder",
+    "owner": null,
+    "crate": "arrow-json",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct Decoder",
+    "docs": "A low-level interface for reading JSON data from a byte stream\n\nSee [`Reader`] for a higher-level interface for interface with [`BufRead`]\n\nThe push-based interface facilitates integration with sources that yield arbitrarily\ndelimited bytes ranges, such as [`BufRead`], or a chunked byte stream received from\nobject storage\n\n```\n# use std::io::BufRead;\n# use arrow_array::RecordBatch;\n# use arrow_json::reader::{Decoder, ReaderBuilder};\n# use arrow_schema::{ArrowError, SchemaRef};\n#\nfn read_from_json<R: BufRead>(\n    mut reader: R,\n    schema: SchemaRef,\n) -> Result<impl Iterator<Item = Result<RecordBatch, ArrowError>>, ArrowError> {\n    let mut decoder = ReaderBuilder::new(schema).build_decoder()?;\n    let mut next = move || {\n        loop {\n            // Decoder is agnostic that buf doesn't contain whole records\n            let buf = reader.fill_buf()?;\n            if buf.is_empty() {\n                break; // Input exhausted\n            }\n            let read = buf.len();\n            let decoded = decoder.decode(buf)?;\n\n            // Consume the number of bytes read\n            reader.consume(decoded);\n            if decoded != read {\n                break; // Read batch size\n            }\n        }\n        decoder.flush()\n    };\n    Ok(std::iter::from_fn(move || next().transpose()))\n}\n```",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        446,
+        1
+      ],
+      "end": [
+        452,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          204,
+          205,
+          206,
+          207,
+          208,
+          209,
+          210,
+          211,
+          212,
+          213,
+          214,
+          215,
+          216,
+          217,
+          218,
+          220
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Reader`": 9,
+      "`BufRead`": 15
+    },
+    "link_paths": {
+      "`Reader`": "arrow_json::reader::Reader",
+      "`BufRead`": "alloc::io::buf_read::BufRead"
+    },
+    "artifact": {
+      "id": "dd4cd3d73c7a2495b6756e2be8c5f04e18225bd265f764ae397c35bc0edac616",
+      "format_version": 61,
+      "item_id": "135",
+      "origin": "https://docs.rs/crate/arrow-json/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_json.reader.Decoder.md",
+    "record_file": "operations/arrow_json.reader.Decoder.json",
+    "anchor": "op-9a10b6ca230ecd7bed81532a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Reader`": "../operations/arrow_json.reader.Reader.md#op-065551256893ce5f2d76aab8"
+    }
+  },
+  {
+    "id": "432f1d1ec2cb18d7ee8c3aae",
+    "path": "arrow_json::reader::Decoder::decode",
+    "name": "decode",
+    "owner": "arrow_json::reader::Decoder",
+    "crate": "arrow-json",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn decode(&mut self, buf: &[u8]) -> Result<usize, ArrowError>",
+    "docs": "Read JSON objects from `buf`, returning the number of bytes read\n\nThis method returns once `batch_size` objects have been parsed since the\nlast call to [`Self::flush`], or `buf` is exhausted. Any remaining bytes\nshould be included in the next call to [`Self::decode`]\n\nThere is no requirement that `buf` contains a whole number of records, facilitating\nintegration with arbitrary byte streams, such as those yielded by [`BufRead`]",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        472,
+        5
+      ],
+      "end": [
+        474,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "buf",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "u8"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 14,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::result::Result",
+      "14": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_json::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          463,
+          1
+        ],
+        "end": [
+          705,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::flush`": 196,
+      "`Self::decode`": 197,
+      "`BufRead`": 15
+    },
+    "link_paths": {
+      "`Self::flush`": "arrow_json::reader::Decoder::flush",
+      "`Self::decode`": "arrow_json::reader::Decoder::decode",
+      "`BufRead`": "alloc::io::buf_read::BufRead"
+    },
+    "artifact": {
+      "id": "dd4cd3d73c7a2495b6756e2be8c5f04e18225bd265f764ae397c35bc0edac616",
+      "format_version": 61,
+      "item_id": "197",
+      "origin": "https://docs.rs/crate/arrow-json/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_json.reader.Decoder.md",
+    "record_file": "operations/arrow_json.reader.Decoder.json",
+    "anchor": "op-432f1d1ec2cb18d7ee8c3aae",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::flush`": "../operations/arrow_json.reader.Decoder.md#op-f12a99309c412e731981123f",
+      "`Self::decode`": "../operations/arrow_json.reader.Decoder.md#op-432f1d1ec2cb18d7ee8c3aae"
+    }
+  },
+  {
+    "id": "f12a99309c412e731981123f",
+    "path": "arrow_json::reader::Decoder::flush",
+    "name": "flush",
+    "owner": "arrow_json::reader::Decoder",
+    "crate": "arrow-json",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn flush(&mut self) -> Result<Option<RecordBatch>, ArrowError>",
+    "docs": "Flushes the currently buffered data to a [`RecordBatch`]\n\nReturns `Ok(None)` if no buffered data, i.e. [`Self::is_empty`] is true.\n\nNote: This will return an error if called part way through decoding a record,\ni.e. [`Self::has_partial_record`] is true.",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        677,
+        5
+      ],
+      "end": [
+        704,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 11,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "RecordBatch",
+                                      "id": 167,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 14,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::result::Result",
+      "11": "core::option::Option",
+      "167": "arrow_array::record_batch::RecordBatch",
+      "14": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_json::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          463,
+          1
+        ],
+        "end": [
+          705,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::is_empty`": 203,
+      "`Self::has_partial_record`": 201,
+      "`RecordBatch`": 167
+    },
+    "link_paths": {
+      "`Self::is_empty`": "arrow_json::reader::Decoder::is_empty",
+      "`Self::has_partial_record`": "arrow_json::reader::Decoder::has_partial_record",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "dd4cd3d73c7a2495b6756e2be8c5f04e18225bd265f764ae397c35bc0edac616",
+      "format_version": 61,
+      "item_id": "196",
+      "origin": "https://docs.rs/crate/arrow-json/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_json.reader.Decoder.md",
+    "record_file": "operations/arrow_json.reader.Decoder.json",
+    "anchor": "op-f12a99309c412e731981123f",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::is_empty`": "../operations/arrow_json.reader.Decoder.md#op-24c7a5aa3cf2c1dd2ba08219",
+      "`Self::has_partial_record`": "../operations/arrow_json.reader.Decoder.md#op-362bbde4ed37f541c6dfa5a3",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "e72ea76d4e47feb63e5383ff",
+    "path": "arrow_json::reader::Decoder::fmt",
+    "name": "fmt",
+    "owner": "arrow_json::reader::Decoder",
+    "crate": "arrow-json",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        455,
+        5
+      ],
+      "end": [
+        460,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::fmt::Formatter",
+                      "id": 119,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 120,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "119": "core::fmt::Formatter",
+      "120": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_json::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          454,
+          1
+        ],
+        "end": [
+          461,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dd4cd3d73c7a2495b6756e2be8c5f04e18225bd265f764ae397c35bc0edac616",
+      "format_version": 61,
+      "item_id": "219",
+      "origin": "https://docs.rs/crate/arrow-json/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_json.reader.Decoder.md",
+    "record_file": "operations/arrow_json.reader.Decoder.json",
+    "anchor": "op-e72ea76d4e47feb63e5383ff",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "362bbde4ed37f541c6dfa5a3",
+    "path": "arrow_json::reader::Decoder::has_partial_record",
+    "name": "has_partial_record",
+    "owner": "arrow_json::reader::Decoder",
+    "crate": "arrow-json",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn has_partial_record(&self) -> bool",
+    "docs": "True if the decoder is currently part way through decoding a record.",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        657,
+        5
+      ],
+      "end": [
+        659,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_json::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          463,
+          1
+        ],
+        "end": [
+          705,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dd4cd3d73c7a2495b6756e2be8c5f04e18225bd265f764ae397c35bc0edac616",
+      "format_version": 61,
+      "item_id": "201",
+      "origin": "https://docs.rs/crate/arrow-json/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_json.reader.Decoder.md",
+    "record_file": "operations/arrow_json.reader.Decoder.json",
+    "anchor": "op-362bbde4ed37f541c6dfa5a3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "24c7a5aa3cf2c1dd2ba08219",
+    "path": "arrow_json::reader::Decoder::is_empty",
+    "name": "is_empty",
+    "owner": "arrow_json::reader::Decoder",
+    "crate": "arrow-json",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "True if there are no records to flush, i.e. [`Self::len`] is zero.",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        667,
+        5
+      ],
+      "end": [
+        669,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_json::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          463,
+          1
+        ],
+        "end": [
+          705,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::len`": 202
+    },
+    "link_paths": {
+      "`Self::len`": "arrow_json::reader::Decoder::len"
+    },
+    "artifact": {
+      "id": "dd4cd3d73c7a2495b6756e2be8c5f04e18225bd265f764ae397c35bc0edac616",
+      "format_version": 61,
+      "item_id": "203",
+      "origin": "https://docs.rs/crate/arrow-json/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_json.reader.Decoder.md",
+    "record_file": "operations/arrow_json.reader.Decoder.json",
+    "anchor": "op-24c7a5aa3cf2c1dd2ba08219",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::len`": "../operations/arrow_json.reader.Decoder.md#op-ba2932d7cbc6dcd7de2eeff8"
+    }
+  },
+  {
+    "id": "ba2932d7cbc6dcd7de2eeff8",
+    "path": "arrow_json::reader::Decoder::len",
+    "name": "len",
+    "owner": "arrow_json::reader::Decoder",
+    "crate": "arrow-json",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "The number of unflushed records, including the partially decoded record (if any).",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        662,
+        5
+      ],
+      "end": [
+        664,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_json::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          463,
+          1
+        ],
+        "end": [
+          705,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dd4cd3d73c7a2495b6756e2be8c5f04e18225bd265f764ae397c35bc0edac616",
+      "format_version": 61,
+      "item_id": "202",
+      "origin": "https://docs.rs/crate/arrow-json/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_json.reader.Decoder.md",
+    "record_file": "operations/arrow_json.reader.Decoder.json",
+    "anchor": "op-ba2932d7cbc6dcd7de2eeff8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8556fc8721e544d5e48c86bb",
+    "path": "arrow_json::reader::Decoder::serialize",
+    "name": "serialize",
+    "owner": "arrow_json::reader::Decoder",
+    "crate": "arrow-json",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn serialize<S: Serialize>(&mut self, rows: &[S]) -> Result<(), ArrowError>",
+    "docs": "Serialize `rows` to this [`Decoder`]\n\nThis provides a simple way to convert [serde]-compatible datastructures into arrow\n[`RecordBatch`].\n\nCustom conversion logic as described in [arrow_array::builder] will likely outperform this,\nespecially where the schema is known at compile-time, however, this provides a mechanism\nto get something up and running quickly\n\nIt can be used with [`serde_json::Value`]\n\n```\n# use std::sync::Arc;\n# use serde_json::{Value, json};\n# use arrow_array::cast::AsArray;\n# use arrow_array::types::Float32Type;\n# use arrow_json::ReaderBuilder;\n# use arrow_schema::{DataType, Field, Schema};\nlet json = vec![json!({\"float\": 2.3}), json!({\"float\": 5.7})];\n\nlet schema = Schema::new(vec![Field::new(\"float\", DataType::Float32, true)]);\nlet mut decoder = ReaderBuilder::new(Arc::new(schema)).build_decoder().unwrap();\n\ndecoder.serialize(&json).unwrap();\nlet batch = decoder.flush().unwrap().unwrap();\nassert_eq!(batch.num_rows(), 2);\nassert_eq!(batch.num_columns(), 1);\nlet values = batch.column(0).as_primitive::<Float32Type>().values();\nassert_eq!(values, &[2.3, 5.7])\n```\n\nOr with arbitrary [`Serialize`] types\n\n```\n# use std::sync::Arc;\n# use arrow_json::ReaderBuilder;\n# use arrow_schema::{DataType, Field, Schema};\n# use serde::Serialize;\n# use arrow_array::cast::AsArray;\n# use arrow_array::types::{Float32Type, Int32Type};\n#\n#[derive(Serialize)]\nstruct MyStruct {\n    int32: i32,\n    float: f32,\n}\n\nlet schema = Schema::new(vec![\n    Field::new(\"int32\", DataType::Int32, false),\n    Field::new(\"float\", DataType::Float32, false),\n]);\n\nlet rows = vec![\n    MyStruct{ int32: 0, float: 3. },\n    MyStruct{ int32: 4, float: 67.53 },\n];\n\nlet mut decoder = ReaderBuilder::new(Arc::new(schema)).build_decoder().unwrap();\ndecoder.serialize(&rows).unwrap();\n\nlet batch = decoder.flush().unwrap().unwrap();\n\n// Expect batch containing two columns\nlet int32 = batch.column(0).as_primitive::<Int32Type>();\nassert_eq!(int32.values(), &[0, 4]);\n\nlet float = batch.column(1).as_primitive::<Float32Type>();\nassert_eq!(float.values(), &[3., 67.53]);\n```\n\nOr even complex nested types\n\n```\n# use std::collections::BTreeMap;\n# use std::sync::Arc;\n# use arrow_array::StructArray;\n# use arrow_cast::display::{ArrayFormatter, FormatOptions};\n# use arrow_json::ReaderBuilder;\n# use arrow_schema::{DataType, Field, Fields, Schema};\n# use serde::Serialize;\n#\n#[derive(Serialize)]\nstruct MyStruct {\n    int32: i32,\n    list: Vec<f64>,\n    nested: Vec<Option<Nested>>,\n}\n\nimpl MyStruct {\n    /// Returns the [`Fields`] for [`MyStruct`]\n    fn fields() -> Fields {\n        let nested = DataType::Struct(Nested::fields());\n        Fields::from([\n            Arc::new(Field::new(\"int32\", DataType::Int32, false)),\n            Arc::new(Field::new_list(\n                \"list\",\n                Field::new(\"element\", DataType::Float64, false),\n                false,\n            )),\n            Arc::new(Field::new_list(\n                \"nested\",\n                Field::new(\"element\", nested, true),\n                true,\n            )),\n        ])\n    }\n}\n\n#[derive(Serialize)]\nstruct Nested {\n    map: BTreeMap<String, Vec<String>>\n}\n\nimpl Nested {\n    /// Returns the [`Fields`] for [`Nested`]\n    fn fields() -> Fields {\n        let element = Field::new(\"element\", DataType::Utf8, false);\n        Fields::from([\n            Arc::new(Field::new_map(\n                \"map\",\n                \"entries\",\n                Field::new(\"key\", DataType::Utf8, false),\n                Field::new_list(\"value\", element, false),\n                false, // sorted\n                false, // nullable\n            ))\n        ])\n    }\n}\n\nlet data = vec![\n    MyStruct {\n        int32: 34,\n        list: vec![1., 2., 34.],\n        nested: vec![\n            None,\n            Some(Nested {\n                map: vec![\n                    (\"key1\".to_string(), vec![\"foo\".to_string(), \"bar\".to_string()]),\n                    (\"key2\".to_string(), vec![\"baz\".to_string()])\n                ].into_iter().collect()\n            })\n        ]\n    },\n    MyStruct {\n        int32: 56,\n        list: vec![],\n        nested: vec![]\n    },\n    MyStruct {\n        int32: 24,\n        list: vec![-1., 245.],\n        nested: vec![None]\n    }\n];\n\nlet schema = Schema::new(MyStruct::fields());\nlet mut decoder = ReaderBuilder::new(Arc::new(schema)).build_decoder().unwrap();\ndecoder.serialize(&data).unwrap();\nlet batch = decoder.flush().unwrap().unwrap();\nassert_eq!(batch.num_rows(), 3);\nassert_eq!(batch.num_columns(), 3);\n\n// Convert to StructArray to format\nlet s = StructArray::from(batch);\nlet options = FormatOptions::default().with_null(\"null\");\nlet formatter = ArrayFormatter::try_new(&s, &options).unwrap();\n\nassert_eq!(&formatter.value(0).to_string(), \"{int32: 34, list: [1.0, 2.0, 34.0], nested: [null, {map: {key1: [foo, bar], key2: [baz]}}]}\");\nassert_eq!(&formatter.value(1).to_string(), \"{int32: 56, list: [], nested: []}\");\nassert_eq!(&formatter.value(2).to_string(), \"{int32: 24, list: [-1.0, 245.0], nested: [null]}\");\n```\n\nNote: this ignores any batch size setting, and always decodes all rows\n\n[serde]: https://docs.rs/serde/latest/serde/",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        652,
+        5
+      ],
+      "end": [
+        654,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "rows",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "generic": "S"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 14,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "S",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Serialize",
+                          "id": 199,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::result::Result",
+      "14": "arrow_schema::error::ArrowError",
+      "199": "serde_core::ser::Serialize"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_json::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          463,
+          1
+        ],
+        "end": [
+          705,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Serialize`": 199,
+      "`RecordBatch`": 167,
+      "`Decoder`": 135,
+      "arrow_array::builder": 198,
+      "`serde_json::Value`": 20
+    },
+    "link_paths": {
+      "`Serialize`": "serde_core::ser::Serialize",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch",
+      "`Decoder`": "arrow_json::reader::Decoder",
+      "arrow_array::builder": "arrow_array::builder",
+      "`serde_json::Value`": "serde_json::value::Value"
+    },
+    "artifact": {
+      "id": "dd4cd3d73c7a2495b6756e2be8c5f04e18225bd265f764ae397c35bc0edac616",
+      "format_version": 61,
+      "item_id": "200",
+      "origin": "https://docs.rs/crate/arrow-json/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_json.reader.Decoder.md",
+    "record_file": "operations/arrow_json.reader.Decoder.json",
+    "anchor": "op-8556fc8721e544d5e48c86bb",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "`Decoder`": "../operations/arrow_json.reader.Decoder.md#op-9a10b6ca230ecd7bed81532a",
+      "arrow_array::builder": "../modules/arrow_array.builder.md#op-aacfbf3413ace5e290c06216"
+    }
+  }
+]

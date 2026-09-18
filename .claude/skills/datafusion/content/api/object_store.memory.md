@@ -49,6 +49,9 @@ async fn create_multipart(&self, _path: &Path) -> Result<MultipartId>
 async fn put_part(&self, _path: &Path, id: &MultipartId, part_idx: usize, payload: PutPayload) -> Result<PartId>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.memory.InMemory.md).
+
+
 In-memory storage suitable for testing or for opting out of using a cloud
 storage provider.
 

@@ -57,6 +57,7 @@ pub use iterators::*;
 pub use scan::*;
 pub use stream::*;
 
+mod bounded_ipc;
 mod iterators;
 mod log_data;
 mod scan;
@@ -1336,6 +1337,29 @@ pub(crate) async fn resolve_snapshot(
 }
 
 impl EagerSnapshot {
+    /// Best-effort owned heap estimate for bounded runtime residency. Shared schema/CRC
+    /// allocations are excluded by the kernel estimator. Arrow replay buffers are counted
+    /// conservatively; this is a capacity charge, not an RSS measurement.
+    pub fn estimated_owned_heap_size_bytes(&self) -> usize {
+        self.snapshot
+            .inner
+            .estimated_owned_heap_size_bytes()
+            .saturating_add(std::mem::size_of::<Self>())
+            .saturating_add(std::mem::size_of::<Snapshot>())
+            .saturating_add(
+                self.snapshot
+                    .materialized_files
+                    .as_ref()
+                    .map_or(0, |files| {
+                        files
+                            .batches
+                            .iter()
+                            .map(RecordBatch::get_array_memory_size)
+                            .sum::<usize>()
+                    }),
+            )
+    }
+
     /// Create a new [`EagerSnapshot`] instance
     pub async fn try_new(
         log_store: &dyn LogStore,

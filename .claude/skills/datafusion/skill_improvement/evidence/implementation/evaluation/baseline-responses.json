@@ -1,0 +1,560 @@
+{
+  "metadata": {
+    "evaluation": "frozen_baseline_forward_test",
+    "scope": "Pilot paired comparison; design evaluation only, not broad certification.",
+    "baseline_root": "/home/paul/library-enrichment/.claude/skills/datafusion/skill_improvement/evidence/implementation/evaluation/baseline",
+    "tasks_path": "/home/paul/library-enrichment/.claude/skills/datafusion/skill_improvement/evidence/implementation/evaluation_tasks.json",
+    "case_count": 24,
+    "started_at": "2026-09-18T15:32:17-04:00",
+    "finished_at": "2026-09-18T15:38:02.757890-04:00",
+    "elapsed_wall_seconds": 345.758,
+    "timing_note": "Start sampled by date at first reference-read command; finish sampled immediately before response serialization.",
+    "command_count": 19,
+    "command_count_definition": "Nested exec_command invocations in this evaluator, including this final artifact creation and structural validation command; not shell simple-command count.",
+    "tool_counts": {
+      "functions_exec_orchestration_calls": 14,
+      "nested_exec_command_calls": 19,
+      "web_calls": 0,
+      "compilation_calls": 0,
+      "runtime_probe_calls": 0
+    },
+    "output_token_estimate": null,
+    "context_token_estimate": null,
+    "token_measurement_note": "No session tokenizer/accounting was available. Some tool outputs were truncated, including an overly broad initial file listing; reported per-command original-token estimates do not measure delivered context.",
+    "shared_evidence_paths_read": [
+      "SKILL.md",
+      "content/topics/00-map.md",
+      "content/index/symbols.tsv"
+    ],
+    "evidence_path_convention": "Case evidence paths are relative to baseline_root and identify actually read files or excerpts, not an assertion that every line was consumed. Glob searches do not imply all matching-file content was read.",
+    "source_boundaries": {
+      "candidate_read": false,
+      "parent_implementation_read": false,
+      "plan_read": false,
+      "prior_assessment_read": false,
+      "oracle_artifacts_read": false,
+      "web_used": false,
+      "source_cache_used": false
+    },
+    "validation": {
+      "json_structure_checked": true,
+      "case_ids_match_input": true,
+      "per_case_max_words_excluding_paths": 180,
+      "compilation": "not_run",
+      "runtime_behavior": "not_run",
+      "correctness_oracles": "proposed_not_executed"
+    },
+    "observed_gaps": [
+      "Most extracted method entries retain signatures and one-line summaries rather than full method contracts; CastOptions field semantics, dictionary decode types and selected zero-column behavior were unresolved from these extracts.",
+      "The expressions topic says helper construction applies coercion, while the shipped expr_api example separately applies coercion and demonstrates evaluation failure without it. The example informed the narrower responses.",
+      "The Parquet reader extract identifies row-group and row-selection APIs but omits their coordinate interaction. E12B explicitly labels its answer as an unverified inference.",
+      "No measured optimization break-even or deployment memory guarantee was available; these were not inferred from API availability."
+    ]
+  },
+  "cases": [
+    {
+      "id": "E01A",
+      "candidate_apis": [
+        "arrow_select::filter::filter_record_batch",
+        "arrow_select::filter::FilterBuilder"
+      ],
+      "decision": "Use the batch filtering kernel; prepare a reusable predicate only for reuse.",
+      "decisive_conditions": "Mask length must equal batch row count. TRUE selects; FALSE and NULL do not.",
+      "contract": "Selected rows remain in input order, including duplicates and column nulls. Output keeps column types and schema metadata; no new nulls are introduced. Propagate Arrow errors.",
+      "evidence_paths_read": [
+        "content/api/arrow_select.filter.md",
+        "content/api/arrow_array.record_batch.md"
+      ],
+      "unknowns": [
+        "The extracted batch method documentation does not spell out length-error behavior or the zero-column implementation."
+      ],
+      "rust_sketch": "let out = arrow_select::filter::filter_record_batch(&batch, &mask)?;",
+      "response_word_count_excluding_paths": 72
+    },
+    {
+      "id": "E01B",
+      "candidate_apis": [
+        "arrow_select::take::take_record_batch",
+        "arrow_select::take::take_arrays",
+        "arrow_select::take::TakeOptions"
+      ],
+      "decision": "Use checked take_arrays plus explicit batch construction when bounds control and nullable output are required; take_record_batch is the convenience alternative.",
+      "decisive_conditions": "Use integer indices; validate non-null indices. Nullable indices require nullable output fields even if source fields were non-nullable.",
+      "contract": "Output positions are source rows 2,0,2,then an all-null row. Preserve duplicates, requested order, types and metadata. check_bounds=true converts out-of-range indices into errors; unchecked access may panic.",
+      "evidence_paths_read": [
+        "content/api/arrow_select.take.md",
+        "content/api/arrow_array.record_batch.md"
+      ],
+      "unknowns": [
+        "Batch convenience API exposes no bounds option; its selected policy and nullable-schema handling are not documented here. Null-index behavior is an inference to verify."
+      ],
+      "rust_sketch": "let cols = take_arrays(batch.columns(), &idx, Some(TakeOptions { check_bounds: true }))?; let out = RecordBatch::try_new(nullable_schema, cols)?;",
+      "response_word_count_excluding_paths": 103
+    },
+    {
+      "id": "E02A",
+      "candidate_apis": [
+        "arrow_select::filter::filter",
+        "arrow_select::filter::FilterBuilder",
+        "arrow_select::filter::FilterPredicate"
+      ],
+      "decision": "Prepare one FilterPredicate and reuse it across the 20 arrays; consider optimize before build.",
+      "decisive_conditions": "Same mask and length for all arrays. Repeated use amortizes mask preparation; selectivity, contiguous runs, array types and size determine benefit.",
+      "contract": "Each result contains TRUE-mask rows in original order; NULL-mask rows are omitted. Output types and selected value validity survive. Reuse prepared state while processing all arrays.",
+      "evidence_paths_read": [
+        "content/api/arrow_select.filter.md",
+        "content/model/arrow_select.filter.json"
+      ],
+      "unknowns": [
+        "No benchmark or break-even threshold is present in the read evidence."
+      ],
+      "rust_sketch": "let p = FilterBuilder::new(&mask).optimize().build(); let out = arrays.iter().map(|a| p.filter(a.as_ref())).collect::<Result<Vec<_>, _>>()?;",
+      "response_word_count_excluding_paths": 82
+    },
+    {
+      "id": "E02B",
+      "candidate_apis": [
+        "arrow_select::filter::filter",
+        "arrow_select::filter::FilterBuilder::is_optimize_beneficial"
+      ],
+      "decision": "Use direct filter for one small primitive array. The reusable preparation API exists but adds little value without reuse.",
+      "decisive_conditions": "Mask length matches array length. Direct filter already selects an optimization strategy; manual optimization needs evidence of a benefit.",
+      "contract": "TRUE selects; FALSE/NULL omit. Stable row order and value nulls remain. Returns the same array type or an Arrow error.",
+      "evidence_paths_read": [
+        "content/api/arrow_select.filter.md",
+        "content/model/arrow_select.filter.json"
+      ],
+      "unknowns": [
+        "One small array does not establish a universal performance threshold; measure if this is a hot path."
+      ],
+      "rust_sketch": "let out = arrow_select::filter::filter(&values, &mask)?;",
+      "response_word_count_excluding_paths": 80
+    },
+    {
+      "id": "E03A",
+      "candidate_apis": [
+        "arrow_select::take::take_record_batch",
+        "arrow_array::record_batch::RecordBatch::try_new"
+      ],
+      "decision": "Use take_record_batch for the two valid non-null indices.",
+      "decisive_conditions": "The input has two arrays of length three matching schema field count and types. Indices 2 and 0 are in bounds.",
+      "contract": "Output has two columns and two rows ordered [row2,row0], with the original schema and selected nulls. Ordinary batch construction checks equal lengths and matching data types.",
+      "evidence_paths_read": [
+        "content/api/arrow_select.take.md",
+        "content/api/arrow_array.record_batch.md"
+      ],
+      "unknowns": [
+        "The batch take implementation and its bounds-check default were not available in the extracted prose."
+      ],
+      "rust_sketch": "let idx = UInt32Array::from(vec![2, 0]); let out = take_record_batch(&batch, &idx)?;",
+      "response_word_count_excluding_paths": 80
+    },
+    {
+      "id": "E03B",
+      "candidate_apis": [
+        "arrow_select::take::take_record_batch",
+        "arrow_array::record_batch::RecordBatch::try_new_with_options",
+        "arrow_array::record_batch::RecordBatchOptions"
+      ],
+      "decision": "Validate indices against batch.num_rows(), then explicitly construct a zero-column batch with row_count=2.",
+      "decisive_conditions": "There is no array length from which construction can infer output row count. The input itself must retain its three-row count.",
+      "contract": "Preserve the empty schema and its metadata. Output has zero columns and two rows. Bounds must be checked against the batch even though no column kernel runs.",
+      "evidence_paths_read": [
+        "content/api/arrow_select.take.md",
+        "content/api/arrow_array.record_batch.md",
+        "content/model/arrow_array.record_batch.json"
+      ],
+      "unknowns": [
+        "The baseline does not show whether take_record_batch internally preserves zero-column row counts; the explicit construction avoids relying on it."
+      ],
+      "rust_sketch": "let opt = RecordBatchOptions::new().with_row_count(Some(2)); let out = RecordBatch::try_new_with_options(batch.schema(), vec![], &opt)?; // after checking 2,0 < batch.num_rows()",
+      "response_word_count_excluding_paths": 95
+    },
+    {
+      "id": "E04A",
+      "candidate_apis": [
+        "arrow_cast::cast::cast",
+        "arrow_cast::cast::cast_with_options",
+        "arrow_cast::cast::CastOptions"
+      ],
+      "decision": "Call cast_with_options with safe=true explicitly.",
+      "decisive_conditions": "Input is Utf8 strings with a malformed numeric value; result type is Int32. Safe parsing should replace malformed entries with null.",
+      "contract": "Expected result is [Some(12),None,None], same length/order. Existing null remains null. Unsupported type conversions can still error; this is not universal error suppression. Rebuild any batch field as nullable Int32.",
+      "evidence_paths_read": [
+        "content/api/arrow_cast.cast.md",
+        "content/model/arrow_cast.cast.json"
+      ],
+      "unknowns": [
+        "Field-level safe documentation and its default were omitted; the option interpretation needs an executable check."
+      ],
+      "rust_sketch": "let options = CastOptions { safe: true, ..Default::default() }; let out = cast_with_options(&strings, &DataType::Int32, &options)?;",
+      "response_word_count_excluding_paths": 85
+    },
+    {
+      "id": "E04B",
+      "candidate_apis": [
+        "arrow_cast::cast::cast_with_options",
+        "arrow_cast::cast::CastOptions"
+      ],
+      "decision": "Call cast_with_options with safe=false explicitly and propagate failure.",
+      "decisive_conditions": "Strict parsing must reject \"bad\" rather than turn it into a null.",
+      "contract": "Expected result is Err(ArrowError) for the supplied input; no successful partial array. A valid nullable input would preserve nulls and order while producing Int32. Do not convert the whole error into a null array.",
+      "evidence_paths_read": [
+        "content/api/arrow_cast.cast.md",
+        "content/model/arrow_cast.cast.json"
+      ],
+      "unknowns": [
+        "Extracted CastOptions lists field names but omits their definitions; exact error variant/message and safe behavior remain unverified."
+      ],
+      "rust_sketch": "let options = CastOptions { safe: false, ..Default::default() }; let out = cast_with_options(&strings, &DataType::Int32, &options)?;",
+      "response_word_count_excluding_paths": 86
+    },
+    {
+      "id": "E05A",
+      "candidate_apis": [
+        "arrow_row::RowConverter",
+        "arrow_row::SortField",
+        "arrow_row::Row",
+        "arrow_row::OwnedRow"
+      ],
+      "decision": "Encode composite keys with one RowConverter configured with per-column sort options.",
+      "decisive_conditions": "Use the same converter for all rows being compared; column types and lengths match its fields. Set descending and nulls_first separately per key.",
+      "contract": "Row comparison follows the encoded lexicographic ordering. Borrowed Row lifetime follows Rows; owned() detaches a single row. Retain converter configuration and storage. Float ordering is total and can distinguish signed zero.",
+      "evidence_paths_read": [
+        "content/api/arrow_row.md"
+      ],
+      "unknowns": [
+        "Unsupported types must be checked with supports_fields or construction errors. No runtime compatibility probe was run."
+      ],
+      "rust_sketch": "let fields = cols.iter().zip(opts).map(|(a,o)| SortField::new_with_options(a.data_type().clone(), o)).collect(); let c = RowConverter::new(fields)?; let rows = c.convert_columns(&cols)?; let order = rows.row(0).cmp(&rows.row(1));",
+      "response_word_count_excluding_paths": 99
+    },
+    {
+      "id": "E05B",
+      "candidate_apis": [
+        "arrow_row::RowConverter",
+        "arrow_ipc::writer::FileWriter",
+        "arrow_ipc::reader::FileReader"
+      ],
+      "decision": "Persist typed Arrow batches with IPC and a versioned comparison-policy description; regenerate row keys after loading.",
+      "decisive_conditions": "Durability spans processes and upgrades. RowConverter encoding may change between releases and comparisons require the same converter.",
+      "contract": "Preserve schema, values, nulls and column order in IPC; store sort directions/null placement separately. Finish the writer before publication, validate read schema, and construct one local converter on read. Do not persist raw Rows bytes as stable keys.",
+      "evidence_paths_read": [
+        "content/api/arrow_row.md",
+        "content/api/arrow_ipc.writer.md",
+        "content/api/arrow_ipc.reader.md"
+      ],
+      "unknowns": [
+        "Long-term compatibility across specific producer/consumer releases needs separate round-trip tests and a migration policy."
+      ],
+      "rust_sketch": "let mut w = FileWriter::try_new(file, batch.schema().as_ref())?; w.write(&batch)?; w.finish()?; // recreate converter after FileReader loading",
+      "response_word_count_excluding_paths": 99
+    },
+    {
+      "id": "E06A",
+      "candidate_apis": [
+        "arrow_row::RowConverter",
+        "arrow_cast::cast::cast",
+        "arrow_array::array::dictionary_array::DictionaryArray"
+      ],
+      "decision": "Compare hydrated logical values. For an explicit decode type, cast dictionary string columns to Utf8 before row conversion.",
+      "decisive_conditions": "Only logical values matter; physical dictionary key types, unused entries and assignments may be discarded.",
+      "contract": "Use Utf8 SortFields for hydrated strings. convert_rows on this converter yields Utf8 arrays, preserving values/nulls and selected row order, not Dictionary<K,Utf8>. Composite comparisons use one converter.",
+      "evidence_paths_read": [
+        "content/api/arrow_row.md",
+        "content/api/arrow_cast.cast.md",
+        "content/api/arrow_array.array.dictionary_array.md"
+      ],
+      "unknowns": [
+        "Direct dictionary-input convert_rows decoded physical types are not stated in the baseline; explicit hydration avoids depending on that missing contract."
+      ],
+      "rust_sketch": "let s = cast(dict.as_ref(), &DataType::Utf8)?; let c = RowConverter::new(vec![SortField::new(DataType::Utf8)])?; let rows = c.convert_columns(&[s])?; let decoded = c.convert_rows(rows.iter())?;",
+      "response_word_count_excluding_paths": 96
+    },
+    {
+      "id": "E06B",
+      "candidate_apis": [
+        "arrow_row::RowConverter",
+        "arrow_array::array::dictionary_array::DictionaryArray::try_new",
+        "arrow_select::take::take"
+      ],
+      "decision": "Use row encoding only for comparison, retaining original dictionary arrays and row identities as a sidecar.",
+      "decisive_conditions": "Exact dictionary physical types and key assignments cannot be recovered from a representation that hydrates only logical values.",
+      "contract": "Reconstruct Dictionary<K,V> from gathered original PrimitiveArray<K> keys and the unchanged values array. Preserve null keys, unused dictionary entries and original assignments. Row-decoded comparison values alone are insufficient; retain sidecar until reconstruction completes.",
+      "evidence_paths_read": [
+        "content/api/arrow_row.md",
+        "content/api/arrow_array.array.dictionary_array.md",
+        "content/api/arrow_select.take.md"
+      ],
+      "unknowns": [
+        "The direct convert_rows dictionary output contract is missing; no exact physical round-trip claim is made for it."
+      ],
+      "rust_sketch": "let keys = take(dict.keys(), &row_indices, Some(TakeOptions { check_bounds: true }))?; // downcast keys to PrimitiveArray<K>\nlet out = DictionaryArray::<K>::try_new(typed_keys.clone(), dict.values().clone())?;",
+      "response_word_count_excluding_paths": 103
+    },
+    {
+      "id": "E07A",
+      "candidate_apis": [
+        "datafusion::dataframe::DataFrame::execute_stream",
+        "datafusion::dataframe::DataFrame::execute_stream_partitioned",
+        "datafusion::dataframe::DataFrame::collect"
+      ],
+      "decision": "Use execute_stream and await each consumer operation. Use partitioned streams only when partition-aware consumption is useful.",
+      "decisive_conditions": "Avoid retaining batches or unbounded consumer queues. collect materializes all result batches.",
+      "contract": "Streaming bounds consumer retention to currently processed batches, not query-wide memory. Blocking operators may buffer extensively. Results and errors arrive incrementally; schema follows the plan. No global order without an ordering requirement. Drop stream on cancellation.",
+      "evidence_paths_read": [
+        "content/api/datafusion.dataframe.md",
+        "content/api/datafusion_execution.memory_pool.md"
+      ],
+      "unknowns": [
+        "No measured peak memory or cancellation cleanup evidence is available."
+      ],
+      "rust_sketch": "use futures::TryStreamExt; let mut s = df.execute_stream().await?; while let Some(b) = s.try_next().await? { consume(b).await?; }",
+      "response_word_count_excluding_paths": 89
+    },
+    {
+      "id": "E07B",
+      "candidate_apis": [
+        "datafusion::dataframe::DataFrame::execute_stream",
+        "datafusion_execution::runtime_env::RuntimeEnvBuilder",
+        "datafusion_execution::memory_pool::pool::FairSpillPool"
+      ],
+      "decision": "Stream output and configure a limited memory pool plus bounded temporary spill storage before creating the session.",
+      "decisive_conditions": "A blocking sort buffers/spills before yielding. Limit target partitions and consumer queues; reserve memory for untracked batches and overhead.",
+      "contract": "Pool budget constrains tracked operator reservations, not process RSS. Spill-capable operators spill or fail; disk exhaustion can fail. Require physical-plan inspection, spill metrics, pool peak and RSS measurements under representative large input before guaranteeing a deployment budget.",
+      "evidence_paths_read": [
+        "content/api/datafusion.dataframe.md",
+        "content/api/datafusion_execution.runtime_env.md",
+        "content/api/datafusion_execution.memory_pool.md",
+        "content/api/datafusion.execution.context.md",
+        "content/topics/sessions-and-runtime.md",
+        "content/index/symbols.tsv"
+      ],
+      "unknowns": [
+        "Sort completion, spill behavior, cleanup and peak RSS were not tested; an OS/container limit would be needed for a hard process bound."
+      ],
+      "rust_sketch": "let rt = RuntimeEnvBuilder::new().with_memory_pool(Arc::new(FairSpillPool::new(budget))).with_temp_file_path(tmp).with_max_temp_directory_size(disk_budget).build_arc()?; let ctx = SessionContext::new_with_config_rt(config, rt);",
+      "response_word_count_excluding_paths": 104
+    },
+    {
+      "id": "E08A",
+      "candidate_apis": [
+        "datafusion_catalog::memory::table::MemTable",
+        "datafusion_session::table::TableProvider",
+        "datafusion::execution::context::SessionContext::register_table"
+      ],
+      "decision": "Use MemTable::try_new(schema, partitions); custom provider implementation is unnecessary for existing batches.",
+      "decisive_conditions": "Input is Vec<Vec<RecordBatch>>, one inner vector per partition, with compatible schemas.",
+      "contract": "Register the Arc provider and query it normally. Batches remain materialized in memory; registration does not establish a memory budget or global row ordering. Preserve duplicates/nulls; reject incompatible batch construction. Custom providers remain an option for special execution/source semantics.",
+      "evidence_paths_read": [
+        "content/api/datafusion_catalog.memory.table.md",
+        "content/api/datafusion.execution.context.md",
+        "content/corpus/guides/library-user-guide/custom-table-providers.md"
+      ],
+      "unknowns": [
+        "Exact schema-compatibility acceptance details and empty-partition handling are not shown in the extracted constructor documentation."
+      ],
+      "rust_sketch": "let t = MemTable::try_new(schema, partitions)?; ctx.register_table(\"t\", Arc::new(t))?; let df = ctx.sql(\"SELECT * FROM t\").await?;",
+      "response_word_count_excluding_paths": 90
+    },
+    {
+      "id": "E08B",
+      "candidate_apis": [
+        "datafusion_catalog_listing::table::ListingTable",
+        "datafusion::datasource::file_format::options::ParquetReadOptions",
+        "datafusion::execution::context::SessionContext::register_parquet"
+      ],
+      "decision": "Use registered object storage with Parquet registration/ListingTable. A custom provider is unnecessary unless custom indexes or source behavior are required.",
+      "decisive_conditions": "Declare partition columns, register the object store URL and configure Parquet pruning. Metadata/statistics must exist for effective pruning.",
+      "contract": "Built-ins discover files, add partition columns, manage schema inference/adaptation and apply projection/filter pushdown. Missing compatible columns may become null. No global order follows from file discovery. Inspect EXPLAIN ANALYZE and I/O/pruning metrics; eligibility is not proof of actual skipped data.",
+      "evidence_paths_read": [
+        "content/api/datafusion_catalog_listing.table.md",
+        "content/api/datafusion_catalog_listing.options.md",
+        "content/api/datafusion_catalog_listing.config.md",
+        "content/api/datafusion.datasource.file_format.options.md",
+        "content/api/datafusion.execution.context.md",
+        "content/topics/parquet.md"
+      ],
+      "unknowns": [
+        "Object-store authentication, exact feature set and observed pruning are unverified."
+      ],
+      "rust_sketch": "ctx.register_object_store(&url, store); let o = ParquetReadOptions::new().table_partition_cols(partitions).parquet_pruning(true); ctx.register_parquet(\"t\", prefix, o).await?;",
+      "response_word_count_excluding_paths": 97
+    },
+    {
+      "id": "E09A",
+      "candidate_apis": [
+        "datafusion_session::table::TableProvider::supports_filters_pushdown",
+        "datafusion_expr::table_source::TableProviderFilterPushDown::Exact"
+      ],
+      "decision": "Return Exact for each predicate fully implemented with SQL semantics; Unsupported for unsupported predicates.",
+      "decisive_conditions": "Every TRUE row must survive, every FALSE/NULL row must be removed. Evaluation coverage includes all candidate rows and preserves multiplicities.",
+      "contract": "Return one classification per input expression in the same order. Exact allows DataFusion to remove the residual filter, making this a correctness contract.",
+      "evidence_paths_read": [
+        "content/traits/TableProvider.md",
+        "content/api/datafusion_expr.table_source.md",
+        "content/corpus/guides/library-user-guide/custom-table-providers.md"
+      ],
+      "unknowns": [
+        "No classifier or oracle was executed."
+      ],
+      "rust_sketch": "Ok(filters.iter().map(|f| if supported(f) { Exact } else { Unsupported }).collect())",
+      "correctness_oracle": "For k=[NULL,1,2,2,3], k>=2 yields [2,2,3]. Compare pushed execution against an unfiltered MemTable plus DataFusion WHERE, as multisets; inspect plan for residual removal.",
+      "response_word_count_excluding_paths": 95
+    },
+    {
+      "id": "E09B",
+      "candidate_apis": [
+        "datafusion_session::table::TableProvider::supports_filters_pushdown",
+        "datafusion_expr::table_source::TableProviderFilterPushDown::Inexact"
+      ],
+      "decision": "Return Inexact for supported conservative metadata pruning.",
+      "decisive_conditions": "Candidate groups must contain every potentially matching row. Unknown/incomplete statistics retain groups; false positives are allowed, false negatives are not.",
+      "contract": "DataFusion retains a residual filter to enforce SQL TRUE semantics. Preserve duplicate matching rows; metadata cannot justify Exact merely because it is accurate min/max metadata. Limit must not truncate candidates before residual evaluation.",
+      "evidence_paths_read": [
+        "content/traits/TableProvider.md",
+        "content/api/datafusion_expr.table_source.md",
+        "content/corpus/guides/library-user-guide/custom-table-providers.md"
+      ],
+      "unknowns": [
+        "No metadata-pruning implementation or runtime oracle was executed."
+      ],
+      "rust_sketch": "Ok(filters.iter().map(|f| if metadata_supports(f) { Inexact } else { Unsupported }).collect())",
+      "correctness_oracle": "Compare final results to unpruned MemTable WHERE on nulls, duplicates and boundary values. Separately prove candidate multiset contains every matching source row; include groups mixing 1,2,2,NULL for k>=2.",
+      "response_word_count_excluding_paths": 106
+    },
+    {
+      "id": "E10A",
+      "candidate_apis": [
+        "datafusion_session::table::TableProvider::scan",
+        "datafusion::execution::context::SessionContext::create_physical_expr",
+        "arrow_select::filter::filter_record_batch"
+      ],
+      "decision": "Build a scan execution plan that evaluates supported predicates against the full source schema and filters batches during execution.",
+      "decisive_conditions": "Assume projection=None because all columns are requested. Advertise Exact only for implemented predicates; combine filters with AND.",
+      "contract": "scan plans rather than performs heavy work. Execution yields schema-matching batches, selects only TRUE, preserves multiplicity and does not invent ordering guarantees. Propagate expression/read errors. Evaluate before limiting; avoid claiming sorting absent evidence.",
+      "evidence_paths_read": [
+        "content/traits/TableProvider.md",
+        "content/corpus/guides/library-user-guide/custom-table-providers.md",
+        "content/corpus/examples/query_planning/expr_api.rs",
+        "content/api/arrow_select.filter.md"
+      ],
+      "unknowns": [
+        "Concrete source execution-plan plumbing remains application-specific."
+      ],
+      "rust_sketch": "// Inside the execution stream:\nlet v = physical_predicate.evaluate(&batch)?; // normalize scalar/array to BooleanArray\nlet out = filter_record_batch(&batch, &mask)?;",
+      "correctness_oracle": "Compare full output schema and row multiset to unfiltered MemTable WHERE using NULL, duplicate and boundary rows; empty/all-false batches must remain valid.",
+      "response_word_count_excluding_paths": 116
+    },
+    {
+      "id": "E10B",
+      "candidate_apis": [
+        "datafusion_session::table::TableProvider::scan",
+        "arrow_select::filter::filter_record_batch",
+        "arrow_array::record_batch::RecordBatch::project"
+      ],
+      "decision": "Read predicate columns internally, filter against the full internal schema, then project requested columns and apply a safe post-filter limit.",
+      "decisive_conditions": "Projection indices refer to table schema; output must match requested column order/types. A removed predicate column is still required for evaluation. Exact predicates permit early stop after enough matching rows.",
+      "contract": "FALSE/NULL rows do not count toward the limit. Preserve duplicate matches. Do not apply the limit to pre-filter candidates or before an Inexact residual filter. Coordinate limit handling across partitions or let DataFusion enforce it. Keep planning lightweight.",
+      "evidence_paths_read": [
+        "content/traits/TableProvider.md",
+        "content/corpus/guides/library-user-guide/custom-table-providers.md",
+        "content/api/arrow_array.record_batch.md",
+        "content/api/arrow_select.filter.md"
+      ],
+      "unknowns": [
+        "Exact provider limit-hint contract and cross-partition implementation are not detailed in read extracts."
+      ],
+      "rust_sketch": "let kept = filter_record_batch(&batch, &mask)?; let projected = kept.project(projection)?; // emit matching rows up to coordinated limit",
+      "correctness_oracle": "Compare to SELECT payload FROM oracle WHERE k>=2 LIMIT 2. Include leading NULL/nonmatches and duplicate payloads. Use deterministic ORDER BY or relational limit properties when comparing unordered results.",
+      "response_word_count_excluding_paths": 146
+    },
+    {
+      "id": "E11A",
+      "candidate_apis": [
+        "datafusion::execution::context::SessionContext::sql",
+        "datafusion_expr::expr::Expr",
+        "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier"
+      ],
+      "decision": "Let ordinary SQL planning/analyzer perform coercion before optimization and physical evaluation.",
+      "decisive_conditions": "Registered schema determines operand types. Mixed types need a supported common coercion; incompatible combinations should error.",
+      "contract": "Expr construction describes computation. Analysis resolves names/types and inserts casts; simplification rewrites constants/algebra with schema/nullability context. Physical expression evaluation produces ColumnarValue/Arrow batches and may still raise data-dependent errors. A helper constructor alone does not prove type compatibility.",
+      "evidence_paths_read": [
+        "content/topics/expressions.md",
+        "content/corpus/examples/query_planning/expr_api.rs",
+        "content/api/datafusion_optimizer.simplify_expressions.expr_simplifier.md",
+        "content/api/datafusion.execution.context.md"
+      ],
+      "unknowns": [
+        "No concrete operand pair was specified, so exact result type/coercion cannot be promised."
+      ],
+      "rust_sketch": "let df = ctx.sql(\"SELECT i + f AS result FROM t\").await?; let stream = df.execute_stream().await?;",
+      "response_word_count_excluding_paths": 92
+    },
+    {
+      "id": "E11B",
+      "candidate_apis": [
+        "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::coerce",
+        "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::simplify",
+        "datafusion::execution::context::SessionContext::create_physical_expr"
+      ],
+      "decision": "Explicitly coerce against DFSchema before calling the standalone simplifier. Reject operands without a supported coercion.",
+      "decisive_conditions": "Direct construction and simplify are not substitutes for normal analysis. SessionContext::create_physical_expr supplies coercion; the lower-level function may not.",
+      "contract": "Build SimplifyContext with the correct schema and execution-time context, coerce, simplify, then create/evaluate the physical expression. Propagate coercion/evaluation errors and preserve SQL null semantics. Simplification returns an Expr, not row results.",
+      "evidence_paths_read": [
+        "content/api/datafusion_optimizer.simplify_expressions.expr_simplifier.md",
+        "content/corpus/examples/query_planning/expr_api.rs",
+        "content/topics/expressions.md"
+      ],
+      "unknowns": [
+        "Exact behavior of simplifying a genuinely incompatible expression was not executed; do not rely on it to reject all invalid trees."
+      ],
+      "rust_sketch": "let coerced = simplifier.coerce(expr, &schema)?; let simple = simplifier.simplify(coerced)?; let p = ctx.create_physical_expr(simple, &schema)?; let value = p.evaluate(&batch)?;",
+      "response_word_count_excluding_paths": 103
+    },
+    {
+      "id": "E12A",
+      "candidate_apis": [
+        "parquet::arrow::arrow_reader::selection::RowSelection",
+        "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+        "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_filter"
+      ],
+      "decision": "Build selection ranges over the retained file row sequence, which is the whole file when every row group is retained.",
+      "decisive_conditions": "Coordinates count rows, not bytes or output positions. Use ordered nonoverlapping ranges and the total row count.",
+      "contract": "Selection produces a subset in file order; it is not arbitrary gather/reordering. with_row_filter evaluates predicates during decoding; source/page pruning can avoid I/O earlier. RowSelection can skip fetches when page metadata supports it but does not itself evaluate SQL predicates. Preserve selected values/nulls and reader schema.",
+      "evidence_paths_read": [
+        "content/api/parquet.arrow.arrow_reader.selection.md",
+        "content/api/parquet.arrow.arrow_reader.md",
+        "content/model/parquet.arrow.arrow_reader.json",
+        "content/corpus/examples/data_io/parquet_advanced_index.rs"
+      ],
+      "unknowns": [
+        "Exact malformed-selection errors and I/O savings are unverified."
+      ],
+      "rust_sketch": "let s = RowSelection::from_consecutive_ranges(vec![2..4, 8..9].into_iter(), total_rows); let reader = builder.with_row_selection(s).build()?;",
+      "response_word_count_excluding_paths": 100
+    },
+    {
+      "id": "E12B",
+      "candidate_apis": [
+        "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_groups",
+        "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+        "parquet::arrow::arrow_reader::selection::RowSelection"
+      ],
+      "decision": "Use row selection coordinates over the concatenated retained row groups; omit excluded groups from selection offsets.",
+      "decisive_conditions": "For three ten-row groups retaining [0,2], original row 22 maps to selection offset 12, not 22. Preserve retained-group traversal order.",
+      "contract": "Row-group pruning removes whole groups; row selection narrows rows/pages inside the remaining sequence; RowFilter evaluates while decoding. These stages differ from filtering already decoded batches. Output retains selected values/nulls with the reader schema; no arbitrary gather duplication is provided.",
+      "evidence_paths_read": [
+        "content/api/parquet.arrow.arrow_reader.selection.md",
+        "content/api/parquet.arrow.arrow_reader.md",
+        "content/model/parquet.arrow.arrow_reader.json",
+        "content/corpus/examples/data_io/parquet_advanced_index.rs"
+      ],
+      "unknowns": [
+        "The extracted with_row_selection method contract omits its interaction with with_row_groups; the coordinate rule is an unverified design inference requiring an integration probe."
+      ],
+      "rust_sketch": "let s = RowSelection::from_consecutive_ranges(vec![12..13].into_iter(), 20); let reader = builder.with_row_groups(vec![0,2]).with_row_selection(s).build()?;",
+      "response_word_count_excluding_paths": 106
+    }
+  ]
+}

@@ -1,0 +1,1469 @@
+[
+  {
+    "id": "4e86551bf6a1e8510c810267",
+    "path": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+    "name": "TableChangesScanBuilder",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct",
+    "signature": "struct TableChangesScanBuilder",
+    "docs": "This builder constructs a [`TableChangesScan`] that can be used to read the [`TableChanges`]\nof a table. [`TableChangesScanBuilder`] allows you to specify a schema to project the columns\nor specify a predicate to filter rows in the Change Data Feed. Predicates referencing the\nChange Data Feed columns `_change_type`, `_commit_version`, and `_commit_timestamp` are\naccepted but have no filtering effect, because those columns are synthesized during scan\nexecution rather than read from data files; apply such filters in connector code after the\nscan returns. See issue [#525](https://github.com/delta-io/delta-kernel-rs/issues/525).\n\nNote: There is a lot of shared functionality between [`TableChangesScanBuilder`] and\n[`ScanBuilder`].\n\n[`ScanBuilder`]: crate::scan::ScanBuilder\n# Example\nConstruct a [`TableChangesScan`] from `table_changes` with a given schema and predicate\n```rust\n# use buoyant_kernel as delta_kernel;\n# use std::sync::Arc;\n# use delta_kernel::expressions::{column_expr, Scalar};\n# use delta_kernel::Predicate;\n# use delta_kernel::table_changes::TableChanges;\n# let path = \"./tests/data/table-with-cdf\";\n# let url = delta_kernel::try_parse_uri(path).unwrap();\n# use test_utils::delta_kernel_default_engine::{storage::store_from_url, DefaultEngineBuilder};\n# let engine = DefaultEngineBuilder::new(store_from_url(&url).unwrap()).build();\n# let table_changes = TableChanges::try_new(url, &engine, 0, Some(1)).unwrap();\nlet schema = table_changes\n    .schema()\n    .project(&[\"id\", \"_commit_version\"])\n    .unwrap();\nlet predicate = Arc::new(Predicate::gt(column_expr!(\"id\"), Scalar::from(10)));\nlet scan = table_changes\n    .into_scan_builder()\n    .with_schema(schema)\n    .with_predicate(predicate.clone())\n    .build();\n```",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/scan.rs",
+      "begin": [
+        68,
+        1
+      ],
+      "end": [
+        72,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          8085,
+          8086,
+          8087,
+          8088,
+          8089,
+          8090,
+          8091,
+          8092,
+          8093,
+          8094,
+          8095,
+          8096,
+          8097,
+          8098,
+          8099,
+          8100,
+          8101,
+          8102,
+          8103,
+          8104,
+          8105,
+          8106,
+          8107,
+          8108,
+          8109,
+          8110,
+          8111,
+          8112,
+          8114
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`TableChangesScanBuilder`": 8080,
+      "`TableChangesScan`": 8042,
+      "`TableChanges`": 8041,
+      "crate::scan::ScanBuilder": 6519
+    },
+    "link_paths": {
+      "`TableChangesScanBuilder`": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+      "`TableChangesScan`": "buoyant_kernel::table_changes::scan::TableChangesScan",
+      "`TableChanges`": "buoyant_kernel::table_changes::TableChanges",
+      "crate::scan::ScanBuilder": "buoyant_kernel::scan::ScanBuilder"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8080",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/scan.rs#L68",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "11936",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.md",
+    "record_file": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.json",
+    "anchor": "op-4e86551bf6a1e8510c810267",
+    "aliases": [
+      "delta_kernel::table_changes::scan::TableChangesScanBuilder"
+    ],
+    "resolved_doc_links": {
+      "`TableChangesScanBuilder`": "../operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.md#op-4e86551bf6a1e8510c810267",
+      "`TableChangesScan`": "../operations/buoyant_kernel.table_changes.scan.TableChangesScan.md#op-298dbadcbcd42cc5a5dc83e9",
+      "`TableChanges`": "../operations/buoyant_kernel.table_changes.TableChanges.md#op-9b64c4444ea3b8dc26e08d7e",
+      "crate::scan::ScanBuilder": "../operations/buoyant_kernel.scan.ScanBuilder.md#op-bca3273cb6882c664105ba29"
+    }
+  },
+  {
+    "id": "4e12b022d391de6058910b59",
+    "path": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder::build",
+    "name": "build",
+    "owner": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn build(self) -> DeltaResult<TableChangesScan>",
+    "docs": "Build the [`TableChangesScan`].\n\nThis does not scan the table at this point, but does do some work to ensure that the\nprovided schema make sense, and to prepare some metadata that the scan will need.  The\n[`TableChangesScan`] type itself can be used to fetch the files and associated metadata\nrequired to perform actual data reads.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/scan.rs",
+      "begin": [
+        112,
+        5
+      ],
+      "end": [
+        136,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "TableChangesScan",
+                          "id": 8042,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "239": "buoyant_kernel::error::DeltaResult",
+      "8042": "buoyant_kernel::table_changes::scan::TableChangesScan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableChangesScanBuilder",
+          "id": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/scan.rs",
+        "begin": [
+          74,
+          1
+        ],
+        "end": [
+          137,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TableChangesScan`": 8042
+    },
+    "link_paths": {
+      "`TableChangesScan`": "buoyant_kernel::table_changes::scan::TableChangesScan"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8084",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/scan.rs#L112",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "11940",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.md",
+    "record_file": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.json",
+    "anchor": "op-4e12b022d391de6058910b59",
+    "aliases": [
+      "delta_kernel::table_changes::scan::TableChangesScanBuilder::build"
+    ],
+    "resolved_doc_links": {
+      "`TableChangesScan`": "../operations/buoyant_kernel.table_changes.scan.TableChangesScan.md#op-298dbadcbcd42cc5a5dc83e9"
+    }
+  },
+  {
+    "id": "096c1cd96db2fb1e059f68ab",
+    "path": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder::fmt",
+    "name": "fmt",
+    "owner": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/scan.rs",
+      "begin": [
+        67,
+        10
+      ],
+      "end": [
+        67,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 102,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 103,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "102": "core::fmt::Formatter",
+      "103": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableChangesScanBuilder",
+          "id": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/scan.rs",
+        "begin": [
+          67,
+          10
+        ],
+        "end": [
+          67,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8113",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/scan.rs#L67",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "11969",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.md",
+    "record_file": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.json",
+    "anchor": "op-096c1cd96db2fb1e059f68ab",
+    "aliases": [
+      "delta_kernel::table_changes::scan::TableChangesScanBuilder::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e3b6073f6d8f384cf7aeec31",
+    "path": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder::new",
+    "name": "new",
+    "owner": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn new(table_changes: impl Into<Arc<TableChanges>>) -> Self",
+    "docs": "Create a new [`TableChangesScanBuilder`] instance.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/scan.rs",
+      "begin": [
+        76,
+        5
+      ],
+      "end": [
+        82,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "table_changes",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 56,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Arc",
+                                    "id": 40,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "TableChanges",
+                                                "id": 8041,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Into<Arc<TableChanges>>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 56,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 40,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "resolved_path": {
+                                                  "path": "TableChanges",
+                                                  "id": 8041,
+                                                  "args": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "56": "core::convert::Into",
+      "40": "alloc::sync::Arc",
+      "8041": "buoyant_kernel::table_changes::TableChanges"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableChangesScanBuilder",
+          "id": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/scan.rs",
+        "begin": [
+          74,
+          1
+        ],
+        "end": [
+          137,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TableChangesScanBuilder`": 8080
+    },
+    "link_paths": {
+      "`TableChangesScanBuilder`": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8081",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/scan.rs#L76",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "11937",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.md",
+    "record_file": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.json",
+    "anchor": "op-e3b6073f6d8f384cf7aeec31",
+    "aliases": [
+      "delta_kernel::table_changes::scan::TableChangesScanBuilder::new"
+    ],
+    "resolved_doc_links": {
+      "`TableChangesScanBuilder`": "../operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.md#op-4e86551bf6a1e8510c810267"
+    }
+  },
+  {
+    "id": "36cc5a4657f429b2baf1790a",
+    "path": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder::with_predicate",
+    "name": "with_predicate",
+    "owner": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn with_predicate(self, predicate: impl Into<Option<PredicateRef>>) -> Self",
+    "docs": "Optionally provide an expression to filter rows. For example, using the predicate `x <\n4` to return a subset of the rows in the scan which satisfy the filter. If `predicate_opt`\nis `None`, this is a no-op.\n\nNOTE: The filtering is best-effort and can produce false positives (rows that should should\nhave been filtered out but were kept).",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/scan.rs",
+      "begin": [
+        101,
+        5
+      ],
+      "end": [
+        104,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "predicate",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 56,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Option",
+                                    "id": 23,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "PredicateRef",
+                                                "id": 3450,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Into<Option<PredicateRef>>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 56,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Option",
+                                      "id": 23,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "resolved_path": {
+                                                  "path": "PredicateRef",
+                                                  "id": 3450,
+                                                  "args": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "56": "core::convert::Into",
+      "23": "core::option::Option",
+      "3450": "buoyant_kernel::expressions::PredicateRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableChangesScanBuilder",
+          "id": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/scan.rs",
+        "begin": [
+          74,
+          1
+        ],
+        "end": [
+          137,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8083",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/scan.rs#L101",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "11939",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.md",
+    "record_file": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.json",
+    "anchor": "op-36cc5a4657f429b2baf1790a",
+    "aliases": [
+      "delta_kernel::table_changes::scan::TableChangesScanBuilder::with_predicate"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d4e78da5961e510d6ef7b94e",
+    "path": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder::with_schema",
+    "name": "with_schema",
+    "owner": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn with_schema(self, schema: impl Into<Option<SchemaRef>>) -> Self",
+    "docs": "Provide [`Schema`] for columns to select from the [`TableChanges`].\n\nA table with columns `[a, b, c]` could have a scan which reads only the first\ntwo columns by using the schema `[a, b]`.\n\n[`Schema`]: crate::schema::Schema",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/scan.rs",
+      "begin": [
+        90,
+        5
+      ],
+      "end": [
+        93,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "schema",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 56,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Option",
+                                    "id": 23,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "SchemaRef",
+                                                "id": 778,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Into<Option<SchemaRef>>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 56,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Option",
+                                      "id": 23,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "resolved_path": {
+                                                  "path": "SchemaRef",
+                                                  "id": 778,
+                                                  "args": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "56": "core::convert::Into",
+      "23": "core::option::Option",
+      "778": "buoyant_kernel::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableChangesScanBuilder",
+          "id": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/scan.rs",
+        "begin": [
+          74,
+          1
+        ],
+        "end": [
+          137,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TableChanges`": 8041,
+      "crate::schema::Schema": 6324
+    },
+    "link_paths": {
+      "`TableChanges`": "buoyant_kernel::table_changes::TableChanges",
+      "crate::schema::Schema": "buoyant_kernel::schema::Schema"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8082",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/scan.rs#L90",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "11938",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.md",
+    "record_file": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.json",
+    "anchor": "op-d4e78da5961e510d6ef7b94e",
+    "aliases": [
+      "delta_kernel::table_changes::scan::TableChangesScanBuilder::with_schema"
+    ],
+    "resolved_doc_links": {
+      "`TableChanges`": "../operations/buoyant_kernel.table_changes.TableChanges.md#op-9b64c4444ea3b8dc26e08d7e",
+      "crate::schema::Schema": "../operations/buoyant_kernel.schema.Schema.md#op-636d4431ddb187018059ed1d"
+    }
+  },
+  {
+    "id": "755a1a43fef770e4573f1b71",
+    "path": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder::predicate",
+    "name": "predicate",
+    "owner": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "predicate: Option<PredicateRef>",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/scan.rs",
+      "begin": [
+        71,
+        5
+      ],
+      "end": [
+        71,
+        36
+      ]
+    },
+    "visibility": {
+      "restricted": {
+        "parent": 11894,
+        "path": "::table_changes::scan"
+      }
+    },
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "Option",
+          "id": 11,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::PredicateRef",
+                      "id": 4693,
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "11": "core::option::Option",
+      "4693": "buoyant_kernel::expressions::PredicateRef"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "11935",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/scan.rs#L71",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.md",
+    "record_file": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.json",
+    "anchor": "op-755a1a43fef770e4573f1b71",
+    "aliases": [
+      "delta_kernel::table_changes::scan::TableChangesScanBuilder::predicate"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "52440cf0e35192be15b601cf",
+    "path": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder::schema",
+    "name": "schema",
+    "owner": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "schema: Option<schema::SchemaRef>",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/scan.rs",
+      "begin": [
+        70,
+        5
+      ],
+      "end": [
+        70,
+        30
+      ]
+    },
+    "visibility": {
+      "restricted": {
+        "parent": 11894,
+        "path": "::table_changes::scan"
+      }
+    },
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "Option",
+          "id": 11,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::schema::SchemaRef",
+                      "id": 1214,
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "11": "core::option::Option",
+      "1214": "buoyant_kernel::schema::SchemaRef"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "11934",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/scan.rs#L70",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.md",
+    "record_file": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.json",
+    "anchor": "op-52440cf0e35192be15b601cf",
+    "aliases": [
+      "delta_kernel::table_changes::scan::TableChangesScanBuilder::schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f2cbce458431c6c55ce96781",
+    "path": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder::table_changes",
+    "name": "table_changes",
+    "owner": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "table_changes: std::sync::Arc<super::TableChanges>",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/scan.rs",
+      "begin": [
+        69,
+        5
+      ],
+      "end": [
+        69,
+        37
+      ]
+    },
+    "visibility": {
+      "restricted": {
+        "parent": 11894,
+        "path": "::table_changes::scan"
+      }
+    },
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "std::sync::Arc",
+          "id": 47,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "super::TableChanges",
+                      "id": 11893,
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "47": "alloc::sync::Arc",
+      "11893": "buoyant_kernel::table_changes::TableChanges"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "11933",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/scan.rs#L69",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.md",
+    "record_file": "operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.json",
+    "anchor": "op-f2cbce458431c6c55ce96781",
+    "aliases": [
+      "delta_kernel::table_changes::scan::TableChangesScanBuilder::table_changes"
+    ],
+    "resolved_doc_links": {}
+  }
+]

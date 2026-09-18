@@ -5,6 +5,7 @@ Crate `deltalake-core` · 6 public items · structured records in [`model/deltal
 ## ReadOptions
 
 `struct` · `deltalake_core::datafile::ReadOptions`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.ReadOptions.md)
 
 Also reachable as `deltalake::datafile::ReadOptions`
 
@@ -31,6 +32,7 @@ pushdown is the DataFusion extension's job ([`datafusion_ext::DeltaDataReaderExt
 ## DataFileReader
 
 `trait` · `deltalake_core::datafile::DataFileReader`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.DataFileReader.md)
 
 Also reachable as `deltalake::datafile::DataFileReader`
 
@@ -57,6 +59,7 @@ mirroring [`DataFileWriter`]). Impl: [`reader::ParquetFileReader`].
 ## DataFileWriter
 
 `trait` · `deltalake_core::datafile::DataFileWriter`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.DataFileWriter.md)
 
 Also reachable as `deltalake::datafile::DataFileWriter`
 
@@ -85,6 +88,7 @@ attach. Impl: [`writer::PartitionWriter`].
 ## DeltaDataReader
 
 `trait` · `deltalake_core::datafile::DeltaDataReader`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.DeltaDataReader.md)
 
 Also reachable as `deltalake::datafile::DeltaDataReader`
 
@@ -113,6 +117,7 @@ vectors, partition values, and column-mapping transforms.
 ## DeltaDataWriter
 
 `trait` · `deltalake_core::datafile::DeltaDataWriter`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.DeltaDataWriter.md)
 
 Also reachable as `deltalake::datafile::DeltaDataWriter`
 
@@ -140,6 +145,7 @@ partition). Batches must already conform to the table schema and constraints
 ## BatchStream
 
 `type_alias` · `deltalake_core::datafile::BatchStream`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.BatchStream.md)
 
 Also reachable as `deltalake::datafile::BatchStream`
 

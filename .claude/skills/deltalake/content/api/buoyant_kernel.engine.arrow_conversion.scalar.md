@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## extract_primitive_scalar
 
 `function` · `buoyant_kernel::engine::arrow_conversion::scalar::extract_primitive_scalar`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_conversion.scalar.extract_primitive_scalar.md)
 
 Also reachable as `delta_kernel::engine::arrow_conversion::scalar::extract_primitive_scalar`
 

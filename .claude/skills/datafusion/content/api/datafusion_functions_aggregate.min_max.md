@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::max`
 fn max(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.min_max.max.md).
+
+
 Returns the maximum of a group of values.
 
 ---
@@ -23,6 +26,9 @@ Returns the maximum of a group of values.
 ```rust
 fn max_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.min_max.max_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`Max`]
 
@@ -38,6 +44,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::min`
 fn min(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.min_max.min.md).
+
+
 Returns the minimum of a group of values.
 
 ---
@@ -49,6 +58,9 @@ Returns the minimum of a group of values.
 ```rust
 fn min_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.min_max.min_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`Min`]
 
@@ -91,6 +103,9 @@ fn signature(&self) -> &Signature
 fn value_from_stats(&self, statistics_args: &StatisticsArgs<'_>) -> Option<ScalarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.min_max.Max.md).
+
+
 ---
 
 ## Min
@@ -130,6 +145,9 @@ fn signature(&self) -> &Signature
 fn value_from_stats(&self, statistics_args: &StatisticsArgs<'_>) -> Option<ScalarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.min_max.Min.md).
+
+
 ---
 
 ## SlidingMaxAccumulator
@@ -162,6 +180,9 @@ fn supports_retract_batch(&self) -> bool
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.min_max.SlidingMaxAccumulator.md).
+
+
 ---
 
 ## SlidingMinAccumulator
@@ -193,5 +214,8 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn supports_retract_batch(&self) -> bool
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.min_max.SlidingMinAccumulator.md).
+
 
 ---

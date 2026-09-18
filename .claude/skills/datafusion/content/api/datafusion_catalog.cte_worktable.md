@@ -35,6 +35,9 @@ fn supports_filters_pushdown(&self, filters: &[&Expr]) -> Result<Vec<TableProvid
 fn table_type(&self) -> TableType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.cte_worktable.CteWorkTable.md).
+
+
 The temporary working table where the previous iteration of a recursive query is stored
 Naming is based on PostgreSQL's implementation.
 See here for more details: www.postgresql.org/docs/11/queries-with.html#id-1.5.6.12.5.4

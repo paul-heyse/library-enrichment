@@ -12,4 +12,7 @@ Also reachable as `datafusion::logical_expr::expr_vec_fmt`
 macro_rules! expr_vec_fmt
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_vec_fmt.md).
+
+
 ---

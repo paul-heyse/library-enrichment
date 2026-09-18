@@ -60,6 +60,7 @@ impl TaskExecutor for KernelTasks {
         let executor = self.executor.clone();
         let operation = crate::runtime::capture_operation();
         let effects = crate::native_effect::capture();
+        let input = crate::task_context::InputContext::capture();
         // The kernel's stream/channel cancellation owns termination. The runtime tracker
         // waits for physical exit without retaining a completed task's output or handle.
         let physical = self.executor.physical_context();
@@ -68,7 +69,7 @@ impl TaskExecutor for KernelTasks {
                 .track(async move {
                     let _executor = executor;
                     physical
-                        .scope(operation.scope(effects.scope(Box::pin(work))))
+                        .scope(input.scope(operation.scope(effects.scope(Box::pin(work)))))
                         .await;
                 })
                 .with_current_subscriber(),
@@ -96,6 +97,7 @@ impl TaskExecutor for KernelTasks {
 
 struct OwnedLogStore {
     inner: LogStoreRef,
+    neutral_engine: Arc<dyn Engine>,
     tasks: Arc<KernelTasks>,
     batch_rows: NonZeroUsize,
     buffers: NonZeroUsize,
@@ -103,14 +105,25 @@ struct OwnedLogStore {
 
 pub(crate) fn bind(inner: LogStoreRef, runtime: QueryRuntime) -> LogStoreRef {
     let (batch_rows, buffers) = runtime.kernel_io_shape();
+    let tasks = Arc::new(KernelTasks {
+        handle: runtime.executor_handle(),
+        executor: runtime.executor_owner(),
+    });
+    let batch_rows = NonZeroUsize::new(batch_rows).expect("validated native batch size");
+    let buffers = NonZeroUsize::new(buffers).expect("validated native partition count");
+    let neutral_engine = Arc::new(
+        DefaultEngineBuilder::new(inner.root_object_store(None))
+            .with_task_executor(tasks.clone())
+            .with_batch_size(batch_rows)
+            .with_buffer_size(buffers)
+            .build(),
+    );
     Arc::new(OwnedLogStore {
         inner,
-        tasks: Arc::new(KernelTasks {
-            handle: runtime.executor_handle(),
-            executor: runtime.executor_owner(),
-        }),
-        batch_rows: NonZeroUsize::new(batch_rows).expect("validated native batch size"),
-        buffers: NonZeroUsize::new(buffers).expect("validated native partition count"),
+        neutral_engine,
+        tasks,
+        batch_rows,
+        buffers,
     })
 }
 
@@ -185,6 +198,9 @@ impl LogStore for OwnedLogStore {
         self.inner.root_object_store(operation)
     }
     fn engine(&self, operation: Option<Uuid>) -> Arc<dyn Engine> {
+        if operation.is_none() {
+            return self.neutral_engine.clone();
+        }
         Arc::new(
             DefaultEngineBuilder::new(self.inner.root_object_store(operation))
                 .with_task_executor(self.tasks.clone())
@@ -358,7 +374,12 @@ mod tests {
             let batch =
                 RecordBatch::try_new(schema, vec![Arc::new(Int64Array::from(vec![41_i64]))])?;
             let table = store
-                .append(table, &contract, store.session().read_batch(batch)?, vec![])
+                .append(
+                    table,
+                    &contract,
+                    crate::native_catalog::batch(&store.session(), "kernel_runtime", batch)?,
+                    vec![],
+                )
                 .await?;
             let expected = table.version();
             eprintln!("kernel filesystem oracle: checkpoint");
@@ -436,6 +457,8 @@ mod tests {
             handle: runtime.executor_handle(),
             executor: runtime.executor_owner(),
         };
+        let input = Arc::new(());
+        let input_witness = Arc::downgrade(&input);
         runtime
             .job_operation(
                 "kernel-owner".into(),
@@ -456,13 +479,25 @@ mod tests {
                     });
                     assert_eq!(result, (Some("kernel-owner".into()), expected));
                     let (send, receive) = tokio::sync::oneshot::channel();
-                    tasks.spawn(async move {
-                        let _ = send.send((crate::runtime::operation_id(), Handle::current().id()));
-                    });
+                    let (release, wait) = tokio::sync::oneshot::channel();
+                    crate::task_context::InputContext::owned(input)
+                        .scope(async {
+                            tasks.spawn(async move {
+                                let _ = send
+                                    .send((crate::runtime::operation_id(), Handle::current().id()));
+                                let _ = wait.await;
+                            });
+                        })
+                        .await;
                     assert_eq!(
                         receive.await.unwrap(),
                         (Some("kernel-owner".into()), expected)
                     );
+                    assert!(
+                        input_witness.upgrade().is_some(),
+                        "kernel stream owns its private input"
+                    );
+                    release.send(()).unwrap();
                     let result = tasks
                         .spawn_blocking(|| (crate::runtime::operation_id(), Handle::current().id()))
                         .await
@@ -475,6 +510,7 @@ mod tests {
             )
             .await;
         runtime.close_diagnostics().await?;
+        assert!(input_witness.upgrade().is_none());
         Ok(())
     }
 }

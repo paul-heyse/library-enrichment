@@ -12,6 +12,9 @@ Also reachable as `datafusion_physical_expr::aggregate::utils::get_accum_scalar_
 fn get_accum_scalar_values_as_arrays(accum: &mut dyn Accumulator) -> datafusion_common::Result<Vec<arrow::array::ArrayRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.utils.get_accum_scalar_values_as_arrays.md).
+
+
 Convert scalar values from an accumulator into arrays.
 
 ---
@@ -26,6 +29,9 @@ Also reachable as `datafusion_physical_expr::aggregate::utils::get_sort_options`
 fn get_sort_options(ordering_req: &datafusion_physical_expr_common::sort_expr::LexOrdering) -> Vec<arrow::compute::SortOptions>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.utils.get_sort_options.md).
+
+
 Selects the sort option attribute from all the given `PhysicalSortExpr`s.
 
 ---
@@ -39,6 +45,9 @@ Also reachable as `datafusion_physical_expr::aggregate::utils::ordering_fields`
 ```rust
 fn ordering_fields(order_bys: &[datafusion_physical_expr_common::sort_expr::PhysicalSortExpr], data_types: &[arrow::datatypes::DataType]) -> Vec<arrow::datatypes::FieldRef>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.utils.ordering_fields.md).
+
 
 Construct corresponding fields for the expressions in an ORDER BY clause.
 
@@ -60,6 +69,9 @@ struct DecimalAverager<T: DecimalType>
 fn avg(&self, sum: T::Native, count: T::Native) -> Result<T::Native>
 fn try_new(sum_scale: i8, target_precision: u8, target_scale: i8) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.utils.DecimalAverager.md).
+
 
 Computes averages for `Decimal128`/`Decimal256` values, checking for overflow
 
@@ -94,6 +106,9 @@ fn state(&self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.utils.GenericDistinctBuffer.md).
+
+
 Generic way to collect distinct values for accumulators.
 
 The intermediate state is represented as a List of scalar values updated by
@@ -114,6 +129,9 @@ struct Hashable<T>
 ```
 
 **Derives**: Clone, Copy, Debug, Eq, Hash, PartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.utils.Hashable.md).
+
 
 A wrapper around a type to provide hash for floats
 

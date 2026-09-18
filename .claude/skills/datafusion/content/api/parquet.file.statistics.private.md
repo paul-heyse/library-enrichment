@@ -16,4 +16,7 @@ trait MakeStatistics
 fn make_statistics(statistics: ValueStatistics<Self>) -> Statistics where Self: Sized
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.statistics.private.MakeStatistics.md).
+
+
 ---

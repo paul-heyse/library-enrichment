@@ -22,6 +22,9 @@ struct ParquetFileMetrics
 fn new(partition: usize, filename: &str, metrics: &ExecutionPlanMetricsSet) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.metrics.ParquetFileMetrics.md).
+
+
 Stores metrics about the parquet execution for a particular parquet file.
 
 This component is a subject to **change** in near future and is exposed for low level integrations

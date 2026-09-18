@@ -1,0 +1,2869 @@
+[
+  {
+    "id": "665d9b8c9f50ce696eacb602",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "name": "PartitionedTopKExec",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct PartitionedTopKExec",
+    "docs": "Per-partition Top-K operator for window function queries.\n\n# Background\n\n\"Top K per partition\" is a common analytics pattern used for queries such as\n\"find the top 3 products by revenue for each store\". The (simplified) SQL\nfor such a query might be:\n\n```sql\nSELECT * FROM (\n    SELECT *, ROW_NUMBER() OVER (PARTITION BY store ORDER BY revenue DESC) as rn\n    FROM sales\n) WHERE rn <= 3;\n```\n\nThe unoptimized physical plan would be:\n\n```text\nFilterExec: rn <= 3\n  BoundedWindowAggExec: ROW_NUMBER() PARTITION BY [store] ORDER BY [revenue DESC]\n    SortExec: expr=[store ASC, revenue DESC]\n      DataSourceExec\n```\n\nThis plan sorts the **entire** dataset (O(N log N)), computes `ROW_NUMBER`\nfor **all** rows, and then filters to keep only the top K per partition.\nWith 10M rows, 1K partitions, and K=3, it sorts all 10M rows but only\nkeeps 3K.\n\n# Optimization\n\n`PartitionedTopKExec` replaces the `SortExec` and the `FilterExec` is\nremoved. The optimized plan becomes:\n\n```text\nBoundedWindowAggExec: ROW_NUMBER() PARTITION BY [store] ORDER BY [revenue DESC]\n  PartitionedTopKExec: fetch=3, partition=[store], order=[revenue DESC]\n    DataSourceExec\n```\n\nInstead of sorting the entire dataset, this operator reads unsorted input\nand delegates to a per-partition heap-of-K implementation (`PartitionedTopK`\nfor `ROW_NUMBER` and `PartitionedTopKRank` for `RANK`), each maintaining\none heap per distinct partition key while sharing a single\n[`arrow::row::RowConverter`] /\n[`MemoryReservation`](datafusion_execution::memory_pool::MemoryReservation)\nacross all partitions, and emits only the top-K rows per partition in\nsorted order `(partition_keys, order_keys)`.\n\nCost: O(N log K) time instead of O(N log N), and O(K × P × row_size)\nmemory where K = fetch, P = number of distinct partitions.\n## Why maintaining partition key order in output\nWindow functions do not require partition keys to be globally sorted, and\nenforcing such ordering in the output can introduce unnecessary overhead.\nHowever, the physical optimizer framework currently cannot express an\nordering that is only grouped by some keys while ordered by others. For\nexample:\n\n\n# Example\n\nFor the query above with `fetch=3` and input:\n\n```text\nstore | revenue\n------|--------\n  A   |  100\n  B   |   50\n  A   |  200\n  B   |  150\n  A   |  300\n  A   |  400\n```\n\nThe operator maintains two heaps:\n- **store=A**: keeps top-3 by revenue DESC → {400, 300, 200}, evicts 100\n- **store=B**: keeps top-3 by revenue DESC → {150, 50} (only 2 rows)\n\nOutput (sorted by store ASC, revenue DESC):\n\n```text\nstore | revenue\n------|--------\n  A   |  400\n  A   |  300\n  A   |  200\n  B   |  150\n  B   |   50\n```\n\nThis is then passed to `BoundedWindowAggExec` which assigns\n`ROW_NUMBER` 1, 2, 3 to each partition — all of which satisfy `rn <= 3`.\n\n# Limitations\n\n- Only activated when the window function is `ROW_NUMBER` or `RANK` with\n  a `PARTITION BY` clause. `RANK` additionally requires a non-empty\n  `ORDER BY` (with an empty `ORDER BY`, every row ties at rank 1 and the\n  heap-of-K rewrite doesn't apply). Global top-K (no `PARTITION BY`) is\n  already handled efficiently by `SortExec` with `fetch`.\n- For very high cardinality partition keys (millions of distinct values),\n  both memory usage and runtime overhead can become significant. In such\n  cases, the sort-based plan is more robust. Therefore, this optimization\n  is currently controlled by a configuration flag.",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        177,
+        1
+      ],
+      "end": [
+        201,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          4999,
+          5000,
+          5001,
+          5002,
+          5003,
+          5004,
+          5005,
+          5006,
+          5007,
+          5008,
+          5009,
+          5010,
+          5011,
+          5012,
+          5013,
+          5014,
+          5015,
+          5016,
+          5017,
+          5019,
+          5021,
+          1568,
+          2194
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "datafusion_execution::memory_pool::MemoryReservation": 1080,
+      "`arrow::row::RowConverter`": 234
+    },
+    "link_paths": {
+      "datafusion_execution::memory_pool::MemoryReservation": "datafusion_execution::memory_pool::MemoryReservation",
+      "`arrow::row::RowConverter`": "arrow_row::RowConverter"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1569",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-665d9b8c9f50ce696eacb602",
+    "aliases": [],
+    "resolved_doc_links": {
+      "datafusion_execution::memory_pool::MemoryReservation": "../operations/datafusion_execution.memory_pool.MemoryReservation.md#op-a0611bd048c178da7e0d05df",
+      "`arrow::row::RowConverter`": "../operations/arrow_row.RowConverter.md#op-3289371bf6ccaf9946ba91e3"
+    }
+  },
+  {
+    "id": "50d728b544944f91b19f03d9",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::apply_expressions",
+    "name": "apply_expressions",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        385,
+        5
+      ],
+      "end": [
+        393,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "FnMut",
+                            "id": 795,
+                            "args": {
+                              "parenthesized": {
+                                "inputs": [
+                                  {
+                                    "borrowed_ref": {
+                                      "lifetime": null,
+                                      "is_mutable": false,
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Arc",
+                                          "id": 94,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "dyn_trait": {
+                                                      "traits": [
+                                                        {
+                                                          "trait": {
+                                                            "path": "PhysicalExpr",
+                                                            "id": 629,
+                                                            "args": null
+                                                          },
+                                                          "generic_params": []
+                                                        }
+                                                      ],
+                                                      "lifetime": null
+                                                    }
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                "output": {
+                                  "resolved_path": {
+                                    "path": "Result",
+                                    "id": 99,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "TreeNodeRecursion",
+                                                "id": 796,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "TreeNodeRecursion",
+                          "id": 796,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "795": "core::ops::function::FnMut",
+      "94": "alloc::sync::Arc",
+      "629": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "99": "datafusion_common::error::Result",
+      "796": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          338,
+          1
+        ],
+        "end": [
+          453,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2191",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-50d728b544944f91b19f03d9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "41c23209183b51873c08112b",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::children",
+    "name": "children",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        366,
+        5
+      ],
+      "end": [
+        368,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          338,
+          1
+        ],
+        "end": [
+          453,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2189",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-41c23209183b51873c08112b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6d344867fe089c6d64c83456",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::clone",
+    "name": "clone",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> PartitionedTopKExec",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        176,
+        17
+      ],
+      "end": [
+        176,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "PartitionedTopKExec",
+              "id": 1569,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1569": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          176,
+          17
+        ],
+        "end": [
+          176,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5020",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-6d344867fe089c6d64c83456",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "97cc23436d099ede54710e2c",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::execute",
+    "name": "execute",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        405,
+        5
+      ],
+      "end": [
+        452,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "context",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "TaskContext",
+                              "id": 800,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SendableRecordBatchStream",
+                          "id": 103,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "800": "datafusion_execution::task::TaskContext",
+      "99": "datafusion_common::error::Result",
+      "103": "datafusion_execution::stream::SendableRecordBatchStream"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          338,
+          1
+        ],
+        "end": [
+          453,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2193",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-97cc23436d099ede54710e2c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "01bb39e46d21ae0830f321ba",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::expr",
+    "name": "expr",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn expr(&self) -> &LexOrdering",
+    "docs": "Returns the full sort ordering `[partition_keys..., order_keys...]`.",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        254,
+        5
+      ],
+      "end": [
+        256,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "LexOrdering",
+                  "id": 93,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "93": "datafusion_physical_expr_common::sort_expr::LexOrdering"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          203,
+          1
+        ],
+        "end": [
+          293,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4995",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-01bb39e46d21ae0830f321ba",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4313c02ed0cd5d6d55875a6b",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::fetch",
+    "name": "fetch",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fetch(&self) -> usize",
+    "docs": "Returns the maximum number of rows retained per partition.",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        265,
+        5
+      ],
+      "end": [
+        267,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          203,
+          1
+        ],
+        "end": [
+          293,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4997",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-4313c02ed0cd5d6d55875a6b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "075e163cdc1212ea0164dc6a",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        176,
+        10
+      ],
+      "end": [
+        176,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          176,
+          10
+        ],
+        "end": [
+          176,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5018",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-075e163cdc1212ea0164dc6a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d2506e2af0209d365f2790e5",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::fmt_as",
+    "name": "fmt_as",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        296,
+        5
+      ],
+      "end": [
+        335,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "t",
+              {
+                "resolved_path": {
+                  "path": "DisplayFormatType",
+                  "id": 778,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "778": "datafusion_physical_plan::display::DisplayFormatType",
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "DisplayAs",
+        "id": "datafusion_physical_plan::display::DisplayAs",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::display::DisplayAs",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          295,
+          1
+        ],
+        "end": [
+          336,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1567",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-d2506e2af0209d365f2790e5",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "eb8f9e17dc757005f88ebaca",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::fn_kind",
+    "name": "fn_kind",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fn_kind(&self) -> WindowFnKind",
+    "docs": "Returns which window function this operator is optimizing.",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        270,
+        5
+      ],
+      "end": [
+        272,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "WindowFnKind",
+              "id": 4953,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4953": "datafusion_physical_plan::sorts::partitioned_topk::WindowFnKind"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          203,
+          1
+        ],
+        "end": [
+          293,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4998",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-eb8f9e17dc757005f88ebaca",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ed40cbb844579947c1e2b1b9",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::input",
+    "name": "input",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn input(&self) -> &Arc<dyn ExecutionPlan>",
+    "docs": "Returns the child execution plan.",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        249,
+        5
+      ],
+      "end": [
+        251,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          203,
+          1
+        ],
+        "end": [
+          293,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4994",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-ed40cbb844579947c1e2b1b9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "972613dcb656ce0a0b0dd4ef",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::input_distribution_requirements",
+    "name": "input_distribution_requirements",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn input_distribution_requirements(&self) -> InputDistributionRequirements",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        351,
+        5
+      ],
+      "end": [
+        360,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "crate::InputDistributionRequirements",
+              "id": 786,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "786": "datafusion_physical_plan::distribution_requirements::InputDistributionRequirements"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          338,
+          1
+        ],
+        "end": [
+          453,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2187",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-972613dcb656ce0a0b0dd4ef",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3d82f3937700b3a693373486",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::maintains_input_order",
+    "name": "maintains_input_order",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn maintains_input_order(&self) -> Vec<bool>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        362,
+        5
+      ],
+      "end": [
+        364,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          338,
+          1
+        ],
+        "end": [
+          453,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2188",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-3d82f3937700b3a693373486",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6592ebbce27ea86adabbeaee",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::name",
+    "name": "name",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &'static str",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        339,
+        5
+      ],
+      "end": [
+        341,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": "'static",
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          338,
+          1
+        ],
+        "end": [
+          453,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2184",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-6592ebbce27ea86adabbeaee",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f9816124c1c496d5a25dfe0e",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::partition_prefix_len",
+    "name": "partition_prefix_len",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn partition_prefix_len(&self) -> usize",
+    "docs": "Returns the number of leading expressions in [`Self::expr`] that\ndefine the partition key.",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        260,
+        5
+      ],
+      "end": [
+        262,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          203,
+          1
+        ],
+        "end": [
+          293,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::expr`": 4995
+    },
+    "link_paths": {
+      "`Self::expr`": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::expr"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4996",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-f9816124c1c496d5a25dfe0e",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::expr`": "../operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md#op-01bb39e46d21ae0830f321ba"
+    }
+  },
+  {
+    "id": "0dea512579e16d16566b4bde",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::properties",
+    "name": "properties",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        343,
+        5
+      ],
+      "end": [
+        345,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "PlanProperties",
+                              "id": 730,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "730": "datafusion_physical_plan::execution_plan::PlanProperties"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          338,
+          1
+        ],
+        "end": [
+          453,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2185",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-0dea512579e16d16566b4bde",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "64f41fbb5b1bd59120126035",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::replace_children",
+    "name": "replace_children",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, _: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        370,
+        5
+      ],
+      "end": [
+        383,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_",
+              {
+                "resolved_path": {
+                  "path": "ReplaceChildrenOptions",
+                  "id": 792,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "792": "datafusion_physical_plan::execution_plan::ReplaceChildrenOptions",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          338,
+          1
+        ],
+        "end": [
+          453,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2190",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-64f41fbb5b1bd59120126035",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "07721c489ae3fbea95fd05c3",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::required_input_distribution",
+    "name": "required_input_distribution",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn required_input_distribution(&self) -> Vec<Distribution>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        347,
+        5
+      ],
+      "end": [
+        349,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Distribution",
+                          "id": 784,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "784": "datafusion_physical_expr::partitioning::Distribution"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          338,
+          1
+        ],
+        "end": [
+          453,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2186",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-07721c489ae3fbea95fd05c3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a304ce539e7a36e229a89d03",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::try_new",
+    "name": "try_new",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_new(input: Arc<dyn ExecutionPlan>, expr: LexOrdering, partition_prefix_len: usize, fetch: usize, fn_kind: WindowFnKind) -> Result<Self>",
+    "docs": "Create a new `PartitionedTopKExec`.\n\n# Arguments\n\n* `input` - The child execution plan providing unsorted input rows.\n* `expr` - Full sort ordering `[partition_keys..., order_keys...]`.\n  For `PARTITION BY pk ORDER BY val ASC`, this would be `[pk ASC, val ASC]`.\n* `partition_prefix_len` - Number of leading expressions in `expr`\n  that form the partition key. Must be >= 1.\n* `fetch` - Maximum rows to retain per partition (the K in \"top-K\").\n* `fn_kind` - Which ranking window function this operator optimizes\n  ([`WindowFnKind::RowNumber`] or [`WindowFnKind::Rank`]).\n\n# Example\n\n```text\n// For: ROW_NUMBER() OVER (PARTITION BY store ORDER BY revenue DESC) ... WHERE rn <= 5\nPartitionedTopKExec::try_new(\n    data_source,\n    LexOrdering([store ASC, revenue DESC]),\n    1,    // partition_prefix_len: 1 partition column (store)\n    5,    // fetch: keep top 5 per partition\n    WindowFnKind::RowNumber,\n)\n```",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        229,
+        5
+      ],
+      "end": [
+        246,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "input",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "expr",
+              {
+                "resolved_path": {
+                  "path": "LexOrdering",
+                  "id": 93,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "partition_prefix_len",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "fetch",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "fn_kind",
+              {
+                "resolved_path": {
+                  "path": "WindowFnKind",
+                  "id": 4953,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "93": "datafusion_physical_expr_common::sort_expr::LexOrdering",
+      "4953": "datafusion_physical_plan::sorts::partitioned_topk::WindowFnKind",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          203,
+          1
+        ],
+        "end": [
+          293,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`WindowFnKind::RowNumber`": 4951,
+      "`WindowFnKind::Rank`": 4952
+    },
+    "link_paths": {
+      "`WindowFnKind::RowNumber`": "datafusion_physical_plan::sorts::partitioned_topk::WindowFnKind::RowNumber",
+      "`WindowFnKind::Rank`": "datafusion_physical_plan::sorts::partitioned_topk::WindowFnKind::Rank"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4993",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-a304ce539e7a36e229a89d03",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`WindowFnKind::RowNumber`": "../operations/datafusion_physical_plan.sorts.partitioned_topk.WindowFnKind.md#op-99bfffea8644338484d99182",
+      "`WindowFnKind::Rank`": "../operations/datafusion_physical_plan.sorts.partitioned_topk.WindowFnKind.md#op-61ea1931e400e25a7990c3d4"
+    }
+  },
+  {
+    "id": "5e7e3809af6e242d0a3ad05f",
+    "path": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec::with_new_children",
+    "name": "with_new_children",
+    "owner": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/partitioned_topk.rs",
+      "begin": [
+        395,
+        5
+      ],
+      "end": [
+        403,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PartitionedTopKExec",
+          "id": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/partitioned_topk.rs",
+        "begin": [
+          338,
+          1
+        ],
+        "end": [
+          453,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2192",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.json",
+    "anchor": "op-5e7e3809af6e242d0a3ad05f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

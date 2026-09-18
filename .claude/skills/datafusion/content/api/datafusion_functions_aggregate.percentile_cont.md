@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::percentile_cont`
 fn percentile_cont(order_by: datafusion_expr::expr::Sort, percentile: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.percentile_cont.percentile_cont.md).
+
+
 Computes the exact percentile continuous of a set of numbers
 
 ---
@@ -23,6 +26,9 @@ Computes the exact percentile continuous of a set of numbers
 ```rust
 fn percentile_cont_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.percentile_cont.percentile_cont_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`PercentileCont`]
 
@@ -61,6 +67,9 @@ fn simplify(&self) -> Option<AggregateFunctionSimplification>
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 fn supports_within_group_clause(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.percentile_cont.PercentileCont.md).
+
 
 PERCENTILE_CONT aggregate expression. This uses an exact calculation and stores all values
 in memory before computing the result. If an approximation is sufficient then

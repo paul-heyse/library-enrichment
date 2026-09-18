@@ -220,6 +220,7 @@ fn extract_tar_gz_inner<R: Read>(
     archive.set_unpack_xattrs(false);
 
     let mut seen = std::collections::BTreeMap::new();
+    let mut physical_paths = std::collections::BTreeSet::new();
     let mut omissions = Vec::new();
     let mut written_entries = 0usize;
     let mut written_bytes = 0u64;
@@ -373,6 +374,19 @@ fn extract_tar_gz_inner<R: Read>(
             continue;
         }
 
+        // Implicit parent directories consume physical entries too. Prove the complete
+        // path bound before create_dir_all can expand a short archive into a deep tree.
+        for path in relative
+            .ancestors()
+            .filter(|path| !path.as_os_str().is_empty())
+        {
+            physical_paths.insert(path.to_owned());
+            if physical_paths.len() > policy.max_entries {
+                return Err(ArchiveError::TooManyEntries {
+                    limit: policy.max_entries,
+                });
+            }
+        }
         let target = destination.join(&relative);
         if kind == EntryType::Directory {
             fs::create_dir_all(&target)?;
@@ -544,6 +558,31 @@ mod tests {
 
     fn dest() -> tempfile::TempDir {
         tempfile::tempdir().expect("temp dir")
+    }
+
+    #[test]
+    fn implicit_directories_are_bounded_before_their_creation() {
+        let bytes = tarball(|b| file(b, "root/deep/member.txt", b"bounded"));
+        let dir = dest();
+        let policy = ArchivePolicy {
+            max_entries: 2,
+            ..ArchivePolicy::default()
+        };
+        assert!(matches!(
+            extract_tar_gz(&bytes[..], dir.path(), &policy),
+            Err(ArchiveError::TooManyEntries { limit: 2 })
+        ));
+        assert!(fs::read_dir(dir.path()).unwrap().next().is_none());
+        let policy = ArchivePolicy {
+            max_entries: 3,
+            ..policy
+        };
+        let extracted = extract_tar_gz(&bytes[..], dir.path(), &policy).unwrap();
+        assert_eq!(extracted.entries, 1);
+        assert_eq!(
+            fs::read(dir.path().join("root/deep/member.txt")).unwrap(),
+            b"bounded"
+        );
     }
 
     #[test]

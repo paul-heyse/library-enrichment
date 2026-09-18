@@ -1,0 +1,155 @@
+[
+  {
+    "id": "d2b5d8c02c97a530ce7ab240",
+    "path": "datafusion_sql::resolve::resolve_table_references",
+    "name": "resolve_table_references",
+    "owner": null,
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn resolve_table_references(statement: &parser::Statement, enable_ident_normalization: bool) -> datafusion_common::Result<(Vec<datafusion_common::TableReference>, Vec<datafusion_common::TableReference>)>",
+    "docs": "Collects all tables and views referenced in the SQL statement. CTEs are collected separately.\nThis can be used to determine which tables need to be in the catalog for a query to be planned.\n\n# Returns\n\nA `(table_refs, ctes)` tuple, the first element contains table and view references and the second\nelement contains any CTE aliases that were defined and possibly referenced.\n\n## Example\n\n```\n# use datafusion_sql::parser::DFParser;\n# use datafusion_sql::resolve::resolve_table_references;\nlet query = \"SELECT a FROM foo where x IN (SELECT y FROM bar)\";\nlet statement = DFParser::parse_sql(query).unwrap().pop_back().unwrap();\nlet (table_refs, ctes) = resolve_table_references(&statement, true).unwrap();\nassert_eq!(table_refs.len(), 2);\nassert_eq!(table_refs[0].to_string(), \"bar\");\nassert_eq!(table_refs[1].to_string(), \"foo\");\nassert_eq!(ctes.len(), 0);\n```\n\n## Example with CTEs  \n  \n```  \n# use datafusion_sql::parser::DFParser;\n# use datafusion_sql::resolve::resolve_table_references;\nlet query = \"with my_cte as (values (1), (2)) SELECT * from my_cte;\";\nlet statement = DFParser::parse_sql(query).unwrap().pop_back().unwrap();\nlet (table_refs, ctes) = resolve_table_references(&statement, true).unwrap();\nassert_eq!(table_refs.len(), 0);\nassert_eq!(ctes.len(), 1);\nassert_eq!(ctes[0].to_string(), \"my_cte\");\n```",
+    "span": {
+      "filename": "src/resolve.rs",
+      "begin": [
+        227,
+        1
+      ],
+      "end": [
+        244,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "statement",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::parser::Statement",
+                      "id": 13,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "enable_ident_normalization",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 507,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": [
+                          {
+                            "resolved_path": {
+                              "path": "Vec",
+                              "id": 113,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "datafusion_common::TableReference",
+                                          "id": 639,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "resolved_path": {
+                              "path": "Vec",
+                              "id": 113,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "datafusion_common::TableReference",
+                                          "id": 639,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "13": "datafusion_sql::parser::Statement",
+      "507": "datafusion_common::error::Result",
+      "113": "alloc::vec::Vec",
+      "639": "datafusion_common::table_reference::TableReference"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "646",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.resolve.resolve_table_references.md",
+    "record_file": "operations/datafusion_sql.resolve.resolve_table_references.json",
+    "anchor": "op-d2b5d8c02c97a530ce7ab240",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

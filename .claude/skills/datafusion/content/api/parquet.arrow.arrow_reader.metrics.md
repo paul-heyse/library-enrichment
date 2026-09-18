@@ -23,6 +23,9 @@ fn records_read_from_cache(&self) -> Option<usize>
 fn records_read_from_inner(&self) -> Option<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.metrics.ArrowReaderMetrics.md).
+
+
 This enum represents the state of Arrow reader metrics collection.
 
 The inner metrics are stored in an `Arc<ArrowReaderMetricsInner>`
@@ -42,6 +45,9 @@ struct ArrowReaderMetricsInner
 ```
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.metrics.ArrowReaderMetricsInner.md).
+
 
 Holds the actual metrics for the Arrow reader.
 

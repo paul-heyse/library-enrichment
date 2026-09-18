@@ -35,4 +35,7 @@ fn simplify(&self, args: Vec<Expr>, info: &SimplifyContext) -> Result<ExprSimpli
 fn with_updated_config(&self, config: &ConfigOptions) -> Option<ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.now.NowFunc.md).
+
+
 ---

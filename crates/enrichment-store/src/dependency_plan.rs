@@ -72,7 +72,8 @@ fn register(
     schema: SchemaRef,
     batches: &[RecordBatch],
 ) -> Result<()> {
-    session.register_table(
+    crate::native_catalog::work(
+        session,
         name,
         Arc::new(datafusion::datasource::MemTable::try_new(
             schema,

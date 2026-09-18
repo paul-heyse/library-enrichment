@@ -12,6 +12,9 @@ Also reachable as `datafusion_optimizer::simplify_expressions::DEFAULT_MAX_SIMPL
 const DEFAULT_MAX_SIMPLIFIER_CYCLES: u32 = 3
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.simplify_expressions.expr_simplifier.DEFAULT_MAX_SIMPLIFIER_CYCLES.md).
+
+
 ---
 
 ## THRESHOLD_INLINE_INLIST
@@ -23,6 +26,9 @@ Also reachable as `datafusion_optimizer::simplify_expressions::THRESHOLD_INLINE_
 ```rust
 const THRESHOLD_INLINE_INLIST: usize = 3
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.simplify_expressions.expr_simplifier.THRESHOLD_INLINE_INLIST.md).
+
 
 ---
 
@@ -48,6 +54,9 @@ fn with_canonicalize(self, canonicalize: bool) -> Self
 fn with_guarantees(self, guarantees: Vec<(Expr, NullableInterval)>) -> Self
 fn with_max_cycles(self, max_simplifier_cycles: u32) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md).
+
 
 This structure handles API for expression simplification
 

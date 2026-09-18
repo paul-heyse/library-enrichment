@@ -1,0 +1,6068 @@
+[
+  {
+    "id": "994d82c95af72fa0e3aa6207",
+    "path": "arrow_array::array::struct_array::StructArray",
+    "name": "StructArray",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct StructArray",
+    "docs": "An array of [structs](https://arrow.apache.org/docs/format/Columnar.html#struct-layout)\n\nEach child (called *field*) is represented by a separate array.\n\n# Comparison with [RecordBatch]\n\nBoth [`RecordBatch`] and [`StructArray`] represent a collection of columns / arrays with the\nsame length.\n\nHowever, there are a couple of key differences:\n\n* [`StructArray`] can be nested within other [`Array`], including itself\n* [`RecordBatch`] can contain top-level metadata on its associated [`Schema`][arrow_schema::Schema]\n* [`StructArray`] can contain top-level nulls, i.e. `null`\n* [`RecordBatch`] can only represent nulls in its child columns, i.e. `{\"field\": null}`\n\n[`StructArray`] is therefore a more general data container than [`RecordBatch`], and as such\ncode that needs to handle both will typically share an implementation in terms of\n[`StructArray`] and convert to/from [`RecordBatch`] as necessary.\n\n[`From`] implementations are provided to facilitate this conversion, however, converting\nfrom a [`StructArray`] containing top-level nulls to a [`RecordBatch`] will panic, as there\nis no way to preserve them.\n\n# Example: Create an array from a vector of fields\n\n```\nuse std::sync::Arc;\nuse arrow_array::{Array, ArrayRef, BooleanArray, Int32Array, StructArray};\nuse arrow_schema::{DataType, Field};\n\nlet boolean = Arc::new(BooleanArray::from(vec![false, false, true, true]));\nlet int = Arc::new(Int32Array::from(vec![42, 28, 19, 31]));\n\nlet struct_array = StructArray::from(vec![\n    (\n        Arc::new(Field::new(\"b\", DataType::Boolean, false)),\n        boolean.clone() as ArrayRef,\n    ),\n    (\n        Arc::new(Field::new(\"c\", DataType::Int32, false)),\n        int.clone() as ArrayRef,\n    ),\n]);\nassert_eq!(struct_array.column(0).as_ref(), boolean.as_ref());\nassert_eq!(struct_array.column(1).as_ref(), int.as_ref());\nassert_eq!(4, struct_array.len());\nassert_eq!(0, struct_array.null_count());\nassert_eq!(0, struct_array.offset());\n```",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        77,
+        1
+      ],
+      "end": [
+        82,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          1248,
+          1249,
+          1250,
+          1251,
+          1252,
+          1253,
+          1254,
+          1255,
+          1256,
+          1257,
+          1258,
+          1259,
+          1260,
+          1261,
+          1262,
+          1263,
+          1264,
+          1265,
+          1267,
+          1269,
+          1271,
+          1274,
+          1289,
+          1291,
+          1293,
+          1295,
+          1297,
+          1301,
+          1303,
+          1305,
+          1307
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`StructArray`": 729,
+      "`RecordBatch`": 1227,
+      "arrow_schema::Schema": 1228,
+      "`From`": 90,
+      "RecordBatch": 1227,
+      "`Array`": 76
+    },
+    "link_paths": {
+      "`StructArray`": "arrow_array::array::struct_array::StructArray",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch",
+      "arrow_schema::Schema": "arrow_schema::schema::Schema",
+      "`From`": "core::convert::From",
+      "RecordBatch": "arrow_array::record_batch::RecordBatch",
+      "`Array`": "arrow_array::array::Array"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "729",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-994d82c95af72fa0e3aa6207",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`StructArray`": "../operations/arrow_array.array.struct_array.StructArray.md#op-994d82c95af72fa0e3aa6207",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "arrow_schema::Schema": "../operations/arrow_schema.schema.Schema.md#op-144709aa539d6163483c2050",
+      "RecordBatch": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "`Array`": "../operations/arrow_array.array.Array.md#op-cabb9fba5e3e968cee823d21"
+    }
+  },
+  {
+    "id": "fb64bddfb5f3ae140250994d",
+    "path": "arrow_array::array::struct_array::StructArray::Error",
+    "name": "Error",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "assoc_type",
+    "signature": "Error",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        464,
+        5
+      ],
+      "end": [
+        464,
+        29
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "type": {
+          "resolved_path": {
+            "path": "ArrowError",
+            "id": 186,
+            "args": null
+          }
+        },
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "186": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "TryFrom",
+        "id": "core::convert::TryFrom",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "Vec",
+                    "id": "alloc::vec::Vec",
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "tuple": [
+                                {
+                                  "borrowed_ref": {
+                                    "lifetime": null,
+                                    "is_mutable": false,
+                                    "type": {
+                                      "primitive": "str"
+                                    }
+                                  }
+                                },
+                                {
+                                  "resolved_path": {
+                                    "path": "Arc",
+                                    "id": "alloc::sync::Arc",
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "dyn_trait": {
+                                                "traits": [
+                                                  {
+                                                    "trait": {
+                                                      "path": "Array",
+                                                      "id": "arrow_array::array::Array",
+                                                      "args": null
+                                                    },
+                                                    "generic_params": []
+                                                  }
+                                                ],
+                                                "lifetime": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::TryFrom",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          463,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1272",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-fb64bddfb5f3ae140250994d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "aa1cda78aa719610f9e26a43",
+    "path": "arrow_array::array::struct_array::StructArray::Output",
+    "name": "Output",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "assoc_type",
+    "signature": "Output",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        611,
+        5
+      ],
+      "end": [
+        611,
+        28
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "type": {
+          "resolved_path": {
+            "path": "Arc",
+            "id": 603,
+            "args": {
+              "angle_bracketed": {
+                "args": [
+                  {
+                    "type": {
+                      "dyn_trait": {
+                        "traits": [
+                          {
+                            "trait": {
+                              "path": "Array",
+                              "id": 76,
+                              "args": null
+                            },
+                            "generic_params": []
+                          }
+                        ],
+                        "lifetime": null
+                      }
+                    }
+                  }
+                ],
+                "constraints": []
+              }
+            }
+          }
+        },
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "603": "alloc::sync::Arc",
+      "76": "arrow_array::array::Array"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Index",
+        "id": "core::ops::index::Index",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "borrowed_ref": {
+                    "lifetime": null,
+                    "is_mutable": false,
+                    "type": {
+                      "primitive": "str"
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::ops::index::Index",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          610,
+          1
+        ],
+        "end": [
+          625,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1298",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-aa1cda78aa719610f9e26a43",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e6bf9cafed0dd16557707b05",
+    "path": "arrow_array::array::struct_array::StructArray::as_any",
+    "name": "as_any",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any(&self) -> &dyn Any",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        484,
+        5
+      ],
+      "end": [
+        486,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          483,
+          1
+        ],
+        "end": [
+          558,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1275",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-e6bf9cafed0dd16557707b05",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a159ce660562bfa9ccea61c7",
+    "path": "arrow_array::array::struct_array::StructArray::claim",
+    "name": "claim",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn claim(&self, pool: &dyn arrow_buffer::MemoryPool)",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        550,
+        5
+      ],
+      "end": [
+        557,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"pool\"), span: src/array/struct_array.rs:549:11: 549:27 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "pool",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "arrow_buffer::MemoryPool",
+                            "id": 138,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "138": "arrow_buffer::pool::MemoryPool"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          483,
+          1
+        ],
+        "end": [
+          558,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1288",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-a159ce660562bfa9ccea61c7",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2d5a59b3870dfc56d4f205fb",
+    "path": "arrow_array::array::struct_array::StructArray::clone",
+    "name": "clone",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> StructArray",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        76,
+        10
+      ],
+      "end": [
+        76,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "StructArray",
+              "id": 729,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "729": "arrow_array::array::struct_array::StructArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          76,
+          10
+        ],
+        "end": [
+          76,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1266",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-2d5a59b3870dfc56d4f205fb",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fe721cc7a325d22a5ce0808c",
+    "path": "arrow_array::array::struct_array::StructArray::column",
+    "name": "column",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn column(&self, pos: usize) -> &ArrayRef",
+    "docs": "Returns the field at `pos`.",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        285,
+        5
+      ],
+      "end": [
+        287,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "pos",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ArrayRef",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1238",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-fe721cc7a325d22a5ce0808c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6df0ef165495d067973277b2",
+    "path": "arrow_array::array::struct_array::StructArray::column_by_name",
+    "name": "column_by_name",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn column_by_name(&self, column_name: &str) -> Option<&ArrayRef>",
+    "docs": "Return child array whose field name equals to column_name\n\nNote: A schema can currently have duplicate field names, in which case\nthe first field will always be selected.\nThis issue will be addressed in [#9205](https://github.com/apache/arrow-rs/issues/9205)",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        323,
+        5
+      ],
+      "end": [
+        327,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "column_name",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "primitive": "str"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayRef",
+                              "id": 128,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1243",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-6df0ef165495d067973277b2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "845747a7094fbca9accb1cf1",
+    "path": "arrow_array::array::struct_array::StructArray::column_names",
+    "name": "column_names",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn column_names(&self) -> Vec<&str>",
+    "docs": "Return field names in this struct array",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        300,
+        5
+      ],
+      "end": [
+        308,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 145,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "primitive": "str"
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "145": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1241",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-845747a7094fbca9accb1cf1",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e2dd0e713630c89b9573f2d8",
+    "path": "arrow_array::array::struct_array::StructArray::columns",
+    "name": "columns",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn columns(&self) -> &[ArrayRef]",
+    "docs": "Returns the fields of the struct array",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        295,
+        5
+      ],
+      "end": [
+        297,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "ArrayRef",
+                    "id": 128,
+                    "args": null
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1240",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-e2dd0e713630c89b9573f2d8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c645210530cfd167da44e12f",
+    "path": "arrow_array::array::struct_array::StructArray::data_type",
+    "name": "data_type",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn data_type(&self) -> &DataType",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        496,
+        5
+      ],
+      "end": [
+        498,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "DataType",
+                  "id": 126,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "126": "arrow_schema::datatype::DataType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          483,
+          1
+        ],
+        "end": [
+          558,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1278",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-c645210530cfd167da44e12f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "42248f40370467b91b215951",
+    "path": "arrow_array::array::struct_array::StructArray::eq",
+    "name": "eq",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &Self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/array/mod.rs",
+      "begin": [
+        843,
+        5
+      ],
+      "end": [
+        845,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/mod.rs",
+        "begin": [
+          842,
+          1
+        ],
+        "end": [
+          846,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1302",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-42248f40370467b91b215951",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4e48bd23867874333d932bfa",
+    "path": "arrow_array::array::struct_array::StructArray::field",
+    "name": "field",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn field(&self, pos: usize) -> &FieldRef",
+    "docs": "Returns the [`FieldRef`] at `pos`.",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        330,
+        5
+      ],
+      "end": [
+        332,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "pos",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "FieldRef",
+                  "id": 545,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "545": "arrow_schema::field::FieldRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FieldRef`": 545
+    },
+    "link_paths": {
+      "`FieldRef`": "arrow_schema::field::FieldRef"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1244",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-4e48bd23867874333d932bfa",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FieldRef`": "../operations/arrow_schema.field.FieldRef.md#op-a0fdaf7a91a3563923566542"
+    }
+  },
+  {
+    "id": "f2d1d895d089963d38b3f179",
+    "path": "arrow_array::array::struct_array::StructArray::field_by_name",
+    "name": "field_by_name",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn field_by_name(&self, field_name: &str) -> Option<&FieldRef>",
+    "docs": "Return the [`FieldRef`] whose name equals to `field_name`\n\nNote: A schema can currently have duplicate field names, in which case\nthe first field will always be selected.\nThis issue will be addressed in [#9205](https://github.com/apache/arrow-rs/issues/9205)",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        339,
+        5
+      ],
+      "end": [
+        341,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "field_name",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "primitive": "str"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "FieldRef",
+                              "id": 545,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "545": "arrow_schema::field::FieldRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FieldRef`": 545
+    },
+    "link_paths": {
+      "`FieldRef`": "arrow_schema::field::FieldRef"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1245",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-f2d1d895d089963d38b3f179",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FieldRef`": "../operations/arrow_schema.field.FieldRef.md#op-a0fdaf7a91a3563923566542"
+    }
+  },
+  {
+    "id": "54978b1fc8189f90560da2a6",
+    "path": "arrow_array::array::struct_array::StructArray::fields",
+    "name": "fields",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fields(&self) -> &Fields",
+    "docs": "Returns the [`Fields`] of this [`StructArray`]",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        311,
+        5
+      ],
+      "end": [
+        316,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Fields",
+                  "id": 1231,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1231": "arrow_schema::fields::Fields"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`StructArray`": 729,
+      "`Fields`": 1231
+    },
+    "link_paths": {
+      "`StructArray`": "arrow_array::array::struct_array::StructArray",
+      "`Fields`": "arrow_schema::fields::Fields"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1242",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-54978b1fc8189f90560da2a6",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`StructArray`": "../operations/arrow_array.array.struct_array.StructArray.md#op-994d82c95af72fa0e3aa6207",
+      "`Fields`": "../operations/arrow_schema.fields.Fields.md#op-8db4115e48dc67eeb9be6faa"
+    }
+  },
+  {
+    "id": "8cc7a75901600d5317e82a8b",
+    "path": "arrow_array::array::struct_array::StructArray::flatten",
+    "name": "flatten",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn flatten(&self) -> (Fields, Vec<ArrayRef>)",
+    "docs": "Returns the children of this [`StructArray`] with the struct's validity\nbitmap AND'd into each child's validity bitmap.\n\nThis ensures that positions where the struct itself is null are also\nnull in each returned child array. Fields that were non-nullable are\nmarked nullable in the returned [`Fields`] when the struct has nulls.\n\nIf the struct has no nulls, children and fields are returned as-is.\n\nThis mirrors the semantics of C++ Arrow's `StructArray::Flatten`.\n\n# Example\n\n```\n# use std::sync::Arc;\n# use arrow_array::{Array, ArrayRef, Int32Array, StructArray};\n# use arrow_buffer::{BooleanBuffer, NullBuffer};\n# use arrow_schema::{DataType, Field, Fields};\nlet child = Arc::new(Int32Array::from(vec![1, 2, 3])) as ArrayRef;\nlet struct_nulls = NullBuffer::new(BooleanBuffer::from(vec![true, false, true]));\nlet sa = StructArray::new(\n    Fields::from(vec![Field::new(\"a\", DataType::Int32, false)]),\n    vec![child],\n    Some(struct_nulls),\n);\nlet (fields, columns) = sa.flatten();\nassert!(fields[0].is_nullable());\nassert!(columns[0].is_null(1));\n```",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        389,
+        5
+      ],
+      "end": [
+        422,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "tuple": [
+              {
+                "resolved_path": {
+                  "path": "Fields",
+                  "id": 1231,
+                  "args": null
+                }
+              },
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayRef",
+                              "id": 128,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1231": "arrow_schema::fields::Fields",
+      "145": "alloc::vec::Vec",
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`StructArray`": 729,
+      "`Fields`": 1231
+    },
+    "link_paths": {
+      "`StructArray`": "arrow_array::array::struct_array::StructArray",
+      "`Fields`": "arrow_schema::fields::Fields"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1247",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-8cc7a75901600d5317e82a8b",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`StructArray`": "../operations/arrow_array.array.struct_array.StructArray.md#op-994d82c95af72fa0e3aa6207",
+      "`Fields`": "../operations/arrow_schema.fields.Fields.md#op-8db4115e48dc67eeb9be6faa"
+    }
+  },
+  {
+    "id": "2a57c4cc801a784e7ca75391",
+    "path": "arrow_array::array::struct_array::StructArray::fmt",
+    "name": "fmt",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        568,
+        5
+      ],
+      "end": [
+        587,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::fmt::Formatter",
+                      "id": 117,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 118,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "117": "core::fmt::Formatter",
+      "118": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          567,
+          1
+        ],
+        "end": [
+          588,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1292",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-2a57c4cc801a784e7ca75391",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1ad55851f1b24686a8e68e76",
+    "path": "arrow_array::array::struct_array::StructArray::from",
+    "name": "from",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from(data: ArrayData) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        426,
+        5
+      ],
+      "end": [
+        449,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data",
+              {
+                "resolved_path": {
+                  "path": "ArrayData",
+                  "id": 123,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "ArrayData",
+                    "id": "arrow_data::data::ArrayData",
+                    "args": null
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          425,
+          1
+        ],
+        "end": [
+          450,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1268",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-1ad55851f1b24686a8e68e76",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1d7148f0ee760c9d3c7ae405",
+    "path": "arrow_array::array::struct_array::StructArray::from",
+    "name": "from",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from(v: Vec<(FieldRef, ArrayRef)>) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        561,
+        5
+      ],
+      "end": [
+        564,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "v",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "tuple": [
+                              {
+                                "resolved_path": {
+                                  "path": "FieldRef",
+                                  "id": 545,
+                                  "args": null
+                                }
+                              },
+                              {
+                                "resolved_path": {
+                                  "path": "ArrayRef",
+                                  "id": 128,
+                                  "args": null
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "145": "alloc::vec::Vec",
+      "545": "arrow_schema::field::FieldRef",
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "Vec",
+                    "id": "alloc::vec::Vec",
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "tuple": [
+                                {
+                                  "resolved_path": {
+                                    "path": "Arc",
+                                    "id": "alloc::sync::Arc",
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "Field",
+                                                "id": "arrow_schema::field::Field",
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "resolved_path": {
+                                    "path": "Arc",
+                                    "id": "alloc::sync::Arc",
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "dyn_trait": {
+                                                "traits": [
+                                                  {
+                                                    "trait": {
+                                                      "path": "Array",
+                                                      "id": "arrow_array::array::Array",
+                                                      "args": null
+                                                    },
+                                                    "generic_params": []
+                                                  }
+                                                ],
+                                                "lifetime": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          560,
+          1
+        ],
+        "end": [
+          565,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1290",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-1d7148f0ee760c9d3c7ae405",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "64d42b7372ab1c00c8daa4ed",
+    "path": "arrow_array::array::struct_array::StructArray::from",
+    "name": "from",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from(value: RecordBatch) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        600,
+        5
+      ],
+      "end": [
+        607,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "RecordBatch",
+                  "id": 1227,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1227": "arrow_array::record_batch::RecordBatch"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "RecordBatch",
+                    "id": "arrow_array::record_batch::RecordBatch",
+                    "args": null
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          599,
+          1
+        ],
+        "end": [
+          608,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1296",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-64d42b7372ab1c00c8daa4ed",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "79a1f8ba143780f2be8358e2",
+    "path": "arrow_array::array::struct_array::StructArray::from",
+    "name": "from",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from(pair: (Vec<(FieldRef, ArrayRef)>, Buffer)) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        591,
+        5
+      ],
+      "end": [
+        596,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "pair",
+              {
+                "tuple": [
+                  {
+                    "resolved_path": {
+                      "path": "Vec",
+                      "id": 145,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "tuple": [
+                                  {
+                                    "resolved_path": {
+                                      "path": "FieldRef",
+                                      "id": 545,
+                                      "args": null
+                                    }
+                                  },
+                                  {
+                                    "resolved_path": {
+                                      "path": "ArrayRef",
+                                      "id": 128,
+                                      "args": null
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "resolved_path": {
+                      "path": "Buffer",
+                      "id": 18,
+                      "args": null
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "145": "alloc::vec::Vec",
+      "545": "arrow_schema::field::FieldRef",
+      "128": "arrow_array::array::ArrayRef",
+      "18": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "tuple": [
+                    {
+                      "resolved_path": {
+                        "path": "Vec",
+                        "id": "alloc::vec::Vec",
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "tuple": [
+                                    {
+                                      "resolved_path": {
+                                        "path": "Arc",
+                                        "id": "alloc::sync::Arc",
+                                        "args": {
+                                          "angle_bracketed": {
+                                            "args": [
+                                              {
+                                                "type": {
+                                                  "resolved_path": {
+                                                    "path": "Field",
+                                                    "id": "arrow_schema::field::Field",
+                                                    "args": null
+                                                  }
+                                                }
+                                              }
+                                            ],
+                                            "constraints": []
+                                          }
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "resolved_path": {
+                                        "path": "Arc",
+                                        "id": "alloc::sync::Arc",
+                                        "args": {
+                                          "angle_bracketed": {
+                                            "args": [
+                                              {
+                                                "type": {
+                                                  "dyn_trait": {
+                                                    "traits": [
+                                                      {
+                                                        "trait": {
+                                                          "path": "Array",
+                                                          "id": "arrow_array::array::Array",
+                                                          "args": null
+                                                        },
+                                                        "generic_params": []
+                                                      }
+                                                    ],
+                                                    "lifetime": null
+                                                  }
+                                                }
+                                              }
+                                            ],
+                                            "constraints": []
+                                          }
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "resolved_path": {
+                        "path": "Buffer",
+                        "id": "arrow_buffer::buffer::immutable::Buffer",
+                        "args": null
+                      }
+                    }
+                  ]
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          590,
+          1
+        ],
+        "end": [
+          597,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1294",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-79a1f8ba143780f2be8358e2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3b61816b2ce71cf084454f5a",
+    "path": "arrow_array::array::struct_array::StructArray::get_array_memory_size",
+    "name": "get_array_memory_size",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_array_memory_size(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        540,
+        5
+      ],
+      "end": [
+        547,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          483,
+          1
+        ],
+        "end": [
+          558,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1287",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-3b61816b2ce71cf084454f5a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1186e5b0f79240e6b23f6d67",
+    "path": "arrow_array::array::struct_array::StructArray::get_buffer_memory_size",
+    "name": "get_buffer_memory_size",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_buffer_memory_size(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        532,
+        5
+      ],
+      "end": [
+        538,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          483,
+          1
+        ],
+        "end": [
+          558,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1286",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-1186e5b0f79240e6b23f6d67",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d5fad82f14720f8037e78928",
+    "path": "arrow_array::array::struct_array::StructArray::index",
+    "name": "index",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn index(&self, name: &str) -> &Self::Output",
+    "docs": "Get a reference to a column's array by name.\n\nNote: A schema can currently have duplicate field names, in which case\nthe first field will always be selected.\nThis issue will be addressed in [ARROW-11178](https://issues.apache.org/jira/browse/ARROW-11178)\n\n# Panics\n\nPanics if the name is not in the schema.",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        622,
+        5
+      ],
+      "end": [
+        624,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "name",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "primitive": "str"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "qualified_path": {
+                  "name": "Output",
+                  "args": null,
+                  "self_type": {
+                    "generic": "Self"
+                  },
+                  "trait": {
+                    "path": "",
+                    "id": 1300,
+                    "args": null
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1300": "core::ops::index::Index"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Index",
+        "id": "core::ops::index::Index",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "borrowed_ref": {
+                    "lifetime": null,
+                    "is_mutable": false,
+                    "type": {
+                      "primitive": "str"
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::ops::index::Index",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          610,
+          1
+        ],
+        "end": [
+          625,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1299",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-d5fad82f14720f8037e78928",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6350c6b817b44ca020445533",
+    "path": "arrow_array::array::struct_array::StructArray::into_data",
+    "name": "into_data",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_data(self) -> ArrayData",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        492,
+        5
+      ],
+      "end": [
+        494,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayData",
+              "id": 123,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          483,
+          1
+        ],
+        "end": [
+          558,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1277",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-6350c6b817b44ca020445533",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "927381b38ff5e9a84052fc01",
+    "path": "arrow_array::array::struct_array::StructArray::into_parts",
+    "name": "into_parts",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_parts(self) -> (Fields, Vec<ArrayRef>, Option<NullBuffer>)",
+    "docs": "Deconstruct this array into its constituent parts",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        276,
+        5
+      ],
+      "end": [
+        282,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "tuple": [
+              {
+                "resolved_path": {
+                  "path": "Fields",
+                  "id": 1231,
+                  "args": null
+                }
+              },
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayRef",
+                              "id": 128,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              },
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1231": "arrow_schema::fields::Fields",
+      "145": "alloc::vec::Vec",
+      "128": "arrow_array::array::ArrayRef",
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1237",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-927381b38ff5e9a84052fc01",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e55a4fac22cb2694fc101ec7",
+    "path": "arrow_array::array::struct_array::StructArray::is_empty",
+    "name": "is_empty",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        508,
+        5
+      ],
+      "end": [
+        510,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          483,
+          1
+        ],
+        "end": [
+          558,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1281",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-e55a4fac22cb2694fc101ec7",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "99762001abb5314082850635",
+    "path": "arrow_array::array::struct_array::StructArray::len",
+    "name": "len",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        504,
+        5
+      ],
+      "end": [
+        506,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          483,
+          1
+        ],
+        "end": [
+          558,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1280",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-99762001abb5314082850635",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "334ec35a7e748d42b822700e",
+    "path": "arrow_array::array::struct_array::StructArray::logical_null_count",
+    "name": "logical_null_count",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn logical_null_count(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        527,
+        5
+      ],
+      "end": [
+        530,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          483,
+          1
+        ],
+        "end": [
+          558,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1285",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-334ec35a7e748d42b822700e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2598e406029f896b6ca7050e",
+    "path": "arrow_array::array::struct_array::StructArray::new",
+    "name": "new",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(fields: Fields, arrays: Vec<ArrayRef>, nulls: Option<NullBuffer>) -> Self",
+    "docs": "Create a new [`StructArray`] from the provided parts, panicking on failure\n\n# Panics\n\nPanics if [`Self::try_new`] returns an error",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        90,
+        5
+      ],
+      "end": [
+        92,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "fields",
+              {
+                "resolved_path": {
+                  "path": "Fields",
+                  "id": 1231,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "arrays",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayRef",
+                              "id": 128,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "nulls",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1231": "arrow_schema::fields::Fields",
+      "145": "alloc::vec::Vec",
+      "128": "arrow_array::array::ArrayRef",
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`StructArray`": 729,
+      "`Self::try_new`": 1229
+    },
+    "link_paths": {
+      "`StructArray`": "arrow_array::array::struct_array::StructArray",
+      "`Self::try_new`": "arrow_array::array::struct_array::StructArray::try_new"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1230",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-2598e406029f896b6ca7050e",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`StructArray`": "../operations/arrow_array.array.struct_array.StructArray.md#op-994d82c95af72fa0e3aa6207",
+      "`Self::try_new`": "../operations/arrow_array.array.struct_array.StructArray.md#op-2c2d2d017833ba5435783b13"
+    }
+  },
+  {
+    "id": "5d5726b2a80ad09e7af956d1",
+    "path": "arrow_array::array::struct_array::StructArray::new_empty_fields",
+    "name": "new_empty_fields",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_empty_fields(len: usize, nulls: Option<NullBuffer>) -> Self",
+    "docs": "Create a new [`StructArray`] containing no fields\n\n# Panics\n\nIf `len != nulls.len()`",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        263,
+        5
+      ],
+      "end": [
+        273,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "nulls",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`StructArray`": 729
+    },
+    "link_paths": {
+      "`StructArray`": "arrow_array::array::struct_array::StructArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1236",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-5d5726b2a80ad09e7af956d1",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`StructArray`": "../operations/arrow_array.array.struct_array.StructArray.md#op-994d82c95af72fa0e3aa6207"
+    }
+  },
+  {
+    "id": "4a4ae52b743caaf47b9a7028",
+    "path": "arrow_array::array::struct_array::StructArray::new_null",
+    "name": "new_null",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_null(fields: Fields, len: usize) -> Self",
+    "docs": "Create a new [`StructArray`] of length `len` where all values are null",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        192,
+        5
+      ],
+      "end": [
+        204,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "fields",
+              {
+                "resolved_path": {
+                  "path": "Fields",
+                  "id": 1231,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1231": "arrow_schema::fields::Fields"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`StructArray`": 729
+    },
+    "link_paths": {
+      "`StructArray`": "arrow_array::array::struct_array::StructArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1233",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-4a4ae52b743caaf47b9a7028",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`StructArray`": "../operations/arrow_array.array.struct_array.StructArray.md#op-994d82c95af72fa0e3aa6207"
+    }
+  },
+  {
+    "id": "042055dd490587e0415c43bb",
+    "path": "arrow_array::array::struct_array::StructArray::new_unchecked",
+    "name": "new_unchecked",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn new_unchecked(fields: Fields, arrays: Vec<ArrayRef>, nulls: Option<NullBuffer>) -> Self",
+    "docs": "Create a new [`StructArray`] from the provided parts without validation\n\nThe length will be inferred from the length of the child arrays.  Panics if there are no\nchild arrays.  Consider using [`Self::new_unchecked_with_length`] if the length is known\nto avoid this.\n\n# Safety\n\nSafe if [`Self::new`] would not panic with the given arguments",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        215,
+        5
+      ],
+      "end": [
+        233,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "fields",
+              {
+                "resolved_path": {
+                  "path": "Fields",
+                  "id": 1231,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "arrays",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayRef",
+                              "id": 128,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "nulls",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1231": "arrow_schema::fields::Fields",
+      "145": "alloc::vec::Vec",
+      "128": "arrow_array::array::ArrayRef",
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::new`": 1230,
+      "`StructArray`": 729,
+      "`Self::new_unchecked_with_length`": 1234
+    },
+    "link_paths": {
+      "`Self::new`": "arrow_array::array::struct_array::StructArray::new",
+      "`StructArray`": "arrow_array::array::struct_array::StructArray",
+      "`Self::new_unchecked_with_length`": "arrow_array::array::struct_array::StructArray::new_unchecked_with_length"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1235",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-042055dd490587e0415c43bb",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::new`": "../operations/arrow_array.array.struct_array.StructArray.md#op-2598e406029f896b6ca7050e",
+      "`StructArray`": "../operations/arrow_array.array.struct_array.StructArray.md#op-994d82c95af72fa0e3aa6207",
+      "`Self::new_unchecked_with_length`": "../operations/arrow_array.array.struct_array.StructArray.md#op-80745b6bfb265c5308535e7d"
+    }
+  },
+  {
+    "id": "80745b6bfb265c5308535e7d",
+    "path": "arrow_array::array::struct_array::StructArray::new_unchecked_with_length",
+    "name": "new_unchecked_with_length",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn new_unchecked_with_length(fields: Fields, arrays: Vec<ArrayRef>, nulls: Option<NullBuffer>, len: usize) -> Self",
+    "docs": "Create a new [`StructArray`] from the provided parts without validation\n\n# Safety\n\nSafe if [`Self::new`] would not panic with the given arguments",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        240,
+        5
+      ],
+      "end": [
+        256,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "fields",
+              {
+                "resolved_path": {
+                  "path": "Fields",
+                  "id": 1231,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "arrays",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayRef",
+                              "id": 128,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "nulls",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1231": "arrow_schema::fields::Fields",
+      "145": "alloc::vec::Vec",
+      "128": "arrow_array::array::ArrayRef",
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::new`": 1230,
+      "`StructArray`": 729
+    },
+    "link_paths": {
+      "`Self::new`": "arrow_array::array::struct_array::StructArray::new",
+      "`StructArray`": "arrow_array::array::struct_array::StructArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1234",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-80745b6bfb265c5308535e7d",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::new`": "../operations/arrow_array.array.struct_array.StructArray.md#op-2598e406029f896b6ca7050e",
+      "`StructArray`": "../operations/arrow_array.array.struct_array.StructArray.md#op-994d82c95af72fa0e3aa6207"
+    }
+  },
+  {
+    "id": "f614077c2500cfa6774f3368",
+    "path": "arrow_array::array::struct_array::StructArray::nulls",
+    "name": "nulls",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn nulls(&self) -> Option<&NullBuffer>",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        523,
+        5
+      ],
+      "end": [
+        525,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          483,
+          1
+        ],
+        "end": [
+          558,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1284",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-f614077c2500cfa6774f3368",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "28766bac5e49ca083d7a6b10",
+    "path": "arrow_array::array::struct_array::StructArray::num_columns",
+    "name": "num_columns",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn num_columns(&self) -> usize",
+    "docs": "Return the number of fields in this struct array",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        290,
+        5
+      ],
+      "end": [
+        292,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1239",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-28766bac5e49ca083d7a6b10",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d14f1163eee4d9b3f495a52f",
+    "path": "arrow_array::array::struct_array::StructArray::offset",
+    "name": "offset",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn offset(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        519,
+        5
+      ],
+      "end": [
+        521,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          483,
+          1
+        ],
+        "end": [
+          558,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1283",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-d14f1163eee4d9b3f495a52f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9ea5e7378595ab40d1992ce6",
+    "path": "arrow_array::array::struct_array::StructArray::shrink_to_fit",
+    "name": "shrink_to_fit",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn shrink_to_fit(&mut self)",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        512,
+        5
+      ],
+      "end": [
+        517,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          483,
+          1
+        ],
+        "end": [
+          558,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1282",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-9ea5e7378595ab40d1992ce6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1bbde1c8f853112d9d7d759f",
+    "path": "arrow_array::array::struct_array::StructArray::slice",
+    "name": "slice",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn slice(&self, offset: usize, len: usize) -> Self",
+    "docs": "Returns a zero-copy slice of this array with the indicated offset and length.",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        344,
+        5
+      ],
+      "end": [
+        358,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1246",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-1bbde1c8f853112d9d7d759f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8ea74e94ee7f8a57f73fa5aa",
+    "path": "arrow_array::array::struct_array::StructArray::slice",
+    "name": "slice",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn slice(&self, offset: usize, length: usize) -> ArrayRef",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        500,
+        5
+      ],
+      "end": [
+        502,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "length",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          483,
+          1
+        ],
+        "end": [
+          558,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1279",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-8ea74e94ee7f8a57f73fa5aa",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5e79994e2461534a49e04bed",
+    "path": "arrow_array::array::struct_array::StructArray::to_data",
+    "name": "to_data",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn to_data(&self) -> ArrayData",
+    "docs": "",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        488,
+        5
+      ],
+      "end": [
+        490,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayData",
+              "id": 123,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          483,
+          1
+        ],
+        "end": [
+          558,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1276",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-5e79994e2461534a49e04bed",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d288fdc6051a6abc3c1823dc",
+    "path": "arrow_array::array::struct_array::StructArray::try_from",
+    "name": "try_from",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_from(values: Vec<(&str, ArrayRef)>) -> Result<Self, ArrowError>",
+    "docs": "builds a StructArray from a vector of names and arrays.",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        467,
+        5
+      ],
+      "end": [
+        479,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "values",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "tuple": [
+                              {
+                                "borrowed_ref": {
+                                  "lifetime": null,
+                                  "is_mutable": false,
+                                  "type": {
+                                    "primitive": "str"
+                                  }
+                                }
+                              },
+                              {
+                                "resolved_path": {
+                                  "path": "ArrayRef",
+                                  "id": 128,
+                                  "args": null
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "145": "alloc::vec::Vec",
+      "128": "arrow_array::array::ArrayRef",
+      "45": "core::result::Result",
+      "186": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "TryFrom",
+        "id": "core::convert::TryFrom",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "Vec",
+                    "id": "alloc::vec::Vec",
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "tuple": [
+                                {
+                                  "borrowed_ref": {
+                                    "lifetime": null,
+                                    "is_mutable": false,
+                                    "type": {
+                                      "primitive": "str"
+                                    }
+                                  }
+                                },
+                                {
+                                  "resolved_path": {
+                                    "path": "Arc",
+                                    "id": "alloc::sync::Arc",
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "dyn_trait": {
+                                                "traits": [
+                                                  {
+                                                    "trait": {
+                                                      "path": "Array",
+                                                      "id": "arrow_array::array::Array",
+                                                      "args": null
+                                                    },
+                                                    "generic_params": []
+                                                  }
+                                                ],
+                                                "lifetime": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::TryFrom",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          463,
+          1
+        ],
+        "end": [
+          480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1273",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-d288fdc6051a6abc3c1823dc",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2c2d2d017833ba5435783b13",
+    "path": "arrow_array::array::struct_array::StructArray::try_new",
+    "name": "try_new",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new(fields: Fields, arrays: Vec<ArrayRef>, nulls: Option<NullBuffer>) -> Result<Self, ArrowError>",
+    "docs": "Create a new [`StructArray`] from the provided parts, returning an error on failure\n\nThe length will be inferred from the length of the child arrays.  Returns an error if\nthere are no child arrays.  Consider using [`Self::try_new_with_length`] if the length\nis known to avoid this.\n\n# Errors\n\nErrors if\n\n* `fields.len() == 0`\n* Any reason that [`Self::try_new_with_length`] would error",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        106,
+        5
+      ],
+      "end": [
+        114,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "fields",
+              {
+                "resolved_path": {
+                  "path": "Fields",
+                  "id": 1231,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "arrays",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayRef",
+                              "id": 128,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "nulls",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1231": "arrow_schema::fields::Fields",
+      "145": "alloc::vec::Vec",
+      "128": "arrow_array::array::ArrayRef",
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer",
+      "45": "core::result::Result",
+      "186": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::try_new_with_length`": 1232,
+      "`StructArray`": 729
+    },
+    "link_paths": {
+      "`Self::try_new_with_length`": "arrow_array::array::struct_array::StructArray::try_new_with_length",
+      "`StructArray`": "arrow_array::array::struct_array::StructArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1229",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-2c2d2d017833ba5435783b13",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::try_new_with_length`": "../operations/arrow_array.array.struct_array.StructArray.md#op-bcbc5179b72b93429d309bc5",
+      "`StructArray`": "../operations/arrow_array.array.struct_array.StructArray.md#op-994d82c95af72fa0e3aa6207"
+    }
+  },
+  {
+    "id": "bcbc5179b72b93429d309bc5",
+    "path": "arrow_array::array::struct_array::StructArray::try_new_with_length",
+    "name": "try_new_with_length",
+    "owner": "arrow_array::array::struct_array::StructArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_with_length(fields: Fields, arrays: Vec<ArrayRef>, nulls: Option<NullBuffer>, len: usize) -> Result<Self, ArrowError>",
+    "docs": "Create a new [`StructArray`] from the provided parts, returning an error on failure\n\n# Errors\n\nErrors if\n\n* `fields.len() != arrays.len()`\n* `fields[i].data_type() != arrays[i].data_type()`\n* `arrays[i].len() != arrays[j].len()`\n* `arrays[i].len() != nulls.len()`\n* `!fields[i].is_nullable() && !nulls.contains(arrays[i].nulls())`",
+    "span": {
+      "filename": "src/array/struct_array.rs",
+      "begin": [
+        127,
+        5
+      ],
+      "end": [
+        189,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "fields",
+              {
+                "resolved_path": {
+                  "path": "Fields",
+                  "id": 1231,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "arrays",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayRef",
+                              "id": 128,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "nulls",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1231": "arrow_schema::fields::Fields",
+      "145": "alloc::vec::Vec",
+      "128": "arrow_array::array::ArrayRef",
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer",
+      "45": "core::result::Result",
+      "186": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructArray",
+          "id": "arrow_array::array::struct_array::StructArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/struct_array.rs",
+        "begin": [
+          84,
+          1
+        ],
+        "end": [
+          423,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`StructArray`": 729
+    },
+    "link_paths": {
+      "`StructArray`": "arrow_array::array::struct_array::StructArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1232",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.struct_array.StructArray.md",
+    "record_file": "operations/arrow_array.array.struct_array.StructArray.json",
+    "anchor": "op-bcbc5179b72b93429d309bc5",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`StructArray`": "../operations/arrow_array.array.struct_array.StructArray.md#op-994d82c95af72fa0e3aa6207"
+    }
+  }
+]

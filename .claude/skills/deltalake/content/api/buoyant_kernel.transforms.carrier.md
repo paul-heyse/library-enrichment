@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## Carrier
 
 `trait` · `buoyant_kernel::transforms::carrier::Carrier`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transforms.carrier.Carrier.md)
 
 Also reachable as `buoyant_kernel::transforms::Carrier`, `delta_kernel::transforms::carrier::Carrier`
 

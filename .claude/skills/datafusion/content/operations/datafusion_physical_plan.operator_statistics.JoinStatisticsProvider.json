@@ -1,0 +1,498 @@
+[
+  {
+    "id": "192cd9d26ef10e0d08f3f4ef",
+    "path": "datafusion_physical_plan::operator_statistics::JoinStatisticsProvider",
+    "name": "JoinStatisticsProvider",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct JoinStatisticsProvider",
+    "docs": "Statistics provider for equi-joins (hash join, sort-merge join) and cross joins.\n\nFor equi-joins, estimates output cardinality as\n`left_rows * right_rows / product(max(left_ndv_i, right_ndv_i))`\nacross all join key columns (assuming independence between keys),\nfalling back to the Cartesian product when any key lacks NDV on both sides.\nFor cross joins, uses the exact Cartesian product.\n\nThe base inner-join estimate is then adjusted for the join type:\n- Semi joins: capped at the preserved-side row count\n- Anti joins: preserved-side minus matched rows (clamped to 0)\n- Left/Right outer: at least as many rows as the preserved side\n- Full outer: at least `left + right - inner_estimate`\n- Left mark: exactly `left_rows` (one output row per left row)\n\nDelegates when:\n- The plan is not a supported join type\n- Either input lacks row count information",
+    "span": {
+      "filename": "src/operator_statistics/mod.rs",
+      "begin": [
+        758,
+        1
+      ],
+      "end": [
+        758,
+        35
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": "unit",
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          4389,
+          4390,
+          4391,
+          4392,
+          4393,
+          4394,
+          4395,
+          4396,
+          4397,
+          4398,
+          4399,
+          4400,
+          4401,
+          4402,
+          4403,
+          4404,
+          4405,
+          4407,
+          4409,
+          4237
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4238",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.operator_statistics.JoinStatisticsProvider.md",
+    "record_file": "operations/datafusion_physical_plan.operator_statistics.JoinStatisticsProvider.json",
+    "anchor": "op-192cd9d26ef10e0d08f3f4ef",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "41efd8a7395f10bb8261f49a",
+    "path": "datafusion_physical_plan::operator_statistics::JoinStatisticsProvider::compute_statistics",
+    "name": "compute_statistics",
+    "owner": "datafusion_physical_plan::operator_statistics::JoinStatisticsProvider",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>",
+    "docs": "",
+    "span": {
+      "filename": "src/operator_statistics/mod.rs",
+      "begin": [
+        761,
+        5
+      ],
+      "end": [
+        871,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "plan",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "ExecutionPlan",
+                            "id": 126,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "child_stats",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ExtendedStatistics",
+                        "id": 4157,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "StatisticsResult",
+                          "id": 4201,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "4157": "datafusion_physical_plan::operator_statistics::ExtendedStatistics",
+      "99": "datafusion_common::error::Result",
+      "4201": "datafusion_physical_plan::operator_statistics::StatisticsResult"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "JoinStatisticsProvider",
+          "id": "datafusion_physical_plan::operator_statistics::JoinStatisticsProvider",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "StatisticsProvider",
+        "id": "datafusion_physical_plan::operator_statistics::StatisticsProvider",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::operator_statistics::StatisticsProvider",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/operator_statistics/mod.rs",
+        "begin": [
+          760,
+          1
+        ],
+        "end": [
+          872,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4236",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.operator_statistics.JoinStatisticsProvider.md",
+    "record_file": "operations/datafusion_physical_plan.operator_statistics.JoinStatisticsProvider.json",
+    "anchor": "op-41efd8a7395f10bb8261f49a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "26ad5c9d3375220079985337",
+    "path": "datafusion_physical_plan::operator_statistics::JoinStatisticsProvider::default",
+    "name": "default",
+    "owner": "datafusion_physical_plan::operator_statistics::JoinStatisticsProvider",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn default() -> JoinStatisticsProvider",
+    "docs": "",
+    "span": {
+      "filename": "src/operator_statistics/mod.rs",
+      "begin": [
+        757,
+        17
+      ],
+      "end": [
+        757,
+        24
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "resolved_path": {
+              "path": "JoinStatisticsProvider",
+              "id": 4238,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4238": "datafusion_physical_plan::operator_statistics::JoinStatisticsProvider"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "JoinStatisticsProvider",
+          "id": "datafusion_physical_plan::operator_statistics::JoinStatisticsProvider",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/operator_statistics/mod.rs",
+        "begin": [
+          757,
+          17
+        ],
+        "end": [
+          757,
+          24
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4408",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.operator_statistics.JoinStatisticsProvider.md",
+    "record_file": "operations/datafusion_physical_plan.operator_statistics.JoinStatisticsProvider.json",
+    "anchor": "op-26ad5c9d3375220079985337",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3e655053c92d9bf01d33549c",
+    "path": "datafusion_physical_plan::operator_statistics::JoinStatisticsProvider::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_plan::operator_statistics::JoinStatisticsProvider",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/operator_statistics/mod.rs",
+      "begin": [
+        757,
+        10
+      ],
+      "end": [
+        757,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "JoinStatisticsProvider",
+          "id": "datafusion_physical_plan::operator_statistics::JoinStatisticsProvider",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/operator_statistics/mod.rs",
+        "begin": [
+          757,
+          10
+        ],
+        "end": [
+          757,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4406",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.operator_statistics.JoinStatisticsProvider.md",
+    "record_file": "operations/datafusion_physical_plan.operator_statistics.JoinStatisticsProvider.json",
+    "anchor": "op-3e655053c92d9bf01d33549c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

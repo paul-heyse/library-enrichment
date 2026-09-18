@@ -5,6 +5,7 @@ Crate `deltalake-core` · 3 public items · structured records in [`model/deltal
 ## cast_record_batch
 
 `function` · `deltalake_core::kernel::schema::cast::cast_record_batch`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.cast.cast_record_batch.md)
 
 Also reachable as `deltalake::cast::cast_record_batch`, `deltalake::cast_record_batch`, `deltalake::kernel::cast::cast_record_batch`, `deltalake::kernel::cast_record_batch`, `deltalake::kernel::schema::cast::cast_record_batch`, `deltalake::kernel::schema::cast_record_batch`, `deltalake::schema::cast_record_batch`, `deltalake_core::cast::cast_record_batch` (+5 more)
 
@@ -19,6 +20,7 @@ Cast recordbatch to a new target_schema, by casting each column array
 ## normalize_for_delta
 
 `function` · `deltalake_core::kernel::schema::cast::normalize_for_delta`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.cast.normalize_for_delta.md)
 
 Also reachable as `deltalake::cast::normalize_for_delta`, `deltalake::kernel::cast::normalize_for_delta`, `deltalake::kernel::normalize_for_delta`, `deltalake::kernel::schema::cast::normalize_for_delta`, `deltalake::kernel::schema::normalize_for_delta`, `deltalake::normalize_for_delta`, `deltalake::schema::normalize_for_delta`, `deltalake_core::cast::normalize_for_delta` (+5 more)
 
@@ -37,6 +39,7 @@ original schema untouched when no changes are required.
 ## set_cast_nanos_timestamps_to_micros
 
 `function` · `deltalake_core::kernel::schema::cast::set_cast_nanos_timestamps_to_micros`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.schema.cast.set_cast_nanos_timestamps_to_micros.md)
 
 Also reachable as `deltalake::cast::set_cast_nanos_timestamps_to_micros`, `deltalake::kernel::cast::set_cast_nanos_timestamps_to_micros`, `deltalake::kernel::schema::cast::set_cast_nanos_timestamps_to_micros`, `deltalake::kernel::schema::set_cast_nanos_timestamps_to_micros`, `deltalake::kernel::set_cast_nanos_timestamps_to_micros`, `deltalake::schema::set_cast_nanos_timestamps_to_micros`, `deltalake::set_cast_nanos_timestamps_to_micros`, `deltalake_core::cast::set_cast_nanos_timestamps_to_micros` (+5 more)
 

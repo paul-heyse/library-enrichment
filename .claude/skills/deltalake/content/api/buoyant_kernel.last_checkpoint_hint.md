@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 3 public items · structured records in [`model/buoyan
 ## HintAction
 
 `enum` · `buoyant_kernel::last_checkpoint_hint::HintAction`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.last_checkpoint_hint.HintAction.md)
 
 Also reachable as `delta_kernel::last_checkpoint_hint::HintAction`
 
@@ -40,6 +41,7 @@ parse; `try_read` swallows that, so the reader falls back to reading the checkpo
 ## LastCheckpointHint
 
 `struct` · `buoyant_kernel::last_checkpoint_hint::LastCheckpointHint`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.last_checkpoint_hint.LastCheckpointHint.md)
 
 Also reachable as `delta_kernel::last_checkpoint_hint::LastCheckpointHint`
 
@@ -76,6 +78,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## LastCheckpointV2
 
 `struct` · `buoyant_kernel::last_checkpoint_hint::LastCheckpointV2`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.last_checkpoint_hint.LastCheckpointV2.md)
 
 Also reachable as `delta_kernel::last_checkpoint_hint::LastCheckpointV2`
 

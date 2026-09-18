@@ -1,0 +1,5028 @@
+[
+  {
+    "id": "e0ba0adb06eaa3e5277df91c",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "name": "SortPreservingMergeExec",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct SortPreservingMergeExec",
+    "docs": "Sort preserving merge execution plan\n\n# Overview\n\nThis operator implements a K-way merge. It is used to merge multiple sorted\nstreams into a single sorted stream and is highly optimized.\n\n## Inputs:\n\n1. A list of sort expressions\n2. An input plan, where each partition is sorted with respect to\n   these sort expressions.\n\n## Output:\n\n1. A single partition that is also sorted with respect to the expressions\n\n## Diagram\n\n```text\n┌─────────────────────────┐\n│ ┌───┬───┬───┬───┐       │\n│ │ A │ B │ C │ D │ ...   │──┐\n│ └───┴───┴───┴───┘       │  │\n└─────────────────────────┘  │  ┌───────────────────┐    ┌───────────────────────────────┐\n  Stream 1                   │  │                   │    │ ┌───┬───╦═══╦───┬───╦═══╗     │\n                             ├─▶│SortPreservingMerge│───▶│ │ A │ B ║ B ║ C │ D ║ E ║ ... │\n                             │  │                   │    │ └───┴─▲─╩═══╩───┴───╩═══╝     │\n┌─────────────────────────┐  │  └───────────────────┘    └─┬─────┴───────────────────────┘\n│ ╔═══╦═══╗               │  │\n│ ║ B ║ E ║     ...       │──┘                             │\n│ ╚═══╩═══╝               │              Stable sort if `enable_round_robin_repartition=false`:\n└─────────────────────────┘              the merged stream places equal rows from stream 1\n  Stream 2\n\n\n Input Partitions                                          Output Partition\n   (sorted)                                                  (sorted)\n```\n\n# Error Handling\n\nIf any of the input partitions return an error, the error is propagated to\nthe output and inputs are not polled again.",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        91,
+        1
+      ],
+      "end": [
+        106,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          5080,
+          5082,
+          5083,
+          5084,
+          5085,
+          5086,
+          5087,
+          5088,
+          5089,
+          5090,
+          5091,
+          5092,
+          5093,
+          5094,
+          5095,
+          5096,
+          5097,
+          5098,
+          5099,
+          5100,
+          5102,
+          5104,
+          1574,
+          2241
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1575",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-e0ba0adb06eaa3e5277df91c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "11471511323bfb969e439715",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::apply_expressions",
+    "name": "apply_expressions",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        287,
+        5
+      ],
+      "end": [
+        295,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "FnMut",
+                            "id": 795,
+                            "args": {
+                              "parenthesized": {
+                                "inputs": [
+                                  {
+                                    "borrowed_ref": {
+                                      "lifetime": null,
+                                      "is_mutable": false,
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Arc",
+                                          "id": 94,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "dyn_trait": {
+                                                      "traits": [
+                                                        {
+                                                          "trait": {
+                                                            "path": "PhysicalExpr",
+                                                            "id": 629,
+                                                            "args": null
+                                                          },
+                                                          "generic_params": []
+                                                        }
+                                                      ],
+                                                      "lifetime": null
+                                                    }
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                "output": {
+                                  "resolved_path": {
+                                    "path": "Result",
+                                    "id": 99,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "TreeNodeRecursion",
+                                                "id": 796,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "TreeNodeRecursion",
+                          "id": 796,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "795": "core::ops::function::FnMut",
+      "94": "alloc::sync::Arc",
+      "629": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "99": "datafusion_common::error::Result",
+      "796": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2229",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-11471511323bfb969e439715",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f3f6178cfcdd627b47c067bc",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::benefits_from_input_partitioning",
+    "name": "benefits_from_input_partitioning",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn benefits_from_input_partitioning(&self) -> Vec<bool>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        271,
+        5
+      ],
+      "end": [
+        273,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2225",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-f3f6178cfcdd627b47c067bc",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5ef2adc3b80c52c1d9ee00c6",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::cardinality_effect",
+    "name": "cardinality_effect",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn cardinality_effect(&self) -> CardinalityEffect",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        433,
+        5
+      ],
+      "end": [
+        439,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "CardinalityEffect",
+              "id": 809,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "809": "datafusion_physical_plan::execution_plan::CardinalityEffect"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2237",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-5ef2adc3b80c52c1d9ee00c6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1805d80db006afdb81b69214",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::child_stats_requests",
+    "name": "child_stats_requests",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn child_stats_requests(&self, _partition: Option<usize>) -> Vec<ChildStats>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        420,
+        5
+      ],
+      "end": [
+        422,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_partition",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ChildStats",
+                          "id": 804,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "2": "alloc::vec::Vec",
+      "804": "datafusion_physical_plan::statistics::ChildStats"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2235",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-1805d80db006afdb81b69214",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "48a3fc4d679a7bd64c06cabb",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::children",
+    "name": "children",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        283,
+        5
+      ],
+      "end": [
+        285,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2228",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-48a3fc4d679a7bd64c06cabb",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6b6a4636c537d6e6af603531",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::clone",
+    "name": "clone",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> SortPreservingMergeExec",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        90,
+        17
+      ],
+      "end": [
+        90,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "SortPreservingMergeExec",
+              "id": 1575,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1575": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          90,
+          17
+        ],
+        "end": [
+          90,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5103",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-6b6a4636c537d6e6af603531",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4f3db90b06134de5465d55f8",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::execute",
+    "name": "execute",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        336,
+        5
+      ],
+      "end": [
+        414,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "context",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "TaskContext",
+                              "id": 800,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SendableRecordBatchStream",
+                          "id": 103,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "800": "datafusion_execution::task::TaskContext",
+      "99": "datafusion_common::error::Result",
+      "103": "datafusion_execution::stream::SendableRecordBatchStream"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2233",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-4f3db90b06134de5465d55f8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c75a59f3edd792b1e4e5a40a",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::expr",
+    "name": "expr",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn expr(&self) -> &LexOrdering",
+    "docs": "Sort expressions",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        151,
+        5
+      ],
+      "end": [
+        153,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "LexOrdering",
+                  "id": 93,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "93": "datafusion_physical_expr_common::sort_expr::LexOrdering"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          108,
+          1
+        ],
+        "end": [
+          188,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5078",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-c75a59f3edd792b1e4e5a40a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0e9fe7ae81cf8d13695f724f",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::fetch",
+    "name": "fetch",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fetch(&self) -> Option<usize>",
+    "docs": "Fetch",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        156,
+        5
+      ],
+      "end": [
+        158,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          108,
+          1
+        ],
+        "end": [
+          188,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5079",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-0e9fe7ae81cf8d13695f724f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "51fd6a805d7ed21bbcf92ac6",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::fetch",
+    "name": "fetch",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fetch(&self) -> Option<usize>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        233,
+        5
+      ],
+      "end": [
+        235,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2220",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-51fd6a805d7ed21bbcf92ac6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b7f8a85bb29cde64bb837d63",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        90,
+        10
+      ],
+      "end": [
+        90,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          90,
+          10
+        ],
+        "end": [
+          90,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5101",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-b7f8a85bb29cde64bb837d63",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b3b427eb2148c920e0876ed4",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::fmt_as",
+    "name": "fmt_as",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        191,
+        5
+      ],
+      "end": [
+        220,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "t",
+              {
+                "resolved_path": {
+                  "path": "DisplayFormatType",
+                  "id": 778,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "778": "datafusion_physical_plan::display::DisplayFormatType",
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "DisplayAs",
+        "id": "datafusion_physical_plan::display::DisplayAs",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::display::DisplayAs",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          190,
+          1
+        ],
+        "end": [
+          221,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1573",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-b3b427eb2148c920e0876ed4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "770648de39ba2fd59632478d",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::input",
+    "name": "input",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn input(&self) -> &Arc<dyn ExecutionPlan>",
+    "docs": "Input schema",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        146,
+        5
+      ],
+      "end": [
+        148,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          108,
+          1
+        ],
+        "end": [
+          188,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5077",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-770648de39ba2fd59632478d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e001dd56076c37c627f012aa",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::input_distribution_requirements",
+    "name": "input_distribution_requirements",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn input_distribution_requirements(&self) -> InputDistributionRequirements",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        265,
+        5
+      ],
+      "end": [
+        269,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "crate::InputDistributionRequirements",
+              "id": 786,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "786": "datafusion_physical_plan::distribution_requirements::InputDistributionRequirements"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2224",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-e001dd56076c37c627f012aa",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7adde57595012727bdffb8bf",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::maintains_input_order",
+    "name": "maintains_input_order",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn maintains_input_order(&self) -> Vec<bool>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        279,
+        5
+      ],
+      "end": [
+        281,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2227",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-7adde57595012727bdffb8bf",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7baaf3473488284eeb0121d6",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::metrics",
+    "name": "metrics",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn metrics(&self) -> Option<MetricsSet>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        416,
+        5
+      ],
+      "end": [
+        418,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "MetricsSet",
+                          "id": 802,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "802": "datafusion_physical_expr_common::metrics::MetricsSet"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2234",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-7baaf3473488284eeb0121d6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "783a2167a4452f8bf05933f0",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::name",
+    "name": "name",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &'static str",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        224,
+        5
+      ],
+      "end": [
+        226,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": "'static",
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2218",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-783a2167a4452f8bf05933f0",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8ab56f6bbea285182b585b53",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::new",
+    "name": "new",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(expr: LexOrdering, input: Arc<dyn ExecutionPlan>) -> Self",
+    "docs": "Create a new sort execution plan",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        110,
+        5
+      ],
+      "end": [
+        120,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "expr",
+              {
+                "resolved_path": {
+                  "path": "LexOrdering",
+                  "id": 93,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "input",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "93": "datafusion_physical_expr_common::sort_expr::LexOrdering",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          108,
+          1
+        ],
+        "end": [
+          188,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5074",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-8ab56f6bbea285182b585b53",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ffa0627d80a00dea1aad328e",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::properties",
+    "name": "properties",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+    "docs": "Return a reference to Any that can be used for downcasting",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        229,
+        5
+      ],
+      "end": [
+        231,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "PlanProperties",
+                              "id": 730,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "730": "datafusion_physical_plan::execution_plan::PlanProperties"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2219",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-ffa0627d80a00dea1aad328e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0c354d695f5b7278a4497551",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::replace_children",
+    "name": "replace_children",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, options: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        297,
+        5
+      ],
+      "end": [
+        314,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "ReplaceChildrenOptions",
+                  "id": 792,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "792": "datafusion_physical_plan::execution_plan::ReplaceChildrenOptions",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2230",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-0c354d695f5b7278a4497551",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3e5d64e0ee2f2b71c5e332f8",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::required_input_distribution",
+    "name": "required_input_distribution",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn required_input_distribution(&self) -> Vec<Distribution>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        261,
+        5
+      ],
+      "end": [
+        263,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Distribution",
+                          "id": 784,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "784": "datafusion_physical_expr::partitioning::Distribution"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2223",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-3e5d64e0ee2f2b71c5e332f8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7c0817b15038654181181438",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::required_input_ordering",
+    "name": "required_input_ordering",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn required_input_ordering(&self) -> Vec<Option<OrderingRequirements>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        275,
+        5
+      ],
+      "end": [
+        277,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 281,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "OrderingRequirements",
+                                      "id": 788,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "281": "core::option::Option",
+      "788": "datafusion_physical_expr_common::sort_expr::OrderingRequirements"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2226",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-7c0817b15038654181181438",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "de8b781cf0359cec1aa0acce",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::statistics_from_inputs",
+    "name": "statistics_from_inputs",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn statistics_from_inputs(&self, input_stats: &[Arc<Statistics>], _args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        424,
+        5
+      ],
+      "end": [
+        431,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "input_stats",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Arc",
+                        "id": 94,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Statistics",
+                                    "id": 806,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "StatisticsArgs",
+                      "id": 807,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Statistics",
+                                      "id": 806,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "806": "datafusion_common::stats::Statistics",
+      "807": "datafusion_physical_plan::statistics::StatisticsArgs",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2236",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-de8b781cf0359cec1aa0acce",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ba73e08b68db025b270c641f",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::supports_limit_pushdown",
+    "name": "supports_limit_pushdown",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_limit_pushdown(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        441,
+        5
+      ],
+      "end": [
+        443,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2238",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-ba73e08b68db025b270c641f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c4d5e2c1a5100dd79835c9e5",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::try_from_proto",
+    "name": "try_from_proto",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        509,
+        5
+      ],
+      "end": [
+        561,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "node",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                      "id": 752,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::proto::ExecutionPlanDecodeCtx",
+                      "id": 753,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "752": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode",
+      "753": "datafusion_physical_plan::proto::ExecutionPlanDecodeCtx",
+      "99": "datafusion_common::error::Result",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          508,
+          1
+        ],
+        "end": [
+          562,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5081",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-c4d5e2c1a5100dd79835c9e5",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "12072fadd66d6bf4d03d5b01",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::try_swapping_with_projection",
+    "name": "try_swapping_with_projection",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_swapping_with_projection(&self, projection: &ProjectionExec) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+    "docs": "Tries to swap the projection with its input [`SortPreservingMergeExec`].\nIf this is possible, it returns the new [`SortPreservingMergeExec`] whose\nchild is a projection. Otherwise, it returns None.",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        448,
+        5
+      ],
+      "end": [
+        469,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "projection",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ProjectionExec",
+                      "id": 1063,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 281,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 94,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "ExecutionPlan",
+                                                        "id": 126,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1063": "datafusion_physical_plan::projection::ProjectionExec",
+      "99": "datafusion_common::error::Result",
+      "281": "core::option::Option",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`SortPreservingMergeExec`": 1575
+    },
+    "link_paths": {
+      "`SortPreservingMergeExec`": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2239",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-12072fadd66d6bf4d03d5b01",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`SortPreservingMergeExec`": "../operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md#op-e0ba0adb06eaa3e5277df91c"
+    }
+  },
+  {
+    "id": "2af47a49c5fc1397f5c3dfb2",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::try_to_proto",
+    "name": "try_to_proto",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        471,
+        5
+      ],
+      "end": [
+        504,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"proto\"), span: src/sorts/sort_preserving_merge.rs:470:11: 470:28 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::proto::ExecutionPlanEncodeCtx",
+                      "id": 818,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 281,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                                      "id": 752,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "818": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx",
+      "99": "datafusion_common::error::Result",
+      "281": "core::option::Option",
+      "752": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2240",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-2af47a49c5fc1397f5c3dfb2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8c524175995b020727dcb846",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::with_fetch",
+    "name": "with_fetch",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_fetch(&self, limit: Option<usize>) -> Option<Arc<dyn ExecutionPlan>>",
+    "docs": "Sets the number of rows to fetch",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        238,
+        5
+      ],
+      "end": [
+        247,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "limit",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2221",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-8c524175995b020727dcb846",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b82195c2ccd065eef3006630",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::with_fetch",
+    "name": "with_fetch",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_fetch(self, fetch: Option<usize>) -> Self",
+    "docs": "Sets the number of rows to fetch",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        123,
+        5
+      ],
+      "end": [
+        126,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "fetch",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          108,
+          1
+        ],
+        "end": [
+          188,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5075",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-b82195c2ccd065eef3006630",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5cdcf45c01af2c82fc5e1163",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::with_new_children",
+    "name": "with_new_children",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        316,
+        5
+      ],
+      "end": [
+        324,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2231",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-5cdcf45c01af2c82fc5e1163",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6e5ab2c7ba3a01715796a4b1",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::with_new_children_and_same_properties",
+    "name": "with_new_children_and_same_properties",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        326,
+        5
+      ],
+      "end": [
+        334,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2232",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-6e5ab2c7ba3a01715796a4b1",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "dd349ae89c320f43bed7427b",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::with_preserve_order",
+    "name": "with_preserve_order",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_preserve_order(&self, preserve_order: bool) -> Option<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        249,
+        5
+      ],
+      "end": [
+        259,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "preserve_order",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          223,
+          1
+        ],
+        "end": [
+          505,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2222",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-dd349ae89c320f43bed7427b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ec8ceabcfd6fdccdcbc73977",
+    "path": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec::with_round_robin_repartition",
+    "name": "with_round_robin_repartition",
+    "owner": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_round_robin_repartition(self, enable_round_robin_repartition: bool) -> Self",
+    "docs": "Sets the selection strategy of tied winners of the loser tree algorithm\n\nIf true (the default) equal output rows are placed in the merged stream\nin round robin fashion. This approach consumes input streams at more\neven rates when there are many rows with the same sort key.\n\nIf false, equal output rows are always placed in the merged stream in\nthe order of the inputs, resulting in potentially slower execution but a\nstable output order.",
+    "span": {
+      "filename": "src/sorts/sort_preserving_merge.rs",
+      "begin": [
+        137,
+        5
+      ],
+      "end": [
+        143,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "enable_round_robin_repartition",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortPreservingMergeExec",
+          "id": "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/sorts/sort_preserving_merge.rs",
+        "begin": [
+          108,
+          1
+        ],
+        "end": [
+          188,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5076",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md",
+    "record_file": "operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.json",
+    "anchor": "op-ec8ceabcfd6fdccdcbc73977",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

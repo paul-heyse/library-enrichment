@@ -3,7 +3,10 @@
 //! Durable publication and admission own trust. These providers project already captured
 //! inputs; lookup never refreshes a generation, acquires evidence, or changes visibility.
 
-use enrichment_core::telemetry::InventorySummary;
+use enrichment_core::{
+    native_union::{NativeStruct, Rule},
+    telemetry::InventorySummary,
+};
 use std::{collections::BTreeMap, sync::Arc};
 
 use arrow_schema::SchemaRef;
@@ -25,7 +28,6 @@ pub(crate) trait RelationContract: Copy {
     fn name(self) -> &'static str;
     fn schema(self) -> Result<SchemaRef>;
     fn key(self) -> &'static str;
-    fn references(self) -> &'static [ReferenceRule];
 
     fn validated_constraints(self) -> Result<Constraints> {
         let schema = self.schema()?;
@@ -75,38 +77,7 @@ impl RelationContract for crate::admission::Relation {
     fn key(self) -> &'static str {
         self.key()
     }
-    fn references(self) -> &'static [ReferenceRule] {
-        match self {
-            Self::Symbols => &[ReferenceRule {
-                id: "symbol_definition",
-                field: "definition_id",
-                target: "definitions",
-                target_field: "definition_id",
-                nullable: false,
-                when: None,
-            }],
-            Self::Coverage => COVERAGE_REFERENCES,
-            Self::InputArtifacts => &[ReferenceRule {
-                id: "semantic_producer_binding",
-                field: "producer_binding_id",
-                target: "producer_runs",
-                target_field: "producer_binding_id",
-                nullable: false,
-                when: None,
-            }],
-            _ => &[],
-        }
-    }
 }
-
-const COVERAGE_REFERENCES: &[ReferenceRule] = &[ReferenceRule {
-    id: "semantic_producer_binding",
-    field: "producer_binding_id",
-    target: "producer_runs",
-    target_field: "producer_binding_id",
-    nullable: false,
-    when: None,
-}];
 
 impl RelationContract for crate::control::Table {
     fn name(self) -> &'static str {
@@ -117,115 +88,6 @@ impl RelationContract for crate::control::Table {
     }
     fn key(self) -> &'static str {
         self.key()
-    }
-    fn references(self) -> &'static [ReferenceRule] {
-        match self {
-            Self::Contexts => &[
-                ReferenceRule {
-                    id: "context_release",
-                    field: "release_id",
-                    target: "releases",
-                    target_field: "release_id",
-                    nullable: false,
-                    when: None,
-                },
-                ReferenceRule {
-                    id: "context_environment",
-                    field: "environment_id",
-                    target: "environments",
-                    target_field: "environment_id",
-                    nullable: false,
-                    when: None,
-                },
-                ReferenceRule {
-                    id: "context_parent",
-                    field: "parent_context_id",
-                    target: "contexts",
-                    target_field: "context_id",
-                    nullable: true,
-                    when: None,
-                },
-            ],
-            Self::Snapshots => &[ReferenceRule {
-                id: "snapshot_context",
-                field: "context_id",
-                target: "contexts",
-                target_field: "context_id",
-                nullable: false,
-                when: None,
-            }],
-            Self::Attempts => &[ReferenceRule {
-                id: "attempt_snapshot",
-                field: "snapshot_id",
-                target: "snapshots",
-                target_field: "snapshot_id",
-                nullable: false,
-                when: None,
-            }],
-            Self::JobTransitions | Self::Claims | Self::Interests => &[ReferenceRule {
-                id: "job_command",
-                field: "job_id",
-                target: "commands",
-                target_field: "job_id",
-                nullable: false,
-                when: None,
-            }],
-            _ => &[],
-        }
-    }
-}
-
-/// Repeated mechanical closure checks; conditional/composite semantics remain explicit plans.
-#[derive(Clone, Copy)]
-pub(crate) struct ReferenceRule {
-    pub(crate) id: &'static str,
-    pub(crate) field: &'static str,
-    pub(crate) target: &'static str,
-    pub(crate) target_field: &'static str,
-    pub(crate) nullable: bool,
-    pub(crate) when: Option<(&'static str, &'static str)>,
-}
-
-impl ReferenceRule {
-    pub(crate) async fn violations(
-        &self,
-        session: &SessionContext,
-        source: TableReference,
-        key: &str,
-    ) -> Result<DataFrame> {
-        let target = TableReference::full(
-            source
-                .catalog()
-                .ok_or_else(|| DataFusionError::Internal("rule requires a catalog".into()))?,
-            source
-                .schema()
-                .ok_or_else(|| DataFusionError::Internal("rule requires a schema".into()))?,
-            self.target,
-        );
-        let mut input = session.table(source).await?;
-        let value = |path: &str| {
-            use datafusion::functions::core::expr_ext::FieldAccessor;
-            let mut parts = path.split('.');
-            let root = col(parts.next().expect("declared reference path"));
-            parts.fold(root, |expr, part| expr.field(part))
-        };
-        if let Some((field, expected)) = self.when {
-            input = input.filter(value(field).eq(lit(expected)))?;
-        }
-        if self.nullable {
-            input = input.filter(value(self.field).is_not_null())?;
-        }
-        input = input.with_column("reference_value", value(self.field))?;
-        input
-            .join(
-                session.table(target).await?,
-                datafusion::logical_expr::JoinType::LeftAnti,
-                &["reference_value"],
-                &[self.target_field],
-                None,
-            )?
-            .select(vec![col(key)])?
-            .limit(0, Some(1))
     }
 }
 
@@ -275,6 +137,7 @@ pub(crate) struct BoundSchema {
 /// The schema provider refuses registration/removal through its default mutation contracts.
 pub(crate) fn declarations(
     retention: &enrichment_core::operation::retention::RetentionPolicy,
+    pool: &Arc<dyn datafusion::execution::memory_pool::MemoryPool>,
 ) -> Result<Tables> {
     use enrichment_core::{
         evidence::execution::{ExecutionDefinition, ExecutionKind},
@@ -301,9 +164,25 @@ pub(crate) fn declarations(
             DiscoveryDefinition::batch(&DiscoveryKind::definitions())?,
         ),
         (
+            "search_families",
+            enrichment_core::search::FamilyDefinition::batch(&enrichment_core::search::families())?,
+        ),
+        (
+            "comparison_scopes",
+            enrichment_core::compare::ScopeDefinition::batch(
+                &enrichment_core::compare::Scope::definitions(),
+            )?,
+        ),
+        (
             "operations",
             enrichment_core::operation::Definition::batch(
                 &enrichment_core::request::operation_definitions(),
+            )?,
+        ),
+        (
+            "resources",
+            enrichment_core::request::resources::ResourceDefinition::batch(
+                &enrichment_core::request::resources::definitions(),
             )?,
         ),
     ]
@@ -312,7 +191,7 @@ pub(crate) fn declarations(
         Ok((
             name.into(),
             Arc::new(crate::admitted_provider::AdmittedProvider::from_batch(
-                batch,
+                batch, pool,
             )?) as Arc<dyn TableProvider>,
         ))
     })
@@ -376,30 +255,47 @@ impl BoundCatalog {
     }
 }
 
+enrichment_core::native_struct! {
 /// Query diagnostics and native metadata derive from these same immutable bindings.
-#[derive(Clone)]
 pub(crate) struct RelationInfo {
-    pub catalog: String,
-    pub schema: String,
-    pub name: String,
-    pub kind: String,
-    pub trust: String,
-    pub declared_key: Option<String>,
-    pub key: Option<String>,
-    pub rows: Option<u64>,
-}
+    catalog_name: String => Rule::NonEmpty,
+    schema_name: String => Rule::NonEmpty,
+    table_name: String => Rule::NonEmpty,
+    table_type: String => Rule::NonEmpty,
+    binding_kind: String => Rule::NonEmpty,
+    declared_key: Option<String> => Rule::Text,
+    validated_key: Option<String> => Rule::Text,
+    verified_rows: Option<u64> => Rule::Text,
+} }
+enrichment_core::native_vocabulary! { pub(crate) enum RuleKind {
+    Unique = "unique", Reference = "reference", NullableReference = "nullable_reference",
+    ScopedReference = "scoped_reference", Conditional = "conditional",
+} }
+enrichment_core::native_vocabulary! { pub(crate) enum ReferenceNull {
+    Exact = "exact", Unspecified = "unspecified",
+} }
+enrichment_core::native_struct! { pub(crate) struct ReferenceScope {
+    source: Vec<String> => Rule::SequenceBounds { min: 1, max: 64 },
+    target: Vec<String> => Rule::SequenceBounds { min: 1, max: 64 },
+    null: ReferenceNull => Rule::Text,
+} }
+enrichment_core::native_struct! { pub(crate) struct RuleInfo {
+    relation: String => Rule::NonEmpty,
+    rule_id: String => Rule::NonEmpty,
+    kind: RuleKind => Rule::Text,
+    source_field: Vec<String> => Rule::SequenceBounds { min: 0, max: 64 },
+    target_relation: Option<String> => Rule::Text,
+    target_field: Option<Vec<String>> => Rule::SequenceBounds { min: 1, max: 64 },
+    target_domain: Option<String> => Rule::Text,
+    scope: Vec<ReferenceScope> => Rule::SequenceBounds { min: 0, max: 16 },
+} }
+enrichment_core::native_struct! { pub(crate) struct InventoryInfo {
+    relations: u64 => Rule::Text,
+    nested_fields: u64 => Rule::Text,
+    truncated: bool => Rule::Text,
+} }
 
-pub(crate) struct RuleInfo {
-    pub relation: String,
-    pub id: String,
-    pub kind: &'static str,
-    pub field: String,
-    pub target: Option<String>,
-    pub target_field: Option<String>,
-    pub condition: Option<(&'static str, &'static str)>,
-}
-
-fn declaration(kind: BindingKind, name: &str) -> Option<(&'static str, &'static [ReferenceRule])> {
+fn declaration(kind: BindingKind, name: &str) -> Option<&'static str> {
     if matches!(
         kind,
         BindingKind::AdmittedEvidence | BindingKind::CandidateEvidence
@@ -407,24 +303,104 @@ fn declaration(kind: BindingKind, name: &str) -> Option<(&'static str, &'static 
         crate::admission::Relation::ALL
             .into_iter()
             .find(|relation| relation.name() == name)
-            .map(|relation| (relation.key(), relation.references()))
+            .map(|relation| relation.key())
     } else if kind == BindingKind::FoldedRecords {
         crate::control::Table::ALL
             .into_iter()
             .find(|table| table.name() == name)
-            .map(|table| (table.key(), table.references()))
+            .map(|table| table.key())
     } else {
         None
     }
 }
 
-pub(crate) struct FieldInfo {
-    pub relation: String,
-    pub path: String,
-    pub kind: String,
-    pub nullable: bool,
-    pub required_by_contract: bool,
-    pub role: Option<String>,
+enrichment_core::native_struct! { pub(crate) struct FieldInfo {
+    relation: String => Rule::NonEmpty,
+    field_path: Vec<String> => Rule::SequenceBounds { min: 1, max: 64 },
+    data_type: String => Rule::NonEmpty,
+    nullable: bool => Rule::Text,
+    required_by_contract: bool => Rule::Text,
+    semantic_role: Option<String> => Rule::Text,
+    /// Exact declaration metadata, queryable without another field-policy registry.
+    metadata: BTreeMap<String, String> => Rule::Map,
+} }
+
+impl RuleInfo {
+    fn estimated_size(&self) -> usize {
+        let path_size = |path: &[String]| path.iter().map(|part| part.len() + 24).sum::<usize>();
+        self.relation.len()
+            + self.rule_id.len()
+            + path_size(&self.source_field)
+            + self.target_relation.as_ref().map_or(0, String::len)
+            + self.target_field.as_ref().map_or(0, |path| path_size(path))
+            + self.target_domain.as_ref().map_or(0, String::len)
+            + self
+                .scope
+                .iter()
+                .map(|scope| path_size(&scope.source) + path_size(&scope.target) + 64)
+                .sum::<usize>()
+            + 256
+    }
+}
+
+fn reference_info(
+    catalog: &str,
+    schema: &str,
+    relation: &str,
+    path: &[String],
+    field: &arrow_schema::Field,
+) -> Result<Option<RuleInfo>> {
+    use enrichment_core::native_union::{ReferenceTarget, ScopeNull};
+    let Some(encoded) = field.metadata().get("enrichment.rule") else {
+        return Ok(None);
+    };
+    let rule: Rule = serde_json::from_str(encoded).map_err(|error| {
+        datafusion::common::plan_datafusion_err!("invalid catalog field rule: {error}")
+    })?;
+    let Some((target, scope)) = rule.reference() else {
+        return Ok(None);
+    };
+    let (table, target_field, target_domain) = match target {
+        ReferenceTarget::Evidence(domain) => {
+            let target = (schema == "evidence")
+                .then(|| domain.evidence_target())
+                .flatten();
+            (
+                target.map(|(table, _)| table.to_owned()),
+                target.map(|(_, field)| vec![field.into()]),
+                Some(domain.prefix().into()),
+            )
+        }
+        ReferenceTarget::Relation { table, field } => (Some(table), Some(field), None),
+    };
+    Ok(Some(RuleInfo {
+        relation: relation.into(),
+        rule_id: format!("{relation}:{path:?}"),
+        kind: if !scope.is_empty() {
+            RuleKind::ScopedReference
+        } else if enrichment_core::native_schema::required(field) {
+            RuleKind::Reference
+        } else {
+            RuleKind::NullableReference
+        },
+        source_field: path.into(),
+        target_relation: table.map(|table| {
+            TableReference::full(catalog.to_owned(), schema.to_owned(), table).to_string()
+        }),
+        target_field,
+        target_domain,
+        scope: scope
+            .into_iter()
+            .map(|scope| ReferenceScope {
+                source: scope.source,
+                target: scope.target,
+                null: match scope.null {
+                    ScopeNull::Exact => ReferenceNull::Exact,
+                    ScopeNull::Unspecified => ReferenceNull::Unspecified,
+                },
+            })
+            .collect(),
+    }))
 }
 
 fn validate_inventory(catalogs: &BTreeMap<String, Arc<dyn CatalogProvider>>) -> Result<()> {
@@ -456,6 +432,9 @@ fn validate_inventory(catalogs: &BTreeMap<String, Arc<dyn CatalogProvider>>) -> 
                     "binding kind is not eligible for this catalog".into(),
                 ));
             }
+            for table in schema.tables.values() {
+                enrichment_core::native_analysis::validate_derived_fields(table.schema().fields())?;
+            }
         }
     }
     Ok(())
@@ -475,9 +454,10 @@ impl SqlRule {
 
 pub(crate) fn metadata(
     catalogs: &BTreeMap<String, Arc<dyn CatalogProvider>>,
+    pool: &Arc<dyn datafusion::execution::memory_pool::MemoryPool>,
 ) -> Result<(Tables, InventorySummary)> {
     use arrow_schema::DataType;
-    use datafusion::{common::stats::Precision, datasource::MemTable};
+    use datafusion::common::stats::Precision;
     validate_inventory(catalogs)?;
     const MAX_RELATIONS: usize = 128;
     const MAX_FIELDS: usize = 2048;
@@ -522,40 +502,17 @@ pub(crate) fn metadata(
                 });
                 let declaration = declaration(binding_kind, name);
                 let rule_start = rules.len();
-                if let Some((key, references)) = declaration {
+                if let Some(key) = declaration {
                     rules.push(RuleInfo {
                         relation: qualified.clone(),
-                        id: format!("{name}.unique"),
-                        kind: "unique",
-                        field: key.into(),
-                        target: None,
+                        rule_id: format!("{name}.unique"),
+                        kind: RuleKind::Unique,
+                        source_field: vec![key.into()],
+                        target_relation: None,
                         target_field: None,
-                        condition: None,
+                        target_domain: None,
+                        scope: Vec::new(),
                     });
-                    for rule in references {
-                        rules.push(RuleInfo {
-                            relation: qualified.clone(),
-                            id: rule.id.into(),
-                            kind: if rule.when.is_some() {
-                                "conditional_reference"
-                            } else if rule.nullable {
-                                "nullable_reference"
-                            } else {
-                                "reference"
-                            },
-                            field: rule.field.into(),
-                            target: Some(
-                                TableReference::full(
-                                    catalog_name.clone(),
-                                    schema_name.clone(),
-                                    rule.target,
-                                )
-                                .to_string(),
-                            ),
-                            target_field: Some(rule.target_field.into()),
-                            condition: rule.when,
-                        });
-                    }
                 }
                 let rule_set = match binding_kind {
                     BindingKind::AdmittedEvidence | BindingKind::CandidateEvidence => {
@@ -567,27 +524,18 @@ pub(crate) fn metadata(
                 for rule in rule_set.iter().filter(|rule| rule.relation == name) {
                     rules.push(RuleInfo {
                         relation: qualified.clone(),
-                        id: rule.id.into(),
-                        kind: "conditional",
-                        field: declaration.map_or("", |(key, _)| key).into(),
-                        target: None,
+                        rule_id: rule.id.into(),
+                        kind: RuleKind::Conditional,
+                        source_field: declaration.map(|key| vec![key.into()]).unwrap_or_default(),
+                        target_relation: None,
                         target_field: None,
-                        condition: None,
+                        target_domain: None,
+                        scope: Vec::new(),
                     });
                 }
-                let rule_bytes = rules
+                let rule_bytes = rules[rule_start..]
                     .iter()
-                    .filter(|rule| rule.relation == qualified)
-                    .map(|rule| {
-                        rule.relation.len()
-                            + rule.id.len()
-                            + rule.field.len()
-                            + rule.target.as_ref().map_or(0, String::len)
-                            + rule
-                                .condition
-                                .map_or(0, |(field, value)| field.len() + value.len())
-                            + 128
-                    })
+                    .map(RuleInfo::estimated_size)
                     .sum::<usize>();
                 let cost = qualified.len() * 2 + 256 + rule_bytes;
                 if cost > MAX_BYTES.saturating_sub(bytes) {
@@ -597,14 +545,14 @@ pub(crate) fn metadata(
                 }
                 bytes += cost;
                 relations.push(RelationInfo {
-                    catalog: catalog_name.clone(),
-                    schema: schema_name.clone(),
-                    name: name.clone(),
-                    kind: format!("{:?}", table.table_type()),
-                    trust: binding_kind.trust().into(),
-                    declared_key: declaration.map(|(key, _)| key.to_owned()),
-                    key,
-                    rows,
+                    catalog_name: catalog_name.clone(),
+                    schema_name: schema_name.clone(),
+                    table_name: name.clone(),
+                    table_type: format!("{:?}", table.table_type()),
+                    binding_kind: binding_kind.trust().into(),
+                    declared_key: declaration.map(str::to_owned),
+                    validated_key: key,
+                    verified_rows: rows,
                 });
                 summary.relations.push(qualified.clone());
                 if schema.fields().len() > MAX_FIELDS {
@@ -615,46 +563,62 @@ pub(crate) fn metadata(
                     .fields()
                     .iter()
                     .rev()
-                    .map(|field| (field.as_ref(), String::new(), 0usize))
+                    .map(|field| (field.clone(), Vec::<String>::new(), 0usize))
                     .collect();
                 while let Some((field, prefix, depth)) = pending.pop() {
                     if fields.len() == MAX_FIELDS || bytes >= MAX_BYTES || depth > 32 {
                         summary.truncated = true;
                         break;
                     }
-                    let path = if prefix.is_empty() {
-                        field.name().clone()
-                    } else {
-                        format!("{prefix}.{}", field.name())
-                    };
+                    let mut path = prefix;
+                    path.push(field.name().clone());
                     // Container labels avoid recursively rendering the entire nested schema.
                     let kind = match field.data_type() {
                         DataType::Struct(_) => "Struct".into(),
                         DataType::List(_)
                         | DataType::LargeList(_)
+                        | DataType::ListView(_)
+                        | DataType::LargeListView(_)
                         | DataType::FixedSizeList(_, _) => "List".into(),
                         DataType::Map(_, _) => "Map".into(),
+                        DataType::Dictionary(_, _) => "Dictionary".into(),
+                        DataType::Union(_, _) => "Union".into(),
+                        DataType::RunEndEncoded(_, _) => "RunEndEncoded".into(),
                         other => other.to_string(),
                     };
                     let role = field.metadata().get("enrichment.role").cloned();
+                    let reference =
+                        reference_info(catalog_name, schema_name, &qualified, &path, &field)?;
                     let cost = qualified.len()
-                        + path.len()
+                        + path.iter().map(String::len).sum::<usize>()
                         + kind.len()
                         + role.as_ref().map_or(0, String::len)
+                        + field
+                            .metadata()
+                            .iter()
+                            .map(|(key, value)| key.len() + value.len() + 48)
+                            .sum::<usize>()
+                        + reference.as_ref().map_or(0, RuleInfo::estimated_size)
                         + 64;
                     if cost > MAX_BYTES.saturating_sub(bytes) {
                         summary.truncated = true;
                         break;
                     }
                     bytes += cost;
+                    rules.extend(reference);
                     fields.push(FieldInfo {
                         relation: qualified.clone(),
-                        path: path.clone(),
-                        kind,
+                        field_path: path.clone(),
+                        data_type: kind,
                         nullable: field.is_nullable(),
                         required_by_contract:
-                            enrichment_core::evidence::arrow_model::checks::required(field),
-                        role,
+                            enrichment_core::evidence::arrow_model::checks::required(&field),
+                        semantic_role: role,
+                        metadata: field
+                            .metadata()
+                            .iter()
+                            .map(|(key, value)| (key.clone(), value.clone()))
+                            .collect(),
                     });
                     match field.data_type() {
                         DataType::Struct(children) => {
@@ -666,14 +630,40 @@ pub(crate) fn metadata(
                                 children
                                     .iter()
                                     .rev()
-                                    .map(|child| (child.as_ref(), path.clone(), depth + 1)),
+                                    .map(|child| (child.clone(), path.clone(), depth + 1)),
                             );
                         }
                         DataType::List(child)
                         | DataType::LargeList(child)
+                        | DataType::ListView(child)
+                        | DataType::LargeListView(child)
                         | DataType::FixedSizeList(child, _)
-                        | DataType::Map(child, _) => {
-                            pending.push((child.as_ref(), path, depth + 1))
+                        | DataType::Map(child, _) => pending.push((child.clone(), path, depth + 1)),
+                        DataType::Union(children, _) => {
+                            if pending.len() + children.len() > MAX_FIELDS {
+                                summary.truncated = true;
+                                break;
+                            }
+                            pending.extend(
+                                children
+                                    .iter()
+                                    .map(|(_, child)| (child.clone(), path.clone(), depth + 1)),
+                            );
+                        }
+                        DataType::RunEndEncoded(ends, values) => {
+                            pending.push((values.clone(), path.clone(), depth + 1));
+                            pending.push((ends.clone(), path, depth + 1));
+                        }
+                        DataType::Dictionary(_, value) => {
+                            pending.push((
+                                Arc::new(arrow_schema::Field::new(
+                                    "dictionary_values",
+                                    value.as_ref().clone(),
+                                    true,
+                                )),
+                                path,
+                                depth + 1,
+                            ));
                         }
                         _ => {}
                     }
@@ -684,21 +674,23 @@ pub(crate) fn metadata(
     summary.nested_fields = fields.len();
     let mut tables = Tables::new();
     for (name, batch) in [
-        (
-            "relations",
-            crate::projection::contracts::relations(&relations)?,
-        ),
-        ("fields", crate::projection::contracts::fields(&fields)?),
-        ("rules", crate::projection::contracts::rules(&rules)?),
+        ("relations", RelationInfo::batch(&relations)?),
+        ("fields", FieldInfo::batch(&fields)?),
+        ("rules", RuleInfo::batch(&rules)?),
         (
             "inventory",
-            crate::projection::contracts::inventory(&summary)?,
+            InventoryInfo::batch(&[InventoryInfo {
+                relations: summary.relations.len() as u64,
+                nested_fields: summary.nested_fields as u64,
+                truncated: summary.truncated,
+            }])?,
         ),
     ] {
         tables.insert(
             name.into(),
-            Arc::new(MemTable::try_new(batch.schema(), vec![vec![batch]])?)
-                as Arc<dyn TableProvider>,
+            Arc::new(crate::admitted_provider::AdmittedProvider::from_batch(
+                batch, pool,
+            )?) as Arc<dyn TableProvider>,
         );
     }
     Ok((tables, summary))
@@ -731,14 +723,26 @@ impl CatalogProvider for BoundCatalog {
 /// Only temporary operation objects may be registered after immutable roots are installed.
 /// A finite Arrow protocol input gets its own native relation identity. Anonymous `?table?`
 /// sources become ambiguous when independent nested projections meet in a control union.
+/// The captured provider exposes no mutation handle and grants no row constraints. Shared
+/// buffers carry a fallible pool claim through the final retained input or cache reader.
 pub(crate) fn batch(
     session: &datafusion::prelude::SessionContext,
     name: &str,
     batch: arrow::record_batch::RecordBatch,
 ) -> Result<datafusion::dataframe::DataFrame> {
-    let provider = Arc::new(datafusion::datasource::MemTable::try_new(
-        batch.schema(),
-        vec![vec![batch]],
+    captured_batches(session, name, vec![batch])
+}
+
+/// Rebind materialized Arrow results without reopening a mutable ingress. All batches must
+/// carry the same full field contract. Shared buffers keep payment through physical readers.
+pub(crate) fn captured_batches(
+    session: &SessionContext,
+    name: &str,
+    batches: Vec<arrow::record_batch::RecordBatch>,
+) -> Result<DataFrame> {
+    let provider = Arc::new(crate::admitted_provider::AdmittedProvider::from_batches(
+        batches,
+        &session.runtime_env().memory_pool,
     )?);
     let plan = datafusion::logical_expr::LogicalPlanBuilder::scan(
         format!("{name}_{}", uuid::Uuid::new_v4().simple()),
@@ -786,16 +790,173 @@ pub(crate) fn work(
     Ok(())
 }
 
+/// A finite input uses the same collision/shadowing policy as every operation work relation.
+/// Give its anonymous source a unique native name before installing the immutable view.
+pub(crate) fn input(
+    session: &SessionContext,
+    name: &str,
+    value: arrow::record_batch::RecordBatch,
+) -> Result<()> {
+    work(session, name, batch(session, name, value)?.into_view())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::runtime::{QueryLimits, QueryRuntime};
     use arrow::{
-        array::{Int32Array, StringArray, StructArray},
+        array::{Array, Int32Array, StringArray, StructArray},
         datatypes::{DataType, Field},
         record_batch::RecordBatch,
     };
     use datafusion::{catalog::MemorySchemaProvider, datasource::MemTable};
+
+    #[tokio::test]
+    async fn captured_batches_keep_payment_and_schema_through_last_physical_reader() -> Result<()> {
+        use datafusion::execution::{
+            memory_pool::{GreedyMemoryPool, MemoryPool},
+            runtime_env::RuntimeEnvBuilder,
+        };
+        let pool: Arc<dyn MemoryPool> = Arc::new(GreedyMemoryPool::new(1 << 20));
+        let session = SessionContext::new_with_config_rt(
+            Default::default(),
+            Arc::new(
+                RuntimeEnvBuilder::new()
+                    .with_memory_pool(pool.clone())
+                    .build()?,
+            ),
+        );
+        let original = RecordBatch::try_from_iter([(
+            "value",
+            Arc::new(StringArray::from(vec!["first", "second", "third"])) as arrow::array::ArrayRef,
+        )])?;
+        let batches = vec![original.slice(0, 1), original.slice(1, 2)];
+        let frame = captured_batches(&session, "captured", batches)?;
+        let charge = pool.reserved();
+        assert!(charge > 0);
+        assert!(captured_batches(&session, "empty", vec![]).is_err());
+        let field = Field::new("value", DataType::Utf8, false).with_metadata(
+            std::collections::HashMap::from([("different_contract".into(), "true".into())]),
+        );
+        let changed = RecordBatch::try_new(
+            Arc::new(arrow_schema::Schema::new(vec![field])),
+            original.columns().to_vec(),
+        )?;
+        assert!(captured_batches(&session, "mismatch", vec![original.clone(), changed]).is_err());
+        assert_eq!(
+            pool.reserved(),
+            charge,
+            "refusal preserves the original payment"
+        );
+        let plan = frame.create_physical_plan().await?;
+        drop(frame);
+        drop(original);
+        assert_eq!(
+            pool.reserved(),
+            charge,
+            "physical plan retains captured buffers"
+        );
+        let output = datafusion::physical_plan::collect(plan.clone(), session.task_ctx()).await?;
+        drop(plan);
+        assert_eq!(output.iter().map(RecordBatch::num_rows).sum::<usize>(), 3);
+        assert!(pool.reserved() >= charge);
+        drop(output);
+        assert_eq!(
+            pool.reserved(),
+            0,
+            "last reader releases buffer reservations"
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn native_catalog_segments_keep_literal_dots_and_nested_references_distinct() -> Result<()>
+    {
+        let root = tempfile::tempdir()?;
+        let runtime = QueryRuntime::new(root.path(), Default::default())?;
+        let reference_field = |name| {
+            enrichment_core::native_union::field::<String>(
+                name,
+                Rule::foreign_key("target", "key.dot"),
+            )
+        };
+        let leaf = Arc::new(reference_field("value"));
+        let nested = Arc::new(StructArray::new(
+            vec![leaf].into(),
+            vec![Arc::new(StringArray::from(vec!["missing"]))],
+            None,
+        ));
+        let source = RecordBatch::try_new(
+            Arc::new(arrow_schema::Schema::new(vec![
+                Field::new("owner", DataType::Utf8, false),
+                reference_field("nested.value"),
+                Field::new("nested", nested.data_type().clone(), false),
+            ])),
+            vec![
+                Arc::new(StringArray::from(vec!["source"])),
+                Arc::new(StringArray::from(vec!["retained"])),
+                nested,
+            ],
+        )?;
+        let declared = source.schema();
+        let target = RecordBatch::try_from_iter(vec![(
+            "key.dot",
+            Arc::new(StringArray::from(vec!["retained"])) as arrow::array::ArrayRef,
+        )])?;
+        let session = runtime.session();
+        let provider =
+            |name, record| Ok::<_, DataFusionError>(batch(&session, name, record)?.into_view());
+        let catalog = Arc::new(BoundCatalog::default().with_schema(
+            BindingKind::CandidateEvidence,
+            Tables::from([
+                ("source".into(), provider("source", source)?),
+                ("target".into(), provider("target", target)?),
+            ]),
+        ));
+        let session = runtime.bound_session(BTreeMap::from([(
+            "candidate".into(),
+            catalog as Arc<dyn CatalogProvider>,
+        )]))?;
+        let references = crate::field_admission::violations(
+            &session,
+            TableReference::full("candidate", "evidence", "source"),
+            declared.as_ref(),
+            "owner",
+            crate::field_admission::ReferenceNamespace::Records,
+        )
+        .await?;
+        assert_eq!(references.len(), 2);
+        let mut outcomes = Vec::new();
+        for (_, plan) in references {
+            outcomes.push(runtime.execute(plan).await?.rows);
+        }
+        assert_eq!(outcomes, vec![0, 1]);
+        let rules = runtime.records::<RuleInfo>(session.sql("SELECT * FROM operation.metadata.rules WHERE relation='candidate.evidence.source' ORDER BY source_field").await?, 2).await?;
+        assert_eq!(rules.len(), 2);
+        assert_ne!(rules[0].source_field, rules[1].source_field);
+        assert!(
+            rules
+                .iter()
+                .all(|rule| rule.target_field == Some(vec!["key.dot".into()])
+                    && rule.target_relation.as_deref() == Some("candidate.evidence.target"))
+        );
+        let paths = runtime.records::<FieldInfo>(session.sql("SELECT * FROM operation.metadata.fields WHERE relation='candidate.evidence.source' AND (field_path=['nested.value'] OR field_path=['nested','value']) ORDER BY field_path").await?,2).await?;
+        assert_eq!(paths.len(), 2);
+        assert_ne!(paths[0].field_path, paths[1].field_path);
+        let metadata = session.table_provider("operation.metadata.fields").await?;
+        assert!(
+            metadata
+                .downcast_ref::<crate::admitted_provider::AdmittedProvider>()
+                .is_some()
+        );
+        assert!(
+            metadata
+                .constraints()
+                .is_some_and(|constraints| constraints.is_empty())
+        );
+        runtime.close_diagnostics().await?;
+        Ok(())
+    }
 
     #[tokio::test]
     async fn bound_inventory_is_immutable_consistent_and_drives_nested_metadata() {
@@ -849,12 +1010,20 @@ mod tests {
             )]))
             .unwrap();
         assert!(work(&session, "sample", provider).is_err());
-        let metadata = runtime.execute(session.sql("SELECT semantic_role FROM operation.metadata.fields WHERE field_path = 'nested.value'").await.unwrap()).await.unwrap();
+        let metadata = runtime.execute(session.sql("SELECT semantic_role FROM operation.metadata.fields WHERE field_path = ['nested','value']").await.unwrap()).await.unwrap();
         assert_eq!(metadata.rows, 1);
         assert_eq!(
             crate::projection::TextColumn::new(metadata.batches[0].column(0).as_ref())
                 .unwrap()
                 .get(0),
+            Some("test:semantic-value")
+        );
+        let fields = runtime.records::<FieldInfo>(session.sql("SELECT * FROM operation.metadata.fields WHERE field_path = ['nested','value']").await.unwrap(), 1).await.unwrap();
+        assert_eq!(
+            fields[0]
+                .metadata
+                .get("enrichment.role")
+                .map(String::as_str),
             Some("test:semantic-value")
         );
         let inventory = runtime.execute(session.sql("SELECT table_name FROM information_schema.tables WHERE table_catalog = 'snapshot' AND table_schema = 'evidence'").await.unwrap()).await.unwrap();
@@ -942,9 +1111,6 @@ mod tests {
                 Field::new("value", DataType::Utf8, true),
                 Field::new("id", DataType::Utf8, false),
             ])))
-        }
-        fn references(self) -> &'static [ReferenceRule] {
-            &[]
         }
     }
 

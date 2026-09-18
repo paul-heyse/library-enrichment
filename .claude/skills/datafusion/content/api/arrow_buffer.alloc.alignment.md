@@ -12,6 +12,9 @@ Also reachable as `arrow::alloc::ALIGNMENT`, `arrow_buffer::alloc::ALIGNMENT`
 const ALIGNMENT: usize = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.alloc.alignment.ALIGNMENT.md).
+
+
 Cache and allocation multiple alignment size
 
 ---

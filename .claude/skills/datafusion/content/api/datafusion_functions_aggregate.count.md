@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::count`
 fn count(expr: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.count.count.md).
+
+
 Count the number of non-null values in the column
 
 ---
@@ -23,6 +26,9 @@ Count the number of non-null values in the column
 ```rust
 fn count_all() -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.count.count_all.md).
+
 
 Creates aggregation to count all rows.
 
@@ -51,6 +57,9 @@ let expr = col(expr.schema_name().to_string());
 ```rust
 fn count_all_window() -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.count.count_all_window.md).
+
 
 Creates window aggregation to count all rows.
 
@@ -84,6 +93,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::count_distinct`
 fn count_distinct(expr: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.count.count_distinct.md).
+
+
 ---
 
 ## count_udaf
@@ -93,6 +105,9 @@ fn count_distinct(expr: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```rust
 fn count_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.count.count_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`Count`]
 
@@ -135,6 +150,9 @@ fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 fn value_from_stats(&self, statistics_args: &StatisticsArgs<'_>) -> Option<ScalarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.count.Count.md).
+
+
 ---
 
 ## SlidingDistinctCountAccumulator
@@ -166,5 +184,8 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn supports_retract_batch(&self) -> bool
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.count.SlidingDistinctCountAccumulator.md).
+
 
 ---

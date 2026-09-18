@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::contains`, `arrow::compute::kernels::comparis
 fn contains(left: &dyn Datum, right: &dyn Datum) -> Result<BooleanArray, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_string.like.contains.md).
+
+
 Perform SQL `CONTAINS(left, right)`
 
 # Supported DataTypes
@@ -46,6 +49,9 @@ Also reachable as `arrow::compute::ends_with`, `arrow::compute::kernels::compari
 ```rust
 fn ends_with(left: &dyn Datum, right: &dyn Datum) -> Result<BooleanArray, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_string.like.ends_with.md).
+
 
 Perform SQL `ENDSWITH(left, right)`
 
@@ -82,6 +88,9 @@ Also reachable as `arrow::compute::eq_ignore_ascii_case`, `arrow::compute::kerne
 fn eq_ignore_ascii_case(left: &dyn Datum, right: &dyn Datum) -> Result<BooleanArray, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_string.like.eq_ignore_ascii_case.md).
+
+
 Perform equality check on two arrays using an ASCII case-insensitive match.
 
 `left` and `right` must be the same type, and one of
@@ -112,6 +121,9 @@ Also reachable as `arrow::compute::ilike`, `arrow::compute::kernels::comparison:
 fn ilike(left: &dyn Datum, right: &dyn Datum) -> Result<BooleanArray, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_string.like.ilike.md).
+
+
 Perform SQL `left ILIKE right`
 
 # Notes
@@ -131,6 +143,9 @@ Also reachable as `arrow::compute::kernels::comparison::like`, `arrow::compute::
 ```rust
 fn like(left: &dyn Datum, right: &dyn Datum) -> Result<BooleanArray, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_string.like.like.md).
+
 
 Perform SQL `left LIKE right`
 
@@ -169,6 +184,9 @@ Also reachable as `arrow::compute::kernels::comparison::nilike`, `arrow::compute
 fn nilike(left: &dyn Datum, right: &dyn Datum) -> Result<BooleanArray, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_string.like.nilike.md).
+
+
 Perform SQL `left NOT ILIKE right`
 
 # Notes
@@ -187,6 +205,9 @@ Also reachable as `arrow::compute::kernels::comparison::nlike`, `arrow::compute:
 fn nlike(left: &dyn Datum, right: &dyn Datum) -> Result<BooleanArray, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_string.like.nlike.md).
+
+
 Perform SQL `left NOT LIKE right`
 
 # Notes
@@ -204,6 +225,9 @@ Also reachable as `arrow::compute::kernels::comparison::starts_with`, `arrow::co
 ```rust
 fn starts_with(left: &dyn Datum, right: &dyn Datum) -> Result<BooleanArray, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_string.like.starts_with.md).
+
 
 Perform SQL `STARTSWITH(left, right)`
 

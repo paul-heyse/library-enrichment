@@ -38,6 +38,9 @@ fn try_join_next(&mut self) -> Option<Result<T, JoinError>>
 fn try_join_next_with_id(&mut self) -> Option<Result<(Id, T), JoinError>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common_runtime.join_set.JoinSet.md).
+
+
 A wrapper around [Tokio's `JoinSet`] that forwards all API calls while optionally
 instrumenting spawned tasks and blocking closures with custom tracing behavior.
 If no tracer is injected via [`set_join_set_tracer`], tasks and closures are executed

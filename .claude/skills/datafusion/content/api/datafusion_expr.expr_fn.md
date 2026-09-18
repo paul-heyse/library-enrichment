@@ -16,6 +16,9 @@ enum ExprFuncKind
 
 **Derives**: Clone, Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.ExprFuncKind.md).
+
+
 ---
 
 ## and
@@ -27,6 +30,9 @@ Also reachable as `datafusion::logical_expr::and`, `datafusion::prelude::and`, `
 ```rust
 fn and(left: Expr, right: Expr) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.and.md).
+
 
 Return a new expression with a logical AND
 
@@ -42,6 +48,9 @@ Also reachable as `datafusion::logical_expr::binary_expr`, `datafusion::prelude:
 fn binary_expr(left: Expr, op: Operator, right: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.binary_expr.md).
+
+
 Return a new expression `left <op> right`
 
 ---
@@ -55,6 +64,9 @@ Also reachable as `datafusion::logical_expr::bitwise_and`, `datafusion::prelude:
 ```rust
 fn bitwise_and(left: Expr, right: Expr) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.bitwise_and.md).
+
 
 Return a new expression with bitwise AND
 
@@ -70,6 +82,9 @@ Also reachable as `datafusion::logical_expr::bitwise_or`, `datafusion::prelude::
 fn bitwise_or(left: Expr, right: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.bitwise_or.md).
+
+
 Return a new expression with bitwise OR
 
 ---
@@ -83,6 +98,9 @@ Also reachable as `datafusion::logical_expr::bitwise_shift_left`, `datafusion::p
 ```rust
 fn bitwise_shift_left(left: Expr, right: Expr) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.bitwise_shift_left.md).
+
 
 Return a new expression with bitwise SHIFT LEFT
 
@@ -98,6 +116,9 @@ Also reachable as `datafusion::logical_expr::bitwise_shift_right`, `datafusion::
 fn bitwise_shift_right(left: Expr, right: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.bitwise_shift_right.md).
+
+
 Return a new expression with bitwise SHIFT RIGHT
 
 ---
@@ -111,6 +132,9 @@ Also reachable as `datafusion::logical_expr::bitwise_xor`, `datafusion::prelude:
 ```rust
 fn bitwise_xor(left: Expr, right: Expr) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.bitwise_xor.md).
+
 
 Return a new expression with bitwise XOR
 
@@ -126,6 +150,9 @@ Also reachable as `datafusion::logical_expr::case`, `datafusion::prelude::case`,
 fn case(expr: Expr) -> conditional_expressions::CaseBuilder
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.case.md).
+
+
 Create a CASE WHEN statement with literal WHEN expressions for comparison to the base expression.
 
 ---
@@ -140,6 +167,9 @@ Also reachable as `datafusion::logical_expr::cast`, `datafusion::prelude::cast`,
 fn cast(expr: Expr, data_type: arrow::datatypes::DataType) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.cast.md).
+
+
 Create a cast expression
 
 ---
@@ -153,6 +183,9 @@ Also reachable as `datafusion::logical_expr::col`, `datafusion::prelude::col`, `
 ```rust
 fn col(ident: impl Into<datafusion_common::Column>) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.col.md).
+
 
 Create a column expression based on a qualified or unqualified column name. Will
 normalize unquoted identifiers according to SQL rules (identifiers will become lowercase).
@@ -182,6 +215,9 @@ Also reachable as `datafusion::logical_expr::create_udaf`, `datafusion::prelude:
 fn create_udaf(name: &str, input_type: Vec<arrow::datatypes::DataType>, return_type: std::sync::Arc<arrow::datatypes::DataType>, volatility: Volatility, accumulator: function::AccumulatorFactoryFunction, state_type: std::sync::Arc<Vec<arrow::datatypes::DataType>>) -> AggregateUDF
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.create_udaf.md).
+
+
 Creates a new UDAF with a specific signature, state type and return type.
 The signature and state type must match the `Accumulator's implementation`.
 
@@ -196,6 +232,9 @@ Also reachable as `datafusion::logical_expr::create_udf`, `datafusion::prelude::
 ```rust
 fn create_udf(name: &str, input_types: Vec<arrow::datatypes::DataType>, return_type: arrow::datatypes::DataType, volatility: Volatility, fun: ScalarFunctionImplementation) -> ScalarUDF
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.create_udf.md).
+
 
 Convenience method to create a new user defined scalar function (UDF) with a
 specific signature and specific return type.
@@ -222,6 +261,9 @@ Also reachable as `datafusion::logical_expr::create_udwf`, `datafusion::prelude:
 fn create_udwf(name: &str, input_type: arrow::datatypes::DataType, return_type: std::sync::Arc<arrow::datatypes::DataType>, volatility: Volatility, partition_evaluator_factory: function::PartitionEvaluatorFactory) -> WindowUDF
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.create_udwf.md).
+
+
 Creates a new UDWF with a specific signature, state type and return type.
 
 The signature and state type must match the [`PartitionEvaluator`]'s implementation`.
@@ -240,6 +282,9 @@ Also reachable as `datafusion::logical_expr::cube`, `datafusion::prelude::cube`,
 fn cube(exprs: Vec<Expr>) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.cube.md).
+
+
 Create a grouping set for all combination of `exprs`
 
 ---
@@ -253,6 +298,9 @@ Also reachable as `datafusion::logical_expr::exists`, `datafusion::prelude::exis
 ```rust
 fn exists(subquery: std::sync::Arc<LogicalPlan>) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.exists.md).
+
 
 Create an EXISTS subquery expression
 
@@ -268,6 +316,9 @@ Also reachable as `datafusion::logical_expr::grouping_set`, `datafusion::prelude
 fn grouping_set(exprs: Vec<Vec<Expr>>) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.grouping_set.md).
+
+
 Create a grouping set
 
 ---
@@ -281,6 +332,9 @@ Also reachable as `datafusion::logical_expr::ident`, `datafusion::prelude::ident
 ```rust
 fn ident(name: impl Into<String>) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.ident.md).
+
 
 Create an unqualified column expression from the provided name, without normalizing
 the column.
@@ -313,6 +367,9 @@ Also reachable as `datafusion::logical_expr::in_list`, `datafusion::prelude::in_
 fn in_list(expr: Expr, list: Vec<Expr>, negated: bool) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.in_list.md).
+
+
 Create an in_list expression
 
 ---
@@ -326,6 +383,9 @@ Also reachable as `datafusion::logical_expr::in_subquery`, `datafusion::prelude:
 ```rust
 fn in_subquery(expr: Expr, subquery: std::sync::Arc<LogicalPlan>) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.in_subquery.md).
+
 
 Create an IN subquery expression
 
@@ -341,6 +401,9 @@ Also reachable as `datafusion::logical_expr::interval_datetime_lit`, `datafusion
 fn interval_datetime_lit(value: &str) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.interval_datetime_lit.md).
+
+
 ---
 
 ## interval_month_day_nano_lit
@@ -352,6 +415,9 @@ Also reachable as `datafusion::logical_expr::interval_month_day_nano_lit`, `data
 ```rust
 fn interval_month_day_nano_lit(value: &str) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.interval_month_day_nano_lit.md).
+
 
 ---
 
@@ -365,6 +431,9 @@ Also reachable as `datafusion::logical_expr::interval_year_month_lit`, `datafusi
 fn interval_year_month_lit(value: &str) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.interval_year_month_lit.md).
+
+
 ---
 
 ## is_false
@@ -376,6 +445,9 @@ Also reachable as `datafusion::logical_expr::is_false`, `datafusion::prelude::is
 ```rust
 fn is_false(expr: Expr) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.is_false.md).
+
 
 Create is false expression
 
@@ -391,6 +463,9 @@ Also reachable as `datafusion::logical_expr::is_not_false`, `datafusion::prelude
 fn is_not_false(expr: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.is_not_false.md).
+
+
 Create is not false expression
 
 ---
@@ -404,6 +479,9 @@ Also reachable as `datafusion::logical_expr::is_not_null`, `datafusion::prelude:
 ```rust
 fn is_not_null(expr: Expr) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.is_not_null.md).
+
 
 Create is not null expression
 
@@ -419,6 +497,9 @@ Also reachable as `datafusion::logical_expr::is_not_true`, `datafusion::prelude:
 fn is_not_true(expr: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.is_not_true.md).
+
+
 Create is not true expression
 
 ---
@@ -432,6 +513,9 @@ Also reachable as `datafusion::logical_expr::is_not_unknown`, `datafusion::prelu
 ```rust
 fn is_not_unknown(expr: Expr) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.is_not_unknown.md).
+
 
 Create is not unknown expression
 
@@ -447,6 +531,9 @@ Also reachable as `datafusion::logical_expr::is_null`, `datafusion::prelude::is_
 fn is_null(expr: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.is_null.md).
+
+
 Create is null expression
 
 ---
@@ -460,6 +547,9 @@ Also reachable as `datafusion::logical_expr::is_true`, `datafusion::prelude::is_
 ```rust
 fn is_true(expr: Expr) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.is_true.md).
+
 
 Create is true expression
 
@@ -475,6 +565,9 @@ Also reachable as `datafusion::logical_expr::is_unknown`, `datafusion::prelude::
 fn is_unknown(expr: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.is_unknown.md).
+
+
 Create is unknown expression
 
 ---
@@ -489,6 +582,9 @@ Also reachable as `datafusion::logical_expr::lambda`, `datafusion::prelude::lamb
 fn lambda(params: impl IntoIterator<Item = impl Into<String>>, body: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.lambda.md).
+
+
 Create a lambda expression
 
 ---
@@ -502,6 +598,9 @@ Also reachable as `datafusion::logical_expr::lambda_var`, `datafusion::prelude::
 ```rust
 fn lambda_var(name: impl Into<String>) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.lambda_var.md).
+
 
 Create an unresolved lambda variable expression
 
@@ -523,6 +622,9 @@ Also reachable as `datafusion::logical_expr::not`, `datafusion::prelude::not`, `
 fn not(expr: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.not.md).
+
+
 Return a new expression with a logical NOT
 
 ---
@@ -536,6 +638,9 @@ Also reachable as `datafusion::logical_expr::not_exists`, `datafusion::prelude::
 ```rust
 fn not_exists(subquery: std::sync::Arc<LogicalPlan>) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.not_exists.md).
+
 
 Create a NOT EXISTS subquery expression
 
@@ -551,6 +656,9 @@ Also reachable as `datafusion::logical_expr::not_in_subquery`, `datafusion::prel
 fn not_in_subquery(expr: Expr, subquery: std::sync::Arc<LogicalPlan>) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.not_in_subquery.md).
+
+
 Create a NOT IN subquery expression
 
 ---
@@ -565,6 +673,9 @@ Also reachable as `datafusion::logical_expr::or`, `datafusion::prelude::or`, `da
 fn or(left: Expr, right: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.or.md).
+
+
 Return a new expression with a logical OR
 
 ---
@@ -578,6 +689,9 @@ Also reachable as `datafusion::logical_expr::out_ref_col`, `datafusion::prelude:
 ```rust
 fn out_ref_col(dt: arrow::datatypes::DataType, ident: impl Into<datafusion_common::Column>) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.out_ref_col.md).
+
 
 Create an out reference column which hold a reference that has been resolved to a field
 outside of the current plan.
@@ -596,6 +710,9 @@ Also reachable as `datafusion::logical_expr::out_ref_col_with_metadata`, `datafu
 fn out_ref_col_with_metadata(dt: arrow::datatypes::DataType, metadata: std::collections::HashMap<String, String>, ident: impl Into<datafusion_common::Column>) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.out_ref_col_with_metadata.md).
+
+
 Create an out reference column from an existing field (preserving metadata)
 
 ---
@@ -609,6 +726,9 @@ Also reachable as `datafusion::logical_expr::placeholder`, `datafusion::prelude:
 ```rust
 fn placeholder(id: impl Into<String>) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.placeholder.md).
+
 
 Create placeholder value that will be filled in (such as `$1`)
 
@@ -634,6 +754,9 @@ Also reachable as `datafusion::logical_expr::qualified_wildcard`, `datafusion::p
 fn qualified_wildcard(qualifier: impl Into<datafusion_common::TableReference>) -> select_expr::SelectExpr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.qualified_wildcard.md).
+
+
 Create an 't.*' [`Expr::Wildcard`] expression that matches all columns from a specific table
 
 # Example
@@ -657,6 +780,9 @@ Also reachable as `datafusion::logical_expr::qualified_wildcard_with_options`, `
 fn qualified_wildcard_with_options(qualifier: impl Into<datafusion_common::TableReference>, options: expr::WildcardOptions) -> select_expr::SelectExpr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.qualified_wildcard_with_options.md).
+
+
 Create an 't.*' [`Expr::Wildcard`] expression with the wildcard options
 
 ---
@@ -670,6 +796,9 @@ Also reachable as `datafusion::logical_expr::rollup`, `datafusion::prelude::roll
 ```rust
 fn rollup(exprs: Vec<Expr>) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.rollup.md).
+
 
 Create a grouping set for rollup
 
@@ -685,6 +814,9 @@ Also reachable as `datafusion::logical_expr::scalar_subquery`, `datafusion::prel
 fn scalar_subquery(subquery: std::sync::Arc<LogicalPlan>) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.scalar_subquery.md).
+
+
 Create a scalar subquery expression
 
 ---
@@ -698,6 +830,9 @@ Also reachable as `datafusion::logical_expr::try_cast`, `datafusion::prelude::tr
 ```rust
 fn try_cast(expr: Expr, data_type: arrow::datatypes::DataType) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.try_cast.md).
+
 
 Create a try cast expression
 
@@ -713,6 +848,9 @@ Also reachable as `datafusion::logical_expr::unnest`, `datafusion::prelude::unne
 fn unnest(expr: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.unnest.md).
+
+
 Create a Unnest expression with default (non-outer) semantics.
 
 ---
@@ -727,6 +865,9 @@ Also reachable as `datafusion::logical_expr::when`, `datafusion::prelude::when`,
 fn when(when: Expr, then: Expr) -> conditional_expressions::CaseBuilder
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.when.md).
+
+
 Create a CASE WHEN statement with boolean WHEN expressions and no base expression.
 
 ---
@@ -740,6 +881,9 @@ Also reachable as `datafusion::logical_expr::wildcard`, `datafusion::prelude::wi
 ```rust
 fn wildcard() -> select_expr::SelectExpr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.wildcard.md).
+
 
 Create an '*' [`Expr::Wildcard`] expression that matches all columns
 
@@ -762,6 +906,9 @@ Also reachable as `datafusion::logical_expr::wildcard_with_options`, `datafusion
 ```rust
 fn wildcard_with_options(options: expr::WildcardOptions) -> select_expr::SelectExpr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.wildcard_with_options.md).
+
 
 Create an '*' [`Expr::Wildcard`] expression with the wildcard options
 
@@ -797,6 +944,9 @@ fn order_by(self, order_by: Vec<Sort>) -> ExprFuncBuilder
 fn partition_by(self, partition_by: Vec<Expr>) -> ExprFuncBuilder
 fn window_frame(self, window_frame: WindowFrame) -> ExprFuncBuilder
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.ExprFuncBuilder.md).
+
 
 Implementation of [`ExprFunctionExt`].
 
@@ -835,6 +985,9 @@ fn signature(&self) -> &Signature
 fn state_fields(&self, _args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.SimpleAggregateUDF.md).
+
+
 Implements [`AggregateUDFImpl`] for functions that have a single signature and
 return type.
 
@@ -869,6 +1022,9 @@ fn name(&self) -> &str
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.SimpleScalarUDF.md).
+
 
 Implements [`ScalarUDFImpl`] for functions that have a single signature and
 return type.
@@ -905,6 +1061,9 @@ fn partition_evaluator(&self, _partition_evaluator_args: PartitionEvaluatorArgs<
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.SimpleWindowUDF.md).
+
+
 Implements [`WindowUDFImpl`] for functions that have a single signature and
 return type.
 
@@ -935,6 +1094,9 @@ fn order_by(self, order_by: Vec<Sort>) -> ExprFuncBuilder
 fn partition_by(self, partition_by: Vec<Expr>) -> ExprFuncBuilder
 fn window_frame(self, window_frame: WindowFrame) -> ExprFuncBuilder
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_fn.ExprFunctionExt.md).
+
 
 Extensions for configuring [`Expr::AggregateFunction`] or [`Expr::WindowFunction`]
 

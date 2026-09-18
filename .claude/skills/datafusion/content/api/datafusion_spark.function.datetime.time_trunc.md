@@ -31,6 +31,9 @@ fn signature(&self) -> &Signature
 fn simplify(&self, args: Vec<Expr>, _info: &SimplifyContext) -> Result<ExprSimplifyResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.time_trunc.SparkTimeTrunc.md).
+
+
 Spark time_trunc function only handles time inputs.
 <https://spark.apache.org/docs/latest/api/sql/index.html#time_trunc>
 

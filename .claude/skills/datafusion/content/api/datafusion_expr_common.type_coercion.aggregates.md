@@ -12,6 +12,9 @@ Also reachable as `datafusion_expr::type_coercion::aggregates::check_arg_count`
 fn check_arg_count(func_name: &str, input_fields: &[arrow::datatypes::FieldRef], signature: &signature::TypeSignature) -> datafusion_common::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.aggregates.check_arg_count.md).
+
+
 Validate the length of `input_fields` matches the `signature` for `agg_fun`.
 
 This method DOES NOT validate the argument fields - only that (at least one,
@@ -32,6 +35,9 @@ Also reachable as `datafusion_expr::type_coercion::aggregates::INTEGERS`
 static INTEGERS: &[arrow::datatypes::DataType]
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.aggregates.INTEGERS.md).
+
+
 ---
 
 ## NUMERICS
@@ -45,5 +51,8 @@ Also reachable as `datafusion_expr::type_coercion::aggregates::NUMERICS`
 ```rust
 static NUMERICS: &[arrow::datatypes::DataType]
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.aggregates.NUMERICS.md).
+
 
 ---

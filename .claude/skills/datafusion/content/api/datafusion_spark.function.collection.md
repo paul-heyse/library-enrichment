@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 2 public items · structured records in [`model/data
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.collection.functions.md).
+
+
 ---
 
 ## size
@@ -19,6 +22,9 @@ fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```rust
 fn size() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.collection.size.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of size
 

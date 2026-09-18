@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::approx_percentile_co
 fn approx_percentile_cont(order_by: datafusion_expr::expr::Sort, percentile: datafusion_expr::Expr, centroids: Option<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.approx_percentile_cont.approx_percentile_cont.md).
+
+
 Computes the approximate percentile continuous of a set of numbers
 
 ---
@@ -23,6 +26,9 @@ Computes the approximate percentile continuous of a set of numbers
 ```rust
 fn approx_percentile_cont_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.approx_percentile_cont.approx_percentile_cont_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`ApproxPercentileCont`]
 
@@ -57,6 +63,9 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.approx_percentile_cont.ApproxPercentileAccumulator.md).
+
+
 ---
 
 ## ApproxPercentileCont
@@ -88,5 +97,8 @@ fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 fn supports_within_group_clause(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.approx_percentile_cont.ApproxPercentileCont.md).
+
 
 ---

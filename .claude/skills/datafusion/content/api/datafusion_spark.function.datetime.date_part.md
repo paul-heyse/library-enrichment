@@ -32,6 +32,9 @@ fn signature(&self) -> &Signature
 fn simplify(&self, args: Vec<Expr>, _info: &SimplifyContext) -> Result<ExprSimplifyResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.date_part.SparkDatePart.md).
+
+
 Wrapper around datafusion date_part function to handle
 Spark behavior returning day of the week 1-indexed instead of 0-indexed and different part aliases.
 <https://spark.apache.org/docs/latest/api/sql/index.html#date_part>

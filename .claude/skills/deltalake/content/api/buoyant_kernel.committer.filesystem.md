@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## FileSystemCommitter
 
 `struct` · `buoyant_kernel::committer::filesystem::FileSystemCommitter`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.committer.filesystem.FileSystemCommitter.md)
 
 Also reachable as `buoyant_kernel::committer::FileSystemCommitter`, `delta_kernel::committer::filesystem::FileSystemCommitter`
 

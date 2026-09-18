@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## EagerSnapshot
 
 `struct` · `deltalake_core::kernel::snapshot::EagerSnapshot`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.snapshot.EagerSnapshot.md)
 
 Also reachable as `deltalake::kernel::EagerSnapshot`, `deltalake_core::kernel::EagerSnapshot`
 
@@ -85,6 +86,7 @@ A snapshot of a Delta table that has been eagerly loaded into memory.
 ## Snapshot
 
 `struct` · `deltalake_core::kernel::snapshot::Snapshot`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.snapshot.Snapshot.md)
 
 Also reachable as `deltalake::kernel::Snapshot`, `deltalake_core::kernel::Snapshot`
 

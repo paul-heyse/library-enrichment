@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 4 public items · structured records in [`model/buoyan
 ## ExpressionFieldPatch
 
 `struct` · `buoyant_kernel::struct_patch::ExpressionFieldPatch`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.struct_patch.ExpressionFieldPatch.md)
 
 Also reachable as `buoyant_kernel::expressions::ExpressionFieldPatch`, `delta_kernel::struct_patch::ExpressionFieldPatch`
 
@@ -40,6 +41,7 @@ input field's output position.
 ## ExpressionStructPatch
 
 `struct` · `buoyant_kernel::struct_patch::ExpressionStructPatch`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.struct_patch.ExpressionStructPatch.md)
 
 Also reachable as `buoyant_kernel::expressions::ExpressionStructPatch`, `delta_kernel::struct_patch::ExpressionStructPatch`
 
@@ -91,6 +93,7 @@ modified and/or dropped, or where a small number of columns need to be injected.
 ## ProjectionStructPatchBuilder
 
 `struct` · `buoyant_kernel::struct_patch::ProjectionStructPatchBuilder`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.struct_patch.ProjectionStructPatchBuilder.md)
 
 Also reachable as `delta_kernel::struct_patch::ProjectionStructPatchBuilder`
 
@@ -134,6 +137,7 @@ only its expression.
 ## StructPatchBuilder
 
 `struct` · `buoyant_kernel::struct_patch::StructPatchBuilder`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.struct_patch.StructPatchBuilder.md)
 
 Also reachable as `delta_kernel::struct_patch::StructPatchBuilder`
 

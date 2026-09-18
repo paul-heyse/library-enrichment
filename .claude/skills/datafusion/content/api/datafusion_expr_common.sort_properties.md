@@ -33,6 +33,9 @@ fn sub(&self, rhs: &Self) -> Self
 fn neg(self) -> Self::Output
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.sort_properties.SortProperties.md).
+
+
 To propagate [`SortOptions`] across the `PhysicalExpr`, it is insufficient
 to simply use `Option<SortOptions>`: There must be a differentiation between
 unordered columns and literal values, since literals may not break the ordering
@@ -72,6 +75,9 @@ fn with_preserves_lex_ordering(self, preserves_lex_ordering: bool) -> Self
 fn with_range(self, range: Interval) -> Self
 fn with_strictly_order_preserving(self, strictly_order_preserving: bool) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.sort_properties.ExprProperties.md).
+
 
 Represents the properties of a `PhysicalExpr`, including its sorting,
 range, and whether it preserves lexicographical ordering.

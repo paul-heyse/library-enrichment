@@ -22,6 +22,9 @@ fn is_eq(&self, other: &Arc<dyn CustomMetricValue>) -> bool
 fn new_empty(&self) -> Arc<dyn CustomMetricValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.md).
+
+
 A trait for implementing custom metric values.
 
 This trait enables defining application- or operator-specific metric types

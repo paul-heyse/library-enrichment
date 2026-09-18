@@ -23,4 +23,7 @@ fn clear(&mut self)
 fn encoded_len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_models.generated.datafusion.scalar_nested_value.Dictionary.md).
+
+
 ---

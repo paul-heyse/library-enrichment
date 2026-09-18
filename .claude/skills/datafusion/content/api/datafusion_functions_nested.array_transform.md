@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_transform`, `datafusion_functions_
 fn array_transform(array: datafusion_expr::Expr, lambda: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_transform.array_transform.md).
+
+
 transforms the values of an array
 
 ---
@@ -23,6 +26,9 @@ transforms the values of an array
 ```rust
 fn array_transform_higher_order_function() -> std::sync::Arc<datafusion_expr::HigherOrderUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_transform.array_transform_higher_order_function.md).
+
 
 HigherOrderFunction that returns a [`HigherOrderUDF`](datafusion_expr::HigherOrderUDF) for 
 ArrayTransform
@@ -59,5 +65,8 @@ fn name(&self) -> &str
 fn return_field_from_args(&self, args: HigherOrderReturnFieldArgs<'_>) -> Result<Arc<Field>>
 fn signature(&self) -> &HigherOrderSignature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_transform.ArrayTransform.md).
+
 
 ---

@@ -30,6 +30,9 @@ fn get_store(&self, url: &Url) -> Result<Arc<dyn ObjectStore>>
 fn register_store(&self, url: &Url, store: Arc<dyn ObjectStore>) -> Option<Arc<dyn ObjectStore>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.object_store.DefaultObjectStoreRegistry.md).
+
+
 The default [`ObjectStoreRegistry`]
 
 ---
@@ -69,6 +72,9 @@ fn as_ref(&self) -> &Url
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.object_store.ObjectStoreUrl.md).
+
+
 A parsed URL identifying a particular [`ObjectStore`] instance
 
 For example:
@@ -99,6 +105,9 @@ fn deregister_store(&self, url: &Url) -> Result<Arc<dyn ObjectStore>>
 fn get_store(&self, url: &Url) -> Result<Arc<dyn ObjectStore>>
 fn register_store(&self, url: &Url, store: Arc<dyn ObjectStore>) -> Option<Arc<dyn ObjectStore>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.object_store.ObjectStoreRegistry.md).
+
 
 [`ObjectStoreRegistry`] maps a URL to an [`ObjectStore`] instance,
 and allows DataFusion to read from different [`ObjectStore`]

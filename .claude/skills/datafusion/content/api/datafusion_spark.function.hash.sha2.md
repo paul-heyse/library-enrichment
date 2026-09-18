@@ -29,6 +29,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.hash.sha2.SparkSha2.md).
+
+
 Differs from DataFusion version in allowing array input for bit lengths, and
 also hex encoding the output.
 

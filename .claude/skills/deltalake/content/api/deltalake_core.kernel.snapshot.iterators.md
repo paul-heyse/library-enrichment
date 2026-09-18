@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## LogicalFileView
 
 `struct` · `deltalake_core::kernel::snapshot::iterators::LogicalFileView`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.snapshot.iterators.LogicalFileView.md)
 
 Also reachable as `deltalake::kernel::LogicalFileView`, `deltalake_core::kernel::LogicalFileView`
 

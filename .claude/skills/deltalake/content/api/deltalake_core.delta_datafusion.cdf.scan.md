@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## DeltaCdfTableProvider
 
 `struct` · `deltalake_core::delta_datafusion::cdf::scan::DeltaCdfTableProvider`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.cdf.scan.DeltaCdfTableProvider.md)
 
 Also reachable as `deltalake::delta_datafusion::DeltaCdfTableProvider`, `deltalake::delta_datafusion::cdf::scan::DeltaCdfTableProvider`, `deltalake_core::delta_datafusion::DeltaCdfTableProvider`
 

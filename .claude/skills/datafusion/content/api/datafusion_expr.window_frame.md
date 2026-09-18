@@ -36,6 +36,9 @@ fn try_from(bound: protobuf::WindowFrameBound) -> Result<Self, Self::Error>
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.window_frame.WindowFrameBound.md).
+
+
 There are five ways to describe starting and ending frame boundaries:
 
 1. UNBOUNDED PRECEDING
@@ -74,6 +77,9 @@ fn from(units: protobuf::WindowFrameUnits) -> Self
 ```rust
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.window_frame.WindowFrameUnits.md).
+
 
 There are three frame types: ROWS, GROUPS, and RANGE. The frame type determines how the
 starting and ending boundaries of the frame are measured.
@@ -120,6 +126,9 @@ fn try_from(window: protobuf::WindowFrame) -> Result<Self, Self::Error>
 ```rust
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.window_frame.WindowFrame.md).
+
 
 The frame specification determines which output rows are read by an aggregate
 window function. The ending frame boundary can be omitted if the `BETWEEN`

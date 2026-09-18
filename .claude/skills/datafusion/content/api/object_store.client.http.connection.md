@@ -14,6 +14,9 @@ enum HttpErrorKind
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/object_store.client.http.connection.HttpErrorKind.md).
+
+
 Identifies the kind of [`HttpError`]
 
 This is used, among other things, to determine if a request can be retried
@@ -36,6 +39,9 @@ struct HttpClient
 async fn execute(&self, request: HttpRequest) -> Result<HttpResponse, HttpError>
 fn new(service: impl HttpService + 'static) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.client.http.connection.HttpClient.md).
+
 
 An HTTP client
 
@@ -72,6 +78,9 @@ fn source(&self) -> ::core::option::Option<&dyn ::thiserror::__private18::Error 
 fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.client.http.connection.HttpError.md).
+
+
 An HTTP protocol error
 
 Clients should return this when an HTTP request fails to be completed, e.g. because
@@ -98,6 +107,9 @@ struct ReqwestConnector
 ```rust
 fn connect(&self, options: &ClientOptions) -> Result<HttpClient>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.client.http.connection.ReqwestConnector.md).
+
 
 [`HttpConnector`] using [`reqwest::Client`]
 
@@ -126,6 +138,9 @@ fn new(runtime: Handle) -> Self
 ```rust
 fn connect(&self, options: &ClientOptions) -> Result<HttpClient>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.client.http.connection.SpawnedReqwestConnector.md).
+
 
 [`reqwest::Client`] connector that performs all I/O on the provided tokio
 [`Runtime`] (thread pool).
@@ -184,6 +199,9 @@ trait HttpConnector: std::fmt::Debug + Send + Sync + 'static
 fn connect(&self, options: &ClientOptions) -> Result<HttpClient>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.client.http.connection.HttpConnector.md).
+
+
 A factory for [`HttpClient`]
 
 ---
@@ -206,6 +224,9 @@ trait HttpService: std::fmt::Debug + Send + Sync + 'static
 ```rust
 async fn call(&self, req: HttpRequest) -> Result<HttpResponse, HttpError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.client.http.connection.HttpService.md).
+
 
 An asynchronous function from a [`HttpRequest`] to a [`HttpResponse`].
 

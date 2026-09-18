@@ -22,6 +22,9 @@ enum Distinct
 fn input(&self) -> &Arc<LogicalPlan>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Distinct.md).
+
+
 Removes duplicate rows from the input
 
 ---
@@ -37,6 +40,9 @@ enum FetchType
 ```
 
 **Variants**: `Literal`, `UnsupportedExpr`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.FetchType.md).
+
 
 Different types of fetch expression in Limit plan.
 
@@ -128,6 +134,9 @@ fn map_children<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Resu
 fn apply_elements<F: FnMut(&'a Self) -> Result<TreeNodeRecursion>>(&'a self, f: F) -> Result<TreeNodeRecursion>
 fn map_elements<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.LogicalPlan.md).
+
 
 A `LogicalPlan` is a node in a tree of relational operators (such as
 Projection or Filter).
@@ -284,6 +293,9 @@ enum Partitioning
 fn partition_count(&self) -> Option<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Partitioning.md).
+
+
 Logical partitioning schemes.
 
 A scheme can describe either requested repartitioning in
@@ -309,6 +321,9 @@ enum SkipType
 
 **Variants**: `Literal`, `UnsupportedExpr`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.SkipType.md).
+
+
 Different types of skip expression in Limit plan.
 
 ---
@@ -322,6 +337,9 @@ Also reachable as `datafusion::logical_expr::projection_schema`, `datafusion_exp
 ```rust
 fn projection_schema(input: &LogicalPlan, exprs: &[Expr]) -> datafusion_common::Result<std::sync::Arc<datafusion_common::DFSchema>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.projection_schema.md).
+
 
 Computes the schema of the result produced by applying a projection to the input logical plan.
 
@@ -368,6 +386,9 @@ fn try_new(input: Arc<LogicalPlan>, group_expr: Vec<Expr>, aggr_expr: Vec<Expr>)
 fn try_new_with_schema(input: Arc<LogicalPlan>, group_expr: Vec<Expr>, aggr_expr: Vec<Expr>, schema: DFSchemaRef) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Aggregate.md).
+
+
 Aggregates its input based on a set of grouping and aggregate
 expressions (e.g. SUM).
 
@@ -397,6 +418,9 @@ struct Analyze
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Analyze.md).
+
+
 Runs the actual plan, and then prints the physical plan with
 with execution metrics.
 
@@ -423,6 +447,9 @@ struct ColumnUnnestList
 ```rust
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.ColumnUnnestList.md).
+
 
 Represent the unnesting operation on a list column, such as the recursion depth and
 the output column name after unnesting
@@ -459,6 +486,9 @@ struct DescribeTable
 **Fields**: `schema`, `output_schema`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.DescribeTable.md).
+
 
 Describe the schema of table
 
@@ -506,6 +536,9 @@ fn try_new(on_expr: Vec<Expr>, select_expr: Vec<Expr>, sort_expr: Option<Vec<Sor
 fn with_sort_expr(self, sort_expr: Vec<SortExpr>) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.DistinctOn.md).
+
+
 Removes duplicate rows from the input
 
 ---
@@ -523,6 +556,9 @@ struct EmptyRelation
 **Fields**: `produce_one_row`, `schema`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.EmptyRelation.md).
+
 
 Relationship produces 0 or 1 placeholder rows with specified output schema
 In most cases the output schema for `EmptyRelation` would be empty,
@@ -543,6 +579,9 @@ struct Explain
 **Fields**: `verbose`, `explain_format`, `plan`, `stringified_plans`, `schema`, `logical_optimization_succeeded`, `show_statistics`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Explain.md).
+
 
 Produces a relation with string representations of
 various parts of the plan
@@ -578,6 +617,9 @@ fn with_show_statistics(self, show_statistics: Option<bool>) -> Self
 fn with_verbose(self, verbose: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.ExplainOption.md).
+
+
 Options for EXPLAIN
 
 ---
@@ -595,6 +637,9 @@ struct Extension
 **Fields**: `node`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Extension.md).
+
 
 Extension operator defined outside of DataFusion
 
@@ -619,6 +664,9 @@ struct Filter
 ```rust
 fn try_new(predicate: Expr, input: Arc<LogicalPlan>) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Filter.md).
+
 
 Filters rows from its input that do not match an
 expression (essentially a WHERE clause with a predicate
@@ -655,6 +703,9 @@ fn try_new(left: Arc<LogicalPlan>, right: Arc<LogicalPlan>, on: Vec<(Expr, Expr)
 fn try_new_with_project_input(original: &LogicalPlan, left: Arc<LogicalPlan>, right: Arc<LogicalPlan>, column_on: (Vec<Column>, Vec<Column>)) -> Result<(Self, bool)>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Join.md).
+
+
 Join two logical plans on one or more join columns
 
 ---
@@ -679,6 +730,9 @@ struct Limit
 fn get_fetch_type(&self) -> Result<FetchType>
 fn get_skip_type(&self) -> Result<SkipType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Limit.md).
+
 
 Produces the first `n` tuples from its input and discards the rest.
 
@@ -705,6 +759,9 @@ fn new_from_schema(input: Arc<LogicalPlan>, schema: DFSchemaRef) -> Self
 fn try_new(expr: Vec<Expr>, input: Arc<LogicalPlan>) -> Result<Self>
 fn try_new_with_schema(expr: Vec<Expr>, input: Arc<LogicalPlan>, schema: DFSchemaRef) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Projection.md).
+
 
 Evaluates an arbitrary list of expressions (essentially a
 SELECT with an expression list) on its input.
@@ -739,6 +796,9 @@ fn try_new(ordering: Vec<SortExpr>, split_points: Vec<SplitPoint>) -> Result<Sel
 ```rust
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.RangePartitioning.md).
+
 
 Logical range partitioning.
 
@@ -786,6 +846,9 @@ struct RecursiveQuery
 fn try_new(name: String, static_term: Arc<LogicalPlan>, recursive_term: Arc<LogicalPlan>, is_distinct: bool) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.RecursiveQuery.md).
+
+
 A variadic query operation, Recursive CTE.
 
 # Recursive Query Evaluation
@@ -825,6 +888,9 @@ struct Repartition
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Repartition.md).
+
+
 ---
 
 ## Sort
@@ -840,6 +906,9 @@ struct Sort
 **Fields**: `expr`, `input`, `fetch`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Sort.md).
+
 
 Sorts its input according to a list of sort expressions.
 
@@ -880,6 +949,9 @@ fn normalize_eq(&self, other: &Self) -> bool
 fn can_normalize(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Subquery.md).
+
+
 Subquery
 
 ---
@@ -904,6 +976,9 @@ struct SubqueryAlias
 fn try_new(plan: Arc<LogicalPlan>, alias: impl Into<TableReference>) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.SubqueryAlias.md).
+
+
 Aliased subquery
 
 ---
@@ -927,6 +1002,9 @@ struct TableScan
 ```rust
 fn try_new(table_name: impl Into<TableReference>, table_source: Arc<dyn TableSource>, projection: Option<Vec<usize>>, filters: Vec<Expr>, fetch: Option<usize>) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.TableScan.md).
+
 
 Produces rows from a table provider by reference or from the context
 
@@ -961,6 +1039,9 @@ fn with_statistics_requests(self, statistics_requests: BTreeSet<StatisticsReques
 fn from(scan: TableScan) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.TableScanBuilder.md).
+
+
 Builder for [`TableScan`].
 
 Prefer this over constructing a [`TableScan`] directly: it derives the
@@ -993,6 +1074,9 @@ fn try_new_by_name(inputs: Vec<Arc<LogicalPlan>>) -> Result<Self>
 fn try_new_with_loose_types(inputs: Vec<Arc<LogicalPlan>>) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Union.md).
+
+
 Union multiple inputs
 
 ---
@@ -1017,6 +1101,9 @@ struct Unnest
 fn try_new(input: Arc<LogicalPlan>, exec_columns: Vec<Column>, options: UnnestOptions) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Unnest.md).
+
+
 Unnest a column that contains a nested list type. See
 [`UnnestOptions`] for more details.
 
@@ -1035,6 +1122,9 @@ struct Values
 **Fields**: `schema`, `values`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Values.md).
+
 
 Values expression. See
 [Postgres VALUES](https://www.postgresql.org/docs/current/queries-values.html)
@@ -1062,6 +1152,9 @@ struct Window
 fn try_new(window_expr: Vec<Expr>, input: Arc<LogicalPlan>) -> Result<Self>
 fn try_new_with_schema(window_expr: Vec<Expr>, input: Arc<LogicalPlan>, schema: DFSchemaRef) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.plan.Window.md).
+
 
 Window its input based on a set of window spec and window function (e.g. SUM or RANK)
 

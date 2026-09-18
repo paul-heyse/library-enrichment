@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::cosine_distance`, `datafusion_functions_
 fn cosine_distance(array1: datafusion_expr::Expr, array2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.cosine_distance.cosine_distance.md).
+
+
 returns the cosine distance between two numeric arrays.
 
 ---
@@ -23,6 +26,9 @@ returns the cosine distance between two numeric arrays.
 ```rust
 fn cosine_distance_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.cosine_distance.cosine_distance_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 CosineDistance
@@ -57,5 +63,8 @@ fn name(&self) -> &str
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.cosine_distance.CosineDistance.md).
+
 
 ---

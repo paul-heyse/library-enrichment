@@ -14,6 +14,9 @@ Also reachable as `datafusion::datasource::file_format::parquet::fetch_parquet_m
 async fn fetch_parquet_metadata(store: &dyn ObjectStore, object_meta: &object_store::ObjectMeta, size_hint: Option<usize>, decryption_properties: Option<&datafusion_common::encryption::FileDecryptionProperties>, file_metadata_cache: Option<std::sync::Arc<datafusion_execution::cache::cache_manager::FileMetadataCache>>) -> datafusion_common::Result<std::sync::Arc<parquet::file::metadata::ParquetMetaData>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.file_format.fetch_parquet_metadata.md).
+
+
 Fetches parquet metadata from ObjectStore for given object
 
 This component is a subject to **change** in near future and is exposed for low level integrations
@@ -35,6 +38,9 @@ Also reachable as `datafusion::datasource::file_format::parquet::fetch_statistic
 async fn fetch_statistics(store: &dyn ObjectStore, table_schema: arrow::datatypes::SchemaRef, file: &object_store::ObjectMeta, metadata_size_hint: Option<usize>, decryption_properties: Option<&datafusion_common::encryption::FileDecryptionProperties>, file_metadata_cache: Option<std::sync::Arc<datafusion_execution::cache::cache_manager::FileMetadataCache>>) -> datafusion_common::Result<datafusion_common::Statistics>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.file_format.fetch_statistics.md).
+
+
 Read and parse the statistics of the Parquet file at location `path`
 
 See [`statistics_from_parquet_meta_calc`] for more details
@@ -52,6 +58,9 @@ Also reachable as `datafusion::datasource::file_format::parquet::statistics_from
 ```rust
 fn statistics_from_parquet_meta_calc(metadata: &parquet::file::metadata::ParquetMetaData, table_schema: arrow::datatypes::SchemaRef) -> datafusion_common::Result<datafusion_common::Statistics>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.file_format.statistics_from_parquet_meta_calc.md).
+
 
 ---
 
@@ -78,6 +87,9 @@ fn new(store: &'a dyn ObjectStore, meta: &'a ObjectMeta) -> Self
 ```rust
 fn fetch(&mut self, range: Range<u64>) -> BoxFuture<'_, Result<Bytes, ParquetError>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.file_format.ObjectStoreFetch.md).
+
 
 [`MetadataFetch`] adapter for reading bytes from an [`ObjectStore`]
 
@@ -132,6 +144,9 @@ async fn infer_stats(&self, state: &dyn Session, store: &Arc<dyn ObjectStore>, t
 async fn infer_stats_and_ordering(&self, state: &dyn Session, store: &Arc<dyn ObjectStore>, table_schema: SchemaRef, object: &ObjectMeta) -> Result<datafusion_datasource::file_format::FileMeta>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.file_format.ParquetFormat.md).
+
+
 The Apache Parquet `FileFormat` implementation
 
 ---
@@ -171,6 +186,9 @@ fn get_ext(&self) -> String
 fn create(&self, state: &dyn Session, format_options: &std::collections::HashMap<String, String>) -> Result<Arc<dyn FileFormat>>
 fn default(&self) -> Arc<dyn FileFormat>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.file_format.ParquetFormatFactory.md).
+
 
 Factory struct used to create [ParquetFormat]
 

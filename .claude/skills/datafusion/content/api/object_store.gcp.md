@@ -61,6 +61,9 @@ async fn put_part(&self, path: &Path, id: &MultipartId, part_idx: usize, payload
 async fn signed_url(&self, method: Method, path: &Path, expires_in: Duration) -> Result<Url>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.gcp.GoogleCloudStorage.md).
+
+
 Interface for [Google Cloud Storage](https://cloud.google.com/storage/).
 
 ---
@@ -73,6 +76,9 @@ Interface for [Google Cloud Storage](https://cloud.google.com/storage/).
 type GcpCredentialProvider = std::sync::Arc<dyn CredentialProvider<Credential = GcpCredential>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.gcp.GcpCredentialProvider.md).
+
+
 [`CredentialProvider`] for [`GoogleCloudStorage`]
 
 ---
@@ -84,6 +90,9 @@ type GcpCredentialProvider = std::sync::Arc<dyn CredentialProvider<Credential = 
 ```rust
 type GcpSigningCredentialProvider = std::sync::Arc<dyn CredentialProvider<Credential = GcpSigningCredential>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.gcp.GcpSigningCredentialProvider.md).
+
 
 [`GcpSigningCredential`] for [`GoogleCloudStorage`]
 

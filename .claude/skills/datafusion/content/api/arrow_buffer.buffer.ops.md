@@ -10,6 +10,9 @@ Crate `arrow-buffer` · 8 public items · structured records in [`model/arrow_bu
 fn bitwise_bin_op_helper<F>(left: &super::Buffer, left_offset_in_bits: usize, right: &super::Buffer, right_offset_in_bits: usize, len_in_bits: usize, op: F) -> super::Buffer where F: FnMut(u64, u64) -> u64
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.ops.bitwise_bin_op_helper.md).
+
+
 Apply a bitwise operation `op` to two inputs and return the result as a Buffer.
 
 The inputs are treated as bitmaps, meaning that offsets and length are
@@ -27,6 +30,9 @@ outside the offsets and len are set to zero out before calling `op`.
 ```rust
 fn bitwise_quaternary_op_helper<F>(buffers: [&super::Buffer; 4], offsets: [usize; 4], len_in_bits: usize, op: F) -> super::Buffer where F: Fn(u64, u64, u64, u64) -> u64
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.ops.bitwise_quaternary_op_helper.md).
+
 
 Apply a bitwise operation `op` to four inputs and return the result as a Buffer.
 
@@ -46,6 +52,9 @@ outside the offsets and len are set to zero out before calling `op`.
 fn bitwise_unary_op_helper<F>(left: &super::Buffer, offset_in_bits: usize, len_in_bits: usize, op: F) -> super::Buffer where F: FnMut(u64) -> u64
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.ops.bitwise_unary_op_helper.md).
+
+
 Apply a bitwise operation `op` to one input and return the result as a Buffer.
 
 The input is treated as a bitmap, meaning that offset and length are
@@ -64,6 +73,9 @@ outside the offsets and len are set to zero out before calling `op`.
 fn buffer_bin_and(left: &super::Buffer, left_offset_in_bits: usize, right: &super::Buffer, right_offset_in_bits: usize, len_in_bits: usize) -> super::Buffer
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.ops.buffer_bin_and.md).
+
+
 Apply a bitwise and to two inputs and return the result as a Buffer.
 The inputs are treated as bitmaps, meaning that offsets and length are specified in number of bits.
 
@@ -79,6 +91,9 @@ The inputs are treated as bitmaps, meaning that offsets and length are specified
 ```rust
 fn buffer_bin_and_not(left: &super::Buffer, left_offset_in_bits: usize, right: &super::Buffer, right_offset_in_bits: usize, len_in_bits: usize) -> super::Buffer
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.ops.buffer_bin_and_not.md).
+
 
 Apply a bitwise and_not to two inputs and return the result as a Buffer.
 The inputs are treated as bitmaps, meaning that offsets and length are specified in number of bits.
@@ -96,6 +111,9 @@ The inputs are treated as bitmaps, meaning that offsets and length are specified
 fn buffer_bin_or(left: &super::Buffer, left_offset_in_bits: usize, right: &super::Buffer, right_offset_in_bits: usize, len_in_bits: usize) -> super::Buffer
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.ops.buffer_bin_or.md).
+
+
 Apply a bitwise or to two inputs and return the result as a Buffer.
 The inputs are treated as bitmaps, meaning that offsets and length are specified in number of bits.
 
@@ -112,6 +130,9 @@ The inputs are treated as bitmaps, meaning that offsets and length are specified
 fn buffer_bin_xor(left: &super::Buffer, left_offset_in_bits: usize, right: &super::Buffer, right_offset_in_bits: usize, len_in_bits: usize) -> super::Buffer
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.ops.buffer_bin_xor.md).
+
+
 Apply a bitwise xor to two inputs and return the result as a Buffer.
 The inputs are treated as bitmaps, meaning that offsets and length are specified in number of bits.
 
@@ -127,6 +148,9 @@ The inputs are treated as bitmaps, meaning that offsets and length are specified
 ```rust
 fn buffer_unary_not(left: &super::Buffer, offset_in_bits: usize, len_in_bits: usize) -> super::Buffer
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.ops.buffer_unary_not.md).
+
 
 Apply a bitwise not to one input and return the result as a Buffer.
 The input is treated as a bitmap, meaning that offset and length are specified in number of bits.

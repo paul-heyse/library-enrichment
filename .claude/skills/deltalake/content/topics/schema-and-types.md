@@ -6,9 +6,9 @@ Delta's schema is the kernel's `StructType`, not Arrow's. `Schema` and `SchemaRe
 
 | Type | Kind | Methods | Prose | Records |
 |---|---|---:|---|---|
-| `buoyant_kernel::schema::StructType` | struct | 39 | [prose](../api/buoyant_kernel.schema.md#structtype) | [records](../model/buoyant_kernel.schema.json) |
-| `buoyant_kernel::schema::StructField` | struct | 31 | [prose](../api/buoyant_kernel.schema.md#structfield) | [records](../model/buoyant_kernel.schema.json) |
-| `buoyant_kernel::schema::DataType` | enum | 20 | [prose](../api/buoyant_kernel.schema.md#datatype) | [records](../model/buoyant_kernel.schema.json) |
+| `buoyant_kernel::schema::StructType` | struct | 38 | [prose](../api/buoyant_kernel.schema.md#structtype) | [records](../model/buoyant_kernel.schema.json) |
+| `buoyant_kernel::schema::StructField` | struct | 29 | [prose](../api/buoyant_kernel.schema.md#structfield) | [records](../model/buoyant_kernel.schema.json) |
+| `buoyant_kernel::schema::DataType` | enum | 19 | [prose](../api/buoyant_kernel.schema.md#datatype) | [records](../model/buoyant_kernel.schema.json) |
 | `buoyant_kernel::schema::PrimitiveType` | enum | 10 | [prose](../api/buoyant_kernel.schema.md#primitivetype) | [records](../model/buoyant_kernel.schema.json) |
 | `buoyant_kernel::expressions::scalars::Scalar` | enum | 42 | [prose](../api/buoyant_kernel.expressions.scalars.md#scalar) | [records](../model/buoyant_kernel.expressions.scalars.json) |
 
@@ -30,7 +30,7 @@ Delta's schema is the kernel's `StructType`, not Arrow's. `Schema` and `SchemaRe
 
 ## Decision rules
 
-- Write the Delta schema explicitly when creating a table. Inferring it from a `RecordBatch` locks in whatever Arrow happened to produce.
+- Declare a Delta schema when the domain requires independent schema control; batch-derived schemas are appropriate when their normalization and protocol consequences match the intended contract.
 - Schema evolution is opt-in per write, through the write builder's schema mode -- not a table-level setting.
 
 ## Anti-patterns

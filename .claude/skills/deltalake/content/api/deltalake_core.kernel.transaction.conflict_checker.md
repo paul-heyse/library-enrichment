@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## CommitConflictError
 
 `enum` · `deltalake_core::kernel::transaction::conflict_checker::CommitConflictError`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.conflict_checker.CommitConflictError.md)
 
 Also reachable as `deltalake::kernel::transaction::CommitConflictError`, `deltalake_core::kernel::transaction::CommitConflictError`
 

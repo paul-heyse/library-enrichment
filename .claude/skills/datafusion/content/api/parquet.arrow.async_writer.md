@@ -30,6 +30,9 @@ fn try_new_with_options(writer: W, arrow_schema: SchemaRef, options: ArrowWriter
 async fn write(&mut self, batch: &RecordBatch) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.async_writer.AsyncArrowWriter.md).
+
+
 Encodes [`RecordBatch`] to parquet, outputting to an [`AsyncFileWriter`]
 
 ## Memory Usage
@@ -80,6 +83,9 @@ trait AsyncFileWriter: Send
 fn complete(&mut self) -> BoxFuture<'_, Result<()>>
 fn write(&mut self, bs: Bytes) -> BoxFuture<'_, Result<()>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.async_writer.AsyncFileWriter.md).
+
 
 The asynchronous interface used by [`AsyncArrowWriter`] to write parquet files.
 

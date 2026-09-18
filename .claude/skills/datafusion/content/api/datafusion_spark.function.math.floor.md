@@ -30,6 +30,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> datafusion_common::Result<Data
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.floor.SparkFloor.md).
+
+
 Spark-compatible `floor` function.
 
 Differences from DataFusion's floor:

@@ -32,6 +32,9 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.avg_distinct.decimal.DecimalDistinctAvgAccumulator.md).
+
+
 Generic implementation of `AVG DISTINCT` for Decimal types.
 Handles both all Arrow decimal types (32, 64, 128 and 256 bits).
 

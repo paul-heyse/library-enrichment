@@ -24,6 +24,9 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.aggregate.avg.AvgAccumulator.md).
+
+
 An accumulator to compute the average
 
 ---
@@ -59,6 +62,9 @@ fn reverse_expr(&self) -> ReversedUDAF
 fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.aggregate.avg.SparkAvg.md).
+
 
 AVG aggregate expression
 Spark average aggregate expression. Differs from standard DataFusion average aggregate

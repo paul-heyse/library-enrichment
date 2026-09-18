@@ -52,6 +52,9 @@ fn udwf(&self, name: &str) -> Result<Arc<WindowUDF>>
 fn udwfs(&self) -> HashSet<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.task.TaskContext.md).
+
+
 Task Execution Context
 
 A [`TaskContext`] contains the state required during a single query's
@@ -98,6 +101,9 @@ trait TaskContextProvider
 ```rust
 fn task_ctx(&self) -> Arc<TaskContext>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.task.TaskContextProvider.md).
+
 
 Produce the [`TaskContext`].
 

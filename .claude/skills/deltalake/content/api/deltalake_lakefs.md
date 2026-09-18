@@ -5,6 +5,7 @@ Crate `deltalake-lakefs` · 2 public items · structured records in [`model/delt
 ## register_handlers
 
 `function` · `deltalake_lakefs::register_handlers`
+[Full member contracts, output types and access classification](../operations/deltalake_lakefs.register_handlers.md)
 
 Also reachable as `deltalake::lakefs::register_handlers`
 
@@ -19,6 +20,7 @@ Register an [ObjectStoreFactory] for common LakeFS [Url] schemes
 ## LakeFSLogStoreFactory
 
 `struct` · `deltalake_lakefs::LakeFSLogStoreFactory`
+[Full member contracts, output types and access classification](../operations/deltalake_lakefs.LakeFSLogStoreFactory.md)
 
 Also reachable as `deltalake::lakefs::LakeFSLogStoreFactory`
 

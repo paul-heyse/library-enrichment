@@ -1,0 +1,1586 @@
+[
+  {
+    "id": "21b308cb3e3a13c8cb4fc4c0",
+    "path": "arrow_flight::decode::FlightRecordBatchStream",
+    "name": "FlightRecordBatchStream",
+    "owner": null,
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct FlightRecordBatchStream",
+    "docs": "Decodes a [Stream] of [`FlightData`] back into\n[`RecordBatch`]es. This can be used to decode the response from an\nArrow Flight server\n\n# Note\nTo access the lower level Flight messages (e.g. to access\n[`FlightData::app_metadata`]), you can call [`Self::into_inner`]\nand use the [`FlightDataDecoder`] directly.\n\n# Example:\n```no_run\n# async fn f() -> Result<(), arrow_flight::error::FlightError>{\n# use bytes::Bytes;\n// make a do_get request\nuse arrow_flight::{\n  error::Result,\n  decode::FlightRecordBatchStream,\n  Ticket,\n  flight_service_client::FlightServiceClient\n};\nuse tonic::transport::Channel;\nuse futures::stream::{StreamExt, TryStreamExt};\n\nlet client: FlightServiceClient<Channel> = // make client..\n# unimplemented!();\n\nlet request = tonic::Request::new(\n  Ticket { ticket: Bytes::new() }\n);\n\n// Get a stream of FlightData;\nlet flight_data_stream = client\n  .do_get(request)\n  .await?\n  .into_inner();\n\n// Decode stream of FlightData to RecordBatches\nlet record_batch_stream = FlightRecordBatchStream::new_from_flight_data(\n  // convert tonic::Status to FlightError\n  flight_data_stream.map_err(|e| e.into())\n);\n\n// Read back RecordBatches\nwhile let Some(batch) = record_batch_stream.next().await {\n  match batch {\n    Ok(batch) => { /* process batch */ },\n    Err(e) => { /* handle error */ },\n  };\n}\n\n# Ok(())\n# }\n```",
+    "span": {
+      "filename": "src/decode.rs",
+      "begin": [
+        84,
+        1
+      ],
+      "end": [
+        92,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          1361,
+          1362,
+          1363,
+          1364,
+          1365,
+          1366,
+          1367,
+          1368,
+          1369,
+          1370,
+          1371,
+          1372,
+          1373,
+          1374,
+          1375,
+          1380,
+          1381,
+          1383,
+          1385,
+          1386,
+          1390,
+          1391,
+          1393,
+          1394,
+          1396,
+          1400
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`FlightData`": 161,
+      "`FlightDataDecoder`": 1351,
+      "`RecordBatch`": 1131,
+      "Stream": 203,
+      "`Self::into_inner`": 1311,
+      "`FlightData::app_metadata`": 1128
+    },
+    "link_paths": {
+      "`FlightData`": "arrow_flight::gen::FlightData",
+      "`FlightDataDecoder`": "arrow_flight::decode::FlightDataDecoder",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch",
+      "Stream": "futures_core::stream::Stream",
+      "`Self::into_inner`": "arrow_flight::decode::FlightRecordBatchStream::into_inner",
+      "`FlightData::app_metadata`": "arrow_flight::gen::FlightData::app_metadata"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1310",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.decode.FlightRecordBatchStream.md",
+    "record_file": "operations/arrow_flight.decode.FlightRecordBatchStream.json",
+    "anchor": "op-21b308cb3e3a13c8cb4fc4c0",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FlightData`": "../operations/arrow_flight.gen.FlightData.md#op-d385f038797edc1454fc35a5",
+      "`FlightDataDecoder`": "../operations/arrow_flight.decode.FlightDataDecoder.md#op-38627753e30ce7cc30d78250",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "`Self::into_inner`": "../operations/arrow_flight.decode.FlightRecordBatchStream.md#op-b3dd3be088628416debb9120",
+      "`FlightData::app_metadata`": "../operations/arrow_flight.gen.FlightData.md#op-28bbc79c13d963e87e09ea1b"
+    }
+  },
+  {
+    "id": "6285c5e754c7374bf79e5b46",
+    "path": "arrow_flight::decode::FlightRecordBatchStream::Item",
+    "name": "Item",
+    "owner": "arrow_flight::decode::FlightRecordBatchStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "assoc_type",
+    "signature": "Item",
+    "docs": "",
+    "span": {
+      "filename": "src/decode.rs",
+      "begin": [
+        154,
+        5
+      ],
+      "end": [
+        154,
+        37
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "type": {
+          "resolved_path": {
+            "path": "Result",
+            "id": 45,
+            "args": {
+              "angle_bracketed": {
+                "args": [
+                  {
+                    "type": {
+                      "resolved_path": {
+                        "path": "RecordBatch",
+                        "id": 1131,
+                        "args": null
+                      }
+                    }
+                  },
+                  {
+                    "type": {
+                      "resolved_path": {
+                        "path": "FlightError",
+                        "id": 1398,
+                        "args": null
+                      }
+                    }
+                  }
+                ],
+                "constraints": []
+              }
+            }
+          }
+        },
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "45": "core::result::Result",
+      "1131": "arrow_array::record_batch::RecordBatch",
+      "1398": "arrow_flight::error::FlightError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightRecordBatchStream",
+          "id": "arrow_flight::decode::FlightRecordBatchStream",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Stream",
+        "id": "futures_core::stream::Stream",
+        "args": null
+      },
+      "trait_path": "futures_core::stream::Stream",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/decode.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          193,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1397",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.decode.FlightRecordBatchStream.md",
+    "record_file": "operations/arrow_flight.decode.FlightRecordBatchStream.json",
+    "anchor": "op-6285c5e754c7374bf79e5b46",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3baf1e280a908c1e5fe512f8",
+    "path": "arrow_flight::decode::FlightRecordBatchStream::fmt",
+    "name": "fmt",
+    "owner": "arrow_flight::decode::FlightRecordBatchStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/decode.rs",
+      "begin": [
+        83,
+        10
+      ],
+      "end": [
+        83,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 95,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 96,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "95": "core::fmt::Formatter",
+      "96": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightRecordBatchStream",
+          "id": "arrow_flight::decode::FlightRecordBatchStream",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/decode.rs",
+        "begin": [
+          83,
+          10
+        ],
+        "end": [
+          83,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1395",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.decode.FlightRecordBatchStream.md",
+    "record_file": "operations/arrow_flight.decode.FlightRecordBatchStream.json",
+    "anchor": "op-3baf1e280a908c1e5fe512f8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5c0c4e597884e8ef27856f84",
+    "path": "arrow_flight::decode::FlightRecordBatchStream::headers",
+    "name": "headers",
+    "owner": "arrow_flight::decode::FlightRecordBatchStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn headers(&self) -> &MetadataMap",
+    "docs": "Headers attached to this stream.",
+    "span": {
+      "filename": "src/decode.rs",
+      "begin": [
+        130,
+        5
+      ],
+      "end": [
+        132,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "MetadataMap",
+                  "id": 1304,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1304": "tonic::metadata::map::MetadataMap"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightRecordBatchStream",
+          "id": "arrow_flight::decode::FlightRecordBatchStream",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/decode.rs",
+        "begin": [
+          94,
+          1
+        ],
+        "end": [
+          151,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1357",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.decode.FlightRecordBatchStream.md",
+    "record_file": "operations/arrow_flight.decode.FlightRecordBatchStream.json",
+    "anchor": "op-5c0c4e597884e8ef27856f84",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b3dd3be088628416debb9120",
+    "path": "arrow_flight::decode::FlightRecordBatchStream::into_inner",
+    "name": "into_inner",
+    "owner": "arrow_flight::decode::FlightRecordBatchStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_inner(self) -> FlightDataDecoder",
+    "docs": "Consume self and return the wrapped [`FlightDataDecoder`]",
+    "span": {
+      "filename": "src/decode.rs",
+      "begin": [
+        148,
+        5
+      ],
+      "end": [
+        150,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "FlightDataDecoder",
+              "id": 1351,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1351": "arrow_flight::decode::FlightDataDecoder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightRecordBatchStream",
+          "id": "arrow_flight::decode::FlightRecordBatchStream",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/decode.rs",
+        "begin": [
+          94,
+          1
+        ],
+        "end": [
+          151,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FlightDataDecoder`": 1351
+    },
+    "link_paths": {
+      "`FlightDataDecoder`": "arrow_flight::decode::FlightDataDecoder"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1311",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.decode.FlightRecordBatchStream.md",
+    "record_file": "operations/arrow_flight.decode.FlightRecordBatchStream.json",
+    "anchor": "op-b3dd3be088628416debb9120",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FlightDataDecoder`": "../operations/arrow_flight.decode.FlightDataDecoder.md#op-38627753e30ce7cc30d78250"
+    }
+  },
+  {
+    "id": "5ecb0e7df32c036f4e1b10e4",
+    "path": "arrow_flight::decode::FlightRecordBatchStream::new",
+    "name": "new",
+    "owner": "arrow_flight::decode::FlightRecordBatchStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(inner: FlightDataDecoder) -> Self",
+    "docs": "Create a new [`FlightRecordBatchStream`] from a decoded stream",
+    "span": {
+      "filename": "src/decode.rs",
+      "begin": [
+        96,
+        5
+      ],
+      "end": [
+        102,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "inner",
+              {
+                "resolved_path": {
+                  "path": "FlightDataDecoder",
+                  "id": 1351,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1351": "arrow_flight::decode::FlightDataDecoder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightRecordBatchStream",
+          "id": "arrow_flight::decode::FlightRecordBatchStream",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/decode.rs",
+        "begin": [
+          94,
+          1
+        ],
+        "end": [
+          151,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FlightRecordBatchStream`": 1310
+    },
+    "link_paths": {
+      "`FlightRecordBatchStream`": "arrow_flight::decode::FlightRecordBatchStream"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1352",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.decode.FlightRecordBatchStream.md",
+    "record_file": "operations/arrow_flight.decode.FlightRecordBatchStream.json",
+    "anchor": "op-5ecb0e7df32c036f4e1b10e4",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FlightRecordBatchStream`": "../operations/arrow_flight.decode.FlightRecordBatchStream.md#op-21b308cb3e3a13c8cb4fc4c0"
+    }
+  },
+  {
+    "id": "42823723baf24cdaa4b670d5",
+    "path": "arrow_flight::decode::FlightRecordBatchStream::new_from_flight_data",
+    "name": "new_from_flight_data",
+    "owner": "arrow_flight::decode::FlightRecordBatchStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_from_flight_data<S>(inner: S) -> Self where S: Stream<Item = Result<FlightData>> + Send + 'static",
+    "docs": "Create a new [`FlightRecordBatchStream`] from a stream of [`FlightData`]",
+    "span": {
+      "filename": "src/decode.rs",
+      "begin": [
+        105,
+        5
+      ],
+      "end": [
+        114,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "inner",
+              {
+                "generic": "S"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "S",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "S"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Stream",
+                        "id": 203,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [],
+                            "constraints": [
+                              {
+                                "name": "Item",
+                                "args": null,
+                                "binding": {
+                                  "equality": {
+                                    "type": {
+                                      "resolved_path": {
+                                        "path": "Result",
+                                        "id": 1307,
+                                        "args": {
+                                          "angle_bracketed": {
+                                            "args": [
+                                              {
+                                                "type": {
+                                                  "resolved_path": {
+                                                    "path": "FlightData",
+                                                    "id": 161,
+                                                    "args": null
+                                                  }
+                                                }
+                                              }
+                                            ],
+                                            "constraints": []
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": 12,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "203": "futures_core::stream::Stream",
+      "1307": "arrow_flight::error::Result",
+      "161": "arrow_flight::gen::FlightData",
+      "12": "core::marker::Send"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightRecordBatchStream",
+          "id": "arrow_flight::decode::FlightRecordBatchStream",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/decode.rs",
+        "begin": [
+          94,
+          1
+        ],
+        "end": [
+          151,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FlightData`": 161,
+      "`FlightRecordBatchStream`": 1310
+    },
+    "link_paths": {
+      "`FlightData`": "arrow_flight::gen::FlightData",
+      "`FlightRecordBatchStream`": "arrow_flight::decode::FlightRecordBatchStream"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1353",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.decode.FlightRecordBatchStream.md",
+    "record_file": "operations/arrow_flight.decode.FlightRecordBatchStream.json",
+    "anchor": "op-42823723baf24cdaa4b670d5",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FlightData`": "../operations/arrow_flight.gen.FlightData.md#op-d385f038797edc1454fc35a5",
+      "`FlightRecordBatchStream`": "../operations/arrow_flight.decode.FlightRecordBatchStream.md#op-21b308cb3e3a13c8cb4fc4c0"
+    }
+  },
+  {
+    "id": "04d3e464cd06d165b61a236d",
+    "path": "arrow_flight::decode::FlightRecordBatchStream::poll_next",
+    "name": "poll_next",
+    "owner": "arrow_flight::decode::FlightRecordBatchStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn poll_next(Pin<&mut self>, cx: &mut std::task::Context<'_>) -> Poll<Option<Result<RecordBatch>>>",
+    "docs": "Returns the next [`RecordBatch`] available in this stream, or `None` if\nthere are no further results available.",
+    "span": {
+      "filename": "src/decode.rs",
+      "begin": [
+        158,
+        5
+      ],
+      "end": [
+        192,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Pin",
+                  "id": 205,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": true,
+                              "type": {
+                                "generic": "Self"
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "cx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::task::Context",
+                      "id": 279,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Poll",
+              "id": 280,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 6,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Result",
+                                      "id": 1307,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "resolved_path": {
+                                                  "path": "RecordBatch",
+                                                  "id": 1131,
+                                                  "args": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "205": "core::pin::Pin",
+      "279": "core::task::wake::Context",
+      "280": "core::task::poll::Poll",
+      "6": "core::option::Option",
+      "1307": "arrow_flight::error::Result",
+      "1131": "arrow_array::record_batch::RecordBatch"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightRecordBatchStream",
+          "id": "arrow_flight::decode::FlightRecordBatchStream",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Stream",
+        "id": "futures_core::stream::Stream",
+        "args": null
+      },
+      "trait_path": "futures_core::stream::Stream",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/decode.rs",
+        "begin": [
+          153,
+          1
+        ],
+        "end": [
+          193,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RecordBatch`": 1131
+    },
+    "link_paths": {
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1399",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.decode.FlightRecordBatchStream.md",
+    "record_file": "operations/arrow_flight.decode.FlightRecordBatchStream.json",
+    "anchor": "op-04d3e464cd06d165b61a236d",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "92c356358efbf4dacfe9b064",
+    "path": "arrow_flight::decode::FlightRecordBatchStream::schema",
+    "name": "schema",
+    "owner": "arrow_flight::decode::FlightRecordBatchStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn schema(&self) -> Option<&SchemaRef>",
+    "docs": "Return schema for the stream, if it has been received",
+    "span": {
+      "filename": "src/decode.rs",
+      "begin": [
+        143,
+        5
+      ],
+      "end": [
+        145,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 6,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "SchemaRef",
+                              "id": 1360,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6": "core::option::Option",
+      "1360": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightRecordBatchStream",
+          "id": "arrow_flight::decode::FlightRecordBatchStream",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/decode.rs",
+        "begin": [
+          94,
+          1
+        ],
+        "end": [
+          151,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1359",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.decode.FlightRecordBatchStream.md",
+    "record_file": "operations/arrow_flight.decode.FlightRecordBatchStream.json",
+    "anchor": "op-92c356358efbf4dacfe9b064",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "37cbb5ac79be01d61bc1eebd",
+    "path": "arrow_flight::decode::FlightRecordBatchStream::trailers",
+    "name": "trailers",
+    "owner": "arrow_flight::decode::FlightRecordBatchStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn trailers(&self) -> Option<MetadataMap>",
+    "docs": "Trailers attached to this stream.\n\nNote that this will return `None` until the entire stream is consumed.\nOnly after calling `next()` returns `None`, might any available trailers be returned.",
+    "span": {
+      "filename": "src/decode.rs",
+      "begin": [
+        138,
+        5
+      ],
+      "end": [
+        140,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 6,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "MetadataMap",
+                          "id": 1304,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6": "core::option::Option",
+      "1304": "tonic::metadata::map::MetadataMap"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightRecordBatchStream",
+          "id": "arrow_flight::decode::FlightRecordBatchStream",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/decode.rs",
+        "begin": [
+          94,
+          1
+        ],
+        "end": [
+          151,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1358",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.decode.FlightRecordBatchStream.md",
+    "record_file": "operations/arrow_flight.decode.FlightRecordBatchStream.json",
+    "anchor": "op-37cbb5ac79be01d61bc1eebd",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "526f5da3a796c880a272625e",
+    "path": "arrow_flight::decode::FlightRecordBatchStream::with_headers",
+    "name": "with_headers",
+    "owner": "arrow_flight::decode::FlightRecordBatchStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_headers(self, headers: MetadataMap) -> Self",
+    "docs": "Record response headers.",
+    "span": {
+      "filename": "src/decode.rs",
+      "begin": [
+        117,
+        5
+      ],
+      "end": [
+        119,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "headers",
+              {
+                "resolved_path": {
+                  "path": "MetadataMap",
+                  "id": 1304,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1304": "tonic::metadata::map::MetadataMap"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightRecordBatchStream",
+          "id": "arrow_flight::decode::FlightRecordBatchStream",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/decode.rs",
+        "begin": [
+          94,
+          1
+        ],
+        "end": [
+          151,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1354",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.decode.FlightRecordBatchStream.md",
+    "record_file": "operations/arrow_flight.decode.FlightRecordBatchStream.json",
+    "anchor": "op-526f5da3a796c880a272625e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "220983776127f249a4701318",
+    "path": "arrow_flight::decode::FlightRecordBatchStream::with_trailers",
+    "name": "with_trailers",
+    "owner": "arrow_flight::decode::FlightRecordBatchStream",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_trailers(self, trailers: LazyTrailers) -> Self",
+    "docs": "Record response trailers.",
+    "span": {
+      "filename": "src/decode.rs",
+      "begin": [
+        122,
+        5
+      ],
+      "end": [
+        127,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "trailers",
+              {
+                "resolved_path": {
+                  "path": "LazyTrailers",
+                  "id": 1356,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1356": "arrow_flight::trailers::LazyTrailers"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FlightRecordBatchStream",
+          "id": "arrow_flight::decode::FlightRecordBatchStream",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/decode.rs",
+        "begin": [
+          94,
+          1
+        ],
+        "end": [
+          151,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1355",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.decode.FlightRecordBatchStream.md",
+    "record_file": "operations/arrow_flight.decode.FlightRecordBatchStream.json",
+    "anchor": "op-220983776127f249a4701318",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

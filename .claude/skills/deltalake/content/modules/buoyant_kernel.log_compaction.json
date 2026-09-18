@@ -1,0 +1,91 @@
+[
+  {
+    "id": "490149c9991f098af05ed36a",
+    "path": "buoyant_kernel::log_compaction",
+    "name": "log_compaction",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "module",
+    "signature": "mod log_compaction",
+    "docs": "# Log Compaction\n\nLog compaction is now fully enabled and functional.\n\nThis module provides an API for writing log compaction files that aggregate\nmultiple commit JSON files into single compacted files. This improves performance\nby reducing the number of individual log files that need to be processed during\nlog replay operations.\n\n## Overview\n\nLog compaction creates files with the naming pattern\n`{start_version}.{end_version}.compacted.json` that contain the reconciled actions from all\ncommit files in the specified version range. Only commit/compaction files that intersect with\n[start_version, end_version] are processed. Note that `end_version` must be greater than\n`start_version` (equal versions are not allowed). This is similar to checkpoints but operates on\na subset of versions rather than the entire table.\n\n## Usage\n\nThe log compaction API follows a similar pattern to the checkpoint API:\n\n1. Create a [`LogCompactionWriter`] using [`crate::Snapshot::log_compaction_writer`] to compact\n   the log from a given start_version to end_version (inclusive)\n2. Get the compaction path from [`LogCompactionWriter::compaction_path`]\n3. Get the compaction data from [`LogCompactionWriter::compaction_data`]\n4. Write the data to the path in cloud storage (engine-specific)\n\n## Example\n\n```no_run\n# use std::sync::Arc;\n# use buoyant_kernel as delta_kernel;\n# use delta_kernel::{ActionReconciliationIterator, LogCompactionWriter};\n# use delta_kernel::{Engine, Snapshot, DeltaResult, Error, FileMeta};\n# use url::Url;\n\n// Engine-specific function to write compaction data\nfn write_compaction_file(path: &Url, data: ActionReconciliationIterator) -> DeltaResult<FileMeta> {\n    // In a real implementation, this would write the data to cloud storage\n    todo!(\"Write data batches to storage at path: {}\", path)\n}\n\n# fn example(engine: &dyn Engine) -> DeltaResult<()> {\n// Create a snapshot for the table\nlet table_root = Url::parse(\"file:///path/to/table\")?;\nlet snapshot = Snapshot::builder_for(table_root).build(engine)?;\n\n// Create a log compaction writer for versions 10-20\nlet mut writer = snapshot.log_compaction_writer(10, 20)?;\n\nlet compaction_data = writer.compaction_data(engine)?;\nlet compaction_path = writer.compaction_path();\n\n// Write the compaction data to cloud storage\nlet _metadata: FileMeta = write_compaction_file(compaction_path, compaction_data)?;\n# Ok(())\n# }\n```\n\n## When to Use Log Compaction\n\nLog compaction is beneficial when:\n- Table has many small commit files that slow down log replay\n- Reduce the number of files without creating a full checkpoint\n- Optimize specific version ranges that are frequently accessed\n\nThe [`should_compact`] utility function can help determine when compaction is appropriate\nbased on version intervals.\n\nPlease see <https://github.com/delta-io/delta/blob/master/PROTOCOL.md#log-compaction-files>\nfor more details\n\n## Relationship to Checkpoints\n\n- **Checkpoints**: Aggregate the entire table state up to a specific version\n- **Log Compaction**: Aggregates only a specific range of commit files\n- Both use similar action reconciliation logic but serve different use cases",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/log_compaction/mod.rs",
+      "begin": [
+        1,
+        1
+      ],
+      "end": [
+        105,
+        3
+      ]
+    },
+    "visibility": "crate",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          6013,
+          6051,
+          6052,
+          6053
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`should_compact`": 6011,
+      "`LogCompactionWriter`": 390,
+      "`crate::Snapshot::log_compaction_writer`": 6054,
+      "`LogCompactionWriter::compaction_path`": 6018,
+      "`LogCompactionWriter::compaction_data`": 6019
+    },
+    "link_paths": {
+      "`should_compact`": "buoyant_kernel::log_compaction::writer::should_compact",
+      "`LogCompactionWriter`": "buoyant_kernel::log_compaction::writer::LogCompactionWriter",
+      "`crate::Snapshot::log_compaction_writer`": "buoyant_kernel::snapshot::Snapshot::log_compaction_writer",
+      "`LogCompactionWriter::compaction_path`": "buoyant_kernel::log_compaction::writer::LogCompactionWriter::compaction_path",
+      "`LogCompactionWriter::compaction_data`": "buoyant_kernel::log_compaction::writer::LogCompactionWriter::compaction_data"
+    },
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "6050",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_module",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/log_compaction/mod.rs#L1",
+    "reader_notes": [],
+    "page": "modules/buoyant_kernel.log_compaction.md",
+    "record_file": "modules/buoyant_kernel.log_compaction.json",
+    "anchor": "op-490149c9991f098af05ed36a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`should_compact`": "../operations/buoyant_kernel.log_compaction.writer.should_compact.md#op-3951f081c5c4aed237cd04a7",
+      "`LogCompactionWriter`": "../operations/buoyant_kernel.log_compaction.writer.LogCompactionWriter.md#op-17a0145eb5a991e6c3d78695",
+      "`LogCompactionWriter::compaction_path`": "../operations/buoyant_kernel.log_compaction.writer.LogCompactionWriter.md#op-912bbfe809d7ff9700198dfb"
+    }
+  }
+]

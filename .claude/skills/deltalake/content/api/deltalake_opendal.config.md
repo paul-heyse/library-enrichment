@@ -5,6 +5,7 @@ Crate `deltalake-opendal` · 1 public items · structured records in [`model/del
 ## OPENDAL_PREFIX
 
 `constant` · `deltalake_opendal::config::OPENDAL_PREFIX`
+[Full member contracts, output types and access classification](../operations/deltalake_opendal.config.OPENDAL_PREFIX.md)
 
 Also reachable as `deltalake::opendal::OPENDAL_PREFIX`, `deltalake_opendal::OPENDAL_PREFIX`
 

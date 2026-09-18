@@ -12,6 +12,9 @@ Also reachable as `datafusion_physical_expr::expressions::try_cast`, `datafusion
 fn try_cast(expr: std::sync::Arc<dyn PhysicalExpr>, input_schema: &arrow::datatypes::Schema, cast_type: arrow::datatypes::DataType) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.try_cast.try_cast.md).
+
+
 Return a PhysicalExpression representing `expr` casted to
 `cast_type`, if any casting is needed.
 
@@ -28,6 +31,9 @@ Also reachable as `datafusion_physical_expr::expressions::try_cast_with_target_f
 ```rust
 fn try_cast_with_target_field(expr: std::sync::Arc<dyn PhysicalExpr>, input_schema: &arrow::datatypes::Schema, target_field: &arrow::datatypes::FieldRef) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.try_cast.try_cast_with_target_field.md).
+
 
 Return a PhysicalExpression representing `expr` casted to `target_field`,
 preserving any explicit field semantics such as metadata.
@@ -84,6 +90,9 @@ fn return_field(&self, input_schema: &Schema) -> Result<FieldRef>
 fn try_to_proto(&self, ctx: &datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalExprNode>>
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.try_cast.TryCastExpr.md).
+
 
 TRY_CAST expression casts an expression to a specific data type and returns NULL on invalid cast
 

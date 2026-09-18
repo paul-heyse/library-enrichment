@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## AfterSequential
 
 `enum` · `buoyant_kernel::parallel::sequential_phase::AfterSequential`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.parallel.sequential_phase.AfterSequential.md)
 
 Also reachable as `delta_kernel::parallel::sequential_phase::AfterSequential`
 
@@ -22,6 +23,7 @@ cbindgen:ignore
 ## SequentialPhase
 
 `struct` · `buoyant_kernel::parallel::sequential_phase::SequentialPhase`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.parallel.sequential_phase.SequentialPhase.md)
 
 Also reachable as `delta_kernel::parallel::sequential_phase::SequentialPhase`
 

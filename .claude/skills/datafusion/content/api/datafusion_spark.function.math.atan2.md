@@ -29,6 +29,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.atan2.SparkAtan2.md).
+
+
 Spark-compatible `atan2` function.
 
 <https://spark.apache.org/docs/latest/api/sql/index.html#atan2>

@@ -1,0 +1,953 @@
+[
+  {
+    "id": "c7c84381bee05c1cf75f1a87",
+    "path": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+    "name": "TypeCoercionRewriter",
+    "owner": null,
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct TypeCoercionRewriter<'a>",
+    "docs": "Rewrite expressions to apply type coercion.",
+    "span": {
+      "filename": "src/analyzer/type_coercion.rs",
+      "begin": [
+        176,
+        1
+      ],
+      "end": [
+        178,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          128,
+          129,
+          130,
+          131,
+          132,
+          133,
+          134,
+          135,
+          136,
+          137,
+          138,
+          139,
+          140,
+          141,
+          142,
+          143,
+          144,
+          149
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "120",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.md",
+    "record_file": "operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.json",
+    "anchor": "op-c7c84381bee05c1cf75f1a87",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4d168977f9176992928d568b",
+    "path": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter::Node",
+    "name": "Node",
+    "owner": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "assoc_type",
+    "signature": "Node",
+    "docs": "",
+    "span": {
+      "filename": "src/analyzer/type_coercion.rs",
+      "begin": [
+        548,
+        5
+      ],
+      "end": [
+        548,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "type": {
+          "resolved_path": {
+            "path": "Expr",
+            "id": 146,
+            "args": null
+          }
+        },
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "146": "datafusion_expr::expr::Expr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeCoercionRewriter",
+          "id": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'_"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "TreeNodeRewriter",
+        "id": "datafusion_common::tree_node::TreeNodeRewriter",
+        "args": null
+      },
+      "trait_path": "datafusion_common::tree_node::TreeNodeRewriter",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/analyzer/type_coercion.rs",
+        "begin": [
+          547,
+          1
+        ],
+        "end": [
+          944,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "145",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.md",
+    "record_file": "operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.json",
+    "anchor": "op-4d168977f9176992928d568b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "94fbd7e0092ee58eefa00f14",
+    "path": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter::coerce_join",
+    "name": "coerce_join",
+    "owner": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn coerce_join(&mut self, join: Join) -> Result<LogicalPlan>",
+    "docs": "Coerce join equality expressions and join filter\n\nJoins must be treated specially as their equality expressions are stored\nas a parallel list of left and right expressions, rather than a single\nequality expression\n\nFor example, on_exprs like `t1.a = t2.b AND t1.x = t2.y` will be stored\nas a list of `(t1.a, t2.b), (t1.x, t2.y)`",
+    "span": {
+      "filename": "src/analyzer/type_coercion.rs",
+      "begin": [
+        258,
+        5
+      ],
+      "end": [
+        285,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "join",
+              {
+                "resolved_path": {
+                  "path": "Join",
+                  "id": 126,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "LogicalPlan",
+                          "id": 59,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "126": "datafusion_expr::logical_plan::plan::Join",
+      "61": "datafusion_common::error::Result",
+      "59": "datafusion_expr::logical_plan::plan::LogicalPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeCoercionRewriter",
+          "id": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/analyzer/type_coercion.rs",
+        "begin": [
+          180,
+          1
+        ],
+        "end": [
+          545,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "123",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.md",
+    "record_file": "operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.json",
+    "anchor": "op-94fbd7e0092ee58eefa00f14",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f5e3018eb6a70a37476dfe32",
+    "path": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter::coerce_plan",
+    "name": "coerce_plan",
+    "owner": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn coerce_plan(&mut self, plan: LogicalPlan) -> Result<LogicalPlan>",
+    "docs": "Coerce the [`LogicalPlan`].\n\nRefer to [`TypeCoercionRewriter::coerce_join`] and [`TypeCoercionRewriter::coerce_union`]\nfor type-coercion approach.",
+    "span": {
+      "filename": "src/analyzer/type_coercion.rs",
+      "begin": [
+        191,
+        5
+      ],
+      "end": [
+        199,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "plan",
+              {
+                "resolved_path": {
+                  "path": "LogicalPlan",
+                  "id": 59,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "LogicalPlan",
+                          "id": 59,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "59": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "61": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeCoercionRewriter",
+          "id": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/analyzer/type_coercion.rs",
+        "begin": [
+          180,
+          1
+        ],
+        "end": [
+          545,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TypeCoercionRewriter::coerce_join`": 123,
+      "`TypeCoercionRewriter::coerce_union`": 124,
+      "`LogicalPlan`": 59
+    },
+    "link_paths": {
+      "`TypeCoercionRewriter::coerce_join`": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter::coerce_join",
+      "`TypeCoercionRewriter::coerce_union`": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter::coerce_union",
+      "`LogicalPlan`": "datafusion_expr::logical_plan::plan::LogicalPlan"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "125",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.md",
+    "record_file": "operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.json",
+    "anchor": "op-f5e3018eb6a70a37476dfe32",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`TypeCoercionRewriter::coerce_join`": "../operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.md#op-94fbd7e0092ee58eefa00f14",
+      "`TypeCoercionRewriter::coerce_union`": "../operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.md#op-a9955fcf98ebcbf9e6a13b46",
+      "`LogicalPlan`": "../operations/datafusion_expr.logical_plan.plan.LogicalPlan.md#op-2f2092c4f87ff1cc0b33c3da"
+    }
+  },
+  {
+    "id": "a9955fcf98ebcbf9e6a13b46",
+    "path": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter::coerce_union",
+    "name": "coerce_union",
+    "owner": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn coerce_union(union_plan: Union) -> Result<LogicalPlan>",
+    "docs": "Coerce the union’s inputs to a common schema compatible with all inputs.\nThis occurs after wildcard expansion and the coercion of the input expressions.",
+    "span": {
+      "filename": "src/analyzer/type_coercion.rs",
+      "begin": [
+        289,
+        5
+      ],
+      "end": [
+        316,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "union_plan",
+              {
+                "resolved_path": {
+                  "path": "Union",
+                  "id": 127,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "LogicalPlan",
+                          "id": 59,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "127": "datafusion_expr::logical_plan::plan::Union",
+      "61": "datafusion_common::error::Result",
+      "59": "datafusion_expr::logical_plan::plan::LogicalPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeCoercionRewriter",
+          "id": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/analyzer/type_coercion.rs",
+        "begin": [
+          180,
+          1
+        ],
+        "end": [
+          545,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "124",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.md",
+    "record_file": "operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.json",
+    "anchor": "op-a9955fcf98ebcbf9e6a13b46",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "763cc7540d77c41a816243f5",
+    "path": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter::f_up",
+    "name": "f_up",
+    "owner": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn f_up(&mut self, expr: Expr) -> Result<Transformed<Expr>>",
+    "docs": "",
+    "span": {
+      "filename": "src/analyzer/type_coercion.rs",
+      "begin": [
+        550,
+        5
+      ],
+      "end": [
+        943,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "expr",
+              {
+                "resolved_path": {
+                  "path": "Expr",
+                  "id": 146,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Transformed",
+                          "id": 148,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Expr",
+                                      "id": 146,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "146": "datafusion_expr::expr::Expr",
+      "61": "datafusion_common::error::Result",
+      "148": "datafusion_common::tree_node::Transformed"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeCoercionRewriter",
+          "id": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'_"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "TreeNodeRewriter",
+        "id": "datafusion_common::tree_node::TreeNodeRewriter",
+        "args": null
+      },
+      "trait_path": "datafusion_common::tree_node::TreeNodeRewriter",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/analyzer/type_coercion.rs",
+        "begin": [
+          547,
+          1
+        ],
+        "end": [
+          944,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "147",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.md",
+    "record_file": "operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.json",
+    "anchor": "op-763cc7540d77c41a816243f5",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7d7dac90c38774720705c4f3",
+    "path": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter::new",
+    "name": "new",
+    "owner": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(schema: &'a DFSchema) -> Self",
+    "docs": "Create a new [`TypeCoercionRewriter`] with a provided schema\nrepresenting both the inputs and output of the [`LogicalPlan`] node.",
+    "span": {
+      "filename": "src/analyzer/type_coercion.rs",
+      "begin": [
+        183,
+        5
+      ],
+      "end": [
+        185,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'a",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DFSchema",
+                      "id": 122,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "122": "datafusion_common::dfschema::DFSchema"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeCoercionRewriter",
+          "id": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/analyzer/type_coercion.rs",
+        "begin": [
+          180,
+          1
+        ],
+        "end": [
+          545,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`LogicalPlan`": 59,
+      "`TypeCoercionRewriter`": 120
+    },
+    "link_paths": {
+      "`LogicalPlan`": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "`TypeCoercionRewriter`": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "121",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.md",
+    "record_file": "operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.json",
+    "anchor": "op-7d7dac90c38774720705c4f3",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`LogicalPlan`": "../operations/datafusion_expr.logical_plan.plan.LogicalPlan.md#op-2f2092c4f87ff1cc0b33c3da",
+      "`TypeCoercionRewriter`": "../operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.md#op-c7c84381bee05c1cf75f1a87"
+    }
+  }
+]

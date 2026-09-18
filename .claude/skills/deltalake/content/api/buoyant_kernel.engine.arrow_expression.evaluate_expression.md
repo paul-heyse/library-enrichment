@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 4 public items · structured records in [`model/buoyan
 ## coalesce_arrays
 
 `function` · `buoyant_kernel::engine::arrow_expression::evaluate_expression::coalesce_arrays`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_expression.evaluate_expression.coalesce_arrays.md)
 
 Also reachable as `delta_kernel::engine::arrow_expression::evaluate_expression::coalesce_arrays`
 
@@ -38,6 +39,7 @@ This function returns an `ArrowError` in the following cases:
 ## evaluate_expression
 
 `function` · `buoyant_kernel::engine::arrow_expression::evaluate_expression::evaluate_expression`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_expression.evaluate_expression.evaluate_expression.md)
 
 Also reachable as `delta_kernel::engine::arrow_expression::evaluate_expression::evaluate_expression`
 
@@ -52,6 +54,7 @@ Evaluates a kernel expression over a record batch
 ## evaluate_predicate
 
 `function` · `buoyant_kernel::engine::arrow_expression::evaluate_expression::evaluate_predicate`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_expression.evaluate_expression.evaluate_predicate.md)
 
 Also reachable as `delta_kernel::engine::arrow_expression::evaluate_expression::evaluate_predicate`
 
@@ -66,6 +69,7 @@ Evaluates a (possibly inverted) kernel predicate over a record batch
 ## to_json
 
 `function` · `buoyant_kernel::engine::arrow_expression::evaluate_expression::to_json`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_expression.evaluate_expression.to_json.md)
 
 Also reachable as `delta_kernel::engine::arrow_expression::evaluate_expression::to_json`
 

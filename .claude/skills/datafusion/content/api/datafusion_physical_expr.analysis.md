@@ -12,6 +12,9 @@ Also reachable as `datafusion::physical_expr::analyze`, `datafusion_physical_exp
 fn analyze(expr: &std::sync::Arc<dyn PhysicalExpr>, context: AnalysisContext, schema: &arrow::datatypes::Schema) -> datafusion_common::Result<AnalysisContext>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.analysis.analyze.md).
+
+
 Attempts to refine column boundaries and compute a selectivity value.
 
 The function accepts boundaries of the input columns in the `context` parameter.
@@ -52,6 +55,9 @@ fn try_from_statistics(input_schema: &Schema, statistics: &[ColumnStatistics]) -
 fn with_selectivity(self, selectivity: f64) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.analysis.AnalysisContext.md).
+
+
 The shared context used during the analysis of an expression. Includes
 the boundaries for all known columns.
 
@@ -77,6 +83,9 @@ struct ExprBoundaries
 fn try_from_column(schema: &Schema, col_stats: &ColumnStatistics, col_index: usize) -> Result<Self>
 fn try_new_unbounded(schema: &Schema) -> Result<Vec<Self>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.analysis.ExprBoundaries.md).
+
 
 Represents the boundaries (e.g. min and max values) of a particular column
 

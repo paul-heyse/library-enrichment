@@ -69,6 +69,9 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.schema.Schema.md).
+
+
 Describes the meta-data of an ordered sequence of relative types.
 
 Note that this information is only part of the meta-data and not part of the physical
@@ -122,6 +125,9 @@ fn extend<T: IntoIterator<Item = FieldRef>>(&mut self, iter: T)
 fn extend<T: IntoIterator<Item = Field>>(&mut self, iter: T)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.schema.SchemaBuilder.md).
+
+
 A builder to facilitate building a [`Schema`] from iteratively from [`FieldRef`]
 
 ---
@@ -137,6 +143,9 @@ type SchemaRef = std::sync::Arc<Schema>
 ```
 
 **Implements**: `core::convert::From`, `datafusion_common::dfschema::ToDFSchema`
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.schema.SchemaRef.md).
+
 
 A reference-counted reference to a [`Schema`].
 

@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 2 public items · structured records in [`model/data
 fn spark_handled_parse_url(args: &[arrow::array::ArrayRef], handler_err: impl Fn(datafusion_common::Result<Option<String>>) -> datafusion_common::Result<Option<String>>) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.url.parse_url.spark_handled_parse_url.md).
+
+
 ---
 
 ## ParseUrl
@@ -38,5 +41,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.url.parse_url.ParseUrl.md).
+
 
 ---

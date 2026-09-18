@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::concat_elements::concat_element_bina
 fn concat_element_binary<Offset: OffsetSizeTrait>(left: &GenericBinaryArray<Offset>, right: &GenericBinaryArray<Offset>) -> Result<GenericBinaryArray<Offset>, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_string.concat_elements.concat_element_binary.md).
+
+
 Returns the elementwise concatenation of a [`GenericBinaryArray`].
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `arrow::compute::kernels::concat_elements::concat_elements_bin
 ```rust
 fn concat_elements_binary_view_array(left: &BinaryViewArray, right: &BinaryViewArray) -> Result<BinaryViewArray, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_string.concat_elements.concat_elements_binary_view_array.md).
+
 
 Concatenates two `BinaryViewArray`s element-wise.
 If either element is `Null`, the result element is also `Null`.
@@ -45,6 +51,9 @@ Also reachable as `arrow::compute::kernels::concat_elements::concat_elements_byt
 fn concat_elements_bytes<T: ByteArrayType>(left: &GenericByteArray<T>, right: &GenericByteArray<T>) -> Result<GenericByteArray<T>, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_string.concat_elements.concat_elements_bytes.md).
+
+
 Returns the elementwise concatenation of a [`GenericByteArray`].
 
 ---
@@ -58,6 +67,9 @@ Also reachable as `arrow::compute::kernels::concat_elements::concat_elements_dyn
 ```rust
 fn concat_elements_dyn(left: &dyn Array, right: &dyn Array) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_string.concat_elements.concat_elements_dyn.md).
+
 
 Returns the elementwise concatenation of [`Array`]s.
 
@@ -82,6 +94,9 @@ Also reachable as `arrow::compute::kernels::concat_elements::concat_elements_fix
 fn concat_elements_fixed_size_binary(left: &FixedSizeBinaryArray, right: &FixedSizeBinaryArray) -> Result<FixedSizeBinaryArray, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_string.concat_elements.concat_elements_fixed_size_binary.md).
+
+
 Returns the elementwise concatenation of a [`FixedSizeBinaryArray`].
 
 The result has `value_length = left.value_length() + right.value_length()`.
@@ -100,6 +115,9 @@ Also reachable as `arrow::compute::kernels::concat_elements::concat_elements_str
 ```rust
 fn concat_elements_string_view_array(left: &StringViewArray, right: &StringViewArray) -> Result<StringViewArray, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_string.concat_elements.concat_elements_string_view_array.md).
+
 
 Concatenates two `StringViewArray`s element-wise.
 If either element is `Null`, the result element is also `Null`.
@@ -120,6 +138,9 @@ Also reachable as `arrow::compute::kernels::concat_elements::concat_elements_utf
 ```rust
 fn concat_elements_utf8<Offset: OffsetSizeTrait>(left: &GenericStringArray<Offset>, right: &GenericStringArray<Offset>) -> Result<GenericStringArray<Offset>, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_string.concat_elements.concat_elements_utf8.md).
+
 
 Returns the elementwise concatenation of a [`GenericStringArray`].
 
@@ -147,6 +168,9 @@ Also reachable as `arrow::compute::kernels::concat_elements::concat_elements_utf
 ```rust
 fn concat_elements_utf8_many<Offset: OffsetSizeTrait>(arrays: &[&GenericStringArray<Offset>]) -> Result<GenericStringArray<Offset>, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_string.concat_elements.concat_elements_utf8_many.md).
+
 
 Returns the elementwise concatenation of [`StringArray`].
 ```text

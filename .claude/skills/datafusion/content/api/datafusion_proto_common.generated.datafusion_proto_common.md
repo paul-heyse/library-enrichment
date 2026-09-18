@@ -52,6 +52,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.CompressionTypeVariant.md).
+
+
 ---
 
 ## CsvQuoteStyle
@@ -104,6 +107,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.CsvQuoteStyle.md).
+
+
 ---
 
 ## ExplainFormat
@@ -148,6 +154,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ExplainFormat.md).
+
 
 ---
 
@@ -200,6 +209,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.IntervalUnit.md).
+
+
 ---
 
 ## JoinConstraint
@@ -244,6 +256,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.JoinConstraint.md).
+
 
 ---
 
@@ -296,6 +311,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.JoinSide.md).
+
+
 ---
 
 ## JoinType
@@ -341,6 +359,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.JoinType.md).
+
+
 ---
 
 ## MetricCategory
@@ -385,6 +406,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.MetricCategory.md).
+
 
 Category of an `EXPLAIN ANALYZE` metric. Mirrors
 `datafusion_common::format::MetricCategory`.
@@ -434,6 +458,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.MetricType.md).
+
+
 Verbosity level for `EXPLAIN ANALYZE`. Mirrors
 `datafusion_common::format::MetricType`.
 
@@ -482,6 +509,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.NullEquality.md).
+
+
 ---
 
 ## PrecisionInfo
@@ -526,6 +556,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.PrecisionInfo.md).
+
 
 ---
 
@@ -578,6 +611,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.TimeUnit.md).
+
+
 ---
 
 ## UnionMode
@@ -623,6 +659,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.UnionMode.md).
+
+
 ---
 
 ## ArrowFormat
@@ -658,6 +697,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ArrowFormat.md).
+
+
 ---
 
 ## ArrowOptions
@@ -692,6 +734,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ArrowOptions.md).
+
 
 ---
 
@@ -736,6 +781,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ArrowType.md).
+
+
 Serialized data type
 
 ---
@@ -773,6 +821,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.AvroFormat.md).
+
+
 ---
 
 ## AvroOptions
@@ -807,6 +858,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.AvroOptions.md).
+
 
 ---
 
@@ -852,6 +906,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Column.md).
+
+
 ---
 
 ## ColumnRelation
@@ -888,6 +945,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ColumnRelation.md).
+
 
 ---
 
@@ -932,6 +992,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ColumnStats.md).
+
+
 ---
 
 ## Constraint
@@ -974,6 +1037,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Constraint.md).
+
 
 ---
 
@@ -1018,6 +1084,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Constraints.md).
+
+
 ---
 
 ## CsvFormat
@@ -1054,6 +1123,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.CsvFormat.md).
+
 
 ---
 
@@ -1109,6 +1181,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.CsvOptions.md).
+
+
 Options controlling CSV format
 
 ---
@@ -1163,6 +1238,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.CsvWriterOptions.md).
+
+
 ---
 
 ## Decimal128
@@ -1199,6 +1277,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Decimal128.md).
+
 
 ---
 
@@ -1237,6 +1318,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Decimal128Type.md).
+
+
 ---
 
 ## Decimal256
@@ -1273,6 +1357,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Decimal256.md).
+
 
 ---
 
@@ -1311,6 +1398,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Decimal256Type.md).
+
+
 ---
 
 ## Decimal32
@@ -1347,6 +1437,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Decimal32.md).
+
 
 ---
 
@@ -1385,6 +1478,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Decimal32Type.md).
+
+
 ---
 
 ## Decimal64
@@ -1421,6 +1517,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Decimal64.md).
+
 
 ---
 
@@ -1459,6 +1558,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Decimal64Type.md).
+
+
 ---
 
 ## DfField
@@ -1495,6 +1597,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.DfField.md).
+
 
 ---
 
@@ -1540,6 +1645,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.DfSchema.md).
+
+
 ---
 
 ## Dictionary
@@ -1577,6 +1685,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Dictionary.md).
+
+
 ---
 
 ## EmptyMessage
@@ -1611,6 +1722,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.EmptyMessage.md).
+
 
 Useful for representing an empty enum variant in rust
 E.G. enum example{One, Two(i32)}
@@ -1666,6 +1780,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ExplainAnalyzeCategoriesNode.md).
+
+
 Wire encoding for `datafusion_common::format::ExplainAnalyzeCategories`.
 
 If `all` is true, every category is shown (the `only` list is ignored).
@@ -1715,6 +1832,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Field.md).
+
+
 ---
 
 ## FixedSizeList
@@ -1751,6 +1871,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.FixedSizeList.md).
+
 
 ---
 
@@ -1789,6 +1912,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.IntervalDayTimeValue.md).
+
+
 ---
 
 ## IntervalMonthDayNanoValue
@@ -1825,6 +1951,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.IntervalMonthDayNanoValue.md).
+
 
 ---
 
@@ -1879,6 +2008,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.JsonOptions.md).
+
+
 Options controlling CSV format
 
 ---
@@ -1931,6 +2063,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.JsonWriterOptions.md).
+
+
 ---
 
 ## List
@@ -1967,6 +2102,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.List.md).
+
 
 ---
 
@@ -2005,6 +2143,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Map.md).
+
+
 ---
 
 ## NdJsonFormat
@@ -2041,6 +2182,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.NdJsonFormat.md).
+
 
 ---
 
@@ -2084,6 +2228,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ParquetCdcOptions.md).
+
 
 Content-defined chunking (CDC) options for writing parquet files.
 
@@ -2130,6 +2277,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ParquetColumnOptions.md).
+
+
 ---
 
 ## ParquetColumnSpecificOptions
@@ -2167,6 +2317,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ParquetColumnSpecificOptions.md).
+
+
 ---
 
 ## ParquetFormat
@@ -2203,6 +2356,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ParquetFormat.md).
+
 
 ---
 
@@ -2246,6 +2402,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ParquetOptions.md).
+
 
 ---
 
@@ -2298,6 +2457,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Precision.md).
+
+
 ---
 
 ## PrimaryKeyConstraint
@@ -2334,6 +2496,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.PrimaryKeyConstraint.md).
+
 
 ---
 
@@ -2372,6 +2537,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.RunEndEncoded.md).
+
+
 ---
 
 ## ScalarDictionaryValue
@@ -2408,6 +2576,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ScalarDictionaryValue.md).
+
 
 ---
 
@@ -2446,6 +2617,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ScalarFixedSizeBinary.md).
+
+
 ---
 
 ## ScalarNestedValue
@@ -2482,6 +2656,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ScalarNestedValue.md).
+
 
 Used for List/FixedSizeList/LargeList/ListView/LargeListView/Struct/Map
 
@@ -2522,6 +2699,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ScalarRunEndEncodedValue.md).
+
+
 ---
 
 ## ScalarTime32Value
@@ -2558,6 +2738,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ScalarTime32Value.md).
+
 
 ---
 
@@ -2596,6 +2779,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ScalarTime64Value.md).
+
+
 ---
 
 ## ScalarTimestampValue
@@ -2632,6 +2818,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ScalarTimestampValue.md).
+
 
 ---
 
@@ -2675,6 +2864,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.ScalarValue.md).
+
 
 ---
 
@@ -2720,6 +2912,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Schema.md).
+
+
 ---
 
 ## Statistics
@@ -2763,6 +2958,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Statistics.md).
+
+
 ---
 
 ## Struct
@@ -2799,6 +2997,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Struct.md).
+
 
 ---
 
@@ -2842,6 +3043,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.TableParquetOptions.md).
+
 
 ---
 
@@ -2887,6 +3091,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Timestamp.md).
+
+
 ---
 
 ## Union
@@ -2931,6 +3138,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.Union.md).
+
+
 ---
 
 ## UnionField
@@ -2967,6 +3177,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.UnionField.md).
+
 
 ---
 
@@ -3012,6 +3225,9 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.UnionValue.md).
+
+
 ---
 
 ## UniqueConstraint
@@ -3048,5 +3264,8 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 ```rust
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_common.generated.datafusion_proto_common.UniqueConstraint.md).
+
 
 ---

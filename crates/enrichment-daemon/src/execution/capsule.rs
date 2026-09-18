@@ -3,9 +3,8 @@ use super::Runner;
 use crate::{ops::common::Opened, service::Service};
 use enrichment_core::{
     canonical,
-    execution::{ProcessEnd, ProcessObservation},
+    execution::{ProcessObservation, producer::Invocation},
     identity::{Ecosystem, Environment},
-    producer::python,
 };
 use std::{
     fs,
@@ -45,8 +44,7 @@ impl From<&str> for PreparationError {
 
 pub struct Capsule {
     pub root: PathBuf,
-    pub environment: Environment,
-    pub lock: Vec<u8>,
+    pub prepared: enrichment_core::operation::ownership::PreparedCapsule,
     pub observations: Vec<ProcessObservation>,
     /// Whether this capsule outlives the request that prepared it.
     ///
@@ -55,9 +53,12 @@ pub struct Capsule {
     /// leave the server answering about files that no longer exist.
     pub retain: bool,
     runner: Runner,
-    storage: Option<super::budget::Preparation>,
+    storage: Option<Arc<super::budget::Preparation>>,
 }
 impl Capsule {
+    pub fn input_reader(&self) -> std::io::Result<super::cleanup::InputReader> {
+        self.runner.input_reader()
+    }
     pub fn write_input(&self, relative: &str, content: impl AsRef<[u8]>) -> std::io::Result<()> {
         self.storage
             .as_ref()
@@ -152,8 +153,7 @@ pub async fn prepare_retained(
         {
             return Ok(Capsule {
                 root,
-                environment: retained.environment,
-                lock: retained.lock.into_bytes(),
+                prepared: retained.prepared,
                 observations: Vec::new(),
                 retain: true,
                 runner: runner.clone(),
@@ -184,12 +184,9 @@ pub async fn prepare_retained(
         .ownership
         .publish_capsule(&enrichment_core::operation::ownership::RetainedCapsule {
             key,
-            inputs,
             cache: runner.ownership.cache().into(),
             generation,
-            environment: capsule.environment.clone(),
-            lock: String::from_utf8(capsule.lock.clone()).map_err(|e| e.to_string())?,
-            inventory,
+            prepared: capsule.prepared.clone(),
             sequence: 0,
         })
         .await
@@ -214,11 +211,19 @@ pub async fn prepare(
     opened: &Opened,
     runner: &Runner,
     image: &str,
-    job: &str,
+    workspace_id: &str,
     cancel: Arc<AtomicBool>,
 ) -> Result<Capsule, PreparationError> {
+    let producer_target = enrichment_store::environment_plan::admit(
+        &service.repository.runtime,
+        &opened.environment,
+        opened.release.key.ecosystem,
+        image,
+    )
+    .await
+    .map_err(|error| PreparationError::Environment(error.to_string()))?;
     let capsules = service.paths.cache_root.join("capsules");
-    let root = capsules.join(job);
+    let root = capsules.join(workspace_id);
     let storage = super::budget::Preparation::acquire(
         &runner.ownership,
         &root,
@@ -245,91 +250,82 @@ pub async fn prepare(
         .artifact_digest
         .as_deref()
         .ok_or("selected release has no artifact digest")?;
-    let bytes = service.blobs.read(digest).map_err(|e| e.to_string())?;
-    if canonical::sha256_hex(&bytes) != digest {
-        return Err("selected artifact digest mismatch".into());
+    let artifact = opened
+        .reader
+        .source_artifact()
+        .await
+        .map_err(|error| error.to_string())?
+        .ok_or("selected snapshot lacks its source acquisition")?;
+    if artifact.sha256 != digest {
+        return Err("selected source acquisition differs from release".into());
     }
+    let owner = runner
+        .input_reader()
+        .map_err(|error| PreparationError::Policy(error.to_string()))?;
+    let blobs = service.blobs.clone();
+    let input = artifact.clone();
+    let pool = service
+        .repository
+        .runtime
+        .session()
+        .runtime_env()
+        .memory_pool
+        .clone();
+    let bytes = service
+        .repository
+        .runtime
+        .blocking(move || {
+            let _owner = owner;
+            blobs.read_owned(&input, 268_435_456, &pool)
+        })
+        .await
+        .map_err(|error| PreparationError::Policy(error.to_string()))?
+        .map_err(|error| error.to_string())?;
+    let storage = Arc::new(storage);
     let mut observations = Vec::new();
     let versions = match opened.release.key.ecosystem {
-        Ecosystem::Python => strings(&[
-            "/usr/local/bin/python3",
-            "-I",
-            "-S",
-            "-c",
-            "import sys,os; assert os.getuid()==65532; assert sys.version_info[:3]==(3,14,7); print(sys.version)",
-        ]),
-        Ecosystem::Rust => strings(&["/usr/local/cargo/bin/rustc", "+1.98.1", "-vV"]),
+        Ecosystem::Python => Invocation::PythonIdentity,
+        Ecosystem::Rust => Invocation::RustIdentity,
     };
     let observed = runner
         .run(image, &root, &versions, cancel.clone())
         .await
         .map_err(|e| PreparationError::Policy(format!("isolation unavailable: {e}")))?;
-    require_success(&observed, "producer identity qualification")?;
-    if opened.release.key.ecosystem == Ecosystem::Rust
-        && (!observed.stdout.contains("release: 1.98.1")
-            || !observed.stdout.contains("host: x86_64-unknown-linux-gnu"))
-    {
-        return Err(
-            "Rust producer identity differs from the admitted stable compiler/target".into(),
-        );
-    }
+    require_success(
+        runner,
+        &versions,
+        &observed,
+        "producer identity qualification",
+    )
+    .await?;
     observations.push(observed);
     if opened.release.key.ecosystem == Ecosystem::Python {
         let ty = runner
-            .run(
-                image,
-                &root,
-                &strings(&["/opt/producers/bin/ty", "--version"]),
-                cancel.clone(),
-            )
+            .run(image, &root, &Invocation::TyIdentity, cancel.clone())
             .await
             .map_err(|e| PreparationError::from_runner(&e))?;
-        require_success(&ty, "ty producer identity")?;
-        if ty.stdout.trim() != "ty 0.0.80" {
-            return Err("ty producer differs from the admitted version".into());
-        }
+        require_success(runner, &Invocation::TyIdentity, &ty, "ty producer identity").await?;
         observations.push(ty);
     }
 
-    let (lock, toolchain, target, defaults) = match opened.release.key.ecosystem {
+    let (lock, defaults) = match opened.release.key.ecosystem {
         Ecosystem::Python => {
-            if !python_toolchain_accepted(opened.environment.toolchain.as_deref(), image) {
-                return Err(
-                    "admitted producer is Python3.14.7; requested interpreter is different".into(),
-                );
-            }
-            if !python_target_accepted(opened.environment.target.as_deref()) {
-                return Err("admitted Python capsule target is linux/x86_64; requested target is not reproduced".into());
-            }
-            let artifact = opened
-                .reader
-                .source_artifact()
-                .await
-                .map_err(|e| e.to_string())?
-                .ok_or("selected snapshot lacks its source acquisition")?;
-            let url = url::Url::parse(&artifact.source_uri).map_err(|e| e.to_string())?;
+            let url = url::Url::parse(&artifact.source_uri).map_err(|error| error.to_string())?;
             let filename = url
                 .path_segments()
-                .and_then(|mut s| s.next_back())
+                .and_then(|mut segments| segments.next_back())
                 .ok_or("distribution filename missing")?;
-            if !filename.ends_with(".whl") || filename.contains(['/', '\\', ':', '%']) {
-                return Err("this capsule requires an admitted wheel; source/native builds need a separately qualified build producer".into());
-            }
-            python::archive::extract_zip(
-                &bytes,
-                &root.join("metadata"),
-                &storage.archive_policy().map_err(|e| e.to_string())?,
-            )?;
-            let mut metadata = None;
-            for path in python::archive::files(&root.join("metadata"))? {
-                if path.ends_with(".dist-info/METADATA") {
-                    metadata = Some(
-                        fs::read_to_string(root.join("metadata").join(&path))
-                            .map_err(|e| e.to_string())?,
-                    );
-                }
-            }
-            let metadata = metadata.ok_or("wheel METADATA missing")?;
+            let bytes = Arc::new(bytes);
+            let metadata = super::preparation::wheel_distribution(
+                runner,
+                storage.clone(),
+                root.join("metadata"),
+                bytes.clone(),
+                filename,
+                &artifact.sha256,
+            )
+            .await?;
+
             // Every ty invocation in this capsule -- `ty check` and the language server alike --
             // is pointed at this file. It is written once, here, because a capsule that has it
             // for one caller and not another is two different analysis environments wearing one
@@ -340,106 +336,63 @@ pub async fn prepare(
                 .map_err(|e| e.to_string())?;
             fs::create_dir(root.join("wheelhouse")).map_err(|e| e.to_string())?;
             storage
-                .write(&root.join("wheelhouse").join(filename), &bytes)
+                .write(&root.join("wheelhouse").join(filename), bytes.as_ref())
                 .map_err(|e| e.to_string())?;
             let (lock, requirements) = super::python_closure::resolve(
                 service,
                 opened,
                 &root,
                 filename,
-                &metadata,
+                &metadata.distribution,
                 cancel.clone(),
                 &storage,
+                runner,
             )
             .await?;
             storage
                 .write(&root.join("requirements.txt"), requirements)
                 .map_err(|e| e.to_string())?;
             let result = runner
-                .prepare_outputs(
-                    image,
-                    &root,
-                    &strings(&[
-                        "/opt/producers/bin/uv",
-                        "--no-config",
-                        "--no-python-downloads",
-                        "pip",
-                        "install",
-                        "--python=/usr/local/bin/python3",
-                        "--offline",
-                        "--no-index",
-                        "--find-links=/capsule/wheelhouse",
-                        "--only-binary=:all:",
-                        "--require-hashes",
-                        "--no-deps",
-                        "--target=/capsule/python",
-                        "--link-mode=copy",
-                        "-r",
-                        "/capsule/requirements.txt",
-                    ]),
-                    cancel,
-                    [(
-                        "python".into(),
-                        enrichment_core::capsule_protocol::OutputKind::Directory,
-                    )]
-                    .into(),
-                )
+                .run(image, &root, &Invocation::PythonInstall, cancel)
                 .await
                 .map_err(|e| PreparationError::from_runner(&e))?;
-            require_success(&result, "offline dependency install")?;
-            observations.push(result);
-            (
-                lock,
-                format!("python-3.14.7;{image}"),
-                "linux-x86_64".to_owned(),
-                None,
+            require_success(
+                runner,
+                &Invocation::PythonInstall,
+                &result,
+                "offline dependency install",
             )
+            .await?;
+            observations.push(result);
+            (lock, None)
         }
         Ecosystem::Rust => {
-            if opened
-                .environment
-                .target
-                .as_deref()
-                .is_some_and(|s| s != "x86_64-unknown-linux-gnu")
-            {
-                return Err(
-                    "only the admitted x86_64-unknown-linux-gnu Rust target is available".into(),
-                );
-            }
-            let extracted = enrichment_core::archive::extract_tar_gz(
-                bytes.as_slice(),
-                &root.join("source"),
-                &storage.archive_policy().map_err(|e| e.to_string())?,
+            let top = super::preparation::cargo_source(
+                runner,
+                storage.clone(),
+                &root,
+                bytes,
+                &opened.release.key.package,
+                Some(&opened.release.key.version),
             )
-            .map_err(|e| e.to_string())?;
-            let top = extracted.top_level.ok_or("crate archive lacks one root")?;
-            let source = root.join("source").join(&top);
-            let cargo: toml::Value = toml::from_str(
-                &fs::read_to_string(source.join("Cargo.toml")).map_err(|e| e.to_string())?,
+            .await?
+            .root;
+            fs::create_dir(root.join("src")).map_err(|error| error.to_string())?;
+            let options = enrichment_store::producer_plan::rustdoc_options(
+                &service.repository.runtime,
+                &opened.environment,
             )
-            .map_err(|e| e.to_string())?;
-            validate_cargo_sources(&cargo)?;
-            // Discard all package-supplied Cargo configuration, not just the top-level file.
-            for path in python::archive::files(&source)? {
-                if path.split('/').any(|part| part == ".cargo")
-                    || path.ends_with("rust-toolchain")
-                    || path.ends_with("rust-toolchain.toml")
-                {
-                    fs::remove_file(source.join(path)).map_err(|e| e.to_string())?;
-                }
-            }
-            fs::create_dir(root.join("src")).map_err(|e| e.to_string())?;
-            let features =
-                serde_json::to_string(&opened.environment.features.as_deref().unwrap_or_default())
-                    .map_err(|e| e.to_string())?;
-            let default_features = opened.environment.default_features.unwrap_or(true);
-            let manifest = format!(
-                "[package]\nname=\"enrichment-consumer\"\nversion=\"0.0.0\"\nedition=\"2024\"\n[workspace]\n[dependencies]\n{}={{path=\"source/{}\",features={},default-features={}}}\n",
-                serde_json::to_string(&opened.release.key.package).map_err(|e| e.to_string())?,
-                top,
-                features,
-                default_features
-            );
+            .await
+            .map_err(|error| error.to_string())?;
+            let default_features = options.default_features;
+            let manifest = enrichment_store::preparation_plan::cargo_manifest(
+                &service.repository.runtime,
+                &opened.release.key.package,
+                &top,
+                &options,
+            )
+            .await
+            .map_err(|error| error.to_string())?;
             storage
                 .write(&root.join("Cargo.toml"), manifest)
                 .map_err(|e| e.to_string())?;
@@ -449,54 +402,48 @@ pub async fn prepare(
             // Target config cannot influence acquisition: fixed compiler/toolchain and manifest, no source Git/path overrides.
             fs::create_dir_all(root.join("cargo-home")).map_err(|e| e.to_string())?;
             let fetch = runner
-                .acquire(
-                    image,
-                    &root,
-                    &strings(&[
-                        "/usr/local/cargo/bin/cargo",
-                        "+1.98.1",
-                        "fetch",
-                        "--manifest-path=/capsule/Cargo.toml",
-                        "--target=x86_64-unknown-linux-gnu",
-                    ]),
-                    cancel,
-                    [
-                        (
-                            "Cargo.lock".into(),
-                            enrichment_core::capsule_protocol::OutputKind::File,
-                        ),
-                        (
-                            "cargo-home".into(),
-                            enrichment_core::capsule_protocol::OutputKind::Directory,
-                        ),
-                    ]
-                    .into(),
-                )
+                .run(image, &root, &Invocation::RustFetch, cancel)
                 .await
                 .map_err(|e| PreparationError::from_runner(&e))?;
-            require_success(&fetch, "registry dependency acquisition")?;
-            observations.push(fetch);
-            let lock = fs::read(root.join("Cargo.lock")).map_err(|e| e.to_string())?;
-            (
-                lock,
-                format!("rust-1.98.1;{image}"),
-                "x86_64-unknown-linux-gnu".into(),
-                Some(default_features),
+            require_success(
+                runner,
+                &Invocation::RustFetch,
+                &fetch,
+                "registry dependency acquisition",
             )
+            .await?;
+            observations.push(fetch);
+            let lock = super::preparation::read(runner, root.join("Cargo.lock"), 1_048_576)
+                .await?
+                .to_vec();
+            (lock, Some(default_features))
         }
     };
     let environment = Environment::resolved(
-        toolchain,
-        target,
+        producer_target.toolchain,
+        producer_target.target,
         opened.environment.features.clone().unwrap_or_default(),
         defaults,
         canonical::sha256_hex(&lock),
     );
+    storage
+        .write(&root.join("enrichment.lock"), &lock)
+        .map_err(|e| e.to_string())?;
+    let prepared = enrichment_core::operation::ownership::PreparedCapsule {
+        inputs: capsule_inputs(
+            opened,
+            image,
+            &runner.containment_identity().map_err(|e| e.to_string())?,
+        ),
+        environment,
+        lock: String::from_utf8(lock).map_err(|e| e.to_string())?,
+        inventory: super::inventory::capture(&root, service.config.execution.scratch_bytes())
+            .map_err(|e| e.to_string())?,
+    };
     staging.path.take();
     Ok(Capsule {
         root,
-        environment,
-        lock,
+        prepared,
         observations,
         retain: false,
         runner: runner.clone(),
@@ -504,102 +451,30 @@ pub async fn prepare(
     })
 }
 
-pub(super) fn validate_cargo_sources(value: &toml::Value) -> Result<(), String> {
-    match value {
-        toml::Value::Table(table) => {
-            for (key, value) in table {
-                if matches!(
-                    key.as_str(),
-                    "dependencies" | "dev-dependencies" | "build-dependencies"
-                ) && let Some(dependencies) = value.as_table()
-                {
-                    for dependency in dependencies.values() {
-                        if dependency.as_table().is_some_and(|fields| {
-                            fields.contains_key("path")
-                                || fields.contains_key("git")
-                                || fields.contains_key("registry")
-                        }) {
-                            return Err("unadmitted dependency source: path/Git/alternate registry dependencies require explicit admission".into());
-                        }
-                    }
-                }
-                if matches!(
-                    key.as_str(),
-                    "git" | "path" | "registry" | "patch" | "replace" | "members"
-                ) && key != "path"
-                {
-                    return Err(format!("unadmitted Cargo source/workspace setting: {key}"));
-                }
-                if key == "path"
-                    && value
-                        .as_str()
-                        .is_some_and(|s| s.starts_with('/') || s.split('/').any(|c| c == ".."))
-                {
-                    return Err("escaping Cargo source path".into());
-                }
-                validate_cargo_sources(value)?;
-            }
-        }
-        toml::Value::Array(items) => {
-            for item in items {
-                validate_cargo_sources(item)?;
-            }
-        }
-        _ => {}
-    }
-    Ok(())
-}
 pub fn strings(values: &[&str]) -> Vec<String> {
     values.iter().map(|s| (*s).to_owned()).collect()
 }
-pub fn require_success(result: &ProcessObservation, stage: &str) -> Result<(), PreparationError> {
-    if result.end != ProcessEnd::Exited || result.exit_code != Some(0) {
-        return Err(PreparationError::Process(
-            Box::new(result.clone()),
-            stage.into(),
-        ));
-    }
-    // A preparation step whose container could not be removed did not succeed, whatever its
-    // exit code says. `verify_usage` reports an unconfirmed probe cleanup as `partial` because
-    // the probe evidence is still real; a preparation step has no evidence to preserve, so the
-    // honest answer is that the stage failed.
-    if !result.cleanup_confirmed {
-        return Err(PreparationError::Process(
-            Box::new(result.clone()),
-            format!("{stage} (its container was not confirmed removed)"),
-        ));
-    }
-    Ok(())
-}
-
-/// One declared-interpreter contract for preparing and discovering the qualified capsule.
-pub(crate) fn python_toolchain_accepted(declared: Option<&str>, image: &str) -> bool {
-    declared.is_none_or(|v| {
-        matches!(v, "python-3.14" | "python-3.14.7") || v == format!("python-3.14.7;{image}")
-    })
-}
-pub(crate) fn python_target_accepted(declared: Option<&str>) -> bool {
-    declared.is_none_or(|v| matches!(v, "linux" | "x86_64-manylinux_2_40" | "linux-x86_64"))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn nested_cargo_dependency_sources_are_rejected_before_acquisition() {
-        for source in [
-            "[dependencies.local]\npath='deps/local'",
-            "[target.'cfg(unix)'.dependencies.local]\npath='deps/local'",
-            "[build-dependencies.local]\ngit='https://github.com/x/y'",
-        ] {
-            let value: toml::Value = toml::from_str(source).unwrap();
-            assert!(validate_cargo_sources(&value).is_err());
+pub async fn require_success(
+    runner: &Runner,
+    invocation: &Invocation,
+    result: &ProcessObservation,
+    stage: &str,
+) -> Result<(), PreparationError> {
+    let selected = enrichment_store::producer_plan::preparation_result(
+        runner.ownership.runtime(),
+        invocation,
+        result,
+        stage,
+    )
+    .await
+    .map_err(|error| PreparationError::Policy(error.to_string()))?;
+    match selected.state {
+        enrichment_core::execution::producer::PreparationState::Ready => Ok(()),
+        enrichment_core::execution::producer::PreparationState::ProcessFailed => Err(
+            PreparationError::Process(Box::new(result.clone()), selected.detail),
+        ),
+        enrichment_core::execution::producer::PreparationState::IdentityMismatch => {
+            Err(PreparationError::Environment(selected.detail))
         }
-        assert!(
-            validate_cargo_sources(
-                &toml::from_str("[lib]\npath='src/lib.rs'\n[dependencies]\nserde='1'").unwrap()
-            )
-            .is_ok()
-        );
     }
 }

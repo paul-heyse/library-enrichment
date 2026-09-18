@@ -23,6 +23,9 @@ fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Tra
 fn supports_rewrite(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.filter_null_join_keys.FilterNullJoinKeys.md).
+
+
 The FilterNullJoinKeys rule will identify joins with equi-join conditions
 where the join key is nullable and then insert an `IsNotNull` filter on the nullable side since null values
 can never match.

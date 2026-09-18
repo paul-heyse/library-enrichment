@@ -1,0 +1,158 @@
+[
+  {
+    "id": "6e48a8801ba918447dc34006",
+    "path": "buoyant_kernel::table_features::column_mapping::validate_schema_column_mapping",
+    "name": "validate_schema_column_mapping",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn validate_schema_column_mapping(schema: &schema::Schema, mode: ColumnMappingMode) -> DeltaResult<()>",
+    "docs": "Validates `delta.columnMapping.id` and `delta.columnMapping.physicalName` annotations across\nevery field in `schema`. Aligns with delta-spark's validation logic.\n\nWhen `mode` is [`ColumnMappingMode::Id`] or [`ColumnMappingMode::Name`]: each field must\ncarry both annotations, no two fields may share a `delta.columnMapping.id`, and no two\nfields may share a *full physical column path*. Two fields may share the same leaf\n`physicalName` if they live at different physical column paths.\n\nWhen `mode` is [`ColumnMappingMode::None`]: verifies no field carries either annotation.\n\nExamples for physical name validation:\nRejected (two siblings share `delta.columnMapping.physicalName=\"x\"`):\n```json\n{\"type\":\"struct\",\"fields\":[\n  {\"name\":\"a\",\"type\":\"long\",\"nullable\":true,\n   \"metadata\":{\"delta.columnMapping.id\":1,\"delta.columnMapping.physicalName\":\"x\"}},\n  {\"name\":\"b\",\"type\":\"long\",\"nullable\":true,\n   \"metadata\":{\"delta.columnMapping.id\":2,\"delta.columnMapping.physicalName\":\"x\"}}\n]}\n```\n\nAccepted (same `delta.columnMapping.physicalName=\"x\"` at different physical column paths):\n```json\n{\"type\":\"struct\",\"fields\":[\n  {\"name\":\"a\",\"type\":\"long\",\"nullable\":true,\n   \"metadata\":{\"delta.columnMapping.id\":1,\"delta.columnMapping.physicalName\":\"x\"}},\n  {\"name\":\"nested\",\"nullable\":true,\n   \"metadata\":{\"delta.columnMapping.id\":2,\"delta.columnMapping.physicalName\":\"nested\"},\n   \"type\":{\"type\":\"struct\",\"fields\":[\n     {\"name\":\"a\",\"type\":\"long\",\"nullable\":true,\n      \"metadata\":{\"delta.columnMapping.id\":3,\"delta.columnMapping.physicalName\":\"x\"}}\n  ]}}\n]}\n```",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_features/column_mapping.rs",
+      "begin": [
+        111,
+        1
+      ],
+      "end": [
+        113,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::schema::Schema",
+                      "id": 6324,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "mode",
+              {
+                "resolved_path": {
+                  "path": "ColumnMappingMode",
+                  "id": 6889,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "crate::DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6324": "buoyant_kernel::schema::Schema",
+      "6889": "buoyant_kernel::table_features::column_mapping::ColumnMappingMode",
+      "239": "buoyant_kernel::error::DeltaResult"
+    },
+    "impl_context": null,
+    "links": {
+      "`ColumnMappingMode::Id`": 6985,
+      "`ColumnMappingMode::None`": 8264,
+      "`ColumnMappingMode::Name`": 8265
+    },
+    "link_paths": {
+      "`ColumnMappingMode::Id`": "buoyant_kernel::table_features::column_mapping::ColumnMappingMode::Id",
+      "`ColumnMappingMode::None`": "buoyant_kernel::table_features::column_mapping::ColumnMappingMode::None",
+      "`ColumnMappingMode::Name`": "buoyant_kernel::table_features::column_mapping::ColumnMappingMode::Name"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8318",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_features/column_mapping.rs#L111",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "12380",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_features.column_mapping.validate_schema_column_mapping.md",
+    "record_file": "operations/buoyant_kernel.table_features.column_mapping.validate_schema_column_mapping.json",
+    "anchor": "op-6e48a8801ba918447dc34006",
+    "aliases": [
+      "buoyant_kernel::table_features::validate_schema_column_mapping",
+      "delta_kernel::table_features::column_mapping::validate_schema_column_mapping"
+    ],
+    "resolved_doc_links": {
+      "`ColumnMappingMode::Id`": "../operations/buoyant_kernel.table_features.column_mapping.ColumnMappingMode.md#op-daa16a7e06e167fc1441630c",
+      "`ColumnMappingMode::None`": "../operations/buoyant_kernel.table_features.column_mapping.ColumnMappingMode.md#op-86c2a30a801346d0bff7b13e",
+      "`ColumnMappingMode::Name`": "../operations/buoyant_kernel.table_features.column_mapping.ColumnMappingMode.md#op-9c15dcff4d43480fcd397e96"
+    }
+  }
+]

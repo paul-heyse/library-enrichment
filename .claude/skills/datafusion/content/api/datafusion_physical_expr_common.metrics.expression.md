@@ -23,6 +23,9 @@ fn new<T>(metrics: &ExecutionPlanMetricsSet, partition: usize, expression_labels
 fn scoped_timer(&self, index: usize) -> Option<ScopedTimerGuard<'_>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.expression.ExpressionEvaluatorMetrics.md).
+
+
 Tracks evaluation time for a sequence of expressions.
 
 # Example

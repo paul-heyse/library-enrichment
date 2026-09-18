@@ -10,6 +10,9 @@ Crate `datafusion-substrait` · 1 public items · structured records in [`model/
 async fn from_substrait_func_args(consumer: &impl SubstraitConsumer, arguments: &Vec<substrait::proto::FunctionArgument>, input_schema: &datafusion::common::DFSchema) -> datafusion::common::Result<Vec<datafusion::logical_expr::Expr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.expr.function_arguments.from_substrait_func_args.md).
+
+
 Convert Substrait FunctionArguments to DataFusion Exprs
 
 ---

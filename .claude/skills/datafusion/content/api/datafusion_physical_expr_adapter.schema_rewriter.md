@@ -12,6 +12,9 @@ Also reachable as `datafusion::physical_expr_adapter::replace_columns_with_liter
 fn replace_columns_with_literals<K, V>(expr: std::sync::Arc<dyn PhysicalExpr>, replacements: &std::collections::HashMap<K, V>) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>> where K: Borrow<str> + Eq + Hash, V: Borrow<datafusion_common::ScalarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_adapter.schema_rewriter.replace_columns_with_literals.md).
+
+
 Replace column references in the given physical expression with literal values.
 
 Some use cases for this include:
@@ -51,6 +54,9 @@ struct BatchAdapter
 fn adapt_batch(&self, batch: &RecordBatch) -> Result<RecordBatch>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_adapter.schema_rewriter.BatchAdapter.md).
+
+
 Adapter for transforming record batches to match a target schema.
 
 Create instances via [`BatchAdapterFactory`].
@@ -82,6 +88,9 @@ fn make_adapter(&self, source_schema: &SchemaRef) -> Result<BatchAdapter>
 fn new(target_schema: SchemaRef) -> Self
 fn with_adapter_factory(self, factory: Arc<dyn PhysicalExprAdapterFactory>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_adapter.schema_rewriter.BatchAdapterFactory.md).
+
 
 Factory for creating [`BatchAdapter`] instances to adapt record batches
 to a target schema.
@@ -167,6 +176,9 @@ fn new(logical_file_schema: SchemaRef, physical_file_schema: SchemaRef) -> Self
 fn rewrite(&self, expr: Arc<dyn PhysicalExpr>) -> Result<Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_adapter.schema_rewriter.DefaultPhysicalExprAdapter.md).
+
+
 Default implementation of [`PhysicalExprAdapter`] for rewriting physical
 expressions to match different schemas.
 
@@ -231,6 +243,9 @@ struct DefaultPhysicalExprAdapterFactory
 fn create(&self, logical_file_schema: SchemaRef, physical_file_schema: SchemaRef) -> Result<Arc<dyn PhysicalExprAdapter>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_adapter.schema_rewriter.DefaultPhysicalExprAdapterFactory.md).
+
+
 ---
 
 ## PhysicalExprAdapter
@@ -252,6 +267,9 @@ trait PhysicalExprAdapter: Send + Sync + std::fmt::Debug
 ```rust
 fn rewrite(&self, expr: Arc<dyn PhysicalExpr>) -> Result<Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_adapter.schema_rewriter.PhysicalExprAdapter.md).
+
 
 Trait for adapting [`PhysicalExpr`] expressions to match a target schema.
 
@@ -342,6 +360,9 @@ trait PhysicalExprAdapterFactory: Send + Sync + std::fmt::Debug
 ```rust
 fn create(&self, logical_file_schema: SchemaRef, physical_file_schema: SchemaRef) -> Result<Arc<dyn PhysicalExprAdapter>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_adapter.schema_rewriter.PhysicalExprAdapterFactory.md).
+
 
 Creates instances of [`PhysicalExprAdapter`] for given logical and physical schemas.
 

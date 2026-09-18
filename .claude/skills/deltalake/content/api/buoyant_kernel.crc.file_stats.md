@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## FileStats
 
 `struct` · `buoyant_kernel::crc::file_stats::FileStats`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.crc.file_stats.FileStats.md)
 
 Also reachable as `buoyant_kernel::FileStats`, `buoyant_kernel::crc::FileStats`, `delta_kernel::crc::file_stats::FileStats`
 

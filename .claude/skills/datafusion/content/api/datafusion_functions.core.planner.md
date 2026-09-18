@@ -23,4 +23,7 @@ fn plan_overlay(&self, args: Vec<Expr>) -> Result<PlannerResult<Vec<Expr>>>
 fn plan_struct_literal(&self, args: Vec<Expr>, is_named_struct: bool) -> Result<PlannerResult<Vec<Expr>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.planner.CoreFunctionPlanner.md).
+
+
 ---

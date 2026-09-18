@@ -12,6 +12,9 @@ Also reachable as `datafusion::functions::all_default_functions`
 fn all_default_functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.all_default_functions.md).
+
+
 Return all default functions
 
 ---
@@ -26,6 +29,9 @@ Also reachable as `datafusion::functions::register_all`
 fn register_all(registry: &mut dyn FunctionRegistry) -> datafusion_common::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.register_all.md).
+
+
 Registers all enabled packages with a [`FunctionRegistry`]
 
 ---
@@ -39,6 +45,9 @@ Also reachable as `datafusion::functions::downcast_arg`
 ```rust
 macro_rules! downcast_arg
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.downcast_arg.md).
+
 
 Downcast an argument to a specific array type, returning an internal error
 if the cast fails
@@ -58,6 +67,9 @@ Also reachable as `datafusion::functions::downcast_named_arg`
 macro_rules! downcast_named_arg
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.downcast_named_arg.md).
+
+
 Downcast a named argument to a specific array type, returning an internal error
 if the cast fails
 
@@ -76,6 +88,9 @@ Also reachable as `datafusion::functions::export_functions`
 ```rust
 macro_rules! export_functions
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.export_functions.md).
+
 
 macro that exports a list of function names as:
 1. individual functions in an `expr_fn` module
@@ -127,6 +142,9 @@ Also reachable as `datafusion::functions::make_abs_function`
 macro_rules! make_abs_function
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.make_abs_function.md).
+
+
 ---
 
 ## make_try_abs_function
@@ -139,6 +157,9 @@ Also reachable as `datafusion::functions::make_try_abs_function`
 macro_rules! make_try_abs_function
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.make_try_abs_function.md).
+
+
 ---
 
 ## make_udf_function
@@ -150,6 +171,9 @@ Also reachable as `datafusion::functions::make_udf_function`
 ```rust
 macro_rules! make_udf_function
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.make_udf_function.md).
+
 
 Creates a singleton `ScalarUDF` of the `$UDF` function and a function
 named `$NAME` which returns that singleton. Optionally use a custom constructor
@@ -169,6 +193,9 @@ Also reachable as `datafusion::functions::make_udf_function_with_config`
 macro_rules! make_udf_function_with_config
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.make_udf_function_with_config.md).
+
+
 Creates a singleton `ScalarUDF` of the `$UDF` function and a function
 named `$NAME` which returns that singleton. The function takes a
 configuration argument of type `$CONFIG_TYPE` to create the UDF.
@@ -184,5 +211,8 @@ Also reachable as `datafusion::functions::make_wrapping_abs_function`
 ```rust
 macro_rules! make_wrapping_abs_function
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.make_wrapping_abs_function.md).
+
 
 ---

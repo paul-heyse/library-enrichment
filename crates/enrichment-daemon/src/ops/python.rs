@@ -1,21 +1,18 @@
 //! Exact static Python evidence over the same catalog, snapshots and retrieval tools as Rust.
-use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
-use std::process::Stdio;
+use std::collections::BTreeMap;
 use std::time::Duration;
 
 use enrichment_core::canonical;
 use enrichment_core::evidence::{ArtifactKind, EvidenceKind, Gap, GapReason, PlannedFallback};
-use enrichment_core::identity::{Context, Ecosystem, Release, ReleaseKey};
+use enrichment_core::identity::{Context, Release};
 use enrichment_core::policy::ArchivePolicy;
 use enrichment_core::producer::{
     RunOutcome,
-    python::{self, DistributionFile, WorkerRequest},
+    python::{self, DistributionFile},
 };
 use enrichment_core::request::{FreshnessMode, ResolveRequest};
 use enrichment_core::wire::data::ResolveData;
-use enrichment_core::wire::{Coverage, Envelope, ErrorCode, Freshness, SourceVersionMatch};
-use serde_json::Value;
+use enrichment_core::wire::{Envelope, ErrorCode, SourceVersionMatch};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use url::Url;
 
@@ -94,14 +91,13 @@ async fn acquire_inner(
                 url.as_str(),
             )
             .map_err(|e| e.to_string())?;
-        let value: Value = serde_json::from_slice(&response.bytes).map_err(|e| e.to_string())?;
-        let versions: Vec<String> = serde_json::from_value(value["versions"].clone())
+        let index: python::registry::Versions = serde_json::from_slice(&response.bytes)
             .map_err(|e| format!("index versions unavailable: {e}"))?;
         let versions = captures
             .python_versions(
                 &artifact,
                 Some("application/vnd.pypi.simple.v1+json"),
-                &versions,
+                &index.versions,
             )
             .await
             .map_err(|e| e.to_string())?;
@@ -143,10 +139,9 @@ async fn acquire_inner(
             ));
         }
         found_release = true;
-        let metadata: Value = serde_json::from_slice(&response.bytes).map_err(|e| e.to_string())?;
-        let files: Vec<DistributionFile> =
-            serde_json::from_value(metadata["urls"].clone()).map_err(|e| e.to_string())?;
-        let candidates = BTreeMap::from([(version.clone(), files)]);
+        let metadata: python::registry::ReleaseMetadata =
+            serde_json::from_slice(&response.bytes).map_err(|e| e.to_string())?;
+        let candidates = BTreeMap::from([(version.clone(), metadata.urls)]);
         let artifact = acq
             .store(
                 &response,
@@ -173,12 +168,20 @@ async fn acquire_inner(
         .await
         .map_err(|e| e.to_string())?
         {
-            let file = choice.file;
-            selected = Some((choice.version, file, metadata));
+            let release = enrichment_store::python_registry::release(
+                &service.repository.runtime,
+                registry,
+                &request.name,
+                &choice,
+                &metadata.info,
+            )
+            .await
+            .map_err(|e| e.to_string())?;
+            selected = Some((choice.file, release));
             break;
         }
     }
-    let Some((version, file, metadata)) = selected else {
+    let Some((file, mut release)) = selected else {
         return Ok(envelope::error(
             if !found_release && request.version.is_some() {
                 ErrorCode::VersionNotFound
@@ -190,15 +193,8 @@ async fn acquire_inner(
             false,
         ));
     };
-    let selected = Release::new(ReleaseKey {
-        ecosystem: Ecosystem::Python,
-        registry: registry.clone(),
-        package: request.name.clone(),
-        version: version.clone(),
-        artifact_digest: file.digests.get("sha256").cloned(),
-    });
     if let Some(replay) =
-        super::resolve::replay_selected(service, request, &selected, None, &mut acq).await
+        super::resolve::replay_selected(service, request, &release, None, &mut acq).await
     {
         return Ok(replay);
     }
@@ -226,68 +222,59 @@ async fn acquire_inner(
             url.as_str(),
         )
         .map_err(|e| e.to_string())?;
-    let mut release = Release::new(ReleaseKey {
-        ecosystem: Ecosystem::Python,
-        registry: registry.clone(),
-        package: request.name.clone(),
-        version: version.clone(),
-        artifact_digest: Some(sha.clone()),
-    });
-    release.yanked = file.yanked;
-    release.license = metadata["info"]["license"].as_str().map(str::to_owned);
-    release.links.documentation = metadata["info"]["project_urls"]["Documentation"]
-        .as_str()
-        .map(str::to_owned);
-    release.links.homepage = metadata["info"]["home_page"].as_str().map(str::to_owned);
     let environment = environment_for(request);
     let context = Context::new(
         release.release_id.clone(),
         environment.environment_id.clone(),
         request.effective_mode(),
     );
-    let unpacked = service.paths.unpacked();
+    let staging = service
+        .repository
+        .source_directory()
+        .await
+        .map_err(|e| e.to_string())?;
     let tar = file.filename.ends_with(".tar.gz");
     let sdist = file.packagetype == "sdist";
     let bytes = fetched.bytes;
-    let (staging, source_root) = tokio::task::spawn_blocking(move || -> Result<_, String> {
-        std::fs::create_dir_all(&unpacked).map_err(|e| e.to_string())?;
-        let staging = tempfile::Builder::new()
-            .prefix(".python-source-")
-            .tempdir_in(unpacked)
-            .map_err(|e| e.to_string())?;
-        let mut root = if tar {
-            enrichment_core::archive::extract_tar_gz(
-                bytes.as_slice(),
-                staging.path(),
-                &ArchivePolicy::default(),
-            )
-            .map_err(|e| e.to_string())?
-            .top_level
-            .unwrap_or_default()
-        } else {
-            python::archive::extract_zip(&bytes, staging.path(), &ArchivePolicy::default())?;
-            String::new()
-        };
-        if root.is_empty() && sdist {
-            let mut entries = std::fs::read_dir(staging.path()).map_err(|e| e.to_string())?;
-            if let Some(entry) = entries.next() {
-                let entry = entry.map_err(|e| e.to_string())?;
-                if entries.next().is_none()
-                    && entry.file_type().map_err(|e| e.to_string())?.is_dir()
-                {
-                    root = entry
-                        .file_name()
-                        .into_string()
-                        .map_err(|_| "non UTF8 sdist root")?;
+    let (staging, source_root) = service
+        .repository
+        .runtime
+        .blocking(move || -> Result<_, String> {
+            let mut root = if tar {
+                enrichment_core::archive::extract_tar_gz(
+                    bytes.as_ref(),
+                    staging.path(),
+                    &ArchivePolicy::default(),
+                )
+                .map_err(|e| e.to_string())?
+                .top_level
+                .unwrap_or_default()
+            } else {
+                python::archive::extract_zip(&bytes, staging.path(), &ArchivePolicy::default())?;
+                String::new()
+            };
+            if root.is_empty() && sdist {
+                let mut entries = std::fs::read_dir(staging.path()).map_err(|e| e.to_string())?;
+                if let Some(entry) = entries.next() {
+                    let entry = entry.map_err(|e| e.to_string())?;
+                    if entries.next().is_none()
+                        && entry.file_type().map_err(|e| e.to_string())?.is_dir()
+                    {
+                        root = entry
+                            .file_name()
+                            .into_string()
+                            .map_err(|_| "non UTF8 sdist root")?;
+                    }
                 }
             }
-        }
-        Ok((staging, root))
-    })
-    .await
-    .map_err(|e| e.to_string())??;
-    let input_root = staging.path().join(&source_root);
-    let result = produce(
+            Ok((staging, root))
+        })
+        .await
+        .map_err(|e| e.to_string())??;
+    let input_root =
+        super::source_tree::SourceTree::owned(staging.clone(), staging.path().join(&source_root))
+            .map_err(|e| e.to_string())?;
+    produce(
         service,
         request,
         &mut acq,
@@ -303,16 +290,11 @@ async fn acquire_inner(
             revision_tree: false,
         },
     )
-    .await;
-    tokio::task::spawn_blocking(move || staging.close())
-        .await
-        .map_err(|e| e.to_string())?
-        .map_err(|e| e.to_string())?;
-    result
+    .await
 }
 
 pub(super) struct Production<'a> {
-    pub(super) input_root: &'a Path,
+    pub(super) input_root: &'a super::source_tree::SourceTree,
     pub(super) source_root: &'a str,
     pub(super) file: &'a DistributionFile,
     pub(super) archive: &'a enrichment_core::evidence::Artifact,
@@ -337,45 +319,43 @@ pub(super) async fn produce(
         started,
         revision_tree,
     } = production;
-    let directory = input_root.to_owned();
-    let filename = file.filename.clone();
-    let digest = archive.sha256.clone();
-    let source_root = source_root.to_owned();
-    let selected_request = request.clone();
-    let version = release.key.version.clone();
-    let (mut distribution, warnings) = tokio::task::spawn_blocking(move || -> Result<_, String> {
-        let distribution =
-            python::archive::inventory(&directory, &filename, &digest, &source_root)?;
-        let warnings = if revision_tree {
-            Vec::new()
-        } else {
-            python::archive::validate_metadata(
-                &directory,
-                &distribution,
-                &selected_request,
-                &version,
-            )?
-        };
-        Ok((distribution, warnings))
-    })
+    let captured = enrichment_store::python_distribution::capture(
+        &service.repository.runtime,
+        input_root.to_path_buf(),
+        input_root.owner(),
+        &file.filename,
+        &archive.sha256,
+        source_root,
+    )
     .await
-    .map_err(|e| e.to_string())??;
+    .map_err(|error| error.to_string())?;
+    let warnings = if revision_tree {
+        Vec::new()
+    } else {
+        enrichment_store::python_distribution::admit(
+            &service.repository.runtime,
+            &captured.distribution,
+            captured.texts(),
+            request,
+            &release.key.version,
+        )
+        .await
+        .map_err(|error| error.to_string())?
+    };
+    let mut distribution = captured.distribution.clone();
     if revision_tree {
         acq.gaps.push(gap(EvidenceKind::DistributionSource,"Revision source layout is inferred statically; built/generated files, export exclusions, LFS and submodule contents are unverified"));
     }
     for warning in warnings {
         acq.gaps.push(gap(EvidenceKind::RegistryMetadata, warning));
     }
-    release.root_module = distribution.import_roots.first().cloned();
-    release.lib_name = release.root_module.clone();
-    let worker_request = WorkerRequest {
-        schema_version: python::worker::PROTOCOL.into(),
-        root: input_root.to_string_lossy().into_owned(),
-        files: distribution.files.clone(),
-        max_observations: 100000,
-        max_memory_bytes: 1024 * 1024 * 1024,
-        max_cpu_seconds: service.config.producers.python.worker_timeout_seconds,
-    };
+    *release = enrichment_store::python_distribution::release_binding(
+        &service.repository.runtime,
+        release,
+        &distribution.import_roots,
+    )
+    .await
+    .map_err(|error| error.to_string())?;
     let mut inputs = BTreeMap::new();
     let mut native = None;
     let mut worker_identity = None;
@@ -383,39 +363,52 @@ pub(super) async fn produce(
     let work = acq
         .work
         .ok_or("static extraction requires its durable acquisition job")?;
-    match run_worker(service, &worker_request, &work.cancel).await {
+    match run_worker(
+        service,
+        request,
+        &distribution.files,
+        archive,
+        work,
+        input_root,
+    )
+    .await
+    {
         Ok((facts, directory)) => {
             let source = directory.path().join("worker.arrow");
             let blobs = service.blobs.clone();
-            let artifact = tokio::task::spawn_blocking(move || {
-                let _directory = directory;
-                let retrieved_at = enrichment_core::native_time::AcquisitionTime::now()
-                    .map_err(std::io::Error::other)?;
-                blobs.put_stream(
-                    python::worker::MAX_BYTES,
-                    |output| {
-                        std::io::copy(&mut std::fs::File::open(source)?, output)?;
-                        Ok(())
-                    },
-                    |digest, bytes| {
-                        let mut artifact = enrichment_core::evidence::Artifact::describe(
-                            &[],
-                            ArtifactKind::Other,
-                            "application/vnd.apache.arrow.stream",
-                            "producer:griffe-static",
-                            retrieved_at,
-                        );
-                        artifact.artifact_id = enrichment_core::evidence::artifact_id_for(digest);
-                        artifact.sha256 = digest.into();
-                        artifact.size_bytes = bytes;
-                        artifact
-                    },
-                )
-            })
-            .await
-            .map_err(|e| e.to_string())?
-            .map_err(|e| e.to_string())?
-            .acquired;
+            let artifact = service
+                .repository
+                .runtime
+                .blocking(move || {
+                    let _directory = directory;
+                    let retrieved_at = enrichment_core::native_time::AcquisitionTime::now()
+                        .map_err(std::io::Error::other)?;
+                    blobs.put_stream(
+                        python::worker::MAX_BYTES,
+                        |output| {
+                            std::io::copy(&mut std::fs::File::open(source)?, output)?;
+                            Ok(())
+                        },
+                        |digest, bytes| {
+                            let mut artifact = enrichment_core::evidence::Artifact::describe(
+                                &[],
+                                ArtifactKind::Other,
+                                "application/vnd.apache.arrow.stream",
+                                "producer:griffe-static",
+                                retrieved_at,
+                            );
+                            artifact.artifact_id =
+                                enrichment_core::evidence::artifact_id_for(digest);
+                            artifact.sha256 = digest.into();
+                            artifact.size_bytes = bytes;
+                            artifact
+                        },
+                    )
+                })
+                .await
+                .map_err(|e| e.to_string())?
+                .map_err(|e| e.to_string())?
+                .acquired;
             let artifact = acq.remember_artifact(artifact).map_err(|e| e.to_string())?;
             inputs.insert("worker".into(), artifact.sha256.clone());
             distribution.worker_artifact_id = Some(artifact.artifact_id);
@@ -473,34 +466,27 @@ pub(super) async fn produce(
     }
 
     let source_directory = input_root.to_owned();
-    let files = tokio::task::spawn_blocking(move || python::archive::files(&source_directory))
+    let files = service
+        .repository
+        .runtime
+        .blocking(move || python::archive::files(&source_directory))
         .await
         .map_err(|e| e.to_string())??;
-    for path in files {
-        if !(path.ends_with(".py")
-            || path.ends_with(".pyi")
-            || path.ends_with(".md")
-            || path.ends_with(".rst")
-            || path.ends_with(".txt")
-            || path.ends_with("METADATA")
-            || path.ends_with("PKG-INFO")
-            || path.ends_with("pyproject.toml"))
-        {
-            continue;
-        }
-        let lower = path.to_ascii_lowercase();
-        let kind = if lower.contains("readme") {
-            ArtifactKind::Readme
-        } else if lower.contains("changelog") || lower.contains("changes") {
-            ArtifactKind::Changelog
-        } else {
-            ArtifactKind::SourceFile
-        };
+    let captures = enrichment_store::source_capture::select(
+        &service.repository.runtime,
+        files,
+        enrichment_store::source_capture::Family::Python,
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+    for capture in captures {
+        let path = capture.path;
         let Some(artifact) = acq
             .store_source_file(
-                input_root.join(&path),
-                kind,
-                "text/plain",
+                input_root.clone(),
+                path.clone(),
+                capture.artifact_kind,
+                capture.media_type,
                 format!("{}#{path}", archive.source_uri),
             )
             .await
@@ -508,18 +494,12 @@ pub(super) async fn produce(
         else {
             continue;
         };
-        inputs.insert(format!("python-source:{path}"), artifact.sha256.clone());
-        if matches!(kind, ArtifactKind::Readme | ArtifactKind::Changelog)
-            || lower.starts_with("examples/")
-        {
-            let fk = if kind == ArtifactKind::Changelog {
-                enrichment_core::evidence::FragmentKind::ChangelogSection
-            } else if lower.starts_with("examples/") {
-                enrichment_core::evidence::FragmentKind::Example
-            } else {
-                enrichment_core::evidence::FragmentKind::ReadmeSection
-            };
-            documents.file(path, fk, artifact, false)?;
+        inputs.insert(
+            capture.role.ok_or("native Python source role missing")?,
+            artifact.sha256.clone(),
+        );
+        if let Some(kind) = capture.fragment_kind {
+            documents.file(path, kind, artifact, false)?;
         }
     }
     acq.indexed.extend([
@@ -539,7 +519,7 @@ pub(super) async fn produce(
     {
         acq.indexed.insert(EvidenceKind::Stubs);
     }
-    inputs.extend(acq.semantic_inputs());
+    inputs.extend(acq.semantic_inputs().await?);
     let outcome = if acq.gaps.is_empty() {
         RunOutcome::Succeeded
     } else {
@@ -553,7 +533,8 @@ pub(super) async fn produce(
         started,
         outcome,
         run_gaps,
-    )?;
+    )
+    .await?;
     for kind in documents.kinds() {
         if kind == enrichment_core::evidence::FragmentKind::ChangelogSection {
             acq.indexed.insert(EvidenceKind::ReleaseNotes);
@@ -591,37 +572,35 @@ pub(super) async fn produce(
         gaps: acq.gaps.clone(),
         answered_from_cache: false,
     };
-    let coverage=Coverage{details:None,assessments: Vec::new(),scope:format!("Static contents of {} {} ({})",request.name,release.key.version,file.filename),indexed:acq.indexed.iter().map(|k|k.as_str().into()).collect(),missing:acq.gaps.iter().map(|g|g.kind.as_str().into()).collect(),limitations:vec!["Static source/stub declarations are not executed or typechecker observations; dependencies and namespace contributions are not complete environments.".into()]};
-    let freshness = Freshness {
-        registry_checked_at: Some(
-            enrichment_core::native_time::AcquisitionTime::now()
-                .map_err(|error| error.to_string())?,
-        ),
-        source_version_match: SourceVersionMatch::Exact,
-        latest_verified: !revision_tree && request.version.is_none(),
-    };
-    let partial = !acq.gaps.is_empty();
-    let summary = format!(
-        "{} {}: static distribution evidence",
-        request.name, release.key.version
-    );
-    let artifacts = acq
-        .artifacts
-        .iter()
-        .take(10)
-        .filter_map(|a| common::handle_for(a, "Distribution evidence".into()))
-        .collect::<Vec<_>>();
+    let presentation = enrichment_store::research_resolution::acquisition_presentation(
+        &service.repository.runtime,
+        &data,
+        &acq.indexed.iter().copied().collect::<Vec<_>>(),
+        Some(&file.filename),
+        None,
+    )
+    .await
+    .map_err(|error| error.to_string())?;
+    let freshness = enrichment_store::research_resolution::freshness(
+        &service.repository.runtime,
+        request,
+        SourceVersionMatch::Exact,
+        &acq.artifacts,
+    )
+    .await
+    .map_err(|error| error.to_string())?;
+
     let result = Research {
-        summary,
+        summary: presentation.summary,
         data: common::payload(&data),
-        coverage,
+        coverage: presentation.coverage,
         freshness,
         context_id: Some(context.context_id.clone()),
         snapshot_id: None,
         evidence: Vec::new(),
-        artifacts,
+        artifacts: presentation.artifacts,
     };
-    acq.delivery_template = Some(if partial {
+    acq.delivery_template = Some(if presentation.partial {
         result.partial()
     } else {
         result.ok()
@@ -673,67 +652,99 @@ pub(super) async fn produce(
 
 async fn run_worker(
     service: &Service,
-    request: &WorkerRequest,
-    cancel: &std::sync::atomic::AtomicBool,
+    request: &ResolveRequest,
+    files: &[python::WorkerFile],
+    archive: &enrichment_core::evidence::Artifact,
+    work: &super::resolve_job::Work,
+    source: &super::source_tree::SourceTree,
 ) -> Result<
     (
         enrichment_store::python_normalize::PythonFacts,
-        std::sync::Arc<tempfile::TempDir>,
+        std::sync::Arc<enrichment_store::PrivateDirectory>,
     ),
     String,
 > {
-    let cwd = service.paths.cache_root.join("workers");
-    std::fs::create_dir_all(&cwd).map_err(|e| e.to_string())?;
-    let directory = std::sync::Arc::new(
-        tempfile::Builder::new()
-            .prefix("python-arrow-")
-            .tempdir_in(&cwd)
-            .map_err(|e| e.to_string())?,
-    );
-    let mut output = tokio::fs::File::create(directory.path().join("worker.arrow"))
+    let parent = enrichment_store::native_effect::authorize()
         .await
         .map_err(|e| e.to_string())?;
-    let mut command = tokio::process::Command::new(&service.config.producers.python.worker_python);
-    command
-        .args(["-I", "-B", "-m", "enrichment_worker"])
-        .current_dir(&cwd)
-        .env_clear()
-        .env("PATH", std::env::var_os("PATH").unwrap_or_default())
-        .env("HOME", &cwd)
-        .env("TMPDIR", &cwd)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .kill_on_drop(true);
-    enrichment_store::native_effect::authorize()
+    let directory = service
+        .repository
+        .worker_directory()
         .await
         .map_err(|e| e.to_string())?;
-    let mut child = command
-        .spawn()
-        .map_err(|e| format!("service-owned Griffe worker unavailable: {e}"))?;
-    let bytes = serde_json::to_vec(request).map_err(|e| e.to_string())?;
+    let prepared = enrichment_store::static_worker::prepare(
+        parent,
+        &enrichment_store::static_worker::Source {
+            root: source
+                .to_str()
+                .ok_or("worker source path is not UTF-8")?
+                .into(),
+            files: files.to_vec(),
+            package: request.name.clone(),
+            artifact_id: archive.artifact_id.clone(),
+            artifact_sha256: archive.sha256.clone(),
+            output_root: directory
+                .path()
+                .to_str()
+                .ok_or("worker output path is not UTF-8")?
+                .into(),
+        },
+        source.owner(),
+        directory.clone(),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+    let launch = prepared.launch();
+    let request = &launch.request;
+    let measured = enrichment_core::json_output::measure(request).map_err(|e| e.to_string())?;
+    if measured > enrichment_core::execution::static_worker::REQUEST_BYTES {
+        return Err("static worker request exceeds transport bound".into());
+    }
+    let bytes = enrichment_core::json_output::JsonOutput::serialize(
+        &service
+            .repository
+            .runtime
+            .session()
+            .runtime_env()
+            .memory_pool,
+        request,
+    )
+    .map_err(|e| e.to_string())?;
+    let mut output_owner =
+        enrichment_store::static_worker::Output::create(&service.repository.runtime, &prepared)
+            .await
+            .map_err(|e| e.to_string())?;
+    let output = output_owner.file();
+    let mut owned = enrichment_store::static_worker::OwnedChild::spawn(
+        &service.repository.runtime,
+        &prepared,
+        (source.clone(), directory.clone(), work.lease.clone()),
+    )
+    .await
+    .map_err(|e| format!("service-owned Griffe worker unavailable: {e}"))?;
+    let child = owned.child();
     let mut stdin = child.stdin.take().ok_or("worker stdin unavailable")?;
     let mut stdout = child
         .stdout
         .take()
         .ok_or("worker stdout unavailable")?
-        .take(python::worker::MAX_BYTES + 1);
+        .take(launch.output_bytes + 1);
     let mut stderr = child
         .stderr
         .take()
         .ok_or("worker stderr unavailable")?
-        .take(16385);
+        .take(launch.stderr_bytes + 1);
     let mut log = Vec::new();
     let run = async {
         let (_, _, _, status) = tokio::try_join!(
             async {
-                stdin.write_all(&bytes).await?;
+                stdin.write_all(bytes.as_str().as_bytes()).await?;
                 drop(stdin);
                 Ok::<_, std::io::Error>(())
             },
             async {
-                let bytes = tokio::io::copy(&mut stdout, &mut output).await?;
-                if bytes > python::worker::MAX_BYTES {
+                let bytes = tokio::io::copy(&mut stdout, &mut *output).await?;
+                if bytes > launch.output_bytes {
                     return Err(std::io::Error::other(
                         "worker Arrow output exceeds byte budget",
                     ));
@@ -746,14 +757,15 @@ async fn run_worker(
         Ok::<_, std::io::Error>(status)
     };
     let status = tokio::select! {
-        result = tokio::time::timeout(Duration::from_secs(service.config.producers.python.worker_timeout_seconds), run) => {
+        result = tokio::time::timeout(Duration::from_secs(launch.deadline_seconds), run) => {
             match result {
                 Ok(Ok(status)) => Ok(status),
                 Ok(Err(e)) => Err(e.to_string()),
                 Err(_) => Err("static worker deadline exceeded".into()),
             }
         }
-        () = super::resolve_job::cancelled(cancel) => Err("static worker cancelled".into()),
+        () = super::resolve_job::cancelled(&work.cancel) => Err("static worker cancelled".into()),
+        error = prepared.revoked() => Err(format!("static worker authority revoked: {error}")),
     };
     let status = match status {
         Ok(status) => status,
@@ -770,8 +782,8 @@ async fn run_worker(
         }
     };
     if !status.success()
-        || output.metadata().await.map_err(|e| e.to_string())?.len() > python::worker::MAX_BYTES
-        || log.len() > 16384
+        || output.metadata().await.map_err(|e| e.to_string())?.len() > launch.output_bytes
+        || log.len() as u64 > launch.stderr_bytes
     {
         return Err(format!(
             "static worker failed ({status}): {}",
@@ -779,7 +791,7 @@ async fn run_worker(
         ));
     }
     output.sync_all().await.map_err(|e| e.to_string())?;
-    drop(output);
+    drop(output_owner);
     let facts = enrichment_store::python_normalize::PythonFacts::open(
         &service.repository.runtime,
         directory.clone(),
@@ -787,6 +799,7 @@ async fn run_worker(
     )
     .await
     .map_err(|e| e.to_string())?;
+    prepared.check().await.map_err(|e| e.to_string())?;
     service
         .python_worker_qualified
         .store(true, std::sync::atomic::Ordering::Relaxed);
@@ -801,8 +814,6 @@ async fn documentation_inventory(
     revalidate: bool,
     documents: &mut super::source_documents::SourceDocuments,
 ) -> Result<Vec<python::inventory::Entry>, String> {
-    use enrichment_core::evidence::FragmentKind;
-    use enrichment_core::wire::EvidenceClass;
     let base = Url::parse(documentation).map_err(|e| e.to_string())?;
     let url = base.join("objects.inv").map_err(|e| e.to_string())?;
     let fetched = service
@@ -825,11 +836,13 @@ async fn documentation_inventory(
         )
         .map_err(|e| e.to_string())?;
     let inventory = python::inventory::parse(&fetched.bytes, &base, 8 * 1024 * 1024, 50000)?;
-    let version_match = if inventory.version == version {
-        SourceVersionMatch::CompatibleClaimed
-    } else {
-        SourceVersionMatch::Unknown
-    };
+    let version_match = enrichment_store::documentation_plan::version_match(
+        &service.repository.runtime,
+        &inventory.version,
+        version,
+    )
+    .await
+    .map_err(|e| e.to_string())?;
     let mut accepted = Vec::new();
     for entry in inventory.entries {
         let target = Url::parse(&entry.uri).map_err(|e| e.to_string())?;
@@ -843,13 +856,11 @@ async fn documentation_inventory(
         accepted.push(entry);
     }
     // Follow a bounded set of navigation pages; never execute a documentation build.
-    let mut pages = BTreeSet::new();
-    for entry in accepted.iter().take(3) {
-        let mut target = Url::parse(&entry.uri).map_err(|e| e.to_string())?;
-        target.set_fragment(None);
-        if !pages.insert(target.to_string()) {
-            continue;
-        }
+    let pages = enrichment_store::documentation_plan::pages(&service.repository.runtime, &accepted)
+        .await
+        .map_err(|e| e.to_string())?;
+    for selected in pages {
+        let target = Url::parse(&selected.uri).map_err(|e| e.to_string())?;
         let page = match service
             .fetcher
             .get_with_revalidation(&target, None, revalidate)
@@ -864,21 +875,16 @@ async fn documentation_inventory(
         let page_artifact = acq
             .store(&page, ArtifactKind::Other, "text/html", target.as_str())
             .map_err(|e| e.to_string())?;
-        let mut fragment = enrichment_core::evidence::document::DocumentFact::new(
-            FragmentKind::DocText,
-            &entry.name,
-            &page_artifact.artifact_id,
-            enrichment_core::evidence::relational::Locator::WebDocument {
-                uri: entry.uri.clone(),
-                inventory_version: inventory.version.clone(),
-            },
-            text.chars().take(8000).collect(),
-            EvidenceClass::Declared,
-            "official-document",
-            "1",
-        )?;
-        fragment.source_version_match = Some(version_match);
-        fragment.source_uri = Some(page_artifact.source_uri);
+        let fragment = enrichment_store::documentation_plan::document(
+            &service.repository.runtime,
+            &selected,
+            &page_artifact,
+            text,
+            &inventory.version,
+            version_match,
+        )
+        .await
+        .map_err(|e| e.to_string())?;
         documents.declaration(fragment)?;
     }
     documents.inventory(

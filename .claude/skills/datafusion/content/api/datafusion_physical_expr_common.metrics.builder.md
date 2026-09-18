@@ -45,6 +45,9 @@ fn with_partition(self, partition: usize) -> Self
 fn with_type(self, metric_type: MetricType) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.builder.MetricBuilder.md).
+
+
 Structure for constructing metrics, counters, timers, etc.
 
 Note the use of `Cow<..>` is to avoid allocations in the common

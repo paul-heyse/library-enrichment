@@ -10,6 +10,9 @@ Crate `datafusion-expr` · 3 public items · structured records in [`model/dataf
 fn get_coerce_type_for_case_expression(then_types: &[arrow::datatypes::DataType], else_type: Option<&arrow::datatypes::DataType>) -> Option<arrow::datatypes::DataType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.type_coercion.other.get_coerce_type_for_case_expression.md).
+
+
 Find a common coerceable type for CASE THEN/ELSE result expressions.
 Returns the common data type for `then_types` and `else_type`.
 
@@ -26,6 +29,9 @@ common type (like UNION), not compared.
 fn get_coerce_type_for_case_when(when_types: &[arrow::datatypes::DataType], case_type: &arrow::datatypes::DataType) -> Option<arrow::datatypes::DataType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.type_coercion.other.get_coerce_type_for_case_when.md).
+
+
 Find a common coerceable type for `CASE expr WHEN val1 WHEN val2 ...`
 conditions. Returns the common type for `case_type` and all `when_types`.
 
@@ -41,6 +47,9 @@ equivalent to `expr = val`.
 ```rust
 fn get_coerce_type_for_list(expr_type: &arrow::datatypes::DataType, list_types: &[arrow::datatypes::DataType]) -> Option<arrow::datatypes::DataType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.type_coercion.other.get_coerce_type_for_list.md).
+
 
 Attempts to coerce the types of `list_types` to be comparable with the
 `expr_type` for IN list predicates.

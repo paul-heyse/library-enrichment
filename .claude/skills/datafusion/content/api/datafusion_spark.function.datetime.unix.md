@@ -31,6 +31,9 @@ fn signature(&self) -> &Signature
 fn simplify(&self, args: Vec<Expr>, info: &SimplifyContext) -> Result<ExprSimplifyResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.unix.SparkUnixDate.md).
+
+
 Returns the number of days since epoch (1970-01-01) for the given date.
 <https://spark.apache.org/docs/latest/api/sql/index.html#unix_date>
 
@@ -67,5 +70,8 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 fn simplify(&self, args: Vec<Expr>, info: &SimplifyContext) -> Result<ExprSimplifyResult>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.unix.SparkUnixTimestamp.md).
+
 
 ---

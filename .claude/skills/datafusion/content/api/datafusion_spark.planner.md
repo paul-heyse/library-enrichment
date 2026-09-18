@@ -21,4 +21,7 @@ fn plan_extract(&self, args: Vec<Expr>) -> datafusion_common::Result<PlannerResu
 fn plan_substring(&self, args: Vec<Expr>) -> datafusion_common::Result<PlannerResult<Vec<Expr>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.planner.SparkFunctionPlanner.md).
+
+
 ---

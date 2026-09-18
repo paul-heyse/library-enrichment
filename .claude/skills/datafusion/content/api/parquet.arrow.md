@@ -10,6 +10,9 @@ Crate `parquet` · 4 public items · structured records in [`model/parquet.arrow
 const ARROW_SCHEMA_META_KEY: &str = "ARROW:schema"
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.ARROW_SCHEMA_META_KEY.md).
+
+
 Schema metadata key used to store serialized Arrow schema
 
 The Arrow schema is encoded using the Arrow IPC format, and then base64
@@ -24,6 +27,9 @@ encoded. This is the same format used by arrow-cpp systems, such as pyarrow.
 ```rust
 const PARQUET_FIELD_ID_META_KEY: &str = "PARQUET:field_id"
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.PARQUET_FIELD_ID_META_KEY.md).
+
 
 The value of this metadata key, if present on [`Field::metadata`], will be used
 to populate [`BasicTypeInfo::id`]
@@ -40,6 +46,9 @@ to populate [`BasicTypeInfo::id`]
 ```rust
 fn parquet_column<'a>(parquet_schema: &schema::types::SchemaDescriptor, arrow_schema: &'a arrow_schema::Schema, name: &str) -> Option<(usize, &'a arrow_schema::FieldRef)>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.parquet_column.md).
+
 
 Lookups up the parquet column by name
 
@@ -69,6 +78,9 @@ fn none(len: usize) -> Self
 fn roots(schema: &SchemaDescriptor, indices: impl IntoIterator<Item = usize>) -> Self
 fn union(&mut self, other: &Self)
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.ProjectionMask.md).
+
 
 A [`ProjectionMask`] identifies a set of columns within a potentially nested schema to project
 

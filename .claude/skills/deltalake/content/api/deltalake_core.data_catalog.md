@@ -5,6 +5,7 @@ Crate `deltalake-core` · 3 public items · structured records in [`model/deltal
 ## DataCatalogError
 
 `enum` · `deltalake_core::data_catalog::DataCatalogError`
+[Full member contracts, output types and access classification](../operations/deltalake_core.data_catalog.DataCatalogError.md)
 
 Also reachable as `deltalake::DataCatalogError`, `deltalake::data_catalog::DataCatalogError`, `deltalake_core::DataCatalogError`
 
@@ -37,6 +38,7 @@ Error enum that represents a CatalogError.
 ## DataCatalog
 
 `trait` · `deltalake_core::data_catalog::DataCatalog`
+[Full member contracts, output types and access classification](../operations/deltalake_core.data_catalog.DataCatalog.md)
 
 Also reachable as `deltalake::DataCatalog`, `deltalake::data_catalog::DataCatalog`, `deltalake_core::DataCatalog`
 
@@ -62,6 +64,7 @@ Abstractions for data catalog for the Delta table. To add support for new cloud,
 ## DataCatalogResult
 
 `type_alias` · `deltalake_core::data_catalog::DataCatalogResult`
+[Full member contracts, output types and access classification](../operations/deltalake_core.data_catalog.DataCatalogResult.md)
 
 Also reachable as `deltalake::data_catalog::DataCatalogResult`
 

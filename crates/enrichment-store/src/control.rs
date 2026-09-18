@@ -2,6 +2,10 @@
 //!
 //! Native views expose the finite record families. Delta owns file membership, conflict
 //! checking and log durability; there is no application generation manifest or current pointer.
+mod admission;
+mod reconciliation;
+
+use crate::native_delta::LoadedTable;
 use crate::{
     native_delta::{DeltaStore, StorageContract, transaction_conflict},
     projection::catalog as projection,
@@ -18,7 +22,7 @@ use datafusion::{
     functions::core::expr_ext::FieldAccessor,
     prelude::{SessionContext, col, lit},
 };
-use deltalake::{DeltaTable, kernel::Transaction};
+use deltalake::kernel::Transaction;
 use enrichment_core::{
     evidence::catalog::{ComparisonPublication, JobPublication, SnapshotEntry, SnapshotSelection},
     identity::{Context, ContextId, Ecosystem, Environment, Release, ReleaseId, SnapshotId},
@@ -35,49 +39,14 @@ pub(crate) const MAX_DELTA_ROWS: usize = 1024;
 
 pub(crate) const CONDITIONAL_RULES: &[crate::native_catalog::SqlRule] = &[
     crate::native_catalog::SqlRule {
-        id: "claim_command_binding",
-        relation: "claims",
-        sql: "SELECT c.job_id FROM state.records.claims c LEFT ANTI JOIN state.records.commands d ON c.job_id=d.job_id AND c.job_key=d.job_key AND c.policy_id=d.policy_id LIMIT 1",
-    },
-    crate::native_catalog::SqlRule {
-        id: "projection_source_vector",
-        relation: "search_projections",
-        sql: "SELECT p.projection_id FROM state.records.search_projections p LEFT ANTI JOIN state.records.snapshots s ON p.snapshot_id=s.snapshot_id AND p.inputs=s.publication.tables LIMIT 1",
-    },
-    crate::native_catalog::SqlRule {
         id: "one_active_job_per_key",
         relation: "commands",
         sql: "SELECT c.job_key FROM state.records.commands c JOIN state.records.job_transitions t ON c.job_id=t.job_id LEFT JOIN state.records.claims x ON x.job_id=t.job_id WHERE t.state IN ('queued','running','cancel_requested') OR x.cleanup_state IN ('owned','unresolved') GROUP BY c.job_key HAVING count(*) > 1 LIMIT 1",
     },
     crate::native_catalog::SqlRule {
-        id: "job_transition_vocabulary",
-        relation: "job_transitions",
-        sql: "SELECT job_id FROM state.records.job_transitions WHERE state NOT IN ('queued','running','cancel_requested','succeeded','partial','failed','cancelled') LIMIT 1",
-    },
-    crate::native_catalog::SqlRule {
-        id: "claim_cleanup_vocabulary",
-        relation: "claims",
-        sql: "SELECT job_id FROM state.records.claims WHERE cleanup_state NOT IN ('owned','unresolved','settled') LIMIT 1",
-    },
-    crate::native_catalog::SqlRule {
-        id: "selection_snapshot_context",
-        relation: "selections",
-        sql: "SELECT s.context_id FROM state.records.selections s LEFT ANTI JOIN state.records.snapshots p ON s.snapshot_id = p.snapshot_id AND s.context_id = p.context_id LIMIT 1",
-    },
-    crate::native_catalog::SqlRule {
         id: "selection_generation_unique",
         relation: "selections",
         sql: "SELECT context_id FROM state.history.selections GROUP BY context_id, generation HAVING count(DISTINCT snapshot_id) > 1 LIMIT 1",
-    },
-    crate::native_catalog::SqlRule {
-        id: "comparison_before",
-        relation: "comparison_publications",
-        sql: "SELECT j.job_id FROM state.records.comparison_publications j LEFT ANTI JOIN state.records.snapshots s ON j.before_snapshot_id = s.snapshot_id AND j.before_context_id = s.context_id LIMIT 1",
-    },
-    crate::native_catalog::SqlRule {
-        id: "comparison_after",
-        relation: "comparison_publications",
-        sql: "SELECT j.job_id FROM state.records.comparison_publications j LEFT ANTI JOIN state.records.snapshots s ON j.after_snapshot_id = s.snapshot_id AND j.after_context_id = s.context_id LIMIT 1",
     },
     crate::native_catalog::SqlRule {
         id: "publication_kind_exclusive",
@@ -88,16 +57,6 @@ pub(crate) const CONDITIONAL_RULES: &[crate::native_catalog::SqlRule] = &[
         id: "comparison_package_scope",
         relation: "comparison_publications",
         sql: "SELECT j.job_id FROM state.records.comparison_publications j JOIN state.records.contexts b ON b.context_id = j.before_context_id JOIN state.records.contexts a ON a.context_id = j.after_context_id JOIN state.records.releases br ON br.release_id = b.release_id JOIN state.records.releases ar ON ar.release_id = a.release_id WHERE br.key.ecosystem != ar.key.ecosystem OR br.key.registry != ar.key.registry OR br.key.package != ar.key.package LIMIT 1",
-    },
-    crate::native_catalog::SqlRule {
-        id: "job_snapshot_context",
-        relation: "job_publications",
-        sql: "SELECT j.job_id FROM state.records.job_publications j LEFT ANTI JOIN state.records.snapshots s ON j.snapshot_id = s.snapshot_id AND j.context_id = s.context_id LIMIT 1",
-    },
-    crate::native_catalog::SqlRule {
-        id: "job_attempt_snapshot",
-        relation: "job_publications",
-        sql: "SELECT j.job_id FROM state.records.job_publications j LEFT ANTI JOIN state.records.attempts a ON j.snapshot_id = a.snapshot_id AND j.attempt_id = a.attempt_id LIMIT 1",
     },
     crate::native_catalog::SqlRule {
         id: "job_result_acquisition",
@@ -145,7 +104,7 @@ control_relations! {
     ArtifactReceipts = "artifact_receipts" => ("receipt_id", crate::artifact_catalog::schema(), crate::artifact_catalog::decode, None);
     RetainedResults = "retained_results" => ("result_artifact_id", crate::result_catalog::schema(), |_: &RecordBatch| Ok::<(), DataFusionError>(()), None);
     ExecutionRoots = "execution_roots" => ("root", crate::physical_ownership::schema(Self::ExecutionRoots), |_: &RecordBatch| Ok::<(), DataFusionError>(()), None);
-    PhysicalOwners = "physical_owners" => ("name", crate::physical_ownership::schema(Self::PhysicalOwners), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
+    PhysicalOwners = "physical_owners" => ("owner_id", crate::physical_ownership::schema(Self::PhysicalOwners), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
     StorageReservations = "storage_reservations" => ("reservation_id", crate::physical_ownership::schema(Self::StorageReservations), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
     RetainedCapsules = "retained_capsules" => ("key", crate::physical_ownership::schema(Self::RetainedCapsules), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
     RetentionRoots = "retention_roots" => ("root_id", crate::retention::schema(Self::RetentionRoots), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
@@ -169,19 +128,18 @@ pub struct ControlBatch {
     pub comparison: Option<ComparisonPublication>,
 }
 
+enrichment_core::native_struct! {
 /// Exact physical owner captured when the native command acquired its claim.
-#[derive(Debug, Clone)]
 pub struct PublicationFence {
-    pub owner: String,
-    pub fence: u64,
-}
+    owner: String => enrichment_core::native_union::Rule::NonEmpty,
+    fence: u64 => enrichment_core::native_union::Rule::Text,
+} }
 
-#[derive(Debug, Clone)]
-pub struct SelectionChange {
-    pub context_id: ContextId,
-    pub snapshot_id: SnapshotId,
-    pub expected_base: Option<SnapshotId>,
-}
+enrichment_core::native_struct! { pub struct SelectionChange {
+    context_id: ContextId => enrichment_core::native_union::Rule::Text,
+    snapshot_id: SnapshotId => enrichment_core::native_union::Rule::Text,
+    expected_base: Option<SnapshotId> => enrichment_core::native_union::Rule::Text,
+} }
 
 /// A stale candidate remains unpublished; native selection must be recomputed.
 #[derive(Debug)]
@@ -201,13 +159,14 @@ pub struct ControlSnapshot {
     pub(crate) delta: DeltaStore,
     version: u64,
     identity: String,
-    table_id: String,
-    contract_id: String,
+    source: Option<enrichment_core::delta_reference::DeltaVersionRef>,
     control: Arc<dyn TableProvider>,
     files: usize,
     lease: Option<Arc<File>>,
     retention: Option<crate::retention::RetentionStore>,
+    immutable: Option<Arc<crate::immutable_root::ImmutableRoot>>,
     views: Arc<tokio::sync::OnceCell<crate::native_catalog::Tables>>,
+    visible_views: Arc<tokio::sync::OnceCell<crate::native_catalog::Tables>>,
 }
 impl ControlSnapshot {
     /// Enroll dependencies before their provider/byte capture. Candidate admission
@@ -217,25 +176,34 @@ impl ControlSnapshot {
         owner: String,
         kind: crate::retention::ProtectionKind,
         dependencies: Vec<crate::retention::Dependency>,
+        roots: &[String],
     ) -> Result<crate::leases::ReadProtection> {
         if let Some(retention) = &self.retention {
             return Ok(crate::leases::ReadProtection::Durable(
-                retention.enroll(owner, kind, dependencies).await?,
+                retention
+                    .enroll_rooted(owner, kind, dependencies, roots)
+                    .await?,
             ));
         }
-        self.lease
-            .clone()
-            .map(crate::leases::ReadProtection::Root)
-            .ok_or_else(|| invalid("dependent read requires captured protection"))
-    }
-    pub(crate) fn retained_table(&self) -> crate::retention::TableVersion {
-        crate::retention::TableVersion {
-            table_uri: "control".into(),
-            table_id: self.table_id.clone(),
-            version: self.version,
-            contract_id: self.contract_id.clone(),
-            cohort_id: None,
+        if let Some(root) = &self.immutable {
+            return crate::leases::ReadProtection::immutable(
+                root.clone(),
+                dependencies,
+                self.delta.runtime.clone(),
+            );
         }
+        Err(invalid(
+            "dependent read requires durable or immutable-root protection",
+        ))
+    }
+    pub(crate) fn retained_table(&self) -> Result<crate::retention::TableSelection> {
+        Ok(crate::retention::TableSelection {
+            source: self
+                .source
+                .clone()
+                .ok_or_else(|| invalid("candidate has no captured Delta authority"))?,
+            row: None,
+        })
     }
 
     pub async fn search_projection(
@@ -427,13 +395,23 @@ impl ControlSnapshot {
         roots.extend(retained.iter().map(|record| {
             crate::result_catalog::retained_root(record, destination.generation() + 1)
         }));
-        input = input.union(pack_plan(Table::RetentionRoots, session.read_batch(<crate::retention::RetentionRoot as enrichment_core::native_union::NativeStruct>::batch(&roots)?)?)?)?;
-        let retained = session.read_batch(<enrichment_core::operation::results::RetainedResult as enrichment_core::native_union::NativeStruct>::batch(&retained)?)?;
+        input = input.union(pack_plan(Table::RetentionRoots, crate::native_catalog::batch(&session, "control", <crate::retention::RetentionRoot as enrichment_core::native_union::NativeStruct>::batch(&roots)?)?)?)?;
+        let retained = crate::native_catalog::batch(&session, "control", <enrichment_core::operation::results::RetainedResult as enrichment_core::native_union::NativeStruct>::batch(&retained)?)?;
         input = input.union(pack_plan(Table::RetainedResults, retained)?)?;
         // Materialize the selected native DAG once. Admission over the provider then reuses
         // the same immutable candidate rather than expanding recursive source plans for every
         // record family. An interrupted candidate remains unselected for native maintenance.
         let stage_name = format!("export_candidate_{}", uuid::Uuid::new_v4().simple());
+        let retention = crate::retention::RetentionStore::new(target.clone(), runtime.clone());
+        let obligation = retention
+            .create_obligation(
+                stage_name.clone(),
+                vec![crate::retention::Dependency::TableScope {
+                    table_uri: stage_name.clone(),
+                }],
+            )
+            .await?;
+        let destination = target.capture().await?;
         let stage = target
             .delta
             .create(&stage_name, &target.contract, false)
@@ -465,7 +443,9 @@ impl ControlSnapshot {
                 )],
             )
             .await?;
-        std::fs::remove_dir_all(data_root.join("delta").join(stage_name))?;
+        drop(candidate);
+        target.delta.remove_private_table(stage).await?;
+        retention.settle_removed(&obligation).await?;
         Ok(())
     }
 
@@ -487,6 +467,15 @@ impl ControlSnapshot {
     /// Native planning or unavailable input versions fail explicitly.
     pub async fn session(&self, runtime: &QueryRuntime) -> Result<SessionContext> {
         self.bind(runtime, false).await
+    }
+
+    /// Full committed facts for transition selection and admission. Public reads use
+    /// the visibility rules; a removal cannot erase its own reconciliation evidence.
+    pub(crate) async fn transition_session(
+        &self,
+        runtime: &QueryRuntime,
+    ) -> Result<SessionContext> {
+        self.bind(runtime, true).await
     }
 
     fn history(&self, runtime: &QueryRuntime) -> Result<crate::native_catalog::Tables> {
@@ -626,6 +615,13 @@ impl ControlSnapshot {
                 Ok::<_, DataFusionError>(views)
             })
             .await?;
+        let views = if include_history {
+            views
+        } else {
+            self.visible_views
+                .get_or_try_init(|| crate::root_removal::visible_records(runtime, views.clone()))
+                .await?
+        };
         let staging = runtime.session();
         let mut records = Tables::new();
         for (name, view) in views {
@@ -653,7 +649,7 @@ impl ControlSnapshot {
     pub async fn job_publication(
         &self,
         runtime: &QueryRuntime,
-        id: &str,
+        id: &enrichment_core::identity::JobId,
     ) -> Result<Option<JobPublication>> {
         let session = self.session(runtime).await?;
         one(
@@ -739,7 +735,7 @@ impl ControlSnapshot {
     pub async fn comparison_publication(
         &self,
         runtime: &QueryRuntime,
-        id: &str,
+        id: &enrichment_core::identity::JobId,
     ) -> Result<Option<ComparisonPublication>> {
         let session = self.session(runtime).await?;
         one(
@@ -913,43 +909,13 @@ impl ControlSnapshot {
         .ok_or_else(|| invalid("context environment missing"))?;
         Ok(Some((context, environment)))
     }
-
-    /// Direct derived contexts only, selected within this pinned generation. A large
-    /// alternatives set fails explicitly rather than choosing by age or insertion order.
-    pub async fn children(&self, runtime: &QueryRuntime, parent: &Context) -> Result<Vec<Context>> {
-        let session = self.session(runtime).await?;
-        let output = runtime
-            .execute_family(
-                session
-                    .table("state.records.contexts")
-                    .await?
-                    .filter(
-                        col("parent_context_id")
-                            .eq(parent.context_id.literal())
-                            .and(col("release_id").eq(parent.release_id.literal())),
-                    )?
-                    .sort(vec![col("context_id").sort(true, false)])?
-                    .limit(0, Some(65))?,
-                Some(crate::preparation::QueryFamily::Catalog(Table::Contexts)),
-            )
-            .await?;
-        if output.rows > 64 {
-            return Err(invalid(
-                "more than 64 direct derived contexts; select a context explicitly",
-            ));
-        }
-        let mut contexts = Vec::new();
-        for batch in output.batches {
-            contexts.extend(projection::contexts_from_batch(&batch)?);
-        }
-        Ok(contexts)
-    }
 }
 
 /// Native control transactions. Locks are not the durable concurrency authority.
 #[derive(Clone)]
 pub struct ControlStore {
     read_only: bool,
+    immutable: Option<Arc<crate::immutable_root::ImmutableRoot>>,
     root: PathBuf,
     runtime: QueryRuntime,
     delta: DeltaStore,
@@ -958,6 +924,7 @@ pub struct ControlStore {
 }
 impl ControlStore {
     pub(crate) fn require_write(&self) -> Result<()> {
+        crate::immutable_root::require_mutable(&self.root)?;
         if self.read_only {
             return Err(invalid("control catalog is read-only"));
         }
@@ -971,23 +938,35 @@ impl ControlStore {
     /// # Errors
     /// Invalid roots and storage setup failures are explicit.
     pub fn open(data_root: &Path, runtime: QueryRuntime) -> io::Result<Self> {
+        crate::immutable_root::require_mutable(data_root)?;
         std::fs::create_dir_all(data_root.join("delta/control"))?;
         crate::leases::initialize(data_root)?;
         Self::bind_root(data_root, runtime, false).map_err(io::Error::other)
     }
-    /// Open only existing target control state without creating paths.
+    /// Inspect existing control records without writes. Dependent artifact/result reads
+    /// require an ordinary durably enrolled catalog or an explicit immutable root.
     /// # Errors
     /// A missing target control table is an error.
-    pub fn read_only(data_root: &Path, runtime: QueryRuntime) -> io::Result<Self> {
+    pub fn inspect(data_root: &Path, runtime: QueryRuntime) -> io::Result<Self> {
         if !data_root.join("delta/control/_delta_log").is_dir() {
             return Err(io::Error::other("target Delta control table is absent"));
         }
         Self::bind_root(data_root, runtime, true).map_err(io::Error::other)
     }
+    pub fn immutable(
+        root: Arc<crate::immutable_root::ImmutableRoot>,
+        runtime: QueryRuntime,
+    ) -> io::Result<Self> {
+        root.validate()?;
+        let mut store = Self::inspect(root.root(), runtime)?;
+        store.immutable = Some(root);
+        Ok(store)
+    }
     fn bind_root(data_root: &Path, runtime: QueryRuntime, read_only: bool) -> Result<Self> {
         let root = data_root.canonicalize()?;
         Ok(Self {
             read_only,
+            immutable: None,
             delta: DeltaStore::new(&root.join("delta"), runtime.clone())?,
             root,
             runtime,
@@ -995,7 +974,10 @@ impl ControlStore {
             initialization: Arc::new(tokio::sync::Mutex::new(())),
         })
     }
-    async fn load(&self) -> Result<DeltaTable> {
+    async fn load(&self) -> Result<LoadedTable> {
+        if let Some(root) = &self.immutable {
+            root.validate()?;
+        }
         let _initialization = self.initialization.lock().await;
         if self.read_only {
             let table = self.delta.load("control", None).await?;
@@ -1042,25 +1024,46 @@ impl ControlStore {
     }
     async fn pin_table(
         &self,
-        table: &DeltaTable,
+        table: &LoadedTable,
         lease: Option<Arc<File>>,
     ) -> Result<Arc<ControlSnapshot>> {
-        let version = table
-            .version()
-            .ok_or_else(|| invalid("unloaded control table"))?;
-        let snapshot = table.snapshot().map_err(external)?;
+        let source = crate::native_delta::capture_version("control", table, &self.contract)?;
+        let version = source.version;
+        let protection = self
+            .immutable
+            .as_ref()
+            .map(|root| {
+                crate::leases::ReadProtection::immutable(
+                    root.clone(),
+                    vec![crate::retention::Dependency::Table {
+                        value: crate::retention::TableSelection {
+                            source: source.clone(),
+                            row: None,
+                        },
+                    }],
+                    self.runtime.clone(),
+                )
+            })
+            .transpose()?;
+        let control = self.delta.provider(table, &self.contract).await?;
+        let control = match protection {
+            Some(protection) => protection.provider(control, &self.runtime.session())?,
+            None => control,
+        };
+
         Ok(Arc::new(ControlSnapshot {
             delta: self.delta.clone(),
             version,
-            identity: format!("{}:{version}", snapshot.metadata().id()),
-            table_id: snapshot.metadata().id().into(),
-            contract_id: self.contract.identity().into(),
-            control: self.delta.provider(table, &self.contract).await?,
+            identity: format!("{}:{version}", source.table.table_id),
+            source: Some(source),
+            control,
             files: table.get_file_uris().map_err(external)?.count(),
             lease,
+            immutable: self.immutable.clone(),
             retention: (!self.read_only)
                 .then(|| crate::retention::RetentionStore::new(self.clone(), self.runtime.clone())),
             views: Arc::new(tokio::sync::OnceCell::new()),
+            visible_views: Arc::new(tokio::sync::OnceCell::new()),
         }))
     }
     fn candidate(
@@ -1073,21 +1076,24 @@ impl ControlStore {
             delta: self.delta.clone(),
             version,
             identity: format!("candidate:{version}"),
-            table_id: "candidate".into(),
-            contract_id: self.contract.identity().into(),
+            source: None,
             control: frame.into_view(),
             files: 0,
             lease,
             retention: None,
+            immutable: self.immutable.clone(),
             views: Arc::new(tokio::sync::OnceCell::new()),
+            visible_views: Arc::new(tokio::sync::OnceCell::new()),
         }
     }
     /// Validate a native candidate and publish its related control changes in one commit.
     /// # Errors
-    /// Invalid rules, stale transaction snapshots and native write failures do not publish.
+    /// Invalid rules and stale snapshots refuse publication. Unknown write acknowledgements
+    /// require a fresh complete durable-row proof; an unsuccessful proof preserves the error.
     pub async fn commit(&self, delta: ControlBatch) -> Result<CommitOutcome> {
         // No Delta-internal application rebase: each retry rebuilds all native preconditions
-        // against the newly captured snapshot. Non-conflict failures have unknown outcome.
+        // against the newly captured snapshot. Unknown acknowledgements first pass through
+        // the complete durable-row proof; unresolved non-conflict failures are not retried.
         for attempt in 0..16 {
             match self.commit_once(delta.clone()).await {
                 Err(error) if transaction_conflict(&error) && attempt < 15 => {
@@ -1110,75 +1116,27 @@ impl ControlStore {
             .checked_add(1)
             .ok_or_else(|| invalid("control version overflow"))?;
         let sequence = i64::try_from(version).map_err(external)?;
-        let mut transactions = Vec::new();
-        if let Some(publication) = &delta.publication {
-            if let Some(existing) = base
-                .job_publication(&self.runtime, &publication.job_id)
-                .await?
-            {
-                if existing != *publication {
-                    return Err(invalid("command identity already has a different result"));
-                }
+        let session = base.session(&self.runtime).await?;
+        let admitted = admission::check(&self.runtime, &session, &delta).await?;
+        match admitted.disposition {
+            admission::Disposition::Committed => {
                 return Ok(CommitOutcome::Committed {
                     generation: base.version,
                 });
             }
-            transactions.push(Transaction::new(
-                format!("job/{}", publication.job_id),
-                sequence,
-            ));
-        }
-        if let Some(comparison) = &delta.comparison {
-            if let Some(existing) = base
-                .comparison_publication(&self.runtime, &comparison.job_id)
-                .await?
-            {
-                if existing != *comparison {
-                    return Err(invalid(
-                        "comparison identity already has a different result",
-                    ));
-                }
-                return Ok(CommitOutcome::Committed {
-                    generation: base.version,
-                });
-            }
-            transactions.push(Transaction::new(
-                format!("job/{}", comparison.job_id),
-                sequence,
-            ));
-        }
-        if let Some(change) = &delta.selection {
-            let selected = base.current(&self.runtime, &change.context_id).await?;
-            if selected != change.expected_base && selected.as_ref() != Some(&change.snapshot_id) {
+            admission::Disposition::Conflict => {
                 return Ok(CommitOutcome::Conflict {
                     generation: base.version,
-                    current: selected,
+                    current: admitted.current,
                 });
             }
-            transactions.push(Transaction::new(
-                format!("context/{}", change.context_id),
-                sequence,
-            ));
+            admission::Disposition::Append => {}
         }
-        if let Some(job) = delta
-            .publication
-            .as_ref()
-            .map(|p| p.job_id.as_str())
-            .or_else(|| delta.comparison.as_ref().map(|p| p.job_id.as_str()))
-        {
-            let witness = delta
-                .publication_fence
-                .as_ref()
-                .ok_or_else(|| invalid("publication requires a captured native claim"))?;
-            let session = base.session(&self.runtime).await?;
-            let eligible=session.sql("SELECT c.job_id FROM state.records.claims c JOIN state.records.job_transitions t ON c.job_id=t.job_id WHERE c.job_id=$1 AND c.owner=$2 AND c.fence=$3 AND c.cleanup_state='owned' AND clock_instant(c.lease_expires_at)>now() AND t.state='running'").await?.with_param_values(vec![datafusion::common::ScalarValue::from(job),datafusion::common::ScalarValue::from(witness.owner.as_str()),datafusion::common::ScalarValue::UInt64(Some(witness.fence))])?;
-            if self.runtime.execute(eligible).await?.rows != 1 {
-                return Err(invalid(
-                    "publication owner is stale, cancelled, or terminal",
-                ));
-            }
-            transactions.push(Transaction::new(format!("claim/{job}"), sequence));
-        }
+        let transactions = admitted
+            .transactions
+            .into_iter()
+            .map(|key| Transaction::new(key, sequence))
+            .collect();
         let input = control_input(&self.runtime.session(), delta, version)?;
         let bounded = self.runtime.session();
         // The finite transition is at most 1024 rows. Execute its contribution DAG once,
@@ -1189,7 +1147,7 @@ impl ControlStore {
             .runtime
             .execute(input.limit(0, Some(MAX_DELTA_ROWS + 1))?)
             .await?;
-        let input = bounded.read_batches(retained.batches)?;
+        let input = crate::native_catalog::captured_batches(&bounded, "control", retained.batches)?;
         crate::native_catalog::work(&bounded, "control_command_input", input.clone().into_view())?;
         self.runtime.require_empty(bounded.sql("SELECT 'control_command' AS witness FROM control_command_input HAVING count(*)>1024").await?, "control_command_rows", "control_admission").await?;
         let current = self
@@ -1210,19 +1168,12 @@ impl ControlStore {
             &self.root,
             crate::publication_probe::Point::ControlCandidateValidated,
         )?;
-        let table = self
-            .delta
-            .append(table, &self.contract, input, transactions)
-            .await?;
+        let generation = self.append_control(table, input, transactions).await?;
         crate::publication_probe::hit(
             &self.root,
             crate::publication_probe::Point::ControlCommitAcknowledged,
         )?;
-        Ok(CommitOutcome::Committed {
-            generation: table
-                .version()
-                .ok_or_else(|| invalid("unloaded control result"))?,
-        })
+        Ok(CommitOutcome::Committed { generation })
     }
 
     /// Commit bounded typed operation rows against the exact snapshot that authorized them.
@@ -1260,13 +1211,11 @@ impl ControlStore {
             .into_iter()
             .map(|(table, batch)| pack_rows(table, batch))
             .collect::<Result<Vec<_>>>()?;
-        let input = self
-            .runtime
-            .session()
-            .read_batch(arrow::compute::concat_batches(
-                &control_schema()?,
-                &batches,
-            )?)?;
+        let input = crate::native_catalog::batch(
+            &self.runtime.session(),
+            "control",
+            arrow::compute::concat_batches(&control_schema()?, &batches)?,
+        )?;
         let current = self
             .runtime
             .session()
@@ -1282,10 +1231,8 @@ impl ControlStore {
             .await
             .map_err(|e| e.context("control candidate admission"))?;
         match self
-            .delta
-            .append(
+            .append_control(
                 table,
-                &self.contract,
                 input,
                 keys.into_iter()
                     .map(|key| Transaction::new(key, sequence))
@@ -1293,7 +1240,7 @@ impl ControlStore {
             )
             .await
         {
-            Ok(table) => Ok(table.version()),
+            Ok(generation) => Ok(Some(generation)),
             Err(error) if transaction_conflict(&error) => Ok(None),
             Err(error) => Err(error),
         }
@@ -1306,85 +1253,31 @@ impl ControlStore {
         if self.read_only {
             return Err(invalid("control table is read-only"));
         }
-        let lease = crate::leases::shared(&self.root)?;
         let retention = crate::retention::RetentionStore::new(self.clone(), self.runtime.clone());
-        let run = retention
-            .claim_maintenance(
-                "control".into(),
-                format!("compact/{}", uuid::Uuid::new_v4()),
-            )
-            .await?;
-        let preparation = async {
-            let table = self.load().await?;
-            let snapshot = table.snapshot().map_err(external)?;
-            let binding = crate::retention::TableVersion {
-                table_uri: "control".into(),
-                table_id: snapshot.metadata().id().into(),
-                version: snapshot.version(),
-                contract_id: self.contract.identity().into(),
-                cohort_id: None,
-            };
-            let decision = retention.maintenance_decision(&run, &binding).await?;
-            let state = Arc::new(self.runtime.session().state());
-            let properties = crate::native_policy::delta_writer_properties(
-                state.as_ref(),
-                Some(&self.contract.semantic_schema()),
-            )?;
-            Ok::<_, DataFusionError>((table, decision, state, properties))
-        }
-        .await;
-        let (table, decision, state, properties) = match preparation {
-            Ok(prepared) => prepared,
-            Err(error) => {
-                retention.finish_maintenance(&run, false).await?;
-                return Err(error);
-            }
-        };
-        let commit = deltalake::kernel::transaction::CommitProperties::default()
-            .with_max_retries(0)
-            .with_cleanup_expired_logs(Some(false));
-        let optimize = table
-            .optimize()
-            .with_writer_properties(properties)
-            .with_session_state(state)
-            .with_session_fallback_policy(
-                deltalake::delta_datafusion::SessionFallbackPolicy::RequireSessionState,
-            )
-            .with_commit_properties(commit);
-        // Preserve the distinction between a finished native operation returning an
-        // error and an interrupted task with an unknown physical/commit outcome.
-        let completed = self
-            .runtime
-            .native_write(async move {
-                let _lease = lease;
-                Ok(async {
-                    let (table, _) = optimize.await.map_err(external)?;
-                    deltalake::protocol::checkpoints::create_checkpoint(&table, None)
-                        .await
-                        .map_err(external)?;
-                    let version = table
-                        .version()
-                        .ok_or_else(|| invalid("unloaded control compaction result"))?;
-                    if decision.log_floor < version {
-                        deltalake::protocol::log_compaction::compact_logs(
-                            &table,
-                            decision.log_floor,
-                            version,
-                            None,
-                        )
-                        .await
-                        .map_err(external)?;
-                    }
-                    Ok::<_, DataFusionError>(version)
-                }
-                .await)
-            })
-            .await?;
-        retention
-            .finish_maintenance(&run, completed.is_ok())
-            .await?;
-        completed
+        self.delta
+            .compact("control", &self.contract, &retention)
+            .await
+            .map(|(version, _)| version)
     }
+
+    /// Reclaim unreferenced control data/history through native Delta maintenance.
+    pub async fn reclaim(&self) -> Result<crate::retention::Reclamation> {
+        self.require_write()?;
+        let retention = crate::retention::RetentionStore::new(self.clone(), self.runtime.clone());
+        self.delta
+            .reclaim("control", &self.contract, &retention)
+            .await
+    }
+
+    /// Operator maintenance for an exact registered table in this service namespace.
+    /// Policies and schemas come from the same native registry used by discovery.
+    pub async fn reclaim_table(&self, name: &str) -> Result<crate::retention::Reclamation> {
+        self.require_write()?;
+        let retention = crate::retention::RetentionStore::new(self.clone(), self.runtime.clone());
+        let contract = self.delta.current_contract(name).await?;
+        self.delta.reclaim(name, &contract, &retention).await
+    }
+
     async fn validate(&self, pin: &ControlSnapshot) -> Result<()> {
         let session = pin.bind(&self.runtime, true).await?;
         let mut invariants = crate::invariants::Invariants::default();
@@ -1407,14 +1300,16 @@ impl ControlStore {
             invariants.push(duplicates, "unique", table.name())?;
         }
         for table in Table::ALL {
-            use crate::native_catalog::RelationContract;
-            for rule in table.references() {
-                invariants.push(
-                    rule.violations(&session, table.reference(), table.key())
-                        .await?,
-                    rule.id,
-                    "catalog_admission",
-                )?;
+            for (rule, violations) in crate::field_admission::violations(
+                &session,
+                table.reference(),
+                table.schema()?.as_ref(),
+                table.key(),
+                crate::field_admission::ReferenceNamespace::Records,
+            )
+            .await?
+            {
+                invariants.push(violations, &rule, "catalog_admission")?;
             }
         }
         crate::attempt_plan::reference_rules(
@@ -1424,6 +1319,16 @@ impl ControlStore {
             "association_id",
         )
         .await?;
+        invariants.push(
+            crate::producer_run_plan::value_rules(
+                &session,
+                "state.records.attempts",
+                "association_id",
+            )
+            .await?,
+            "producer_run_contract",
+            "catalog_admission",
+        )?;
         for (table, key, column, nested) in [
             (
                 "releases",
@@ -1478,6 +1383,13 @@ impl ControlStore {
             "catalog_admission",
         )?;
         crate::search_projection::admission_rules(&mut invariants, &session).await?;
+        invariants.push(
+            crate::control_jobs::claim_identity_violations(
+                session.table("state.records.claims").await?,
+            )?,
+            "claim_grant_identity",
+            "catalog_admission",
+        )?;
         crate::retention::admission_rules(&mut invariants, &session).await?;
         crate::physical_ownership::capsule_admission(&mut invariants, &session).await?;
         for rule in CONDITIONAL_RULES {

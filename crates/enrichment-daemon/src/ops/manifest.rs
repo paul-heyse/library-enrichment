@@ -103,9 +103,9 @@ pub async fn manifest(service: &Service, request: ManifestRequest) -> Envelope {
         evidence: Vec::new(),
         artifacts: Vec::new(),
     };
-    if research.coverage.complete() {
-        research.ok()
-    } else {
-        research.partial()
+    match enrichment_store::coverage::complete(reader.runtime(), &research.coverage).await {
+        Ok(true) => research.ok(),
+        Ok(false) => research.partial(),
+        Err(error) => common::operation_error(&error, "manifest_coverage"),
     }
 }

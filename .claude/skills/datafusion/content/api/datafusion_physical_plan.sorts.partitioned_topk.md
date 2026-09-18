@@ -14,6 +14,9 @@ enum WindowFnKind
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.sorts.partitioned_topk.WindowFnKind.md).
+
+
 Which window function `PartitionedTopKExec` is optimizing.
 
 Different ranking functions have different per-partition retention rules:
@@ -67,6 +70,9 @@ fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, _: Replace
 fn required_input_distribution(&self) -> Vec<Distribution>
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md).
+
 
 Per-partition Top-K operator for window function queries.
 

@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 13 public items · structured records in [`m
 fn aggr_test_schema() -> arrow_schema::SchemaRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.aggr_test_schema.md).
+
+
 Get the schema for the aggregate_test_* csv files
 
 ---
@@ -21,6 +24,9 @@ Get the schema for the aggregate_test_* csv files
 ```rust
 fn assert_is_pending<'a, T>(fut: &mut std::pin::Pin<Box<dyn Future<Output = T> + Send + 'a>>)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.assert_is_pending.md).
+
 
 Asserts that given future is pending.
 
@@ -34,6 +40,9 @@ Asserts that given future is pending.
 fn build_table_i32(a: (&str, &Vec<i32>), b: (&str, &Vec<i32>), c: (&str, &Vec<i32>)) -> arrow::array::RecordBatch
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.build_table_i32.md).
+
+
 Returns record batch with 3 columns of i32 in memory
 
 ---
@@ -45,6 +54,9 @@ Returns record batch with 3 columns of i32 in memory
 ```rust
 fn build_table_i32_two_cols(a: (&str, &Vec<i32>), b: (&str, &Vec<i32>)) -> arrow::array::RecordBatch
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.build_table_i32_two_cols.md).
+
 
 Returns record batch with 2 columns of i32 in memory
 
@@ -58,6 +70,9 @@ Returns record batch with 2 columns of i32 in memory
 fn build_table_scan_i32(a: (&str, &Vec<i32>), b: (&str, &Vec<i32>), c: (&str, &Vec<i32>)) -> std::sync::Arc<dyn ExecutionPlan>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.build_table_scan_i32.md).
+
+
 Returns memory table scan wrapped around record batch with 3 columns of i32
 
 ---
@@ -69,6 +84,9 @@ Returns memory table scan wrapped around record batch with 3 columns of i32
 ```rust
 fn make_partition(sz: i32) -> arrow::array::RecordBatch
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.make_partition.md).
+
 
 Return a RecordBatch with a single Int32 array with values (0..sz) in a field named "i"
 
@@ -82,6 +100,9 @@ Return a RecordBatch with a single Int32 array with values (0..sz) in a field na
 fn make_partition_utf8(sz: i32) -> arrow::array::RecordBatch
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.make_partition_utf8.md).
+
+
 ---
 
 ## mem_exec
@@ -91,6 +112,9 @@ fn make_partition_utf8(sz: i32) -> arrow::array::RecordBatch
 ```rust
 fn mem_exec(partitions: usize) -> TestMemoryExec
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.mem_exec.md).
+
 
 Returns a `DataSourceExec` that scans `partitions` of 100 batches each
 
@@ -104,6 +128,9 @@ Returns a `DataSourceExec` that scans `partitions` of 100 batches each
 fn mem_exec_utf8(partitions: usize) -> TestMemoryExec
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.mem_exec_utf8.md).
+
+
 ---
 
 ## scan_partitioned
@@ -113,6 +140,9 @@ fn mem_exec_utf8(partitions: usize) -> TestMemoryExec
 ```rust
 fn scan_partitioned(partitions: usize) -> std::sync::Arc<dyn ExecutionPlan>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.scan_partitioned.md).
+
 
 Returns a `DataSourceExec` that scans `partitions` of 100 batches each
 
@@ -125,6 +155,9 @@ Returns a `DataSourceExec` that scans `partitions` of 100 batches each
 ```rust
 fn scan_partitioned_utf8(partitions: usize) -> std::sync::Arc<dyn ExecutionPlan>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.scan_partitioned_utf8.md).
+
 
 ---
 
@@ -176,6 +209,9 @@ fn statistics_from_inputs(&self, _input_stats: &[Arc<Statistics>], args: &Statis
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.TestMemoryExec.md).
+
+
 `TestMemoryExec` is a mock equivalent to [`MemorySourceConfig`] with [`ExecutionPlan`] implemented for testing.
 i.e. It has some but not all the functionality of [`MemorySourceConfig`].
 This implements an in-memory DataSource rather than explicitly implementing a trait.
@@ -212,5 +248,8 @@ fn new_with_batches(batches: Vec<RecordBatch>) -> Self
 fn execute(&self, _ctx: Arc<TaskContext>) -> SendableRecordBatchStream
 fn schema(&self) -> &SchemaRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.TestPartitionStream.md).
+
 
 ---

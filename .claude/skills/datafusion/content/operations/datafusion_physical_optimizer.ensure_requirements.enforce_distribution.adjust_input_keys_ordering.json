@@ -1,0 +1,118 @@
+[
+  {
+    "id": "d3f9f7d3e3d4722bc4823300",
+    "path": "datafusion_physical_optimizer::ensure_requirements::enforce_distribution::adjust_input_keys_ordering",
+    "name": "adjust_input_keys_ordering",
+    "owner": null,
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn adjust_input_keys_ordering(requirements: PlanWithKeyRequirements) -> datafusion_common::error::Result<datafusion_common::tree_node::Transformed<PlanWithKeyRequirements>>",
+    "docs": "When the physical planner creates the Joins, the ordering of join keys is from the original query.\nThat might not match with the output partitioning of the join node's children\nA Top-Down process will use this method to adjust children's output partitioning based on the parent key reordering requirements:\n\nExample:\n    TopJoin on (a, b, c)\n        bottom left join on(b, a, c)\n        bottom right join on(c, b, a)\n\n Will be adjusted to:\n    TopJoin on (a, b, c)\n        bottom left join on(a, b, c)\n        bottom right join on(a, b, c)\n\nExample:\n    TopJoin on (a, b, c)\n        Agg1 group by (b, a, c)\n        Agg2 group by (c, b, a)\n\nWill be adjusted to:\n    TopJoin on (a, b, c)\n         Projection(b, a, c)\n            Agg1 group by (a, b, c)\n         Projection(c, b, a)\n            Agg2 group by (a, b, c)\n\nFollowing is the explanation of the reordering process:\n\n1) If the current plan is Partitioned HashJoin, SortMergeJoin, check whether the requirements can be satisfied by adjusting join keys ordering:\n   Requirements can not be satisfied, clear the current requirements, generate new requirements(to pushdown) based on the current join keys, return the unchanged plan.\n   Requirements is already satisfied, clear the current requirements, generate new requirements(to pushdown) based on the current join keys, return the unchanged plan.\n   Requirements can be satisfied by adjusting keys ordering, clear the current requirements, generate new requirements(to pushdown) based on the adjusted join keys, return the changed plan.\n\n2) If the current plan is Aggregation, check whether the requirements can be satisfied by adjusting group by keys ordering:\n   Requirements can not be satisfied, clear all the requirements, return the unchanged plan.\n   Requirements is already satisfied, clear all the requirements, return the unchanged plan.\n   Requirements can be satisfied by adjusting keys ordering, clear all the requirements, return the changed plan.\n\n3) If the current plan is RepartitionExec, CoalescePartitionsExec or WindowAggExec, clear all the requirements, return the unchanged plan\n4) If the current plan is Projection, transform the requirements to the columns before the Projection and push down requirements\n5) For other types of operators, by default, pushdown the parent requirements to children.",
+    "span": {
+      "filename": "src/ensure_requirements/enforce_distribution.rs",
+      "begin": [
+        135,
+        1
+      ],
+      "end": [
+        275,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "requirements",
+              {
+                "resolved_path": {
+                  "path": "PlanWithKeyRequirements",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::error::Result",
+              "id": 63,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "datafusion_common::tree_node::Transformed",
+                          "id": 133,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "PlanWithKeyRequirements",
+                                      "id": 128,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "datafusion_physical_optimizer::ensure_requirements::enforce_distribution::PlanWithKeyRequirements",
+      "63": "datafusion_common::error::Result",
+      "133": "datafusion_common::tree_node::Transformed"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "132",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_optimizer.ensure_requirements.enforce_distribution.adjust_input_keys_ordering.md",
+    "record_file": "operations/datafusion_physical_optimizer.ensure_requirements.enforce_distribution.adjust_input_keys_ordering.json",
+    "anchor": "op-d3f9f7d3e3d4722bc4823300",
+    "aliases": [
+      "datafusion_physical_optimizer::enforce_distribution::adjust_input_keys_ordering"
+    ],
+    "resolved_doc_links": {}
+  }
+]

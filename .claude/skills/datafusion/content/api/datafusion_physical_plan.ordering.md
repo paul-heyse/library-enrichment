@@ -16,6 +16,9 @@ enum InputOrderMode
 
 **Derives**: Clone, Debug, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.ordering.InputOrderMode.md).
+
+
 Specifies how the input to an aggregation or window operator is ordered
 relative to their `GROUP BY` or  `PARTITION BY` expressions.
 

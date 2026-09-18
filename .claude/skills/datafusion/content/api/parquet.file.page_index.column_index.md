@@ -27,6 +27,9 @@ fn num_pages(&self) -> u64
 fn repetition_level_histogram(&self, idx: usize) -> Option<&[i64]>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.page_index.column_index.ColumnIndexMetaData.md).
+
+
 Parsed [`ColumnIndex`] information for a Parquet file.
 
 See [`ParquetColumnIndex`] for more information.
@@ -63,6 +66,9 @@ fn min_values_iter(&self) -> impl Iterator<Item = Option<&[u8]>>
 fn deref(&self) -> &Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.page_index.column_index.ByteArrayColumnIndex.md).
+
+
 Column index for byte arrays (fixed length and variable)
 
 ---
@@ -86,6 +92,9 @@ fn null_count(&self, idx: usize) -> Option<i64>
 fn num_pages(&self) -> u64
 fn repetition_level_histogram(&self, idx: usize) -> Option<&[i64]>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.page_index.column_index.ColumnIndex.md).
+
 
 Common bits of the column index
 
@@ -120,6 +129,9 @@ fn min_values_iter(&self) -> impl Iterator<Item = Option<&T>>
 fn deref(&self) -> &Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.page_index.column_index.PrimitiveColumnIndex.md).
+
+
 Column index for primitive types
 
 ---
@@ -144,6 +156,9 @@ trait ColumnIndexIterators
 fn max_values_iter(colidx: &ColumnIndexMetaData) -> impl Iterator<Item = Option<Self::Item>>
 fn min_values_iter(colidx: &ColumnIndexMetaData) -> impl Iterator<Item = Option<Self::Item>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.page_index.column_index.ColumnIndexIterators.md).
+
 
 Provides iterators over min and max values of a [`ColumnIndexMetaData`]
 

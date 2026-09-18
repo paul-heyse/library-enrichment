@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::bit_and`, `arrow::compute::kernels::aggregate
 fn bit_and<T>(array: &PrimitiveArray<T>) -> Option<T::Native> where T: ArrowNumericType, T::Native: BitAnd<Output = T::Native> + ArrowNativeTypeOp
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.bit_and.md).
+
+
 Returns the bitwise and of all non-null input values.
 
 Returns `None` if the array is empty or only contains null values.
@@ -27,6 +30,9 @@ Also reachable as `arrow::compute::bit_or`, `arrow::compute::kernels::aggregate:
 ```rust
 fn bit_or<T>(array: &PrimitiveArray<T>) -> Option<T::Native> where T: ArrowNumericType, T::Native: BitOr<Output = T::Native> + ArrowNativeTypeOp
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.bit_or.md).
+
 
 Returns the bitwise or of all non-null input values.
 
@@ -44,6 +50,9 @@ Also reachable as `arrow::compute::bit_xor`, `arrow::compute::kernels::aggregate
 fn bit_xor<T>(array: &PrimitiveArray<T>) -> Option<T::Native> where T: ArrowNumericType, T::Native: BitXor<Output = T::Native> + ArrowNativeTypeOp
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.bit_xor.md).
+
+
 Returns the bitwise xor of all non-null input values.
 
 Returns `None` if the array is empty or only contains null values.
@@ -59,6 +68,9 @@ Also reachable as `arrow::compute::bool_and`, `arrow::compute::kernels::aggregat
 ```rust
 fn bool_and(array: &BooleanArray) -> Option<bool>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.bool_and.md).
+
 
 Returns true if all non-null input values are true, otherwise false.
 
@@ -76,6 +88,9 @@ Also reachable as `arrow::compute::bool_or`, `arrow::compute::kernels::aggregate
 fn bool_or(array: &BooleanArray) -> Option<bool>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.bool_or.md).
+
+
 Returns true if any non-null input value is true, otherwise false.
 
 Returns `None` if the array is empty or only contains null values.
@@ -91,6 +106,9 @@ Also reachable as `arrow::compute::kernels::aggregate::max`, `arrow::compute::ma
 ```rust
 fn max<T: ArrowNumericType>(array: &PrimitiveArray<T>) -> Option<T::Native>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.max.md).
+
 
 Returns the maximum value in the array, according to the natural order.
 For floating point arrays any NaN values are considered to be greater than any other non-null value
@@ -116,6 +134,9 @@ Also reachable as `arrow::compute::kernels::aggregate::max_array`, `arrow::compu
 fn max_array<T: ArrowNumericType, A: ArrayAccessor<Item = T::Native>>(array: A) -> Option<T::Native>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.max_array.md).
+
+
 Returns the max of values in the array of `ArrowNumericType` type, or dictionary
 array with value of `ArrowNumericType` type.
 
@@ -131,6 +152,9 @@ Also reachable as `arrow::compute::kernels::aggregate::max_binary`, `arrow::comp
 fn max_binary<T: OffsetSizeTrait>(array: &GenericBinaryArray<T>) -> Option<&[u8]>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.max_binary.md).
+
+
 Returns the maximum value in the binary array, according to the natural order.
 
 ---
@@ -145,6 +169,9 @@ Also reachable as `arrow::compute::kernels::aggregate::max_binary_view`, `arrow:
 fn max_binary_view(array: &BinaryViewArray) -> Option<&[u8]>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.max_binary_view.md).
+
+
 Returns the maximum value in the binary view array, according to the natural order.
 
 ---
@@ -158,6 +185,9 @@ Also reachable as `arrow::compute::kernels::aggregate::max_boolean`, `arrow::com
 ```rust
 fn max_boolean(array: &BooleanArray) -> Option<bool>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.max_boolean.md).
+
 
 Returns the maximum value in the boolean array
 
@@ -181,6 +211,9 @@ Also reachable as `arrow::compute::kernels::aggregate::max_fixed_size_binary`, `
 fn max_fixed_size_binary(array: &FixedSizeBinaryArray) -> Option<&[u8]>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.max_fixed_size_binary.md).
+
+
 Returns the maximum value in the fixed size binary array, according to the natural order.
 
 ---
@@ -194,6 +227,9 @@ Also reachable as `arrow::compute::kernels::aggregate::max_string`, `arrow::comp
 ```rust
 fn max_string<T: OffsetSizeTrait>(array: &GenericStringArray<T>) -> Option<&str>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.max_string.md).
+
 
 Returns the maximum value in the string array, according to the natural order.
 
@@ -209,6 +245,9 @@ Also reachable as `arrow::compute::kernels::aggregate::max_string_view`, `arrow:
 fn max_string_view(array: &StringViewArray) -> Option<&str>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.max_string_view.md).
+
+
 Returns the maximum value in the string view array, according to the natural order.
 
 ---
@@ -222,6 +261,9 @@ Also reachable as `arrow::compute::kernels::aggregate::min`, `arrow::compute::mi
 ```rust
 fn min<T: ArrowNumericType>(array: &PrimitiveArray<T>) -> Option<T::Native>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.min.md).
+
 
 Returns the minimum value in the array, according to the natural order.
 For floating point arrays any NaN values are considered to be greater than any other non-null value
@@ -247,6 +289,9 @@ Also reachable as `arrow::compute::kernels::aggregate::min_array`, `arrow::compu
 fn min_array<T: ArrowNumericType, A: ArrayAccessor<Item = T::Native>>(array: A) -> Option<T::Native>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.min_array.md).
+
+
 Returns the min of values in the array of `ArrowNumericType` type, or dictionary
 array with value of `ArrowNumericType` type.
 
@@ -262,6 +307,9 @@ Also reachable as `arrow::compute::kernels::aggregate::min_binary`, `arrow::comp
 fn min_binary<T: OffsetSizeTrait>(array: &GenericBinaryArray<T>) -> Option<&[u8]>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.min_binary.md).
+
+
 Returns the minimum value in the binary array, according to the natural order.
 
 ---
@@ -276,6 +324,9 @@ Also reachable as `arrow::compute::kernels::aggregate::min_binary_view`, `arrow:
 fn min_binary_view(array: &BinaryViewArray) -> Option<&[u8]>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.min_binary_view.md).
+
+
 Returns the minimum value in the binary view array, according to the natural order.
 
 ---
@@ -289,6 +340,9 @@ Also reachable as `arrow::compute::kernels::aggregate::min_boolean`, `arrow::com
 ```rust
 fn min_boolean(array: &BooleanArray) -> Option<bool>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.min_boolean.md).
+
 
 Returns the minimum value in the boolean array.
 
@@ -312,6 +366,9 @@ Also reachable as `arrow::compute::kernels::aggregate::min_fixed_size_binary`, `
 fn min_fixed_size_binary(array: &FixedSizeBinaryArray) -> Option<&[u8]>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.min_fixed_size_binary.md).
+
+
 Returns the minimum value in the fixed size binary array, according to the natural order.
 
 ---
@@ -325,6 +382,9 @@ Also reachable as `arrow::compute::kernels::aggregate::min_string`, `arrow::comp
 ```rust
 fn min_string<T: OffsetSizeTrait>(array: &GenericStringArray<T>) -> Option<&str>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.min_string.md).
+
 
 Returns the minimum value in the string array, according to the natural order.
 
@@ -340,6 +400,9 @@ Also reachable as `arrow::compute::kernels::aggregate::min_string_view`, `arrow:
 fn min_string_view(array: &StringViewArray) -> Option<&str>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.min_string_view.md).
+
+
 Returns the minimum value in the string view array, according to the natural order.
 
 ---
@@ -353,6 +416,9 @@ Also reachable as `arrow::compute::kernels::aggregate::product`, `arrow::compute
 ```rust
 fn product<T: ArrowNumericType>(array: &PrimitiveArray<T>) -> Option<T::Native>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.product.md).
+
 
 Returns the product of values in the primitive array.
 
@@ -373,6 +439,9 @@ Also reachable as `arrow::compute::kernels::aggregate::product_checked`, `arrow:
 fn product_checked<T: ArrowNumericType>(array: &PrimitiveArray<T>) -> Result<Option<T::Native>, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.product_checked.md).
+
+
 Returns the product of values in the primitive array.
 
 Returns `Ok(None)` if the array is empty or only contains null values.
@@ -391,6 +460,9 @@ Also reachable as `arrow::compute::kernels::aggregate::sum`, `arrow::compute::su
 ```rust
 fn sum<T: ArrowNumericType>(array: &PrimitiveArray<T>) -> Option<T::Native>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.sum.md).
+
 
 Returns the sum of values in the primitive array.
 
@@ -411,6 +483,9 @@ Also reachable as `arrow::compute::kernels::aggregate::sum_array`, `arrow::compu
 fn sum_array<T: ArrowNumericType, A: ArrayAccessor<Item = T::Native>>(array: A) -> Option<T::Native>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.sum_array.md).
+
+
 Returns the sum of values in the array.
 
 This doesn't detect overflow. Once overflowing, the result will wrap around.
@@ -427,6 +502,9 @@ Also reachable as `arrow::compute::kernels::aggregate::sum_array_checked`, `arro
 ```rust
 fn sum_array_checked<T: ArrowNumericType, A: ArrayAccessor<Item = T::Native>>(array: A) -> Result<Option<T::Native>, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.sum_array_checked.md).
+
 
 Returns the sum of values in the array.
 
@@ -446,6 +524,9 @@ Also reachable as `arrow::compute::kernels::aggregate::sum_checked`, `arrow::com
 ```rust
 fn sum_checked<T: ArrowNumericType>(array: &PrimitiveArray<T>) -> Result<Option<T::Native>, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.aggregate.sum_checked.md).
+
 
 Returns the sum of values in the primitive array.
 

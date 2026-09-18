@@ -5,6 +5,7 @@ Crate `deltalake-core` · 16 public items · structured records in [`model/delta
 ## IsolationLevel
 
 `enum` · `deltalake_core::kernel::models::actions::IsolationLevel`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.IsolationLevel.md)
 
 Also reachable as `deltalake::kernel::IsolationLevel`, `deltalake::kernel::models::IsolationLevel`, `deltalake_core::kernel::IsolationLevel`, `deltalake_core::kernel::models::IsolationLevel`
 
@@ -49,6 +50,7 @@ The isolation level applied during transaction
 ## StorageType
 
 `enum` · `deltalake_core::kernel::models::actions::StorageType`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.StorageType.md)
 
 Also reachable as `deltalake::kernel::StorageType`, `deltalake::kernel::models::StorageType`, `deltalake_core::kernel::StorageType`, `deltalake_core::kernel::models::StorageType`
 
@@ -99,6 +101,7 @@ Storage type of deletion vector
 ## TableFeatures
 
 `enum` · `deltalake_core::kernel::models::actions::TableFeatures`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.TableFeatures.md)
 
 Also reachable as `deltalake::kernel::TableFeatures`, `deltalake::kernel::models::TableFeatures`, `deltalake_core::kernel::TableFeatures`, `deltalake_core::kernel::models::TableFeatures`
 
@@ -155,6 +158,7 @@ High level table features
 ## contains_timestamp_nanos
 
 `function` · `deltalake_core::kernel::models::actions::contains_timestamp_nanos`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.contains_timestamp_nanos.md)
 
 Also reachable as `deltalake::kernel::contains_timestamp_nanos`, `deltalake::kernel::models::contains_timestamp_nanos`, `deltalake_core::kernel::contains_timestamp_nanos`, `deltalake_core::kernel::models::contains_timestamp_nanos`
 
@@ -171,6 +175,7 @@ field including nested fields. Both primitive types require the same
 ## contains_timestampntz
 
 `function` · `deltalake_core::kernel::models::actions::contains_timestampntz`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.contains_timestampntz.md)
 
 Also reachable as `deltalake::kernel::contains_timestampntz`, `deltalake::kernel::models::contains_timestampntz`, `deltalake_core::kernel::contains_timestampntz`, `deltalake_core::kernel::models::contains_timestampntz`
 
@@ -185,6 +190,7 @@ checks if table contains timestamp_ntz in any field including nested fields.
 ## new_metadata
 
 `function` · `deltalake_core::kernel::models::actions::new_metadata`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.new_metadata.md)
 
 Also reachable as `deltalake::kernel::models::new_metadata`, `deltalake::kernel::new_metadata`, `deltalake_core::kernel::models::new_metadata`, `deltalake_core::kernel::new_metadata`
 
@@ -204,6 +210,7 @@ Upstream tracked here: <https://github.com/delta-io/delta-kernel-rs/issues/1055>
 ## Add
 
 `struct` · `deltalake_core::kernel::models::actions::Add`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.Add.md)
 
 Also reachable as `deltalake::kernel::Add`, `deltalake::kernel::models::Add`, `deltalake_core::kernel::Add`, `deltalake_core::kernel::models::Add`
 
@@ -252,6 +259,7 @@ Defines an add action
 ## AddCDCFile
 
 `struct` · `deltalake_core::kernel::models::actions::AddCDCFile`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.AddCDCFile.md)
 
 Also reachable as `deltalake::kernel::AddCDCFile`, `deltalake::kernel::models::AddCDCFile`, `deltalake_core::kernel::AddCDCFile`, `deltalake_core::kernel::models::AddCDCFile`
 
@@ -293,6 +301,7 @@ Delta AddCDCFile action that describes a parquet CDC data file.
 ## CheckpointMetadata
 
 `struct` · `deltalake_core::kernel::models::actions::CheckpointMetadata`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.CheckpointMetadata.md)
 
 Also reachable as `deltalake::kernel::CheckpointMetadata`, `deltalake::kernel::models::CheckpointMetadata`, `deltalake_core::kernel::CheckpointMetadata`, `deltalake_core::kernel::models::CheckpointMetadata`
 
@@ -325,6 +334,7 @@ This action is only allowed in checkpoints following V2 spec. It describes the d
 ## CommitInfo
 
 `struct` · `deltalake_core::kernel::models::actions::CommitInfo`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.CommitInfo.md)
 
 Also reachable as `deltalake::kernel::CommitInfo`, `deltalake::kernel::models::CommitInfo`, `deltalake_core::kernel::CommitInfo`, `deltalake_core::kernel::models::CommitInfo`
 
@@ -359,6 +369,7 @@ allow us to be more permissive in commit conflict resolution.
 ## DeletionVectorDescriptor
 
 `struct` · `deltalake_core::kernel::models::actions::DeletionVectorDescriptor`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.DeletionVectorDescriptor.md)
 
 Also reachable as `deltalake::kernel::DeletionVectorDescriptor`, `deltalake::kernel::models::DeletionVectorDescriptor`, `deltalake_core::kernel::DeletionVectorDescriptor`, `deltalake_core::kernel::models::DeletionVectorDescriptor`
 
@@ -397,6 +408,7 @@ Defines a deletion vector
 ## DomainMetadata
 
 `struct` · `deltalake_core::kernel::models::actions::DomainMetadata`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.DomainMetadata.md)
 
 Also reachable as `deltalake::kernel::DomainMetadata`, `deltalake::kernel::models::DomainMetadata`, `deltalake_core::kernel::DomainMetadata`, `deltalake_core::kernel::models::DomainMetadata`
 
@@ -429,6 +441,7 @@ The domain metadata action contains a configuration (string) for a named metadat
 ## Remove
 
 `struct` · `deltalake_core::kernel::models::actions::Remove`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.Remove.md)
 
 Also reachable as `deltalake::kernel::Remove`, `deltalake::kernel::models::Remove`, `deltalake_core::kernel::Remove`, `deltalake_core::kernel::models::Remove`
 
@@ -477,6 +490,7 @@ Represents a tombstone (deleted file) in the Delta log.
 ## Sidecar
 
 `struct` · `deltalake_core::kernel::models::actions::Sidecar`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.Sidecar.md)
 
 Also reachable as `deltalake::kernel::Sidecar`, `deltalake::kernel::models::Sidecar`, `deltalake_core::kernel::Sidecar`, `deltalake_core::kernel::models::Sidecar`
 
@@ -510,6 +524,7 @@ This action is only allowed in checkpoints following V2 spec.
 ## Transaction
 
 `struct` · `deltalake_core::kernel::models::actions::Transaction`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.Transaction.md)
 
 Also reachable as `deltalake::kernel::Transaction`, `deltalake::kernel::models::Transaction`, `deltalake_core::kernel::Transaction`, `deltalake_core::kernel::models::Transaction`
 
@@ -550,6 +565,7 @@ enable idempotency.
 ## MetadataExt
 
 `trait` · `deltalake_core::kernel::models::actions::MetadataExt`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.actions.MetadataExt.md)
 
 Also reachable as `deltalake::kernel::MetadataExt`, `deltalake::kernel::models::MetadataExt`, `deltalake_core::kernel::MetadataExt`, `deltalake_core::kernel::models::MetadataExt`
 

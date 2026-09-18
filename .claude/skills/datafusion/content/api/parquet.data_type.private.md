@@ -26,6 +26,9 @@ fn skip(decoder: &mut PlainDecoderDetails, num_values: usize) -> Result<usize>
 fn variable_length_bytes(_: &[Self]) -> Option<i64>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.data_type.private.ParquetValueType.md).
+
+
 Sealed trait to start to remove specialisation from implementations
 
 This is done to force the associated value type to be unimplementable outside of this

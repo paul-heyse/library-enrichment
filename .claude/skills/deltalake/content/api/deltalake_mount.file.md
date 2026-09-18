@@ -5,6 +5,7 @@ Crate `deltalake-mount` · 1 public items · structured records in [`model/delta
 ## LocalFileSystemError
 
 `enum` · `deltalake_mount::file::LocalFileSystemError`
+[Full member contracts, output types and access classification](../operations/deltalake_mount.file.LocalFileSystemError.md)
 
 ```rust
 enum LocalFileSystemError

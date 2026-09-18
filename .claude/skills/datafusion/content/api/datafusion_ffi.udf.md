@@ -28,6 +28,9 @@ fn from(udf: Arc<ScalarUDF>) -> Self
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udf.FFI_ScalarUDF.md).
+
+
 A stable struct for sharing a [`ScalarUDF`] across FFI boundaries.
 
 ---
@@ -60,6 +63,9 @@ fn signature(&self) -> &Signature
 fn with_updated_config(&self, config: &ConfigOptions) -> Option<ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udf.ForeignScalarUDF.md).
+
+
 This struct is used to access an UDF provided by a foreign
 library across a FFI boundary.
 
@@ -78,5 +84,8 @@ struct ScalarUDFPrivateData
 ```
 
 **Fields**: `udf`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.udf.ScalarUDFPrivateData.md).
+
 
 ---

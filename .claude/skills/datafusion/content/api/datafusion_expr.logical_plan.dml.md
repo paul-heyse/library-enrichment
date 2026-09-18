@@ -30,6 +30,9 @@ fn name(&self) -> &str
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.dml.InsertOp.md).
+
+
 ---
 
 ## MergeIntoAction
@@ -45,6 +48,9 @@ enum MergeIntoAction
 **Variants**: `Update`, `Insert`, `Delete`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.dml.MergeIntoAction.md).
+
 
 The action for a single WHEN clause.
 
@@ -78,6 +84,9 @@ fn is_not_matched_by_target(&self) -> bool
 ```rust
 fn from(kind: protobuf::merge_into_clause_node::Kind) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.dml.MergeIntoClauseKind.md).
+
 
 Which rows a MERGE WHEN clause applies to.
 
@@ -122,6 +131,9 @@ fn name(&self) -> &str
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.dml.WriteOp.md).
+
+
 The type of DML operation to perform.
 
 See [`DmlStatement`] for more details.
@@ -151,6 +163,9 @@ struct CopyTo
 fn new(input: Arc<LogicalPlan>, output_url: String, partition_by: Vec<String>, file_type: Arc<dyn FileType>, options: HashMap<String, String>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.dml.CopyTo.md).
+
+
 Operator that copies the contents of a database to file(s)
 
 ---
@@ -175,6 +190,9 @@ struct DmlStatement
 fn name(&self) -> &str
 fn new(table_name: TableReference, target: Arc<dyn TableSource>, op: WriteOp, input: Arc<LogicalPlan>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.dml.DmlStatement.md).
+
 
 Modifies the content of a database
 
@@ -215,6 +233,9 @@ struct MergeIntoClause
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.dml.MergeIntoClause.md).
+
+
 A single WHEN clause within a MERGE INTO statement.
 
 ---
@@ -239,6 +260,9 @@ struct MergeIntoOp
 fn exprs(&self) -> Vec<&Expr>
 fn with_new_exprs(&self, exprs: Vec<Expr>) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.dml.MergeIntoOp.md).
+
 
 Describes a MERGE INTO operation's parameters.
 

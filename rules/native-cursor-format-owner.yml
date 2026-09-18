@@ -1,0 +1,14 @@
+id: native-cursor-format-owner
+language: Rust
+severity: error
+message: Continuations use the shared bounded cursor codec and declared native witnesses.
+files:
+  - crates/enrichment-core/src/search/mod.rs
+  - crates/enrichment-core/src/search/page.rs
+  - crates/enrichment-core/src/search/row_page.rs
+  - crates/enrichment-core/src/compare/page.rs
+rule:
+  any:
+    - pattern: serde_json::to_vec($VALUE)
+    - pattern: serde_json::from_slice($VALUE)
+note: One prefix/escaped-byte/hex bound lives in native_cursor.rs. This source-shape check does not establish selection or snapshot witness correctness.

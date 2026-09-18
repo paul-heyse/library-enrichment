@@ -19,6 +19,9 @@ fn from(v: GenericBinaryArray<OffsetSize>) -> Self
 fn from(v: GenericListArray<OffsetSize>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.string_array.GenericStringArray.md).
+
+
 A [`GenericByteArray`] for storing `str`
 
 ---
@@ -30,6 +33,9 @@ A [`GenericByteArray`] for storing `str`
 ```rust
 type LargeStringArray = GenericStringArray<i64>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.string_array.LargeStringArray.md).
+
 
 A [`GenericStringArray`] of `str` using `i64` offsets
 
@@ -66,6 +72,9 @@ See [`GenericByteArray`] for more information and examples
 ```rust
 type StringArray = GenericStringArray<i32>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.string_array.StringArray.md).
+
 
 A [`GenericStringArray`] of `str` using `i32` offsets
 

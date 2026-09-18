@@ -23,6 +23,9 @@ fn propagate_statistics(&mut self, given_stats: Distribution) -> Result<Propagat
 fn try_new(expr: Arc<dyn PhysicalExpr>, schema: &Schema) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.statistics.stats_solver.ExprStatisticsGraph.md).
+
+
 This object implements a directed acyclic expression graph (DAEG) that
 is used to compute statistics/distributions for expressions hierarchically.
 
@@ -46,6 +49,9 @@ struct ExprStatisticsGraphNode
 fn distribution(&self) -> &Distribution
 fn make_node(node: &ExprTreeNode<NodeIndex>, schema: &Schema) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.statistics.stats_solver.ExprStatisticsGraphNode.md).
+
 
 This is a node in the DAEG; it encapsulates a reference to the actual
 [`PhysicalExpr`] as well as its statistics/distribution.

@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## INSTANCE
 
 `static` · `deltalake_core::kernel::transaction::protocol::INSTANCE`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.protocol.INSTANCE.md)
 
 Also reachable as `deltalake::kernel::transaction::PROTOCOL`, `deltalake_core::kernel::transaction::PROTOCOL`
 
@@ -25,6 +26,7 @@ resulting version support is determined by the supported table feature set.
 ## ProtocolChecker
 
 `struct` · `deltalake_core::kernel::transaction::protocol::ProtocolChecker`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.transaction.protocol.ProtocolChecker.md)
 
 ```rust
 struct ProtocolChecker

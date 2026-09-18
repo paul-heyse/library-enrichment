@@ -25,6 +25,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use super::Runner;
+use enrichment_core::identity::PhysicalOwnerId;
 
 /// Whether new execution work may be admitted.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -70,11 +71,28 @@ struct Outstanding {
 #[derive(Debug)]
 pub struct Lease {
     _permit: tokio::sync::OwnedSemaphorePermit,
-    active: Mutex<Option<String>>,
+    active: Mutex<Option<PhysicalOwnerId>>,
     retained_locks: Mutex<Vec<std::fs::File>>,
+    input_readers: tokio::sync::watch::Sender<usize>,
+}
+
+/// A physical blocking reader retains its original permit and capsule locks through exit.
+/// Dropping its async waiter cannot make the underlying files safe to delete.
+pub struct InputReader(Arc<Lease>);
+impl Drop for InputReader {
+    fn drop(&mut self) {
+        self.0.input_readers.send_modify(|readers| *readers -= 1);
+    }
 }
 
 impl Lease {
+    pub(crate) fn input_reader(self: &Arc<Self>) -> InputReader {
+        self.input_readers.send_modify(|readers| *readers += 1);
+        InputReader(self.clone())
+    }
+    pub(crate) fn inputs_active(&self) -> bool {
+        *self.input_readers.borrow() != 0
+    }
     /// Keep a retained capsule locked through warm use and any unresolved cleanup.
     pub(crate) fn hold_capsule_lock(&self, path: &std::path::Path) -> std::io::Result<()> {
         let file = std::fs::OpenOptions::new()
@@ -107,7 +125,7 @@ impl Lease {
 /// Tracks every owned container until its absence is confirmed.
 #[derive(Debug)]
 pub struct Supervisor {
-    outstanding: Mutex<BTreeMap<String, Outstanding>>,
+    outstanding: Mutex<BTreeMap<PhysicalOwnerId, Outstanding>>,
     permits: Arc<tokio::sync::Semaphore>,
     deadline: Duration,
     concurrency: usize,
@@ -150,7 +168,7 @@ impl Supervisor {
                     if let Admission::Quarantined { detail, .. } = self.admission() {
                         return Err(std::io::Error::other(detail));
                     }
-                    return Ok(Arc::new(Lease { _permit: permit, active: Mutex::new(None), retained_locks: Mutex::new(Vec::new()) }));
+                    return Ok(Arc::new(Lease { _permit: permit, active: Mutex::new(None), retained_locks: Mutex::new(Vec::new()),input_readers:tokio::sync::watch::channel(0).0 }));
                 },
                 _ = changed.changed() => {},
             }
@@ -161,6 +179,7 @@ impl Supervisor {
     /// A terminal job cannot imply completed cancellation before this succeeds.
     pub async fn wait_for_cleanup(&self, lease: &Lease) -> std::io::Result<()> {
         let mut changed = self.changed.subscribe();
+        let mut readers = lease.input_readers.subscribe();
         loop {
             {
                 let outstanding = self
@@ -171,27 +190,31 @@ impl Supervisor {
                     .active
                     .lock()
                     .map_err(|_| std::io::Error::other("execution lease poisoned"))?;
-                let Some(name) = active.as_ref() else {
+                if let Some(name) = active.as_ref() {
+                    match outstanding.get(name) {
+                        Some(Outstanding {
+                            stage: Stage::Abandoned(reason),
+                            ..
+                        }) => {
+                            return Err(std::io::Error::other(format!(
+                                "container {name} cleanup is unconfirmed: {reason}; execution remains quarantined",
+                            )));
+                        }
+                        Some(_) => {}
+                        None => {
+                            return Err(std::io::Error::other(
+                                "active container lost cleanup ownership",
+                            ));
+                        }
+                    }
+                } else if !lease.inputs_active() {
                     return Ok(());
-                };
-                match outstanding.get(name) {
-                    Some(Outstanding {
-                        stage: Stage::Abandoned(reason),
-                        ..
-                    }) => {
-                        return Err(std::io::Error::other(format!(
-                            "container {name} cleanup is unconfirmed: {reason}; execution remains quarantined",
-                        )));
-                    }
-                    Some(_) => {}
-                    None => {
-                        return Err(std::io::Error::other(
-                            "active container lost cleanup ownership",
-                        ));
-                    }
                 }
             }
-            changed.changed().await.map_err(std::io::Error::other)?;
+            tokio::select! {
+                result=changed.changed()=>result.map_err(std::io::Error::other)?,
+                result=readers.changed()=>result.map_err(std::io::Error::other)?,
+            }
         }
     }
 
@@ -209,7 +232,7 @@ impl Supervisor {
         let abandoned = outstanding
             .iter()
             .find_map(|(name, entry)| match &entry.stage {
-                Stage::Abandoned(reason) => Some((name.clone(), reason.clone())),
+                Stage::Abandoned(reason) => Some((*name, reason.clone())),
                 _ => None,
             });
         if let Some((name, reason)) = abandoned {
@@ -240,7 +263,7 @@ impl Supervisor {
 
     /// Owned containers whose absence is not yet confirmed.
     #[must_use]
-    pub fn outstanding(&self) -> Vec<String> {
+    pub fn outstanding(&self) -> Vec<PhysicalOwnerId> {
         self.outstanding
             .lock()
             .map(|o| o.keys().cloned().collect())
@@ -256,7 +279,7 @@ impl Supervisor {
             .unwrap_or(false)
     }
 
-    fn register(&self, name: &str, lease: Option<Arc<Lease>>) -> std::io::Result<()> {
+    fn register(&self, name: &PhysicalOwnerId, lease: Option<Arc<Lease>>) -> std::io::Result<()> {
         let mut outstanding = self
             .outstanding
             .lock()
@@ -282,10 +305,10 @@ impl Supervisor {
                     "execution lease already owns a container; cleanup must confirm absence before another stage",
                 ));
             }
-            *active = Some(name.to_owned());
+            *active = Some(*name);
         }
         outstanding.insert(
-            name.to_owned(),
+            *name,
             Outstanding {
                 since: Instant::now(),
                 stage: Stage::Running,
@@ -297,7 +320,7 @@ impl Supervisor {
 
     /// Removal has started. From here the clock that matters is the cleanup deadline, not how
     /// long the container has been doing its job.
-    fn begin_removal(&self, name: &str) {
+    fn begin_removal(&self, name: &PhysicalOwnerId) {
         if let Ok(mut outstanding) = self.outstanding.lock()
             && let Some(entry) = outstanding.get_mut(name)
             && entry.stage == Stage::Running
@@ -307,7 +330,7 @@ impl Supervisor {
         }
     }
 
-    fn resolve(&self, name: &str) {
+    fn resolve(&self, name: &PhysicalOwnerId) {
         if let Ok(mut outstanding) = self.outstanding.lock() {
             if let Some(entry) = outstanding.remove(name)
                 && let Some(lease) = entry._lease
@@ -320,7 +343,7 @@ impl Supervisor {
         }
     }
 
-    fn abandon(&self, name: &str, reason: String) {
+    fn abandon(&self, name: &PhysicalOwnerId, reason: String) {
         if let Ok(mut outstanding) = self.outstanding.lock()
             && let Some(entry) = outstanding.get_mut(name)
         {
@@ -330,7 +353,7 @@ impl Supervisor {
         }
     }
 
-    fn elapsed(&self, name: &str) -> Duration {
+    fn elapsed(&self, name: &PhysicalOwnerId) -> Duration {
         self.outstanding
             .lock()
             .ok()
@@ -345,7 +368,7 @@ impl Supervisor {
 /// exists, so there is no window in which a container is running with nothing watching it.
 #[derive(Debug)]
 pub struct ContainerGuard {
-    name: String,
+    name: PhysicalOwnerId,
     runner: Runner,
     supervisor: Arc<Supervisor>,
     resolved: bool,
@@ -356,7 +379,7 @@ impl ContainerGuard {
     pub fn register(
         runner: Runner,
         supervisor: Arc<Supervisor>,
-        name: String,
+        name: PhysicalOwnerId,
     ) -> std::io::Result<Self> {
         let lease = runner
             .lease
@@ -417,7 +440,7 @@ impl Drop for ContainerGuard {
         if self.resolved {
             return;
         }
-        let name = std::mem::take(&mut self.name);
+        let name = self.name;
         let runner = self.runner.clone();
         let supervisor = Arc::clone(&self.supervisor);
         // Ownership already contains the original execution lease. Never acquire a second
@@ -458,6 +481,9 @@ impl Drop for ContainerGuard {
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn fixture_id() -> PhysicalOwnerId {
+        PhysicalOwnerId::from_component("00112233445566778899aabbccddeeff").unwrap()
+    }
 
     fn supervisor(concurrency: usize) -> Arc<Supervisor> {
         Supervisor::new(
@@ -468,13 +494,20 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_cleanup_waiter_does_not_finish_while_the_container_is_still_owned() {
+    async fn cancelled_blocking_input_waiter_keeps_cleanup_and_permit_until_reader_exits() {
         let supervisor = supervisor(1);
-        let lease = supervisor.lease().await.expect("lease");
-        supervisor
-            .register("owned", Some(lease.clone()))
-            .expect("registered");
-        supervisor.begin_removal("owned");
+        let lease = supervisor.lease().await.unwrap();
+        let reader = lease.input_reader();
+        let (started, ready) = tokio::sync::oneshot::channel();
+        let (release, exit) = std::sync::mpsc::channel();
+        let physical = tokio::task::spawn_blocking(move || {
+            let _reader = reader;
+            started.send(()).unwrap();
+            exit.recv().unwrap();
+        });
+        ready.await.unwrap();
+        physical.abort();
+        assert!(lease.inputs_active());
         assert!(
             tokio::time::timeout(
                 Duration::from_millis(10),
@@ -483,7 +516,35 @@ mod tests {
             .await
             .is_err()
         );
-        supervisor.resolve("owned");
+        assert_eq!(supervisor.permits.available_permits(), 0);
+        release.send(()).unwrap();
+        physical.await.unwrap();
+        tokio::time::timeout(Duration::from_secs(1), supervisor.wait_for_cleanup(&lease))
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(!lease.inputs_active());
+        drop(lease);
+        assert_eq!(supervisor.permits.available_permits(), 1);
+    }
+
+    #[tokio::test]
+    async fn a_cleanup_waiter_does_not_finish_while_the_container_is_still_owned() {
+        let supervisor = supervisor(1);
+        let lease = supervisor.lease().await.expect("lease");
+        supervisor
+            .register(&fixture_id(), Some(lease.clone()))
+            .expect("registered");
+        supervisor.begin_removal(&fixture_id());
+        assert!(
+            tokio::time::timeout(
+                Duration::from_millis(10),
+                supervisor.wait_for_cleanup(&lease)
+            )
+            .await
+            .is_err()
+        );
+        supervisor.resolve(&fixture_id());
         supervisor
             .wait_for_cleanup(&lease)
             .await
@@ -506,12 +567,12 @@ mod tests {
         .expect("runner")
         .using_lease(lease.clone());
         supervisor
-            .register("owned", Some(lease.clone()))
+            .register(&fixture_id(), Some(lease.clone()))
             .expect("registered");
         runner.discard_workspace(scratch.clone());
         tokio::task::yield_now().await;
         assert!(scratch.exists(), "an active mount cannot be removed");
-        supervisor.abandon("owned", "injected retry exhaustion".into());
+        supervisor.abandon(&fixture_id(), "injected retry exhaustion".into());
         assert!(supervisor.wait_for_cleanup(&lease).await.is_err());
         tokio::task::yield_now().await;
         assert!(
@@ -519,7 +580,7 @@ mod tests {
             "failed cleanup retains scratch for reconciliation"
         );
         assert_eq!(supervisor.available_permits(), 0);
-        supervisor.resolve("owned");
+        supervisor.resolve(&fixture_id());
     }
 
     #[tokio::test]
@@ -527,21 +588,21 @@ mod tests {
         let supervisor = supervisor(1);
         let lease = supervisor.lease().await.expect("admitted");
         supervisor
-            .register("owned", Some(Arc::clone(&lease)))
+            .register(&fixture_id(), Some(Arc::clone(&lease)))
             .expect("register");
         drop(lease);
         assert_eq!(supervisor.permits.available_permits(), 0);
-        supervisor.begin_removal("owned");
+        supervisor.begin_removal(&fixture_id());
         // Removing the last container already quarantines admission; increasing the bound in
         // the other test below exercises retry exhaustion below that bound as well.
         assert!(supervisor.lease().await.is_err());
-        supervisor.abandon("owned", "retry deadline".into());
+        supervisor.abandon(&fixture_id(), "retry deadline".into());
         assert_eq!(
             supervisor.permits.available_permits(),
             0,
             "abandonment never frees an unsafe slot"
         );
-        supervisor.resolve("owned");
+        supervisor.resolve(&fixture_id());
         assert_eq!(supervisor.permits.available_permits(), 1);
         assert!(supervisor.lease().await.is_ok());
     }
@@ -551,15 +612,17 @@ mod tests {
         let supervisor = supervisor(2);
         let first = supervisor.lease().await.expect("first");
         let second = supervisor.lease().await.expect("second");
-        supervisor.register("owned", Some(first)).expect("register");
+        supervisor
+            .register(&fixture_id(), Some(first))
+            .expect("register");
         let waiting = {
             let supervisor = Arc::clone(&supervisor);
             tokio::spawn(async move { supervisor.lease().await })
         };
         tokio::task::yield_now().await;
         assert!(!waiting.is_finished());
-        supervisor.begin_removal("owned");
-        supervisor.abandon("owned", "retry deadline".into());
+        supervisor.begin_removal(&fixture_id());
+        supervisor.abandon(&fixture_id(), "retry deadline".into());
         assert!(
             tokio::time::timeout(Duration::from_secs(1), waiting)
                 .await
@@ -571,7 +634,7 @@ mod tests {
         drop(second);
         assert_eq!(supervisor.permits.available_permits(), 1);
         assert!(supervisor.lease().await.is_err());
-        supervisor.resolve("owned");
+        supervisor.resolve(&fixture_id());
         assert_eq!(supervisor.permits.available_permits(), 2);
     }
 
@@ -581,19 +644,19 @@ mod tests {
         // not make the next submission read as "cleanup is unresolved". Busy is the durable job
         // queue's problem; unresolved cleanup is a boundary that is not holding.
         let supervisor = supervisor(1);
-        supervisor.register("libenr-a", None).expect("register");
+        supervisor.register(&fixture_id(), None).expect("register");
         assert_eq!(supervisor.admission(), Admission::Open);
         assert!(
             !supervisor.is_idle(),
             "it is still owned, so shutdown must still wait for it"
         );
 
-        supervisor.begin_removal("libenr-a");
+        supervisor.begin_removal(&fixture_id());
         assert!(matches!(
             supervisor.admission(),
             Admission::Quarantined { outstanding: 1, .. }
         ));
-        supervisor.resolve("libenr-a");
+        supervisor.resolve(&fixture_id());
         assert_eq!(supervisor.admission(), Admission::Open);
         assert!(supervisor.is_idle());
     }
@@ -603,15 +666,15 @@ mod tests {
         // The count alone would not trip quarantine here: 1 outstanding of 4 workers. An
         // abandoned removal must quarantine anyway, because nothing is watching that container.
         let supervisor = supervisor(4);
-        supervisor.register("libenr-b", None).expect("register");
-        supervisor.begin_removal("libenr-b");
+        supervisor.register(&fixture_id(), None).expect("register");
+        supervisor.begin_removal(&fixture_id());
         assert_eq!(supervisor.admission(), Admission::Open);
-        supervisor.abandon("libenr-b", "30 seconds of retries".to_owned());
+        supervisor.abandon(&fixture_id(), "30 seconds of retries".to_owned());
         let Admission::Quarantined { detail, .. } = supervisor.admission() else {
             panic!("an abandoned cleanup must quarantine admission");
         };
-        assert!(detail.contains("libenr-b"), "{detail}");
+        assert!(detail.contains(&fixture_id().to_string()), "{detail}");
         assert!(detail.contains("restart"), "{detail}");
-        assert_eq!(supervisor.outstanding(), vec!["libenr-b".to_owned()]);
+        assert_eq!(supervisor.outstanding(), vec![fixture_id()]);
     }
 }

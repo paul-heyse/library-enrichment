@@ -29,6 +29,9 @@ fn rewrite(&self, plan: LogicalPlan, _config: &dyn OptimizerConfig) -> Result<Tr
 fn supports_rewrite(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.optimize_unions.OptimizeUnions.md).
+
+
 An optimization rule that
 1. replaces nested unions with a single union.
 2. removes unions with a single input.

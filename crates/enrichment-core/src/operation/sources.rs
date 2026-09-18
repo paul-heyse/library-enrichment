@@ -22,8 +22,8 @@ crate::native_struct! {
 }
 crate::native_struct! {
     pub struct RevisionReceipt {
-        capture_id: String => Rule::NonEmpty,
-        binding: super::DefinitionBinding => Rule::Text,
+        capture_id: crate::identity::RevisionCaptureId => Rule::Text,
+        binding: crate::delta_reference::DeltaVersionRef => Rule::Text,
         source: RevisionCapture => Rule::Text,
         extraction: crate::producer::revision::RevisionExtraction => Rule::Text,
     }

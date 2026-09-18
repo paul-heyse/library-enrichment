@@ -1,0 +1,943 @@
+[
+  {
+    "id": "5495f79277c60608747ce314",
+    "path": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+    "name": "CommonSubexprEliminate",
+    "owner": null,
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct CommonSubexprEliminate",
+    "docs": "Performs Common Sub-expression Elimination optimization.\n\nThis optimization improves query performance by computing expressions that\nappear more than once and reusing those results rather than re-computing the\nsame value\n\nCurrently only common sub-expressions within a single `LogicalPlan` are\neliminated.\n\n# Example\n\nGiven a projection that computes the same expensive expression\nmultiple times such as parsing as string as a date with `to_date` twice:\n\n```text\nProjectionExec(expr=[extract (day from to_date(c1)), extract (year from to_date(c1))])\n```\n\nThis optimization will rewrite the plan to compute the common expression once\nusing a new `ProjectionExec` and then rewrite the original expressions to\nrefer to that new column.\n\n```text\nProjectionExec(exprs=[extract (day from new_col), extract (year from new_col)]) <-- reuse here\n  ProjectionExec(exprs=[to_date(c1) as new_col]) <-- compute to_date once\n```",
+    "span": {
+      "filename": "src/common_subexpr_eliminate.rs",
+      "begin": [
+        70,
+        1
+      ],
+      "end": [
+        70,
+        37
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": false
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          199,
+          200,
+          201,
+          202,
+          203,
+          204,
+          205,
+          206,
+          207,
+          208,
+          209,
+          210,
+          211,
+          212,
+          213,
+          214,
+          215,
+          217,
+          225,
+          227
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "197",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.md",
+    "record_file": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.json",
+    "anchor": "op-5495f79277c60608747ce314",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "97db183241fe7b0a3b05a254",
+    "path": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate::apply_order",
+    "name": "apply_order",
+    "owner": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_order(&self) -> Option<ApplyOrder>",
+    "docs": "",
+    "span": {
+      "filename": "src/common_subexpr_eliminate.rs",
+      "begin": [
+        547,
+        5
+      ],
+      "end": [
+        552,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 220,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ApplyOrder",
+                          "id": 221,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "220": "core::option::Option",
+      "221": "datafusion_optimizer::optimizer::ApplyOrder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CommonSubexprEliminate",
+          "id": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/common_subexpr_eliminate.rs",
+        "begin": [
+          542,
+          1
+        ],
+        "end": [
+          612,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "219",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.md",
+    "record_file": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.json",
+    "anchor": "op-97db183241fe7b0a3b05a254",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3ecdd666ea0376ad3ec020ed",
+    "path": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate::default",
+    "name": "default",
+    "owner": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn default() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/common_subexpr_eliminate.rs",
+      "begin": [
+        772,
+        5
+      ],
+      "end": [
+        774,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CommonSubexprEliminate",
+          "id": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/common_subexpr_eliminate.rs",
+        "begin": [
+          771,
+          1
+        ],
+        "end": [
+          775,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "226",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.md",
+    "record_file": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.json",
+    "anchor": "op-3ecdd666ea0376ad3ec020ed",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0c9d7d2eae7c6fb23a9c6d62",
+    "path": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate::fmt",
+    "name": "fmt",
+    "owner": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/common_subexpr_eliminate.rs",
+      "begin": [
+        69,
+        10
+      ],
+      "end": [
+        69,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 53,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 54,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "53": "core::fmt::Formatter",
+      "54": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CommonSubexprEliminate",
+          "id": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/common_subexpr_eliminate.rs",
+        "begin": [
+          69,
+          10
+        ],
+        "end": [
+          69,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "216",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.md",
+    "record_file": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.json",
+    "anchor": "op-0c9d7d2eae7c6fb23a9c6d62",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1588e929ef1739ce8365005b",
+    "path": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate::name",
+    "name": "name",
+    "owner": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &str",
+    "docs": "",
+    "span": {
+      "filename": "src/common_subexpr_eliminate.rs",
+      "begin": [
+        609,
+        5
+      ],
+      "end": [
+        611,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CommonSubexprEliminate",
+          "id": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/common_subexpr_eliminate.rs",
+        "begin": [
+          542,
+          1
+        ],
+        "end": [
+          612,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "224",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.md",
+    "record_file": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.json",
+    "anchor": "op-1588e929ef1739ce8365005b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3a0727e7fdc2dfa0094cf17e",
+    "path": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate::new",
+    "name": "new",
+    "owner": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/common_subexpr_eliminate.rs",
+      "begin": [
+        73,
+        5
+      ],
+      "end": [
+        75,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CommonSubexprEliminate",
+          "id": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/common_subexpr_eliminate.rs",
+        "begin": [
+          72,
+          1
+        ],
+        "end": [
+          489,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "198",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.md",
+    "record_file": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.json",
+    "anchor": "op-3a0727e7fdc2dfa0094cf17e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "973b818589a4b3d9df57cce9",
+    "path": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate::rewrite",
+    "name": "rewrite",
+    "owner": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/common_subexpr_eliminate.rs",
+      "begin": [
+        554,
+        50
+      ],
+      "end": [
+        554,
+        70
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "plan",
+              {
+                "resolved_path": {
+                  "path": "LogicalPlan",
+                  "id": 59,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "OptimizerConfig",
+                            "id": 223,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Transformed",
+                          "id": 148,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "LogicalPlan",
+                                      "id": 59,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "59": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "223": "datafusion_optimizer::optimizer::OptimizerConfig",
+      "61": "datafusion_common::error::Result",
+      "148": "datafusion_common::tree_node::Transformed"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CommonSubexprEliminate",
+          "id": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/common_subexpr_eliminate.rs",
+        "begin": [
+          542,
+          1
+        ],
+        "end": [
+          612,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "222",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.md",
+    "record_file": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.json",
+    "anchor": "op-973b818589a4b3d9df57cce9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "24c2fe1d0bf51fd5b51008f9",
+    "path": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate::supports_rewrite",
+    "name": "supports_rewrite",
+    "owner": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_rewrite(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/common_subexpr_eliminate.rs",
+      "begin": [
+        543,
+        5
+      ],
+      "end": [
+        545,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "CommonSubexprEliminate",
+          "id": "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/common_subexpr_eliminate.rs",
+        "begin": [
+          542,
+          1
+        ],
+        "end": [
+          612,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "218",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.md",
+    "record_file": "operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.json",
+    "anchor": "op-24c2fe1d0bf51fd5b51008f9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

@@ -45,6 +45,9 @@ fn schema(&self) -> SchemaRef
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.memory.LazyMemoryExec.md).
+
+
 Execution plan for lazy in-memory batches of data
 
 This plan generates output batches lazily, it doesn't have to buffer all batches
@@ -73,6 +76,9 @@ fn schema(&self) -> SchemaRef
 ```rust
 fn poll_next(std::pin::Pin<&mut self>, _: &mut Context<'_>) -> Poll<Option<Self::Item>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.memory.LazyMemoryStream.md).
+
 
 Stream that generates record batches on demand
 
@@ -109,6 +115,9 @@ fn poll_next(std::pin::Pin<&mut self>, _: &mut Context<'_>) -> Poll<Option<Self:
 fn size_hint(&self) -> (usize, Option<usize>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.memory.MemoryStream.md).
+
+
 Iterator over batches
 
 ---
@@ -134,5 +143,8 @@ fn boundedness(&self) -> Boundedness
 fn generate_next_batch(&mut self) -> Result<Option<RecordBatch>>
 fn reset_state(&self) -> Arc<RwLock<dyn LazyBatchGenerator>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.memory.LazyBatchGenerator.md).
+
 
 ---

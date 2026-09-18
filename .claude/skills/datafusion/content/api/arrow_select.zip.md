@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::zip::zip`
 fn zip(mask: &BooleanArray, truthy: &dyn Datum, falsy: &dyn Datum) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.zip.zip.md).
+
+
 Zip two arrays by some boolean mask.
 
 - Where `mask` is `true`, values of `truthy` are taken
@@ -92,6 +95,9 @@ struct ScalarZipper
 fn try_new(truthy: &dyn Datum, falsy: &dyn Datum) -> Result<Self, ArrowError>
 fn zip(&self, mask: &BooleanArray) -> Result<ArrayRef, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_select.zip.ScalarZipper.md).
+
 
 Zipper for 2 scalars
 

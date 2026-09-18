@@ -10,6 +10,9 @@ Crate `arrow` · 1 public items · structured records in [`model/arrow.error.jso
 type Result<T> = std::result::Result<T, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.error.Result.md).
+
+
 A specialized `Result` type for Arrow operations.
 
 ---

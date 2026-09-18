@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_window::expr_fn::cume_dist`
 fn cume_dist() -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.cume_dist.cume_dist.md).
+
+
 Create a [`WindowFunction`](datafusion_expr::Expr::WindowFunction) expression for
 `CumeDist` user-defined window function.
 
@@ -26,6 +29,9 @@ Calculates the cumulative distribution of a value in a group of values.
 ```rust
 fn cume_dist_udwf() -> std::sync::Arc<datafusion_expr::WindowUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.cume_dist.cume_dist_udwf.md).
+
 
 Returns a [`WindowUDF`](datafusion_expr::WindowUDF) for [`cume_dist`].
 
@@ -61,6 +67,9 @@ fn name(&self) -> &str
 fn partition_evaluator(&self, _partition_evaluator_args: PartitionEvaluatorArgs<'_>) -> Result<Box<dyn PartitionEvaluator>>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.cume_dist.CumeDist.md).
+
 
 CumeDist calculates the cume_dist in the window function with order by
 

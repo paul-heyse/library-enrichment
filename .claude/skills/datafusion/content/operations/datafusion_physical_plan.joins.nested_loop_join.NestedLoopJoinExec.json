@@ -1,0 +1,4791 @@
+[
+  {
+    "id": "879865d333b3afaee6f0226e",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "name": "NestedLoopJoinExec",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct NestedLoopJoinExec",
+    "docs": "NestedLoopJoinExec is a build-probe join operator designed for joins that\ndo not have equijoin keys in their `ON` clause.\n\n# Execution Flow\n\n```text\n                                               Incoming right batch\n               Left Side Buffered Batches\n                      ┌───────────┐              ┌───────────────┐\n                      │ ┌───────┐ │              │               │\n                      │ │       │ │              │               │\n Current Left Row ───▶│ ├───────├─┤──────────┐   │               │\n                      │ │       │ │          │   └───────────────┘\n                      │ │       │ │          │           │\n                      │ │       │ │          │           │\n                      │ └───────┘ │          │           │\n                      │ ┌───────┐ │          │           │\n                      │ │       │ │          │     ┌─────┘\n                      │ │       │ │          │     │\n                      │ │       │ │          │     │\n                      │ │       │ │          │     │\n                      │ │       │ │          │     │\n                      │ └───────┘ │          ▼     ▼\n                      │   ......  │  ┌──────────────────────┐\n                      │           │  │X (Cartesian Product) │\n                      │           │  └──────────┬───────────┘\n                      └───────────┘             │\n                                                │\n                                                ▼\n                                     ┌───────┬───────────────┐\n                                     │       │               │\n                                     │       │               │\n                                     │       │               │\n                                     └───────┴───────────────┘\n                                       Intermediate Batch\n                                 (For join predicate evaluation)\n```\n\nThe execution follows a two-phase design:\n\n## 1. Buffering Left Input\n- The operator eagerly buffers all left-side input batches into memory,\n  util a memory limit is reached.\n  Currently, an out-of-memory error will be thrown if all the left-side input batches\n  cannot fit into memory at once.\n  In the future, it's possible to make this case finish execution. (see\n  'Memory-limited Execution' section)\n- The rationale for buffering the left side is that scanning the right side\n  can be expensive (e.g., decoding Parquet files), so buffering more left\n  rows reduces the number of right-side scan passes required.\n\n## 2. Probing Right Input\n- Right-side input is streamed batch by batch.\n- For each right-side batch:\n  - It evaluates the join filter against the full buffered left input.\n    This results in a Cartesian product between the right batch and each\n    left row -- with the join predicate/filter applied -- for each inner\n    loop iteration.\n  - Matched results are accumulated into an output buffer. (see more in\n    `Output Buffering Strategy` section)\n- This process continues until all right-side input is consumed.\n\n# Producing unmatched build-side data\n- For special join types like left/full joins, it's required to also output\n  unmatched pairs. During execution, bitmaps are kept for both left and right\n  sides of the input; they'll be handled by dedicated states in `NLJStream`.\n- The final output of the left side unmatched rows is handled by a single\n  partition for simplicity, since it only counts a small portion of the\n  execution time. (e.g. if probe side has 10k rows, the final output of\n  unmatched build side only roughly counts for 1/10k of the total time)\n\n# Output Buffering Strategy\nThe operator uses an intermediate output buffer to accumulate results. Once\nthe output threshold is reached (currently set to the same value as\n`batch_size` in the configuration), the results will be eagerly output.\n\n# Extra Notes\n- The operator always considers the **left** side as the build (buffered) side.\n  Therefore, the physical optimizer should assign the smaller input to the left.\n- The design try to minimize the intermediate data size to approximately\n  1 batch, for better cache locality and memory efficiency.\n\n# Memory-limited Execution\nWhen the memory budget is exceeded during left-side buffering, the operator\nfalls back to a multi-pass strategy:\n1. Buffer as many left rows as fit in memory (one \"chunk\")\n2. On the first pass, the right side is both processed and spilled to disk\n3. For each subsequent left chunk, the right side is re-read from the spill file\n\nThe fallback is triggered automatically when the initial in-memory load\nfails with `ResourcesExhausted` and disk spilling is available. Each\noutput partition independently re-executes the left child and manages\nits own spill state.\n\nAll join types are supported. For RIGHT/FULL/RIGHT SEMI/RIGHT ANTI/\nRIGHT MARK joins, a global right-side bitmap (indexed by right batch\nsequence number) accumulates matches across all left chunks. After the\nlast left chunk is processed, the right side is replayed one more time\nto emit unmatched right rows using the accumulated bitmap.\n\nTracking issue: <https://github.com/apache/datafusion/issues/15760>\n\n# Clone / Shared State\nNote this structure includes a [`OnceAsync`] that is used to coordinate the\nloading of the left side with the processing in each output stream.\nTherefore it can not be [`Clone`]",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        194,
+        1
+      ],
+      "end": [
+        229,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[expect(rustdoc::private_intra_doc_links)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          3414,
+          3416,
+          3417,
+          3418,
+          3419,
+          3420,
+          3421,
+          3422,
+          3423,
+          3424,
+          3425,
+          3426,
+          3427,
+          3428,
+          3429,
+          3430,
+          3431,
+          3432,
+          3434,
+          3436,
+          1530,
+          1991,
+          3439
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`OnceAsync`": 3120,
+      "`Clone`": 29
+    },
+    "link_paths": {
+      "`OnceAsync`": null,
+      "`Clone`": "core::clone::Clone"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1531",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-879865d333b3afaee6f0226e",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a3d8b872b07c55145773f88a",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::apply_expressions",
+    "name": "apply_expressions",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        566,
+        5
+      ],
+      "end": [
+        575,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "FnMut",
+                            "id": 795,
+                            "args": {
+                              "parenthesized": {
+                                "inputs": [
+                                  {
+                                    "borrowed_ref": {
+                                      "lifetime": null,
+                                      "is_mutable": false,
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Arc",
+                                          "id": 94,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "dyn_trait": {
+                                                      "traits": [
+                                                        {
+                                                          "trait": {
+                                                            "path": "crate::PhysicalExpr",
+                                                            "id": 629,
+                                                            "args": null
+                                                          },
+                                                          "generic_params": []
+                                                        }
+                                                      ],
+                                                      "lifetime": null
+                                                    }
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                "output": {
+                                  "resolved_path": {
+                                    "path": "Result",
+                                    "id": 99,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "TreeNodeRecursion",
+                                                "id": 796,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "TreeNodeRecursion",
+                          "id": 796,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "795": "core::ops::function::FnMut",
+      "94": "alloc::sync::Arc",
+      "629": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "99": "datafusion_common::error::Result",
+      "796": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1981",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-a3d8b872b07c55145773f88a",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::apply_expressions"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "21f4c1279f5d4b84d1bbc4c9",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::child_stats_requests",
+    "name": "child_stats_requests",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn child_stats_requests(&self, partition: Option<usize>) -> Vec<ChildStats>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        727,
+        5
+      ],
+      "end": [
+        731,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ChildStats",
+                          "id": 804,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "2": "alloc::vec::Vec",
+      "804": "datafusion_physical_plan::statistics::ChildStats"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1987",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-21f4c1279f5d4b84d1bbc4c9",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::child_stats_requests"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e3749dffbcfe26f81a4a6e35",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::children",
+    "name": "children",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        562,
+        5
+      ],
+      "end": [
+        564,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1980",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-e3749dffbcfe26f81a4a6e35",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::children"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "cb5f9f663a03ea6122c1df78",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::contains_projection",
+    "name": "contains_projection",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn contains_projection(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        431,
+        5
+      ],
+      "end": [
+        433,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          324,
+          1
+        ],
+        "end": [
+          493,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3411",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-cb5f9f663a03ea6122c1df78",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::contains_projection"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "cc659d124de7b065e46f89e3",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::execute",
+    "name": "execute",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        634,
+        5
+      ],
+      "end": [
+        721,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "context",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "TaskContext",
+                              "id": 800,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SendableRecordBatchStream",
+                          "id": 103,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "800": "datafusion_execution::task::TaskContext",
+      "99": "datafusion_common::error::Result",
+      "103": "datafusion_execution::stream::SendableRecordBatchStream"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1985",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-cc659d124de7b065e46f89e3",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::execute"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e510c387eb78c70a264c4842",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::filter",
+    "name": "filter",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn filter(&self) -> Option<&JoinFilter>",
+    "docs": "Filters applied before join output",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        350,
+        5
+      ],
+      "end": [
+        352,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "JoinFilter",
+                              "id": 3159,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "3159": "datafusion_physical_plan::joins::join_filter::JoinFilter"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          324,
+          1
+        ],
+        "end": [
+          493,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3408",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-e510c387eb78c70a264c4842",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::filter"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2b72223d2b1b1f087b8b564c",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        193,
+        10
+      ],
+      "end": [
+        193,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          193,
+          10
+        ],
+        "end": [
+          193,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3433",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-2b72223d2b1b1f087b8b564c",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "090a8f15dcc883ee2ea154f8",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::fmt_as",
+    "name": "fmt_as",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        496,
+        5
+      ],
+      "end": [
+        535,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "t",
+              {
+                "resolved_path": {
+                  "path": "DisplayFormatType",
+                  "id": 778,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "778": "datafusion_physical_plan::display::DisplayFormatType",
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "DisplayAs",
+        "id": "datafusion_physical_plan::display::DisplayAs",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::display::DisplayAs",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          495,
+          1
+        ],
+        "end": [
+          536,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1529",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-090a8f15dcc883ee2ea154f8",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::fmt_as"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "65391d455d12259bc3a0334a",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::input_distribution_requirements",
+    "name": "input_distribution_requirements",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn input_distribution_requirements(&self) -> InputDistributionRequirements",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        551,
+        5
+      ],
+      "end": [
+        556,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "crate::InputDistributionRequirements",
+              "id": 786,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "786": "datafusion_physical_plan::distribution_requirements::InputDistributionRequirements"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1978",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-65391d455d12259bc3a0334a",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::input_distribution_requirements"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "34abaf3aa901012c7b422423",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::join_type",
+    "name": "join_type",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn join_type(&self) -> &JoinType",
+    "docs": "How the join is performed",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        355,
+        5
+      ],
+      "end": [
+        357,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "JoinType",
+                  "id": 3154,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3154": "datafusion_common::join_type::JoinType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          324,
+          1
+        ],
+        "end": [
+          493,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3409",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-34abaf3aa901012c7b422423",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::join_type"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3c56e8c56fbd7614c9bda848",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::left",
+    "name": "left",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn left(&self) -> &Arc<dyn ExecutionPlan>",
+    "docs": "left side",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        340,
+        5
+      ],
+      "end": [
+        342,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          324,
+          1
+        ],
+        "end": [
+          493,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3406",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-3c56e8c56fbd7614c9bda848",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::left"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "630a064268b4e255bdb034e6",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::maintains_input_order",
+    "name": "maintains_input_order",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn maintains_input_order(&self) -> Vec<bool>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        558,
+        5
+      ],
+      "end": [
+        560,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1979",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-630a064268b4e255bdb034e6",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::maintains_input_order"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5201e97ebd560dee4bfcd096",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::metrics",
+    "name": "metrics",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn metrics(&self) -> Option<MetricsSet>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        723,
+        5
+      ],
+      "end": [
+        725,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "MetricsSet",
+                          "id": 802,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "802": "datafusion_physical_expr_common::metrics::MetricsSet"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1986",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-5201e97ebd560dee4bfcd096",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::metrics"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "29f72fd0e8b37cb391233393",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::name",
+    "name": "name",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &'static str",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        539,
+        5
+      ],
+      "end": [
+        541,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": "'static",
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1975",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-29f72fd0e8b37cb391233393",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::name"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ad7fbe0f2d4e3500e2111773",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::projection",
+    "name": "projection",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn projection(&self) -> &Option<ProjectionRef>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        359,
+        5
+      ],
+      "end": [
+        361,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ProjectionRef",
+                              "id": 2805,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "2805": "datafusion_physical_expr::projection::ProjectionRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          324,
+          1
+        ],
+        "end": [
+          493,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3410",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-ad7fbe0f2d4e3500e2111773",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::projection"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e9b8c905511c2953fc80f2ae",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::properties",
+    "name": "properties",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        543,
+        5
+      ],
+      "end": [
+        545,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "PlanProperties",
+                              "id": 730,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "730": "datafusion_physical_plan::execution_plan::PlanProperties"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1976",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-e9b8c905511c2953fc80f2ae",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::properties"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8d2de9e3bdb48da84970ea02",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::replace_children",
+    "name": "replace_children",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, options: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        577,
+        5
+      ],
+      "end": [
+        612,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "ReplaceChildrenOptions",
+                  "id": 792,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "792": "datafusion_physical_plan::execution_plan::ReplaceChildrenOptions",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1982",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-8d2de9e3bdb48da84970ea02",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::replace_children"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0e63b65adb5d13d9b86a3449",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::required_input_distribution",
+    "name": "required_input_distribution",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn required_input_distribution(&self) -> Vec<Distribution>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        547,
+        5
+      ],
+      "end": [
+        549,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Distribution",
+                          "id": 784,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "784": "datafusion_physical_expr::partitioning::Distribution"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1977",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-0e63b65adb5d13d9b86a3449",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::required_input_distribution"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fb3618f2852ed439f8b49391",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::right",
+    "name": "right",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn right(&self) -> &Arc<dyn ExecutionPlan>",
+    "docs": "right side",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        345,
+        5
+      ],
+      "end": [
+        347,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          324,
+          1
+        ],
+        "end": [
+          493,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3407",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-fb3618f2852ed439f8b49391",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::right"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0707807ecde9e53422494523",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::statistics_from_inputs",
+    "name": "statistics_from_inputs",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn statistics_from_inputs(&self, input_stats: &[Arc<Statistics>], _args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        733,
+        5
+      ],
+      "end": [
+        760,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "input_stats",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Arc",
+                        "id": 94,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Statistics",
+                                    "id": 806,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "StatisticsArgs",
+                      "id": 807,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Statistics",
+                                      "id": 806,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "806": "datafusion_common::stats::Statistics",
+      "807": "datafusion_physical_plan::statistics::StatisticsArgs",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1988",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-0707807ecde9e53422494523",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::statistics_from_inputs"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d2ebc970f174bf3406c62ae9",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::swap_inputs",
+    "name": "swap_inputs",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn swap_inputs(&self) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "Returns a new `ExecutionPlan` that runs NestedLoopsJoins with the left\nand right inputs swapped.\n\n# Notes:\n\nThis function should be called BEFORE inserting any repartitioning\noperators on the join's children. Check [`super::HashJoinExec::swap_inputs`]\nfor more details.",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        454,
+        5
+      ],
+      "end": [
+        492,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "99": "datafusion_common::error::Result",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          324,
+          1
+        ],
+        "end": [
+          493,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`super::HashJoinExec::swap_inputs`": 3124
+    },
+    "link_paths": {
+      "`super::HashJoinExec::swap_inputs`": "datafusion_physical_plan::joins::hash_join::exec::HashJoinExec::swap_inputs"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3413",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-d2ebc970f174bf3406c62ae9",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::swap_inputs"
+    ],
+    "resolved_doc_links": {
+      "`super::HashJoinExec::swap_inputs`": "../operations/datafusion_physical_plan.joins.hash_join.exec.HashJoinExec.md#op-ab8ffc5ca4894926893b682e"
+    }
+  },
+  {
+    "id": "680e6bbbff6007e1f3c36267",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::try_from_proto",
+    "name": "try_from_proto",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        840,
+        5
+      ],
+      "end": [
+        885,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "node",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                      "id": 752,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::proto::ExecutionPlanDecodeCtx",
+                      "id": 753,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "752": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode",
+      "753": "datafusion_physical_plan::proto::ExecutionPlanDecodeCtx",
+      "99": "datafusion_common::error::Result",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          839,
+          1
+        ],
+        "end": [
+          886,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3415",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-680e6bbbff6007e1f3c36267",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::try_from_proto"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1adfd82eed473d36c9277901",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::try_new",
+    "name": "try_new",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_new(left: Arc<dyn ExecutionPlan>, right: Arc<dyn ExecutionPlan>, filter: Option<JoinFilter>, join_type: &JoinType, projection: Option<Vec<usize>>) -> Result<Self>",
+    "docs": "Try to create a new [`NestedLoopJoinExec`]",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        326,
+        5
+      ],
+      "end": [
+        337,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "left",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "right",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "filter",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "JoinFilter",
+                              "id": 3159,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "join_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "JoinType",
+                      "id": 3154,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "projection",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Vec",
+                              "id": 2,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "usize"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "281": "core::option::Option",
+      "3159": "datafusion_physical_plan::joins::join_filter::JoinFilter",
+      "3154": "datafusion_common::join_type::JoinType",
+      "2": "alloc::vec::Vec",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          324,
+          1
+        ],
+        "end": [
+          493,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`NestedLoopJoinExec`": 1531
+    },
+    "link_paths": {
+      "`NestedLoopJoinExec`": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3405",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-1adfd82eed473d36c9277901",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::try_new"
+    ],
+    "resolved_doc_links": {
+      "`NestedLoopJoinExec`": "../operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md#op-879865d333b3afaee6f0226e"
+    }
+  },
+  {
+    "id": "fe4f49e76e29f3bd8322b8a3",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::try_swapping_with_projection",
+    "name": "try_swapping_with_projection",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_swapping_with_projection(&self, projection: &ProjectionExec) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+    "docs": "Tries to push `projection` down through `nested_loop_join`. If possible, performs the\npushdown and returns a new [`NestedLoopJoinExec`] as the top plan which has projections\nas its children. Otherwise, returns `None`.",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        765,
+        5
+      ],
+      "end": [
+        800,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "projection",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ProjectionExec",
+                      "id": 1063,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 281,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 94,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "ExecutionPlan",
+                                                        "id": 126,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1063": "datafusion_physical_plan::projection::ProjectionExec",
+      "99": "datafusion_common::error::Result",
+      "281": "core::option::Option",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`NestedLoopJoinExec`": 1531
+    },
+    "link_paths": {
+      "`NestedLoopJoinExec`": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1989",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-fe4f49e76e29f3bd8322b8a3",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::try_swapping_with_projection"
+    ],
+    "resolved_doc_links": {
+      "`NestedLoopJoinExec`": "../operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md#op-879865d333b3afaee6f0226e"
+    }
+  },
+  {
+    "id": "d1912e6d4920e81b354d3464",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::try_to_proto",
+    "name": "try_to_proto",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        802,
+        5
+      ],
+      "end": [
+        835,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"proto\"), span: src/joins/nested_loop_join.rs:801:11: 801:28 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::proto::ExecutionPlanEncodeCtx",
+                      "id": 818,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 281,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                                      "id": 752,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "818": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx",
+      "99": "datafusion_common::error::Result",
+      "281": "core::option::Option",
+      "752": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1990",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-d1912e6d4920e81b354d3464",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::try_to_proto"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ce2250f3a31c6bc2613fb6e5",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::with_new_children",
+    "name": "with_new_children",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        614,
+        5
+      ],
+      "end": [
+        622,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1983",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-ce2250f3a31c6bc2613fb6e5",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::with_new_children"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c0b1eceafed1c87acf9643a5",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::with_new_children_and_same_properties",
+    "name": "with_new_children_and_same_properties",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        624,
+        5
+      ],
+      "end": [
+        632,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          538,
+          1
+        ],
+        "end": [
+          836,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1984",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-c0b1eceafed1c87acf9643a5",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::with_new_children_and_same_properties"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "67d39d265579dd3297405d9a",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::with_projection",
+    "name": "with_projection",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_projection(&self, projection: Option<Vec<usize>>) -> Result<Self>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        889,
+        5
+      ],
+      "end": [
+        891,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "projection",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Vec",
+                              "id": 2,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "usize"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "2": "alloc::vec::Vec",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "EmbeddedProjection",
+        "id": "datafusion_physical_plan::projection::EmbeddedProjection",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::projection::EmbeddedProjection",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          888,
+          1
+        ],
+        "end": [
+          892,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3438",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-67d39d265579dd3297405d9a",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::with_projection"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "86fd2101a2e1310c7808666a",
+    "path": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec::with_projection",
+    "name": "with_projection",
+    "owner": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_projection(&self, projection: Option<Vec<usize>>) -> Result<Self>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/nested_loop_join.rs",
+      "begin": [
+        435,
+        5
+      ],
+      "end": [
+        444,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "projection",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Vec",
+                              "id": 2,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "usize"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "2": "alloc::vec::Vec",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "NestedLoopJoinExec",
+          "id": "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/nested_loop_join.rs",
+        "begin": [
+          324,
+          1
+        ],
+        "end": [
+          493,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3412",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.nested_loop_join.NestedLoopJoinExec.json",
+    "anchor": "op-86fd2101a2e1310c7808666a",
+    "aliases": [
+      "datafusion_physical_plan::joins::NestedLoopJoinExec::with_projection"
+    ],
+    "resolved_doc_links": {}
+  }
+]

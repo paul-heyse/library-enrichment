@@ -37,6 +37,9 @@ fn complete(&mut self) -> BoxFuture<'_, Result<()>>
 fn write(&mut self, bs: Bytes) -> BoxFuture<'_, Result<()>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.async_writer.store.ParquetObjectWriter.md).
+
+
 [`ParquetObjectWriter`] for writing to parquet to [`ObjectStore`]
 
 This type is deprecated: [`BufWriter`] implements [`AsyncWrite`] and can

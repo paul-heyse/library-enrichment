@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 6 public items · structured records in [`mo
 fn batch_filter(batch: &arrow::record_batch::RecordBatch, predicate: &std::sync::Arc<dyn PhysicalExpr>) -> datafusion_common::Result<arrow::record_batch::RecordBatch>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.filter.batch_filter.md).
+
+
 ---
 
 ## collect_columns_from_predicate
@@ -21,6 +24,9 @@ fn batch_filter(batch: &arrow::record_batch::RecordBatch, predicate: &std::sync:
 ```rust
 fn collect_columns_from_predicate(predicate: &std::sync::Arc<dyn PhysicalExpr>) -> EqualAndNonEqual<'_>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.filter.collect_columns_from_predicate.md).
+
 
 Return the equals Column-Pairs and Non-equals Column-Pairs
 
@@ -90,6 +96,9 @@ fn with_preserve_order(&self, preserve_order: bool) -> Option<Arc<dyn ExecutionP
 fn with_projection(&self, projection: Option<Vec<usize>>) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.filter.FilterExec.md).
+
+
 FilterExec evaluates a boolean predicate against all input batches to determine which rows to
 include in its output batches.
 
@@ -125,6 +134,9 @@ fn with_predicate(self, predicate: Arc<dyn PhysicalExpr>) -> Self
 fn from(exec: &FilterExec) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.filter.FilterExecBuilder.md).
+
+
 Builder for [`FilterExec`] to set optional parameters
 
 ---
@@ -137,6 +149,9 @@ Builder for [`FilterExec`] to set optional parameters
 type EqualAndNonEqual<'a> = (Vec<PhysicalExprPairRef<'a>>, Vec<PhysicalExprPairRef<'a>>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.filter.EqualAndNonEqual.md).
+
+
 The equals Column-Pairs and Non-equals Column-Pairs in the Predicates
 
 ---
@@ -148,6 +163,9 @@ The equals Column-Pairs and Non-equals Column-Pairs in the Predicates
 ```rust
 type PhysicalExprPairRef<'a> = (&'a std::sync::Arc<dyn PhysicalExpr>, &'a std::sync::Arc<dyn PhysicalExpr>)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.filter.PhysicalExprPairRef.md).
+
 
 Pair of `Arc<dyn PhysicalExpr>`s
 

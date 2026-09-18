@@ -38,6 +38,9 @@ fn take_children(self) -> (Self, Vec<Self>)
 fn with_new_children(self, children: Vec<Self>) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.tree_node.PlanContext.md).
+
+
 A node context object beneficial for writing optimizer rules.
 This context encapsulating an [`ExecutionPlan`] node with a payload.
 

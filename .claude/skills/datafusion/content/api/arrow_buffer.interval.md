@@ -122,6 +122,9 @@ fn sub(self, rhs: &'a IntervalDayTime) -> Self::Output
 fn sub_assign(&mut self, rhs: Self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.interval.IntervalDayTime.md).
+
+
 Value of an IntervalDayTime array
 
 ## Representation
@@ -269,6 +272,9 @@ fn sub(self, rhs: Self) -> Self::Output
 ```rust
 fn sub_assign(&mut self, rhs: Self)
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.interval.IntervalMonthDayNano.md).
+
 
  Value of an IntervalMonthDayNano array
 

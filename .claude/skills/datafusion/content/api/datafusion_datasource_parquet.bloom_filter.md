@@ -35,6 +35,9 @@ fn num_containers(&self) -> usize
 fn row_counts(&self) -> Option<ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.bloom_filter.BloomFilterStatistics.md).
+
+
 In memory Parquet Split Block Bloom Filters (SBBF).
 
 This structure implements [`PruningStatistics`] and is used to prune

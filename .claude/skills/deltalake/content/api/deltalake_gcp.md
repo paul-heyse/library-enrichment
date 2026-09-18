@@ -5,6 +5,7 @@ Crate `deltalake-gcp` · 2 public items · structured records in [`model/deltala
 ## register_handlers
 
 `function` · `deltalake_gcp::register_handlers`
+[Full member contracts, output types and access classification](../operations/deltalake_gcp.register_handlers.md)
 
 Also reachable as `deltalake::gcp::register_handlers`
 
@@ -19,6 +20,7 @@ Register an [ObjectStoreFactory] for common Google Cloud [Url] schemes
 ## GcpFactory
 
 `struct` · `deltalake_gcp::GcpFactory`
+[Full member contracts, output types and access classification](../operations/deltalake_gcp.GcpFactory.md)
 
 Also reachable as `deltalake::gcp::GcpFactory`
 

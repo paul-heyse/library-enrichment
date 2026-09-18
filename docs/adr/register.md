@@ -93,3 +93,7 @@ writing the ADR its trigger called for, or moving `next-check` forward with a re
 | R-50 | Retire the restricted Delta codec rebinding seam when upstream supplies the complete contract. | ADR-0053 | Upstream exposes validated immutable rebinding and bounded provider encoding, or a consumer requires persisted descriptors. | manual: run native provider-cache identity, contract, ownership and codec refusal fixtures | paul-heyse | 2026-09-17 | 2026-12-17 | watch |
 
 | R-51 | Requalify native MCP framing when SDK pins or transport scope change. | ADR-0054 | FastMCP/MCP serializer pin changes or a non-stdio transport is proposed. | manual: native delivery vectors and pinned SDK parity probes | paul-heyse | 2026-09-17 | 2026-12-17 | watch |
+
+| R-52 | Revisit governed native cache seams when upstream or source consumers change. | ADR-0055 | Upstream provides shared CDF metadata/accounted snapshot ownership, or a real remote/ListingTable source is enabled. | manual: Plan 19 DC01-DC12 and current native cache qualification | paul-heyse | 2026-09-17 | 2026-12-17 | watch |
+
+| R-53 | Requalify closed comparison variants on semantic or upstream set-operator changes. | ADR-0056 | A comparison scope needs a new value variant, or pinned native set/field/encoding semantics change. | manual: typed_comparison_ units, schema-conformance and CP12 durable comparison journey | paul-heyse | 2026-09-17 | 2026-12-17 | watch |

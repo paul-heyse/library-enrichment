@@ -16,6 +16,9 @@ trait HeapSize
 fn heap_size(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.memory.HeapSize.md).
+
+
 Trait for calculating the size of various containers
 
 ---

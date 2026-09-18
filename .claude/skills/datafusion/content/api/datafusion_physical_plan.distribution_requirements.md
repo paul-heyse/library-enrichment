@@ -22,6 +22,9 @@ fn new() -> Self
 fn with_allow_subset(self, allow_subset: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.distribution_requirements.ChildSatisfactionOptions.md).
+
+
 Options for checking child distribution satisfaction.
 
 ---
@@ -48,6 +51,9 @@ fn into_per_child(self) -> Vec<Distribution>
 fn new(per_child: Vec<Distribution>) -> Self
 fn per_child_distributions(&self) -> impl ExactSizeIterator<Item = &Distribution> + '_
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.distribution_requirements.InputDistributionRequirements.md).
+
 
 Distribution requirements for an [`ExecutionPlan`]'s inputs.
 

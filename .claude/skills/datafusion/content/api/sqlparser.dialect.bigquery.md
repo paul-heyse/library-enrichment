@@ -56,6 +56,9 @@ fn supports_window_clause_named_window_reference(&self) -> bool
 fn supports_window_function_null_treatment_arg(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.bigquery.BigQueryDialect.md).
+
+
 A [`Dialect`] for [Google Bigquery](https://cloud.google.com/bigquery/)
 
 ---

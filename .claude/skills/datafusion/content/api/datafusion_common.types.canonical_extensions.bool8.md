@@ -28,6 +28,9 @@ fn serialize_metadata(&self) -> Option<String>
 fn storage_type(&self) -> DataType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.canonical_extensions.bool8.DFBool8.md).
+
+
 Defines the extension type logic for the canonical `arrow.bool8` extension type. This extension
 type allows storing a Boolean value in a single byte, instead of a single bit.
 

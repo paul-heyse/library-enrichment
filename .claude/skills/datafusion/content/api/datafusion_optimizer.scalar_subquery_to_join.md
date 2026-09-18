@@ -29,6 +29,9 @@ fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Tra
 fn supports_rewrite(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.scalar_subquery_to_join.ScalarSubqueryToJoin.md).
+
+
 Optimizer rule that rewrites scalar subquery filters to joins and places an
 additional projection on top of the filter to preserve the original schema.
 

@@ -1,0 +1,142 @@
+[
+  {
+    "id": "540b7f60b0a4510e8b41a2b9",
+    "path": "datafusion_physical_expr::projection::project_ordering",
+    "name": "project_ordering",
+    "owner": null,
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn project_ordering(ordering: &datafusion_physical_expr_common::sort_expr::LexOrdering, schema: &arrow::datatypes::SchemaRef) -> Option<datafusion_physical_expr_common::sort_expr::LexOrdering>",
+    "docs": "Projects a single [LexOrdering] onto the given schema.\n\nThis function attempts to rewrite every [PhysicalSortExpr] in the provided\n[LexOrdering] so that any [Column] expressions point at the correct field\nindices in `schema`.\n\nKey details:\n- Columns are matched by name, not by index. The index of each matched\n  column is looked up with [Schema::column_with_name](arrow::datatypes::Schema::column_with_name) and a new\n  [Column] with the correct [index](Column::index) is substituted.\n- If an expression references a column name that does not exist in\n  `schema`, projection of the current ordering stops and only the already\n  rewritten prefix is kept. This models the fact that a lexicographical\n  ordering remains valid for any leading prefix whose expressions are\n  present in the projected schema.\n- If no expressions can be projected (i.e. the first one is missing), the\n  function returns `None`.\n\nReturn value:\n- `Some(LexOrdering)` if at least one sort expression could be projected.\n  The returned ordering may be a strict prefix of the input ordering.\n- `None` if no part of the ordering can be projected onto `schema`.\n\nExample\n\nSuppose we have an input ordering `[col(\"a@0\"), col(\"b@1\")]` but the projected\nschema only contains b and not a. The result will be `Some([col(\"a@0\")])`. In other\nwords, the column reference is reindexed to match the projected schema.\nIf neither a nor b is present, the result will be None.",
+    "span": {
+      "filename": "src/projection.rs",
+      "begin": [
+        1397,
+        1
+      ],
+      "end": [
+        1432,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "ordering",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_physical_expr_common::sort_expr::LexOrdering",
+                      "id": 611,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "arrow::datatypes::SchemaRef",
+                      "id": 46,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 115,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "datafusion_physical_expr_common::sort_expr::LexOrdering",
+                          "id": 611,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "611": "datafusion_physical_expr_common::sort_expr::LexOrdering",
+      "46": "arrow_schema::schema::SchemaRef",
+      "115": "core::option::Option"
+    },
+    "impl_context": null,
+    "links": {
+      "LexOrdering": 611,
+      "PhysicalSortExpr": 48,
+      "Column::index": 958,
+      "Column": 299,
+      "arrow::datatypes::Schema::column_with_name": 2350
+    },
+    "link_paths": {
+      "LexOrdering": "datafusion_physical_expr_common::sort_expr::LexOrdering",
+      "PhysicalSortExpr": "datafusion_physical_expr_common::sort_expr::PhysicalSortExpr",
+      "Column::index": "datafusion_physical_expr::expressions::column::Column::index",
+      "Column": "datafusion_physical_expr::expressions::column::Column",
+      "arrow::datatypes::Schema::column_with_name": "arrow_schema::schema::Schema::column_with_name"
+    },
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "752",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.projection.project_ordering.md",
+    "record_file": "operations/datafusion_physical_expr.projection.project_ordering.json",
+    "anchor": "op-540b7f60b0a4510e8b41a2b9",
+    "aliases": [
+      "datafusion_physical_expr::equivalence::project_ordering"
+    ],
+    "resolved_doc_links": {
+      "LexOrdering": "../operations/datafusion_physical_expr_common.sort_expr.LexOrdering.md#op-d19b6df9e9a4be59c4b4dfd1",
+      "PhysicalSortExpr": "../operations/datafusion_physical_expr_common.sort_expr.PhysicalSortExpr.md#op-80fd045cf8466b7fe98e5ea8",
+      "Column::index": "../operations/datafusion_physical_expr.expressions.column.Column.md#op-024112f5861d789f4d444043",
+      "Column": "../operations/datafusion_physical_expr.expressions.column.Column.md#op-8a412ca3bf3f178f4986ec28"
+    }
+  }
+]

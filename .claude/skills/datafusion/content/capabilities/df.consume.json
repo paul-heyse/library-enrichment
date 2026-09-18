@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "id": "df.consume",
+  "title": "Choose stream, materialization, cache and resource boundaries",
+  "task_aliases": [
+    "consume incrementally",
+    "large query result",
+    "stream memory budget",
+    "blocking sort",
+    "cache repeat execution",
+    "cancel stream"
+  ],
+  "crates": [
+    "datafusion",
+    "datafusion-execution",
+    "datafusion-physical-plan"
+  ],
+  "input": [
+    "DataFrame",
+    "RuntimeEnv"
+  ],
+  "output": [
+    "SendableRecordBatchStream",
+    "RecordBatch",
+    "DataFrame"
+  ],
+  "properties": [
+    "streaming",
+    "memory",
+    "spill",
+    "order",
+    "errors",
+    "lifecycle",
+    "reuse"
+  ],
+  "operations": [
+    "datafusion::dataframe::DataFrame::collect",
+    "datafusion::dataframe::DataFrame::execute_stream",
+    "datafusion::dataframe::DataFrame::execute_stream_partitioned",
+    "datafusion::dataframe::DataFrame::cache",
+    "datafusion_execution::runtime_env::RuntimeEnvBuilder::with_memory_limit",
+    "datafusion_execution::disk_manager::DiskManagerBuilder"
+  ],
+  "brief": "Streaming avoids retaining every output batch in the terminal API; it does not bound the query working set. A blocking sort can still fail for memory even when output is streamed.",
+  "choices": [
+    {
+      "candidate": "collect",
+      "choose_when": "All output is intentionally retained",
+      "tradeoff": "Returns Vec<RecordBatch>; memory includes result retention.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "execute_stream",
+      "choose_when": "Incremental single-stream consumer",
+      "tradeoff": "Planning and stream polling can fail separately; consumer retention still matters.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "execute_stream_partitioned",
+      "choose_when": "Caller can manage output partition concurrency",
+      "tradeoff": "Partition streams do not imply global ordering.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "cache",
+      "choose_when": "Reuse materialized results",
+      "tradeoff": "Executes and stores results in memory; a cloned plan/view is not the same guarantee.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "df.consume.shape",
+      "aspect": "shape",
+      "statement": "Terminal methods consume DataFrame. execute_stream asynchronously creates a physical plan and returns a fallible RecordBatch stream; collect returns a batch vector. Single-stream output is not an implicit sort.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.consume.memory",
+      "aspect": "memory",
+      "statement": "Operator state, prefetch, caches and consumer batches contribute memory. Default pool is unbounded; disk manager defaults to OS temporary storage. with_memory_limit explicitly does not account for every allocation.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream",
+        "source"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.consume.spill",
+      "aspect": "spill",
+      "statement": "Configure a participating pool and operator-specific spill behavior, directory/capacity and concurrency. A pool budget is not an RSS bound. Inspect EXPLAIN/metrics and execute the workload.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.consume.lifecycle",
+      "aspect": "lifecycle",
+      "statement": "Upstream documents dropping the output stream aborts its execution and frees associated resources. This is not a guarantee for unrelated application background tasks or retained batch buffers.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Choose terminal API from ownership and consumption requirements.",
+    "Inspect blocking operators and configure their resource policy before execution.",
+    "Handle failures both creating and polling streams; test cancellation if operational correctness depends on it."
+  ],
+  "unknowns": [
+    "The probe proves a 1-byte pool sort fails and stream/collect values agree. It does not measure RSS, spill throughput, cancellation latency or all operator accounting."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "datafusion::dataframe::DataFrame::collect",
+        "datafusion::dataframe::DataFrame::execute_stream",
+        "datafusion::dataframe::DataFrame::execute_stream_partitioned",
+        "datafusion::dataframe::DataFrame::cache",
+        "datafusion_execution::runtime_env::RuntimeEnvBuilder::with_memory_limit",
+        "datafusion_execution::disk_manager::DiskManagerBuilder"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    },
+    {
+      "id": "probe",
+      "kind": "runtime_observation",
+      "tests": [
+        "stream_collect_cache_and_sort_resource_error"
+      ],
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Only the named assertions in the recorded Cargo profile."
+    },
+    {
+      "id": "source",
+      "kind": "upstream_source",
+      "path": "skill_improvement/evidence/sources/datafusion-execution-55.1.0/src/disk_manager.rs",
+      "scope": "Selected exact published source; source-manifest.json retains provenance."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "datafusion::dataframe::DataFrame::collect",
+      "datafusion::dataframe::DataFrame::execute_stream",
+      "datafusion::dataframe::DataFrame::execute_stream_partitioned",
+      "datafusion::dataframe::DataFrame::cache",
+      "datafusion_execution::runtime_env::RuntimeEnvBuilder::with_memory_limit",
+      "datafusion_execution::disk_manager::DiskManagerBuilder"
+    ],
+    "candidate_set": [
+      "collect",
+      "execute_stream",
+      "execute_stream_partitioned",
+      "cache"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  },
+  "resolved_operations": [
+    {
+      "path": "datafusion::dataframe::DataFrame::collect",
+      "id": "c2a2c9a0147637ad4b86374e",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-c2a2c9a0147637ad4b86374e",
+      "signature": "async fn collect(self) -> Result<Vec<RecordBatch>>"
+    },
+    {
+      "path": "datafusion::dataframe::DataFrame::execute_stream",
+      "id": "acdcda8e3349a26da03fd615",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-acdcda8e3349a26da03fd615",
+      "signature": "async fn execute_stream(self) -> Result<SendableRecordBatchStream>"
+    },
+    {
+      "path": "datafusion::dataframe::DataFrame::execute_stream_partitioned",
+      "id": "73ff2f187bcd18e356825de9",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-73ff2f187bcd18e356825de9",
+      "signature": "async fn execute_stream_partitioned(self) -> Result<Vec<SendableRecordBatchStream>>"
+    },
+    {
+      "path": "datafusion::dataframe::DataFrame::cache",
+      "id": "46de08d8309fcb4f0782d08e",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.dataframe.DataFrame.json",
+      "page": "operations/datafusion.dataframe.DataFrame.md#op-46de08d8309fcb4f0782d08e",
+      "signature": "async fn cache(self) -> Result<DataFrame>"
+    },
+    {
+      "path": "datafusion_execution::runtime_env::RuntimeEnvBuilder::with_memory_limit",
+      "id": "67b941dfc4573dd8aea8cf06",
+      "kind": "function",
+      "crate": "datafusion-execution",
+      "record": "operations/datafusion_execution.runtime_env.RuntimeEnvBuilder.json",
+      "page": "operations/datafusion_execution.runtime_env.RuntimeEnvBuilder.md#op-67b941dfc4573dd8aea8cf06",
+      "signature": "fn with_memory_limit(self, max_memory: usize, memory_fraction: f64) -> Self"
+    },
+    {
+      "path": "datafusion_execution::disk_manager::DiskManagerBuilder",
+      "id": "3c6231e792a03a3bc83aef37",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "record": "operations/datafusion_execution.disk_manager.DiskManagerBuilder.json",
+      "page": "operations/datafusion_execution.disk_manager.DiskManagerBuilder.md#op-3c6231e792a03a3bc83aef37",
+      "signature": "struct DiskManagerBuilder"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/df.consume.json"
+}

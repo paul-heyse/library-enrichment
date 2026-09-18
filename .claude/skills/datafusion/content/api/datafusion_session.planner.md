@@ -22,6 +22,9 @@ struct UnsupportedQueryPlanner
 async fn create_physical_plan(&self, _logical_plan: &LogicalPlan, _session: &dyn Session) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_session.planner.UnsupportedQueryPlanner.md).
+
+
 A query planner that reports that planning is not implemented.
 
 [`Session`] implementations that do not expose a query planner can return
@@ -45,6 +48,9 @@ trait ExtensionPlanner
 async fn plan_extension(&self, planner: &dyn PhysicalPlanner, node: &dyn UserDefinedLogicalNode, logical_inputs: &[&LogicalPlan], physical_inputs: &[Arc<dyn ExecutionPlan>], session: &dyn Session, planning_ctx: &PhysicalPlanningContext) -> Result<Option<Arc<dyn ExecutionPlan>>>
 async fn plan_table_scan(&self, _planner: &dyn PhysicalPlanner, _scan: &TableScan, _session: &dyn Session, _planning_ctx: &PhysicalPlanningContext) -> Result<Option<Arc<dyn ExecutionPlan>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_session.planner.ExtensionPlanner.md).
+
 
 This trait exposes the ability to plan an [`ExecutionPlan`] out of a [`LogicalPlan`].
 
@@ -71,6 +77,9 @@ fn create_physical_expr(&self, expr: &Expr, input_dfschema: &DFSchema, session: 
 async fn create_physical_plan(&self, logical_plan: &LogicalPlan, session: &dyn Session) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_session.planner.PhysicalPlanner.md).
+
+
 Physical query planner that converts a [`LogicalPlan`] to an
 [`ExecutionPlan`] suitable for execution.
 
@@ -96,6 +105,9 @@ trait QueryPlanner: Any + Debug
 ```rust
 async fn create_physical_plan(&self, logical_plan: &LogicalPlan, session: &dyn Session) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_session.planner.QueryPlanner.md).
+
 
 A planner that creates a physical plan for a query.
 

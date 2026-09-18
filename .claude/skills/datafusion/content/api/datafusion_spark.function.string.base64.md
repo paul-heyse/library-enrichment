@@ -31,6 +31,9 @@ fn signature(&self) -> &Signature
 fn simplify(&self, args: Vec<Expr>, _info: &SimplifyContext) -> Result<ExprSimplifyResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.base64.SparkBase64.md).
+
+
 Apache Spark base64 uses padded base64 encoding.
 <https://spark.apache.org/docs/latest/api/sql/index.html#base64>
 
@@ -64,6 +67,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 fn simplify(&self, args: Vec<Expr>, _info: &SimplifyContext) -> Result<ExprSimplifyResult>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.base64.SparkUnBase64.md).
+
 
 <https://spark.apache.org/docs/latest/api/sql/index.html#unbase64>
 

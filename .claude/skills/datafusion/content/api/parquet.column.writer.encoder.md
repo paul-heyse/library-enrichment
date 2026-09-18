@@ -10,6 +10,9 @@ Crate `parquet` · 5 public items · structured records in [`model/parquet.colum
 struct ColumnValueEncoderImpl<T: DataType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.writer.encoder.ColumnValueEncoderImpl.md).
+
+
 ---
 
 ## DataPageValues
@@ -21,6 +24,9 @@ struct DataPageValues<T>
 ```
 
 **Fields**: `buf`, `num_values`, `encoding`, `min_value`, `max_value`, `variable_length_bytes`
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.writer.encoder.DataPageValues.md).
+
 
 The encoded values for a data page, with optional statistics
 
@@ -35,6 +41,9 @@ struct DictionaryPage
 ```
 
 **Fields**: `buf`, `num_values`, `is_sorted`
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.writer.encoder.DictionaryPage.md).
+
 
 The encoded data for a dictionary page
 
@@ -68,6 +77,9 @@ fn write(&mut self, values: &Self::Values, offset: usize, len: usize) -> Result<
 fn write_gather(&mut self, values: &Self::Values, indices: &[usize]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.writer.encoder.ColumnValueEncoder.md).
+
+
 A generic encoder of [`ColumnValues`] to data and dictionary pages used by
 [super::GenericColumnWriter`]
 
@@ -86,6 +98,9 @@ trait ColumnValues
 ```rust
 fn len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.writer.encoder.ColumnValues.md).
+
 
 A collection of [`ParquetValueType`] encoded by a [`ColumnValueEncoder`]
 

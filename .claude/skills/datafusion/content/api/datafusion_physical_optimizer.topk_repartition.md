@@ -28,6 +28,9 @@ fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> Resu
 fn schema_check(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.topk_repartition.TopKRepartition.md).
+
+
 A physical optimizer rule that pushes TopK (Sort with fetch) past
 hash repartition when the partition key is a prefix of the sort key.
 

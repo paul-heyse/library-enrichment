@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## LogSegmentFiles
 
 `struct` · `buoyant_kernel::log_segment_files::LogSegmentFiles`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.log_segment_files.LogSegmentFiles.md)
 
 Also reachable as `buoyant_kernel::log_segment::LogSegmentFiles`, `delta_kernel::log_segment_files::LogSegmentFiles`
 

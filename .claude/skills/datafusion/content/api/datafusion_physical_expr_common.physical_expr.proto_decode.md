@@ -10,6 +10,9 @@ Crate `datafusion-physical-expr-common` · 3 public items · structured records 
 fn require_proto_field<T>(opt: Option<T>, expr_name: &str, field: &str) -> datafusion_common::Result<T>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.proto_decode.require_proto_field.md).
+
+
 Unwrap a required non-expression proto field.
 
 Mirrors [`PhysicalExprDecodeCtx::decode_required_expression`] for proto
@@ -46,6 +49,9 @@ fn new(schema: &'a Schema, decoder: &'a dyn PhysicalExprDecode) -> Self
 fn schema(&self) -> &Schema
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.proto_decode.PhysicalExprDecodeCtx.md).
+
+
 Decoder context handed to per-expression `try_from_proto` constructors.
 
 Wraps an internal [`PhysicalExprDecode`] trait object plus a borrowed
@@ -71,6 +77,9 @@ trait PhysicalExprDecode
 ```rust
 fn decode(&self, node: &PhysicalExprNode, schema: &Schema) -> Result<Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.proto_decode.PhysicalExprDecode.md).
+
 
 Internal dispatch trait. Implementors live in `datafusion-proto`.
 Expression authors should use [`PhysicalExprDecodeCtx`] instead of

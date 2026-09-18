@@ -30,6 +30,9 @@ fn single_file_output(self, base_output_path: &ListingTableUrl) -> bool
 fn from(value: Option<bool>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_sink_config.FileOutputMode.md).
+
+
 Determines how `FileSink` output paths are interpreted.
 
 ---
@@ -62,6 +65,9 @@ fn output_schema(&self) -> &SchemaRef
 fn try_from(conf: &protobuf::FileSinkConfig) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_sink_config.FileSinkConfig.md).
+
+
 The base configurations to provide when creating a physical plan for
 writing to any given file format.
 
@@ -90,6 +96,9 @@ fn config(&self) -> &FileSinkConfig
 async fn spawn_writer_tasks_and_join(&self, context: &Arc<TaskContext>, demux_task: SpawnedTask<Result<()>>, file_stream_rx: DemuxedStreamReceiver, object_store: Arc<dyn ObjectStore>) -> Result<u64>
 async fn write_all(&self, data: SendableRecordBatchStream, context: &Arc<TaskContext>) -> Result<u64>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_sink_config.FileSink.md).
+
 
 General behaviors for files that do `DataSink` operations
 

@@ -116,7 +116,7 @@ Full table with Rust setters in [`../catalogs/config-options.md`](../catalogs/co
 
 ## Decision rules
 
-- A non-local store is registered per session with `register_object_store`, keyed by URL scheme and authority.
+- Object stores are registered in the RuntimeEnv registry, keyed by URL scheme/authority; contexts can share that runtime.
 - Schema inference costs a read. Supply a schema through `ListingOptions`/`ParquetReadOptions` when you already know it.
 - `enable_url_table` lets SQL address a path directly, which removes the registration step for ad-hoc queries.
 

@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "id": "df.aggregate-window",
+  "title": "Reuse aggregate/window functions and characterize state before extensions",
+  "task_aliases": [
+    "aggregate merge state",
+    "groups accumulator",
+    "sliding window retract",
+    "window frame peers",
+    "partial aggregation",
+    "count distinct"
+  ],
+  "crates": [
+    "datafusion-functions-aggregate",
+    "datafusion-functions-aggregate-common",
+    "datafusion-functions-window",
+    "datafusion-expr",
+    "datafusion-expr-common"
+  ],
+  "input": [
+    "ArrayRef",
+    "group indices",
+    "window partition",
+    "state arrays"
+  ],
+  "output": [
+    "ScalarValue",
+    "state arrays",
+    "ArrayRef"
+  ],
+  "properties": [
+    "state",
+    "merge",
+    "retract",
+    "order",
+    "nulls",
+    "frames"
+  ],
+  "operations": [
+    "datafusion_expr::udaf::AggregateUDFImpl",
+    "datafusion_expr_common::accumulator::Accumulator",
+    "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+    "datafusion_expr::partition_evaluator::PartitionEvaluator",
+    "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter"
+  ],
+  "brief": "Choose built-in aggregates/windows first. For extensions, partial state, merge, grouped layout and window retraction are distinct contracts; an accumulator is not merely a final reduction function.",
+  "choices": [
+    {
+      "candidate": "built-in aggregate/window",
+      "choose_when": "Existing semantics and frames fit",
+      "tradeoff": "Check empty/null/order/distinct behavior and registration.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "Accumulator",
+      "choose_when": "Custom stateful aggregate",
+      "tradeoff": "Consumes batches; state output must compose correctly with merge_batch and declared state fields.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "GroupsAccumulator / adapter",
+      "choose_when": "Many groups need shared state layout",
+      "tradeoff": "Specialization can reduce overhead but must preserve groups/null/emit semantics; benchmark rather than assuming.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "PartitionEvaluator / retract-capable aggregate",
+      "choose_when": "Window-specific or moving-frame evaluation",
+      "tradeoff": "Capability hooks determine available evaluation paths; returning unsupported/default may be correct.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "df.aggregate-window.state",
+      "aspect": "state",
+      "statement": "Accumulator update_batch receives arrays, state returns partial ScalarValues, merge_batch consumes state arrays, and evaluate produces a final ScalarValue. Declared state fields must agree with both serialization and merge.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.aggregate-window.frames",
+      "aspect": "frames",
+      "statement": "Window partitioning, ORDER BY, peer groups and frame bounds determine rows contributing to output. Default ordered RANGE and explicit ROWS can differ on duplicate ordering keys.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.aggregate-window.retraction",
+      "aspect": "retraction",
+      "statement": "Sliding windows may require retract_batch or specialized partition evaluation. Advertise support only when removal/order/empty-state semantics are correct.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.aggregate-window.memory",
+      "aspect": "memory",
+      "statement": "Accumulator size reporting and groups state influence resource accounting. A groups implementation is not an automatic throughput or memory improvement.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Look up the built-in function and its signature/null/frame behavior.",
+    "For custom aggregates test partitioned partial->merge against single-pass output.",
+    "For moving windows test duplicate keys, empty frames and retractions; inspect state schema and memory reporting."
+  ],
+  "unknowns": [
+    "Runtime coverage compares ordered RANGE/ROWS counts. Custom merge/retract implementations and groups performance require additional probes."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "datafusion_expr::udaf::AggregateUDFImpl",
+        "datafusion_expr_common::accumulator::Accumulator",
+        "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+        "datafusion_expr::partition_evaluator::PartitionEvaluator",
+        "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    },
+    {
+      "id": "probe",
+      "kind": "runtime_observation",
+      "tests": [
+        "joins_sets_and_window_frames_have_distinct_cardinality"
+      ],
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Only the named assertions in the recorded Cargo profile."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "datafusion_expr::udaf::AggregateUDFImpl",
+      "datafusion_expr_common::accumulator::Accumulator",
+      "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+      "datafusion_expr::partition_evaluator::PartitionEvaluator",
+      "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter"
+    ],
+    "candidate_set": [
+      "built-in aggregate/window",
+      "Accumulator",
+      "GroupsAccumulator / adapter",
+      "PartitionEvaluator / retract-capable aggregate"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  },
+  "resolved_operations": [
+    {
+      "path": "datafusion_expr::udaf::AggregateUDFImpl",
+      "id": "9f175a3c2e0fb1ef9e53572c",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "record": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+      "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md#op-9f175a3c2e0fb1ef9e53572c",
+      "signature": "trait AggregateUDFImpl: Debug + DynEq + DynHash + Send + Sync + Any"
+    },
+    {
+      "path": "datafusion_expr_common::accumulator::Accumulator",
+      "id": "2911d7ffb2098886b7dd6ba8",
+      "kind": "trait",
+      "crate": "datafusion-expr-common",
+      "record": "operations/datafusion_expr_common.accumulator.Accumulator.json",
+      "page": "operations/datafusion_expr_common.accumulator.Accumulator.md#op-2911d7ffb2098886b7dd6ba8",
+      "signature": "trait Accumulator: Send + Sync + Debug + std::any::Any"
+    },
+    {
+      "path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+      "id": "9c9c43a7d8bf357eb3adcb6e",
+      "kind": "trait",
+      "crate": "datafusion-expr-common",
+      "record": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.json",
+      "page": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md#op-9c9c43a7d8bf357eb3adcb6e",
+      "signature": "trait GroupsAccumulator: Send + std::any::Any"
+    },
+    {
+      "path": "datafusion_expr::partition_evaluator::PartitionEvaluator",
+      "id": "28021de2fba820ec392e9ef2",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "record": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.json",
+      "page": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md#op-28021de2fba820ec392e9ef2",
+      "signature": "trait PartitionEvaluator: Debug + Send + std::any::Any"
+    },
+    {
+      "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+      "id": "d2e10609875cb34a913017d4",
+      "kind": "struct",
+      "crate": "datafusion-functions-aggregate-common",
+      "record": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.json",
+      "page": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.md#op-d2e10609875cb34a913017d4",
+      "signature": "struct GroupsAccumulatorAdapter"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/df.aggregate-window.json"
+}

@@ -1,0 +1,2377 @@
+[
+  {
+    "id": "637d6dc146e8bf36b6e304bf",
+    "path": "arrow_ipc::reader::FileReader",
+    "name": "FileReader",
+    "owner": null,
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct FileReader<R>",
+    "docs": "Arrow File Reader\n\nReads Arrow [`RecordBatch`]es from bytes in the [IPC File Format],\nproviding random access to the record batches.\n\n# See Also\n\n* [`Self::set_index`] for random access\n* [`StreamReader`] for reading streaming data\n\n# Example: Reading from a `File`\n```\n# use std::io::Cursor;\nuse arrow_array::record_batch;\n# use arrow_ipc::reader::FileReader;\n# use arrow_ipc::writer::FileWriter;\n# let batch = record_batch!((\"a\", Int32, [1, 2, 3])).unwrap();\n# let mut file = vec![]; // mimic a stream for the example\n# {\n#  let mut writer = FileWriter::try_new(&mut file, &batch.schema()).unwrap();\n#  writer.write(&batch).unwrap();\n#  writer.write(&batch).unwrap();\n#  writer.finish().unwrap();\n# }\n# let mut file = Cursor::new(&file);\nlet projection = None; // read all columns\nlet mut reader = FileReader::try_new(&mut file, projection).unwrap();\n// Position the reader to the second batch\nreader.set_index(1).unwrap();\n// read batches from the reader using the Iterator trait\nlet mut num_rows = 0;\nfor batch in reader {\n   let batch = batch.unwrap();\n   num_rows += batch.num_rows();\n}\nassert_eq!(num_rows, 3);\n```\n# Example: Reading from `mmap`ed file\n\nFor an example creating Arrays without copying using  memory mapped (`mmap`)\nfiles see the [`zero_copy_ipc`] example.\n\n[IPC File Format]: https://arrow.apache.org/docs/format/Columnar.html#ipc-file-format\n[`zero_copy_ipc`]: https://github.com/apache/arrow-rs/blob/main/arrow/examples/zero_copy_ipc.rs",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1338,
+        1
+      ],
+      "end": [
+        1358,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "R",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          269,
+          278,
+          279,
+          280,
+          281,
+          282,
+          283,
+          284,
+          285,
+          286,
+          287,
+          288,
+          289,
+          290,
+          291,
+          292,
+          297,
+          301,
+          304,
+          306
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Self::set_index`": 266,
+      "`StreamReader`": 119,
+      "`RecordBatch`": 118
+    },
+    "link_paths": {
+      "`Self::set_index`": "arrow_ipc::reader::FileReader::set_index",
+      "`StreamReader`": "arrow_ipc::reader::StreamReader",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "202",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileReader.md",
+    "record_file": "operations/arrow_ipc.reader.FileReader.json",
+    "anchor": "op-637d6dc146e8bf36b6e304bf",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::set_index`": "../operations/arrow_ipc.reader.FileReader.md#op-3cb1c25f5682b51adde1b7ab",
+      "`StreamReader`": "../operations/arrow_ipc.reader.StreamReader.md#op-e303cfe08d702b62a9f2f221",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "e6cc156db6eb2f81fb5da060",
+    "path": "arrow_ipc::reader::FileReader::Item",
+    "name": "Item",
+    "owner": "arrow_ipc::reader::FileReader",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "assoc_type",
+    "signature": "Item",
+    "docs": "",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1464,
+        5
+      ],
+      "end": [
+        1464,
+        49
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "type": {
+          "resolved_path": {
+            "path": "Result",
+            "id": 44,
+            "args": {
+              "angle_bracketed": {
+                "args": [
+                  {
+                    "type": {
+                      "resolved_path": {
+                        "path": "RecordBatch",
+                        "id": 118,
+                        "args": null
+                      }
+                    }
+                  },
+                  {
+                    "type": {
+                      "resolved_path": {
+                        "path": "ArrowError",
+                        "id": 72,
+                        "args": null
+                      }
+                    }
+                  }
+                ],
+                "constraints": []
+              }
+            }
+          }
+        },
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "44": "core::result::Result",
+      "118": "arrow_array::record_batch::RecordBatch",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileReader",
+          "id": "arrow_ipc::reader::FileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Iterator",
+        "id": "core::iter::traits::iterator::Iterator",
+        "args": null
+      },
+      "trait_path": "core::iter::traits::iterator::Iterator",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Read",
+                        "id": "alloc::io::read::Read",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Seek",
+                        "id": "core::io::seek::Seek",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1463,
+          1
+        ],
+        "end": [
+          1474,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "302",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileReader.md",
+    "record_file": "operations/arrow_ipc.reader.FileReader.json",
+    "anchor": "op-e6cc156db6eb2f81fb5da060",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d153046fb36081cf82b06640",
+    "path": "arrow_ipc::reader::FileReader::custom_metadata",
+    "name": "custom_metadata",
+    "owner": "arrow_ipc::reader::FileReader",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn custom_metadata(&self) -> &HashMap<String, String>",
+    "docs": "Return user defined customized metadata",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1400,
+        5
+      ],
+      "end": [
+        1402,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "HashMap",
+                  "id": 65,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "String",
+                              "id": 66,
+                              "args": null
+                            }
+                          }
+                        },
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "String",
+                              "id": 66,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "65": "std::collections::hash::map::HashMap",
+      "66": "alloc::string::String"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileReader",
+          "id": "arrow_ipc::reader::FileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Read",
+                        "id": "alloc::io::read::Read",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Seek",
+                        "id": "core::io::seek::Seek",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1380,
+          1
+        ],
+        "end": [
+          1461,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "272",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileReader.md",
+    "record_file": "operations/arrow_ipc.reader.FileReader.json",
+    "anchor": "op-d153046fb36081cf82b06640",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ad8378df63ab4d8a44b6566f",
+    "path": "arrow_ipc::reader::FileReader::fmt",
+    "name": "fmt",
+    "owner": "arrow_ipc::reader::FileReader",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error>",
+    "docs": "",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1361,
+        5
+      ],
+      "end": [
+        1368,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "fmt::Formatter",
+                      "id": 57,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "fmt::Error",
+                          "id": 300,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "57": "core::fmt::Formatter",
+      "44": "core::result::Result",
+      "300": "core::fmt::Error"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileReader",
+          "id": "arrow_ipc::reader::FileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1360,
+          1
+        ],
+        "end": [
+          1369,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "299",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileReader.md",
+    "record_file": "operations/arrow_ipc.reader.FileReader.json",
+    "anchor": "op-ad8378df63ab4d8a44b6566f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bee86230b7d0ac0450a33d28",
+    "path": "arrow_ipc::reader::FileReader::get_mut",
+    "name": "get_mut",
+    "owner": "arrow_ipc::reader::FileReader",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_mut(&mut self) -> &mut R",
+    "docs": "Gets a mutable reference to the underlying reader.\n\nIt is inadvisable to directly read from the underlying reader.",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1448,
+        5
+      ],
+      "end": [
+        1450,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "R"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileReader",
+          "id": "arrow_ipc::reader::FileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Read",
+                        "id": "alloc::io::read::Read",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Seek",
+                        "id": "core::io::seek::Seek",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1380,
+          1
+        ],
+        "end": [
+          1461,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "276",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileReader.md",
+    "record_file": "operations/arrow_ipc.reader.FileReader.json",
+    "anchor": "op-bee86230b7d0ac0450a33d28",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "61f3733cdff2cdad273d277e",
+    "path": "arrow_ipc::reader::FileReader::get_ref",
+    "name": "get_ref",
+    "owner": "arrow_ipc::reader::FileReader",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_ref(&self) -> &R",
+    "docs": "Gets a reference to the underlying reader.\n\nIt is inadvisable to directly read from the underlying reader.",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1441,
+        5
+      ],
+      "end": [
+        1443,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "generic": "R"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileReader",
+          "id": "arrow_ipc::reader::FileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Read",
+                        "id": "alloc::io::read::Read",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Seek",
+                        "id": "core::io::seek::Seek",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1380,
+          1
+        ],
+        "end": [
+          1461,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "275",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileReader.md",
+    "record_file": "operations/arrow_ipc.reader.FileReader.json",
+    "anchor": "op-61f3733cdff2cdad273d277e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4d5aff1b2b2c0fe7de778817",
+    "path": "arrow_ipc::reader::FileReader::next",
+    "name": "next",
+    "owner": "arrow_ipc::reader::FileReader",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn next(&mut self) -> Option<Self::Item>",
+    "docs": "",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1466,
+        5
+      ],
+      "end": [
+        1473,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 127,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Item",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 294,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "127": "core::option::Option",
+      "294": "core::iter::traits::iterator::Iterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileReader",
+          "id": "arrow_ipc::reader::FileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Iterator",
+        "id": "core::iter::traits::iterator::Iterator",
+        "args": null
+      },
+      "trait_path": "core::iter::traits::iterator::Iterator",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Read",
+                        "id": "alloc::io::read::Read",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Seek",
+                        "id": "core::io::seek::Seek",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1463,
+          1
+        ],
+        "end": [
+          1474,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "303",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileReader.md",
+    "record_file": "operations/arrow_ipc.reader.FileReader.json",
+    "anchor": "op-4d5aff1b2b2c0fe7de778817",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "29b20f145323b4769e8fdc32",
+    "path": "arrow_ipc::reader::FileReader::num_batches",
+    "name": "num_batches",
+    "owner": "arrow_ipc::reader::FileReader",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn num_batches(&self) -> usize",
+    "docs": "Return the number of batches in the file",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1405,
+        5
+      ],
+      "end": [
+        1407,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileReader",
+          "id": "arrow_ipc::reader::FileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Read",
+                        "id": "alloc::io::read::Read",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Seek",
+                        "id": "core::io::seek::Seek",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1380,
+          1
+        ],
+        "end": [
+          1461,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "273",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileReader.md",
+    "record_file": "operations/arrow_ipc.reader.FileReader.json",
+    "anchor": "op-29b20f145323b4769e8fdc32",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8d03a7c11900c061cf05b662",
+    "path": "arrow_ipc::reader::FileReader::schema",
+    "name": "schema",
+    "owner": "arrow_ipc::reader::FileReader",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn schema(&self) -> SchemaRef",
+    "docs": "Return the schema of the file",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1410,
+        5
+      ],
+      "end": [
+        1412,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "SchemaRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileReader",
+          "id": "arrow_ipc::reader::FileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Read",
+                        "id": "alloc::io::read::Read",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Seek",
+                        "id": "core::io::seek::Seek",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1380,
+          1
+        ],
+        "end": [
+          1461,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "274",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileReader.md",
+    "record_file": "operations/arrow_ipc.reader.FileReader.json",
+    "anchor": "op-8d03a7c11900c061cf05b662",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a7e5cdf7b43e93e8a8188c8d",
+    "path": "arrow_ipc::reader::FileReader::schema",
+    "name": "schema",
+    "owner": "arrow_ipc::reader::FileReader",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn schema(&self) -> SchemaRef",
+    "docs": "",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1477,
+        5
+      ],
+      "end": [
+        1479,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "SchemaRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileReader",
+          "id": "arrow_ipc::reader::FileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "RecordBatchReader",
+        "id": "arrow_array::record_batch::RecordBatchReader",
+        "args": null
+      },
+      "trait_path": "arrow_array::record_batch::RecordBatchReader",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Read",
+                        "id": "alloc::io::read::Read",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Seek",
+                        "id": "core::io::seek::Seek",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1476,
+          1
+        ],
+        "end": [
+          1480,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "305",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileReader.md",
+    "record_file": "operations/arrow_ipc.reader.FileReader.json",
+    "anchor": "op-a7e5cdf7b43e93e8a8188c8d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3cb1c25f5682b51adde1b7ab",
+    "path": "arrow_ipc::reader::FileReader::set_index",
+    "name": "set_index",
+    "owner": "arrow_ipc::reader::FileReader",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn set_index(&mut self, index: usize) -> Result<(), ArrowError>",
+    "docs": "See to a specific [`RecordBatch`]\n\nSets the current block to the index, allowing random reads",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1417,
+        5
+      ],
+      "end": [
+        1427,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "index",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "44": "core::result::Result",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileReader",
+          "id": "arrow_ipc::reader::FileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Read",
+                        "id": "alloc::io::read::Read",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Seek",
+                        "id": "core::io::seek::Seek",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1380,
+          1
+        ],
+        "end": [
+          1461,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RecordBatch`": 118
+    },
+    "link_paths": {
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "266",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileReader.md",
+    "record_file": "operations/arrow_ipc.reader.FileReader.json",
+    "anchor": "op-3cb1c25f5682b51adde1b7ab",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "83fb7ff70e1971cd86eb34b0",
+    "path": "arrow_ipc::reader::FileReader::try_new",
+    "name": "try_new",
+    "owner": "arrow_ipc::reader::FileReader",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new(reader: R, projection: Option<Vec<usize>>) -> Result<Self, ArrowError>",
+    "docs": "Try to create a new file reader.\n\nThere is no internal buffering. If buffered reads are needed you likely want to use\n[`FileReader::try_new_buffered`] instead.\n\n# Errors\n\nAn ['Err'](Result::Err) may be returned if:\n- the file does not meet the Arrow Format footer requirements, or\n- file endianness does not match the target endianness.",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1391,
+        5
+      ],
+      "end": [
+        1397,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "reader",
+              {
+                "generic": "R"
+              }
+            ],
+            [
+              "projection",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 127,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Vec",
+                              "id": 206,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "usize"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "127": "core::option::Option",
+      "206": "alloc::vec::Vec",
+      "44": "core::result::Result",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileReader",
+          "id": "arrow_ipc::reader::FileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Read",
+                        "id": "alloc::io::read::Read",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Seek",
+                        "id": "core::io::seek::Seek",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1380,
+          1
+        ],
+        "end": [
+          1461,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Result::Err": 271,
+      "`FileReader::try_new_buffered`": 268
+    },
+    "link_paths": {
+      "Result::Err": "core::result::Result::Err",
+      "`FileReader::try_new_buffered`": "arrow_ipc::reader::FileReader::try_new_buffered"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "267",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileReader.md",
+    "record_file": "operations/arrow_ipc.reader.FileReader.json",
+    "anchor": "op-83fb7ff70e1971cd86eb34b0",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FileReader::try_new_buffered`": "../operations/arrow_ipc.reader.FileReader.md#op-899dfb786db15a0d86a5b9c9"
+    }
+  },
+  {
+    "id": "899dfb786db15a0d86a5b9c9",
+    "path": "arrow_ipc::reader::FileReader::try_new_buffered",
+    "name": "try_new_buffered",
+    "owner": "arrow_ipc::reader::FileReader",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_buffered(reader: R, projection: Option<Vec<usize>>) -> Result<Self, ArrowError>",
+    "docs": "Try to create a new file reader with the reader wrapped in a BufReader.\n\nSee [`FileReader::try_new`] for an unbuffered version.",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1375,
+        5
+      ],
+      "end": [
+        1377,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "reader",
+              {
+                "generic": "R"
+              }
+            ],
+            [
+              "projection",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 127,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Vec",
+                              "id": 206,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "usize"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "127": "core::option::Option",
+      "206": "alloc::vec::Vec",
+      "44": "core::result::Result",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileReader",
+          "id": "arrow_ipc::reader::FileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::io::BufReader",
+                      "id": "alloc::io::buffered::bufreader::BufReader",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "R"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Read",
+                        "id": "alloc::io::read::Read",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Seek",
+                        "id": "core::io::seek::Seek",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1371,
+          1
+        ],
+        "end": [
+          1378,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FileReader::try_new`": 267
+    },
+    "link_paths": {
+      "`FileReader::try_new`": "arrow_ipc::reader::FileReader::try_new"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "268",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileReader.md",
+    "record_file": "operations/arrow_ipc.reader.FileReader.json",
+    "anchor": "op-899dfb786db15a0d86a5b9c9",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FileReader::try_new`": "../operations/arrow_ipc.reader.FileReader.md#op-83fb7ff70e1971cd86eb34b0"
+    }
+  },
+  {
+    "id": "400075171d6ad5045b744a05",
+    "path": "arrow_ipc::reader::FileReader::with_skip_validation",
+    "name": "with_skip_validation",
+    "owner": "arrow_ipc::reader::FileReader",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn with_skip_validation(self, skip_validation: bool) -> Self",
+    "docs": "Specifies if validation should be skipped when reading data (defaults to `false`)\n\n# Safety\n\nSee [`FileDecoder::with_skip_validation`]",
+    "span": {
+      "filename": "src/reader.rs",
+      "begin": [
+        1457,
+        5
+      ],
+      "end": [
+        1460,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "skip_validation",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileReader",
+          "id": "arrow_ipc::reader::FileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Read",
+                        "id": "alloc::io::read::Read",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Seek",
+                        "id": "core::io::seek::Seek",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader.rs",
+        "begin": [
+          1380,
+          1
+        ],
+        "end": [
+          1461,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FileDecoder::with_skip_validation`": 208
+    },
+    "link_paths": {
+      "`FileDecoder::with_skip_validation`": "arrow_ipc::reader::FileDecoder::with_skip_validation"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "277",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.reader.FileReader.md",
+    "record_file": "operations/arrow_ipc.reader.FileReader.json",
+    "anchor": "op-400075171d6ad5045b744a05",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FileDecoder::with_skip_validation`": "../operations/arrow_ipc.reader.FileDecoder.md#op-e750154fa82597609b22c72a"
+    }
+  }
+]

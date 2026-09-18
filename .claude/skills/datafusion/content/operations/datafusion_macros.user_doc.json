@@ -1,0 +1,54 @@
+[
+  {
+    "id": "d180806e65ea7e3580e74e4a",
+    "path": "datafusion_macros::user_doc",
+    "name": "user_doc",
+    "owner": null,
+    "crate": "datafusion-macros",
+    "version": "55.1.0",
+    "kind": "proc_macro",
+    "signature": "macro user_doc",
+    "docs": "This procedural macro is intended to parse a rust custom attribute and create user documentation\nfrom it by constructing a `DocumentBuilder()` automatically. The `Documentation` can be\nretrieved from the `documentation()` method\ndeclared on `AggregateUDF`, `WindowUDFImpl`, `ScalarUDFImpl` traits.\nFor `doc_section`, this macro will try to find corresponding predefined `DocSection` by label field\nPredefined `DocSection` can be found in datafusion/expr/src/udf.rs\nExample:\n```ignore\n#[user_doc(\n    doc_section(label = \"Time and Date Functions\"),\n    description = r\"Converts a value to a date (`YYYY-MM-DD`).\",\n    syntax_example = \"to_date(expression[, ..., format_n])\",\n    sql_example = r#\"```sql\n> select to_date('2023-01-31');\n+-----------------------------+\n| to_date(Utf8(\\\"2023-01-31\\\")) |\n+-----------------------------+\n| 2023-01-31                  |\n+-----------------------------+\n```\"#,\n    standard_argument(name = \"expression\", prefix = \"String\"),\n    argument(\n        name = \"format_n\",\n        description = r\"Optional [Chrono format](https://docs.rs/chrono/latest/chrono/format/strftime/index.html) strings to use to parse the expression. Formats will be tried in the order\n  they appear with the first successful one being returned. If none of the formats successfully parse the expression\n  an error will be returned.\"\n   )\n)]\n#[derive(Debug)]\npub struct ToDateFunc {\n    signature: Signature,\n}\n```\nwill generate the following code\n```ignore\npub struct ToDateFunc {\n    signature: Signature,\n}\nimpl ToDateFunc {\n    fn doc(&self) -> Option<&datafusion_doc::Documentation> {\n        static DOCUMENTATION: std::sync::LazyLock<\n            datafusion_doc::Documentation,\n        > = std::sync::LazyLock::new(|| {\n            datafusion_doc::Documentation::builder(\n                    datafusion_doc::DocSection {\n                        include: true,\n                        label: \"Time and Date Functions\",\n                        description: None,\n                    },\n                    r\"Converts a value to a date (`YYYY-MM-DD`).\".to_string(),\n                    \"to_date(expression[, ..., format_n])\".to_string(),\n                )\n                .with_sql_example(\n                    r#\"```sql\n> select to_date('2023-01-31');\n+-----------------------------+\n| to_date(Utf8(\\\"2023-01-31\\\")) |\n+-----------------------------+\n| 2023-01-31                  |\n+-----------------------------+\n```\"#,\n                )\n                .with_standard_argument(\"expression\", \"String\".into())\n                .with_argument(\n                    \"format_n\",\n                    r\"Optional [Chrono format](https://docs.rs/chrono/latest/chrono/format/strftime/index.html) strings to use to parse the expression. Formats will be tried in the order\nthey appear with the first successful one being returned. If none of the formats successfully parse the expression\nan error will be returned.\",\n                )\n                .build()\n        });\n        Some(&DOCUMENTATION)\n    }\n}\n```",
+    "span": {
+      "filename": "src/user_doc.rs",
+      "begin": [
+        106,
+        1
+      ],
+      "end": [
+        283,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = ProcMacroAttribute]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "proc_macro": {
+        "kind": "attr",
+        "helpers": []
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dc1837b1a633b4aa48a7a433a17a0a4891f4e85d8333022b7b03ba6ce1fa303c",
+      "format_version": 61,
+      "item_id": "0",
+      "origin": "https://docs.rs/crate/datafusion-macros/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_macros.user_doc.md",
+    "record_file": "operations/datafusion_macros.user_doc.json",
+    "anchor": "op-d180806e65ea7e3580e74e4a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

@@ -1,0 +1,1046 @@
+[
+  {
+    "id": "60e2758f8efa1bca70a870ce",
+    "path": "arrow_avro::reader::Decoder",
+    "name": "Decoder",
+    "owner": null,
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct Decoder",
+    "docs": "A low‑level, push‑based decoder from Avro bytes to Arrow `RecordBatch`.\n\n`Decoder` is designed for **streaming** scenarios:\n\n* You *feed* freshly received bytes using `Self::decode`, potentially multiple times,\n  until at least one row is complete.\n* You then *drain* completed rows with `Self::flush`, which yields a `RecordBatch`\n  if any rows were finished since the last flush.\n\nUnlike `Reader`, which is specialized for Avro **Object Container Files**, `Decoder`\nunderstands **framed single‑object** inputs and **Confluent Schema Registry** messages,\nswitching schemas mid‑stream when the framing indicates a new fingerprint.\n\n### Supported prefixes\n\nOn each new row boundary, `Decoder` tries to match one of the following \"prefixes\":\n\n* **Single‑Object encoding**: magic `0xC3 0x01` + schema fingerprint (length depends on\n  the configured `FingerprintAlgorithm`); see `SINGLE_OBJECT_MAGIC`.\n* **Confluent wire format**: magic `0x00` + 4‑byte big‑endian schema id; see\n  `CONFLUENT_MAGIC`.\n\nThe active fingerprint determines which cached row decoder is used to decode the following\nrecord body bytes.\n\n### Schema switching semantics\n\nWhen a new fingerprint is observed:\n\n* If the current batch is empty, the decoder switches immediately;\n* Otherwise, the current batch is finalized on the next `flush` and only then\n  does the decoder switch to the new schema. This guarantees that a single `RecordBatch`\n  never mixes rows with different schemas.\n\n### Examples\n\nBuild and use a `Decoder` for single‑object encoding:\n\n```\nuse arrow_avro::schema::{AvroSchema, SchemaStore};\nuse arrow_avro::reader::ReaderBuilder;\n\n# fn main() -> Result<(), Box<dyn std::error::Error>> {\n// Use a record schema at the top level so we can build an Arrow RecordBatch\nlet mut store = SchemaStore::new(); // Rabin fingerprinting by default\nlet avro = AvroSchema::new(\n    r#\"{\"type\":\"record\",\"name\":\"E\",\"fields\":[{\"name\":\"x\",\"type\":\"long\"}]}\"#.to_string()\n);\nlet fp = store.register(avro)?;\n\n// --- Hidden: write a single-object framed row {x:7} ---\n# use std::sync::Arc;\n# use std::collections::HashMap;\n# use arrow_array::{ArrayRef, Int64Array, RecordBatch};\n# use arrow_schema::{DataType, Field, Schema};\n# use arrow_avro::schema::{SCHEMA_METADATA_KEY, FingerprintStrategy};\n# use arrow_avro::writer::{WriterBuilder, format::AvroSoeFormat};\n# let mut md = HashMap::new();\n# md.insert(SCHEMA_METADATA_KEY.to_string(),\n#     r#\"{\"type\":\"record\",\"name\":\"E\",\"fields\":[{\"name\":\"x\",\"type\":\"long\"}]}\"#.to_string());\n# let arrow = Schema::new_with_metadata(vec![Field::new(\"x\", DataType::Int64, false)], md);\n# let batch = RecordBatch::try_new(Arc::new(arrow.clone()), vec![Arc::new(Int64Array::from(vec![7])) as ArrayRef])?;\n# let mut w = WriterBuilder::new(arrow)\n#     .with_fingerprint_strategy(fp.into())\n#     .build::<_, AvroSoeFormat>(Vec::new())?;\n# w.write(&batch)?; w.finish()?; let frame = w.into_inner();\n\nlet mut decoder = ReaderBuilder::new()\n    .with_writer_schema_store(store)\n    .with_batch_size(16)\n    .build_decoder()?;\n\n# decoder.decode(&frame)?;\nlet batch = decoder.flush()?.expect(\"one row\");\nassert_eq!(batch.num_rows(), 1);\n# Ok(()) }\n```\n\n*Background:* Avro's single‑object encoding is defined as `0xC3 0x01` + 8‑byte\nlittle‑endian CRC‑64‑AVRO fingerprint of the **writer schema** + Avro binary body.\nSee the Avro 1.11.1 spec for details. <https://avro.apache.org/docs/1.11.1/specification/#single-object-encoding>\n\nBuild and use a `Decoder` for Confluent Registry messages:\n\n```\nuse arrow_avro::schema::{AvroSchema, SchemaStore, Fingerprint, FingerprintAlgorithm};\nuse arrow_avro::reader::ReaderBuilder;\n\n# fn main() -> Result<(), Box<dyn std::error::Error>> {\nlet mut store = SchemaStore::new_with_type(FingerprintAlgorithm::Id);\nstore.set(Fingerprint::Id(1234), AvroSchema::new(r#\"{\"type\":\"record\",\"name\":\"E\",\"fields\":[{\"name\":\"x\",\"type\":\"long\"}]}\"#.to_string()))?;\n\n// --- Hidden: encode two Confluent-framed messages {x:1} and {x:2} ---\n# use std::sync::Arc;\n# use std::collections::HashMap;\n# use arrow_array::{ArrayRef, Int64Array, RecordBatch};\n# use arrow_schema::{DataType, Field, Schema};\n# use arrow_avro::schema::{SCHEMA_METADATA_KEY, FingerprintStrategy};\n# use arrow_avro::writer::{WriterBuilder, format::AvroSoeFormat};\n# fn msg(x: i64) -> Result<Vec<u8>, Box<dyn std::error::Error>> {\n#   let mut md = HashMap::new();\n#   md.insert(SCHEMA_METADATA_KEY.to_string(),\n#     r#\"{\"type\":\"record\",\"name\":\"E\",\"fields\":[{\"name\":\"x\",\"type\":\"long\"}]}\"#.to_string());\n#   let arrow = Schema::new_with_metadata(vec![Field::new(\"x\", DataType::Int64, false)], md);\n#   let batch = RecordBatch::try_new(Arc::new(arrow.clone()), vec![Arc::new(Int64Array::from(vec![x])) as ArrayRef])?;\n#   let mut w = WriterBuilder::new(arrow)\n#       .with_fingerprint_strategy(FingerprintStrategy::Id(1234))\n#       .build::<_, AvroSoeFormat>(Vec::new())?;\n#   w.write(&batch)?; w.finish()?; Ok(w.into_inner())\n# }\n# let m1 = msg(1)?;\n# let m2 = msg(2)?;\n\nlet mut decoder = ReaderBuilder::new()\n    .with_writer_schema_store(store)\n    .build_decoder()?;\n# decoder.decode(&m1)?;\n# decoder.decode(&m2)?;\nlet batch = decoder.flush()?.expect(\"two rows\");\nassert_eq!(batch.num_rows(), 2);\n# Ok(()) }\n```",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        643,
+        1
+      ],
+      "end": [
+        652,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          289,
+          290,
+          291,
+          292,
+          293,
+          294,
+          295,
+          296,
+          297,
+          298,
+          299,
+          300,
+          301,
+          302,
+          303,
+          304,
+          305,
+          306,
+          308
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "281",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.Decoder.md",
+    "record_file": "operations/arrow_avro.reader.Decoder.json",
+    "anchor": "op-60e2758f8efa1bca70a870ce",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1fad3e906bfd8f79d2acfaab",
+    "path": "arrow_avro::reader::Decoder::batch_is_empty",
+    "name": "batch_is_empty",
+    "owner": "arrow_avro::reader::Decoder",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn batch_is_empty(&self) -> bool",
+    "docs": "Returns true if the decoder has not decoded any batches yet (i.e., the current batch is empty).",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        881,
+        5
+      ],
+      "end": [
+        883,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_avro::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          654,
+          1
+        ],
+        "end": [
+          904,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "288",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.Decoder.md",
+    "record_file": "operations/arrow_avro.reader.Decoder.json",
+    "anchor": "op-1fad3e906bfd8f79d2acfaab",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "46a82949e6c5135ee0003a17",
+    "path": "arrow_avro::reader::Decoder::batch_is_full",
+    "name": "batch_is_full",
+    "owner": "arrow_avro::reader::Decoder",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn batch_is_full(&self) -> bool",
+    "docs": "Returns true if the decoder has reached its capacity for the current batch.",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        876,
+        5
+      ],
+      "end": [
+        878,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_avro::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          654,
+          1
+        ],
+        "end": [
+          904,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "287",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.Decoder.md",
+    "record_file": "operations/arrow_avro.reader.Decoder.json",
+    "anchor": "op-46a82949e6c5135ee0003a17",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "95c559c0c9214aca2d52af8f",
+    "path": "arrow_avro::reader::Decoder::batch_size",
+    "name": "batch_size",
+    "owner": "arrow_avro::reader::Decoder",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn batch_size(&self) -> usize",
+    "docs": "Returns the configured maximum number of rows per batch.",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        683,
+        5
+      ],
+      "end": [
+        685,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_avro::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          654,
+          1
+        ],
+        "end": [
+          904,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "283",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.Decoder.md",
+    "record_file": "operations/arrow_avro.reader.Decoder.json",
+    "anchor": "op-95c559c0c9214aca2d52af8f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "729177c45c704f1f9dadfe46",
+    "path": "arrow_avro::reader::Decoder::capacity",
+    "name": "capacity",
+    "owner": "arrow_avro::reader::Decoder",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn capacity(&self) -> usize",
+    "docs": "Returns the number of rows that can be added to this decoder before it is full.",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        871,
+        5
+      ],
+      "end": [
+        873,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_avro::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          654,
+          1
+        ],
+        "end": [
+          904,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "286",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.Decoder.md",
+    "record_file": "operations/arrow_avro.reader.Decoder.json",
+    "anchor": "op-729177c45c704f1f9dadfe46",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ba3c6111a3583be055e585a9",
+    "path": "arrow_avro::reader::Decoder::decode",
+    "name": "decode",
+    "owner": "arrow_avro::reader::Decoder",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn decode(&mut self, data: &[u8]) -> Result<usize, AvroError>",
+    "docs": "Feed a chunk of bytes into the decoder.\n\nThis will:\n\n* Decode at most `Self::batch_size` rows;\n* Return the number of input bytes **consumed** from `data` (which may be 0 if more\n  bytes are required, or less than `data.len()` if a prefix/body straddles the\n  chunk boundary);\n* Defer producing a `RecordBatch` until you call `Self::flush`.\n\n# Returns\nThe number of bytes consumed from `data`.\n\n# Errors\nReturns an error if:\n\n* The input indicates an unknown fingerprint (not present in the provided\n  `SchemaStore`;\n* The Avro body is malformed;\n* A strict‑mode union rule is violated (see `ReaderBuilder::with_strict_mode`).",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        707,
+        5
+      ],
+      "end": [
+        737,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "data",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "u8"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 9,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "AvroError",
+                          "id": 11,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "9": "core::result::Result",
+      "11": "arrow_avro::errors::AvroError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_avro::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          654,
+          1
+        ],
+        "end": [
+          904,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "284",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.Decoder.md",
+    "record_file": "operations/arrow_avro.reader.Decoder.json",
+    "anchor": "op-ba3c6111a3583be055e585a9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "184b72a475847cda809afea4",
+    "path": "arrow_avro::reader::Decoder::flush",
+    "name": "flush",
+    "owner": "arrow_avro::reader::Decoder",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn flush(&mut self) -> Result<Option<RecordBatch>, AvroError>",
+    "docs": "Produce a `RecordBatch` if at least one row is fully decoded, returning\n`Ok(None)` if no new rows are available.\n\nIf a schema change was detected while decoding rows for the current batch, the\nschema switch is applied **after** flushing this batch, so the **next** batch\n(if any) may have a different schema.",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        863,
+        5
+      ],
+      "end": [
+        868,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 9,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 14,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "RecordBatch",
+                                      "id": 262,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "AvroError",
+                          "id": 11,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "9": "core::result::Result",
+      "14": "core::option::Option",
+      "262": "arrow_array::record_batch::RecordBatch",
+      "11": "arrow_avro::errors::AvroError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_avro::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          654,
+          1
+        ],
+        "end": [
+          904,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "285",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.Decoder.md",
+    "record_file": "operations/arrow_avro.reader.Decoder.json",
+    "anchor": "op-184b72a475847cda809afea4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "053272d553c2f2a05542e282",
+    "path": "arrow_avro::reader::Decoder::fmt",
+    "name": "fmt",
+    "owner": "arrow_avro::reader::Decoder",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        642,
+        10
+      ],
+      "end": [
+        642,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 177,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 178,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "177": "core::fmt::Formatter",
+      "178": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_avro::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          642,
+          10
+        ],
+        "end": [
+          642,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "307",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.Decoder.md",
+    "record_file": "operations/arrow_avro.reader.Decoder.json",
+    "anchor": "op-053272d553c2f2a05542e282",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c18b3dbc140ca294dad3d6bd",
+    "path": "arrow_avro::reader::Decoder::schema",
+    "name": "schema",
+    "owner": "arrow_avro::reader::Decoder",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn schema(&self) -> SchemaRef",
+    "docs": "Returns the Arrow schema for the rows decoded by this decoder.\n\n**Note:** With single‑object or Confluent framing, the schema may change\nat a row boundary when the input indicates a new fingerprint.",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        678,
+        5
+      ],
+      "end": [
+        680,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "SchemaRef",
+              "id": 229,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "229": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Decoder",
+          "id": "arrow_avro::reader::Decoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/mod.rs",
+        "begin": [
+          654,
+          1
+        ],
+        "end": [
+          904,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "282",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.Decoder.md",
+    "record_file": "operations/arrow_avro.reader.Decoder.json",
+    "anchor": "op-c18b3dbc140ca294dad3d6bd",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

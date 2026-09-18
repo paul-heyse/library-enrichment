@@ -1,0 +1,938 @@
+[
+  {
+    "id": "2911d7ffb2098886b7dd6ba8",
+    "path": "datafusion_expr_common::accumulator::Accumulator",
+    "name": "Accumulator",
+    "owner": null,
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait Accumulator: Send + Sync + Debug + std::any::Any",
+    "docs": "Tracks an aggregate function's state.\n\n`Accumulator`s are stateful objects that implement a single group. They\naggregate values from multiple rows together into a final output aggregate.\n\n[`GroupsAccumulator]` is an additional more performant (but also complex) API\nthat manages state for multiple groups at once.\n\nAn accumulator knows how to:\n* update its state from inputs via [`update_batch`]\n\n* compute the final value from its internal state via [`evaluate`]\n\n* retract an update to its state from given inputs via\n  [`retract_batch`] (when used as a window aggregate [window\n  function])\n\n* convert its internal state to a vector of aggregate values via\n  [`state`] and combine the state from multiple accumulators\n  via [`merge_batch`], as part of efficient multi-phase grouping.\n\n[`update_batch`]: Self::update_batch\n[`retract_batch`]: Self::retract_batch\n[`state`]: Self::state\n[`evaluate`]: Self::evaluate\n[`merge_batch`]: Self::merge_batch\n[window function]: https://en.wikipedia.org/wiki/Window_function_(SQL)",
+    "span": {
+      "filename": "src/accumulator.rs",
+      "begin": [
+        51,
+        1
+      ],
+      "end": [
+        329,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          0,
+          4,
+          6,
+          9,
+          11,
+          3,
+          12
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 13,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 14,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Debug",
+                "id": 15,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "std::any::Any",
+                "id": 16,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": []
+      }
+    },
+    "type_references": {
+      "13": "core::marker::Send",
+      "14": "core::marker::Sync",
+      "15": "core::fmt::Debug",
+      "16": "core::any::Any"
+    },
+    "impl_context": null,
+    "links": {
+      "Self::state": 9,
+      "Self::merge_batch": 11,
+      "Self::retract_batch": 3,
+      "Self::update_batch": 0,
+      "Self::evaluate": 4
+    },
+    "link_paths": {
+      "Self::state": "datafusion_expr_common::accumulator::Accumulator::state",
+      "Self::merge_batch": "datafusion_expr_common::accumulator::Accumulator::merge_batch",
+      "Self::retract_batch": "datafusion_expr_common::accumulator::Accumulator::retract_batch",
+      "Self::update_batch": "datafusion_expr_common::accumulator::Accumulator::update_batch",
+      "Self::evaluate": "datafusion_expr_common::accumulator::Accumulator::evaluate"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "7",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.accumulator.Accumulator.md",
+    "record_file": "operations/datafusion_expr_common.accumulator.Accumulator.json",
+    "anchor": "op-2911d7ffb2098886b7dd6ba8",
+    "aliases": [
+      "datafusion::logical_expr::Accumulator",
+      "datafusion::physical_plan::Accumulator",
+      "datafusion_expr::Accumulator",
+      "datafusion_physical_plan::Accumulator",
+      "datafusion_physical_plan::execution_plan::Accumulator"
+    ],
+    "resolved_doc_links": {
+      "Self::state": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-e13afcecd1da09f0b485e6dc",
+      "Self::merge_batch": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-f67447a9bb1b06cf9ea3db0d",
+      "Self::retract_batch": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-15a92480d8af9ef2e20e8eb8",
+      "Self::update_batch": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-1afa6e9a06d15906b5bac2ac",
+      "Self::evaluate": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-d45f0e13fa55e22a4afa980e"
+    }
+  },
+  {
+    "id": "d45f0e13fa55e22a4afa980e",
+    "path": "datafusion_expr_common::accumulator::Accumulator::evaluate",
+    "name": "evaluate",
+    "owner": "datafusion_expr_common::accumulator::Accumulator",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn evaluate(&mut self) -> Result<ScalarValue>",
+    "docs": "Returns the final aggregate value.\n\nFor example, the `SUM` accumulator maintains a running sum,\nand `evaluate` will produce that running sum as its output.\n\nThis function gets `&mut self` to allow for the accumulator to build\narrow-compatible internal state that can be returned without copying\nwhen possible (for example distinct strings).\n\n## Correctness\n\nThis function must not consume the internal state, as it is also used in window\naggregate functions where it can be executed multiple times depending on the\ncurrent window frame. Consuming the internal state can cause the next invocation\nto have incorrect results.\n\n- Even if this accumulator doesn't implement [`retract_batch`] it may still be used\n  in window aggregate functions where the window frame is\n  `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`\n\nIt is fine to modify the state (e.g. re-order elements within internal state vec) so long\nas this doesn't cause an incorrect computation on the next call of evaluate.\n\n[`retract_batch`]: Self::retract_batch",
+    "span": {
+      "filename": "src/accumulator.rs",
+      "begin": [
+        85,
+        5
+      ],
+      "end": [
+        85,
+        51
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ScalarValue",
+                          "id": 5,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "datafusion_common::error::Result",
+      "5": "datafusion_common::scalar::ScalarValue"
+    },
+    "impl_context": null,
+    "links": {
+      "Self::retract_batch": 3
+    },
+    "link_paths": {
+      "Self::retract_batch": "datafusion_expr_common::accumulator::Accumulator::retract_batch"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "4",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.accumulator.Accumulator.md",
+    "record_file": "operations/datafusion_expr_common.accumulator.Accumulator.json",
+    "anchor": "op-d45f0e13fa55e22a4afa980e",
+    "aliases": [
+      "datafusion::logical_expr::Accumulator::evaluate",
+      "datafusion::physical_plan::Accumulator::evaluate",
+      "datafusion_expr::Accumulator::evaluate",
+      "datafusion_physical_plan::Accumulator::evaluate",
+      "datafusion_physical_plan::execution_plan::Accumulator::evaluate"
+    ],
+    "resolved_doc_links": {
+      "Self::retract_batch": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-15a92480d8af9ef2e20e8eb8"
+    }
+  },
+  {
+    "id": "f67447a9bb1b06cf9ea3db0d",
+    "path": "datafusion_expr_common::accumulator::Accumulator::merge_batch",
+    "name": "merge_batch",
+    "owner": "datafusion_expr_common::accumulator::Accumulator",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn merge_batch(&mut self, states: &[ArrayRef]) -> Result<()>",
+    "docs": "Updates the accumulator's state from an `Array` containing one\nor more intermediate values.\n\nFor some aggregates (such as `SUM`), merge_batch is the same\nas `update_batch`, but for some aggregates (such as `COUNT`)\nthe operations differ. See [`Self::state`] for more details on how\nstate is used and merged.\n\nThe `states` array passed was formed by concatenating the\nresults of calling [`Self::state`] on zero or more other\n`Accumulator` instances.",
+    "span": {
+      "filename": "src/accumulator.rs",
+      "begin": [
+        279,
+        5
+      ],
+      "end": [
+        279,
+        66
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "states",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 1,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "arrow_array::array::ArrayRef",
+      "2": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::state`": 9
+    },
+    "link_paths": {
+      "`Self::state`": "datafusion_expr_common::accumulator::Accumulator::state"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "11",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.accumulator.Accumulator.md",
+    "record_file": "operations/datafusion_expr_common.accumulator.Accumulator.json",
+    "anchor": "op-f67447a9bb1b06cf9ea3db0d",
+    "aliases": [
+      "datafusion::logical_expr::Accumulator::merge_batch",
+      "datafusion::physical_plan::Accumulator::merge_batch",
+      "datafusion_expr::Accumulator::merge_batch",
+      "datafusion_physical_plan::Accumulator::merge_batch",
+      "datafusion_physical_plan::execution_plan::Accumulator::merge_batch"
+    ],
+    "resolved_doc_links": {
+      "`Self::state`": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-e13afcecd1da09f0b485e6dc"
+    }
+  },
+  {
+    "id": "15a92480d8af9ef2e20e8eb8",
+    "path": "datafusion_expr_common::accumulator::Accumulator::retract_batch",
+    "name": "retract_batch",
+    "owner": "datafusion_expr_common::accumulator::Accumulator",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn retract_batch(&mut self, _values: &[ArrayRef]) -> Result<()>",
+    "docs": "Retracts (removed) an update (caused by the given inputs) to\naccumulator's state.\n\nThis is the inverse operation of [`Self::update_batch`] and is used\nto incrementally calculate window aggregates where the `OVER`\nclause defines a bounded window.\n\n# Example\n\nFor example, given the following input partition\n\n```text\n                    │      current      │\n                           window\n                    │                   │\n               ┌────┬────┬────┬────┬────┬────┬────┬────┬────┐\n    Input      │ A  │ B  │ C  │ D  │ E  │ F  │ G  │ H  │ I  │\n  partition    └────┴────┴────┴────┼────┴────┴────┴────┼────┘\n\n                                   │         next      │\n                                            window\n```\n\nFirst, [`Self::evaluate`] will be called to produce the output\nfor the current window.\n\nThen, to advance to the next window:\n\nFirst, [`Self::retract_batch`] will be called with the values\nthat are leaving the window, `[B, C, D]` and then\n[`Self::update_batch`] will be called with the values that are\nentering the window, `[F, G, H]`.",
+    "span": {
+      "filename": "src/accumulator.rs",
+      "begin": [
+        313,
+        5
+      ],
+      "end": [
+        318,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 1,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "arrow_array::array::ArrayRef",
+      "2": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::retract_batch`": 3,
+      "`Self::update_batch`": 0,
+      "`Self::evaluate`": 4
+    },
+    "link_paths": {
+      "`Self::retract_batch`": "datafusion_expr_common::accumulator::Accumulator::retract_batch",
+      "`Self::update_batch`": "datafusion_expr_common::accumulator::Accumulator::update_batch",
+      "`Self::evaluate`": "datafusion_expr_common::accumulator::Accumulator::evaluate"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "3",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.accumulator.Accumulator.md",
+    "record_file": "operations/datafusion_expr_common.accumulator.Accumulator.json",
+    "anchor": "op-15a92480d8af9ef2e20e8eb8",
+    "aliases": [
+      "datafusion::logical_expr::Accumulator::retract_batch",
+      "datafusion::physical_plan::Accumulator::retract_batch",
+      "datafusion_expr::Accumulator::retract_batch",
+      "datafusion_physical_plan::Accumulator::retract_batch",
+      "datafusion_physical_plan::execution_plan::Accumulator::retract_batch"
+    ],
+    "resolved_doc_links": {
+      "`Self::retract_batch`": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-15a92480d8af9ef2e20e8eb8",
+      "`Self::update_batch`": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-1afa6e9a06d15906b5bac2ac",
+      "`Self::evaluate`": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-d45f0e13fa55e22a4afa980e"
+    }
+  },
+  {
+    "id": "b05b660bb47e797c0fc81f10",
+    "path": "datafusion_expr_common::accumulator::Accumulator::size",
+    "name": "size",
+    "owner": "datafusion_expr_common::accumulator::Accumulator",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn size(&self) -> usize",
+    "docs": "Returns the allocated size required for this accumulator, in\nbytes, including `Self`.\n\nThis value is used to calculate the memory used during\nexecution so DataFusion can stay within its allotted limit.\n\n\"Allocated\" means that for internal containers such as `Vec`,\nthe `capacity` should be used not the `len`.\n\nMay be expensive; check the implementation before calling on hot paths.",
+    "span": {
+      "filename": "src/accumulator.rs",
+      "begin": [
+        97,
+        5
+      ],
+      "end": [
+        97,
+        29
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "6",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.accumulator.Accumulator.md",
+    "record_file": "operations/datafusion_expr_common.accumulator.Accumulator.json",
+    "anchor": "op-b05b660bb47e797c0fc81f10",
+    "aliases": [
+      "datafusion::logical_expr::Accumulator::size",
+      "datafusion::physical_plan::Accumulator::size",
+      "datafusion_expr::Accumulator::size",
+      "datafusion_physical_plan::Accumulator::size",
+      "datafusion_physical_plan::execution_plan::Accumulator::size"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e13afcecd1da09f0b485e6dc",
+    "path": "datafusion_expr_common::accumulator::Accumulator::state",
+    "name": "state",
+    "owner": "datafusion_expr_common::accumulator::Accumulator",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn state(&mut self) -> Result<Vec<ScalarValue>>",
+    "docs": "Returns the intermediate state of the accumulator, consuming the\nintermediate state.\n\nThis function should not be called twice, otherwise it will\nresult in potentially non-deterministic behavior.\n\nThis function gets `&mut self` to allow for the accumulator to build\narrow-compatible internal state that can be returned without copying\nwhen possible (for example distinct strings).\n\nIntermediate state is used for \"multi-phase\" grouping in\nDataFusion, where an aggregate is computed in parallel with\nmultiple `Accumulator` instances, as described below:\n\n# Multi-Phase Grouping\n\n```text\n                              ▲\n                              │                   evaluate() is called to\n                              │                   produce the final aggregate\n                              │                   value per group\n                              │\n                 ┌─────────────────────────┐\n                 │GroupBy                  │\n                 │(AggregateMode::Final)   │      state() is called for each\n                 │                         │      group and the resulting\n                 └─────────────────────────┘      RecordBatches passed to the\n                                                  Final GroupBy via merge_batch()\n                              ▲\n                              │\n             ┌────────────────┴───────────────┐\n             │                                │\n             │                                │\n┌─────────────────────────┐      ┌─────────────────────────┐\n│        GroupBy          │      │        GroupBy          │\n│(AggregateMode::Partial) │      │(AggregateMode::Partial) │\n└─────────────────────────┘      └─────────────────────────┘\n             ▲                                ▲\n             │                                │    update_batch() is called for\n             │                                │    each input RecordBatch\n        .─────────.                      .─────────.\n     ,─'           '─.                ,─'           '─.\n    ;      Input      :              ;      Input      :\n    :   Partition 0   ;              :   Partition 1   ;\n     ╲               ╱                ╲               ╱\n      '─.         ,─'                  '─.         ,─'\n         `───────'                        `───────'\n```\n\nThe partial state is serialized as `Arrays` and then combined\nwith other partial states from different instances of this\nAccumulator (that ran on different partitions, for example).\n\nThe state can be and often is a different type than the output\ntype of the [`Accumulator`] and needs different merge\noperations (for example, the partial state for `COUNT` needs\nto be summed together)\n\nSome accumulators can return multiple values for their\nintermediate states. For example, the average accumulator\ntracks `sum` and `n`, and this function should return a vector\nof two values, sum and n.\n\nNote that [`ScalarValue::List`] can be used to pass multiple\nvalues if the number of intermediate values is not known at\nplanning time (e.g. for `MEDIAN`)\n\n# Multi-phase repartitioned Grouping\n\nMany multi-phase grouping plans contain a Repartition operation\nas well as shown below:\n\n```text\n               ▲                          ▲\n               │                          │\n               │                          │\n               │                          │\n               │                          │\n               │                          │\n   ┌───────────────────────┐  ┌───────────────────────┐       4. Each AggregateMode::Final\n   │GroupBy                │  │GroupBy                │       GroupBy has an entry for its\n   │(AggregateMode::Final) │  │(AggregateMode::Final) │       subset of groups (in this case\n   │                       │  │                       │       that means half the entries)\n   └───────────────────────┘  └───────────────────────┘\n               ▲                          ▲\n               │                          │\n               └─────────────┬────────────┘\n                             │\n                             │\n                             │\n                ┌─────────────────────────┐                   3. Repartitioning by hash(group\n                │       Repartition       │                   keys) ensures that each distinct\n                │         HASH(x)         │                   group key now appears in exactly\n                └─────────────────────────┘                   one partition\n                             ▲\n                             │\n             ┌───────────────┴─────────────┐\n             │                             │\n             │                             │\n┌─────────────────────────┐  ┌──────────────────────────┐     2. Each AggregateMode::Partial\n│        GroupBy          │  │       GroupBy            │     GroupBy has an entry for *all*\n│(AggregateMode::Partial) │  │ (AggregateMode::Partial) │     the groups\n└─────────────────────────┘  └──────────────────────────┘\n             ▲                             ▲\n             │                             │\n             │                             │\n        .─────────.                   .─────────.\n     ,─'           '─.             ,─'           '─.\n    ;      Input      :           ;      Input      :         1. Since input data is\n    :   Partition 0   ;           :   Partition 1   ;         arbitrarily or RoundRobin\n     ╲               ╱             ╲               ╱          distributed, each partition\n      '─.         ,─'               '─.         ,─'           likely has all distinct\n         `───────'                     `───────'\n```\n\nThis structure is used so that the `AggregateMode::Partial` accumulators\nreduces the cardinality of the input as soon as possible. Typically,\neach partial accumulator sees all groups in the input as the group keys\nare evenly distributed across the input.\n\nThe final output is computed by repartitioning the result of\n[`Self::state`] from each Partial aggregate and `hash(group keys)` so\nthat each distinct group key appears in exactly one of the\n`AggregateMode::Final` GroupBy nodes. The outputs of the final nodes are\nthen unioned together to produce the overall final output.\n\nHere is an example that shows the distribution of groups in the\ndifferent phases\n\n```text\n              ┌─────┐                ┌─────┐\n              │  1  │                │  3  │\n              ├─────┤                ├─────┤\n              │  2  │                │  4  │                After repartitioning by\n              └─────┘                └─────┘                hash(group keys), each distinct\n              ┌─────┐                ┌─────┐                group key now appears in exactly\n              │  1  │                │  3  │                one partition\n              ├─────┤                ├─────┤\n              │  2  │                │  4  │\n              └─────┘                └─────┘\n\n\n─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─\n\n              ┌─────┐                ┌─────┐\n              │  2  │                │  2  │\n              ├─────┤                ├─────┤\n              │  1  │                │  2  │\n              ├─────┤                ├─────┤\n              │  3  │                │  3  │\n              ├─────┤                ├─────┤\n              │  4  │                │  1  │\n              └─────┘                └─────┘                Input data is arbitrarily or\n                ...                    ...                  RoundRobin distributed, each\n              ┌─────┐                ┌─────┐                partition likely has all\n              │  1  │                │  4  │                distinct group keys\n              ├─────┤                ├─────┤\n              │  4  │                │  3  │\n              ├─────┤                ├─────┤\n              │  1  │                │  1  │\n              ├─────┤                ├─────┤\n              │  4  │                │  3  │\n              └─────┘                └─────┘\n\n          group values           group values\n          in partition 0         in partition 1\n```",
+    "span": {
+      "filename": "src/accumulator.rs",
+      "begin": [
+        266,
+        5
+      ],
+      "end": [
+        266,
+        53
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 10,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "ScalarValue",
+                                      "id": 5,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "datafusion_common::error::Result",
+      "10": "alloc::vec::Vec",
+      "5": "datafusion_common::scalar::ScalarValue"
+    },
+    "impl_context": null,
+    "links": {
+      "`ScalarValue::List`": 8,
+      "`Self::state`": 9,
+      "`Accumulator`": 7
+    },
+    "link_paths": {
+      "`ScalarValue::List`": "datafusion_common::scalar::ScalarValue::List",
+      "`Self::state`": "datafusion_expr_common::accumulator::Accumulator::state",
+      "`Accumulator`": "datafusion_expr_common::accumulator::Accumulator"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "9",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.accumulator.Accumulator.md",
+    "record_file": "operations/datafusion_expr_common.accumulator.Accumulator.json",
+    "anchor": "op-e13afcecd1da09f0b485e6dc",
+    "aliases": [
+      "datafusion::logical_expr::Accumulator::state",
+      "datafusion::physical_plan::Accumulator::state",
+      "datafusion_expr::Accumulator::state",
+      "datafusion_physical_plan::Accumulator::state",
+      "datafusion_physical_plan::execution_plan::Accumulator::state"
+    ],
+    "resolved_doc_links": {
+      "`ScalarValue::List`": "../operations/datafusion_common.scalar.ScalarValue.md#op-e02ff167c86d13c10b64e274",
+      "`Self::state`": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-e13afcecd1da09f0b485e6dc",
+      "`Accumulator`": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-2911d7ffb2098886b7dd6ba8"
+    }
+  },
+  {
+    "id": "2eacec226efdbaa1eff030a0",
+    "path": "datafusion_expr_common::accumulator::Accumulator::supports_retract_batch",
+    "name": "supports_retract_batch",
+    "owner": "datafusion_expr_common::accumulator::Accumulator",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_retract_batch(&self) -> bool",
+    "docs": "Does the accumulator support incrementally updating its value\nby *removing* values.\n\nIf this function returns true, [`Self::retract_batch`] will be\ncalled for sliding window functions such as queries with an\n`OVER (ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING)`",
+    "span": {
+      "filename": "src/accumulator.rs",
+      "begin": [
+        326,
+        5
+      ],
+      "end": [
+        328,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Self::retract_batch`": 3
+    },
+    "link_paths": {
+      "`Self::retract_batch`": "datafusion_expr_common::accumulator::Accumulator::retract_batch"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "12",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.accumulator.Accumulator.md",
+    "record_file": "operations/datafusion_expr_common.accumulator.Accumulator.json",
+    "anchor": "op-2eacec226efdbaa1eff030a0",
+    "aliases": [
+      "datafusion::logical_expr::Accumulator::supports_retract_batch",
+      "datafusion::physical_plan::Accumulator::supports_retract_batch",
+      "datafusion_expr::Accumulator::supports_retract_batch",
+      "datafusion_physical_plan::Accumulator::supports_retract_batch",
+      "datafusion_physical_plan::execution_plan::Accumulator::supports_retract_batch"
+    ],
+    "resolved_doc_links": {
+      "`Self::retract_batch`": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-15a92480d8af9ef2e20e8eb8"
+    }
+  },
+  {
+    "id": "1afa6e9a06d15906b5bac2ac",
+    "path": "datafusion_expr_common::accumulator::Accumulator::update_batch",
+    "name": "update_batch",
+    "owner": "datafusion_expr_common::accumulator::Accumulator",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>",
+    "docs": "Updates the accumulator's state from its input.\n\n`values` contains the arguments to this aggregate function.\n\nFor example, the `SUM` accumulator maintains a running sum,\nand `update_batch` adds each of the input values to the\nrunning sum.",
+    "span": {
+      "filename": "src/accumulator.rs",
+      "begin": [
+        59,
+        5
+      ],
+      "end": [
+        59,
+        67
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 1,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "arrow_array::array::ArrayRef",
+      "2": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "0",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.accumulator.Accumulator.md",
+    "record_file": "operations/datafusion_expr_common.accumulator.Accumulator.json",
+    "anchor": "op-1afa6e9a06d15906b5bac2ac",
+    "aliases": [
+      "datafusion::logical_expr::Accumulator::update_batch",
+      "datafusion::physical_plan::Accumulator::update_batch",
+      "datafusion_expr::Accumulator::update_batch",
+      "datafusion_physical_plan::Accumulator::update_batch",
+      "datafusion_physical_plan::execution_plan::Accumulator::update_batch"
+    ],
+    "resolved_doc_links": {}
+  }
+]

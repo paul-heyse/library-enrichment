@@ -14,6 +14,9 @@ enum DecodedPayload
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.decode.DecodedPayload.md).
+
+
 The result of decoding [`FlightData`]
 
 ---
@@ -38,6 +41,9 @@ fn new_none(inner: FlightData) -> Self
 fn new_record_batch(inner: FlightData, batch: RecordBatch) -> Self
 fn new_schema(inner: FlightData, schema: SchemaRef) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.decode.DecodedFlightData.md).
+
 
 FlightData and the decoded payload (Schema, RecordBatch), if any
 
@@ -68,6 +74,9 @@ unsafe fn with_skip_validation(self) -> Self
 ```rust
 fn poll_next(Pin<&mut self>, cx: &mut std::task::Context<'_>) -> Poll<Option<Self::Item>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.decode.FlightDataDecoder.md).
+
 
 Wrapper around a stream of [`FlightData`] that handles the details
 of decoding low level Flight messages into [`Schema`] and
@@ -132,6 +141,9 @@ fn with_trailers(self, trailers: LazyTrailers) -> Self
 ```rust
 fn poll_next(Pin<&mut self>, cx: &mut std::task::Context<'_>) -> Poll<Option<Result<RecordBatch>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.decode.FlightRecordBatchStream.md).
+
 
 Decodes a [Stream] of [`FlightData`] back into
 [`RecordBatch`]es. This can be used to decode the response from an

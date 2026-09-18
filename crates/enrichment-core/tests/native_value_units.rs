@@ -555,7 +555,7 @@ fn native_cursor_bindings_reject_changes_without_json_identity_hashing() {
 async fn contract_changes_report_paths_rules_layout_and_codec_independently() {
     use arrow::datatypes::{Field, Schema};
     use datafusion::prelude::SessionContext;
-    use enrichment_core::native_contract::{Change, Manifest, changes};
+    use enrichment_core::native_contract::{Change, ContractField, Manifest, changes};
     let field = Field::new("literal.dot", DataType::UInt64, false);
     let semantic = Schema::new(vec![field.clone()]);
     let storage = Schema::new(vec![Field::new(
@@ -582,7 +582,12 @@ async fn contract_changes_report_paths_rules_layout_and_codec_independently() {
     .unwrap();
     assert_ne!(before.identity().unwrap(), after.identity().unwrap());
     let session = SessionContext::new();
-    let batches = changes(&session, &before, &after)
+    let input = |manifest: &Manifest| {
+        session
+            .read_batch(ContractField::batch(&manifest.fields).unwrap())
+            .unwrap()
+    };
+    let batches = changes(&session, input(&before), input(&after))
         .await
         .unwrap()
         .collect()
@@ -609,7 +614,12 @@ async fn contract_changes_report_paths_rules_layout_and_codec_independently() {
         .properties
         .insert("wire".into(), "new-codec".into());
     let session = SessionContext::new();
-    let batches = changes(&session, &before, &codec)
+    let input = |manifest: &Manifest| {
+        session
+            .read_batch(ContractField::batch(&manifest.fields).unwrap())
+            .unwrap()
+    };
+    let batches = changes(&session, input(&before), input(&codec))
         .await
         .unwrap()
         .collect()
@@ -684,7 +694,7 @@ fn generated_evidence_codecs_preserve_values_and_reject_corrupted_identities() {
     assert_eq!(encoded.schema().fields(), &Definition::fields());
     assert_eq!(
         arrow_model::decode::definitions(&encoded.project(&[4, 2, 0, 3, 1]).unwrap()).unwrap(),
-        [definition.clone()]
+        std::slice::from_ref(&definition)
     );
     let mut changed = definition;
     changed.definition_path.push_str("_different");
@@ -726,7 +736,7 @@ fn generated_evidence_codecs_preserve_values_and_reject_corrupted_identities() {
     assert_eq!(encoded.schema().fields(), &ExecutionObservation::fields());
     assert_eq!(
         arrow_model::execution::decode(&encoded).unwrap(),
-        [observation.clone()]
+        std::slice::from_ref(&observation)
     );
     let mut changed = observation;
     changed.containment_identity = "3".repeat(64);
@@ -753,7 +763,7 @@ fn generated_evidence_codecs_preserve_values_and_reject_corrupted_identities() {
     );
     assert_eq!(
         arrow_model::relationships_from_batch(&encoded).unwrap(),
-        [relationship.clone()]
+        std::slice::from_ref(&relationship)
     );
     let mut changed = relationship;
     changed.target = TargetRef::Unresolved {

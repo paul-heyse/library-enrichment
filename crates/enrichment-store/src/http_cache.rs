@@ -17,7 +17,7 @@ use enrichment_core::{
     http::{CacheRecord as Record, Fetched, cache_schema},
     native_union::NativeStruct,
 };
-use std::{io::Read, path::Path, sync::Arc};
+use std::{path::Path, sync::Arc};
 
 #[derive(Clone)]
 pub struct HttpCache {
@@ -49,23 +49,17 @@ impl HttpCache {
             initialization: Arc::new(tokio::sync::Mutex::new(())),
         })
     }
-    async fn table(&self) -> Result<deltalake::DeltaTable> {
+    async fn table(&self) -> Result<crate::native_delta::LoadedTable> {
         let _initialization = self.initialization.lock().await;
         self.delta
             .open_or_create(
                 "http_responses",
                 &self.contract,
                 true,
-                &[
-                    (
-                        "http_status",
-                        "response.status=200 OR response.status=404 OR response.status=410".into(),
-                    ),
-                    (
-                        "http_digest",
-                        "regexp_like(body_digest,'^[0-9a-f]{64}$')".into(),
-                    ),
-                ],
+                &[(
+                    "http_status",
+                    "response.status=200 OR response.status=404 OR response.status=410".into(),
+                )],
             )
             .await
     }
@@ -117,17 +111,28 @@ impl HttpCache {
             .map_err(|e| e.context("HTTP response selection"))?
             .pop())
     }
-    pub async fn body(&self, cached: &Cached) -> Result<Vec<u8>> {
+    pub async fn body(&self, cached: &Cached) -> Result<bytes::Bytes> {
         let artifact = cached.artifact();
+        let protection =
+            crate::retention::RetentionStore::new(self.catalog.clone(), self.runtime.clone())
+                .enroll(
+                    format!("http-body/{}", uuid::Uuid::new_v4()),
+                    crate::retention::ProtectionKind::Query,
+                    vec![crate::retention::Dependency::Artifact {
+                        artifact_id: artifact.artifact_id.clone(),
+                    }],
+                )
+                .await?;
         let blobs = self.blobs.clone();
         let limit = self.limit;
+        let pool = self.runtime.session().runtime_env().memory_pool.clone();
         Ok(self
             .runtime
             .blocking(move || {
-                let mut file = blobs.capture(&artifact, limit)?;
-                let mut bytes = Vec::new();
-                file.read_to_end(&mut bytes)?;
-                Ok::<_, std::io::Error>(bytes)
+                let _protection = protection;
+                blobs
+                    .read_owned(&artifact, limit, &pool)
+                    .map(bytes::Bytes::from_owner)
             })
             .await??)
     }
@@ -151,7 +156,11 @@ impl HttpCache {
             response: response.metadata(),
             request_url: url.to_string(),
             accept: accept.map(str::to_owned),
-            body_digest: artifact.sha256.clone(),
+            body_digest: artifact
+                .sha256
+                .clone()
+                .try_into()
+                .map_err(|message: &str| DataFusionError::Plan(message.into()))?,
             body_bytes: artifact.size_bytes,
         };
         let frame = crate::native_catalog::batch(
@@ -198,7 +207,8 @@ impl HttpCache {
     }
     pub async fn revalidated(&self, fresh: &Fetched, cached: Option<&Cached>) -> Result<Fetched> {
         let session = self.runtime.session();
-        session.register_batch(
+        crate::native_catalog::input(
+            &session,
             "fresh_response",
             Fetched::batch(std::slice::from_ref(fresh))?,
         )?;
@@ -206,7 +216,7 @@ impl HttpCache {
             .map(|c| c.response().clone())
             .into_iter()
             .collect::<Vec<_>>();
-        session.register_batch("previous_response", Fetched::batch(&previous)?)?;
+        crate::native_catalog::input(&session, "previous_response", Fetched::batch(&previous)?)?;
         self.runtime.require_empty(session.sql("SELECT 'http_not_modified' AS witness FROM fresh_response f LEFT JOIN previous_response p ON p.status=200 WHERE f.status<>304 OR p.status IS NULL LIMIT 1").await?, "http_unsolicited_not_modified", "http_revalidation").await?;
         let frame = session.sql("SELECT CAST(200 AS SMALLINT UNSIGNED) AS status,coalesce(f.content_type,p.content_type) AS content_type,coalesce(f.etag,p.etag) AS etag,coalesce(f.last_modified,p.last_modified) AS last_modified,f.final_url,f.retrieved_at FROM fresh_response f CROSS JOIN previous_response p").await?;
         self.runtime

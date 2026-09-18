@@ -12,6 +12,9 @@ Also reachable as `datafusion::functions_window::all_default_window_functions`
 fn all_default_window_functions() -> Vec<std::sync::Arc<datafusion_expr::WindowUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.all_default_window_functions.md).
+
+
 Returns all default window functions
 
 ---
@@ -26,6 +29,9 @@ Also reachable as `datafusion::functions_window::register_all`
 fn register_all(registry: &mut dyn FunctionRegistry) -> datafusion_common::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.register_all.md).
+
+
 Registers all enabled packages with a [`FunctionRegistry`]
 
 ---
@@ -39,6 +45,9 @@ Also reachable as `datafusion::functions_window::create_udwf_expr`
 ```rust
 macro_rules! create_udwf_expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.create_udwf_expr.md).
+
 
 Create a [`WindowFunction`] expression that exposes a fluent API
 which you can use to build more complex expressions.
@@ -227,6 +236,9 @@ Also reachable as `datafusion::functions_window::define_udwf_and_expr`
 ```rust
 macro_rules! define_udwf_and_expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.define_udwf_and_expr.md).
+
 
 Defines a user-defined window function.
 
@@ -560,6 +572,9 @@ Also reachable as `datafusion::functions_window::get_or_init_udwf`
 ```rust
 macro_rules! get_or_init_udwf
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.get_or_init_udwf.md).
+
 
 Lazily initializes a user-defined window function exactly once
 when called concurrently. Repeated calls return a reference to the

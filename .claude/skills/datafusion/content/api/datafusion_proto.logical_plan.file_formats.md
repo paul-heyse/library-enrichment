@@ -25,6 +25,9 @@ fn try_encode_file_format(&self, __buf: &mut Vec<u8>, __node: Arc<dyn FileFormat
 fn try_encode_table_provider(&self, _table_ref: &TableReference, _node: Arc<dyn datafusion_catalog::TableProvider>, _buf: &mut Vec<u8>) -> datafusion_common::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.file_formats.ArrowLogicalExtensionCodec.md).
+
+
 ---
 
 ## AvroLogicalExtensionCodec
@@ -49,6 +52,9 @@ fn try_encode(&self, _node: &datafusion_expr::Extension, _buf: &mut Vec<u8>) -> 
 fn try_encode_file_format(&self, __buf: &mut Vec<u8>, __node: Arc<dyn FileFormatFactory>) -> datafusion_common::Result<()>
 fn try_encode_table_provider(&self, _table_ref: &TableReference, _node: Arc<dyn datafusion_catalog::TableProvider>, _buf: &mut Vec<u8>) -> datafusion_common::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.file_formats.AvroLogicalExtensionCodec.md).
+
 
 ---
 
@@ -75,6 +81,9 @@ fn try_encode_file_format(&self, buf: &mut Vec<u8>, node: Arc<dyn FileFormatFact
 fn try_encode_table_provider(&self, _table_ref: &TableReference, _node: Arc<dyn datafusion_catalog::TableProvider>, _buf: &mut Vec<u8>) -> datafusion_common::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.file_formats.CsvLogicalExtensionCodec.md).
+
+
 ---
 
 ## JsonLogicalExtensionCodec
@@ -99,5 +108,8 @@ fn try_encode(&self, _node: &datafusion_expr::Extension, _buf: &mut Vec<u8>) -> 
 fn try_encode_file_format(&self, buf: &mut Vec<u8>, node: Arc<dyn FileFormatFactory>) -> datafusion_common::Result<()>
 fn try_encode_table_provider(&self, _table_ref: &TableReference, _node: Arc<dyn datafusion_catalog::TableProvider>, _buf: &mut Vec<u8>) -> datafusion_common::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.file_formats.JsonLogicalExtensionCodec.md).
+
 
 ---

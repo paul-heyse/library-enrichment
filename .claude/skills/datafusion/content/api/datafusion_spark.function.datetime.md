@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 24 public items · structured records in [`model/dat
 fn add_months() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.add_months.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of add_months
 
 ---
@@ -21,6 +24,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of add_months
 ```rust
 fn date_add() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.date_add.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of date_add
 
@@ -34,6 +40,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of date_add
 fn date_diff() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.date_diff.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of date_diff
 
 ---
@@ -45,6 +54,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of date_diff
 ```rust
 fn date_part() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.date_part.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of date_part
 
@@ -58,6 +70,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of date_part
 fn date_sub() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.date_sub.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of date_sub
 
 ---
@@ -69,6 +84,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of date_sub
 ```rust
 fn date_trunc() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.date_trunc.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of date_trunc
 
@@ -82,6 +100,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of date_trunc
 fn from_utc_timestamp() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.from_utc_timestamp.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of from_utc_timestamp
 
 ---
@@ -94,6 +115,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of from_utc_ti
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.functions.md).
+
+
 ---
 
 ## hour
@@ -103,6 +127,9 @@ fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```rust
 fn hour() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.hour.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of hour
 
@@ -116,6 +143,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of hour
 fn last_day() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.last_day.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of last_day
 
 ---
@@ -127,6 +157,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of last_day
 ```rust
 fn make_dt_interval() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.make_dt_interval.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of make_dt_interval
 
@@ -140,6 +173,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of make_dt_int
 fn make_interval() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.make_interval.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of make_interval
 
 ---
@@ -151,6 +187,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of make_interv
 ```rust
 fn minute() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.minute.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of minute
 
@@ -164,6 +203,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of minute
 fn monthname() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.monthname.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of monthname
 
 ---
@@ -175,6 +217,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of monthname
 ```rust
 fn next_day() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.next_day.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of next_day
 
@@ -188,6 +233,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of next_day
 fn second() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.second.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of second
 
 ---
@@ -199,6 +247,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of second
 ```rust
 fn time_trunc() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.time_trunc.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of time_trunc
 
@@ -212,6 +263,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of time_trunc
 fn to_utc_timestamp() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.to_utc_timestamp.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of to_utc_timestamp
 
 ---
@@ -223,6 +277,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of to_utc_time
 ```rust
 fn trunc() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.trunc.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of trunc
 
@@ -236,6 +293,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of trunc
 fn unix_date() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.unix_date.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of unix_date
 
 ---
@@ -247,6 +307,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of unix_date
 ```rust
 fn unix_micros() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.unix_micros.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of unix_micros
 
@@ -260,6 +323,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of unix_micros
 fn unix_millis() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.unix_millis.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of unix_millis
 
 ---
@@ -272,6 +338,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of unix_millis
 fn unix_seconds() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.unix_seconds.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of unix_seconds
 
 ---
@@ -283,6 +352,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of unix_second
 ```rust
 fn weekday() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.weekday.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of weekday
 

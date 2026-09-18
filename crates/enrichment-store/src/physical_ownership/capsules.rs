@@ -2,58 +2,47 @@
 use super::*;
 use enrichment_core::{capsule_protocol::inventory::Inventory, native_key::Key};
 
-fn capsule_rules(
+async fn capsule_rules(
+    session: &SessionContext,
     frame: datafusion::dataframe::DataFrame,
 ) -> Result<Vec<(&'static str, datafusion::dataframe::DataFrame)>> {
-    use datafusion::functions::{
-        crypto::expr_fn::sha256, encoding::expr_fn::encode, regex::expr_fn::regexp_like,
-        string::expr_fn::concat,
-    };
+    use datafusion::functions::{regex::expr_fn::regexp_like, string::expr_fn::concat};
+    use enrichment_core::operation::ownership::PreparedCapsule;
     let key = Key::CapsuleIdentity;
     let inputs = key
         .schema()
         .fields()
         .iter()
-        .map(|f| col("inputs").field(f.name()))
+        .map(|f| col("prepared").field("inputs").field(f.name()))
         .collect();
     let identity = frame
         .clone()
         .filter(col("key").not_eq(key.bind(inputs)?))?
         .select(vec![col("key")])?;
-    let key = Key::Environment;
-    let inputs = key
-        .schema()
-        .fields()
-        .iter()
-        .map(|f| col("environment").field(f.name()))
-        .collect();
-    let environment = frame
+    let contract = frame
         .clone()
         .filter(
-            col("environment")
-                .field("environment_id")
-                .not_eq(key.identity_expression(inputs)?),
+            regexp_like(
+                col("generation"),
+                concat(vec![lit("^"), col("key"), lit("-[a-f0-9]{32}$")]),
+                None,
+            )
+            .not(),
         )?
         .select(vec![col("key")])?;
-    let member = |name: &str| col("environment").field(name);
-    let invalid = regexp_like(
-        col("generation"),
-        concat(vec![lit("^"), col("key"), lit("-[a-f0-9]{32}$")]),
-        None,
-    )
-    .not()
-    .or(member("resolution").not_eq(lit("resolved")))
-    .or(member("toolchain").is_null())
-    .or(member("target").is_null())
-    .or(member("features").is_null())
-    .or(member("lock_digest").is_null())
-    .or(member("lock_digest").not_eq(encode(sha256(col("lock")), lit("hex"))))
-    .or(col("inputs").field("profile").not_eq(lit("build")));
-    let contract = frame.filter(invalid)?.select(vec![col("key")])?;
+    let prepared = frame.select(
+        PreparedCapsule::fields()
+            .iter()
+            .map(|field| col("prepared").field(field.name()).alias(field.name()))
+            .collect::<Vec<_>>(),
+    )?;
     Ok(vec![
         ("retained_capsule_identity", identity),
-        ("retained_capsule_environment", environment),
         ("retained_capsule_contract", contract),
+        (
+            "prepared_capsule_contract",
+            crate::prepared_capsule::refusals(session, prepared).await?,
+        ),
     ])
 }
 
@@ -61,11 +50,15 @@ pub(crate) async fn capsule_admission(
     invariants: &mut crate::invariants::Invariants,
     session: &SessionContext,
 ) -> Result<()> {
-    for (rule, invalid) in capsule_rules(session.table(Table::RetainedCapsules.reference()).await?)?
+    for (rule, invalid) in capsule_rules(
+        session,
+        session.table(Table::RetainedCapsules.reference()).await?,
+    )
+    .await?
     {
         invariants.push(invalid, rule, "capsule_publication")?;
     }
-    invariants.push(session.sql("SELECT c.key AS witness FROM state.records.retained_capsules c LEFT ANTI JOIN state.records.contexts x ON c.inputs.context.context_id=x.context_id AND c.inputs.context.release_id=x.release_id AND c.inputs.context.environment_id=x.environment_id AND c.inputs.release.release_id=x.release_id AND c.inputs.environment.environment_id=x.environment_id").await?,"retained_capsule_context","capsule_publication")?;
+    invariants.push(session.sql("SELECT c.key AS witness FROM state.records.retained_capsules c LEFT ANTI JOIN state.records.contexts x ON c.prepared.inputs.context.context_id=x.context_id AND c.prepared.inputs.context.release_id=x.release_id AND c.prepared.inputs.context.environment_id=x.environment_id AND c.prepared.inputs.release.release_id=x.release_id AND c.prepared.inputs.environment.environment_id=x.environment_id").await?,"retained_capsule_context","capsule_publication")?;
     Ok(())
 }
 
@@ -77,16 +70,18 @@ pub async fn reusable_capsule(
 ) -> Result<bool> {
     enrichment_core::native_struct! { struct Observation { inventory: Inventory => Rule::Map } }
     let session = runtime.session();
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "capsule",
         RetainedCapsule::batch(std::slice::from_ref(capsule))?,
     )?;
-    for (rule, invalid) in capsule_rules(session.table("capsule").await?)? {
+    for (rule, invalid) in capsule_rules(&session, session.table("capsule").await?).await? {
         runtime
             .require_empty(invalid, rule, "capsule_reuse")
             .await?;
     }
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "observed",
         Observation::batch(&[Observation {
             inventory: actual.clone(),
@@ -95,7 +90,7 @@ pub async fn reusable_capsule(
     let result = runtime
         .execute(
             session
-                .sql("SELECT c.key FROM capsule c JOIN observed o ON c.inventory=o.inventory")
+                .sql("SELECT c.key FROM capsule c JOIN observed o ON c.prepared.inventory=o.inventory")
                 .await?,
         )
         .await?;
@@ -130,9 +125,12 @@ impl OwnershipStore {
             native_catalog::work(
                 &session,
                 "capsule_input",
-                session
-                    .read_batch(RetainedCapsule::batch(&[record])?)?
-                    .into_view(),
+                crate::native_catalog::batch(
+                    &session,
+                    "capsules",
+                    RetainedCapsule::batch(&[record])?,
+                )?
+                .into_view(),
             )?;
             self.runtime
                 .require_empty(
@@ -146,7 +144,7 @@ impl OwnershipStore {
                     "capsule_publication",
                 )
                 .await?;
-            self.runtime.require_empty(session.sql("SELECT n.key AS witness FROM capsule_input n JOIN state.records.retained_capsules p ON n.key=p.key WHERE n.cache<>p.cache OR n.inputs<>p.inputs").await?, "capsule_inputs_immutable", "capsule_publication").await?;
+            self.runtime.require_empty(session.sql("SELECT n.key AS witness FROM capsule_input n JOIN state.records.retained_capsules p ON n.key=p.key WHERE n.cache<>p.cache OR n.prepared.inputs<>p.prepared.inputs").await?, "capsule_inputs_immutable", "capsule_publication").await?;
             let records = self
                 .runtime
                 .execute(session.table("capsule_input").await?)

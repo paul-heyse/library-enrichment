@@ -25,6 +25,9 @@ fn with_row_groups(column_index: usize, row_group_indices: Box<dyn Iterator<Item
 fn next(&mut self) -> Option<Result<Box<dyn PageReader>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.reader.FilePageIterator.md).
+
+
 Implementation of page iterator for parquet file.
 
 ---
@@ -48,6 +51,9 @@ trait ChunkReader: Length + Send + Sync
 fn get_bytes(&self, start: u64, length: usize) -> Result<Bytes>
 fn get_read(&self, start: u64) -> Result<Self::T>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.reader.ChunkReader.md).
+
 
 Generates [`Read`]ers to read chunks of a Parquet data source.
 
@@ -89,6 +95,9 @@ fn metadata(&self) -> &ParquetMetaData
 fn num_row_groups(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.reader.FileReader.md).
+
+
 Parquet file reader API. With this, user can get metadata information about the
 Parquet file, can get reader for each row group, and access record iterator.
 
@@ -112,6 +121,9 @@ trait Length
 ```rust
 fn len(&self) -> u64
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.reader.Length.md).
+
 
 Length should return the total number of bytes in the input source.
 It's mainly used to read the metadata, which is at the end of the source.
@@ -140,6 +152,9 @@ fn get_row_iter(&self, projection: Option<SchemaType>) -> Result<RowIter<'_>>
 fn metadata(&self) -> &RowGroupMetaData
 fn num_columns(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.reader.RowGroupReader.md).
+
 
 Parquet row group reader API. With this, user can get metadata information about the
 row group, as well as readers for each individual column chunk.

@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_scale`, `datafusion_functions_nest
 fn array_scale(array: datafusion_expr::Expr, scalar: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_scale.array_scale.md).
+
+
 scales each element of a numeric array by a scalar.
 
 ---
@@ -23,6 +26,9 @@ scales each element of a numeric array by a scalar.
 ```rust
 fn array_scale_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_scale.array_scale_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayScale
@@ -58,5 +64,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_scale.ArrayScale.md).
+
 
 ---

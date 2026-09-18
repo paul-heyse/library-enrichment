@@ -41,6 +41,9 @@ fn take_children(self) -> (Self, Vec<Self>)
 fn with_new_children(self, children: Vec<Self>) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.tree_node.ExprContext.md).
+
+
 A node object encapsulating a [`PhysicalExpr`] node with a payload. Since there are
 two ways to access child plans—directly from the plan  and through child nodes—it's
 recommended to perform mutable operations via [`Self::update_expr_from_children`].

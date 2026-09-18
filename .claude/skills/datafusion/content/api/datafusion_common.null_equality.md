@@ -18,6 +18,9 @@ enum NullEquality
 
 **Derives**: Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.null_equality.NullEquality.md).
+
+
 Represents the behavior for null values when evaluating equality. Currently, its primary use
 case is to define the behavior of joins for null values.
 

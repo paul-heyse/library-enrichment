@@ -22,6 +22,9 @@ trait HashTableAllocExt
 fn insert_accounted(&mut self, x: Self::T, hasher: impl Fn(&Self::T) -> u64, accounting: &mut usize)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.proxy.HashTableAllocExt.md).
+
+
 Extension trait for hash browns [`HashTable`] to account for allocations.
 
 ---
@@ -46,6 +49,9 @@ trait VecAllocExt
 fn allocated_size(&self) -> usize
 fn push_accounted(&mut self, x: Self::T, accounting: &mut usize)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.proxy.VecAllocExt.md).
+
 
 Extension trait for [`Vec`] to account for allocations.
 

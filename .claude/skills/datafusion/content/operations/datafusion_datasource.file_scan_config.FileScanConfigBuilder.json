@@ -1,0 +1,2633 @@
+[
+  {
+    "id": "fc85b3f3f7ee6a9b542e85c0",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "name": "FileScanConfigBuilder",
+    "owner": null,
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct FileScanConfigBuilder",
+    "docs": "A builder for [`FileScanConfig`]'s.\n\nExample:\n\n```rust\n# use std::sync::Arc;\n# use arrow::datatypes::{DataType, Field, Schema};\n# use datafusion_datasource::file_scan_config::{FileScanConfigBuilder, FileScanConfig};\n# use datafusion_datasource::file_compression_type::FileCompressionType;\n# use datafusion_datasource::file_groups::FileGroup;\n# use datafusion_datasource::PartitionedFile;\n# use datafusion_datasource::table_schema::TableSchema;\n# use datafusion_execution::object_store::ObjectStoreUrl;\n# use datafusion_common::Statistics;\n# use datafusion_datasource::file::FileSource;\n\n# fn main() {\n# fn with_source(file_source: Arc<dyn FileSource>) {\n    // Create a schema for our Parquet files\n    let file_schema = Arc::new(Schema::new(vec![\n        Field::new(\"id\", DataType::Int32, false),\n        Field::new(\"value\", DataType::Utf8, false),\n    ]));\n\n    // Create partition columns\n    let partition_cols = vec![\n        Arc::new(Field::new(\"date\", DataType::Utf8, false)),\n    ];\n\n    // Create table schema with file schema and partition columns\n    let table_schema = TableSchema::builder(file_schema)\n        .with_table_partition_cols(partition_cols)\n        .build();\n\n    // Create a builder for scanning Parquet files from a local filesystem\n    let config = FileScanConfigBuilder::new(\n        ObjectStoreUrl::local_filesystem(),\n        file_source,\n    )\n    // Set a limit of 1000 rows\n    .with_limit(Some(1000))\n    // Project only the first column\n    .with_projection_indices(Some(vec![0]))\n    .expect(\"Failed to push down projection\")\n    // Add a file group with two files\n    .with_file_group(FileGroup::new(vec![\n        PartitionedFile::new(\"data/date=2024-01-01/file1.parquet\", 1024),\n        PartitionedFile::new(\"data/date=2024-01-01/file2.parquet\", 2048),\n    ]))\n    // Set compression type\n    .with_file_compression_type(FileCompressionType::UNCOMPRESSED)\n    // Build the final config\n    .build();\n# }\n# }\n```",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        285,
+        1
+      ],
+      "end": [
+        298,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          636,
+          637,
+          638,
+          639,
+          640,
+          641,
+          642,
+          643,
+          644,
+          645,
+          646,
+          647,
+          648,
+          649,
+          650,
+          651,
+          652,
+          653,
+          654,
+          656,
+          579
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`FileScanConfig`": 193
+    },
+    "link_paths": {
+      "`FileScanConfig`": "datafusion_datasource::file_scan_config::FileScanConfig"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "538",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-fc85b3f3f7ee6a9b542e85c0",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder"
+    ],
+    "resolved_doc_links": {
+      "`FileScanConfig`": "../operations/datafusion_datasource.file_scan_config.FileScanConfig.md#op-d7aa66cd63851cc944f55f57"
+    }
+  },
+  {
+    "id": "33624ed9f35eb7e42233a463",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::build",
+    "name": "build",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn build(self) -> FileScanConfig",
+    "docs": "Build the final [`FileScanConfig`] with all the configured settings.\n\nThis method takes ownership of the builder and returns the constructed `FileScanConfig`.\nAny unset optional fields will use their default values.\n\n# Errors\nReturns an error if projection pushdown fails or if schema operations fail.",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        528,
+        5
+      ],
+      "end": [
+        568,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "FileScanConfig",
+              "id": 193,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "193": "datafusion_datasource::file_scan_config::FileScanConfig"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FileScanConfig`": 193
+    },
+    "link_paths": {
+      "`FileScanConfig`": "datafusion_datasource::file_scan_config::FileScanConfig"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "635",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-33624ed9f35eb7e42233a463",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::build"
+    ],
+    "resolved_doc_links": {
+      "`FileScanConfig`": "../operations/datafusion_datasource.file_scan_config.FileScanConfig.md#op-d7aa66cd63851cc944f55f57"
+    }
+  },
+  {
+    "id": "5a903bdc185ce71282f9c7d7",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::clone",
+    "name": "clone",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> FileScanConfigBuilder",
+    "docs": "",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        284,
+        10
+      ],
+      "end": [
+        284,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "FileScanConfigBuilder",
+              "id": 538,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "538": "datafusion_datasource::file_scan_config::FileScanConfigBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          284,
+          10
+        ],
+        "end": [
+          284,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "655",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-5a903bdc185ce71282f9c7d7",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "029952799db60ab5300ff836",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::from",
+    "name": "from",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn from(config: FileScanConfig) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        572,
+        5
+      ],
+      "end": [
+        587,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "config",
+              {
+                "resolved_path": {
+                  "path": "FileScanConfig",
+                  "id": 193,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "193": "datafusion_datasource::file_scan_config::FileScanConfig"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "FileScanConfig",
+                    "id": "datafusion_datasource::file_scan_config::FileScanConfig",
+                    "args": null
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          571,
+          1
+        ],
+        "end": [
+          588,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "578",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-029952799db60ab5300ff836",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::from"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "71a160eb98ea33e5450afbcd",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::new",
+    "name": "new",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(object_store_url: ObjectStoreUrl, file_source: Arc<dyn FileSource>) -> Self",
+    "docs": "Create a new [`FileScanConfigBuilder`] with default settings for scanning files.\n\n# Parameters:\n* `object_store_url`: See [`FileScanConfig::object_store_url`]\n* `file_source`: See [`FileScanConfig::file_source`]. The file source must have\n  a schema set via its constructor.",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        307,
+        5
+      ],
+      "end": [
+        325,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "object_store_url",
+              {
+                "resolved_path": {
+                  "path": "ObjectStoreUrl",
+                  "id": 519,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "file_source",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 13,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "FileSource",
+                                    "id": 189,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "519": "datafusion_execution::object_store::ObjectStoreUrl",
+      "13": "alloc::sync::Arc",
+      "189": "datafusion_datasource::file::FileSource"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FileScanConfig::object_store_url`": 518,
+      "`FileScanConfig::file_source`": 556,
+      "`FileScanConfigBuilder`": 538
+    },
+    "link_paths": {
+      "`FileScanConfig::object_store_url`": "datafusion_datasource::file_scan_config::FileScanConfig::object_store_url",
+      "`FileScanConfig::file_source`": "datafusion_datasource::file_scan_config::FileScanConfig::file_source",
+      "`FileScanConfigBuilder`": "datafusion_datasource::file_scan_config::FileScanConfigBuilder"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "618",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-71a160eb98ea33e5450afbcd",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::new"
+    ],
+    "resolved_doc_links": {
+      "`FileScanConfig::object_store_url`": "../operations/datafusion_datasource.file_scan_config.FileScanConfig.md#op-c454162bee53ac41a79cc197",
+      "`FileScanConfig::file_source`": "../operations/datafusion_datasource.file_scan_config.FileScanConfig.md#op-47b12dd2c48dbed38d686054",
+      "`FileScanConfigBuilder`": "../operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md#op-fc85b3f3f7ee6a9b542e85c0"
+    }
+  },
+  {
+    "id": "37c90871e705fd7851a2ed56",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::table_schema",
+    "name": "table_schema",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn table_schema(&self) -> &SchemaRef",
+    "docs": "Return the table schema",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        356,
+        5
+      ],
+      "end": [
+        358,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 365,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "365": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "622",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-37c90871e705fd7851a2ed56",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::table_schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5be9ffa0e7f21e227626a37a",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_batch_size",
+    "name": "with_batch_size",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_batch_size(self, batch_size: Option<usize>) -> Self",
+    "docs": "Set the batch_size property",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        502,
+        5
+      ],
+      "end": [
+        505,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "batch_size",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 64,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "633",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-5be9ffa0e7f21e227626a37a",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_batch_size"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6dc84fcd2ccde2147730496e",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_constraints",
+    "name": "with_constraints",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_constraints(self, constraints: Constraints) -> Self",
+    "docs": "Set the table constraints",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        419,
+        5
+      ],
+      "end": [
+        422,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "constraints",
+              {
+                "resolved_path": {
+                  "path": "Constraints",
+                  "id": 522,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "522": "datafusion_common::functional_dependencies::Constraints"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "625",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-6dc84fcd2ccde2147730496e",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_constraints"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c9241a0df6624cdca7d0d56d",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_expr_adapter",
+    "name": "with_expr_adapter",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_expr_adapter(self, expr_adapter: Option<Arc<dyn PhysicalExprAdapterFactory>>) -> Self",
+    "docs": "Register an expression adapter used to adapt filters and projections that are pushed down into the scan\nfrom the logical schema to the physical schema of the file.\nThis can include things like:\n- Column ordering changes\n- Handling of missing columns\n- Rewriting expression to use pre-computed values or file format specific optimizations",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        513,
+        5
+      ],
+      "end": [
+        519,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "expr_adapter",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 64,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 13,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "PhysicalExprAdapterFactory",
+                                                "id": 533,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::option::Option",
+      "13": "alloc::sync::Arc",
+      "533": "datafusion_physical_expr_adapter::schema_rewriter::PhysicalExprAdapterFactory"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "634",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-c9241a0df6624cdca7d0d56d",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_expr_adapter"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1b3cc8f739606c79a65a935d",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_file",
+    "name": "with_file",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_file(self, partitioned_file: PartitionedFile) -> Self",
+    "docs": "Add a file as a single group\n\nSee [`Self::with_file_groups`] for more information.",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        466,
+        5
+      ],
+      "end": [
+        468,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "partitioned_file",
+              {
+                "resolved_path": {
+                  "path": "PartitionedFile",
+                  "id": 225,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "225": "datafusion_datasource::PartitionedFile"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::with_file_groups`": 628
+    },
+    "link_paths": {
+      "`Self::with_file_groups`": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_file_groups"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "630",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-1b3cc8f739606c79a65a935d",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_file"
+    ],
+    "resolved_doc_links": {
+      "`Self::with_file_groups`": "../operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md#op-00a5e852c71227a508011ed6"
+    }
+  },
+  {
+    "id": "53161ea8bed35199238f28bb",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_file_compression_type",
+    "name": "with_file_compression_type",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_file_compression_type(self, file_compression_type: FileCompressionType) -> Self",
+    "docs": "Set the file compression type",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        493,
+        5
+      ],
+      "end": [
+        499,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "file_compression_type",
+              {
+                "resolved_path": {
+                  "path": "FileCompressionType",
+                  "id": 244,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "244": "datafusion_datasource::file_compression_type::FileCompressionType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "632",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-53161ea8bed35199238f28bb",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_file_compression_type"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "287f90a1a42542a4f4153194",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_file_group",
+    "name": "with_file_group",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_file_group(self, file_group: FileGroup) -> Self",
+    "docs": "Add a new file group\n\nSee [`Self::with_file_groups`] for more information",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        458,
+        5
+      ],
+      "end": [
+        461,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "file_group",
+              {
+                "resolved_path": {
+                  "path": "FileGroup",
+                  "id": 164,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "164": "datafusion_datasource::file_groups::FileGroup"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::with_file_groups`": 628
+    },
+    "link_paths": {
+      "`Self::with_file_groups`": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_file_groups"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "629",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-287f90a1a42542a4f4153194",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_file_group"
+    ],
+    "resolved_doc_links": {
+      "`Self::with_file_groups`": "../operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md#op-00a5e852c71227a508011ed6"
+    }
+  },
+  {
+    "id": "00a5e852c71227a508011ed6",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_file_groups",
+    "name": "with_file_groups",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_file_groups(self, file_groups: Vec<FileGroup>) -> Self",
+    "docs": "Set the list of files to be processed, grouped into partitions.\n\nEach file must have a schema of `file_schema` or a subset. If\na particular file has a subset, the missing columns are\npadded with NULLs.\n\nDataFusion may attempt to read each partition of files\nconcurrently, however files *within* a partition will be read\nsequentially, one after the next.",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        450,
+        5
+      ],
+      "end": [
+        453,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "file_groups",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 215,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "FileGroup",
+                              "id": 164,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "215": "alloc::vec::Vec",
+      "164": "datafusion_datasource::file_groups::FileGroup"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "628",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-00a5e852c71227a508011ed6",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_file_groups"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "19c179f4eccf022adc287547",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_limit",
+    "name": "with_limit",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_limit(self, limit: Option<usize>) -> Self",
+    "docs": "Set the maximum number of records to read from this plan.\n\nIf `None`, all records after filtering are returned.",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        330,
+        5
+      ],
+      "end": [
+        333,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "limit",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 64,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "619",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-19c179f4eccf022adc287547",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_limit"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6e5869c78d3360750fb863cd",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_output_ordering",
+    "name": "with_output_ordering",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_output_ordering(self, output_ordering: Vec<LexOrdering>) -> Self",
+    "docs": "Set the output ordering of the files\n\nThe expressions are in terms of the entire table schema (file schema +\npartition columns), before any projection or filtering from the file\nscan is applied.\n\nThis is used for optimization purposes, e.g. to determine if a file scan\ncan satisfy an `ORDER BY` without an additional sort.",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        478,
+        5
+      ],
+      "end": [
+        481,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "output_ordering",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 215,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "LexOrdering",
+                              "id": 212,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "215": "alloc::vec::Vec",
+      "212": "datafusion_physical_expr_common::sort_expr::LexOrdering"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "525",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-6e5869c78d3360750fb863cd",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_output_ordering"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4c06cb89ce34211968a14ac2",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_output_partitioning",
+    "name": "with_output_partitioning",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_output_partitioning(self, output_partitioning: Option<Partitioning>) -> Self",
+    "docs": "Set declared physical output partitioning for this scan.",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        484,
+        5
+      ],
+      "end": [
+        490,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "output_partitioning",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 64,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Partitioning",
+                              "id": 536,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::option::Option",
+      "536": "datafusion_physical_expr::partitioning::Partitioning"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "631",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-4c06cb89ce34211968a14ac2",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_output_partitioning"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "03a92cdf53c6c443157aa757",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_preserve_order",
+    "name": "with_preserve_order",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_preserve_order(self, order_sensitive: bool) -> Self",
+    "docs": "Set whether the limit should be order-sensitive.\n\nWhen `true`, files must be read in the exact order specified to produce\ncorrect results (e.g., for `ORDER BY ... LIMIT` queries). When `false`,\nDataFusion may reorder file processing for optimization without\naffecting correctness.",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        341,
+        5
+      ],
+      "end": [
+        344,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "order_sensitive",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "620",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-03a92cdf53c6c443157aa757",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_preserve_order"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ab6d2aba7ef781c6be1ef5c4",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_projection",
+    "name": "with_projection",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_projection(self, indices: Option<Vec<usize>>) -> Self",
+    "docs": "Set the columns on which to project the data. Indexes that are higher than the\nnumber of columns of `file_schema` refer to `table_partition_cols`.\n\n# Deprecated\nUse [`Self::with_projection_indices`] instead. This method will be removed in a future release.",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        366,
+        5
+      ],
+      "end": [
+        376,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": {
+      "since": "51.0.0",
+      "note": "Use with_projection_indices instead"
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "indices",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 64,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Vec",
+                              "id": 215,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "usize"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::option::Option",
+      "215": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::with_projection_indices`": 623
+    },
+    "link_paths": {
+      "`Self::with_projection_indices`": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_projection_indices"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "624",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-ab6d2aba7ef781c6be1ef5c4",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_projection"
+    ],
+    "resolved_doc_links": {
+      "`Self::with_projection_indices`": "../operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md#op-82b5fb24e3cd88cbf18dccd3"
+    }
+  },
+  {
+    "id": "82b5fb24e3cd88cbf18dccd3",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_projection_indices",
+    "name": "with_projection_indices",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_projection_indices(self, indices: Option<Vec<usize>>) -> Result<Self>",
+    "docs": "Set the columns on which to project the data using column indices.\n\nThis method attempts to push down the projection to the underlying file\nsource if supported. If the file source does not support projection\npushdown, an error is returned.\n\nIndexes that are higher than the number of columns of `file_schema`\nrefer to `table_partition_cols`.",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        386,
+        5
+      ],
+      "end": [
+        416,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "indices",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 64,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Vec",
+                              "id": 215,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "usize"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 119,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::option::Option",
+      "215": "alloc::vec::Vec",
+      "119": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "623",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-82b5fb24e3cd88cbf18dccd3",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_projection_indices"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "add500a5d3c3c56ec799cd4d",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_source",
+    "name": "with_source",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_source(self, file_source: Arc<dyn FileSource>) -> Self",
+    "docs": "Set the file source for scanning files.\n\nThis method allows you to change the file source implementation (e.g.\nParquetSource, CsvSource, etc.) after the builder has been created.",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        350,
+        5
+      ],
+      "end": [
+        353,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "file_source",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 13,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "FileSource",
+                                    "id": 189,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "13": "alloc::sync::Arc",
+      "189": "datafusion_datasource::file::FileSource"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "621",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-add500a5d3c3c56ec799cd4d",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_source"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0543356469cff3f115cd8043",
+    "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_statistics",
+    "name": "with_statistics",
+    "owner": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_statistics(self, statistics: Statistics) -> Self",
+    "docs": "Set the statistics of the files, including partition\ncolumns. Defaults to [`Statistics::new_unknown`].\n\nThese statistics are for the entire table (file schema + partition\ncolumns) before any projection or filtering is applied. Projections are\napplied when statistics are retrieved, and if a filter is present,\n[`FileScanConfig::statistics`] will mark the statistics as inexact\n(counts are not adjusted).\n\nProjections and filters may be applied by the file source, either by\n[`Self::with_projection_indices`] or a preexisting\n[`FileSource::projection`] or [`FileSource::filter`].",
+    "span": {
+      "filename": "src/file_scan_config/mod.rs",
+      "begin": [
+        436,
+        5
+      ],
+      "end": [
+        439,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "statistics",
+              {
+                "resolved_path": {
+                  "path": "Statistics",
+                  "id": 329,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "329": "datafusion_common::stats::Statistics"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileScanConfigBuilder",
+          "id": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_scan_config/mod.rs",
+        "begin": [
+          300,
+          1
+        ],
+        "end": [
+          569,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FileSource::projection`": 197,
+      "`FileScanConfig::statistics`": 548,
+      "`Self::with_projection_indices`": 623,
+      "`Statistics::new_unknown`": 626,
+      "`FileSource::filter`": 202
+    },
+    "link_paths": {
+      "`FileSource::projection`": "datafusion_datasource::file::FileSource::projection",
+      "`FileScanConfig::statistics`": "datafusion_datasource::file_scan_config::FileScanConfig::statistics",
+      "`Self::with_projection_indices`": "datafusion_datasource::file_scan_config::FileScanConfigBuilder::with_projection_indices",
+      "`Statistics::new_unknown`": "datafusion_common::stats::Statistics::new_unknown",
+      "`FileSource::filter`": "datafusion_datasource::file::FileSource::filter"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "627",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md",
+    "record_file": "operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.json",
+    "anchor": "op-0543356469cff3f115cd8043",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileScanConfigBuilder::with_statistics"
+    ],
+    "resolved_doc_links": {
+      "`FileSource::projection`": "../operations/datafusion_datasource.file.FileSource.md#op-0222a3b6073f25c90ced3f20",
+      "`FileScanConfig::statistics`": "../operations/datafusion_datasource.file_scan_config.FileScanConfig.md#op-b928e7f935d14db6c2cc7e96",
+      "`Self::with_projection_indices`": "../operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md#op-82b5fb24e3cd88cbf18dccd3",
+      "`FileSource::filter`": "../operations/datafusion_datasource.file.FileSource.md#op-09dcb4160e6584441ae99415"
+    }
+  }
+]

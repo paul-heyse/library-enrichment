@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::stddev`
 fn stddev(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.stddev.stddev.md).
+
+
 Compute the standard deviation of a set of numbers
 
 ---
@@ -26,6 +29,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::stddev_pop`
 fn stddev_pop(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.stddev.stddev_pop.md).
+
+
 Compute the population standard deviation of a set of numbers
 
 ---
@@ -38,6 +44,9 @@ Compute the population standard deviation of a set of numbers
 fn stddev_pop_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.stddev.stddev_pop_udaf.md).
+
+
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`StddevPop`]
 
 ---
@@ -49,6 +58,9 @@ AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF)
 ```rust
 fn stddev_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.stddev.stddev_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`Stddev`]
 
@@ -86,6 +98,9 @@ fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.stddev.Stddev.md).
+
+
 STDDEV and STDDEV_SAMP (standard deviation) aggregate expression
 
 ---
@@ -121,6 +136,9 @@ fn supports_retract_batch(&self) -> bool
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.stddev.StddevAccumulator.md).
+
+
 An accumulator to compute the average
 
 ---
@@ -154,6 +172,9 @@ fn state(&mut self, emit_to: datafusion_expr::EmitTo) -> Result<Vec<ArrayRef>>
 fn update_batch(&mut self, values: &[ArrayRef], group_indices: &[usize], opt_filter: Option<&BooleanArray>, total_num_groups: usize) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.stddev.StddevGroupsAccumulator.md).
+
+
 ---
 
 ## StddevPop
@@ -186,6 +207,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.stddev.StddevPop.md).
+
 
 STDDEV_POP population aggregate expression
 

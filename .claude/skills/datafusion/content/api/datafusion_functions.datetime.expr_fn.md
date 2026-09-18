@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::current_date`, `datafusion_functions::ex
 fn current_date() -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.current_date.md).
+
+
 returns current UTC date as a Date32 value
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `datafusion::prelude::current_time`, `datafusion_functions::ex
 ```rust
 fn current_time() -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.current_time.md).
+
 
 returns current UTC time as a Time64 value
 
@@ -40,6 +46,9 @@ Also reachable as `datafusion::prelude::date_bin`, `datafusion_functions::expr_f
 fn date_bin(stride: datafusion_expr::Expr, source: datafusion_expr::Expr, origin: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.date_bin.md).
+
+
 coerces an arbitrary timestamp to the start of the nearest specified interval
 
 ---
@@ -53,6 +62,9 @@ Also reachable as `datafusion::prelude::date_part`, `datafusion_functions::expr_
 ```rust
 fn date_part(part: datafusion_expr::Expr, date: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.date_part.md).
+
 
 extracts a subfield from the date
 
@@ -68,6 +80,9 @@ Also reachable as `datafusion::prelude::date_trunc`, `datafusion_functions::expr
 fn date_trunc(part: datafusion_expr::Expr, date: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.date_trunc.md).
+
+
 truncates the date to a specified level of precision
 
 ---
@@ -81,6 +96,9 @@ Also reachable as `datafusion::prelude::from_unixtime`, `datafusion_functions::e
 ```rust
 fn from_unixtime(unixtime: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.from_unixtime.md).
+
 
 converts an integer to RFC3339 timestamp format string
 
@@ -96,6 +114,9 @@ Also reachable as `datafusion::prelude::make_date`, `datafusion_functions::expr_
 fn make_date(year: datafusion_expr::Expr, month: datafusion_expr::Expr, day: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.make_date.md).
+
+
 make a date from year, month and day component parts
 
 ---
@@ -109,6 +130,9 @@ Also reachable as `datafusion::prelude::make_time`, `datafusion_functions::expr_
 ```rust
 fn make_time(hour: datafusion_expr::Expr, minute: datafusion_expr::Expr, second: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.make_time.md).
+
 
 make a time from hour, minute and second component parts
 
@@ -124,6 +148,9 @@ Also reachable as `datafusion::prelude::now`, `datafusion_functions::expr_fn::no
 fn now() -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.now.md).
+
+
 returns the current timestamp in nanoseconds, using the same value for all instances of now() in same statement
 
 ---
@@ -137,6 +164,9 @@ Also reachable as `datafusion::prelude::to_char`, `datafusion_functions::expr_fn
 ```rust
 fn to_char(datetime: datafusion_expr::Expr, format: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.to_char.md).
+
 
 Returns a string representation of a date, time, timestamp or duration based
 on a Chrono pattern.
@@ -226,6 +256,9 @@ Also reachable as `datafusion::prelude::to_date`, `datafusion_functions::expr_fn
 fn to_date(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.to_date.md).
+
+
 ```ignore
 # use std::sync::Arc;
 
@@ -285,6 +318,9 @@ Also reachable as `datafusion::prelude::to_local_time`, `datafusion_functions::e
 fn to_local_time(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.to_local_time.md).
+
+
 converts a timezone-aware timestamp to local time (with no offset or timezone information), i.e. strips off the timezone from the timestamp
 
 ---
@@ -298,6 +334,9 @@ Also reachable as `datafusion::prelude::to_time`, `datafusion_functions::expr_fn
 ```rust
 fn to_time(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.to_time.md).
+
 
 converts a string and optional formats to a `Time64(Nanoseconds)`
 
@@ -313,6 +352,9 @@ Also reachable as `datafusion::prelude::to_timestamp`, `datafusion_functions::ex
 fn to_timestamp(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.to_timestamp.md).
+
+
 converts a string and optional formats to a `Timestamp(Nanoseconds, TimeZone)`
 
 ---
@@ -326,6 +368,9 @@ Also reachable as `datafusion::prelude::to_timestamp_micros`, `datafusion_functi
 ```rust
 fn to_timestamp_micros(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.to_timestamp_micros.md).
+
 
 converts a string and optional formats to a `Timestamp(Microseconds, TimeZone)`
 
@@ -341,6 +386,9 @@ Also reachable as `datafusion::prelude::to_timestamp_millis`, `datafusion_functi
 fn to_timestamp_millis(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.to_timestamp_millis.md).
+
+
 converts a string and optional formats to a `Timestamp(Milliseconds, TimeZone)`
 
 ---
@@ -354,6 +402,9 @@ Also reachable as `datafusion::prelude::to_timestamp_nanos`, `datafusion_functio
 ```rust
 fn to_timestamp_nanos(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.to_timestamp_nanos.md).
+
 
 converts a string and optional formats to a `Timestamp(Nanoseconds, TimeZone)`
 
@@ -369,6 +420,9 @@ Also reachable as `datafusion::prelude::to_timestamp_seconds`, `datafusion_funct
 fn to_timestamp_seconds(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.to_timestamp_seconds.md).
+
+
 converts a string and optional formats to a `Timestamp(Seconds, TimeZone)`
 
 ---
@@ -382,6 +436,9 @@ Also reachable as `datafusion::prelude::to_unixtime`, `datafusion_functions::exp
 ```rust
 fn to_unixtime(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.datetime.expr_fn.to_unixtime.md).
+
 
 converts a value to seconds since the unix epoch
 

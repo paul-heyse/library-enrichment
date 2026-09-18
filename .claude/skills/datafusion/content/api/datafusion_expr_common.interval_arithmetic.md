@@ -50,6 +50,9 @@ fn from(value: ScalarValue) -> Self
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.interval_arithmetic.NullableInterval.md).
+
+
 An [Interval] that also tracks null status using a boolean interval.
 
 This represents values that may be in a particular range or be null.
@@ -98,6 +101,9 @@ Also reachable as `datafusion_expr::interval_arithmetic::apply_operator`
 fn apply_operator(op: &operator::Operator, lhs: &Interval, rhs: &Interval) -> datafusion_common::Result<Interval>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.interval_arithmetic.apply_operator.md).
+
+
 Applies the given binary operator the `lhs` and `rhs` arguments.
 
 ---
@@ -111,6 +117,9 @@ Also reachable as `datafusion_expr::interval_arithmetic::cardinality_ratio`
 ```rust
 fn cardinality_ratio(initial_interval: &Interval, final_interval: &Interval) -> f64
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.interval_arithmetic.cardinality_ratio.md).
+
 
 This function computes the selectivity of an operation by computing the
 cardinality ratio of the given input/output intervals. If this can not be
@@ -128,6 +137,9 @@ Also reachable as `datafusion_expr::interval_arithmetic::satisfy_greater`
 ```rust
 fn satisfy_greater(left: &Interval, right: &Interval, strict: bool) -> datafusion_common::Result<Option<(Interval, Interval)>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.interval_arithmetic.satisfy_greater.md).
+
 
 This function updates the given intervals by enforcing (i.e. propagating)
 the inequality `left > right` (or the `left >= right` inequality, if `strict`
@@ -225,6 +237,9 @@ fn from(value: ScalarValue) -> Self
 ```rust
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.interval_arithmetic.Interval.md).
+
 
 The `Interval` type represents a closed interval used for computing
 reliable bounds for mathematical expressions.

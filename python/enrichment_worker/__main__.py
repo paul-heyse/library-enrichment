@@ -29,10 +29,10 @@ from enrichment_mcp._generated.worker_schema import (
     WorkerRequest,
 )
 
-MAX_INPUT = 4 * 1024 * 1024
 with files("enrichment_worker").joinpath("_schemas/worker.arrow").open("rb") as _schema_file:
     SCHEMA = pa.ipc.open_stream(_schema_file).schema
 CONTRACT = json.loads(SCHEMA.metadata[b"enrichment.worker"])
+MAX_INPUT = int(CONTRACT["request_bytes"])
 
 
 def _publicness(obj: griffe.Object | griffe.Alias, parent: griffe.Object | None) -> Publicness:

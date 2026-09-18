@@ -14,6 +14,9 @@ struct PaginatedListOptions
 
 **Derives**: Clone, Debug, Default
 
+[Full member, field, variant and typed contracts](../operations/object_store.list.PaginatedListOptions.md).
+
+
 Options for a paginated list request
 
 ---
@@ -29,6 +32,9 @@ struct PaginatedListResult
 **Fields**: `result`, `page_token`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/object_store.list.PaginatedListResult.md).
+
 
 A [`ListResult`] with optional pagination token
 
@@ -53,6 +59,9 @@ trait PaginatedListStore: Send + Sync + 'static
 ```rust
 async fn list_paginated(&self, prefix: Option<&str>, opts: PaginatedListOptions) -> Result<PaginatedListResult>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.list.PaginatedListStore.md).
+
 
 A low-level interface for interacting with paginated listing APIs
 

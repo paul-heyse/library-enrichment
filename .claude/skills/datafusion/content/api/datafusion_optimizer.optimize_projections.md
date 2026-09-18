@@ -10,6 +10,9 @@ Crate `datafusion-optimizer` · 2 public items · structured records in [`model/
 fn is_projection_unnecessary(input: &datafusion_expr::logical_plan::LogicalPlan, proj_exprs: &[datafusion_expr::Expr]) -> datafusion_common::Result<bool>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.optimize_projections.is_projection_unnecessary.md).
+
+
 Projection is unnecessary, when
 - input schema of the projection, output schema of the projection are same, and
 - all projection expressions are either Column or Literal
@@ -42,6 +45,9 @@ fn name(&self) -> &str
 fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>>
 fn supports_rewrite(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.optimize_projections.OptimizeProjections.md).
+
 
 Optimizer rule to prune unnecessary columns from intermediate schemas
 inside the [`LogicalPlan`]. This rule:

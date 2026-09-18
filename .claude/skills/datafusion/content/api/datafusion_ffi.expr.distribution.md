@@ -22,6 +22,9 @@ enum FFI_Distribution
 fn try_from(value: &Distribution) -> Result<Self, Self::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.expr.distribution.FFI_Distribution.md).
+
+
 A stable struct for sharing [`Distribution`] across FFI boundaries.
 See ['Distribution'] for the meaning of each variant.
 
@@ -45,6 +48,9 @@ struct FFI_BernoulliDistribution
 fn try_from(value: &BernoulliDistribution) -> Result<Self, Self::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.expr.distribution.FFI_BernoulliDistribution.md).
+
+
 ---
 
 ## FFI_ExponentialDistribution
@@ -64,6 +70,9 @@ struct FFI_ExponentialDistribution
 ```rust
 fn try_from(value: &ExponentialDistribution) -> Result<Self, Self::Error>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.expr.distribution.FFI_ExponentialDistribution.md).
+
 
 ---
 
@@ -85,6 +94,9 @@ struct FFI_GaussianDistribution
 fn try_from(value: &GaussianDistribution) -> Result<Self, Self::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.expr.distribution.FFI_GaussianDistribution.md).
+
+
 ---
 
 ## FFI_GenericDistribution
@@ -105,6 +117,9 @@ struct FFI_GenericDistribution
 fn try_from(value: &GenericDistribution) -> Result<Self, Self::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.expr.distribution.FFI_GenericDistribution.md).
+
+
 ---
 
 ## FFI_UniformDistribution
@@ -124,5 +139,8 @@ struct FFI_UniformDistribution
 ```rust
 fn try_from(value: &UniformDistribution) -> Result<Self, Self::Error>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.expr.distribution.FFI_UniformDistribution.md).
+
 
 ---

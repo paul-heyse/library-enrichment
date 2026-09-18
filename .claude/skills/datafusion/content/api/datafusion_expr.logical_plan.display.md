@@ -12,6 +12,9 @@ Also reachable as `datafusion::logical_expr::display_schema`, `datafusion_expr::
 fn display_schema(schema: &arrow::datatypes::Schema) -> impl fmt::Display + '_
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.display.display_schema.md).
+
+
 Print the schema in a compact representation to `buf`
 
 For example: `foo:Utf8` if `foo` can not be null, and
@@ -61,6 +64,9 @@ fn f_down(&mut self, plan: &'n LogicalPlan) -> datafusion_common::Result<TreeNod
 fn f_up(&mut self, _plan: &LogicalPlan) -> datafusion_common::Result<TreeNodeRecursion>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.display.GraphvizVisitor.md).
+
+
 Formats plans for graphical display using the `DOT` language. This
 format can be visualized using software from
 [`graphviz`](https://graphviz.org/)
@@ -89,6 +95,9 @@ fn new(f: &'a mut fmt::Formatter<'b>, with_schema: bool) -> Self
 fn f_down(&mut self, plan: &'n LogicalPlan) -> datafusion_common::Result<TreeNodeRecursion>
 fn f_up(&mut self, _plan: &'n LogicalPlan) -> datafusion_common::Result<TreeNodeRecursion>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.display.IndentVisitor.md).
+
 
 Formats plans with a single line per node. For example:
 
@@ -121,6 +130,9 @@ fn with_schema(&mut self, with_schema: bool)
 fn f_down(&mut self, node: &'n LogicalPlan) -> datafusion_common::Result<TreeNodeRecursion>
 fn f_up(&mut self, _node: &Self::Node) -> datafusion_common::Result<TreeNodeRecursion>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.display.PgJsonVisitor.md).
+
 
 Formats plans to display as postgresql plan json format.
 

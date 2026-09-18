@@ -14,6 +14,9 @@ struct PartId
 
 **Derives**: Clone, Debug
 
+[Full member, field, variant and typed contracts](../operations/object_store.multipart.PartId.md).
+
+
 Represents a part of a file that has been successfully uploaded in a multipart upload process.
 
 ---
@@ -43,6 +46,9 @@ async fn complete_multipart(&self, path: &Path, id: &MultipartId, parts: Vec<Par
 async fn create_multipart(&self, path: &Path) -> Result<MultipartId>
 async fn put_part(&self, path: &Path, id: &MultipartId, part_idx: usize, data: PutPayload) -> Result<PartId>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.multipart.MultipartStore.md).
+
 
 A low-level interface for interacting with multipart upload APIs
 

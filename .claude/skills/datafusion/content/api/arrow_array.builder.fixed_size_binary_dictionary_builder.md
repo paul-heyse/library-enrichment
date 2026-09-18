@@ -42,6 +42,9 @@ fn into_box_any(Box<self>) -> Box<dyn Any>
 fn len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.fixed_size_binary_dictionary_builder.FixedSizeBinaryDictionaryBuilder.md).
+
+
 Builder for [`DictionaryArray`] of [`FixedSizeBinaryArray`]
 
 The output array has a dictionary of unique, fixed-size binary values. The

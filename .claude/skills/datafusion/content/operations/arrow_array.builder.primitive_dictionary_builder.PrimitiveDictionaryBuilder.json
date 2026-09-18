@@ -1,0 +1,6634 @@
+[
+  {
+    "id": "a12b3c003516f0ffac7bf241",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "name": "PrimitiveDictionaryBuilder",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct PrimitiveDictionaryBuilder<K, V> where K: ArrowPrimitiveType, V: ArrowPrimitiveType",
+    "docs": "Builder for [`DictionaryArray`] of [`PrimitiveArray`]\n\n# Example:\n\n```\n\n# use arrow_array::builder::PrimitiveDictionaryBuilder;\n# use arrow_array::types::{UInt32Type, UInt8Type};\n# use arrow_array::{Array, UInt32Array, UInt8Array};\n\nlet mut builder = PrimitiveDictionaryBuilder::<UInt8Type, UInt32Type>::new();\n builder.append(12345678).unwrap();\n builder.append_null();\n builder.append(22345678).unwrap();\n let array = builder.finish();\n\n assert_eq!(\n     array.keys(),\n     &UInt8Array::from(vec![Some(0), None, Some(1)])\n );\n\n // Values are polymorphic and so require a downcast.\n let av = array.values();\n let ava: &UInt32Array = av.as_any().downcast_ref::<UInt32Array>().unwrap();\n let avs: &[u32] = ava.values();\n\n assert!(!array.is_null(0));\n assert!(array.is_null(1));\n assert!(!array.is_null(2));\n\n assert_eq!(avs, &[12345678, 22345678]);\n```",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        83,
+        1
+      ],
+      "end": [
+        91,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "K",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "V",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "K"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowPrimitiveType",
+                        "id": 307,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "V"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowPrimitiveType",
+                        "id": 307,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "impls": [
+          2872,
+          2889,
+          2890,
+          2892,
+          2893,
+          2894,
+          2895,
+          2896,
+          2897,
+          2898,
+          2899,
+          2900,
+          2901,
+          2902,
+          2903,
+          2904,
+          2905,
+          2907,
+          2909,
+          2917,
+          2918
+        ]
+      }
+    },
+    "type_references": {
+      "307": "arrow_array::types::ArrowPrimitiveType"
+    },
+    "impl_context": null,
+    "links": {
+      "`PrimitiveArray`": 301,
+      "`DictionaryArray`": 277
+    },
+    "link_paths": {
+      "`PrimitiveArray`": "arrow_array::array::primitive_array::PrimitiveArray",
+      "`DictionaryArray`": "arrow_array::array::dictionary_array::DictionaryArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "320",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-a12b3c003516f0ffac7bf241",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`PrimitiveArray`": "../operations/arrow_array.array.primitive_array.PrimitiveArray.md#op-bc88178d283a743ead5dd814",
+      "`DictionaryArray`": "../operations/arrow_array.array.dictionary_array.DictionaryArray.md#op-761ab0c11d727f026bdc2e47"
+    }
+  },
+  {
+    "id": "64c014e4ca96be5085afa965",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::append",
+    "name": "append",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append(&mut self, value: V::Native) -> Result<K::Native, ArrowError>",
+    "docs": "Append a primitive value to the array. Return an existing index\nif already present in the values array or a new index if the\nvalue is appended to the values array.",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        301,
+        5
+      ],
+      "end": [
+        305,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "qualified_path": {
+                  "name": "Native",
+                  "args": null,
+                  "self_type": {
+                    "generic": "V"
+                  },
+                  "trait": {
+                    "path": "",
+                    "id": 307,
+                    "args": null
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Native",
+                          "args": null,
+                          "self_type": {
+                            "generic": "K"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 307,
+                            "args": null
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "307": "arrow_array::types::ArrowPrimitiveType",
+      "45": "core::result::Result",
+      "186": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2873",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-64c014e4ca96be5085afa965",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "955a6cb1cef8ff0c6b5dc51e",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::append_n",
+    "name": "append_n",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_n(&mut self, value: V::Native, count: usize) -> Result<K::Native, ArrowError>",
+    "docs": "Append a value multiple times to the array.\nThis is the same as `append` but allows to append the same value multiple times without doing multiple lookups.\n\nReturns an error if the new index would overflow the key type.",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        311,
+        5
+      ],
+      "end": [
+        315,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "qualified_path": {
+                  "name": "Native",
+                  "args": null,
+                  "self_type": {
+                    "generic": "V"
+                  },
+                  "trait": {
+                    "path": "",
+                    "id": 307,
+                    "args": null
+                  }
+                }
+              }
+            ],
+            [
+              "count",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Native",
+                          "args": null,
+                          "self_type": {
+                            "generic": "K"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 307,
+                            "args": null
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "307": "arrow_array::types::ArrowPrimitiveType",
+      "45": "core::result::Result",
+      "186": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2874",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-955a6cb1cef8ff0c6b5dc51e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ebb9ce8b84a622318cb55b3b",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::append_null",
+    "name": "append_null",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_null(&mut self)",
+    "docs": "Appends a null slot into the builder",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        340,
+        5
+      ],
+      "end": [
+        342,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2877",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-ebb9ce8b84a622318cb55b3b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "37ddef5729e60ee0ae82561f",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::append_nulls",
+    "name": "append_nulls",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_nulls(&mut self, n: usize)",
+    "docs": "Append `n` null slots into the builder",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        346,
+        5
+      ],
+      "end": [
+        348,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2878",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-37ddef5729e60ee0ae82561f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "747103ece176cd4002e90bb6",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::append_option",
+    "name": "append_option",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_option(&mut self, value: Option<V::Native>)",
+    "docs": "Append an `Option` value into the builder\n\n# Panics\n\nPanics if the resulting length of the dictionary values array would exceed `T::Native::MAX`",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        356,
+        5
+      ],
+      "end": [
+        361,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "qualified_path": {
+                              "name": "Native",
+                              "args": null,
+                              "self_type": {
+                                "generic": "V"
+                              },
+                              "trait": {
+                                "path": "",
+                                "id": 307,
+                                "args": null
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "307": "arrow_array::types::ArrowPrimitiveType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2879",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-747103ece176cd4002e90bb6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ccb1434d68970eef1df93aff",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::append_options",
+    "name": "append_options",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_options(&mut self, value: Option<V::Native>, count: usize)",
+    "docs": "Append an `Option` value into the builder repeatedly `count` times.\nThis is the same as `append_option` but allows to append the same value multiple times without doing multiple lookups.\n\n# Panics\n\nPanics if the resulting length of the dictionary values array would exceed `T::Native::MAX`",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        369,
+        5
+      ],
+      "end": [
+        374,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "qualified_path": {
+                              "name": "Native",
+                              "args": null,
+                              "self_type": {
+                                "generic": "V"
+                              },
+                              "trait": {
+                                "path": "",
+                                "id": 307,
+                                "args": null
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "count",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "307": "arrow_array::types::ArrowPrimitiveType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2880",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-ccb1434d68970eef1df93aff",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "758fea0118271a8899b85748",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::append_value",
+    "name": "append_value",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_value(&mut self, value: V::Native)",
+    "docs": "Infallibly append a value to this builder\n\n# Panics\n\nPanics if the resulting length of the dictionary values array would exceed `T::Native::MAX`",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        323,
+        5
+      ],
+      "end": [
+        325,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "qualified_path": {
+                  "name": "Native",
+                  "args": null,
+                  "self_type": {
+                    "generic": "V"
+                  },
+                  "trait": {
+                    "path": "",
+                    "id": 307,
+                    "args": null
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "307": "arrow_array::types::ArrowPrimitiveType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2875",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-758fea0118271a8899b85748",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "29e608c63c8b91440719e664",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::append_values",
+    "name": "append_values",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_values(&mut self, value: V::Native, count: usize)",
+    "docs": "Infallibly append a value to this builder repeatedly `count` times.\nThis is the same as `append_value` but allows to append the same value multiple times without doing multiple lookups.\n\n# Panics\n\nPanics if the resulting length of the dictionary values array would exceed `T::Native::MAX`",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        333,
+        5
+      ],
+      "end": [
+        336,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "qualified_path": {
+                  "name": "Native",
+                  "args": null,
+                  "self_type": {
+                    "generic": "V"
+                  },
+                  "trait": {
+                    "path": "",
+                    "id": 307,
+                    "args": null
+                  }
+                }
+              }
+            ],
+            [
+              "count",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "307": "arrow_array::types::ArrowPrimitiveType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2876",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-29e608c63c8b91440719e664",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b48500143b5cf157215f519f",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::as_any",
+    "name": "as_any",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any(&self) -> &dyn Any",
+    "docs": "Returns the builder as an non-mutable `Any` reference.",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        243,
+        5
+      ],
+      "end": [
+        245,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          237,
+          1
+        ],
+        "end": [
+          275,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2910",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-b48500143b5cf157215f519f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0504b90b6a174f89cf08b4b9",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::as_any_mut",
+    "name": "as_any_mut",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any_mut(&mut self) -> &mut dyn Any",
+    "docs": "Returns the builder as an mutable `Any` reference.",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        248,
+        5
+      ],
+      "end": [
+        250,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          237,
+          1
+        ],
+        "end": [
+          275,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2911",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-0504b90b6a174f89cf08b4b9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e90f3f246e2e49d5a3b823d4",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::default",
+    "name": "default",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn default() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        98,
+        5
+      ],
+      "end": [
+        100,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          93,
+          1
+        ],
+        "end": [
+          101,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2908",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-e90f3f246e2e49d5a3b823d4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b9a7e5d593833754bea5f099",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::extend",
+    "name": "extend",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn extend<T: IntoIterator<Item = Option<P::Native>>>(&mut self, iter: T)",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        519,
+        5
+      ],
+      "end": [
+        523,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "iter",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "IntoIterator",
+                          "id": 157,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Option",
+                                          "id": 12,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "qualified_path": {
+                                                      "name": "Native",
+                                                      "args": null,
+                                                      "self_type": {
+                                                        "generic": "P"
+                                                      },
+                                                      "trait": {
+                                                        "path": "",
+                                                        "id": 307,
+                                                        "args": null
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "157": "core::iter::traits::collect::IntoIterator",
+      "12": "core::option::Option",
+      "307": "arrow_array::types::ArrowPrimitiveType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "P"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Extend",
+        "id": "core::iter::traits::collect::Extend",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "Option",
+                    "id": "core::option::Option",
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "qualified_path": {
+                                "name": "Native",
+                                "args": null,
+                                "self_type": {
+                                  "generic": "P"
+                                },
+                                "trait": {
+                                  "path": "ArrowPrimitiveType",
+                                  "id": "arrow_array::types::ArrowPrimitiveType",
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::iter::traits::collect::Extend",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowDictionaryKeyType",
+                        "id": "arrow_array::types::ArrowDictionaryKeyType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "P",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowPrimitiveType",
+                        "id": "arrow_array::types::ArrowPrimitiveType",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          515,
+          1
+        ],
+        "end": [
+          524,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2881",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-b9a7e5d593833754bea5f099",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "30cec6e3ad88f5d2abd33e13",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::extend_dictionary",
+    "name": "extend_dictionary",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn extend_dictionary(&mut self, dictionary: &TypedDictionaryArray<'_, K, PrimitiveArray<V>>) -> Result<(), ArrowError>",
+    "docs": "Extends builder with dictionary\n\nThis is the same as [`Self::extend`] but is faster as it translates\nthe dictionary values once rather than doing a lookup for each item in the iterator\n\nwhen dictionary values are null (the actual mapped values) the keys are null\n",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        383,
+        5
+      ],
+      "end": [
+        431,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "dictionary",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "TypedDictionaryArray",
+                      "id": 316,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            },
+                            {
+                              "type": {
+                                "generic": "K"
+                              }
+                            },
+                            {
+                              "type": {
+                                "resolved_path": {
+                                  "path": "PrimitiveArray",
+                                  "id": 301,
+                                  "args": {
+                                    "angle_bracketed": {
+                                      "args": [
+                                        {
+                                          "type": {
+                                            "generic": "V"
+                                          }
+                                        }
+                                      ],
+                                      "constraints": []
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "316": "arrow_array::array::dictionary_array::TypedDictionaryArray",
+      "301": "arrow_array::array::primitive_array::PrimitiveArray",
+      "45": "core::result::Result",
+      "186": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::extend`": 2881
+    },
+    "link_paths": {
+      "`Self::extend`": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::extend"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2882",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-30cec6e3ad88f5d2abd33e13",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::extend`": "../operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md#op-b9a7e5d593833754bea5f099"
+    }
+  },
+  {
+    "id": "b9cc2550166749718254c063",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> ArrayRef",
+    "docs": "Builds the array and reset this builder.",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        263,
+        5
+      ],
+      "end": [
+        265,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          237,
+          1
+        ],
+        "end": [
+          275,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2914",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-b9cc2550166749718254c063",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d9a4e1b513b56e95ebd89906",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> DictionaryArray<K>",
+    "docs": "Builds the `DictionaryArray` and reset this builder.",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        434,
+        5
+      ],
+      "end": [
+        449,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DictionaryArray",
+              "id": 277,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "K"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "277": "arrow_array::array::dictionary_array::DictionaryArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2883",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-d9a4e1b513b56e95ebd89906",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "024c18bb69398b6235453f5b",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> ArrayRef",
+    "docs": "Builds the array without resetting the builder.",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        268,
+        5
+      ],
+      "end": [
+        270,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          237,
+          1
+        ],
+        "end": [
+          275,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2915",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-024c18bb69398b6235453f5b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1b8428dadc93c13871560347",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> DictionaryArray<K>",
+    "docs": "Builds the `DictionaryArray` without resetting the builder.",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        452,
+        5
+      ],
+      "end": [
+        465,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DictionaryArray",
+              "id": 277,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "K"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "277": "arrow_array::array::dictionary_array::DictionaryArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2884",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-1b8428dadc93c13871560347",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2b1686d68565abd805186fc8",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::finish_preserve_values",
+    "name": "finish_preserve_values",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_preserve_values(&mut self) -> DictionaryArray<K>",
+    "docs": "Builds the `DictionaryArray` without resetting the values builder or\nthe internal de-duplication map.\n\nThe advantage of doing this is that the values will represent the entire\nset of what has been built so-far by this builder and ensures\nconsistency in the assignment of keys to values across multiple calls\nto `finish_preserve_values`. This enables ipc writers to efficiently\nemit delta dictionaries.\n\nThe downside to this is that building the record requires creating a\ncopy of the values, which can become slowly more expensive if the\ndictionary grows.\n\nAdditionally, if record batches from multiple different dictionary\nbuilders for the same column are fed into a single ipc writer, beware\nthat entire dictionaries are likely to be re-sent frequently even when\nthe majority of the values are not used by the current record batch.",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        484,
+        5
+      ],
+      "end": [
+        497,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DictionaryArray",
+              "id": 277,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "K"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "277": "arrow_array::array::dictionary_array::DictionaryArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2885",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-2b1686d68565abd805186fc8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6890007ccd4cb6fff1a0b08b",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::finish_preserve_values",
+    "name": "finish_preserve_values",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_preserve_values(&mut self) -> ArrayRef",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        272,
+        5
+      ],
+      "end": [
+        274,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          237,
+          1
+        ],
+        "end": [
+          275,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2916",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-6890007ccd4cb6fff1a0b08b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "60bb874280889d34571ba801",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::fmt",
+    "name": "fmt",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        82,
+        10
+      ],
+      "end": [
+        82,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 117,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 118,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "117": "core::fmt::Formatter",
+      "118": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "$crate::fmt::Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "$crate::fmt::Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "qualified_path": {
+                  "name": "Native",
+                  "args": null,
+                  "self_type": {
+                    "generic": "V"
+                  },
+                  "trait": {
+                    "path": "",
+                    "id": "arrow_array::types::ArrowPrimitiveType",
+                    "args": null
+                  }
+                }
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "$crate::fmt::Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          82,
+          10
+        ],
+        "end": [
+          82,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2906",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-60bb874280889d34571ba801",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0dc7332966da3efffd40fea8",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::into_box_any",
+    "name": "into_box_any",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_box_any(Box<self>) -> Box<dyn Any>",
+    "docs": "Returns the boxed builder as a box of `Any`.",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        253,
+        5
+      ],
+      "end": [
+        255,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Box",
+                  "id": 1788,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Box",
+              "id": 1788,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "Any",
+                                "id": 106,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1788": "alloc::boxed::Box",
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          237,
+          1
+        ],
+        "end": [
+          275,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2912",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-0dc7332966da3efffd40fea8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e5c14dba3ce2bcf8256664f4",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::len",
+    "name": "len",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Returns the number of array slots in the builder",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        258,
+        5
+      ],
+      "end": [
+        260,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          237,
+          1
+        ],
+        "end": [
+          275,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2913",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-e5c14dba3ce2bcf8256664f4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c4509e1f6173920247822084",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::new",
+    "name": "new",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "Creates a new `PrimitiveDictionaryBuilder`.",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        109,
+        5
+      ],
+      "end": [
+        115,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          235,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2867",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-c4509e1f6173920247822084",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "40e5e1044331b175d5e03707",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::new_from_builders",
+    "name": "new_from_builders",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn new_from_builders(keys_builder: PrimitiveBuilder<K>, values_builder: PrimitiveBuilder<V>) -> Self",
+    "docs": "Creates a new `PrimitiveDictionaryBuilder` from existing `PrimitiveBuilder`s of keys and values.\n\n# Safety\n\ncaller must ensure that the passed in builders are valid for DictionaryArray.",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        143,
+        5
+      ],
+      "end": [
+        160,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "keys_builder",
+              {
+                "resolved_path": {
+                  "path": "PrimitiveBuilder",
+                  "id": 937,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "K"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "values_builder",
+              {
+                "resolved_path": {
+                  "path": "PrimitiveBuilder",
+                  "id": 937,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "V"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "937": "arrow_array::builder::primitive_builder::PrimitiveBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          235,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2869",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-40e5e1044331b175d5e03707",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "30efd41e2ae34d70ba1022ac",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::new_from_empty_builders",
+    "name": "new_from_empty_builders",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_from_empty_builders(keys_builder: PrimitiveBuilder<K>, values_builder: PrimitiveBuilder<V>) -> Self",
+    "docs": "Creates a new `PrimitiveDictionaryBuilder` from the provided keys and values builders.\n\n# Panics\n\nThis method panics if `keys_builder` or `values_builder` is not empty.",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        122,
+        5
+      ],
+      "end": [
+        136,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "keys_builder",
+              {
+                "resolved_path": {
+                  "path": "PrimitiveBuilder",
+                  "id": 937,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "K"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "values_builder",
+              {
+                "resolved_path": {
+                  "path": "PrimitiveBuilder",
+                  "id": 937,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "V"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "937": "arrow_array::builder::primitive_builder::PrimitiveBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          235,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2868",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-30efd41e2ae34d70ba1022ac",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e9f12cb5b42056903d4388a7",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::try_new_from_builder",
+    "name": "try_new_from_builder",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_from_builder<K2>(source: PrimitiveDictionaryBuilder<K2, V>) -> Result<Self, ArrowError> where K::Native: NumCast, K2: ArrowDictionaryKeyType, K2::Native: NumCast",
+    "docs": "Creates a new `PrimitiveDictionaryBuilder` from the existing builder with the same\nkeys and values, but with a new data type for the keys.\n\n# Example\n```\n#\n# use arrow_array::builder::PrimitiveDictionaryBuilder;\n# use arrow_array::types::{UInt8Type, UInt16Type, UInt64Type};\n# use arrow_array::UInt16Array;\n# use arrow_schema::ArrowError;\n\nlet mut u8_keyed_builder = PrimitiveDictionaryBuilder::<UInt8Type, UInt64Type>::new();\n\n// appending too many values causes the dictionary to overflow\nfor i in 0..256 {\n    u8_keyed_builder.append_value(i);\n}\nlet result = u8_keyed_builder.append(256);\nassert!(matches!(result, Err(ArrowError::DictionaryKeyOverflowError{})));\n\n// we need to upgrade to a larger key type\nlet mut u16_keyed_builder = PrimitiveDictionaryBuilder::<UInt16Type, UInt64Type>::try_new_from_builder(u8_keyed_builder).unwrap();\nlet dictionary_array = u16_keyed_builder.finish();\nlet keys = dictionary_array.keys();\n\nassert_eq!(keys, &UInt16Array::from_iter(0..256));",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        200,
+        5
+      ],
+      "end": [
+        234,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "source",
+              {
+                "resolved_path": {
+                  "path": "PrimitiveDictionaryBuilder",
+                  "id": 320,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "K2"
+                          }
+                        },
+                        {
+                          "type": {
+                            "generic": "V"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "K2",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "qualified_path": {
+                    "name": "Native",
+                    "args": null,
+                    "self_type": {
+                      "generic": "K"
+                    },
+                    "trait": {
+                      "path": "",
+                      "id": 307,
+                      "args": null
+                    }
+                  }
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "NumCast",
+                        "id": 2480,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "K2"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowDictionaryKeyType",
+                        "id": 298,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "qualified_path": {
+                    "name": "Native",
+                    "args": null,
+                    "self_type": {
+                      "generic": "K2"
+                    },
+                    "trait": {
+                      "path": "",
+                      "id": 307,
+                      "args": null
+                    }
+                  }
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "NumCast",
+                        "id": 2480,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "320": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+      "45": "core::result::Result",
+      "186": "arrow_schema::error::ArrowError",
+      "307": "arrow_array::types::ArrowPrimitiveType",
+      "2480": "num_traits::cast::NumCast",
+      "298": "arrow_array::types::ArrowDictionaryKeyType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          235,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2871",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-e9f12cb5b42056903d4388a7",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c47f75a8ac85c2f9cc4d24da",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::validity_slice",
+    "name": "validity_slice",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn validity_slice(&self) -> Option<&[u8]>",
+    "docs": "Returns the current null buffer as a slice",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        510,
+        5
+      ],
+      "end": [
+        512,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "slice": {
+                              "primitive": "u8"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2888",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-c47f75a8ac85c2f9cc4d24da",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "feb4c65a86d530a9d8c0ba8f",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::values_slice",
+    "name": "values_slice",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn values_slice(&self) -> &[V::Native]",
+    "docs": "Returns the current dictionary values buffer as a slice",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        500,
+        5
+      ],
+      "end": [
+        502,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "qualified_path": {
+                    "name": "Native",
+                    "args": null,
+                    "self_type": {
+                      "generic": "V"
+                    },
+                    "trait": {
+                      "path": "",
+                      "id": 307,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "307": "arrow_array::types::ArrowPrimitiveType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2886",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-feb4c65a86d530a9d8c0ba8f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "72a034861355332daba5b629",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::values_slice_mut",
+    "name": "values_slice_mut",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn values_slice_mut(&mut self) -> &mut [V::Native]",
+    "docs": "Returns the current dictionary values buffer as a mutable slice",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        505,
+        5
+      ],
+      "end": [
+        507,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "slice": {
+                  "qualified_path": {
+                    "name": "Native",
+                    "args": null,
+                    "self_type": {
+                      "generic": "V"
+                    },
+                    "trait": {
+                      "path": "",
+                      "id": 307,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "307": "arrow_array::types::ArrowPrimitiveType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowDictionaryKeyType",
+                      "id": "arrow_array::types::ArrowDictionaryKeyType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          277,
+          1
+        ],
+        "end": [
+          513,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2887",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-72a034861355332daba5b629",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bac717e644ca011dbaf63403",
+    "path": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder::with_capacity",
+    "name": "with_capacity",
+    "owner": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_capacity(keys_capacity: usize, values_capacity: usize) -> Self",
+    "docs": "Creates a new `PrimitiveDictionaryBuilder` with the provided capacities\n\n`keys_capacity`: the number of keys, i.e. length of array to build\n`values_capacity`: the number of distinct dictionary values, i.e. size of dictionary",
+    "span": {
+      "filename": "src/builder/primitive_dictionary_builder.rs",
+      "begin": [
+        166,
+        5
+      ],
+      "end": [
+        172,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "keys_capacity",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "values_capacity",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveDictionaryBuilder",
+          "id": "arrow_array::builder::primitive_dictionary_builder::PrimitiveDictionaryBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "K"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "K",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "K"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_dictionary_builder.rs",
+        "begin": [
+          103,
+          1
+        ],
+        "end": [
+          235,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2870",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.json",
+    "anchor": "op-bac717e644ca011dbaf63403",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

@@ -1,0 +1,183 @@
+[
+  {
+    "id": "3809055ee1c85876012267ab",
+    "path": "arrow_cast::cast::cast_with_options",
+    "name": "cast_with_options",
+    "owner": null,
+    "crate": "arrow-cast",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn cast_with_options(array: &dyn Array, to_type: &DataType, cast_options: &CastOptions<'_>) -> Result<ArrayRef, ArrowError>",
+    "docs": "Try to cast `array` to `to_type` if possible.\n\nReturns a new Array with type `to_type` if possible.\n\nAccepts [`CastOptions`] to specify cast behavior. See also [`cast()`].\n\n# Behavior\n* `Boolean` to `Utf8`: `true` => '1', `false` => `0`\n* `Utf8` to `Boolean`: `true`, `yes`, `on`, `1` => `true`, `false`, `no`, `off`, `0` => `false`,\n  short variants are accepted, other strings return null or error\n* `Utf8` to Numeric: strings that can't be parsed to numbers return null, float strings\n  in integer casts return null\n* Numeric to `Boolean`: 0 returns `false`, any other value returns `true`\n* `List` to `List`: the underlying data type is cast\n* `List` to `FixedSizeList`: the underlying data type is cast. If safe is true and a list element\n  has the wrong length it will be replaced with NULL, otherwise an error will be returned\n* Primitive to `List`: a list array with 1 value per slot is created\n* `Date32` and `Date64`: precision lost when going to higher interval\n* `Time32 and `Time64`: precision lost when going to higher interval\n* `Timestamp` and `Date{32|64}`: precision lost when going to higher interval\n* Temporal to/from backing Primitive: zero-copy with data type change\n* `Float16/Float32/Float64` to `Decimal(precision, scale)` rounds to the `scale` decimals\n  (i.e. casting `6.4999` to `Decimal(10, 1)` becomes `6.5`).\n* `Decimal` to `Float16/Float32/Float64` is lossy and values outside the representable\n  range become `INFINITY` or `-INFINITY` without error.\n\nUnsupported Casts (check with `can_cast_types` before calling):\n* To or from `StructArray`\n* `List` to `Primitive`\n* `Interval` and `Duration`\n\n# Durations and Intervals\n\nCasting integer types directly to interval types such as\n[`IntervalMonthDayNano`] is not supported because the meaning of the integer\nis ambiguous. For example, the integer  could represent either nanoseconds\nor months.\n\nTo cast an integer type to an interval type, first convert to a Duration\ntype, and then cast that to the desired interval type.\n\nFor example, to convert an `Int64` representing nanoseconds to an\n`IntervalMonthDayNano` you would first convert the `Int64` to a\n`DurationNanoseconds`, and then cast that to `IntervalMonthDayNano`.\n\n# Timestamps and Timezones\n\nTimestamps are stored with an optional timezone in Arrow.\n\n## Casting timestamps to a timestamp without timezone / UTC\n```\n# use arrow_array::Int64Array;\n# use arrow_array::types::TimestampSecondType;\n# use arrow_cast::{cast, display};\n# use arrow_array::cast::AsArray;\n# use arrow_schema::{DataType, TimeUnit};\n// can use \"UTC\" if chrono-tz feature is enabled, here use offset based timezone\nlet data_type = DataType::Timestamp(TimeUnit::Second, None);\nlet a = Int64Array::from(vec![1_000_000_000, 2_000_000_000, 3_000_000_000]);\nlet b = cast(&a, &data_type).unwrap();\nlet b = b.as_primitive::<TimestampSecondType>(); // downcast to result type\nassert_eq!(2_000_000_000, b.value(1)); // values are the same as the type has no timezone\n// use display to show them (note has no trailing Z)\nassert_eq!(\"2033-05-18T03:33:20\", display::array_value_to_string(&b, 1).unwrap());\n```\n\n## Casting timestamps to a timestamp with timezone\n\nSimilarly to the previous example, if you cast numeric values to a timestamp\nwith timezone, the cast kernel will not change the underlying values\nbut display and other functions will interpret them as being in the provided timezone.\n\n```\n# use arrow_array::Int64Array;\n# use arrow_array::types::TimestampSecondType;\n# use arrow_cast::{cast, display};\n# use arrow_array::cast::AsArray;\n# use arrow_schema::{DataType, TimeUnit};\n// can use \"Americas/New_York\" if chrono-tz feature is enabled, here use offset based timezone\nlet data_type = DataType::Timestamp(TimeUnit::Second, Some(\"-05:00\".into()));\nlet a = Int64Array::from(vec![1_000_000_000, 2_000_000_000, 3_000_000_000]);\nlet b = cast(&a, &data_type).unwrap();\nlet b = b.as_primitive::<TimestampSecondType>(); // downcast to result type\nassert_eq!(2_000_000_000, b.value(1)); // values are still the same\n// displayed in the target timezone (note the offset -05:00)\nassert_eq!(\"2033-05-17T22:33:20-05:00\", display::array_value_to_string(&b, 1).unwrap());\n```\n# Casting timestamps without timezone to timestamps with timezone\n\nWhen casting from a timestamp without timezone to a timestamp with\ntimezone, the cast kernel interprets the timestamp values as being in\nthe destination timezone and then adjusts the underlying value to UTC as required\n\nHowever, note that when casting from a timestamp with timezone BACK to a\ntimestamp without timezone the cast kernel does not adjust the values.\n\nThus round trip casting a timestamp without timezone to a timestamp with\ntimezone and back to a timestamp without timezone results in different\nvalues than the starting values.\n\n```\n# use arrow_array::Int64Array;\n# use arrow_array::types::{TimestampSecondType};\n# use arrow_cast::{cast, display};\n# use arrow_array::cast::AsArray;\n# use arrow_schema::{DataType, TimeUnit};\nlet data_type  = DataType::Timestamp(TimeUnit::Second, None);\nlet data_type_tz = DataType::Timestamp(TimeUnit::Second, Some(\"-05:00\".into()));\nlet a = Int64Array::from(vec![1_000_000_000, 2_000_000_000, 3_000_000_000]);\nlet b = cast(&a, &data_type).unwrap(); // cast to timestamp without timezone\nlet b = b.as_primitive::<TimestampSecondType>(); // downcast to result type\nassert_eq!(2_000_000_000, b.value(1)); // values are still the same\n// displayed without a timezone (note lack of offset or Z)\nassert_eq!(\"2033-05-18T03:33:20\", display::array_value_to_string(&b, 1).unwrap());\n\n// Convert timestamps without a timezone to timestamps with a timezone\nlet c = cast(&b, &data_type_tz).unwrap();\nlet c = c.as_primitive::<TimestampSecondType>(); // downcast to result type\nassert_eq!(2_000_018_000, c.value(1)); // value has been adjusted by offset\n// displayed with the target timezone offset (-05:00)\nassert_eq!(\"2033-05-18T03:33:20-05:00\", display::array_value_to_string(&c, 1).unwrap());\n\n// Convert from timestamp with timezone back to timestamp without timezone\nlet d = cast(&c, &data_type).unwrap();\nlet d = d.as_primitive::<TimestampSecondType>(); // downcast to result type\nassert_eq!(2_000_018_000, d.value(1)); // value has not been adjusted\n// NOTE: the timestamp is adjusted (08:33:20 instead of 03:33:20 as in previous example)\nassert_eq!(\"2033-05-18T08:33:20\", display::array_value_to_string(&d, 1).unwrap());\n```",
+    "span": {
+      "filename": "src/cast/mod.rs",
+      "begin": [
+        760,
+        1
+      ],
+      "end": [
+        2267,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "array",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Array",
+                            "id": 145,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "to_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DataType",
+                      "id": 56,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "cast_options",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "CastOptions",
+                      "id": 57,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrayRef",
+                          "id": 58,
+                          "args": null
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 45,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "145": "arrow_array::array::Array",
+      "56": "arrow_schema::datatype::DataType",
+      "57": "arrow_cast::cast::CastOptions",
+      "44": "core::result::Result",
+      "58": "arrow_array::array::ArrayRef",
+      "45": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": null,
+    "links": {
+      "`CastOptions`": 57,
+      "`cast()`": 144,
+      "`IntervalMonthDayNano`": 146
+    },
+    "link_paths": {
+      "`CastOptions`": "arrow_cast::cast::CastOptions",
+      "`cast()`": "arrow_cast::cast::cast",
+      "`IntervalMonthDayNano`": "arrow_buffer::interval::IntervalMonthDayNano"
+    },
+    "artifact": {
+      "id": "752ca5e430612af62fa54422058472f37db7f433eac44e7b27649fd34a282785",
+      "format_version": 61,
+      "item_id": "142",
+      "origin": "https://docs.rs/crate/arrow-cast/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_cast.cast.cast_with_options.md",
+    "record_file": "operations/arrow_cast.cast.cast_with_options.json",
+    "anchor": "op-3809055ee1c85876012267ab",
+    "aliases": [
+      "arrow::compute::cast_with_options",
+      "arrow_cast::cast_with_options"
+    ],
+    "resolved_doc_links": {
+      "`CastOptions`": "../operations/arrow_cast.cast.CastOptions.md#op-befce2bf693cce8eadd84fda",
+      "`cast()`": "../operations/arrow_cast.cast.cast.md#op-b083b1d68dd0a1995d60c584",
+      "`IntervalMonthDayNano`": "../operations/arrow_buffer.interval.IntervalMonthDayNano.md#op-124a76e3b87e96892e283f4a"
+    }
+  }
+]

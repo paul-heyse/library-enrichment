@@ -27,6 +27,9 @@ fn new_with_ffi_codec(factory: Arc<dyn TableProviderFactory + Send>, runtime: Op
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.table_provider_factory.FFI_TableProviderFactory.md).
+
+
 A stable struct for sharing [`TableProviderFactory`] across FFI boundaries.
 
 Similar to [`FFI_TableProvider`], this struct uses the FFI-safe pattern where:
@@ -55,6 +58,9 @@ struct ForeignTableProviderFactory
 ```rust
 async fn create(&self, session: &dyn Session, cmd: &CreateExternalTable) -> Result<Arc<dyn TableProvider>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.table_provider_factory.ForeignTableProviderFactory.md).
+
 
 This wrapper struct exists on the receiver side of the FFI interface, so it has
 no guarantees about being able to access the data in `private_data`. Any functions

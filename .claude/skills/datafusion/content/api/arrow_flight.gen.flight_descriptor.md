@@ -33,6 +33,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<DescriptorType, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.flight_descriptor.DescriptorType.md).
+
+
 
 Describes what type of descriptor is defined.
 

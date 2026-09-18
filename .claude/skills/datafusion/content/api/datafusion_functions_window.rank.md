@@ -14,6 +14,9 @@ enum RankType
 
 **Derives**: Clone, Copy, Debug, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.rank.RankType.md).
+
+
 ---
 
 ## dense_rank
@@ -25,6 +28,9 @@ Also reachable as `datafusion_functions_window::expr_fn::dense_rank`
 ```rust
 fn dense_rank() -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.rank.dense_rank.md).
+
 
 Create a [`WindowFunction`](datafusion_expr::Expr::WindowFunction) expression for
 `DenseRank` user-defined window function.
@@ -40,6 +46,9 @@ Returns rank of the current row without gaps. This function counts peer groups
 ```rust
 fn dense_rank_udwf() -> std::sync::Arc<datafusion_expr::WindowUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.rank.dense_rank_udwf.md).
+
 
 Returns a [`WindowUDF`](datafusion_expr::WindowUDF) for [`dense_rank`].
 
@@ -57,6 +66,9 @@ Also reachable as `datafusion_functions_window::expr_fn::percent_rank`
 fn percent_rank() -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.rank.percent_rank.md).
+
+
 Create a [`WindowFunction`](datafusion_expr::Expr::WindowFunction) expression for
 `PercentRank` user-defined window function.
 
@@ -71,6 +83,9 @@ Returns the relative rank of the current row: (rank - 1) / (total rows - 1)
 ```rust
 fn percent_rank_udwf() -> std::sync::Arc<datafusion_expr::WindowUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.rank.percent_rank_udwf.md).
+
 
 Returns a [`WindowUDF`](datafusion_expr::WindowUDF) for [`percent_rank`].
 
@@ -88,6 +103,9 @@ Also reachable as `datafusion_functions_window::expr_fn::rank`
 fn rank() -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.rank.rank.md).
+
+
 Create a [`WindowFunction`](datafusion_expr::Expr::WindowFunction) expression for
 `Rank` user-defined window function.
 
@@ -102,6 +120,9 @@ Returns rank of the current row with gaps. Same as `row_number` of its first pee
 ```rust
 fn rank_udwf() -> std::sync::Arc<datafusion_expr::WindowUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.rank.rank_udwf.md).
+
 
 Returns a [`WindowUDF`](datafusion_expr::WindowUDF) for [`rank`].
 
@@ -142,6 +163,9 @@ fn signature(&self) -> &Signature
 fn sort_options(&self) -> Option<SortOptions>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.rank.Rank.md).
+
+
 Rank calculates the rank in the window function with order by
 
 ---
@@ -157,6 +181,9 @@ struct RankState
 **Fields**: `last_rank_data`, `last_rank_boundary`, `current_group_count`, `n_rank`
 
 **Derives**: Clone, Debug, Default
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.rank.RankState.md).
+
 
 State for the RANK(rank) built-in window function.
 

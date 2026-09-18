@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_add`, `datafusion_functions_nested
 fn array_add(array1: datafusion_expr::Expr, array2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_add.array_add.md).
+
+
 returns the element-wise sum of two numeric arrays.
 
 ---
@@ -23,6 +26,9 @@ returns the element-wise sum of two numeric arrays.
 ```rust
 fn array_add_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_add.array_add_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayAdd
@@ -58,5 +64,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_add.ArrayAdd.md).
+
 
 ---

@@ -1,0 +1,720 @@
+[
+  {
+    "id": "37a065b67403b669ccbe6bad",
+    "path": "datafusion_session::catalog::CatalogProvider",
+    "name": "CatalogProvider",
+    "owner": null,
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait CatalogProvider: Any + Debug + Sync + Send",
+    "docs": "Represents a catalog, comprising a number of named schemas.\n\n# Catalog Overview\n\nTo plan and execute queries, DataFusion needs a \"Catalog\" that provides\nmetadata such as which schemas and tables exist, their columns and data\ntypes, and how to access the data.\n\nThe Catalog API consists:\n* [`CatalogProviderList`]: a collection of `CatalogProvider`s\n* [`CatalogProvider`]: a collection of `SchemaProvider`s (sometimes called a \"database\" in other systems)\n* [`SchemaProvider`]:  a collection of `TableProvider`s (often called a \"schema\" in other systems)\n* [`TableProvider`]:  individual tables\n\n# Implementing Catalogs\n\nTo implement a catalog, you implement at least one of the [`CatalogProviderList`],\n[`CatalogProvider`] and [`SchemaProvider`] traits and register them\nappropriately in the `SessionContext`.\n\nDataFusion comes with a simple in-memory catalog implementation,\n`MemoryCatalogProvider`, that is used by default and has no persistence.\nDataFusion does not include more complex Catalog implementations because\ncatalog management is a key design choice for most data systems, and thus\nit is unlikely that any general-purpose catalog implementation will work\nwell across many use cases.\n\n# Implementing \"Remote\" catalogs\n\nSee [`remote_catalog`] for an end to end example of how to implement a\nremote catalog.\n\nSometimes catalog information is stored remotely and requires a network call\nto retrieve. For example, the [Delta Lake] table format stores table\nmetadata in files on S3 that must be first downloaded to discover what\nschemas and tables exist.\n\n[Delta Lake]: https://delta.io/\n[`remote_catalog`]: https://github.com/apache/datafusion/blob/main/datafusion-examples/examples/data_io/remote_catalog.rs\n\nThe [`CatalogProvider`] can support this use case, but it takes some care.\nThe planning APIs in DataFusion are not `async` and thus network IO can not\nbe performed \"lazily\" / \"on demand\" during query planning. The rationale for\nthis design is that using remote procedure calls for all catalog accesses\nrequired for query planning would likely result in multiple network calls\nper plan, resulting in very poor planning performance.\n\nTo implement [`CatalogProvider`] and [`SchemaProvider`] for remote catalogs,\nyou need to provide an in memory snapshot of the required metadata. Most\nsystems typically either already have this information cached locally or can\nbatch access to the remote catalog to retrieve multiple schemas and tables\nin a single network call.\n\nNote that [`SchemaProvider::table`] **is** an `async` function in order to\nsimplify implementing simple [`SchemaProvider`]s. For many table formats it\nis easy to list all available tables but there is additional non trivial\naccess required to read table details (e.g. statistics).\n\nThe pattern that DataFusion itself uses to plan SQL queries is to walk over\nthe query to find all table references, performing required remote catalog\nlookups in parallel, storing the results in a cached snapshot, and then plans\nthe query using that snapshot.\n\n# Example Catalog Implementations\n\nHere are some examples of how to implement custom catalogs:\n\n* [`datafusion-cli`]: [`DynamicFileCatalogProvider`] catalog provider\n  that treats files and directories on a filesystem as tables.\n\n* The [`catalog.rs`]:  a simple directory based catalog.\n\n* [delta-rs]:  [`UnityCatalogProvider`] implementation that can\n  read from Delta Lake tables\n\n[`datafusion-cli`]: https://datafusion.apache.org/user-guide/cli/index.html\n[`DynamicFileCatalogProvider`]: https://github.com/apache/datafusion/blob/31b9b48b08592b7d293f46e75707aad7dadd7cbc/datafusion-cli/src/catalog.rs#L75\n[`catalog.rs`]: https://github.com/apache/datafusion/blob/main/datafusion-examples/examples/data_io/catalog.rs\n[delta-rs]: https://github.com/delta-io/delta-rs\n[`UnityCatalogProvider`]: https://github.com/delta-io/delta-rs/blob/951436ecec476ce65b5ed3b58b50fb0846ca7b91/crates/deltalake-core/src/data_catalog/unity/datafusion.rs#L111-L123\n\n[`TableProvider`]: crate::TableProvider",
+    "span": {
+      "filename": "src/catalog.rs",
+      "begin": [
+        133,
+        1
+      ],
+      "end": [
+        174,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          70,
+          71,
+          72,
+          74
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Any",
+                "id": 43,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Debug",
+                "id": 56,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 7,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 5,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": []
+      }
+    },
+    "type_references": {
+      "43": "core::any::Any",
+      "56": "core::fmt::Debug",
+      "7": "core::marker::Sync",
+      "5": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {
+      "`SchemaProvider::table`": 76,
+      "`CatalogProvider`": 63,
+      "crate::TableProvider": 75,
+      "`CatalogProviderList`": 69,
+      "`SchemaProvider`": 1
+    },
+    "link_paths": {
+      "`SchemaProvider::table`": "datafusion_session::schema::SchemaProvider::table",
+      "`CatalogProvider`": "datafusion_session::catalog::CatalogProvider",
+      "crate::TableProvider": "datafusion_session::table::TableProvider",
+      "`CatalogProviderList`": "datafusion_session::catalog::CatalogProviderList",
+      "`SchemaProvider`": "datafusion_session::schema::SchemaProvider"
+    },
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "63",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.catalog.CatalogProvider.md",
+    "record_file": "operations/datafusion_session.catalog.CatalogProvider.json",
+    "anchor": "op-37a065b67403b669ccbe6bad",
+    "aliases": [
+      "datafusion_session::CatalogProvider"
+    ],
+    "resolved_doc_links": {
+      "`SchemaProvider::table`": "../operations/datafusion_session.schema.SchemaProvider.md#op-2f6985f66089b074a19145db",
+      "`CatalogProvider`": "../operations/datafusion_session.catalog.CatalogProvider.md#op-37a065b67403b669ccbe6bad",
+      "crate::TableProvider": "../operations/datafusion_session.table.TableProvider.md#op-76e5c2e5b081ebf294e9493e",
+      "`CatalogProviderList`": "../operations/datafusion_session.catalog.CatalogProviderList.md#op-d1c9ece1dd28ba403a6492b6",
+      "`SchemaProvider`": "../operations/datafusion_session.schema.SchemaProvider.md#op-009a61a5d6d9122859b6d788"
+    }
+  },
+  {
+    "id": "5943fc7567a0557e14c47947",
+    "path": "datafusion_session::catalog::CatalogProvider::deregister_schema",
+    "name": "deregister_schema",
+    "owner": "datafusion_session::catalog::CatalogProvider",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn deregister_schema(&self, _name: &str, _cascade: bool) -> Result<Option<Arc<dyn SchemaProvider>>>",
+    "docs": "Removes a schema from this catalog. Implementations of this method should return\nerrors if the schema exists but cannot be dropped. For example, in DataFusion's\ndefault in-memory catalog, `MemoryCatalogProvider`, a non-empty schema\nwill only be successfully dropped when `cascade` is true.\nThis is equivalent to how DROP SCHEMA works in PostgreSQL.\n\nImplementations of this method should return None if schema with `name`\ndoes not exist.\n\nBy default returns a \"Not Implemented\" error",
+    "span": {
+      "filename": "src/catalog.rs",
+      "begin": [
+        167,
+        5
+      ],
+      "end": [
+        173,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_name",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "primitive": "str"
+                  }
+                }
+              }
+            ],
+            [
+              "_cascade",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 73,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 64,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 62,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "SchemaProvider",
+                                                        "id": 1,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "73": "datafusion_common::error::Result",
+      "64": "core::option::Option",
+      "62": "alloc::sync::Arc",
+      "1": "datafusion_session::schema::SchemaProvider"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "74",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.catalog.CatalogProvider.md",
+    "record_file": "operations/datafusion_session.catalog.CatalogProvider.json",
+    "anchor": "op-5943fc7567a0557e14c47947",
+    "aliases": [
+      "datafusion_session::CatalogProvider::deregister_schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "75aadd6b4e97aa917c28bf67",
+    "path": "datafusion_session::catalog::CatalogProvider::register_schema",
+    "name": "register_schema",
+    "owner": "datafusion_session::catalog::CatalogProvider",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn register_schema(&self, name: &str, schema: Arc<dyn SchemaProvider>) -> Result<Option<Arc<dyn SchemaProvider>>>",
+    "docs": "Adds a new schema to this catalog.\n\nIf a schema of the same name existed before, it is replaced in\nthe catalog and returned.\n\nBy default returns a \"Not Implemented\" error",
+    "span": {
+      "filename": "src/catalog.rs",
+      "begin": [
+        146,
+        5
+      ],
+      "end": [
+        155,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "name",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "primitive": "str"
+                  }
+                }
+              }
+            ],
+            [
+              "schema",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 62,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "SchemaProvider",
+                                    "id": 1,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 73,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 64,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 62,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "SchemaProvider",
+                                                        "id": 1,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "62": "alloc::sync::Arc",
+      "1": "datafusion_session::schema::SchemaProvider",
+      "73": "datafusion_common::error::Result",
+      "64": "core::option::Option"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "72",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.catalog.CatalogProvider.md",
+    "record_file": "operations/datafusion_session.catalog.CatalogProvider.json",
+    "anchor": "op-75aadd6b4e97aa917c28bf67",
+    "aliases": [
+      "datafusion_session::CatalogProvider::register_schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b79abc665424f2077d1417a5",
+    "path": "datafusion_session::catalog::CatalogProvider::schema",
+    "name": "schema",
+    "owner": "datafusion_session::catalog::CatalogProvider",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn schema(&self, name: &str) -> Option<Arc<dyn SchemaProvider>>",
+    "docs": "Retrieves a specific schema from the catalog by name, provided it exists.",
+    "span": {
+      "filename": "src/catalog.rs",
+      "begin": [
+        138,
+        5
+      ],
+      "end": [
+        138,
+        69
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "name",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "primitive": "str"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 64,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 62,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "SchemaProvider",
+                                            "id": 1,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::option::Option",
+      "62": "alloc::sync::Arc",
+      "1": "datafusion_session::schema::SchemaProvider"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "71",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.catalog.CatalogProvider.md",
+    "record_file": "operations/datafusion_session.catalog.CatalogProvider.json",
+    "anchor": "op-b79abc665424f2077d1417a5",
+    "aliases": [
+      "datafusion_session::CatalogProvider::schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a8a71bc7379553097f1cb20c",
+    "path": "datafusion_session::catalog::CatalogProvider::schema_names",
+    "name": "schema_names",
+    "owner": "datafusion_session::catalog::CatalogProvider",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn schema_names(&self) -> Vec<String>",
+    "docs": "Retrieves the list of available schema names in this catalog.",
+    "span": {
+      "filename": "src/catalog.rs",
+      "begin": [
+        135,
+        5
+      ],
+      "end": [
+        135,
+        43
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 66,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "String",
+                          "id": 61,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "66": "alloc::vec::Vec",
+      "61": "alloc::string::String"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "70",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.catalog.CatalogProvider.md",
+    "record_file": "operations/datafusion_session.catalog.CatalogProvider.json",
+    "anchor": "op-a8a71bc7379553097f1cb20c",
+    "aliases": [
+      "datafusion_session::CatalogProvider::schema_names"
+    ],
+    "resolved_doc_links": {}
+  }
+]

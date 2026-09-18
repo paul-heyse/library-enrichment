@@ -1,0 +1,1141 @@
+[
+  {
+    "id": "2697d4c6c010f5bb2b7f7109",
+    "path": "parquet_variant_compute::variant_array::ShreddingState",
+    "name": "ShreddingState",
+    "owner": null,
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct ShreddingState",
+    "docs": "Represents the shredding state of a [`VariantArray`]\n\n[`VariantArray`]s can be shredded according to the [Parquet Variant\nShredding Spec]. Shredding means that the actual value is stored in a typed\n`typed_field` instead of the generic `value` field.\n\nThe `value` column is always present (the spec requires writers to emit\nit); `typed_value` is optional. Values in the two columns must be\ninterpreted according to the following table (see [Parquet Variant\nShredding Spec] for more details):\n\n| value    | typed_value  | Meaning |\n|----------|--------------|---------|\n| NULL     | NULL         | The value is missing; only valid for shredded object fields |\n| non-NULL | NULL         | The value is present and may be any type, including [`Variant::Null`] |\n| NULL     | non-NULL     | The value is present and is the shredded type |\n| non-NULL | non-NULL     | The value is present and is a partially shredded object |\n\n\nApplying the above rules to entire columns, we obtain the following:\n\n| value  | typed_value  | Meaning |\n|--------|-------------|---------|\n| exists | --          | **Unshredded**: If present, the value may be any type, including [`Variant::Null`]\n| exists | exists      | **Shredded**: perfectly if `value` is all-null, otherwise imperfectly |\n\nNote the spec requires the `value` column to always be present in the\nschema; structs without one are rejected\n(see <https://github.com/apache/arrow-rs/issues/10306>).\n\nNOTE: Partial shredding is a row-wise situation that can arise under imperfect shredding (a\ncolumn-wise situation): When both columns exist (imperfect shredding) and the typed_value column\nis a struct, then both columns can be non-NULL for the same row if value is a variant object\n(partial shredding).\n\n[Parquet Variant Shredding Spec]: https://github.com/apache/parquet-format/blob/master/VariantShredding.md#value-shredding",
+    "span": {
+      "filename": "src/variant_array.rs",
+      "begin": [
+        846,
+        1
+      ],
+      "end": [
+        849,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          209,
+          210,
+          211,
+          212,
+          213,
+          214,
+          215,
+          216,
+          217,
+          218,
+          219,
+          220,
+          221,
+          222,
+          223,
+          224,
+          225,
+          227,
+          229,
+          232
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Variant::Null`": 148,
+      "`VariantArray`": 2
+    },
+    "link_paths": {
+      "`Variant::Null`": "parquet_variant::variant::Variant::Null",
+      "`VariantArray`": "parquet_variant_compute::variant_array::VariantArray"
+    },
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "144",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.variant_array.ShreddingState.md",
+    "record_file": "operations/parquet_variant_compute.variant_array.ShreddingState.json",
+    "anchor": "op-2697d4c6c010f5bb2b7f7109",
+    "aliases": [
+      "parquet::variant::ShreddingState",
+      "parquet_variant_compute::ShreddingState"
+    ],
+    "resolved_doc_links": {
+      "`Variant::Null`": "../operations/parquet_variant.variant.Variant.md#op-a77e1395c0a1609bb5be4d06",
+      "`VariantArray`": "../operations/parquet_variant_compute.variant_array.VariantArray.md#op-0730efce8ca33e866d425d18"
+    }
+  },
+  {
+    "id": "7a232ef3219ee3a81daebc5e",
+    "path": "parquet_variant_compute::variant_array::ShreddingState::Error",
+    "name": "Error",
+    "owner": "parquet_variant_compute::variant_array::ShreddingState",
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "assoc_type",
+    "signature": "Error",
+    "docs": "",
+    "span": {
+      "filename": "src/variant_array.rs",
+      "begin": [
+        890,
+        5
+      ],
+      "end": [
+        890,
+        29
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "type": {
+          "resolved_path": {
+            "path": "ArrowError",
+            "id": 6,
+            "args": null
+          }
+        },
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ShreddingState",
+          "id": "parquet_variant_compute::variant_array::ShreddingState",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "TryFrom",
+        "id": "core::convert::TryFrom",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "borrowed_ref": {
+                    "lifetime": null,
+                    "is_mutable": false,
+                    "type": {
+                      "resolved_path": {
+                        "path": "StructArray",
+                        "id": "arrow_array::array::struct_array::StructArray",
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::TryFrom",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant_array.rs",
+        "begin": [
+          889,
+          1
+        ],
+        "end": [
+          910,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "230",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.variant_array.ShreddingState.md",
+    "record_file": "operations/parquet_variant_compute.variant_array.ShreddingState.json",
+    "anchor": "op-7a232ef3219ee3a81daebc5e",
+    "aliases": [
+      "parquet::variant::ShreddingState::Error",
+      "parquet_variant_compute::ShreddingState::Error"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "58693116fe78e2b125d82896",
+    "path": "parquet_variant_compute::variant_array::ShreddingState::clone",
+    "name": "clone",
+    "owner": "parquet_variant_compute::variant_array::ShreddingState",
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> ShreddingState",
+    "docs": "",
+    "span": {
+      "filename": "src/variant_array.rs",
+      "begin": [
+        845,
+        17
+      ],
+      "end": [
+        845,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ShreddingState",
+              "id": 144,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "144": "parquet_variant_compute::variant_array::ShreddingState"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ShreddingState",
+          "id": "parquet_variant_compute::variant_array::ShreddingState",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant_array.rs",
+        "begin": [
+          845,
+          17
+        ],
+        "end": [
+          845,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "228",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.variant_array.ShreddingState.md",
+    "record_file": "operations/parquet_variant_compute.variant_array.ShreddingState.json",
+    "anchor": "op-58693116fe78e2b125d82896",
+    "aliases": [
+      "parquet::variant::ShreddingState::clone",
+      "parquet_variant_compute::ShreddingState::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c282caaf4a6061223d937b1b",
+    "path": "parquet_variant_compute::variant_array::ShreddingState::fmt",
+    "name": "fmt",
+    "owner": "parquet_variant_compute::variant_array::ShreddingState",
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/variant_array.rs",
+      "begin": [
+        845,
+        10
+      ],
+      "end": [
+        845,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 179,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 180,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "179": "core::fmt::Formatter",
+      "180": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ShreddingState",
+          "id": "parquet_variant_compute::variant_array::ShreddingState",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant_array.rs",
+        "begin": [
+          845,
+          10
+        ],
+        "end": [
+          845,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "226",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.variant_array.ShreddingState.md",
+    "record_file": "operations/parquet_variant_compute.variant_array.ShreddingState.json",
+    "anchor": "op-c282caaf4a6061223d937b1b",
+    "aliases": [
+      "parquet::variant::ShreddingState::fmt",
+      "parquet_variant_compute::ShreddingState::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "09158567a0604f972e1bcfe0",
+    "path": "parquet_variant_compute::variant_array::ShreddingState::new",
+    "name": "new",
+    "owner": "parquet_variant_compute::variant_array::ShreddingState",
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(value: ArrayRef, typed_value: Option<ArrayRef>) -> Self",
+    "docs": "Create a new `ShreddingState` from the given `value` and `typed_value` fields\n\nNote you can create a `ShreddingState` from a &[`StructArray`] using\n`ShreddingState::try_from(&struct_array)`, for example:\n\n```no_run\n# use arrow::array::StructArray;\n# use parquet_variant_compute::ShreddingState;\n# fn get_struct_array() -> StructArray {\n#   unimplemented!()\n# }\nlet struct_array: StructArray = get_struct_array();\nlet shredding_state = ShreddingState::try_from(&struct_array).unwrap();\n```",
+    "span": {
+      "filename": "src/variant_array.rs",
+      "begin": [
+        866,
+        5
+      ],
+      "end": [
+        868,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "ArrayRef",
+                  "id": 13,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "typed_value",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 124,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayRef",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "13": "arrow_array::array::ArrayRef",
+      "124": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ShreddingState",
+          "id": "parquet_variant_compute::variant_array::ShreddingState",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant_array.rs",
+        "begin": [
+          851,
+          1
+        ],
+        "end": [
+          887,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`StructArray`": 135
+    },
+    "link_paths": {
+      "`StructArray`": "arrow_array::array::struct_array::StructArray"
+    },
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "205",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.variant_array.ShreddingState.md",
+    "record_file": "operations/parquet_variant_compute.variant_array.ShreddingState.json",
+    "anchor": "op-09158567a0604f972e1bcfe0",
+    "aliases": [
+      "parquet::variant::ShreddingState::new",
+      "parquet_variant_compute::ShreddingState::new"
+    ],
+    "resolved_doc_links": {
+      "`StructArray`": "../operations/arrow_array.array.struct_array.StructArray.md#op-994d82c95af72fa0e3aa6207"
+    }
+  },
+  {
+    "id": "ac7869b0a6c233f10bfa434e",
+    "path": "parquet_variant_compute::variant_array::ShreddingState::slice",
+    "name": "slice",
+    "owner": "parquet_variant_compute::variant_array::ShreddingState",
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn slice(&self, offset: usize, length: usize) -> Self",
+    "docs": "Slice all the underlying arrays",
+    "span": {
+      "filename": "src/variant_array.rs",
+      "begin": [
+        881,
+        5
+      ],
+      "end": [
+        886,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "length",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ShreddingState",
+          "id": "parquet_variant_compute::variant_array::ShreddingState",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant_array.rs",
+        "begin": [
+          851,
+          1
+        ],
+        "end": [
+          887,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "208",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.variant_array.ShreddingState.md",
+    "record_file": "operations/parquet_variant_compute.variant_array.ShreddingState.json",
+    "anchor": "op-ac7869b0a6c233f10bfa434e",
+    "aliases": [
+      "parquet::variant::ShreddingState::slice",
+      "parquet_variant_compute::ShreddingState::slice"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7eb88594d8d37b0faf4c36cf",
+    "path": "parquet_variant_compute::variant_array::ShreddingState::try_from",
+    "name": "try_from",
+    "owner": "parquet_variant_compute::variant_array::ShreddingState",
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_from(inner_struct: &StructArray) -> Result<Self>",
+    "docs": "",
+    "span": {
+      "filename": "src/variant_array.rs",
+      "begin": [
+        892,
+        5
+      ],
+      "end": [
+        909,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "inner_struct",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "StructArray",
+                      "id": 135,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 18,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "135": "arrow_array::array::struct_array::StructArray",
+      "18": "arrow::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ShreddingState",
+          "id": "parquet_variant_compute::variant_array::ShreddingState",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "TryFrom",
+        "id": "core::convert::TryFrom",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "borrowed_ref": {
+                    "lifetime": null,
+                    "is_mutable": false,
+                    "type": {
+                      "resolved_path": {
+                        "path": "StructArray",
+                        "id": "arrow_array::array::struct_array::StructArray",
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::TryFrom",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant_array.rs",
+        "begin": [
+          889,
+          1
+        ],
+        "end": [
+          910,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "231",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.variant_array.ShreddingState.md",
+    "record_file": "operations/parquet_variant_compute.variant_array.ShreddingState.json",
+    "anchor": "op-7eb88594d8d37b0faf4c36cf",
+    "aliases": [
+      "parquet::variant::ShreddingState::try_from",
+      "parquet_variant_compute::ShreddingState::try_from"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3916ea15abf7bc717ae7df97",
+    "path": "parquet_variant_compute::variant_array::ShreddingState::typed_value_column",
+    "name": "typed_value_column",
+    "owner": "parquet_variant_compute::variant_array::ShreddingState",
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn typed_value_column(&self) -> Option<&ArrayRef>",
+    "docs": "Return a reference to the `typed_value` column, if present",
+    "span": {
+      "filename": "src/variant_array.rs",
+      "begin": [
+        876,
+        5
+      ],
+      "end": [
+        878,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 124,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayRef",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "124": "core::option::Option",
+      "13": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ShreddingState",
+          "id": "parquet_variant_compute::variant_array::ShreddingState",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant_array.rs",
+        "begin": [
+          851,
+          1
+        ],
+        "end": [
+          887,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "207",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.variant_array.ShreddingState.md",
+    "record_file": "operations/parquet_variant_compute.variant_array.ShreddingState.json",
+    "anchor": "op-3916ea15abf7bc717ae7df97",
+    "aliases": [
+      "parquet::variant::ShreddingState::typed_value_column",
+      "parquet_variant_compute::ShreddingState::typed_value_column"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5407f5031b0e644009b62159",
+    "path": "parquet_variant_compute::variant_array::ShreddingState::value_column",
+    "name": "value_column",
+    "owner": "parquet_variant_compute::variant_array::ShreddingState",
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn value_column(&self) -> &ArrayRef",
+    "docs": "Return a reference to the `value` column",
+    "span": {
+      "filename": "src/variant_array.rs",
+      "begin": [
+        871,
+        5
+      ],
+      "end": [
+        873,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ArrayRef",
+                  "id": 13,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "13": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ShreddingState",
+          "id": "parquet_variant_compute::variant_array::ShreddingState",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant_array.rs",
+        "begin": [
+          851,
+          1
+        ],
+        "end": [
+          887,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "206",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.variant_array.ShreddingState.md",
+    "record_file": "operations/parquet_variant_compute.variant_array.ShreddingState.json",
+    "anchor": "op-5407f5031b0e644009b62159",
+    "aliases": [
+      "parquet::variant::ShreddingState::value_column",
+      "parquet_variant_compute::ShreddingState::value_column"
+    ],
+    "resolved_doc_links": {}
+  }
+]

@@ -12,6 +12,9 @@ Also reachable as `arrow::util::bit_mask::set_bits`, `arrow_data::bit_mask::set_
 fn set_bits(write_data: &mut [u8], data: &[u8], offset_write: usize, offset_read: usize, len: usize) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_mask.set_bits.md).
+
+
 Util function to set bits in a slice of bytes.
 
 This will sets all bits on `write_data` in the range `[offset_write..offset_write+len]`

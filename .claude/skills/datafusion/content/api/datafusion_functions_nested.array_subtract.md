@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_subtract`, `datafusion_functions_n
 fn array_subtract(array1: datafusion_expr::Expr, array2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_subtract.array_subtract.md).
+
+
 returns the element-wise difference of two numeric arrays.
 
 ---
@@ -23,6 +26,9 @@ returns the element-wise difference of two numeric arrays.
 ```rust
 fn array_subtract_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_subtract.array_subtract_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArraySubtract
@@ -58,5 +64,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_subtract.ArraySubtract.md).
+
 
 ---

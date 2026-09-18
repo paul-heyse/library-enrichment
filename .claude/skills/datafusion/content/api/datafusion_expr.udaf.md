@@ -14,6 +14,9 @@ enum ReversedUDAF
 
 **Variants**: `Identical`, `NotSupported`, `Reversed`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udaf.ReversedUDAF.md).
+
+
 ---
 
 ## SetMonotonicity
@@ -29,6 +32,9 @@ enum SetMonotonicity
 **Variants**: `Increasing`, `Decreasing`, `NotMonotonic`
 
 **Derives**: Clone, Debug, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udaf.SetMonotonicity.md).
+
 
 Indicates whether an aggregation function is monotonic as a set
 function. A set function is monotonically increasing if its value
@@ -53,6 +59,9 @@ Also reachable as `datafusion::logical_expr::udaf_default_display_name`, `datafu
 fn udaf_default_display_name<F: AggregateUDFImpl + ?Sized>(func: &F, params: &expr::AggregateFunctionParams) -> datafusion_common::Result<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udaf.udaf_default_display_name.md).
+
+
 Encapsulates default implementation of [`AggregateUDFImpl::display_name`].
 
 ---
@@ -66,6 +75,9 @@ Also reachable as `datafusion::logical_expr::udaf_default_human_display`, `dataf
 ```rust
 fn udaf_default_human_display<F: AggregateUDFImpl + ?Sized>(func: &F, params: &expr::AggregateFunctionParams) -> datafusion_common::Result<String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udaf.udaf_default_human_display.md).
+
 
 Encapsulates default implementation of [`AggregateUDFImpl::human_display`].
 
@@ -81,6 +93,9 @@ Also reachable as `datafusion::logical_expr::udaf_default_return_field`, `datafu
 fn udaf_default_return_field<F: AggregateUDFImpl + ?Sized>(func: &F, arg_fields: &[arrow::datatypes::FieldRef]) -> datafusion_common::Result<arrow::datatypes::FieldRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udaf.udaf_default_return_field.md).
+
+
 Encapsulates default implementation of [`AggregateUDFImpl::return_field`].
 
 ---
@@ -94,6 +109,9 @@ Also reachable as `datafusion::logical_expr::udaf_default_schema_name`, `datafus
 ```rust
 fn udaf_default_schema_name<F: AggregateUDFImpl + ?Sized>(func: &F, params: &expr::AggregateFunctionParams) -> datafusion_common::Result<String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udaf.udaf_default_schema_name.md).
+
 
 Encapsulates default implementation of [`AggregateUDFImpl::schema_name`].
 
@@ -109,6 +127,9 @@ Also reachable as `datafusion::logical_expr::udaf_default_window_function_displa
 fn udaf_default_window_function_display_name<F: AggregateUDFImpl + ?Sized>(func: &F, params: &expr::WindowFunctionParams) -> datafusion_common::Result<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udaf.udaf_default_window_function_display_name.md).
+
+
 Encapsulates default implementation of [`AggregateUDFImpl::window_function_display_name`].
 
 ---
@@ -122,6 +143,9 @@ Also reachable as `datafusion::logical_expr::udaf_default_window_function_schema
 ```rust
 fn udaf_default_window_function_schema_name<F: AggregateUDFImpl + ?Sized>(func: &F, params: &expr::WindowFunctionParams) -> datafusion_common::Result<String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udaf.udaf_default_window_function_schema_name.md).
+
 
 Encapsulates default implementation of [`AggregateUDFImpl::window_function_schema_name`].
 
@@ -199,6 +223,9 @@ fn name(&self) -> &str
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udaf.AggregateUDF.md).
+
+
 Logical representation of a user-defined [aggregate function] (UDAF).
 
 An aggregate function combines the values from multiple input rows
@@ -246,6 +273,9 @@ struct StatisticsArgs<'a>
 **Fields**: `statistics`, `return_type`, `is_distinct`, `exprs`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udaf.StatisticsArgs.md).
+
 
 Arguments passed to [`AggregateUDFImpl::value_from_stats`]
 
@@ -336,6 +366,9 @@ fn window_function_display_name(&self, params: &WindowFunctionParams) -> Result<
 fn window_function_schema_name(&self, params: &WindowFunctionParams) -> Result<String>
 fn with_beneficial_ordering(Arc<self>, _beneficial_ordering: bool) -> Result<Option<Arc<dyn AggregateUDFImpl>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udaf.AggregateUDFImpl.md).
+
 
 Trait for implementing [`AggregateUDF`].
 

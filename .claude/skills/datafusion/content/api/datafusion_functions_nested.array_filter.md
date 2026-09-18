@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_filter`, `datafusion_functions_nes
 fn array_filter(array: datafusion_expr::Expr, lambda: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_filter.array_filter.md).
+
+
 filters the values of an array using a boolean lambda
 
 ---
@@ -23,6 +26,9 @@ filters the values of an array using a boolean lambda
 ```rust
 fn array_filter_higher_order_function() -> std::sync::Arc<datafusion_expr::HigherOrderUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_filter.array_filter_higher_order_function.md).
+
 
 HigherOrderFunction that returns a [`HigherOrderUDF`](datafusion_expr::HigherOrderUDF) for 
 ArrayFilter
@@ -59,5 +65,8 @@ fn name(&self) -> &str
 fn return_field_from_args(&self, args: HigherOrderReturnFieldArgs<'_>) -> Result<Arc<Field>>
 fn signature(&self) -> &HigherOrderSignature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_filter.ArrayFilter.md).
+
 
 ---

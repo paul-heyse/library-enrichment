@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::approx_median`
 fn approx_median(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.approx_median.approx_median.md).
+
+
 Computes the approximate median of a set of numbers
 
 ---
@@ -23,6 +26,9 @@ Computes the approximate median of a set of numbers
 ```rust
 fn approx_median_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.approx_median.approx_median_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`ApproxMedian`]
 
@@ -56,6 +62,9 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.approx_median.ApproxMedian.md).
+
 
 APPROX_MEDIAN aggregate expression
 

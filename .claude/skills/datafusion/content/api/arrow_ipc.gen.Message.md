@@ -14,6 +14,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_BODY_COMPRESSION_METHOD`, `arrow_ipc::EN
 const ENUM_MAX_BODY_COMPRESSION_METHOD: i8 = 0
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.ENUM_MAX_BODY_COMPRESSION_METHOD.md).
+
+
 ---
 
 ## ENUM_MAX_COMPRESSION_TYPE
@@ -27,6 +30,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_COMPRESSION_TYPE`, `arrow_ipc::ENUM_MAX_
 ```rust
 const ENUM_MAX_COMPRESSION_TYPE: i8 = 1
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.ENUM_MAX_COMPRESSION_TYPE.md).
+
 
 ---
 
@@ -42,6 +48,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_MESSAGE_HEADER`, `arrow_ipc::ENUM_MAX_ME
 const ENUM_MAX_MESSAGE_HEADER: u8 = 5
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.ENUM_MAX_MESSAGE_HEADER.md).
+
+
 ---
 
 ## ENUM_MIN_BODY_COMPRESSION_METHOD
@@ -55,6 +64,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_BODY_COMPRESSION_METHOD`, `arrow_ipc::EN
 ```rust
 const ENUM_MIN_BODY_COMPRESSION_METHOD: i8 = 0
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.ENUM_MIN_BODY_COMPRESSION_METHOD.md).
+
 
 ---
 
@@ -70,6 +82,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_COMPRESSION_TYPE`, `arrow_ipc::ENUM_MIN_
 const ENUM_MIN_COMPRESSION_TYPE: i8 = 0
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.ENUM_MIN_COMPRESSION_TYPE.md).
+
+
 ---
 
 ## ENUM_MIN_MESSAGE_HEADER
@@ -83,6 +98,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_MESSAGE_HEADER`, `arrow_ipc::ENUM_MIN_ME
 ```rust
 const ENUM_MIN_MESSAGE_HEADER: u8 = 0
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.ENUM_MIN_MESSAGE_HEADER.md).
+
 
 ---
 
@@ -98,6 +116,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_BODY_COMPRESSION_METHOD`, `arrow_ipc:
 const ENUM_VALUES_BODY_COMPRESSION_METHOD: [BodyCompressionMethod; 1] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.ENUM_VALUES_BODY_COMPRESSION_METHOD.md).
+
+
 ---
 
 ## ENUM_VALUES_COMPRESSION_TYPE
@@ -111,6 +132,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_COMPRESSION_TYPE`, `arrow_ipc::ENUM_V
 ```rust
 const ENUM_VALUES_COMPRESSION_TYPE: [CompressionType; 2] = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.ENUM_VALUES_COMPRESSION_TYPE.md).
+
 
 ---
 
@@ -126,6 +150,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_MESSAGE_HEADER`, `arrow_ipc::ENUM_VAL
 const ENUM_VALUES_MESSAGE_HEADER: [MessageHeader; 6] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.ENUM_VALUES_MESSAGE_HEADER.md).
+
+
 ---
 
 ## BodyCompressionOffset
@@ -137,6 +164,9 @@ Also reachable as `arrow::ipc::BodyCompressionOffset`, `arrow_ipc::BodyCompressi
 ```rust
 enum BodyCompressionOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.BodyCompressionOffset.md).
+
 
 ---
 
@@ -150,6 +180,9 @@ Also reachable as `arrow::ipc::DictionaryBatchOffset`, `arrow_ipc::DictionaryBat
 enum DictionaryBatchOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.DictionaryBatchOffset.md).
+
+
 ---
 
 ## MessageOffset
@@ -161,6 +194,9 @@ Also reachable as `arrow::ipc::MessageOffset`, `arrow_ipc::MessageOffset`
 ```rust
 enum MessageOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.MessageOffset.md).
+
 
 ---
 
@@ -174,6 +210,9 @@ Also reachable as `arrow::ipc::RecordBatchOffset`, `arrow_ipc::RecordBatchOffset
 enum RecordBatchOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.RecordBatchOffset.md).
+
+
 ---
 
 ## finish_message_buffer
@@ -185,6 +224,9 @@ Also reachable as `arrow::ipc::finish_message_buffer`, `arrow_ipc::finish_messag
 ```rust
 fn finish_message_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<Message<'a>>)
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.finish_message_buffer.md).
+
 
 ---
 
@@ -198,6 +240,9 @@ Also reachable as `arrow::ipc::finish_size_prefixed_message_buffer`, `arrow_ipc:
 fn finish_size_prefixed_message_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<Message<'a>>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.finish_size_prefixed_message_buffer.md).
+
+
 ---
 
 ## root_as_message
@@ -209,6 +254,9 @@ Also reachable as `arrow::ipc::root_as_message`, `arrow_ipc::root_as_message`
 ```rust
 fn root_as_message(buf: &[u8]) -> Result<Message<'_>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.root_as_message.md).
+
 
 Verifies that a buffer of bytes contains a `Message`
 and returns it.
@@ -229,6 +277,9 @@ Also reachable as `arrow::ipc::root_as_message_unchecked`, `arrow_ipc::root_as_m
 unsafe fn root_as_message_unchecked(buf: &[u8]) -> Message<'_>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.root_as_message_unchecked.md).
+
+
 Assumes, without verification, that a buffer of bytes contains a Message and returns it.
 # Safety
 Callers must trust the given bytes do indeed contain a valid `Message`.
@@ -244,6 +295,9 @@ Also reachable as `arrow::ipc::root_as_message_with_opts`, `arrow_ipc::root_as_m
 ```rust
 fn root_as_message_with_opts<'b, 'o>(opts: &'o flatbuffers::VerifierOptions, buf: &'b [u8]) -> Result<Message<'b>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.root_as_message_with_opts.md).
+
 
 Verifies, with the given options, that a buffer of bytes
 contains a `Message` and returns it.
@@ -264,6 +318,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_message`, `arrow_ipc::size_
 fn size_prefixed_root_as_message(buf: &[u8]) -> Result<Message<'_>, flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.size_prefixed_root_as_message.md).
+
+
 Verifies that a buffer of bytes contains a size prefixed
 `Message` and returns it.
 Note that verification is still experimental and may not
@@ -283,6 +340,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_message_unchecked`, `arrow_
 unsafe fn size_prefixed_root_as_message_unchecked(buf: &[u8]) -> Message<'_>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.size_prefixed_root_as_message_unchecked.md).
+
+
 Assumes, without verification, that a buffer of bytes contains a size prefixed Message and returns it.
 # Safety
 Callers must trust the given bytes do indeed contain a valid size prefixed `Message`.
@@ -298,6 +358,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_message_with_opts`, `arrow_
 ```rust
 fn size_prefixed_root_as_message_with_opts<'b, 'o>(opts: &'o flatbuffers::VerifierOptions, buf: &'b [u8]) -> Result<Message<'b>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.size_prefixed_root_as_message_with_opts.md).
+
 
 Verifies, with the given verifier options, that a buffer of
 bytes contains a size prefixed `Message` and returns
@@ -345,6 +408,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.BodyCompression.md).
+
+
 Optional compression for the memory buffers constituting IPC message
 bodies. Intended for use with RecordBatch but could be used for other
 message types
@@ -364,6 +430,9 @@ struct BodyCompressionArgs
 **Fields**: `codec`, `method`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.BodyCompressionArgs.md).
+
 
 ---
 
@@ -385,6 +454,9 @@ fn add_method(&mut self, method: BodyCompressionMethod)
 fn finish(self) -> flatbuffers::WIPOffset<BodyCompression<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> BodyCompressionBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.BodyCompressionBuilder.md).
+
 
 ---
 
@@ -432,6 +504,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 ```rust
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.BodyCompressionMethod.md).
+
 
 Provided for forward compatibility in case we need to support different
 strategies for compressing the IPC message body (like whole-body
@@ -484,6 +559,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.CompressionType.md).
+
+
 ---
 
 ## DictionaryBatch
@@ -524,6 +602,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.DictionaryBatch.md).
+
+
 For sending dictionary encoding information. Any Field can be
 dictionary-encoded, but in this case none of its children may be
 dictionary-encoded.
@@ -547,6 +628,9 @@ struct DictionaryBatchArgs<'a>
 
 **Derives**: Default
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.DictionaryBatchArgs.md).
+
+
 ---
 
 ## DictionaryBatchBuilder
@@ -568,6 +652,9 @@ fn add_isDelta(&mut self, isDelta: bool)
 fn finish(self) -> flatbuffers::WIPOffset<DictionaryBatch<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DictionaryBatchBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.DictionaryBatchBuilder.md).
+
 
 ---
 
@@ -613,6 +700,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 ```rust
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.FieldNode.md).
+
 
 ----------------------------------------------------------------------
 Data structures for describing a table row batch (a collection of
@@ -671,6 +761,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.Message.md).
+
+
 ---
 
 ## MessageArgs
@@ -686,6 +779,9 @@ struct MessageArgs<'a>
 **Fields**: `version`, `header_type`, `header`, `bodyLength`, `custom_metadata`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.MessageArgs.md).
+
 
 ---
 
@@ -710,6 +806,9 @@ fn add_version(&mut self, version: MetadataVersion)
 fn finish(self) -> flatbuffers::WIPOffset<Message<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> MessageBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.MessageBuilder.md).
+
 
 ---
 
@@ -758,6 +857,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.MessageHeader.md).
+
+
 ----------------------------------------------------------------------
 The root Message type
 This union enables us to easily send different message types without
@@ -778,6 +880,9 @@ Also reachable as `arrow::ipc::MessageHeaderUnionTableOffset`, `arrow_ipc::Messa
 ```rust
 struct MessageHeaderUnionTableOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.MessageHeaderUnionTableOffset.md).
+
 
 ---
 
@@ -821,6 +926,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.RecordBatch.md).
+
+
 A data header describing the shared memory layout of a "record" or "row"
 batch. Some systems call this a "row batch" internally and others a "record
 batch".
@@ -840,6 +948,9 @@ struct RecordBatchArgs<'a>
 **Fields**: `length`, `nodes`, `buffers`, `compression`, `variadicBufferCounts`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.RecordBatchArgs.md).
+
 
 ---
 
@@ -864,5 +975,8 @@ fn add_variadicBufferCounts(&mut self, variadicBufferCounts: flatbuffers::WIPOff
 fn finish(self) -> flatbuffers::WIPOffset<RecordBatch<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> RecordBatchBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Message.RecordBatchBuilder.md).
+
 
 ---

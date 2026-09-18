@@ -92,14 +92,17 @@ pub async fn assess(
     native_catalog::work(
         &session,
         "configuration_inputs",
-        session
-            .read_batch(Inputs::batch(&[Inputs {
+        crate::native_catalog::batch(
+            &session,
+            "comparison_context",
+            Inputs::batch(&[Inputs {
                 before: before.clone(),
                 after: after.clone(),
                 before_observed: before_observed.clone(),
                 after_observed: after_observed.clone(),
-            }])?)?
-            .into_view(),
+            }])?,
+        )?
+        .into_view(),
     )?;
     let input = session.table("configuration_inputs").await?;
     let kind = ConfigurationDifference::data_type();
@@ -158,13 +161,17 @@ pub async fn assess(
         .map(|row| row.message)
         .collect::<Vec<_>>();
     // Selection of the qualifier is part of the same native difference relation.
-    let selected = session.read_batch(Difference::batch(
-        &differences
-            .iter()
-            .cloned()
-            .map(|difference| Difference { difference })
-            .collect::<Vec<_>>(),
-    )?)?;
+    let selected = crate::native_catalog::batch(
+        &session,
+        "comparison_context",
+        Difference::batch(
+            &differences
+                .iter()
+                .cloned()
+                .map(|difference| Difference { difference })
+                .collect::<Vec<_>>(),
+        )?,
+    )?;
     let qualifier = selected.limit(0,Some(1))?.select(vec![lit("Environment or observed configuration differs; do not attribute every difference to the release").alias("message")])?;
     confounders.extend(
         runtime

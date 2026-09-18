@@ -5,6 +5,7 @@ Crate `deltalake-core` · 8 public items · structured records in [`model/deltal
 ## ColumnCountStat
 
 `enum` · `deltalake_core::protocol::ColumnCountStat`
+[Full member contracts, output types and access classification](../operations/deltalake_core.protocol.ColumnCountStat.md)
 
 Also reachable as `deltalake::protocol::ColumnCountStat`
 
@@ -44,6 +45,7 @@ Struct used to represent nullCount in add action statistics.
 ## ColumnValueStat
 
 `enum` · `deltalake_core::protocol::ColumnValueStat`
+[Full member contracts, output types and access classification](../operations/deltalake_core.protocol.ColumnValueStat.md)
 
 Also reachable as `deltalake::protocol::ColumnValueStat`
 
@@ -83,6 +85,7 @@ Struct used to represent minValues and maxValues in add action statistics.
 ## DeltaOperation
 
 `enum` · `deltalake_core::protocol::DeltaOperation`
+[Full member contracts, output types and access classification](../operations/deltalake_core.protocol.DeltaOperation.md)
 
 Also reachable as `deltalake::protocol::DeltaOperation`
 
@@ -133,6 +136,7 @@ This is a key element of the `CommitInfo` action.
 ## OutputMode
 
 `enum` · `deltalake_core::protocol::OutputMode`
+[Full member contracts, output types and access classification](../operations/deltalake_core.protocol.OutputMode.md)
 
 Also reachable as `deltalake::protocol::OutputMode`
 
@@ -165,6 +169,7 @@ The OutputMode used in streaming operations.
 ## SaveMode
 
 `enum` · `deltalake_core::protocol::SaveMode`
+[Full member contracts, output types and access classification](../operations/deltalake_core.protocol.SaveMode.md)
 
 Also reachable as `deltalake::protocol::SaveMode`
 
@@ -203,6 +208,7 @@ The SaveMode used when performing a DeltaOperation
 ## MergePredicate
 
 `struct` · `deltalake_core::protocol::MergePredicate`
+[Full member contracts, output types and access classification](../operations/deltalake_core.protocol.MergePredicate.md)
 
 Also reachable as `deltalake::protocol::MergePredicate`
 
@@ -235,6 +241,7 @@ Used to record the operations performed to the Delta Log
 ## Stats
 
 `struct` · `deltalake_core::protocol::Stats`
+[Full member contracts, output types and access classification](../operations/deltalake_core.protocol.Stats.md)
 
 Also reachable as `deltalake::protocol::Stats`
 
@@ -267,6 +274,7 @@ Statistics associated with Add actions contained in the Delta log.
 ## StatsParsed
 
 `struct` · `deltalake_core::protocol::StatsParsed`
+[Full member contracts, output types and access classification](../operations/deltalake_core.protocol.StatsParsed.md)
 
 Also reachable as `deltalake::protocol::StatsParsed`
 

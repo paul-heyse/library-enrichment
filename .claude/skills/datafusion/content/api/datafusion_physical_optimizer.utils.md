@@ -10,6 +10,9 @@ Crate `datafusion-physical-optimizer` · 10 public items · structured records i
 fn add_sort_above<T: Clone + Default>(node: datafusion_physical_plan::tree_node::PlanContext<T>, sort_requirements: datafusion_physical_expr::LexRequirement, fetch: Option<usize>) -> datafusion_physical_plan::tree_node::PlanContext<T>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.utils.add_sort_above.md).
+
+
 This utility function adds a `SortExec` above an operator according to the
 given ordering requirements while preserving the original partitioning.
 
@@ -27,6 +30,9 @@ the child plans with [`PlanContext::update_plan_from_children`].
 fn add_sort_above_with_check<T: Clone + Default>(node: datafusion_physical_plan::tree_node::PlanContext<T>, sort_requirements: datafusion_physical_expr::LexRequirement, fetch: Option<usize>) -> datafusion_common::Result<datafusion_physical_plan::tree_node::PlanContext<T>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.utils.add_sort_above_with_check.md).
+
+
 This utility function adds a `SortExec` above an operator according to the
 given ordering requirements while preserving the original partitioning. If
 requirement is already satisfied no `SortExec` is added.
@@ -40,6 +46,9 @@ requirement is already satisfied no `SortExec` is added.
 ```rust
 fn add_sort_above_with_distribution<T: Clone + Default>(node: datafusion_physical_plan::tree_node::PlanContext<T>, sort_requirements: datafusion_physical_expr::LexRequirement, fetch: Option<usize>, required_distribution: &datafusion_physical_expr::Distribution) -> datafusion_physical_plan::tree_node::PlanContext<T>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.utils.add_sort_above_with_distribution.md).
+
 
 Like [`add_sort_above`], but also inserts a [`SortPreservingMergeExec`] when
 the parent distribution requires a single partition and the input has
@@ -56,6 +65,9 @@ from violating `SinglePartition` requirements.
 fn is_coalesce_partitions(plan: &std::sync::Arc<dyn ExecutionPlan>) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.utils.is_coalesce_partitions.md).
+
+
 Checks whether the given operator is a [`CoalescePartitionsExec`].
 
 ---
@@ -67,6 +79,9 @@ Checks whether the given operator is a [`CoalescePartitionsExec`].
 ```rust
 fn is_limit(plan: &std::sync::Arc<dyn ExecutionPlan>) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.utils.is_limit.md).
+
 
 Checks whether the given operator is a limit;
 i.e. either a [`LocalLimitExec`] or a [`GlobalLimitExec`].
@@ -81,6 +96,9 @@ i.e. either a [`LocalLimitExec`] or a [`GlobalLimitExec`].
 fn is_repartition(plan: &std::sync::Arc<dyn ExecutionPlan>) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.utils.is_repartition.md).
+
+
 Checks whether the given operator is a [`RepartitionExec`].
 
 ---
@@ -92,6 +110,9 @@ Checks whether the given operator is a [`RepartitionExec`].
 ```rust
 fn is_sort(plan: &std::sync::Arc<dyn ExecutionPlan>) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.utils.is_sort.md).
+
 
 Checks whether the given operator is a [`SortExec`].
 
@@ -105,6 +126,9 @@ Checks whether the given operator is a [`SortExec`].
 fn is_sort_preserving_merge(plan: &std::sync::Arc<dyn ExecutionPlan>) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.utils.is_sort_preserving_merge.md).
+
+
 Checks whether the given operator is a [`SortPreservingMergeExec`].
 
 ---
@@ -117,6 +141,9 @@ Checks whether the given operator is a [`SortPreservingMergeExec`].
 fn is_union(plan: &std::sync::Arc<dyn ExecutionPlan>) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.utils.is_union.md).
+
+
 Checks whether the given operator is a [`UnionExec`].
 
 ---
@@ -128,6 +155,9 @@ Checks whether the given operator is a [`UnionExec`].
 ```rust
 fn is_window(plan: &std::sync::Arc<dyn ExecutionPlan>) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.utils.is_window.md).
+
 
 Checks whether the given operator is a window;
 i.e. either a [`WindowAggExec`] or a [`BoundedWindowAggExec`].

@@ -88,6 +88,9 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.field.Field.md).
+
+
 Describes a single column in a [`Schema`](super::Schema).
 
 A [`Schema`](super::Schema) is an ordered collection of
@@ -113,6 +116,9 @@ type FieldRef = std::sync::Arc<Field>
 ```
 
 **Implements**: `core::convert::From`, `parquet_variant_compute::shred_variant::IntoShreddingField`
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.field.FieldRef.md).
+
 
 A reference counted [`Field`]
 

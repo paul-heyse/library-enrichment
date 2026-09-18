@@ -1,0 +1,14 @@
+id: native-bundle-policy-owner
+language: Rust
+severity: error
+message: Bundle plans own checksum, selection and copy policy; readers require explicit immutable or durable protection.
+files:
+  - crates/enrichment-store/src/bundle.rs
+  - crates/enrichment-store/src/repository.rs
+  - crates/enrichment-store/src/control.rs
+rule:
+  kind: call_expression
+  has:
+    field: function
+    regex: '(EvidenceRepository|ControlStore)::read_only$|ReadProtection::capture$|(^|::)read_small$'
+note: Physical inventory, hashing, bounded descriptor reads and finite admitted copying remain allowed. This guard catches removed APIs, not alias-resolved dispatch.

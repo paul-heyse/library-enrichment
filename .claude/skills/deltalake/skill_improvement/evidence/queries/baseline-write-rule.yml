@@ -1,0 +1,30 @@
+id: project-write-without-commit-properties
+language: rust
+severity: hint
+message: A write is awaited with no commit properties; a retry can duplicate the data.
+note: |
+  Delta commits are idempotent only when the writer supplies an application transaction id.
+  Without one there is nothing in the log that says "this batch was already written", so a
+  scheduler that retries a write whose result it never saw appends the same rows twice --
+  and the table is then wrong in a way no later read can detect.
+  See content/topics/transactions.md.
+
+  Precision note: this matches syntax, not types. `RecordBatchWriter::write` also matches, and
+  that call only stages data -- it commits separately through `flush_and_commit`, which is
+  where its commit properties belong. Treat a match as a question about where the commit
+  happens, not as a finding that one is misconfigured.
+metadata:
+  record: capability-gap
+  capability: idempotent-write
+rule:
+  kind: await_expression
+  all:
+    - has:
+        kind: field_identifier
+        regex: '^(write|merge|delete|update)$'
+        stopBy: end
+    - not:
+        has:
+          kind: field_identifier
+          regex: '^with_commit_properties$'
+          stopBy: end

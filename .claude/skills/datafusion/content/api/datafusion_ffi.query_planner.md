@@ -30,6 +30,9 @@ fn new_with_ffi_codecs(planner: Arc<dyn QueryPlanner + Send + Sync>, logical_cod
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.query_planner.FFI_QueryPlanner.md).
+
+
 An ABI-stable handle to a [`QueryPlanner`] owned by another library.
 
 The Rust-facing adapters serialize the input [`LogicalPlan`] and resulting
@@ -55,6 +58,9 @@ struct ForeignQueryPlanner
 ```rust
 async fn create_physical_plan(&self, logical_plan: &LogicalPlan, session: &dyn Session) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.query_planner.ForeignQueryPlanner.md).
+
 
 Consumer-side [`QueryPlanner`] adapter for an [`FFI_QueryPlanner`].
 

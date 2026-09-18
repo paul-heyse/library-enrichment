@@ -1,0 +1,111 @@
+{
+  "schema": "proposed.delta-capability.v1",
+  "id": "delta.read",
+  "status": "planning-example-partially-probed",
+  "title": "Read Delta rows at an explicitly selected snapshot",
+  "task_aliases": ["query delta table", "refresh table", "time travel", "stream selected columns", "avoid deleted parquet files"],
+  "representations": {
+    "inputs": ["loaded DeltaTable", "unloaded table handle", "explicit snapshot/version"],
+    "outputs": ["Arc<dyn TableProvider>", "(DeltaTable, SendableRecordBatchStream)"],
+    "effects": ["read log and selected data objects", "bind snapshot", "register provider in caller session"]
+  },
+  "profile": {
+    "delta_rs": "58f07cd62bfbce3649a7e1c87c696288068ae184",
+    "kernel": "8ba063f8f84fec222000f66d40d70911d7c79675",
+    "datafusion": "55.1.0",
+    "arrow": "59.3.0",
+    "runtime_profile": "../evidence/runtime-profile.json",
+    "scope": "Rust, local memory/filesystem; documentation capture has additional features"
+  },
+  "choices": [
+    {
+      "when": "Compose joins, filters or SQL with an existing DataFusion context",
+      "choose": "provider",
+      "alternative": "projected_stream",
+      "decisive_difference": "Provider remains available to query planning; convenience stream is already a consumption boundary"
+    },
+    {
+      "when": "Only projected streaming rows are required",
+      "choose": "projected_stream",
+      "alternative": "provider",
+      "decisive_difference": "Existing scan_table path avoids designing a custom provider"
+    },
+    {
+      "when": "Directory is a plain immutable Parquet dataset with no Delta semantics",
+      "choose": "plain_parquet_reader",
+      "alternative": "provider",
+      "decisive_difference": "Plain files do not need transaction-log interpretation; Delta tables do"
+    }
+  ],
+  "operations": [
+    {
+      "id": "provider",
+      "owner": "deltalake_core::table::DeltaTable",
+      "method": "table_provider",
+      "access": "public via facade re-export",
+      "receiver": "&self",
+      "construction_output": "TableProviderBuilder",
+      "execution": "IntoFuture",
+      "await_output": "datafusion::error::Result<Arc<dyn TableProvider>>",
+      "lifecycle": "Existing supplied snapshot wins over table_version; loaded table contributes a snapshot",
+      "source": "../evidence/sources/delta-rs/crates/core/src/delta_datafusion/table_provider.rs"
+    },
+    {
+      "id": "projected_stream",
+      "owner": "deltalake_core::table::DeltaTable",
+      "method": "scan_table",
+      "access": "public method returning inferred unnameable builder",
+      "receiver": "&self",
+      "construction_output": "LoadBuilder (do not use canonical private-module path as import)",
+      "configuration": ["with_columns", "with_session_state"],
+      "execution": "IntoFuture",
+      "await_output": "DeltaResult<(DeltaTable, SendableRecordBatchStream)>",
+      "source": "../evidence/sources/delta-rs/crates/core/src/operations/load.rs"
+    }
+  ],
+  "claims": [
+    {
+      "id": "snapshot.fixed",
+      "statement": "An existing registered provider keeps its captured rows when another handle appends; refreshing the table does not mutate that provider",
+      "evidence_class": "runtime_observation",
+      "test": "provider_snapshot_and_unnameable_load_builder",
+      "observation": "Old provider 2 rows; refreshed table/new provider 3 rows",
+      "condition": "Declared local profile and fixture"
+    },
+    {
+      "id": "parquet.active-files",
+      "statement": "Raw Parquet directory reads include obsolete data files that this Delta snapshot has removed",
+      "evidence_class": "runtime_observation",
+      "test": "delta_snapshot_excludes_removed_parquet_files",
+      "observation": "Delta 0 rows, plain Parquet 2 rows after delete before vacuum"
+    },
+    {
+      "id": "snapshot.policy",
+      "statement": "Retain a version-bound provider for repeatability; refresh and rebuild for newer data",
+      "evidence_class": "conditional_recommendation",
+      "depends_on": ["snapshot.fixed"]
+    }
+  ],
+  "errors_and_effects": {
+    "source_of_errors": ["snapshot/protocol loading", "plan construction", "stream consumption and storage"],
+    "writes_log_version": false,
+    "mutates_caller_context": "Only explicit registration/configuration in caller composition",
+    "not_inferred": ["whole-query memory bounds", "remote storage correctness", "process-crash durability"]
+  },
+  "unknowns": [
+    "Additional column mapping and deletion-vector fixtures",
+    "Compile-failure controls for inaccessible imports and private traits",
+    "Cancellation/resource behavior outside the local probe"
+  ],
+  "evidence": {
+    "receipt": "../evidence/runtime-receipt.json",
+    "test_source": "../evidence/probes/tests/contracts.rs",
+    "source_hashes": "../evidence/source-manifest.json"
+  },
+  "invalidate_when": [
+    "Provider/load implementation or full member contract changes",
+    "Snapshot and version-option precedence changes",
+    "Dependency/profile or protocol prerequisites change",
+    "A new built-in changes the available read alternatives"
+  ]
+}

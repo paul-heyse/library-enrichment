@@ -12,6 +12,9 @@ Also reachable as `datafusion::functions_nested::all_default_higher_order_functi
 fn all_default_higher_order_functions() -> Vec<std::sync::Arc<datafusion_expr::HigherOrderUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.all_default_higher_order_functions.md).
+
+
 ---
 
 ## all_default_nested_functions
@@ -23,6 +26,9 @@ Also reachable as `datafusion::functions_nested::all_default_nested_functions`
 ```rust
 fn all_default_nested_functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.all_default_nested_functions.md).
+
 
 Return all default nested type functions
 
@@ -37,6 +43,9 @@ Also reachable as `datafusion::functions_nested::register_all`
 ```rust
 fn register_all(registry: &mut dyn FunctionRegistry) -> datafusion_common::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.register_all.md).
+
 
 Registers all enabled packages with a [`FunctionRegistry`]
 

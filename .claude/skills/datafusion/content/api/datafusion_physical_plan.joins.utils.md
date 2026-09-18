@@ -12,6 +12,9 @@ enum StatefulStreamResult<T>
 
 **Variants**: `Ready`, `Continue`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.utils.StatefulStreamResult.md).
+
+
 Represents the result of a stateful operation.
 
 This enumeration indicates whether the state produced a result that is
@@ -34,6 +37,9 @@ Variants:
 fn adjust_right_output_partitioning(right_partitioning: &Partitioning, left_columns_len: usize) -> datafusion_common::Result<Partitioning>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.utils.adjust_right_output_partitioning.md).
+
+
 Adjust the right out partitioning to new Column Index
 
 ---
@@ -45,6 +51,9 @@ Adjust the right out partitioning to new Column Index
 ```rust
 fn build_join_schema(left: &arrow::datatypes::Schema, right: &arrow::datatypes::Schema, join_type: &datafusion_common::JoinType) -> (arrow::datatypes::Schema, Vec<ColumnIndex>)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.utils.build_join_schema.md).
+
 
 Creates a schema for a join operation.
 The fields from the left side are first
@@ -59,6 +68,9 @@ The fields from the left side are first
 fn calculate_join_output_ordering(left_ordering: Option<&datafusion_physical_expr::LexOrdering>, right_ordering: Option<&datafusion_physical_expr::LexOrdering>, join_type: datafusion_common::JoinType, left_columns_len: usize, maintains_input_order: &[bool], probe_side: Option<datafusion_common::JoinSide>) -> datafusion_common::Result<Option<datafusion_physical_expr::LexOrdering>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.utils.calculate_join_output_ordering.md).
+
+
 Calculate the output ordering of a given join operation.
 
 ---
@@ -70,6 +82,9 @@ Calculate the output ordering of a given join operation.
 ```rust
 fn check_join_is_valid(left: &arrow::datatypes::Schema, right: &arrow::datatypes::Schema, on: JoinOnRef<'_>) -> datafusion_common::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.utils.check_join_is_valid.md).
+
 
 Checks whether the schemas "left" and "right" and columns "on" represent a valid join.
 They are valid whenever their columns' intersection equals the set `on`
@@ -84,6 +99,9 @@ They are valid whenever their columns' intersection equals the set `on`
 fn compare_join_arrays(left_arrays: &[arrow::array::ArrayRef], left: usize, right_arrays: &[arrow::array::ArrayRef], right: usize, sort_options: &[arrow_schema::SortOptions], null_equality: datafusion_common::NullEquality) -> datafusion_common::Result<std::cmp::Ordering>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.utils.compare_join_arrays.md).
+
+
 Get comparison result of two rows of join arrays
 
 ---
@@ -95,6 +113,9 @@ Get comparison result of two rows of join arrays
 ```rust
 fn reorder_output_after_swap(plan: std::sync::Arc<dyn ExecutionPlan>, left_schema: &arrow::datatypes::Schema, right_schema: &arrow::datatypes::Schema) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.utils.reorder_output_after_swap.md).
+
 
 When the order of the join inputs are changed, the output order of columns
 must remain the same.
@@ -113,6 +134,9 @@ match the original order.
 fn swap_join_projection(left_schema_len: usize, right_schema_len: usize, projection: Option<&[usize]>, join_type: &datafusion_common::JoinType) -> Option<Vec<usize>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.utils.swap_join_projection.md).
+
+
 This function swaps the given join's projection.
 
 ---
@@ -124,6 +148,9 @@ This function swaps the given join's projection.
 ```rust
 fn update_hash(on: &[datafusion_physical_expr::PhysicalExprRef], batch: &arrow::array::RecordBatch, hash_map: &mut dyn JoinHashMapType, offset: usize, random_state: &datafusion_common::hash_utils::RandomState, hashes_buffer: &mut [u64], deleted_offset: usize, fifo_hashmap: bool, null_equality: datafusion_common::NullEquality) -> datafusion_common::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.utils.update_hash.md).
+
 
 Updates `hash_map` with new entries from `batch` evaluated against the expressions `on`
 using `offset` as a start value for `batch` row indices.
@@ -149,6 +176,9 @@ struct ColumnIndex
 
 **Derives**: Clone, Debug, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.utils.ColumnIndex.md).
+
+
 Information about the index and placement (left or right) of the columns
 
 ---
@@ -168,6 +198,9 @@ fn compare(&self, left: usize, right: usize) -> Ordering
 fn is_equal(&self, left: usize, right: usize) -> bool
 fn new(left_arrays: &[ArrayRef], right_arrays: &[ArrayRef], sort_options: &[SortOptions], null_equality: NullEquality) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.utils.JoinKeyComparator.md).
+
 
 Pre-built comparator for join key columns that eliminates per-row type
 dispatch. Wraps `arrow_ord::ord::DynComparator` closures built once per

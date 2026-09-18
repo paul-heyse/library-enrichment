@@ -26,6 +26,9 @@ fn new(config: &'a ConfigOptions) -> Self
 fn config_options(&self) -> &ConfigOptions
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.optimizer.ConfigOnlyContext.md).
+
+
 Simple context wrapping [`ConfigOptions`] for backward compatibility.
 
 This struct provides a minimal implementation of [`PhysicalOptimizerContext`]
@@ -52,6 +55,9 @@ struct PhysicalOptimizer
 fn new() -> Self
 fn with_rules(rules: Vec<Arc<dyn PhysicalOptimizerRule + Send + Sync>>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.optimizer.PhysicalOptimizer.md).
+
 
 A rule-based physical optimizer.
 

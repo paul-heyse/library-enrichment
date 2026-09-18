@@ -21,6 +21,9 @@ fn calculate_range(&mut self, range_columns: &[ArrayRef], last_range: &Range<usi
 fn new(window_frame: Arc<WindowFrame>, sort_options: Vec<SortOptions>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.window_state.WindowFrameContext.md).
+
+
 This object stores the window frame state for use in incremental calculations.
 
 ---
@@ -44,6 +47,9 @@ fn extend(&mut self, batch: &RecordBatch) -> Result<()>
 fn new(schema: SchemaRef) -> Self
 fn new_with_batch(batch: RecordBatch) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.window_state.PartitionBatchState.md).
+
 
 State for each unique partition determined according to PARTITION BY column(s)
 
@@ -70,6 +76,9 @@ fn prune_state(&mut self, n_prune: usize)
 fn update(&mut self, out_col: &ArrayRef, partition_batch_state: &PartitionBatchState) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.window_state.WindowAggState.md).
+
+
 Holds the state of evaluating a window function
 
 ---
@@ -86,6 +95,9 @@ struct WindowFrameStateGroups
 
 **Derives**: Clone, Debug, Default
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.window_state.WindowFrameStateGroups.md).
+
+
 This structure encapsulates all the state information we require as we
 scan groups of data while processing window frames.
 
@@ -100,6 +112,9 @@ struct WindowFrameStateRange
 ```
 
 **Derives**: Clone, Debug, Default
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.window_state.WindowFrameStateRange.md).
+
 
 This structure encapsulates all the state information we require as we scan
 ranges of data while processing RANGE frames.

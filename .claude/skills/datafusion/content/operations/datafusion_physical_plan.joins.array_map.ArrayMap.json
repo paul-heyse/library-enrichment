@@ -1,0 +1,59 @@
+[
+  {
+    "id": "1ef6fc1a0cd369e0c95a3ce2",
+    "path": "datafusion_physical_plan::joins::array_map::ArrayMap",
+    "name": "ArrayMap",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct ArrayMap",
+    "docs": "A dense map for single-column integer join keys within a limited range.\n\nMaps join keys to build-side indices using direct array indexing:\n`data[val - min_val_in_build_side] -> val_idx_in_build_side + 1`.\n\nNULL values are ignored on both the build side and the probe side.\n\n# Handling Negative Numbers with `wrapping_sub`\n\nThis implementation supports signed integer ranges (e.g., `[-5, 5]`) efficiently by\ntreating them as `u64` (Two's Complement) and relying on the bitwise properties of\nwrapping arithmetic (`wrapping_sub`).\n\nIn Two's Complement representation, `a_signed - b_signed` produces the same bit pattern\nas `a_unsigned.wrapping_sub(b_unsigned)` (modulo 2^N). This allows us to perform\nrange calculations and zero-based index mapping uniformly for both signed and unsigned\ntypes without branching.\n\n## Examples\n\nConsider an `Int64` range `[-5, 5]`.\n* `min_val (-5)` casts to `u64`: `...11111011` (`u64::MAX - 4`)\n* `max_val (5)` casts to `u64`: `...00000101` (`5`)\n\n**1. Range Calculation**\n\n```text\nIn modular arithmetic, this is equivalent to:\n  (5 - (2^64 - 5)) mod 2^64\n= (5 - 2^64 + 5) mod 2^64\n= (10 - 2^64) mod 2^64\n= 10\n\n```\nThe resulting `range` (10) correctly represents the size of the interval `[-5, 5]`.\n\n**2. Index Lookup (in `get_matched_indices_with_limit_offset`)**\n\nFor a probe value of `0` (which is stored as `0u64`):\n```text\nIn modular arithmetic, this is equivalent to:\n  (0 - (2^64 - 5)) mod 2^64\n= (-2^64 + 5) mod 2^64\n= 5\n```\nThis correctly maps `-5` to index `0`, `0` to index `5`, etc.",
+    "span": {
+      "filename": "src/joins/array_map.rs",
+      "begin": [
+        103,
+        1
+      ],
+      "end": [
+        113,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": []
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3209",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.array_map.ArrayMap.md",
+    "record_file": "operations/datafusion_physical_plan.joins.array_map.ArrayMap.json",
+    "anchor": "op-1ef6fc1a0cd369e0c95a3ce2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

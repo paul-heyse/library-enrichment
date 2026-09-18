@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_distance`, `datafusion_functions_n
 fn array_distance(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.distance.array_distance.md).
+
+
 returns the Euclidean distance between two one-dimensional numeric arrays.
 
 ---
@@ -23,6 +26,9 @@ returns the Euclidean distance between two one-dimensional numeric arrays.
 ```rust
 fn array_distance_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.distance.array_distance_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayDistance
@@ -58,5 +64,8 @@ fn name(&self) -> &str
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.distance.ArrayDistance.md).
+
 
 ---

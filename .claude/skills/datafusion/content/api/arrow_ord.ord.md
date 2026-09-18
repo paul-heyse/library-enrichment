@@ -12,6 +12,9 @@ Also reachable as `arrow::array::make_comparator`
 fn make_comparator(left: &dyn Array, right: &dyn Array, opts: arrow_schema::SortOptions) -> Result<DynComparator, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ord.ord.make_comparator.md).
+
+
 Returns a comparison function that compares two values at two different positions
 between the two arrays.
 
@@ -93,6 +96,9 @@ Also reachable as `arrow::array::DynComparator`
 ```rust
 type DynComparator = Box<dyn Fn(usize, usize) -> std::cmp::Ordering + Send + Sync>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ord.ord.DynComparator.md).
+
 
 Compare the values at two arbitrary indices in two arrays.
 

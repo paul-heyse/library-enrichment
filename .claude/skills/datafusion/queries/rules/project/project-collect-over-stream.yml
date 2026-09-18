@@ -1,16 +1,15 @@
 id: project-collect-over-stream
 language: rust
 severity: hint
-message: Whole result collected into memory; a streaming execution path exists.
+message: Awaited collect candidate; resolve the receiver before suggesting DataFusion streaming.
 note: |
-  `collect()` materializes every RecordBatch before returning. `execute_stream()` and
-  `execute_stream_partitioned()` yield batches as they are produced, which bounds memory and lets
-  a caller stop early. Collecting is correct for small results and for tests -- this is a prompt
-  to check, not a defect.
+  If this resolves to DataFrame::collect, it materializes output. execute_stream and
+  execute_stream_partitioned permit incremental consumption; they do not bound operator state
+  or process memory. Collecting can be intentional. This is a discovery lead, not a defect.
 
   Anchored to an awaited call, because DataFusion's `collect` is async and `Iterator::collect`
-  is not. Without that anchor this rule matches every iterator in the repository: 298 hits
-  instead of the handful that concern DataFusion.
+  is not. Other async APIs (for example TelemetryClient::collect) also match. Syntax cannot
+  establish the receiver type, imports or dispatch; inspect or resolve them before attribution.
 metadata:
   record: capability-gap
   capability: streaming

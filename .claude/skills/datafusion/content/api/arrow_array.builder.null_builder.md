@@ -37,6 +37,9 @@ fn into_box_any(Box<self>) -> Box<dyn Any>
 fn len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.null_builder.NullBuilder.md).
+
+
 Builder for [`NullArray`]
 
 # Example

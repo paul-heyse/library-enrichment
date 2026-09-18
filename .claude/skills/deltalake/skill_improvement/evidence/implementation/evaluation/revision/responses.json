@@ -1,0 +1,89 @@
+{
+  "evaluation": "D6 independent affected-case revision follow-up",
+  "evaluator": "/root/delta_revision_evaluation",
+  "frozen_at": "2026-09-18T22:06:38.077271+00:00",
+  "candidate_reader": "/home/paul/library-enrichment/.claude/skills/deltalake/skill_improvement/evidence/implementation/.evaluation/revised-candidate",
+  "candidate_archive_receipt": {
+    "mode": "reader",
+    "files": 3771,
+    "bytes": 4962755,
+    "sha256": "55d26c6dab92462489c7a19cadd11a94f13c585c7038848fe5f87eb6eefcf2f4"
+  },
+  "profile": {
+    "delta_rs": "58f07cd62bfbce3649a7e1c87c696288068ae184",
+    "kernel": "8ba063f8f84fec222000f66d40d70911d7c79675",
+    "datafusion": "55.1.0",
+    "arrow": "59.3.0"
+  },
+  "scope": [
+    "H05",
+    "E11B"
+  ],
+  "independence": "Answers written using only revised SKILL.md, scripts/reference.py and content; no original source/cache, earlier baseline/candidate responses, or supplied Rust receipts read before answer freeze. Only task/instruction/identity metadata were additionally consulted.",
+  "rust_execution": "not_run",
+  "original_scores_modified": false,
+  "new_38_case_run": false,
+  "responses": [
+    {
+      "id": "H05",
+      "request": "Use a low-level RecordBatchWriter. Explain which calls stage files and which make their rows visible in the transaction log.",
+      "code_required": false,
+      "response": "Use RecordBatchWriter when incremental batch ingestion and an explicit publication boundary are required. At this pinned commit, distinguish these stages:\n\n1. RecordBatchWriter::for_table(&table) creates the writer. write(batch).await and write_with_mode(batch, mode).await partition and encode incrementally and can perform object-store I/O. They are not guaranteed to be memory-only staging. Target-file-size rolls and MergeSchema rotations can finalize files before explicit flush; completed background uploads can therefore already be present in storage while a reloaded Delta observer still sees the previous log state.\n2. flush().await finalizes the current flush window, returns Vec<Add>, and resets the writer's window for subsequent input. Those actions still need a transaction. Flushing or seeing Parquet files in the store does not publish a Delta log version.\n3. flush_and_commit(&mut table).await flushes its current pending data and publishes it to the Delta log, returning the new Version. Alternatively, retain the Add actions returned by a prior explicit flush and submit them in a valid manual commit. Do not assume a later flush_and_commit implicitly republishes Add actions already taken by an earlier flush. On the manual-commit path the caller also owns evolved metadata and correct transaction semantics. Delta readers must observe the published version, reloading/rebuilding an existing snapshot/provider as needed.\n4. reset() discards pending state since the last flush. It aborts in-progress multipart uploads in the background; files already finalized by a size roll or schema rotation remain unreferenced for later cleanup. It neither publishes those rows nor rolls back an existing Delta log commit. The upstream wording 'flush ... commit buffered data' means file finalization here; the reader's reference annotation explicitly separates it from log publication.\n\nFor error recovery, pre-storage validation failures affect only the failing call, whereas a storage error can discard the whole current flush window and require replay of all its batches. Inspect durable table state before retrying an ambiguous publication failure. File-size inputs are targets, not exact file-size or memory guarantees. The supplied brief reports a target-size probe that awaited background upload before flush and still observed unchanged Delta rows until commit; I have not independently executed that Rust probe.",
+      "sources": [
+        {
+          "reader_path": "content/capabilities/delta.write.json",
+          "locator": "claims delta.write.2, delta.write.4, delta.write.5",
+          "sha256": "fc5bc431b6b5b287be504b6d001114cdf024b01ef6ddbe6df53499ad69fa5177",
+          "supports": "runtime claim, staging/background completion, resource limits"
+        },
+        {
+          "reader_path": "content/operations/deltalake_core.writer.record_batch.RecordBatchWriter.md",
+          "locator": "RecordBatchWriter; flush; flush_and_commit; reset; with_target_file_size; write_partition; write_with_mode",
+          "sha256": "94d8b8dce36847039c533b573fb8981b2017c695b401528e204a9a74f9b9a027",
+          "supports": "exact public method contracts, reset annotation, storage-error window, evolved metadata"
+        },
+        {
+          "reader_path": "content/operations/deltalake_core.writer.DeltaWriter.md",
+          "locator": "flush and flush_and_commit",
+          "sha256": "3806d0cd1e8e905faa0db210fb9dcb3b3550885d513e6ea40d38bf04feecd7e9",
+          "supports": "Add actions versus publication"
+        }
+      ]
+    },
+    {
+      "id": "E11B",
+      "request": "Return row-level inserts, updates and deletes between explicit versions for an incremental consumer.",
+      "code_required": true,
+      "response": "Read CDF, rather than a current snapshot, over an explicitly bounded inclusive version interval. Require that CDF was enabled for the requested history and that its log/data/change files remain retained; current enablement does not create historical events. At this pin mapped tables are rejected by CDF even if an ordinary Delta scan works.\n\nThe built-in DeltaCdfTableProvider makes CDF a DataFusion relation and handles residual row filtering. The code below assumes a freshly loaded DeltaTable named table, a compatible caller SessionContext named ctx, and start/end set to an observed retained interval (start <= end). It is a bounded query fragment, not a newly compiled consumer in this evaluation.\n\nThe output retains the table columns plus these nullable base-schema fields:\n- _change_type: Arrow DataType::Utf8 (insert, delete, update_preimage, update_postimage).\n- _commit_version: Arrow DataType::UInt64.\n- _commit_timestamp: Arrow DataType::Timestamp(TimeUnit::Millisecond, None), with no timezone annotation.\n\nInspect the actual result schema before array downcasts, especially after additional DataFusion expressions; direct-query evidence specifically reports UInt64 commit versions. An update has both its preimage and postimage. Preserve the change kind and version so downstream logic can apply removals and additions correctly; filtering away preimages can change the consumer's semantics.\n\nBoth version bounds are inclusive. After all rows in an observed interval are successfully applied downstream, checkpoint that interval and resume from its end plus one. Use explicit observed bounds: the supplied probe says an end beyond head is clamped even without with_allow_out_of_range, so advancing to a requested future end could skip later commits. A beyond-head start is rejected unless the opt-in empty-range behavior applies; distinguish an unavailable interval from an empty observed one.\n\nQuery caveats: do not assume that CDF output is ordered. The supplied tiny-fixture probe reports ORDER BY id failing with DataFusion SinglePartition/UnknownPartitioning(0); its unordered query followed by caller sorting succeeded. This is a bounded observed failure, not a claim that every ORDER BY fails. If ordering is necessary, define it explicitly in the consumer and verify it for the workload. The provider applies the exact residual predicate; lower-level CdfLoadBuilder::build(&session, filters).await returns a physical plan and requires the caller to preserve residual filtering and use the proper TaskContext. Partition pruning alone is insufficient for exact row filtering. Timestamp-boundary combinations are not exhaustively tested. This follow-up does not certify bounded memory, exactly-once downstream application, or newly executed Rust integration.",
+      "code": "use std::sync::Arc;\nuse deltalake::delta_datafusion::DeltaCdfTableProvider;\n\n// table: a freshly loaded DeltaTable; ctx: compatible SessionContext.\n// start and end are explicit inclusive versions within observed retained history.\nlet cdf = table.scan_cdf()\n    .with_starting_version(start)\n    .with_ending_version(end);\nlet provider = DeltaCdfTableProvider::try_new(cdf)?;\nctx.register_table(\"changes\", Arc::new(provider))?;\n// Keep every change kind and all metadata; this query requests no ordering.\nlet batches = ctx.sql(\"SELECT * FROM changes\").await?.collect().await?;\n// Inspect each batch.schema(), then deliver its rows to the downstream consumer.\n// Persist the observed end only after the complete interval succeeds downstream.\n",
+      "code_status": "not_run",
+      "code_status_reason": "Reader-only affected-case evaluation; fragment derived from exact pinned public contracts; no new Rust compilation or execution claimed.",
+      "sources": [
+        {
+          "reader_path": "content/capabilities/delta.cdf.md",
+          "locator": "Contract; Implementation; Limits and unknowns; Exact contracts",
+          "sha256": "5cf3f1990cf7071f2a00cb5942a700f96850104d1594e87b37c2a672736ef4ac",
+          "supports": "metadata Arrow types, images, bounds, enablement/retention, residual predicate, ordering caveat"
+        },
+        {
+          "reader_path": "content/operations/deltalake_core.operations.load_cdf.CdfLoadBuilder.json",
+          "locator": "with_starting_version; with_ending_version; build; filter",
+          "sha256": "51a75b531e22e4e2c64e10be4143ffaf807ba74d1068e970c9f587367d8ae071",
+          "supports": "builder signatures, explicit build, pruning-only lower-level filter"
+        },
+        {
+          "reader_path": "content/operations/deltalake_core.delta_datafusion.cdf.scan.DeltaCdfTableProvider.md",
+          "locator": "DeltaCdfTableProvider and try_new",
+          "sha256": "5b0be8c0c741330cda72f9698fcd14858343b077c2477e4602a36f303f762a63",
+          "supports": "built-in relation and provider construction"
+        },
+        {
+          "reader_path": "content/index/aliases.tsv",
+          "locator": "deltalake::delta_datafusion::DeltaCdfTableProvider",
+          "sha256": "d1c4a7968ffb902fc3be0e048a4ff2ec8127deb850dfcc05394a9d274b9f75a6",
+          "supports": "public facade import"
+        }
+      ]
+    }
+  ]
+}

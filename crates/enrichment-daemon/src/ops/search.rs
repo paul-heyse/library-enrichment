@@ -5,57 +5,33 @@ use crate::{
     service::Service,
 };
 use enrichment_core::{
-    evidence::{EvidenceKind, FragmentKind},
     request::SearchRequest,
     search::{self, page::SearchCursor, spec::SearchSpec},
     wire::{
-        Envelope, ErrorCode, Evidence, Freshness, Page,
-        data::{ScoreFactor, SearchData, SearchHit},
+        Envelope, ErrorCode, Freshness, Page,
+        data::{ScoreFactor, SearchData},
     },
 };
-use enrichment_store::search_plan::{self, RankedEvidence, SearchOptions};
-
-pub const FAMILIES: &[&str] = &["api", "docs", "examples", "release_notes", "features"];
+use enrichment_store::search_plan::{self, SearchOptions};
 
 pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
-    let query = request.query.trim().to_owned();
-    if query.is_empty() || query.len() > 65536 {
-        return envelope::error(
-            ErrorCode::UnsupportedFormat,
-            "Search needs a nonempty query of at most 64 terms and 65536 bytes",
-            "Use a focused query, then browse or paginate.",
-            false,
-        );
-    }
+    let selection = match enrichment_store::search_policy::select(
+        &service.repository.runtime,
+        &request,
+        service.config.limits.search_results,
+    )
+    .await
+    {
+        Ok(value) => value,
+        Err(error) => return common::operation_error(&error, "search_selection"),
+    };
+    let query = selection.query;
+    let kinds = selection.kinds;
     let tokens = match enrichment_store::scoring::tokens(&service.repository.runtime, &query).await
     {
         Ok(value) => value,
         Err(error) => return common::operation_error(&error, "search_tokens"),
     };
-    let kinds = request
-        .kinds
-        .clone()
-        .unwrap_or_else(|| FAMILIES.iter().map(|k| (*k).into()).collect());
-    let kinds = match enrichment_core::native_key::ordered_set(&kinds) {
-        Ok(values) => values,
-        Err(error) => return common::operation_error(&error, "search_selection"),
-    };
-    if kinds.iter().any(|k| k == "source") {
-        return envelope::error(
-            ErrorCode::UnsupportedCapability,
-            "Full source text is not an indexed lexical search family",
-            "Use inspect_symbol with an explicit source aspect for a selected symbol; search api or docs to discover symbol paths.",
-            false,
-        );
-    }
-    if kinds.is_empty() || kinds.iter().any(|k| !FAMILIES.contains(&k.as_str())) {
-        return envelope::error(
-            ErrorCode::UnsupportedFormat,
-            "Select at least one supported evidence family",
-            format!("Use any of: {}", FAMILIES.join(", ")),
-            false,
-        );
-    }
     let opened = match common::open_context(
         service,
         &request.context_id,
@@ -66,11 +42,9 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
         Ok(value) => value,
         Err(e) => return *e,
     };
-    let area = match request
+    let area = match selection
         .area
         .as_deref()
-        .map(str::trim)
-        .filter(|s| !s.is_empty())
         .map(|s| opened.reader.area(s))
         .transpose()
     {
@@ -81,9 +55,13 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
         context_id: opened.context.context_id.clone(),
         snapshot_id: opened.snapshot_id.clone(),
     };
-    let budget = common::byte_budget(service, request.max_bytes);
+    let budget = match common::byte_budget(service, request.max_bytes).await {
+        Ok(value) => value,
+        Err(error) => return common::query_error(&error),
+    };
     let spec = SearchSpec::new(&query);
     let digest = enrichment_core::operation::selections::SearchSelection {
+        witness: service.selection_witness(),
         spec: spec.clone(),
         kinds: kinds.clone(),
         area: area.clone(),
@@ -108,69 +86,38 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
         }
     };
     let offset = cursor.as_ref().map_or(0, |c| c.returned_before);
-    let want = |family| kinds.iter().any(|k| k == family);
-    let mut fragment_kinds = Vec::new();
-    if want("docs") {
-        fragment_kinds.extend([FragmentKind::DocText, FragmentKind::ReadmeSection]);
-    }
-    if want("examples") {
-        fragment_kinds.push(FragmentKind::Example);
-    }
-    if want("release_notes") {
-        fragment_kinds.push(FragmentKind::ChangelogSection);
-    }
-    if want("features") {
-        fragment_kinds.push(FragmentKind::FeatureDefinition);
-    }
-    let limit = service.config.limits.search_results.clamp(1, 1024);
     let page = match search_plan::page(
         opened.reader.session(),
         opened.reader.runtime(),
         &spec,
         &SearchOptions {
-            include_api: want("api"),
-            fragment_kinds,
+            include_api: selection.include_api,
+            fragment_kinds: selection.fragment_kinds,
             area,
-            page_size: request.max_items.map_or(limit, |n| n.clamp(1, limit)),
+            page_size: selection.page_size,
             after: cursor.map(|c| c.after),
+            offset,
         },
+        service.config.limits.excerpt_characters,
     )
     .await
     {
         Ok(value) => value,
         Err(e) => return common::query_error(&e.into()),
     };
-    if offset > page.total {
-        return envelope::error(
-            ErrorCode::InvalidCursor,
-            "Cursor position exceeds the pinned result count",
-            "Start again without a cursor.",
-            false,
-        );
-    }
-    let searched: Vec<String> = kinds
-        .iter()
-        .filter(|k| k.as_str() != "source")
-        .cloned()
-        .collect();
-    let mut keys = Vec::new();
-    let mut hits = Vec::new();
-    let mut evidence = Vec::new();
-    for row in page.rows {
-        keys.push(row.key.clone());
-        let (hit, citation) = match render(row, service.config.limits.excerpt_characters) {
-            Ok(value) => value,
-            Err(e) => return common::operation_error(&e, "search_projection"),
-        };
-        hits.push(hit);
-        evidence.push(citation);
-    }
+    let searched = kinds.clone();
+    let last_key = page.rows.last().map(|row| row.key.clone());
+    let (hits, evidence) = page
+        .rows
+        .into_iter()
+        .map(|row| (row.hit, row.citation))
+        .unzip();
     let mut data = SearchData {
         page: Page::default(),
         query: query.clone(),
         tokens,
         kinds,
-        area: request.area,
+        area: selection.area,
         hits,
         scoring: search::FACTORS
             .iter()
@@ -183,22 +130,10 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
         offset,
     };
     let manifest = opened.reader.manifest();
-    let requested_kinds: Vec<_> = data
-        .kinds
-        .iter()
-        .map(|family| match family.as_str() {
-            "api" => EvidenceKind::PublicApi,
-            "docs" => EvidenceKind::Documentation,
-            "examples" => EvidenceKind::Examples,
-            "release_notes" => EvidenceKind::ReleaseNotes,
-            "features" => EvidenceKind::RegistryMetadata,
-            _ => unreachable!("validated search family"),
-        })
-        .collect();
     let mut coverage = match opened
         .reader
         .assess(
-            &requested_kinds,
+            &selection.evidence_kinds,
             None,
             format!("{} in snapshot {}", searched.join(", "), opened.snapshot_id),
         )
@@ -208,7 +143,11 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
         Err(e) => return common::query_error(&e),
     };
     coverage.limitations.push("Lexical matching within the pinned evidence scope; an empty result does not establish that a capability is absent.".into());
-    let partial = !coverage.complete();
+    let partial =
+        match enrichment_store::coverage::complete(opened.reader.runtime(), &coverage).await {
+            Ok(complete) => !complete,
+            Err(error) => return common::operation_error(&error, "search_coverage"),
+        };
     let research = Research {
         summary: format!(
             "{} matches for the requested lexical query in {}; {} results already returned.",
@@ -239,14 +178,14 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
         artifacts: vec![],
     };
     let mut result = research.ok_with_page(Page::new(0, Some(page.total), false, None));
-    let returned = data.hits.len() as u64;
-    let more = page.has_more || page.total > offset + returned;
-    let next_cursor = if more && let Some(key) = keys.get(data.hits.len().saturating_sub(1)) {
+    let returned = page.boundary.returned;
+    let more = page.boundary.has_more;
+    let next_cursor = if more && let Some(key) = last_key {
         match SearchCursor::new(
             scope.clone(),
             digest.clone(),
-            offset + returned,
-            key.clone(),
+            page.boundary.next_offset,
+            key,
         )
         .encode()
         {
@@ -256,7 +195,7 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
     } else {
         None
     };
-    data.page = Page::new(returned, Some(page.total), more, next_cursor);
+    data.page = Page::new(returned, page.boundary.total, more, next_cursor);
     result.data = common::payload(&data);
     if partial {
         result = result.into_partial();
@@ -265,36 +204,4 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
     // An oversized first hit is complete in an immutable overflow artifact, including its
     // continuation. It is never silently skipped and cannot trap the caller on an empty page.
     common::enforce_budget(service, result, request.max_bytes).await
-}
-
-fn render(
-    row: RankedEvidence,
-    excerpt_chars: usize,
-) -> Result<(SearchHit, Evidence), enrichment_store::QueryError> {
-    let excerpt = common::truncate(&row.excerpt, excerpt_chars);
-    let citation = Evidence::new(
-        row.fact_id,
-        row.subject,
-        row.key.subject.clone(),
-        row.source,
-        excerpt.clone(),
-    )?;
-    let evidence_id = citation.evidence_id.clone();
-    Ok((
-        SearchHit {
-            hit: row.hit,
-            score: row.key.score,
-            factors: row.factors,
-            evidence_id,
-            path: row.path,
-            symbol_kind: row.symbol_kind,
-            signature: row.signature,
-            also_at: row.also_at,
-            deprecated: row.deprecated,
-            fragment_kind: row.fragment_kind,
-            subject: Some(row.key.subject),
-            excerpt,
-        },
-        citation,
-    ))
 }

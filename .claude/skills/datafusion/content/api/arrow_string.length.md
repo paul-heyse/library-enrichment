@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::length::bit_length`
 fn bit_length(array: &dyn Array) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_string.length.bit_length.md).
+
+
 Returns an array of Int32/Int64 denoting the number of bits in each value in the array.
 
 * this only accepts StringArray/Utf8, LargeString/LargeUtf8, StringViewArray/Utf8View,
@@ -31,6 +34,9 @@ Also reachable as `arrow::compute::kernels::length::length`
 ```rust
 fn length(array: &dyn Array) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_string.length.length.md).
+
 
 Returns an array of Int32/Int64 denoting the length of each value in the array.
 

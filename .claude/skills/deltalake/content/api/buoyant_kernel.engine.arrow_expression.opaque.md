@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 4 public items · structured records in [`model/buoyan
 ## ArrowOpaqueExpression
 
 `trait` · `buoyant_kernel::engine::arrow_expression::opaque::ArrowOpaqueExpression`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_expression.opaque.ArrowOpaqueExpression.md)
 
 Also reachable as `delta_kernel::engine::arrow_expression::opaque::ArrowOpaqueExpression`
 
@@ -29,6 +30,7 @@ Extension trait for turning [`ArrowOpaqueExpressionOp`] into an [`Expression`].
 ## ArrowOpaqueExpressionOp
 
 `trait` · `buoyant_kernel::engine::arrow_expression::opaque::ArrowOpaqueExpressionOp`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_expression.opaque.ArrowOpaqueExpressionOp.md)
 
 Also reachable as `delta_kernel::engine::arrow_expression::opaque::ArrowOpaqueExpressionOp`
 
@@ -57,6 +59,7 @@ not be able to recover a [`&dyn ArrowOpaqueExpressionOp`] from it later. Instead
 ## ArrowOpaquePredicate
 
 `trait` · `buoyant_kernel::engine::arrow_expression::opaque::ArrowOpaquePredicate`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_expression.opaque.ArrowOpaquePredicate.md)
 
 Also reachable as `delta_kernel::engine::arrow_expression::opaque::ArrowOpaquePredicate`
 
@@ -81,6 +84,7 @@ Extension trait for safely turning [`ArrowOpaquePredicateOp`] into an opaque [`P
 ## ArrowOpaquePredicateOp
 
 `trait` · `buoyant_kernel::engine::arrow_expression::opaque::ArrowOpaquePredicateOp`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_expression.opaque.ArrowOpaquePredicateOp.md)
 
 Also reachable as `delta_kernel::engine::arrow_expression::opaque::ArrowOpaquePredicateOp`
 

@@ -12,6 +12,9 @@ Also reachable as `datafusion_optimizer::simplify_expressions::simplify_predicat
 fn simplify_predicates(predicates: Vec<datafusion_expr::Expr>) -> datafusion_common::Result<Vec<datafusion_expr::Expr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.simplify_expressions.simplify_predicates.simplify_predicates.md).
+
+
 Simplifies a list of predicates by removing redundancies.
 
 This function takes a vector of predicate expressions and groups them by the column they reference.

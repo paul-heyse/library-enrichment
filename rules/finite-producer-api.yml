@@ -1,0 +1,29 @@
+id: finite-producer-api
+language: Rust
+severity: error
+message: Production runner entry points accept finite native producer invocations, not caller-selected argv or output contracts.
+files:
+  - crates/enrichment-daemon/src/execution/mod.rs
+rule:
+  all:
+    - kind: function_item
+    - any:
+        - has:
+            field: name
+            regex: '^(acquire|prepare_outputs)$'
+        - all:
+            - has:
+                field: name
+                regex: '^(run|serve)$'
+            - has:
+                kind: parameter
+                has:
+                  field: type
+                  regex: '^(&\[String\]|Vec<String>)$'
+                stopBy: end
+  not:
+    inside:
+      pattern: 'mod tests { $$$BODY }'
+      stopBy: end
+
+note: Compiled qualification fixtures use a private cfg(test) constructor; arbitrary program/output contracts must never become a production runner API.

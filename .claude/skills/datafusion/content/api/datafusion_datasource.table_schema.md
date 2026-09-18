@@ -37,6 +37,9 @@ fn from(schema: SchemaRef) -> Self
 fn from(schema: &SchemaRef) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.table_schema.TableSchema.md).
+
+
 The overall schema for potentially partitioned data sources.
 
 When reading partitioned data (such as Hive-style partitioning), a [`TableSchema`]
@@ -111,6 +114,9 @@ fn with_virtual_columns(self, virtual_columns: impl Into<Fields>) -> Self
 fn from(schema: &SchemaRef) -> Self
 fn from(schema: SchemaRef) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.table_schema.TableSchemaBuilder.md).
+
 
 Builder for [`TableSchema`].
 

@@ -10,4 +10,7 @@ Crate `datafusion-substrait` · 1 public items · structured records in [`model/
 fn from_filter(producer: &mut impl SubstraitProducer, filter: &datafusion::logical_expr::Filter) -> datafusion::common::Result<Box<substrait::proto::Rel>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.rel.filter_rel.from_filter.md).
+
+
 ---

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## TableChangesScan
 
 `struct` · `buoyant_kernel::table_changes::scan::TableChangesScan`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_changes.scan.TableChangesScan.md)
 
 Also reachable as `delta_kernel::table_changes::scan::TableChangesScan`
 
@@ -31,6 +32,7 @@ data feed from the table.
 ## TableChangesScanBuilder
 
 `struct` · `buoyant_kernel::table_changes::scan::TableChangesScanBuilder`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.md)
 
 Also reachable as `delta_kernel::table_changes::scan::TableChangesScanBuilder`
 

@@ -1,0 +1,69 @@
+[
+  {
+    "id": "53dfc6a8d86f7f7c1bf482e7",
+    "path": "arrow_json::reader",
+    "name": "reader",
+    "owner": null,
+    "crate": "arrow-json",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod reader",
+    "docs": "JSON reader\n\nThis JSON reader allows JSON records to be read into the Arrow memory\nmodel. Records are loaded in batches and are then converted from the record-oriented\nrepresentation to the columnar arrow data model.\n\nThe reader ignores whitespace between JSON values, including `\\n` and `\\r`, allowing\nparsing of sequences of one or more arbitrarily formatted JSON values, including\nbut not limited to newline-delimited JSON.\n\n# Basic Usage\n\n[`Reader`] can be used directly with synchronous data sources, such as [`std::fs::File`]\n\n```\n# use arrow_schema::*;\n# use std::fs::File;\n# use std::io::BufReader;\n# use std::sync::Arc;\n\nlet schema = Arc::new(Schema::new(vec![\n    Field::new(\"a\", DataType::Float64, false),\n    Field::new(\"b\", DataType::Float64, false),\n    Field::new(\"c\", DataType::Boolean, true),\n]));\n\nlet file = File::open(\"test/data/basic.json\").unwrap();\n\nlet mut json = arrow_json::ReaderBuilder::new(schema).build(BufReader::new(file)).unwrap();\nlet batch = json.next().unwrap().unwrap();\n```\n\n# Async Usage\n\nThe lower-level [`Decoder`] can be integrated with various forms of async data streams,\nand is designed to be agnostic to the various different kinds of async IO primitives found\nwithin the Rust ecosystem.\n\nFor example, see below for how it can be used with an arbitrary `Stream` of `Bytes`\n\n```\n# use std::task::{Poll, ready};\n# use bytes::{Buf, Bytes};\n# use arrow_schema::ArrowError;\n# use futures::stream::{Stream, StreamExt};\n# use arrow_array::RecordBatch;\n# use arrow_json::reader::Decoder;\n#\nfn decode_stream<S: Stream<Item = Bytes> + Unpin>(\n    mut decoder: Decoder,\n    mut input: S,\n) -> impl Stream<Item = Result<RecordBatch, ArrowError>> {\n    let mut buffered = Bytes::new();\n    futures::stream::poll_fn(move |cx| {\n        loop {\n            if buffered.is_empty() {\n                buffered = match ready!(input.poll_next_unpin(cx)) {\n                    Some(b) => b,\n                    None => break,\n                };\n            }\n            let decoded = match decoder.decode(buffered.as_ref()) {\n                Ok(decoded) => decoded,\n                Err(e) => return Poll::Ready(Some(Err(e))),\n            };\n            let read = buffered.len();\n            buffered.advance(decoded);\n            if decoded != read {\n                break\n            }\n        }\n\n        Poll::Ready(decoder.flush().transpose())\n    })\n}\n\n```\n\nIn a similar vein, it can also be used with tokio-based IO primitives\n\n```\n# use std::sync::Arc;\n# use arrow_schema::{DataType, Field, Schema};\n# use std::pin::Pin;\n# use std::task::{Poll, ready};\n# use futures::{Stream, TryStreamExt};\n# use tokio::io::AsyncBufRead;\n# use arrow_array::RecordBatch;\n# use arrow_json::reader::Decoder;\n# use arrow_schema::ArrowError;\nfn decode_stream<R: AsyncBufRead + Unpin>(\n    mut decoder: Decoder,\n    mut reader: R,\n) -> impl Stream<Item = Result<RecordBatch, ArrowError>> {\n    futures::stream::poll_fn(move |cx| {\n        loop {\n            let b = match ready!(Pin::new(&mut reader).poll_fill_buf(cx)) {\n                Ok(b) if b.is_empty() => break,\n                Ok(b) => b,\n                Err(e) => return Poll::Ready(Some(Err(e.into()))),\n            };\n            let read = b.len();\n            let decoded = match decoder.decode(b) {\n                Ok(decoded) => decoded,\n                Err(e) => return Poll::Ready(Some(Err(e))),\n            };\n            Pin::new(&mut reader).consume(decoded);\n            if decoded != read {\n                break;\n            }\n        }\n\n        Poll::Ready(decoder.flush().transpose())\n    })\n}\n```\n",
+    "span": {
+      "filename": "src/reader/mod.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        3753,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          127,
+          136,
+          9,
+          135,
+          225,
+          246
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Reader`": 9,
+      "`Decoder`": 135,
+      "`std::fs::File`": 247
+    },
+    "link_paths": {
+      "`Reader`": "arrow_json::reader::Reader",
+      "`Decoder`": "arrow_json::reader::Decoder",
+      "`std::fs::File`": "std::fs::File"
+    },
+    "artifact": {
+      "id": "dd4cd3d73c7a2495b6756e2be8c5f04e18225bd265f764ae397c35bc0edac616",
+      "format_version": 61,
+      "item_id": "22",
+      "origin": "https://docs.rs/crate/arrow-json/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/arrow_json.reader.md",
+    "record_file": "modules/arrow_json.reader.json",
+    "anchor": "op-53dfc6a8d86f7f7c1bf482e7",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Reader`": "../operations/arrow_json.reader.Reader.md#op-065551256893ce5f2d76aab8",
+      "`Decoder`": "../operations/arrow_json.reader.Decoder.md#op-9a10b6ca230ecd7bed81532a"
+    }
+  }
+]

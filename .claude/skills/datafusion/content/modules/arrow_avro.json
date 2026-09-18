@@ -1,0 +1,103 @@
+[
+  {
+    "id": "038dc2091d23322e601f3596",
+    "path": "arrow_avro",
+    "name": "arrow_avro",
+    "owner": null,
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod arrow_avro",
+    "docs": "Convert data to / from the [Apache Arrow] memory format and [Apache Avro].\n\nThis crate provides:\n- a [`reader`] that decodes Avro (Object Container Files, Avro Single‑Object encoding,\n  and Confluent Schema Registry wire format) into Arrow `RecordBatch`es,\n- and a [`writer`] that encodes Arrow `RecordBatch`es into Avro (OCF or SOE).\n\nIf you’re new to Arrow or Avro, see:\n- Arrow project site: <https://arrow.apache.org/>\n- Avro 1.11.1 specification: <https://avro.apache.org/docs/1.11.1/specification/>\n\n## Example: OCF (Object Container File) round‑trip *(runnable)*\n\nThe example below creates an Arrow table, writes an **Avro OCF** fully in memory,\nand then reads it back. OCF is a self‑describing file format that embeds the Avro\nschema in a header with optional compression and block sync markers.\nSpec: <https://avro.apache.org/docs/1.11.1/specification/#object-container-files>\n\n```\nuse std::io::Cursor;\nuse std::sync::Arc;\nuse arrow_array::{ArrayRef, Int32Array, RecordBatch};\nuse arrow_schema::{DataType, Field, Schema};\nuse arrow_avro::writer::AvroWriter;\nuse arrow_avro::reader::ReaderBuilder;\n\n# fn main() -> Result<(), Box<dyn std::error::Error>> {\n// Build a tiny Arrow batch\nlet schema = Schema::new(vec![Field::new(\"id\", DataType::Int32, false)]);\nlet batch = RecordBatch::try_new(\n    Arc::new(schema.clone()),\n    vec![Arc::new(Int32Array::from(vec![1, 2, 3])) as ArrayRef],\n)?;\n\n// Write an Avro **Object Container File** (OCF) to a Vec<u8>\nlet sink: Vec<u8> = Vec::new();\nlet mut w = AvroWriter::new(sink, schema.clone())?;\nw.write(&batch)?;\nw.finish()?;\nlet bytes = w.into_inner();\nassert!(!bytes.is_empty());\n\n// Read it back\nlet mut r = ReaderBuilder::new().build(Cursor::new(bytes))?;\nlet out = r.next().unwrap()?;\nassert_eq!(out.num_rows(), 3);\n# Ok(()) }\n```\n\n## Quickstart: SOE (Single‑Object Encoding) round‑trip *(runnable)*\n\nAvro **Single‑Object Encoding (SOE)** wraps an Avro body with a 2‑byte marker\n`0xC3 0x01` and an **8‑byte little‑endian CRC‑64‑AVRO Rabin fingerprint** of the\nwriter schema, then the Avro body. Spec:\n<https://avro.apache.org/docs/1.11.1/specification/#single-object-encoding>\n\nThis example registers the writer schema (computing a Rabin fingerprint), writes a\nsingle‑row Avro body (using `AvroStreamWriter`), constructs the SOE frame, and decodes it back to Arrow.\n\n```\nuse std::collections::HashMap;\nuse std::sync::Arc;\nuse arrow_array::{ArrayRef, Int64Array, RecordBatch};\nuse arrow_schema::{DataType, Field, Schema};\nuse arrow_avro::writer::{AvroStreamWriter, WriterBuilder};\nuse arrow_avro::reader::ReaderBuilder;\nuse arrow_avro::schema::{AvroSchema, SchemaStore, FingerprintStrategy, SCHEMA_METADATA_KEY};\n\n# fn main() -> Result<(), Box<dyn std::error::Error>> {\n// Writer schema: { \"type\":\"record\",\"name\":\"User\",\"fields\":[{\"name\":\"x\",\"type\":\"long\"}] }\nlet writer_json = r#\"{\"type\":\"record\",\"name\":\"User\",\"fields\":[{\"name\":\"x\",\"type\":\"long\"}]}\"#;\nlet mut store = SchemaStore::new(); // Rabin CRC‑64‑AVRO by default\nlet _fp = store.register(AvroSchema::new(writer_json.to_string()))?;\n\n// Build an Arrow schema that references the same Avro JSON\nlet mut md = HashMap::new();\nmd.insert(SCHEMA_METADATA_KEY.to_string(), writer_json.to_string());\nlet schema = Schema::new_with_metadata(\n    vec![Field::new(\"x\", DataType::Int64, false)],\n    md,\n);\n\n// One‑row batch: { x: 7 }\nlet batch = RecordBatch::try_new(\n    Arc::new(schema.clone()),\n    vec![Arc::new(Int64Array::from(vec![7])) as ArrayRef],\n)?;\n\n// Stream‑write a single record; the writer adds **SOE** (C3 01 + Rabin) automatically.\nlet sink: Vec<u8> = Vec::new();\nlet mut w: AvroStreamWriter<Vec<u8>> = WriterBuilder::new(schema.clone())\n    .with_fingerprint_strategy(FingerprintStrategy::Rabin)\n    .build(sink)?;\nw.write(&batch)?;\nw.finish()?;\nlet frame = w.into_inner(); // already: C3 01 + 8B LE Rabin + Avro body\nassert!(frame.len() > 10);\n\n// Decode\nlet mut dec = ReaderBuilder::new()\n  .with_writer_schema_store(store)\n  .build_decoder()?;\ndec.decode(&frame)?;\nlet out = dec.flush()?.expect(\"one row\");\nassert_eq!(out.num_rows(), 1);\n# Ok(()) }\n```\n\n## `async` Reading (`async` feature)\n\nThe [`reader`] module provides async APIs for reading Avro files when the `async`\nfeature is enabled.\n\n[`AsyncAvroFileReader`] implements `Stream<Item = Result<RecordBatch, ArrowError>>`,\nallowing efficient async streaming of record batches. Any [`AsyncFileReader`]\ncan be used as the source; there is a built-in implementation for types\nimplementing [`AsyncRead`] + [`AsyncSeek`] (such as [`tokio::fs::File`]), and object\nstorage services such as S3 can be integrated by implementing\n[`AsyncFileReader`] on top of a client such as the [object_store] crate\n(see the example on the trait documentation).\n\n[`AsyncRead`]: tokio::io::AsyncRead\n[`AsyncSeek`]: tokio::io::AsyncSeek\n[`tokio::fs::File`]: https://docs.rs/tokio/latest/tokio/fs/struct.File.html\n\n```ignore\nuse arrow_avro::reader::AsyncAvroFileReader;\nuse futures::TryStreamExt;\n\n# async fn example() -> Result<(), Box<dyn std::error::Error>> {\nlet file = tokio::fs::File::open(\"data/example.avro\").await?;\nlet file_size = file.metadata().await?.len();\n\nlet stream = AsyncAvroFileReader::builder(file, file_size, 1024)\n    .try_build()\n    .await?;\n\nlet batches: Vec<_> = stream.try_collect().await?;\n# Ok(())\n# }\n```\n\n[object_store]: https://docs.rs/object_store/latest/object_store/\n\n---\n\n### Modules\n\n- [`reader`]: read Avro (OCF, SOE, Confluent) into Arrow `RecordBatch`es.\n  - With the `async` feature: [`AsyncAvroFileReader`] for async streaming reads,\n    from any [`AsyncFileReader`] source including cloud object storage.\n- [`writer`]: write Arrow `RecordBatch`es as Avro (OCF, SOE, Confluent, Apicurio).\n- [`schema`]: Avro schema parsing / fingerprints / registries.\n- [`compression`]: codecs used for **OCF block compression** (i.e., Deflate, Snappy, Zstandard, BZip2, and XZ).\n- [`codec`]: internal Avro-Arrow type conversion and row decode/encode plans.\n\n[`AsyncAvroFileReader`]: reader::AsyncAvroFileReader\n[`AsyncFileReader`]: reader::AsyncFileReader\n\n### Features\n\n**OCF compression (enabled by default)**\n- `deflate` — enable DEFLATE block compression (via `flate2`).\n- `snappy` — enable Snappy block compression with 4‑byte BE CRC32 (per Avro).\n- `zstd` — enable Zstandard block compression.\n- `bzip2` — enable BZip2 block compression.\n- `xz` — enable XZ/LZMA block compression.\n\n**Async (opt‑in)**\n- `async` — enable async APIs for reading Avro (`AsyncAvroFileReader`, `AsyncFileReader` trait).\n  Cloud storage (S3, GCS, Azure Blob, etc.) can be integrated by implementing\n  `AsyncFileReader` on top of a client such as the [`object_store`] crate.\n- `object_store` (**deprecated**): enables the deprecated `AvroObjectReader`.\n  Implement `AsyncFileReader` directly instead (see above). Implies `async`.\n  This feature will be removed in a future release.\n\n**Schema fingerprints & helpers (opt‑in)**\n- `md5` — enable MD5 writer‑schema fingerprints.\n- `sha256` — enable SHA‑256 writer‑schema fingerprints.\n- `small_decimals` — support for compact Arrow representations of small Avro decimals (`Decimal32` and `Decimal64`).\n- `avro_custom_types` — interpret Avro fields annotated with Arrow‑specific logical\n  types such as `arrow.duration-nanos`, `arrow.duration-micros`,\n  `arrow.duration-millis`, or `arrow.duration-seconds` as Arrow `Duration(TimeUnit)`.\n- `canonical_extension_types` — enable support for Arrow [canonical extension types]\n  from `arrow-schema` so `arrow-avro` can respect them during Avro↔Arrow mapping.\n\n**Notes**\n- OCF compression codecs apply only to **Object Container Files**; they do not affect Avro\n  single object encodings.\n\n[`object_store`]: https://docs.rs/object_store/latest/object_store/\n\n[canonical extension types]: https://arrow.apache.org/docs/format/CanonicalExtensions.html\n\n[Apache Arrow]: https://arrow.apache.org/\n[Apache Avro]: https://avro.apache.org/",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        276,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[warn(missing_docs)]"
+      },
+      {
+        "other": "#[attr = CfgAttrTrace([NameValue { name: \"docsrs\", value: None, span: src/lib.rs:219:13: 219:19 (#0) }])]"
+      },
+      {
+        "other": "#[doc(html_favicon_url = \"https://arrow.apache.org/img/arrow-logo_chevrons_black-txt_transparent-bg.svg\")]"
+      },
+      {
+        "other": "#[doc(html_logo_url = \"https://arrow.apache.org/img/arrow-logo_chevrons_black-txt_white-bg.svg\")]"
+      },
+      {
+        "other": "#[attr = Feature([doc_cfg#0])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": true,
+        "items": [
+          401,
+          632,
+          903,
+          940,
+          980,
+          1049,
+          1051
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`compression`": 940,
+      "`writer`": 632,
+      "tokio::io::AsyncSeek": 90,
+      "`codec`": 980,
+      "`schema`": 903,
+      "tokio::io::AsyncRead": 89,
+      "`reader`": 401,
+      "reader::AsyncFileReader": 92,
+      "reader::AsyncAvroFileReader": 88
+    },
+    "link_paths": {
+      "`compression`": "arrow_avro::compression",
+      "`writer`": "arrow_avro::writer",
+      "tokio::io::AsyncSeek": "tokio::io::async_seek::AsyncSeek",
+      "`codec`": "arrow_avro::codec",
+      "`schema`": "arrow_avro::schema",
+      "tokio::io::AsyncRead": "tokio::io::async_read::AsyncRead",
+      "`reader`": "arrow_avro::reader",
+      "reader::AsyncFileReader": "arrow_avro::reader::async_reader::async_file_reader::AsyncFileReader",
+      "reader::AsyncAvroFileReader": "arrow_avro::reader::async_reader::AsyncAvroFileReader"
+    },
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "1052",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/arrow_avro.md",
+    "record_file": "modules/arrow_avro.json",
+    "anchor": "op-038dc2091d23322e601f3596",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`compression`": "../modules/arrow_avro.compression.md#op-783935c870fe18fddca605c2",
+      "`writer`": "../modules/arrow_avro.writer.md#op-11fcfb1ac6b8ac80101af1d3",
+      "`codec`": "../modules/arrow_avro.codec.md#op-d5b615b30766d8ece560b039",
+      "`schema`": "../modules/arrow_avro.schema.md#op-9db94f655c30e51e16dcb9df",
+      "`reader`": "../modules/arrow_avro.reader.md#op-d0f1dd18a131a112e4533284",
+      "reader::AsyncFileReader": "../operations/arrow_avro.reader.async_reader.async_file_reader.AsyncFileReader.md#op-b37e46224b914587014a7456",
+      "reader::AsyncAvroFileReader": "../operations/arrow_avro.reader.async_reader.AsyncAvroFileReader.md#op-1556b0e38a5fc44a0cc6248c"
+    }
+  }
+]

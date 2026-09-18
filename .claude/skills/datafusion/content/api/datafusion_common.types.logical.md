@@ -14,6 +14,9 @@ enum TypeParameter<'a>
 
 **Derives**: Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.logical.TypeParameter.md).
+
+
 ---
 
 ## TypeSignature
@@ -27,6 +30,9 @@ enum TypeSignature<'a>
 **Variants**: `Native`, `Extension`
 
 **Derives**: Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.logical.TypeSignature.md).
+
 
 Signature that uniquely identifies a type among other types.
 
@@ -51,6 +57,9 @@ fn default_cast_for(&self, origin: &DataType) -> Result<DataType>
 fn native(&self) -> &NativeType
 fn signature(&self) -> TypeSignature<'_>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.logical.LogicalType.md).
+
 
 Representation of a logical type with its signature and its native backing
 type.
@@ -92,6 +101,9 @@ impl LogicalType for JSON {
 ```rust
 type LogicalTypeRef = std::sync::Arc<dyn LogicalType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.logical.LogicalTypeRef.md).
+
 
 A reference counted [`LogicalType`].
 

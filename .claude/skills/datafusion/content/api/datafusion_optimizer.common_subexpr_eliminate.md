@@ -29,6 +29,9 @@ fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Tra
 fn supports_rewrite(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.common_subexpr_eliminate.CommonSubexprEliminate.md).
+
+
 Performs Common Sub-expression Elimination optimization.
 
 This optimization improves query performance by computing expressions that

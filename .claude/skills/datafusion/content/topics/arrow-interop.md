@@ -1,6 +1,6 @@
 # Arrow interop
 
-DataFusion's data model is Arrow's, so every signature is saturated with Arrow types. `DFSchema` wraps `Schema` with table qualifiers. The Arrow compute kernels are a large surface of their own and are often the right answer inside a UDF rather than writing element-wise code. Extension types carry semantic meaning in field metadata that survives through a plan.
+Arrow arrays, fields and RecordBatch carry the columnar values and schema. DFSchema adds relational qualifiers. Arrow kernels can operate directly on batches/arrays; DataFusion expressions expose work to planning. Extension metadata survives only through operations that preserve the relevant fields.
 
 ## Entry points
 
@@ -8,6 +8,12 @@ DataFusion's data model is Arrow's, so every signature is saturated with Arrow t
 |---|---|---:|---|---|
 | `datafusion_common::dfschema::DFSchema` | struct | 57 | [prose](../api/datafusion_common.dfschema.md#dfschema) | [records](../model/datafusion_common.dfschema.json) |
 | `datafusion_common::scalar::ScalarValue` | enum | 104 | [prose](../api/datafusion_common.scalar.md#scalarvalue) | [records](../model/datafusion_common.scalar.json) |
+| `arrow_array::record_batch::RecordBatch` | struct | 28 | [prose](../api/arrow_array.record_batch.md#recordbatch) | [records](../model/arrow_array.record_batch.json) |
+| `arrow_schema::schema::Schema` | struct | 25 | [prose](../api/arrow_schema.schema.md#schema) | [records](../model/arrow_schema.schema.json) |
+| `arrow_schema::field::Field` | struct | 48 | [prose](../api/arrow_schema.field.md#field) | [records](../model/arrow_schema.field.json) |
+| `arrow_row::RowConverter` | struct | 11 | [prose](../api/arrow_row.md#rowconverter) | [records](../model/arrow_row.json) |
+| `arrow_cast::cast::CastOptions` | struct | 5 | [prose](../api/arrow_cast.cast.md#castoptions) | [records](../model/arrow_cast.cast.json) |
+| `arrow_select::filter::FilterBuilder` | struct | 5 | [prose](../api/arrow_select.filter.md#filterbuilder) | [records](../model/arrow_select.filter.json) |
 
 ## Settings (1)
 
@@ -35,7 +41,7 @@ Full table with Rust setters in [`../catalogs/config-options.md`](../catalogs/co
 
 ## Anti-patterns
 
-- Converting an Arrow array to a Vec to operate on it.
+- Converting to row objects before checking available columnar kernels and their null/type contracts.
 - Assuming field metadata survives every operator; DataFusion 55 differs between logical and physical UNION on this point.
 
 ## Agent checklist

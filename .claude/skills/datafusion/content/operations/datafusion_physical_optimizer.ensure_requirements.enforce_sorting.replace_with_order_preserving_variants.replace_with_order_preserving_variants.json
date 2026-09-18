@@ -1,0 +1,145 @@
+[
+  {
+    "id": "6b844abbf2e80d7aeaa461cc",
+    "path": "datafusion_physical_optimizer::ensure_requirements::enforce_sorting::replace_with_order_preserving_variants::replace_with_order_preserving_variants",
+    "name": "replace_with_order_preserving_variants",
+    "owner": null,
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn replace_with_order_preserving_variants(requirements: OrderPreservationContext, is_spr_better: bool, is_spm_better: bool, config: &datafusion_common::config::ConfigOptions) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<OrderPreservationContext>>",
+    "docs": "The `replace_with_order_preserving_variants` optimizer sub-rule tries to\nremove `SortExec`s from the physical plan by replacing operators that do\nnot preserve ordering with their order-preserving variants; i.e. by replacing\nordinary `RepartitionExec`s with their sort-preserving variants or by replacing\n`CoalescePartitionsExec`s with `SortPreservingMergeExec`s.\n\nIf this replacement is helpful for removing a `SortExec`, it updates the plan.\nOtherwise, it leaves the plan unchanged.\n\nNOTE: This optimizer sub-rule will only produce sort-preserving `RepartitionExec`s\nif the query is bounded or if the config option `prefer_existing_sort` is\nset to `true`.\n\nThe algorithm flow is simply like this:\n1. Visit nodes of the physical plan bottom-up and look for `SortExec` nodes.\n   During the traversal, keep track of operators that maintain ordering (or\n   can maintain ordering when replaced by an order-preserving variant) until\n   a `SortExec` is found.\n2. When a `SortExec` is found, update the child of the `SortExec` by replacing\n   operators that do not preserve ordering in the tree with their order\n   preserving variants.\n3. Check if the `SortExec` is still necessary in the updated plan by comparing\n   its input ordering with the output ordering it imposes. We do this because\n   replacing operators that lose ordering with their order-preserving variants\n   enables us to preserve the previously lost ordering at the input of `SortExec`.\n4. If the `SortExec` in question turns out to be unnecessary, remove it and\n   use updated plan. Otherwise, use the original plan.\n5. Continue the bottom-up traversal until another `SortExec` is seen, or the\n   traversal is complete.",
+    "span": {
+      "filename": "src/ensure_requirements/enforce_sorting/replace_with_order_preserving_variants.rs",
+      "begin": [
+        251,
+        1
+      ],
+      "end": [
+        299,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "requirements",
+              {
+                "resolved_path": {
+                  "path": "OrderPreservationContext",
+                  "id": 146,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "is_spr_better",
+              {
+                "primitive": "bool"
+              }
+            ],
+            [
+              "is_spm_better",
+              {
+                "primitive": "bool"
+              }
+            ],
+            [
+              "config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_common::config::ConfigOptions",
+                      "id": 62,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 63,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "datafusion_common::tree_node::Transformed",
+                          "id": 133,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "OrderPreservationContext",
+                                      "id": 146,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "146": "datafusion_physical_optimizer::ensure_requirements::enforce_sorting::replace_with_order_preserving_variants::OrderPreservationContext",
+      "62": "datafusion_common::config::ConfigOptions",
+      "63": "datafusion_common::error::Result",
+      "133": "datafusion_common::tree_node::Transformed"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "151",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.replace_with_order_preserving_variants.replace_with_order_preserving_variants.md",
+    "record_file": "operations/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.replace_with_order_preserving_variants.replace_with_order_preserving_variants.json",
+    "anchor": "op-6b844abbf2e80d7aeaa461cc",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

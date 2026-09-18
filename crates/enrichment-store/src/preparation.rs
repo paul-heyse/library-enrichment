@@ -4,6 +4,31 @@ use datafusion::error::{DataFusionError, Result};
 use enrichment_core::telemetry::MaterializationFamily;
 use enrichment_core::wire::Diagnostic;
 
+/// Check the complete selected physical tree before starting streams. DataFusion owns
+/// executable distribution/order/child invariants; native declarations own field meaning.
+/// Root-schema equality alone cannot detect a malformed child hidden by a projection.
+pub(crate) fn admit_physical(
+    root: &std::sync::Arc<dyn datafusion::physical_plan::ExecutionPlan>,
+) -> Result<()> {
+    use datafusion::physical_plan::execution_plan::InvariantLevel;
+    let mut pending = vec![(root.clone(), 0_usize)];
+    let mut visited = 0_usize;
+    while let Some((plan, depth)) = pending.pop() {
+        visited += 1;
+        if depth > 512 || visited > 262_144 {
+            return datafusion::common::plan_err!("physical plan traversal bound");
+        }
+        plan.check_invariants(InvariantLevel::Executable)?;
+        enrichment_core::native_analysis::validate_derived_fields(plan.schema().fields())?;
+        pending.extend(
+            plan.children()
+                .into_iter()
+                .map(|child| (child.clone(), depth + 1)),
+        );
+    }
+    Ok(())
+}
+
 pub(crate) fn witnesses(batches: &[arrow::record_batch::RecordBatch]) -> Vec<String> {
     use arrow::array::{LargeStringArray, StringArray, StringViewArray};
     let mut ids = Vec::new();
@@ -64,7 +89,7 @@ impl InvariantFailure {
         )
     }
 
-    fn with_cause(
+    pub(crate) fn with_cause(
         rule: &str,
         stage: &str,
         affected_ids: Vec<String>,
@@ -103,10 +128,7 @@ pub enum QueryFamily {
     Catalog(crate::control::Table),
     CatalogArtifact,
     StaticInputs,
-    Coverage,
     Intermediate(MaterializationFamily),
-    OverviewSummary,
-    KindCounts { namespace: bool },
     Search,
     ComparisonAlternatives,
     RevisionDisposition,
@@ -248,8 +270,10 @@ impl QueryFamily {
                     .clone()
                     .with_nullable(true);
                 require_fields(actual, &[source], "comparison_alternatives")?;
-                let value = actual.field_with_name("value")?;
-                comparison_value_type(value.data_type())?;
+                let expected = enrichment_core::native_union::field::<
+                    enrichment_core::compare::ComparisonValue,
+                >("value", enrichment_core::native_union::Rule::Text);
+                require_fields(actual, &[expected], "comparison_alternatives")?;
                 return Ok(());
             }
             Self::RevisionDisposition => (
@@ -258,23 +282,6 @@ impl QueryFamily {
                     Field::new("path", DataType::Utf8, true),
                     Field::new("summary", DataType::Boolean, false),
                     Field::new("incomplete", DataType::Boolean, false),
-                ],
-            ),
-            Self::Coverage => (
-                "coverage_output",
-                vec![
-                    Field::new("kind", DataType::Utf8, true),
-                    Field::new("state", DataType::Utf8, true),
-                    Field::new("witness_id", DataType::Utf8, true),
-                    Field::new(
-                        "subject",
-                        Relation::Coverage
-                            .schema()?
-                            .field_with_name("subject")?
-                            .data_type()
-                            .clone(),
-                        true,
-                    ),
                 ],
             ),
             Self::Search | Self::Intermediate(MaterializationFamily::SearchIndex) => {
@@ -298,7 +305,7 @@ impl QueryFamily {
                     ),
                     Field::new(
                         "ranking",
-                        crate::projection::score::field().data_type().clone(),
+                        <enrichment_core::search::Ranking as enrichment_core::native_union::Cell>::data_type(),
                         true,
                     ),
                     Field::new("rank_score", DataType::UInt32, true),
@@ -353,9 +360,9 @@ impl QueryFamily {
                     Field::new("definition_position", DataType::UInt64, false),
                 ],
             ),
-            Self::OverviewSummary
-            | Self::Intermediate(MaterializationFamily::OverviewNamespaces) => {
-                let mut fields = vec![
+            Self::Intermediate(MaterializationFamily::OverviewNamespaces) => (
+                "overview_namespaces",
+                vec![
                     Field::new("path", DataType::Utf8, true),
                     Field::new(
                         "components",
@@ -367,36 +374,8 @@ impl QueryFamily {
                         true,
                     ),
                     Field::new("ecosystem", DataType::Utf8, true),
-                ];
-                if matches!(self, Self::OverviewSummary) {
-                    fields.extend([
-                        Field::new("total", DataType::UInt64, false),
-                        Field::new("doc_summary", DataType::Utf8, true),
-                    ]);
-                }
-                ("overview_namespaces", fields)
-            }
-            Self::KindCounts { namespace } => {
-                let mut fields = vec![
-                    Field::new("kind", DataType::Utf8, true),
-                    Field::new("count", DataType::UInt64, false),
-                ];
-                if namespace {
-                    fields.extend([
-                        Field::new(
-                            "namespace_components",
-                            DataType::List(std::sync::Arc::new(Field::new(
-                                "item",
-                                DataType::Utf8,
-                                true,
-                            ))),
-                            true,
-                        ),
-                        Field::new("ecosystem", DataType::Utf8, true),
-                    ]);
-                }
-                ("kind_counts", fields)
-            }
+                ],
+            ),
         };
         for expected in fields {
             let fields = actual
@@ -419,30 +398,6 @@ impl QueryFamily {
 /// Only types produced by the authored comparison axes may cross the JSON value boundary.
 /// Nested nulls and native string coercion are supported without accepting arbitrary Arrow
 /// extensions whose JSON interpretation would need a separate contract.
-fn comparison_value_type(value: &DataType) -> Result<()> {
-    match value {
-        DataType::Null
-        | DataType::Boolean
-        | DataType::UInt32
-        | DataType::UInt64
-        | DataType::Int64
-        | DataType::Utf8
-        | DataType::LargeUtf8
-        | DataType::Utf8View => Ok(()),
-        DataType::Struct(fields) => fields
-            .iter()
-            .try_for_each(|f| comparison_value_type(f.data_type())),
-        DataType::List(field) | DataType::LargeList(field) => {
-            comparison_value_type(field.data_type())
-        }
-        _ => Err(InvariantFailure::contract(
-            "comparison value type",
-            "comparison_alternatives",
-            vec![value.to_string()],
-        )),
-    }
-}
-
 /// Explicit family requirements also retain selected field tags. Nullability describes
 /// permitted values: a non-null result satisfies a nullable requirement, never the reverse.
 pub fn require_fields(actual: &Schema, required: &[Field], stage: &str) -> Result<()> {

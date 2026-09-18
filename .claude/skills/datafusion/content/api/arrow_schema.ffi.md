@@ -57,6 +57,9 @@ fn try_from(field: Field) -> Result<Self, ArrowError>
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.ffi.FFI_ArrowSchema.md).
+
+
 ABI-compatible struct for `ArrowSchema` from C Data Interface
 See <https://arrow.apache.org/docs/format/CDataInterface.html#the-arrowschema-structure>
 
@@ -210,6 +213,9 @@ fn bitxor_assign(&mut self, other: Self)
 ```rust
 fn not(self) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.ffi.Flags.md).
+
 
 Flags for [`FFI_ArrowSchema`]
 

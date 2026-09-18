@@ -5,6 +5,7 @@ Crate `deltalake-core` · 5 public items · structured records in [`model/deltal
 ## DeltaColumn
 
 `struct` · `deltalake_core::delta_datafusion::DeltaColumn`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.DeltaColumn.md)
 
 Also reachable as `deltalake::delta_datafusion::DeltaColumn`
 
@@ -30,6 +31,7 @@ A wrapper for Deltafusion's Column to preserve case-sensitivity during string co
 ## DeltaLogicalCodec
 
 `struct` · `deltalake_core::delta_datafusion::DeltaLogicalCodec`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.DeltaLogicalCodec.md)
 
 Also reachable as `deltalake::delta_datafusion::DeltaLogicalCodec`
 
@@ -57,6 +59,7 @@ Does serde on DeltaTables
 ## DeltaPhysicalCodec
 
 `struct` · `deltalake_core::delta_datafusion::DeltaPhysicalCodec`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.DeltaPhysicalCodec.md)
 
 > **Deprecated** — DeltaPhysicalCodec only supports the retired physical DeltaScan wrapper. Use DeltaLogicalCodec for table-provider serialization until a DeltaScanExec physical codec is available.
 
@@ -85,6 +88,7 @@ Legacy codec for serialized plans that still contain the retired physical
 ## DeltaTableFactory
 
 `struct` · `deltalake_core::delta_datafusion::DeltaTableFactory`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.DeltaTableFactory.md)
 
 Also reachable as `deltalake::delta_datafusion::DeltaTableFactory`
 
@@ -109,6 +113,7 @@ Responsible for creating deltatables
 ## DataFusionMixins
 
 `trait` · `deltalake_core::delta_datafusion::DataFusionMixins`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.DataFusionMixins.md)
 
 Also reachable as `deltalake::delta_datafusion::DataFusionMixins`
 

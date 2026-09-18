@@ -1,0 +1,1245 @@
+[
+  {
+    "id": "c30c0ec5776ee63a5e364d03",
+    "path": "datafusion_ffi::table_provider::FFI_TableProvider",
+    "name": "FFI_TableProvider",
+    "owner": null,
+    "crate": "datafusion-ffi",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct FFI_TableProvider",
+    "docs": "A stable struct for sharing [`TableProvider`] across FFI boundaries.\n\n# Struct Layout\n\nThe following description applies to all structs provided in this crate.\n\nEach of the exposed structs in this crate is provided with a variant prefixed\nwith `Foreign`. This variant is designed to be used by the consumer of the\nforeign code. The `Foreign` structs should _never_ access the `private_data`\nfields. Instead they should only access the data returned through the function\ncalls defined on the `FFI_` structs. The second purpose of the `Foreign`\nstructs is to contain additional data that may be needed by the traits that\nare implemented on them. Some of these traits require borrowing data which\ncan be far more convenient to be locally stored.\n\nFor example, we have a struct `FFI_TableProvider` to give access to the\n`TableProvider` functions like `table_type()` and `scan()`. If we write a\nlibrary that wishes to expose it's `TableProvider`, then we can access the\nprivate data that contains the Arc reference to the `TableProvider` via\n`FFI_TableProvider`. This data is local to the library.\n\nIf we have a program that accesses a `TableProvider` via FFI, then it\nwill use `ForeignTableProvider`. When using `ForeignTableProvider` we **must**\nnot attempt to access the `private_data` field in `FFI_TableProvider`. If a\nuser is testing locally, you may be able to successfully access this field, but\nit will only work if you are building against the exact same version of\n`DataFusion` for both libraries **and** the same compiler. It will not work\nin general.\n\nIt is worth noting that which library is the `local` and which is `foreign`\ndepends on which interface we are considering. For example, suppose we have a\nPython library called `my_provider` that exposes a `TableProvider` called\n`MyProvider` via `FFI_TableProvider`. Within the library `my_provider` we can\naccess the `private_data` via `FFI_TableProvider`. We connect this to\n`datafusion-python`, where we access it as a `ForeignTableProvider`. Now when\nwe call `scan()` on this interface, we have to pass it a `FFI_SessionConfig`.\nThe `SessionConfig` is local to `datafusion-python` and **not** `my_provider`.\nIt is important to be careful when expanding these functions to be certain which\nside of the interface each object refers to.",
+    "span": {
+      "filename": "src/table_provider.rs",
+      "begin": [
+        94,
+        1
+      ],
+      "end": [
+        163,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "repr": {
+          "kind": "c",
+          "align": null,
+          "packed": null,
+          "int": null
+        }
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [
+              2245,
+              2246,
+              2249,
+              2251
+            ],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          2254,
+          2255,
+          2256,
+          2257,
+          2258,
+          2259,
+          2260,
+          2261,
+          2262,
+          2263,
+          2264,
+          2265,
+          2266,
+          2267,
+          2268,
+          2269,
+          2270,
+          2271,
+          2272,
+          2273,
+          2274,
+          2275,
+          2277,
+          2278,
+          2279,
+          2281,
+          2283,
+          2285
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`TableProvider`": 1790
+    },
+    "link_paths": {
+      "`TableProvider`": "datafusion_session::table::TableProvider"
+    },
+    "artifact": {
+      "id": "1da7a4472325de66bc7ea1ac3642b62c46ca0d1d35e2dd22321a26a597d5d750",
+      "format_version": 61,
+      "item_id": "2054",
+      "origin": "https://docs.rs/crate/datafusion-ffi/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_ffi.table_provider.FFI_TableProvider.md",
+    "record_file": "operations/datafusion_ffi.table_provider.FFI_TableProvider.json",
+    "anchor": "op-c30c0ec5776ee63a5e364d03",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`TableProvider`": "../operations/datafusion_session.table.TableProvider.md#op-76e5c2e5b081ebf294e9493e"
+    }
+  },
+  {
+    "id": "7598d1f5053567f54be3220b",
+    "path": "datafusion_ffi::table_provider::FFI_TableProvider::clone",
+    "name": "clone",
+    "owner": "datafusion_ffi::table_provider::FFI_TableProvider",
+    "crate": "datafusion-ffi",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/table_provider.rs",
+      "begin": [
+        469,
+        5
+      ],
+      "end": [
+        471,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FFI_TableProvider",
+          "id": "datafusion_ffi::table_provider::FFI_TableProvider",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_provider.rs",
+        "begin": [
+          468,
+          1
+        ],
+        "end": [
+          472,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1da7a4472325de66bc7ea1ac3642b62c46ca0d1d35e2dd22321a26a597d5d750",
+      "format_version": 61,
+      "item_id": "2284",
+      "origin": "https://docs.rs/crate/datafusion-ffi/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_ffi.table_provider.FFI_TableProvider.md",
+    "record_file": "operations/datafusion_ffi.table_provider.FFI_TableProvider.json",
+    "anchor": "op-7598d1f5053567f54be3220b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7cea5e0a845c3d49d30d7157",
+    "path": "datafusion_ffi::table_provider::FFI_TableProvider::drop",
+    "name": "drop",
+    "owner": "datafusion_ffi::table_provider::FFI_TableProvider",
+    "crate": "datafusion-ffi",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn drop(&mut self)",
+    "docs": "",
+    "span": {
+      "filename": "src/table_provider.rs",
+      "begin": [
+        375,
+        5
+      ],
+      "end": [
+        377,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FFI_TableProvider",
+          "id": "datafusion_ffi::table_provider::FFI_TableProvider",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Drop",
+        "id": "core::ops::drop::Drop",
+        "args": null
+      },
+      "trait_path": "core::ops::drop::Drop",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_provider.rs",
+        "begin": [
+          374,
+          1
+        ],
+        "end": [
+          378,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1da7a4472325de66bc7ea1ac3642b62c46ca0d1d35e2dd22321a26a597d5d750",
+      "format_version": 61,
+      "item_id": "2280",
+      "origin": "https://docs.rs/crate/datafusion-ffi/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_ffi.table_provider.FFI_TableProvider.md",
+    "record_file": "operations/datafusion_ffi.table_provider.FFI_TableProvider.json",
+    "anchor": "op-7cea5e0a845c3d49d30d7157",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "efa4a81d732f545f3b4a2913",
+    "path": "datafusion_ffi::table_provider::FFI_TableProvider::fmt",
+    "name": "fmt",
+    "owner": "datafusion_ffi::table_provider::FFI_TableProvider",
+    "crate": "datafusion-ffi",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/table_provider.rs",
+      "begin": [
+        93,
+        10
+      ],
+      "end": [
+        93,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 68,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 69,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "68": "core::fmt::Formatter",
+      "69": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FFI_TableProvider",
+          "id": "datafusion_ffi::table_provider::FFI_TableProvider",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_provider.rs",
+        "begin": [
+          93,
+          10
+        ],
+        "end": [
+          93,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1da7a4472325de66bc7ea1ac3642b62c46ca0d1d35e2dd22321a26a597d5d750",
+      "format_version": 61,
+      "item_id": "2276",
+      "origin": "https://docs.rs/crate/datafusion-ffi/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_ffi.table_provider.FFI_TableProvider.md",
+    "record_file": "operations/datafusion_ffi.table_provider.FFI_TableProvider.json",
+    "anchor": "op-efa4a81d732f545f3b4a2913",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f5a08dd9905b1ae0055935fc",
+    "path": "datafusion_ffi::table_provider::FFI_TableProvider::library_marker_id",
+    "name": "library_marker_id",
+    "owner": "datafusion_ffi::table_provider::FFI_TableProvider",
+    "crate": "datafusion-ffi",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "library_marker_id: fn() -> usize",
+    "docs": "Utility to identify when FFI objects are accessed locally through\nthe foreign interface. See [`crate::get_library_marker_id`] and\nthe crate's `README.md` for more information.",
+    "span": {
+      "filename": "src/table_provider.rs",
+      "begin": [
+        162,
+        5
+      ],
+      "end": [
+        162,
+        52
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "function_pointer": {
+          "sig": {
+            "inputs": [],
+            "output": {
+              "primitive": "usize"
+            },
+            "is_c_variadic": false
+          },
+          "generic_params": [],
+          "header": {
+            "is_const": false,
+            "is_unsafe": false,
+            "is_async": false,
+            "abi": {
+              "C": {
+                "unwind": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`crate::get_library_marker_id`": 140
+    },
+    "link_paths": {
+      "`crate::get_library_marker_id`": "datafusion_ffi::get_library_marker_id"
+    },
+    "artifact": {
+      "id": "1da7a4472325de66bc7ea1ac3642b62c46ca0d1d35e2dd22321a26a597d5d750",
+      "format_version": 61,
+      "item_id": "2251",
+      "origin": "https://docs.rs/crate/datafusion-ffi/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_ffi.table_provider.FFI_TableProvider.md",
+    "record_file": "operations/datafusion_ffi.table_provider.FFI_TableProvider.json",
+    "anchor": "op-f5a08dd9905b1ae0055935fc",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`crate::get_library_marker_id`": "../operations/datafusion_ffi.get_library_marker_id.md#op-66c1f07f1e28422eccc970cc"
+    }
+  },
+  {
+    "id": "2c2ca8ede460b0eb21af5062",
+    "path": "datafusion_ffi::table_provider::FFI_TableProvider::logical_codec",
+    "name": "logical_codec",
+    "owner": "datafusion_ffi::table_provider::FFI_TableProvider",
+    "crate": "datafusion-ffi",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "logical_codec: proto::logical_extension_codec::FFI_LogicalExtensionCodec",
+    "docs": "",
+    "span": {
+      "filename": "src/table_provider.rs",
+      "begin": [
+        143,
+        5
+      ],
+      "end": [
+        143,
+        49
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "crate::proto::logical_extension_codec::FFI_LogicalExtensionCodec",
+          "id": 133,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "133": "datafusion_ffi::proto::logical_extension_codec::FFI_LogicalExtensionCodec"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1da7a4472325de66bc7ea1ac3642b62c46ca0d1d35e2dd22321a26a597d5d750",
+      "format_version": 61,
+      "item_id": "2246",
+      "origin": "https://docs.rs/crate/datafusion-ffi/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_ffi.table_provider.FFI_TableProvider.md",
+    "record_file": "operations/datafusion_ffi.table_provider.FFI_TableProvider.json",
+    "anchor": "op-2c2ca8ede460b0eb21af5062",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d84b709f6dfae4ac0c3596f9",
+    "path": "datafusion_ffi::table_provider::FFI_TableProvider::new",
+    "name": "new",
+    "owner": "datafusion_ffi::table_provider::FFI_TableProvider",
+    "crate": "datafusion-ffi",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(provider: Arc<dyn TableProvider>, can_support_pushdown_filters: bool, runtime: Option<Handle>, task_ctx_provider: impl Into<FFI_TaskContextProvider>, logical_codec: Option<Arc<dyn LogicalExtensionCodec>>) -> Self",
+    "docs": "Creates a new [`FFI_TableProvider`].",
+    "span": {
+      "filename": "src/table_provider.rs",
+      "begin": [
+        382,
+        5
+      ],
+      "end": [
+        403,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "provider",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 75,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "TableProvider",
+                                    "id": 1790,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "can_support_pushdown_filters",
+              {
+                "primitive": "bool"
+              }
+            ],
+            [
+              "runtime",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Handle",
+                              "id": 146,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "task_ctx_provider",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 27,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "FFI_TaskContextProvider",
+                                    "id": 147,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ],
+            [
+              "logical_codec",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 75,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "LogicalExtensionCodec",
+                                                "id": 148,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Into<FFI_TaskContextProvider>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 27,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "FFI_TaskContextProvider",
+                                      "id": 147,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "75": "alloc::sync::Arc",
+      "1790": "datafusion_session::table::TableProvider",
+      "145": "core::option::Option",
+      "146": "tokio::runtime::handle::Handle",
+      "27": "core::convert::Into",
+      "147": "datafusion_ffi::execution::task_ctx_provider::FFI_TaskContextProvider",
+      "148": "datafusion_proto::logical_plan::LogicalExtensionCodec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FFI_TableProvider",
+          "id": "datafusion_ffi::table_provider::FFI_TableProvider",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_provider.rs",
+        "begin": [
+          380,
+          1
+        ],
+        "end": [
+          446,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FFI_TableProvider`": 2054
+    },
+    "link_paths": {
+      "`FFI_TableProvider`": "datafusion_ffi::table_provider::FFI_TableProvider"
+    },
+    "artifact": {
+      "id": "1da7a4472325de66bc7ea1ac3642b62c46ca0d1d35e2dd22321a26a597d5d750",
+      "format_version": 61,
+      "item_id": "2252",
+      "origin": "https://docs.rs/crate/datafusion-ffi/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_ffi.table_provider.FFI_TableProvider.md",
+    "record_file": "operations/datafusion_ffi.table_provider.FFI_TableProvider.json",
+    "anchor": "op-d84b709f6dfae4ac0c3596f9",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FFI_TableProvider`": "../operations/datafusion_ffi.table_provider.FFI_TableProvider.md#op-c30c0ec5776ee63a5e364d03"
+    }
+  },
+  {
+    "id": "e0e038d70c73edd3f3cb9901",
+    "path": "datafusion_ffi::table_provider::FFI_TableProvider::new_with_ffi_codec",
+    "name": "new_with_ffi_codec",
+    "owner": "datafusion_ffi::table_provider::FFI_TableProvider",
+    "crate": "datafusion-ffi",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new_with_ffi_codec(provider: Arc<dyn TableProvider>, can_support_pushdown_filters: bool, runtime: Option<Handle>, logical_codec: FFI_LogicalExtensionCodec) -> Self",
+    "docs": "Creates an [`FFI_TableProvider`] using a prebuilt FFI logical codec.\n\nIf `provider` is already foreign, this re-exports its original FFI\nhandle rather than adding another wrapper layer. The handle still adopts\nthe `logical_codec` supplied here, so it is never silently discarded and\nan imported provider can be rebound to a different session.\n\n`runtime` is only honored when a new wrapper is created. An\nalready-foreign handle keeps the runtime of the library that owns it,\nbecause that value lives in private data this side cannot reach.",
+    "span": {
+      "filename": "src/table_provider.rs",
+      "begin": [
+        415,
+        5
+      ],
+      "end": [
+        445,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "provider",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 75,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "TableProvider",
+                                    "id": 1790,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "can_support_pushdown_filters",
+              {
+                "primitive": "bool"
+              }
+            ],
+            [
+              "runtime",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Handle",
+                              "id": 146,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "logical_codec",
+              {
+                "resolved_path": {
+                  "path": "FFI_LogicalExtensionCodec",
+                  "id": 133,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "75": "alloc::sync::Arc",
+      "1790": "datafusion_session::table::TableProvider",
+      "145": "core::option::Option",
+      "146": "tokio::runtime::handle::Handle",
+      "133": "datafusion_ffi::proto::logical_extension_codec::FFI_LogicalExtensionCodec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FFI_TableProvider",
+          "id": "datafusion_ffi::table_provider::FFI_TableProvider",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/table_provider.rs",
+        "begin": [
+          380,
+          1
+        ],
+        "end": [
+          446,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FFI_TableProvider`": 2054
+    },
+    "link_paths": {
+      "`FFI_TableProvider`": "datafusion_ffi::table_provider::FFI_TableProvider"
+    },
+    "artifact": {
+      "id": "1da7a4472325de66bc7ea1ac3642b62c46ca0d1d35e2dd22321a26a597d5d750",
+      "format_version": 61,
+      "item_id": "2253",
+      "origin": "https://docs.rs/crate/datafusion-ffi/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_ffi.table_provider.FFI_TableProvider.md",
+    "record_file": "operations/datafusion_ffi.table_provider.FFI_TableProvider.json",
+    "anchor": "op-e0e038d70c73edd3f3cb9901",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FFI_TableProvider`": "../operations/datafusion_ffi.table_provider.FFI_TableProvider.md#op-c30c0ec5776ee63a5e364d03"
+    }
+  },
+  {
+    "id": "6eb44da0278f37686355862e",
+    "path": "datafusion_ffi::table_provider::FFI_TableProvider::statistics",
+    "name": "statistics",
+    "owner": "datafusion_ffi::table_provider::FFI_TableProvider",
+    "crate": "datafusion-ffi",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "statistics: unsafe fn(&Self) -> util::FFI_Option<stabby::vec::Vec<u8>>",
+    "docs": "Snapshot the provider's table-level statistics. [`FFI_Option::None`]\ncorresponds to [`TableProvider::statistics`] returning `None`;\n`Some(bytes)` is a prost-encoded `datafusion_proto_common::Statistics`.",
+    "span": {
+      "filename": "src/table_provider.rs",
+      "begin": [
+        141,
+        5
+      ],
+      "end": [
+        141,
+        82
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "function_pointer": {
+          "sig": {
+            "inputs": [
+              [
+                "provider",
+                {
+                  "borrowed_ref": {
+                    "lifetime": null,
+                    "is_mutable": false,
+                    "type": {
+                      "generic": "Self"
+                    }
+                  }
+                }
+              ]
+            ],
+            "output": {
+              "resolved_path": {
+                "path": "crate::util::FFI_Option",
+                "id": 127,
+                "args": {
+                  "angle_bracketed": {
+                    "args": [
+                      {
+                        "type": {
+                          "resolved_path": {
+                            "path": "stabby::vec::Vec",
+                            "id": 124,
+                            "args": {
+                              "angle_bracketed": {
+                                "args": [
+                                  {
+                                    "type": {
+                                      "primitive": "u8"
+                                    }
+                                  }
+                                ],
+                                "constraints": []
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ],
+                    "constraints": []
+                  }
+                }
+              }
+            },
+            "is_c_variadic": false
+          },
+          "generic_params": [],
+          "header": {
+            "is_const": false,
+            "is_unsafe": true,
+            "is_async": false,
+            "abi": {
+              "C": {
+                "unwind": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "127": "datafusion_ffi::ffi_option::FFI_Option",
+      "124": "stabby_abi::alloc::vec::Vec"
+    },
+    "impl_context": null,
+    "links": {
+      "`TableProvider::statistics`": 2244,
+      "`FFI_Option::None`": 1108
+    },
+    "link_paths": {
+      "`TableProvider::statistics`": "datafusion_session::table::TableProvider::statistics",
+      "`FFI_Option::None`": "datafusion_ffi::ffi_option::FFI_Option::None"
+    },
+    "artifact": {
+      "id": "1da7a4472325de66bc7ea1ac3642b62c46ca0d1d35e2dd22321a26a597d5d750",
+      "format_version": 61,
+      "item_id": "2245",
+      "origin": "https://docs.rs/crate/datafusion-ffi/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_ffi.table_provider.FFI_TableProvider.md",
+    "record_file": "operations/datafusion_ffi.table_provider.FFI_TableProvider.json",
+    "anchor": "op-6eb44da0278f37686355862e",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`TableProvider::statistics`": "../operations/datafusion_session.table.TableProvider.md#op-baa45f22e70e3ade58373306",
+      "`FFI_Option::None`": "../operations/datafusion_ffi.ffi_option.FFI_Option.md#op-8d55b0c9806cf87bea739d2f"
+    }
+  },
+  {
+    "id": "17ab8674c32e87cd6e6d4865",
+    "path": "datafusion_ffi::table_provider::FFI_TableProvider::version",
+    "name": "version",
+    "owner": "datafusion_ffi::table_provider::FFI_TableProvider",
+    "crate": "datafusion-ffi",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "version: unsafe fn() -> u64",
+    "docs": "Return the major DataFusion version number of this provider.",
+    "span": {
+      "filename": "src/table_provider.rs",
+      "begin": [
+        153,
+        5
+      ],
+      "end": [
+        153,
+        47
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "function_pointer": {
+          "sig": {
+            "inputs": [],
+            "output": {
+              "primitive": "u64"
+            },
+            "is_c_variadic": false
+          },
+          "generic_params": [],
+          "header": {
+            "is_const": false,
+            "is_unsafe": true,
+            "is_async": false,
+            "abi": {
+              "C": {
+                "unwind": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1da7a4472325de66bc7ea1ac3642b62c46ca0d1d35e2dd22321a26a597d5d750",
+      "format_version": 61,
+      "item_id": "2249",
+      "origin": "https://docs.rs/crate/datafusion-ffi/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_ffi.table_provider.FFI_TableProvider.md",
+    "record_file": "operations/datafusion_ffi.table_provider.FFI_TableProvider.json",
+    "anchor": "op-17ab8674c32e87cd6e6d4865",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

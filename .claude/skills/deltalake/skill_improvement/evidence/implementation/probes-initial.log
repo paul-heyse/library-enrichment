@@ -1,0 +1,44 @@
+   Compiling deltalake-skill-reference-probes v0.1.0 (/home/paul/library-enrichment/.claude/skills/deltalake/skill_improvement/evidence/implementation/probes)
+error[E0308]: mismatched types
+   --> tests/behavior.rs:130:36
+    |
+130 |     assert_eq!(m.num_deleted_rows, 1);
+    |                                    ^ expected `Option<usize>`, found integer
+    |
+    = note: expected enum `Option<usize>`
+               found type `{integer}`
+help: try wrapping the expression in `Some`
+    |
+130 |     assert_eq!(m.num_deleted_rows, Some(1));
+    |                                    +++++ +
+
+error[E0599]: no method named `put` found for struct `Arc<(dyn object_store::ObjectStore + 'static)>` in the current scope
+    --> tests/behavior.rs:203:26
+     |
+ 203 |     table.object_store().put(&orphan, object_store::PutPayload::from_static(b"fixture")).await.unwrap();
+     |                          ^^^ method not found in `Arc<(dyn object_store::ObjectStore + 'static)>`
+     |
+    ::: /home/paul/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/object_store-0.13.2/src/lib.rs:1226:8
+     |
+1226 |     fn put(&self, location: &Path, payload: PutPayload) -> impl Future<Output = Result<PutResult>>;
+     |        --- the method is available for `Arc<(dyn object_store::ObjectStore + 'static)>` here
+     |
+     = help: items from traits can only be used if the trait is in scope
+help: trait `ObjectStoreExt` which provides `put` is implemented but not in scope; perhaps you want to import it
+     |
+   1 + use object_store::ObjectStoreExt;
+     |
+
+warning: unused variable: `table`
+   --> tests/behavior.rs:163:9
+    |
+163 |     let table = table.write([batch(&[Some(2)])]).await.unwrap();
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_table`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+Some errors have detailed explanations: E0308, E0599.
+For more information about an error, try `rustc --explain E0308`.
+warning: `deltalake-skill-reference-probes` (test "behavior") generated 1 warning
+error: could not compile `deltalake-skill-reference-probes` (test "behavior") due to 2 previous errors; 1 warning emitted
+warning: build failed, waiting for other jobs to finish...

@@ -35,6 +35,9 @@ fn get_bytes(&mut self, range: Range<u64>) -> BoxFuture<'_, Result<Bytes>>
 fn get_metadata<'a>(&'a mut self, options: Option<&'a ArrowReaderOptions>) -> BoxFuture<'a, Result<Arc<ParquetMetaData>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.async_reader.store.ParquetObjectReader.md).
+
+
 Reads Parquet files in object storage using [`ObjectStore`].
 
 ```no_run

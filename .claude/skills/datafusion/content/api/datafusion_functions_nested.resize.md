@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_resize`, `datafusion_functions_nes
 fn array_resize(array: datafusion_expr::Expr, size: datafusion_expr::Expr, value: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.resize.array_resize.md).
+
+
 returns an array with the specified size filled with the given value.
 
 ---
@@ -23,6 +26,9 @@ returns an array with the specified size filled with the given value.
 ```rust
 fn array_resize_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.resize.array_resize_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayResize
@@ -57,5 +63,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.resize.ArrayResize.md).
+
 
 ---

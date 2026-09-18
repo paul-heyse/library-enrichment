@@ -53,6 +53,9 @@ fn len(&self) -> usize
 fn extend<T: IntoIterator<Item = Option<V>>>(&mut self, iter: T)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_list_builder.GenericListBuilder.md).
+
+
 Builder for [`GenericListArray`]
 
 Use [`ListBuilder`] to build [`ListArray`]s and [`LargeListBuilder`] to build [`LargeListArray`]s.

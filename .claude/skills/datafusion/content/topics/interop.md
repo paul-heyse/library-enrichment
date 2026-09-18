@@ -40,8 +40,8 @@ Full table with Rust setters in [`../catalogs/config-options.md`](../catalogs/co
 
 ## Decision rules
 
-- A custom logical or physical node needs a `PhysicalExtensionCodec` registered before it can be serialized.
-- FFI is the route for a plugin compiled against a different DataFusion build; in-process extension traits are not ABI-stable.
+- Logical proto extensions use LogicalExtensionCodec; physical extensions use PhysicalExtensionCodec. Substrait has separate extension/registry requirements; verify support and round trips.
+- Use the documented FFI compatibility and ownership contract for separately compiled plugins. Neither arbitrary DataFusion-version compatibility nor serialization follows from a stable ABI claim.
 
 ## Anti-patterns
 

@@ -1,7 +1,7 @@
 //! Native command, transition, claim and client-interest contracts.
 //! Requests are finite typed structs at the Arrow boundary; control state contains no job JSON.
 use arrow::datatypes::{Schema, SchemaRef};
-use enrichment_core::native_union::NativeStruct;
+use enrichment_core::{identity::InterestId, native_union::NativeStruct};
 use std::sync::Arc;
 
 /// No replay starts a producer using a different compiled operation definition.
@@ -15,6 +15,99 @@ pub(crate) fn transitions() -> SchemaRef {
 pub(crate) fn claims() -> SchemaRef {
     Arc::new(Schema::new(Claim::fields()))
 }
+
+/// Claim identity is evaluated from the same defining fields used by native claim creation.
+pub(crate) fn claim_identity_violations(
+    claims: datafusion::dataframe::DataFrame,
+) -> Result<datafusion::dataframe::DataFrame> {
+    claims
+        .filter(col("grant_id").not_eq(enrichment_core::native_key::Key::EffectGrant.identity()?))?
+        .select(vec![col("job_id")])
+}
+
+#[cfg(test)]
+mod grant_identity_tests {
+    use super::*;
+    use enrichment_core::{
+        identity::{AttemptId, GrantId, JobId},
+        native_union::Rule,
+    };
+
+    enrichment_core::native_struct! { struct Fields {
+        job_id: JobId => Rule::Text, job_key: String => Rule::Text,
+        policy_id: enrichment_core::identity::OperationPolicyId => Rule::Text, owner: String => Rule::Text,
+        attempt_id: AttemptId => Rule::Text, fence: u64 => Rule::Text,
+    } }
+    enrichment_core::native_struct! { struct Selected { grant_id: GrantId => Rule::Text } }
+
+    #[tokio::test]
+    async fn binary_grant_admission_binds_each_claim_field_and_rejects_forgery() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let runtime = QueryRuntime::new(root.path(), Default::default())?;
+        let fields = Fields {
+            job_id: "job_00112233445566778899aabbccddeeff"
+                .to_owned()
+                .try_into()
+                .unwrap(),
+            job_key: "command".into(),
+            policy_id: enrichment_core::identity::OperationPolicyId::from_record(
+                &enrichment_core::config::Config::default(),
+            ),
+            owner: "owner".into(),
+            attempt_id: "attempt_ffeeddccbbaa99887766554433221100"
+                .to_owned()
+                .try_into()
+                .unwrap(),
+            fence: 1,
+        };
+        let expected = GrantId::from_record(&fields);
+        let frame = |value: &Fields| {
+            crate::native_catalog::batch(
+                &runtime.session(),
+                "grant",
+                Fields::batch(std::slice::from_ref(value))?,
+            )
+        };
+        let derived = frame(&fields)?.with_column(
+            "grant_id",
+            enrichment_core::native_key::Key::EffectGrant.identity()?,
+        )?;
+        let selected = runtime
+            .records::<Selected>(derived.clone().select(vec![col("grant_id")])?, 1)
+            .await?;
+        assert_eq!(selected[0].grant_id, expected);
+        assert_eq!(
+            runtime
+                .execute(claim_identity_violations(derived)?)
+                .await?
+                .rows,
+            0
+        );
+        for change in 0..6 {
+            let mut changed = fields.clone();
+            match change {
+                0 => changed.job_id = JobId::new(),
+                1 => changed.job_key.push('x'),
+                2 => changed.policy_id = format!("policy_{}", "2".repeat(64)).try_into().unwrap(),
+                3 => changed.owner.push('x'),
+                4 => changed.attempt_id = AttemptId::new(),
+                _ => changed.fence += 1,
+            }
+            let stale = frame(&changed)?.with_column("grant_id", expected.literal())?;
+            assert_eq!(
+                runtime
+                    .execute(claim_identity_violations(stale)?)
+                    .await?
+                    .rows,
+                1,
+                "claim field {change}"
+            );
+        }
+        runtime.close_diagnostics().await?;
+        Ok(())
+    }
+}
+
 pub(crate) fn interests() -> SchemaRef {
     Arc::new(Schema::new(Interest::fields()))
 }
@@ -47,14 +140,32 @@ impl std::fmt::Debug for Grant {
     }
 }
 impl Grant {
-    pub fn job_id(&self) -> &str {
+    pub(crate) fn store(&self) -> &JobStore {
+        &self.0.store
+    }
+    pub(crate) fn control(&self) -> ControlStore {
+        self.0.store.control.clone()
+    }
+    pub fn job_id(&self) -> &enrichment_core::identity::JobId {
         &self.0.claim.job_id
     }
-    pub fn id(&self) -> &str {
+    pub fn id(&self) -> &enrichment_core::identity::GrantId {
         &self.0.claim.grant_id
     }
-    pub async fn check(&self) -> Result<()> {
-        self.0.store.check_grant(&self.0.claim).await
+    pub fn check(&self) -> futures::future::BoxFuture<'_, Result<()>> {
+        // Keep the native planner's internal future out of every process/LSP caller's
+        // state machine. This remains a fresh durable check on every invocation.
+        Box::pin(self.0.store.check_grant(&self.0.claim))
+    }
+    /// A physical consumer must stop when its current durable claim is lost. The
+    /// polling interval is only supervision cadence; every check is the same native rule.
+    pub async fn revoked(&self) -> DataFusionError {
+        loop {
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            if let Err(error) = self.check().await {
+                return error;
+            }
+        }
     }
     pub async fn process(
         &self,
@@ -69,7 +180,10 @@ impl Grant {
         )
         .await
     }
-    pub async fn check_policy(&self, policy_id: &str) -> Result<()> {
+    pub async fn check_policy(
+        &self,
+        policy_id: &enrichment_core::identity::OperationPolicyId,
+    ) -> Result<()> {
         let session = self.0.store.runtime.session();
         self.0
             .store
@@ -78,10 +192,10 @@ impl Grant {
                 session
                     .sql("SELECT 'effect_policy_mismatch' AS witness WHERE $1<>$2")
                     .await?
-                    .with_param_values(vec![
-                        datafusion::common::ScalarValue::from(policy_id),
-                        datafusion::common::ScalarValue::from(self.0.claim.policy_id.as_str()),
-                    ])?,
+                    .with_param_values(datafusion::common::ParamValues::List(vec![
+                        policy_id.parameter(),
+                        self.0.claim.policy_id.parameter(),
+                    ]))?,
                 "effect_configuration_binding",
                 "effect_admission",
             )
@@ -98,10 +212,15 @@ pub struct JobStore {
     owner: String,
     queue_limit: usize,
     config: Arc<enrichment_core::config::Config>,
-    policy_binding: Arc<tokio::sync::OnceCell<crate::immutable_definitions::Binding>>,
+    policy_binding: Arc<
+        tokio::sync::OnceCell<(
+            enrichment_core::identity::OperationPolicyId,
+            enrichment_core::delta_reference::DeltaVersionRef,
+        )>,
+    >,
 }
 impl JobStore {
-    pub async fn grant(&self, id: &str, fence: u64) -> Result<Grant> {
+    pub async fn grant(&self, id: &enrichment_core::identity::JobId, fence: u64) -> Result<Grant> {
         let pin = self.pin().await?;
         let claim = self
             .claim(&pin, id)
@@ -122,7 +241,7 @@ impl JobStore {
         use datafusion::common::ScalarValue;
         let pin = self.pin().await?;
         let session = pin.session(&self.runtime).await?;
-        let live = session.sql("SELECT 'grant_revoked_or_expired' AS witness FROM state.records.claims c JOIN state.records.commands d ON c.job_id=d.job_id AND c.job_key=d.job_key AND c.policy_id=d.policy_id JOIN state.records.job_transitions t ON c.job_id=t.job_id WHERE c.job_id=$1 AND c.owner=$2 AND c.fence=$3 AND c.grant_id=$4 AND c.policy_id=$5 AND d.operation_revision=$6 AND c.cleanup_state='owned' AND clock_instant(c.lease_expires_at)>now() AND t.state='running' HAVING count(*)<>1").await?.with_param_values(vec![ScalarValue::from(claim.job_id.as_str()),ScalarValue::from(self.owner.as_str()),ScalarValue::UInt64(Some(claim.fence)),ScalarValue::from(claim.grant_id.as_str()),ScalarValue::from(enrichment_core::native_key::Key::OperationPolicy.record(self.config.as_ref())?),ScalarValue::from(OPERATION_REVISION)])?;
+        let live = session.sql("SELECT 'grant_revoked_or_expired' AS witness FROM state.records.claims c JOIN state.records.commands d ON c.job_id=d.job_id AND c.job_key=d.job_key AND c.policy_id=d.policy_id JOIN state.records.job_transitions t ON c.job_id=t.job_id WHERE c.job_id=$1 AND c.owner=$2 AND c.fence=$3 AND c.grant_id=$4 AND c.policy_id=$5 AND d.operation_revision=$6 AND c.cleanup_state='owned' AND clock_instant(c.lease_expires_at)>now() AND t.state='running' HAVING count(*)<>1").await?.with_param_values(datafusion::common::ParamValues::List(vec![claim.job_id.parameter(),(ScalarValue::from(self.owner.as_str())).into(),(ScalarValue::UInt64(Some(claim.fence))).into(),claim.grant_id.parameter(),enrichment_core::identity::OperationPolicyId::try_from_record(self.config.as_ref())?.parameter(),(ScalarValue::from(OPERATION_REVISION)).into()]))?;
         self.runtime
             .require_empty(live, "live_effect_grant", "effect_admission")
             .await
@@ -148,19 +267,21 @@ impl JobStore {
         }
     }
     pub async fn command_input(&self, arguments: Arguments) -> Result<Command> {
-        self.command_with_id(format!("job_{}", uuid::Uuid::new_v4().simple()), arguments)
+        self.command_with_id(enrichment_core::identity::JobId::new(), arguments)
             .await
     }
-    pub async fn command_with_id(&self, job_id: String, arguments: Arguments) -> Result<Command> {
+    pub async fn command_with_id(
+        &self,
+        job_id: enrichment_core::identity::JobId,
+        arguments: Arguments,
+    ) -> Result<Command> {
         let policies =
             crate::operation_policies::Policies::new(self.control.clone(), self.runtime.clone());
-        let policy_binding = self
+        let (policy_id, policy_binding) = self
             .policy_binding
             .get_or_try_init(|| policies.retain(&self.config))
             .await?
             .clone();
-        let policy_id =
-            enrichment_core::native_key::Key::OperationPolicy.record(self.config.as_ref())?;
         let mut command = Command {
             job_id,
             job_key: String::new(),
@@ -202,7 +323,11 @@ impl JobStore {
         self.runtime.records(frame, 1024).await
     }
 
-    pub async fn command(&self, pin: &ControlSnapshot, id: &str) -> Result<Option<Command>> {
+    pub async fn command(
+        &self,
+        pin: &ControlSnapshot,
+        id: &enrichment_core::identity::JobId,
+    ) -> Result<Option<Command>> {
         let session = pin.session(&self.runtime).await?;
         let mut rows: Vec<Command> = self
             .rows(
@@ -217,7 +342,11 @@ impl JobStore {
         }
         Ok(rows.pop())
     }
-    pub async fn transition(&self, pin: &ControlSnapshot, id: &str) -> Result<Option<Transition>> {
+    pub async fn transition(
+        &self,
+        pin: &ControlSnapshot,
+        id: &enrichment_core::identity::JobId,
+    ) -> Result<Option<Transition>> {
         let session = pin.session(&self.runtime).await?;
         let mut rows: Vec<Transition> = self
             .rows(
@@ -232,7 +361,11 @@ impl JobStore {
         }
         Ok(rows.pop())
     }
-    pub async fn interests(&self, pin: &ControlSnapshot, id: &str) -> Result<Vec<Interest>> {
+    pub async fn interests(
+        &self,
+        pin: &ControlSnapshot,
+        id: &enrichment_core::identity::JobId,
+    ) -> Result<Vec<Interest>> {
         let session = pin.session(&self.runtime).await?;
         self.rows(
             session
@@ -246,11 +379,11 @@ impl JobStore {
     pub async fn snapshot(
         &self,
         pin: &ControlSnapshot,
-        id: &str,
+        id: &enrichment_core::identity::JobId,
     ) -> Result<enrichment_core::operation::jobs::JobSnapshot> {
         let session = pin.session(&self.runtime).await?;
-        let frame = session.sql("WITH interest AS (SELECT job_id, array_agg(interest_id ORDER BY interest_id) AS tokens, count(*) AS active FROM state.records.interests WHERE attached GROUP BY job_id) SELECT d.job_id,d.job_key AS key,d.arguments AS specification,t.state,t.stage,coalesce(i.tokens,CAST([] AS VARCHAR[])) AS interests,CAST(coalesce(i.active,0) AS BIGINT UNSIGNED) AS active_interests,d.submitted_at,t.updated_at,t.result AS result_artifact,t.resolution FROM state.records.commands d JOIN state.records.job_transitions t ON d.job_id=t.job_id LEFT JOIN interest i ON d.job_id=i.job_id WHERE d.job_id=$1")
-            .await?.with_param_values(vec![datafusion::common::ScalarValue::from(id)])?;
+        let frame = session.sql("WITH interest AS (SELECT job_id, native_list_values(array_agg(native_named_struct('value',interest_id) ORDER BY interest_id)) AS tokens, count(*) AS active FROM state.records.interests WHERE attached GROUP BY job_id) SELECT d.job_id,d.job_key AS key,d.arguments AS specification,t.state,t.stage,coalesce(i.tokens,$2) AS interests,CAST(coalesce(i.active,0) AS BIGINT UNSIGNED) AS active_interests,d.submitted_at,t.updated_at,t.result AS result_artifact,t.resolution FROM state.records.commands d JOIN state.records.job_transitions t ON d.job_id=t.job_id LEFT JOIN interest i ON d.job_id=i.job_id WHERE d.job_id=$1")
+            .await?.with_param_values(datafusion::common::ParamValues::List(vec![id.parameter(), enrichment_core::evidence::arrow_model::expressions::parameter(&Vec::<InterestId>::new())?]))?;
         let mut rows = self.runtime.records(frame, 2).await?;
         if rows.len() != 1 {
             return Err(invalid("unknown or ambiguous native job"));
@@ -262,7 +395,11 @@ impl JobStore {
         self.rows(session.sql("SELECT * FROM state.records.job_transitions WHERE state IN ('queued','running','cancel_requested') ORDER BY job_id").await?).await
     }
     /// Submit or join one eligible job, publishing the caller interest in that same commit.
-    pub async fn submit(&self, command: Command, interest_id: String) -> Result<(String, bool)> {
+    pub async fn submit(
+        &self,
+        command: Command,
+        interest_id: InterestId,
+    ) -> Result<(enrichment_core::identity::JobId, bool)> {
         crate::request_admission::validate(
             &self.runtime,
             &command.arguments,
@@ -278,7 +415,7 @@ impl JobStore {
         for _ in 0..16 {
             let pin = self.pin().await?;
             let session = pin.session(&self.runtime).await?;
-            let candidates:Vec<Command>=self.rows(session.sql("SELECT c.* FROM state.records.commands c JOIN state.records.job_transitions t ON c.job_id=t.job_id LEFT JOIN state.records.claims x ON c.job_id=x.job_id WHERE c.job_id=$2 OR (c.job_key=$1 AND (t.state IN ('queued','running','cancel_requested') OR x.cleanup_state IN ('owned','unresolved')))").await?.with_param_values(vec![datafusion::common::ScalarValue::from(command.job_key.as_str()),datafusion::common::ScalarValue::from(command.job_id.as_str())])?).await?;
+            let candidates:Vec<Command>=self.rows(session.sql("SELECT c.* FROM state.records.commands c JOIN state.records.job_transitions t ON c.job_id=t.job_id LEFT JOIN state.records.claims x ON c.job_id=x.job_id WHERE c.job_id=$2 OR (c.job_key=$1 AND (t.state IN ('queued','running','cancel_requested') OR x.cleanup_state IN ('owned','unresolved')))").await?.with_param_values(datafusion::common::ParamValues::List(vec![(datafusion::common::ScalarValue::from(command.job_key.as_str())).into(),command.job_id.parameter()]))?).await?;
             if candidates.len() > 1 {
                 return Err(invalid("more than one active job for one native key"));
             }
@@ -288,13 +425,11 @@ impl JobStore {
             {
                 return Err(invalid("command identity already binds different inputs"));
             }
-            let id = existing
-                .map_or(&command.job_id, |value| &value.job_id)
-                .clone();
+            let id = existing.map_or(command.job_id, |value| value.job_id);
             let interest_rows = session
                 .table("state.records.interests")
                 .await?
-                .filter(col("job_id").eq(lit(id.as_str())))?
+                .filter(col("job_id").eq(lit(id)))?
                 .limit(0, Some(256))?;
             if self.runtime.execute(interest_rows).await?.rows >= 256 {
                 return Err(DataFusionError::ResourcesExhausted(
@@ -305,8 +440,8 @@ impl JobStore {
             let mut records = vec![(
                 Table::Interests,
                 Interest::batch(&[Interest {
-                    interest_id: interest_id.clone(),
-                    job_id: id.clone(),
+                    interest_id,
+                    job_id: id,
                     sequence,
                     attached: true,
                 }])?,
@@ -331,7 +466,7 @@ impl JobStore {
                 records.push((
                     Table::JobTransitions,
                     Transition::batch(&[Transition {
-                        job_id: id.clone(),
+                        job_id: id,
                         sequence,
                         predecessor: None,
                         state: enrichment_core::wire::JobState::Queued,
@@ -365,8 +500,8 @@ impl JobStore {
     /// Native eligibility selects queued work before granting physical ownership.
     pub async fn start(
         &self,
-        id: &str,
-        attempt_id: &str,
+        id: &enrichment_core::identity::JobId,
+        attempt_id: &enrichment_core::identity::AttemptId,
         policy: &crate::execution_policy::Policy,
     ) -> Result<bool> {
         use datafusion::common::ScalarValue;
@@ -386,7 +521,7 @@ impl JobStore {
             let pin = self.pin().await?;
             let session = pin.session(&self.runtime).await?;
             let eligible = session.sql("SELECT t.* FROM state.records.job_transitions t JOIN state.records.commands d ON t.job_id=d.job_id LEFT ANTI JOIN state.records.claims c ON t.job_id=c.job_id AND c.cleanup_state <> 'settled' WHERE t.job_id=$1 AND t.state='queued'").await?
-                .with_param_values(vec![ScalarValue::from(id)])?;
+                .with_param_values(datafusion::common::ParamValues::List(vec![id.parameter()]))?;
             if self
                 .runtime
                 .execute(eligible.clone().limit(0, Some(1))?)
@@ -414,12 +549,11 @@ impl JobStore {
             crate::native_catalog::work(&session, "queued_job", transition.into_view())?;
             let sequence = pin.generation() + 1;
             let next = session.sql("SELECT * REPLACE ($1 AS sequence, sequence AS predecessor, 'running' AS state, 'owned native execution' AS stage, update_time(date_trunc('microsecond',now())) AS updated_at) FROM queued_job").await?
-                .with_param_values(vec![ScalarValue::UInt64(Some(sequence))])?;
+                .with_param_values(datafusion::common::ParamValues::List(vec![(ScalarValue::UInt64(Some(sequence))).into()]))?;
             let claim = session.sql("SELECT job_id, $1 AS owner, $2 AS attempt_id, $3 AS fence, $3 AS sequence, expiry_time(date_trunc('microsecond',now())) AS lease_expires_at, 'owned' AS cleanup_state, CAST(NULL AS VARCHAR) AS cleanup_observer, observation_time(CAST(NULL AS TIMESTAMP)) AS cleanup_confirmed_at, job_key, policy_id, profile, ecosystem, environment_id, snapshot_id, image_id FROM admitted_command").await?
-                .with_param_values(vec![ScalarValue::from(self.owner.as_str()), ScalarValue::from(attempt_id),
-                    ScalarValue::UInt64(Some(sequence))])?
+                .with_param_values(datafusion::common::ParamValues::List(vec![(ScalarValue::from(self.owner.as_str())).into(),attempt_id.parameter(),(ScalarValue::UInt64(Some(sequence))).into()]))?
                 .with_column("lease_expires_at",crate::native_policy::claim_deadline(&session.state())?)?
-                .with_column("grant_id",enrichment_core::native_key::Key::EffectGrant.expression())?;
+                .with_column("grant_id",enrichment_core::native_key::Key::EffectGrant.identity()?)?;
             if self
                 .commit_frames(
                     &pin,
@@ -445,13 +579,13 @@ impl JobStore {
 
     /// Renew only the selected, live fence. An expired, cancelled, settled or replaced owner
     /// cannot resurrect itself. Known Delta conflicts recompute against a fresh snapshot.
-    pub async fn renew(&self, id: &str, fence: u64) -> Result<bool> {
+    pub async fn renew(&self, id: &enrichment_core::identity::JobId, fence: u64) -> Result<bool> {
         use datafusion::common::ScalarValue;
         for _ in 0..16 {
             let pin = self.pin().await?;
             let session = pin.session(&self.runtime).await?;
             let eligible = session.sql("SELECT c.* FROM state.records.claims c JOIN state.records.job_transitions t ON c.job_id=t.job_id JOIN state.records.commands d ON c.job_id=d.job_id WHERE c.job_id=$1 AND c.owner=$2 AND c.fence=$3 AND c.cleanup_state='owned' AND clock_instant(c.lease_expires_at)>now() AND t.state='running' AND c.job_key=d.job_key AND c.policy_id=d.policy_id AND d.policy_id=$4 AND d.operation_revision=$5").await?
-                .with_param_values(vec![ScalarValue::from(id),ScalarValue::from(self.owner.as_str()),ScalarValue::UInt64(Some(fence)), ScalarValue::from(enrichment_core::native_key::Key::OperationPolicy.record(self.config.as_ref())?), ScalarValue::from(OPERATION_REVISION)])?;
+                .with_param_values(datafusion::common::ParamValues::List(vec![id.parameter(),(ScalarValue::from(self.owner.as_str())).into(),(ScalarValue::UInt64(Some(fence))).into(),enrichment_core::identity::OperationPolicyId::try_from_record(self.config.as_ref())?.parameter(),(ScalarValue::from(OPERATION_REVISION)).into()]))?;
             if self.runtime.execute(eligible.clone()).await?.rows != 1 {
                 return Ok(false);
             }
@@ -519,7 +653,11 @@ impl JobStore {
             .await?
             .is_some())
     }
-    pub async fn claim(&self, pin: &ControlSnapshot, id: &str) -> Result<Option<Claim>> {
+    pub async fn claim(
+        &self,
+        pin: &ControlSnapshot,
+        id: &enrichment_core::identity::JobId,
+    ) -> Result<Option<Claim>> {
         let session = pin.session(&self.runtime).await?;
         let mut rows: Vec<Claim> = self
             .rows(
@@ -536,7 +674,11 @@ impl JobStore {
     }
     /// Detach exactly one authenticated interest. Native predicates distinguish that action
     /// from requesting cleanup of the shared producer when its final caller detaches.
-    pub async fn cancel(&self, id: &str, interest: &str) -> Result<()> {
+    pub async fn cancel(
+        &self,
+        id: &enrichment_core::identity::JobId,
+        interest: &InterestId,
+    ) -> Result<()> {
         use datafusion::common::ScalarValue;
         for _ in 0..16 {
             let pin = self.pin().await?;
@@ -559,7 +701,7 @@ impl JobStore {
                 )?
                 .with_column("sequence", lit(pin.generation() + 1))?
                 .with_column("attached", lit(false))?;
-            let next=session.sql("SELECT t.* REPLACE ($3 AS sequence, t.sequence AS predecessor, CASE WHEN t.state IN ('queued','running') AND coalesce(i.remaining,0)=0 THEN 'cancel_requested' ELSE t.state END AS state, 'caller interest detached' AS stage, update_time(date_trunc('microsecond',now())) AS updated_at) FROM state.records.job_transitions t LEFT JOIN (SELECT job_id,count(*) AS remaining FROM state.records.interests WHERE interest_id <> $2 AND attached GROUP BY job_id) i ON t.job_id=i.job_id WHERE t.job_id=$1").await?.with_param_values(vec![ScalarValue::from(id),ScalarValue::from(interest),ScalarValue::UInt64(Some(pin.generation()+1))])?;
+            let next=session.sql("SELECT t.* REPLACE ($3 AS sequence, t.sequence AS predecessor, CASE WHEN t.state IN ('queued','running') AND coalesce(i.remaining,0)=0 THEN 'cancel_requested' ELSE t.state END AS state, 'caller interest detached' AS stage, update_time(date_trunc('microsecond',now())) AS updated_at) FROM state.records.job_transitions t LEFT JOIN (SELECT job_id,count(*) AS remaining FROM state.records.interests WHERE interest_id <> $2 AND attached GROUP BY job_id) i ON t.job_id=i.job_id WHERE t.job_id=$1").await?.with_param_values(datafusion::common::ParamValues::List(vec![id.parameter(),interest.parameter(),ScalarValue::UInt64(Some(pin.generation()+1)).into()]))?;
             if self
                 .commit_frames(
                     &pin,
@@ -574,12 +716,17 @@ impl JobStore {
         Err(invalid("interest cancellation conflict bound exceeded"))
     }
     /// Pin acquired inputs only while this daemon owns the active claim.
-    pub async fn pin_resolution(&self, id: &str, fence: u64, resolution: Resolution) -> Result<()> {
+    pub async fn pin_resolution(
+        &self,
+        id: &enrichment_core::identity::JobId,
+        fence: u64,
+        resolution: Resolution,
+    ) -> Result<()> {
         crate::operation_policy::resolution(&self.runtime, &resolution).await?;
         for _ in 0..16 {
             let pin = self.pin().await?;
             let session = pin.session(&self.runtime).await?;
-            let input=session.sql("SELECT t.* FROM state.records.job_transitions t JOIN state.records.claims c ON t.job_id=c.job_id WHERE t.job_id=$1 AND t.state='running' AND t.resolution IS NULL AND c.owner=$2 AND c.fence=$3 AND c.cleanup_state='owned' AND clock_instant(c.lease_expires_at)>now()").await?.with_param_values(vec![datafusion::common::ScalarValue::from(id),datafusion::common::ScalarValue::from(self.owner.as_str()),datafusion::common::ScalarValue::UInt64(Some(fence))])?;
+            let input=session.sql("SELECT t.* FROM state.records.job_transitions t JOIN state.records.claims c ON t.job_id=c.job_id WHERE t.job_id=$1 AND t.state='running' AND t.resolution IS NULL AND c.owner=$2 AND c.fence=$3 AND c.cleanup_state='owned' AND clock_instant(c.lease_expires_at)>now()").await?.with_param_values(datafusion::common::ParamValues::List(vec![id.parameter(),(datafusion::common::ScalarValue::from(self.owner.as_str())).into(),(datafusion::common::ScalarValue::UInt64(Some(fence))).into()]))?;
             let rows: Vec<Transition> = self.rows(input).await?;
             let Some(previous) = rows.first() else {
                 return Err(invalid(
@@ -616,7 +763,7 @@ impl JobStore {
         F: std::future::Future<Output = std::io::Result<enrichment_core::evidence::Artifact>>,
     >(
         &self,
-        id: &str,
+        id: &enrichment_core::identity::JobId,
         fence: Option<u64>,
         state: enrichment_core::wire::JobState,
         prepare: impl FnOnce() -> F,
@@ -640,7 +787,7 @@ impl JobStore {
         F: std::future::Future<Output = std::io::Result<enrichment_core::evidence::Artifact>>,
     >(
         &self,
-        id: &str,
+        id: &enrichment_core::identity::JobId,
         fence: Option<u64>,
         prepare: impl FnOnce() -> F,
     ) -> Result<()> {
@@ -648,7 +795,7 @@ impl JobStore {
             .settlement(id, async {
                 let pin = self.pin().await?;
                 let session = pin.session(&self.runtime).await?;
-                self.runtime.require_empty(session.sql("SELECT 'missing_driver_command' AS witness FROM state.records.job_transitions WHERE job_id=$1 HAVING count(*)<>1").await?.with_param_values(vec![datafusion::common::ScalarValue::from(id)])?, "driver_command_exists", "driver_settlement").await?;
+                self.runtime.require_empty(session.sql("SELECT 'missing_driver_command' AS witness FROM state.records.job_transitions WHERE job_id=$1 HAVING count(*)<>1").await?.with_param_values(datafusion::common::ParamValues::List(vec![id.parameter()]))?, "driver_command_exists", "driver_settlement").await?;
                 let active = session
                     .table("state.records.job_transitions")
                     .await?
@@ -688,7 +835,7 @@ impl JobStore {
 
     pub async fn finish(
         &self,
-        id: &str,
+        id: &enrichment_core::identity::JobId,
         fence: u64,
         state: enrichment_core::wire::JobState,
         result: &enrichment_core::evidence::Artifact,
@@ -700,7 +847,7 @@ impl JobStore {
     }
     async fn finish_inner(
         &self,
-        id: &str,
+        id: &enrichment_core::identity::JobId,
         fence: u64,
         state: enrichment_core::wire::JobState,
         result: &enrichment_core::evidence::Artifact,
@@ -717,7 +864,7 @@ impl JobStore {
         for _ in 0..16 {
             let pin = self.pin().await?;
             let session = pin.session(&self.runtime).await?;
-            let eligible=session.sql("SELECT t.* FROM state.records.job_transitions t JOIN state.records.claims c ON t.job_id=c.job_id WHERE t.job_id=$1 AND c.owner=$2 AND c.fence=$3").await?.with_param_values(vec![ScalarValue::from(id),ScalarValue::from(self.owner.as_str()),ScalarValue::UInt64(Some(fence))])?;
+            let eligible=session.sql("SELECT t.* FROM state.records.job_transitions t JOIN state.records.claims c ON t.job_id=c.job_id WHERE t.job_id=$1 AND c.owner=$2 AND c.fence=$3").await?.with_param_values(datafusion::common::ParamValues::List(vec![id.parameter(),(ScalarValue::from(self.owner.as_str())).into(),(ScalarValue::UInt64(Some(fence))).into()]))?;
             if self.runtime.execute(eligible.clone()).await?.rows != 1 {
                 return Err(invalid("completion fence is stale or terminal"));
             }
@@ -791,7 +938,7 @@ impl JobStore {
     /// have exited. A retained publication may supply success; no producer is replayed here.
     pub async fn recover_settled(
         &self,
-        id: &str,
+        id: &enrichment_core::identity::JobId,
         state: enrichment_core::wire::JobState,
         result: &enrichment_core::evidence::Artifact,
     ) -> Result<()> {
@@ -801,7 +948,7 @@ impl JobStore {
     }
     async fn recover_settled_inner(
         &self,
-        id: &str,
+        id: &enrichment_core::identity::JobId,
         state: enrichment_core::wire::JobState,
         result: &enrichment_core::evidence::Artifact,
     ) -> Result<()> {
@@ -900,7 +1047,10 @@ impl JobStore {
     }
     /// The live owner supplies only commands whose driver future has actually exited.
     /// A semantic terminal state or an idle container supervisor alone is insufficient.
-    pub async fn confirm_cleanup(&self, physically_finished: &[String]) -> Result<()> {
+    pub async fn confirm_cleanup(
+        &self,
+        physically_finished: &[enrichment_core::identity::JobId],
+    ) -> Result<()> {
         if physically_finished.is_empty() {
             return Ok(());
         }
@@ -913,16 +1063,16 @@ impl JobStore {
     }
     async fn confirm_terminal_cleanup_inner(
         &self,
-        physically_finished: Option<&[String]>,
+        physically_finished: Option<&[enrichment_core::identity::JobId]>,
     ) -> Result<()> {
         for _ in 0..16 {
             let pin = self.pin().await?;
             let session = pin.session(&self.runtime).await?;
-            let pending=session.sql("SELECT c.* FROM state.records.claims c JOIN state.records.job_transitions t ON c.job_id=t.job_id WHERE c.owner=$1 AND c.cleanup_state <> 'settled' AND t.state IN ('succeeded','partial','failed','cancelled')").await?.with_param_values(vec![datafusion::common::ScalarValue::from(self.owner.as_str())])?;
+            let pending=session.sql("SELECT c.* FROM state.records.claims c JOIN state.records.job_transitions t ON c.job_id=t.job_id WHERE c.owner=$1 AND c.cleanup_state <> 'settled' AND t.state IN ('succeeded','partial','failed','cancelled')").await?.with_param_values(datafusion::common::ParamValues::List(vec![(datafusion::common::ScalarValue::from(self.owner.as_str())).into()]))?;
             let pending = match physically_finished {
-                Some(ids) => pending.filter(
-                    col("job_id").in_list(ids.iter().map(|id| lit(id.as_str())).collect(), false),
-                )?,
+                Some(ids) => {
+                    pending.filter(col("job_id").in_list(ids.iter().map(lit).collect(), false))?
+                }
                 None => pending,
             };
             let ids: Vec<Claim> = self.rows(pending.clone()).await?;
@@ -960,6 +1110,75 @@ impl JobStore {
 #[cfg(test)]
 mod tests {
     use super::*;
+    /// Pure Arrow query: no control store, Delta publication or service fixture.
+    #[tokio::test]
+    async fn interest_aggregation_preserves_domain_for_empty_and_populated_groups() -> Result<()> {
+        use enrichment_core::{evidence::arrow_model::expressions, native_union::Cell};
+        let root = tempfile::tempdir()?;
+        let runtime = QueryRuntime::new(root.path(), Default::default())?;
+        let session = runtime.session();
+        let first = InterestId::try_from("interest_00000000000000000000000000000001".to_owned())
+            .map_err(invalid)?;
+        let second = InterestId::try_from("interest_00000000000000000000000000000002".to_owned())
+            .map_err(invalid)?;
+        let job = enrichment_core::identity::JobId::new();
+        let input = crate::native_catalog::batch(
+            &session,
+            "interests",
+            Interest::batch(&[
+                Interest {
+                    interest_id: second,
+                    job_id: job,
+                    sequence: 1,
+                    attached: true,
+                },
+                Interest {
+                    interest_id: first,
+                    job_id: job,
+                    sequence: 2,
+                    attached: true,
+                },
+            ])?,
+        )?;
+        crate::native_catalog::work(&session, "interests", input.into_view())?;
+        for (attached, expected) in [(true, vec![first, second]), (false, vec![])] {
+            let frame = session.sql("SELECT coalesce(native_list_values(array_agg(native_named_struct('value',interest_id) ORDER BY interest_id)),$2) AS interests FROM interests WHERE attached=$1 AND job_id=$3")
+                .await?.with_param_values(datafusion::common::ParamValues::List(vec![
+                    datafusion::common::ScalarValue::Boolean(Some(attached)).into(),
+                    expressions::parameter(&Vec::<InterestId>::new())?,
+                    job.parameter(),
+                ]))?;
+            let output = runtime.execute(frame).await?;
+            let rows =
+                enrichment_core::evidence::arrow_model::cells::RowSet::batch(&output.batches[0])?;
+            assert_eq!(
+                Vec::<InterestId>::decode(rows.row(0), "interests")?,
+                expected
+            );
+            let field = output.batches[0].schema().field(0).clone();
+            let declared = enrichment_core::native_union::field::<Vec<InterestId>>(
+                "interests",
+                enrichment_core::native_union::Rule::Set,
+            );
+            enrichment_core::native_analysis::compatible(
+                &field,
+                &declared,
+                "interest aggregation",
+            )?;
+        }
+        // UUID width alone cannot authorize a comparison or a SQL parameter.
+        let wrong_domain = session
+            .sql("SELECT * FROM interests WHERE job_id=$1")
+            .await?
+            .with_param_values(datafusion::common::ParamValues::List(vec![
+                first.parameter(),
+            ]))?;
+        assert!(runtime.execute(wrong_domain).await.is_err());
+        let erased = session.sql("SELECT native_list_values(array_agg(named_struct('value',interest_id))) FROM interests").await?;
+        assert!(runtime.execute(erased).await.is_err());
+        runtime.close_diagnostics().await?;
+        Ok(())
+    }
     #[tokio::test]
     async fn native_claims_share_interests_and_reject_stale_owners() {
         let root = tempfile::tempdir().unwrap();
@@ -980,9 +1199,11 @@ mod tests {
             "second".into(),
             Arc::new(enrichment_core::config::Config::default()),
         );
-        let make = |id: &'static str| {
+        let one = enrichment_core::identity::JobId::new();
+        let two = enrichment_core::identity::JobId::new();
+        let make = |id: enrichment_core::identity::JobId| {
             first.command_with_id(
-                id.into(),
+                id,
                 Arguments::Resolve {
                     request: enrichment_core::request::ResolveRequest {
                         name: "sample".into(),
@@ -1006,29 +1227,35 @@ mod tests {
         )
         .await
         .unwrap();
+        let caller_a =
+            InterestId::try_from("interest_00000000000000000000000000000001".to_owned()).unwrap();
+        let caller_b =
+            InterestId::try_from("interest_00000000000000000000000000000002".to_owned()).unwrap();
         assert_eq!(
             first
-                .submit(make("one").await.unwrap(), "caller_a".into())
+                .submit(make(one).await.unwrap(), caller_a)
                 .await
                 .unwrap(),
-            ("one".into(), true)
+            (one, true)
         );
         assert_eq!(
             second
-                .submit(make("two").await.unwrap(), "caller_b".into())
+                .submit(make(two).await.unwrap(), caller_b)
                 .await
                 .unwrap(),
-            ("one".into(), false)
+            (one, false)
         );
         assert_eq!(first.counts().await.unwrap(), (1, 0));
         let pin = first.pin().await.unwrap();
-        let snapshot = first.snapshot(&pin, "one").await.unwrap();
+        let snapshot = first.snapshot(&pin, &one).await.unwrap();
         assert_eq!(snapshot.state, enrichment_core::wire::JobState::Queued);
         assert_eq!(snapshot.active_interests, 2);
-        assert_eq!(snapshot.interests, vec!["caller_a", "caller_b"]);
+        assert_eq!(snapshot.interests, vec![caller_a, caller_b]);
+        let first_attempt = enrichment_core::identity::AttemptId::new();
+        let second_attempt = enrichment_core::identity::AttemptId::new();
         let (a, b) = tokio::join!(
-            first.start("one", "attempt_a", &policy),
-            second.start("one", "attempt_b", &policy)
+            first.start(&one, &first_attempt, &policy),
+            second.start(&one, &second_attempt, &policy)
         );
         let a = a.unwrap();
         let b = b.unwrap();
@@ -1039,12 +1266,12 @@ mod tests {
             (&second, &first)
         };
         let pin = owner.pin().await.unwrap();
-        let initial = owner.claim(&pin, "one").await.unwrap().unwrap();
-        assert!(!stale.renew("one", initial.fence).await.unwrap());
-        assert!(!owner.renew("one", initial.fence + 1).await.unwrap());
-        assert!(owner.renew("one", initial.fence).await.unwrap());
+        let initial = owner.claim(&pin, &one).await.unwrap().unwrap();
+        assert!(!stale.renew(&one, initial.fence).await.unwrap());
+        assert!(!owner.renew(&one, initial.fence + 1).await.unwrap());
+        assert!(owner.renew(&one, initial.fence).await.unwrap());
         let pin = owner.pin().await.unwrap();
-        let renewed = owner.claim(&pin, "one").await.unwrap().unwrap();
+        let renewed = owner.claim(&pin, &one).await.unwrap().unwrap();
         assert_eq!(initial.fence, renewed.fence);
         assert_eq!(initial.attempt_id, renewed.attempt_id);
         assert!(renewed.sequence > initial.sequence);
@@ -1055,7 +1282,7 @@ mod tests {
             .table("state.records.claims")
             .await
             .unwrap()
-            .filter(col("job_id").eq(lit("one")))
+            .filter(col("job_id").eq(lit(one)))
             .unwrap()
             .with_column("sequence", lit(pin.generation() + 1))
             .unwrap()
@@ -1077,31 +1304,31 @@ mod tests {
                 .commit_frames(
                     &pin,
                     vec![(Table::Claims, expired)],
-                    vec!["claim/one".into()]
+                    vec![format!("claim/{one}")]
                 )
                 .await
                 .unwrap()
         );
         assert!(
             !stale
-                .start("one", "replacement_after_expiry", &policy)
+                .start(&one, &enrichment_core::identity::AttemptId::new(), &policy)
                 .await
                 .unwrap(),
             "expiry is not cleanup proof"
         );
         assert!(
-            !owner.renew("one", initial.fence).await.unwrap(),
+            !owner.renew(&one, initial.fence).await.unwrap(),
             "a running owner cannot renew an expired claim"
         );
-        first.cancel("one", "caller_a").await.unwrap();
+        first.cancel(&one, &caller_a).await.unwrap();
         let pin = first.pin().await.unwrap();
         assert_eq!(
-            first.transition(&pin, "one").await.unwrap().unwrap().state,
+            first.transition(&pin, &one).await.unwrap().unwrap().state,
             enrichment_core::wire::JobState::Running
         );
-        second.cancel("one", "caller_b").await.unwrap();
+        second.cancel(&one, &caller_b).await.unwrap();
         let pin = owner.pin().await.unwrap();
-        let claim = owner.claim(&pin, "one").await.unwrap().unwrap();
+        let claim = owner.claim(&pin, &one).await.unwrap().unwrap();
         let session = pin.session(&owner.runtime).await.unwrap();
         let future = session
             .sql("SELECT job_id FROM state.records.claims WHERE clock_instant(lease_expires_at) > now()")
@@ -1109,7 +1336,7 @@ mod tests {
             .unwrap();
         assert_eq!(owner.runtime.execute(future).await.unwrap().rows, 0);
         assert!(
-            !owner.renew("one", claim.fence).await.unwrap(),
+            !owner.renew(&one, claim.fence).await.unwrap(),
             "cancellation revokes renewal"
         );
         let result = enrichment_core::evidence::Artifact::describe(
@@ -1125,7 +1352,7 @@ mod tests {
         assert!(
             stale
                 .finish(
-                    "one",
+                    &one,
                     claim.fence,
                     enrichment_core::wire::JobState::Cancelled,
                     &result,
@@ -1154,7 +1381,7 @@ mod tests {
                     );
                     owner
                         .finish(
-                            "one",
+                            &one,
                             claim.fence,
                             enrichment_core::wire::JobState::Cancelled,
                             &result,
@@ -1168,9 +1395,9 @@ mod tests {
         assert_eq!(first.counts().await.unwrap(), (0, 0));
         let pin = second.pin().await.unwrap();
         assert_eq!(
-            second.transition(&pin, "one").await.unwrap().unwrap().state,
+            second.transition(&pin, &one).await.unwrap().unwrap().state,
             enrichment_core::wire::JobState::Cancelled
         );
-        assert_eq!(second.interests(&pin, "one").await.unwrap().len(), 2);
+        assert_eq!(second.interests(&pin, &one).await.unwrap().len(), 2);
     }
 }

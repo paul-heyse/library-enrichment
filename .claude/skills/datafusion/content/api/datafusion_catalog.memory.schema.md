@@ -32,6 +32,9 @@ fn table_exist(&self, name: &str) -> bool
 fn table_names(&self) -> Vec<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.memory.schema.MemorySchemaProvider.md).
+
+
 Simple in-memory implementation of a schema.
 
 ---

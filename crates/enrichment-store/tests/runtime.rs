@@ -761,8 +761,8 @@ async fn independent_family_requirement_fails_before_execution_with_its_own_trac
     let runtime = QueryRuntime::new(&dir.path().join("spill"), QueryLimits::default()).unwrap();
     let error = runtime
         .execute_family(
-            runtime.session().sql("SELECT 1 AS kind").await.unwrap(),
-            Some(enrichment_store::preparation::QueryFamily::Coverage),
+            runtime.session().sql("SELECT 1 AS path").await.unwrap(),
+            Some(enrichment_store::preparation::QueryFamily::RevisionDisposition),
         )
         .await
         .unwrap_err();
@@ -771,10 +771,10 @@ async fn independent_family_requirement_fails_before_execution_with_its_own_trac
         diagnostic.cause,
         enrichment_core::wire::DiagnosticCause::Internal
     );
-    assert_eq!(diagnostic.affected_ids, ["kind"]);
+    assert_eq!(diagnostic.affected_ids, ["path"]);
     let traces = runtime.diagnostics().await.unwrap();
     assert_eq!(traces.len(), 1);
-    assert_eq!(traces[0].family.as_deref(), Some("Coverage"));
+    assert_eq!(traces[0].family.as_deref(), Some("RevisionDisposition"));
     assert!(!traces[0].completed);
     assert!(traces[0].physical.is_empty());
 }

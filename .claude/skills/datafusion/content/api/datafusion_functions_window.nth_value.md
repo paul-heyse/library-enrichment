@@ -14,6 +14,9 @@ enum NthValueKind
 
 **Derives**: Clone, Copy, Debug, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.nth_value.NthValueKind.md).
+
+
 Tag to differentiate special use cases of the NTH_VALUE built-in window function.
 
 ---
@@ -27,6 +30,9 @@ Also reachable as `datafusion_functions_window::expr_fn::first_value`
 ```rust
 fn first_value(arg: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.nth_value.first_value.md).
+
 
 Create a [`WindowFunction`](datafusion_expr::Expr::WindowFunction) expression for
 `First` user-defined window function.
@@ -42,6 +48,9 @@ Returns the first value in the window frame
 ```rust
 fn first_value_udwf() -> std::sync::Arc<datafusion_expr::WindowUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.nth_value.first_value_udwf.md).
+
 
 Returns a [`WindowUDF`](datafusion_expr::WindowUDF) for [`first_value`].
 
@@ -59,6 +68,9 @@ Also reachable as `datafusion_functions_window::expr_fn::last_value`
 fn last_value(arg: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.nth_value.last_value.md).
+
+
 Create a [`WindowFunction`](datafusion_expr::Expr::WindowFunction) expression for
 `Last` user-defined window function.
 
@@ -73,6 +85,9 @@ Returns the last value in the window frame
 ```rust
 fn last_value_udwf() -> std::sync::Arc<datafusion_expr::WindowUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.nth_value.last_value_udwf.md).
+
 
 Returns a [`WindowUDF`](datafusion_expr::WindowUDF) for [`last_value`].
 
@@ -90,6 +105,9 @@ Also reachable as `datafusion_functions_window::expr_fn::nth_value`
 fn nth_value(arg: datafusion_expr::Expr, n: i64) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.nth_value.nth_value.md).
+
+
 Create an expression to represent the `nth_value` window function
 
 ---
@@ -101,6 +119,9 @@ Create an expression to represent the `nth_value` window function
 ```rust
 fn nth_value_udwf() -> std::sync::Arc<datafusion_expr::WindowUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.nth_value.nth_value_udwf.md).
+
 
 Returns a [`WindowUDF`](datafusion_expr::WindowUDF) for [`nth_value`].
 
@@ -142,6 +163,9 @@ fn reverse_expr(&self) -> ReversedUDWF
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.nth_value.NthValue.md).
+
+
 ---
 
 ## NthValueState
@@ -155,5 +179,8 @@ struct NthValueState
 **Fields**: `finalized_result`, `kind`
 
 **Derives**: Clone, Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.nth_value.NthValueState.md).
+
 
 ---

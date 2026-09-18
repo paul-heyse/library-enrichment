@@ -17,13 +17,19 @@ pub(crate) fn artifacts(
 }
 pub(crate) fn attempt_artifacts(
     batch: &RecordBatch,
-) -> Result<Vec<(String, enrichment_core::evidence::Artifact)>, ArrowError> {
+) -> Result<
+    Vec<(
+        enrichment_core::identity::AttemptId,
+        enrichment_core::evidence::Artifact,
+    )>,
+    ArrowError,
+> {
     let rows = RowSet::batch(batch)?;
     (0..batch.num_rows())
         .map(|i| {
             let row = rows.row(i);
             Ok((
-                row.text("attempt_id")?.into(),
+                <enrichment_core::identity::AttemptId as enrichment_core::native_union::Cell>::decode(row, "attempt_id")?,
                 super::acquisitions::decode_one(row.structure("artifact")?)?,
             ))
         })

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## MeteredDeltaEngine
 
 `struct` · `buoyant_kernel::metrics::metered_engine::MeteredDeltaEngine`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.metrics.metered_engine.MeteredDeltaEngine.md)
 
 Also reachable as `buoyant_kernel::metrics::MeteredDeltaEngine`, `delta_kernel::metrics::metered_engine::MeteredDeltaEngine`
 

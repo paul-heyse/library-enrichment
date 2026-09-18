@@ -5,6 +5,7 @@ Crate `deltalake-opendal` · 2 public items · structured records in [`model/del
 ## OpendalLogStoreFactory
 
 `struct` · `deltalake_opendal::factory::OpendalLogStoreFactory`
+[Full member contracts, output types and access classification](../operations/deltalake_opendal.factory.OpendalLogStoreFactory.md)
 
 Also reachable as `deltalake::opendal::OpendalLogStoreFactory`, `deltalake_opendal::OpendalLogStoreFactory`
 
@@ -35,6 +36,7 @@ operator is scoped deeper than the bucket root, the adapter is authoritative.
 ## OpendalObjectStoreFactory
 
 `struct` · `deltalake_opendal::factory::OpendalObjectStoreFactory`
+[Full member contracts, output types and access classification](../operations/deltalake_opendal.factory.OpendalObjectStoreFactory.md)
 
 Also reachable as `deltalake::opendal::OpendalObjectStoreFactory`, `deltalake_opendal::OpendalObjectStoreFactory`
 

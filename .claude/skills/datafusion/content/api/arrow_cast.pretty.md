@@ -12,6 +12,9 @@ Also reachable as `arrow::util::pretty::pretty_format_batches`
 fn pretty_format_batches(results: &[arrow_array::RecordBatch]) -> Result<impl Display + use<>, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.pretty.pretty_format_batches.md).
+
+
 Create a visual representation of [`RecordBatch`]es
 
 Uses default values for display. See [`pretty_format_batches_with_options`]
@@ -53,6 +56,9 @@ Also reachable as `arrow::util::pretty::pretty_format_batches_with_options`
 ```rust
 fn pretty_format_batches_with_options(results: &[arrow_array::RecordBatch], options: &display::FormatOptions<'_>) -> Result<impl Display + use<>, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.pretty.pretty_format_batches_with_options.md).
+
 
 Create a visual representation of [`RecordBatch`]es with formatting options.
 
@@ -97,6 +103,9 @@ Also reachable as `arrow::util::pretty::pretty_format_batches_with_schema`
 fn pretty_format_batches_with_schema(schema: arrow_schema::SchemaRef, results: &[arrow_array::RecordBatch]) -> Result<impl Display + use<>, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.pretty.pretty_format_batches_with_schema.md).
+
+
 Create a visual representation of [`RecordBatch`]es with a provided schema.
 
 Useful to display empty batches.
@@ -134,6 +143,9 @@ Also reachable as `arrow::util::pretty::pretty_format_columns`
 fn pretty_format_columns(col_name: &str, results: &[arrow_array::ArrayRef]) -> Result<impl Display + use<>, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.pretty.pretty_format_columns.md).
+
+
 Create a visual representation of [`ArrayRef`]
 
 Uses default values for display. See [`pretty_format_columns_with_options`]
@@ -152,6 +164,9 @@ Also reachable as `arrow::util::pretty::pretty_format_columns_with_options`
 fn pretty_format_columns_with_options(col_name: &str, results: &[arrow_array::ArrayRef], options: &display::FormatOptions<'_>) -> Result<impl Display + use<>, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.pretty.pretty_format_columns_with_options.md).
+
+
 Create a visual representation of [`ArrayRef`] with formatting options.
 
 See [`pretty_format_batches_with_options`] for an example
@@ -168,6 +183,9 @@ Also reachable as `arrow::util::pretty::print_batches`
 fn print_batches(results: &[arrow_array::RecordBatch]) -> Result<(), arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.pretty.print_batches.md).
+
+
 Prints a visual representation of record batches to stdout
 
 ---
@@ -181,6 +199,9 @@ Also reachable as `arrow::util::pretty::print_columns`
 ```rust
 fn print_columns(col_name: &str, results: &[arrow_array::ArrayRef]) -> Result<(), arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.pretty.print_columns.md).
+
 
 Prints a visual representation of a list of column to stdout
 

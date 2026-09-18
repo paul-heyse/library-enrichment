@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::var_pop`
 fn var_pop(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.variance.var_pop.md).
+
+
 Computes the population variance.
 
 ---
@@ -24,6 +27,9 @@ Computes the population variance.
 fn var_pop_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.variance.var_pop_udaf.md).
+
+
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`VariancePopulation`]
 
 ---
@@ -35,6 +41,9 @@ AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF)
 ```rust
 fn var_samp_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.variance.var_samp_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`VarianceSample`]
 
@@ -49,6 +58,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::var_sample`
 ```rust
 fn var_sample(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.variance.var_sample.md).
+
 
 Computes the sample variance.
 
@@ -81,6 +93,9 @@ fn size(&self) -> usize
 fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.variance.DistinctVarianceAccumulator.md).
+
 
 ---
 
@@ -116,6 +131,9 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn supports_retract_batch(&self) -> bool
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.variance.VarianceAccumulator.md).
+
 
 An accumulator to compute variance
 The algorithm used is an online implementation and numerically stable. It is based on this paper:
@@ -158,6 +176,9 @@ fn state(&mut self, emit_to: datafusion_expr::EmitTo) -> Result<Vec<ArrayRef>>
 fn update_batch(&mut self, values: &[ArrayRef], group_indices: &[usize], opt_filter: Option<&BooleanArray>, total_num_groups: usize) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.variance.VarianceGroupsAccumulator.md).
+
+
 ---
 
 ## VariancePopulation
@@ -192,6 +213,9 @@ fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.variance.VariancePopulation.md).
+
+
 ---
 
 ## VarianceSample
@@ -225,5 +249,8 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.variance.VarianceSample.md).
+
 
 ---

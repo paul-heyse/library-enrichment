@@ -18,6 +18,9 @@ trait DynEq: private::EqSealed
 fn dyn_eq(&self, other: &dyn Any) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.dyn_eq.DynEq.md).
+
+
 A dyn-compatible version of [`Eq`] trait.
 The implementation constraints for this trait are the same as for [`Eq`]:
 the implementation must be reflexive, symmetric, and transitive.
@@ -46,6 +49,9 @@ trait DynHash: private::HashSealed
 ```rust
 fn dyn_hash(&self, _state: &mut dyn Hasher)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.dyn_eq.DynHash.md).
+
 
 A dyn-compatible version of [`Hash`] trait.
 If two values are equal according to [`DynEq`], they must produce the same hash value.

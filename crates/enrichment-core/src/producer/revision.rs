@@ -2,6 +2,23 @@
 use crate::{identity::Ecosystem, request::ResolveRequest};
 mod inputs;
 
+crate::native_struct! { @source
+    pub struct CommitResponse {
+        sha: String => crate::native_union::Rule::NonEmpty,
+        commit: CommitBody => crate::native_union::Rule::Text,
+    }
+}
+crate::native_struct! { @source
+    pub struct CommitBody {
+        tree: CommitTree => crate::native_union::Rule::Text,
+    }
+}
+crate::native_struct! { @source
+    pub struct CommitTree {
+        sha: String => crate::native_union::Rule::NonEmpty,
+    }
+}
+
 crate::native_struct! {
 /// Declared input reachability is distinct from a proof of complete generated/build inputs.
 pub struct RevisionExtraction {

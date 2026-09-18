@@ -1,0 +1,61 @@
+# `arrow_array::types::Time32SecondType`
+
+Full upstream contracts; raw type trees and source locators in [structured records](arrow_array.types.Time32SecondType.json).
+
+<a id="op-a516ed21c7243a54f32d8c6f"></a>
+## Time32SecondType
+
+`struct` · `arrow_array::types::Time32SecondType` · arrow-array 59.3.0
+
+```rust
+struct Time32SecondType
+```
+
+Source: `src/types.rs:200`. [Exact documentation build](https://docs.rs/crate/arrow-array/59.3.0/json).
+
+32-bit time type: the elapsed time since midnight in seconds.
+
+<a id="op-d70a0c4bb86168960057a526"></a>
+## DATA_TYPE
+
+`assoc_const` · `arrow_array::types::Time32SecondType::DATA_TYPE` · arrow-array 59.3.0
+
+```rust
+DATA_TYPE
+```
+
+Implementation context: `{"for": {"resolved_path": {"args": null, "id": "arrow_array::types::Time32SecondType", "path": "Time32SecondType"}}, "generics": {"params": [], "where_predicates": []}, "is_negative": false, "span": {"begin": [200, 1], "end": [205, 2], "filename": "src/types.rs"}, "trait": {"args": null, "id": "arrow_array::types::ArrowPrimitiveType", "path": "ArrowPrimitiveType"}, "trait_path": "arrow_array::types::ArrowPrimitiveType"}`
+
+Source: `src/types.rs:200`. [Exact documentation build](https://docs.rs/crate/arrow-array/59.3.0/json).
+
+No upstream documentation on this item; consult its owner/trait contract.
+
+<a id="op-1978b5149ffd48b9156632f8"></a>
+## Native
+
+`assoc_type` · `arrow_array::types::Time32SecondType::Native` · arrow-array 59.3.0
+
+```rust
+Native
+```
+
+Implementation context: `{"for": {"resolved_path": {"args": null, "id": "arrow_array::types::Time32SecondType", "path": "Time32SecondType"}}, "generics": {"params": [], "where_predicates": []}, "is_negative": false, "span": {"begin": [200, 1], "end": [205, 2], "filename": "src/types.rs"}, "trait": {"args": null, "id": "arrow_array::types::ArrowPrimitiveType", "path": "ArrowPrimitiveType"}, "trait_path": "arrow_array::types::ArrowPrimitiveType"}`
+
+Source: `src/types.rs:200`. [Exact documentation build](https://docs.rs/crate/arrow-array/59.3.0/json).
+
+No upstream documentation on this item; consult its owner/trait contract.
+
+<a id="op-1231a8a81830a820b7b416af"></a>
+## fmt
+
+`function` · `arrow_array::types::Time32SecondType::fmt` · arrow-array 59.3.0
+
+```rust
+fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+```
+
+Implementation context: `{"for": {"resolved_path": {"args": null, "id": "arrow_array::types::Time32SecondType", "path": "Time32SecondType"}}, "generics": {"params": [], "where_predicates": []}, "is_negative": false, "span": {"begin": [200, 1], "end": [205, 2], "filename": "src/types.rs"}, "trait": {"args": null, "id": "core::fmt::Debug", "path": "Debug"}, "trait_path": "core::fmt::Debug"}`
+
+Source: `src/types.rs:200`. [Exact documentation build](https://docs.rs/crate/arrow-array/59.3.0/json).
+
+No upstream documentation on this item; consult its owner/trait contract.

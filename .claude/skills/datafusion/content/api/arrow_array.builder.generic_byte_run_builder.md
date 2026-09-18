@@ -43,6 +43,9 @@ fn len(&self) -> usize
 fn extend<T: IntoIterator<Item = Option<S>>>(&mut self, iter: T)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_byte_run_builder.GenericByteRunBuilder.md).
+
+
 Builder for [`RunArray`] of [`GenericByteArray`](crate::array::GenericByteArray)
 
 # Example:
@@ -88,6 +91,9 @@ assert_eq!(ava.value(2), b"def");
 type BinaryRunBuilder<K> = GenericByteRunBuilder<K, types::BinaryType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_byte_run_builder.BinaryRunBuilder.md).
+
+
 Builder for [`RunArray`] of [`BinaryArray`](crate::array::BinaryArray)
 
 ```
@@ -130,6 +136,9 @@ assert_eq!(ava.value(3), b"abc");
 type LargeBinaryRunBuilder<K> = GenericByteRunBuilder<K, types::LargeBinaryType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_byte_run_builder.LargeBinaryRunBuilder.md).
+
+
 Builder for [`RunArray`] of [`LargeBinaryArray`](crate::array::LargeBinaryArray)
 
 ---
@@ -142,6 +151,9 @@ Builder for [`RunArray`] of [`LargeBinaryArray`](crate::array::LargeBinaryArray)
 type LargeStringRunBuilder<K> = GenericByteRunBuilder<K, types::LargeUtf8Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_byte_run_builder.LargeStringRunBuilder.md).
+
+
 Builder for [`RunArray`] of [`LargeStringArray`](crate::array::LargeStringArray)
 
 ---
@@ -153,6 +165,9 @@ Builder for [`RunArray`] of [`LargeStringArray`](crate::array::LargeStringArray)
 ```rust
 type StringRunBuilder<K> = GenericByteRunBuilder<K, types::Utf8Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_byte_run_builder.StringRunBuilder.md).
+
 
 Builder for [`RunArray`] of [`StringArray`](crate::array::StringArray)
 

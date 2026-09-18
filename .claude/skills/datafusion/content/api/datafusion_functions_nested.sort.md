@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_sort`, `datafusion_functions_neste
 fn array_sort(array: datafusion_expr::Expr, desc: datafusion_expr::Expr, null_first: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.sort.array_sort.md).
+
+
 returns sorted array.
 
 ---
@@ -23,6 +26,9 @@ returns sorted array.
 ```rust
 fn array_sort_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.sort.array_sort_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArraySort
@@ -57,6 +63,9 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.sort.ArraySort.md).
+
 
 Implementation of `array_sort` function
 

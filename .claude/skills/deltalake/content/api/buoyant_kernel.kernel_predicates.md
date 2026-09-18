@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 6 public items · structured records in [`model/buoyan
 ## KernelPredicateEvaluatorDefaults
 
 `struct` · `buoyant_kernel::kernel_predicates::KernelPredicateEvaluatorDefaults`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluatorDefaults.md)
 
 Also reachable as `delta_kernel::kernel_predicates::KernelPredicateEvaluatorDefaults`
 
@@ -30,6 +31,7 @@ allow reuse by multiple bool-output predicate evaluator implementations.
 ## DataSkippingPredicateEvaluator
 
 `trait` · `buoyant_kernel::kernel_predicates::DataSkippingPredicateEvaluator`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.kernel_predicates.DataSkippingPredicateEvaluator.md)
 
 Also reachable as `delta_kernel::kernel_predicates::DataSkippingPredicateEvaluator`
 
@@ -73,6 +75,7 @@ and rowcount stats.
 ## KernelPredicateEvaluator
 
 `trait` · `buoyant_kernel::kernel_predicates::KernelPredicateEvaluator`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.kernel_predicates.KernelPredicateEvaluator.md)
 
 Also reachable as `delta_kernel::kernel_predicates::KernelPredicateEvaluator`
 
@@ -160,6 +163,7 @@ necessary type information to reliably detect all type errors.
 ## DirectDataSkippingPredicateEvaluator
 
 `type_alias` · `buoyant_kernel::kernel_predicates::DirectDataSkippingPredicateEvaluator`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.kernel_predicates.DirectDataSkippingPredicateEvaluator.md)
 
 Also reachable as `delta_kernel::kernel_predicates::DirectDataSkippingPredicateEvaluator`
 
@@ -175,6 +179,7 @@ references to scalar stats values such as those provided by parquet footer stats
 ## DirectPredicateEvaluator
 
 `type_alias` · `buoyant_kernel::kernel_predicates::DirectPredicateEvaluator`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.kernel_predicates.DirectPredicateEvaluator.md)
 
 Also reachable as `delta_kernel::kernel_predicates::DirectPredicateEvaluator`
 
@@ -190,6 +195,7 @@ values.
 ## IndirectDataSkippingPredicateEvaluator
 
 `type_alias` · `buoyant_kernel::kernel_predicates::IndirectDataSkippingPredicateEvaluator`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.kernel_predicates.IndirectDataSkippingPredicateEvaluator.md)
 
 Also reachable as `delta_kernel::kernel_predicates::IndirectDataSkippingPredicateEvaluator`
 

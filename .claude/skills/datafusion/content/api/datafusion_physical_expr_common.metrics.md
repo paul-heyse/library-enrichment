@@ -30,6 +30,9 @@ fn register(&self, metric: Arc<Metric>)
 fn from(metrics: MetricsSet) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.ExecutionPlanMetricsSet.md).
+
+
 A set of [`Metric`]s for an individual operator.
 
 This structure is intended as a convenience for execution plan
@@ -68,6 +71,9 @@ fn value(&self) -> &str
 ```rust
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.Label.md).
+
 
 `name=value` pairs identifying a metric. This concept is called various things
 in various different systems:
@@ -122,6 +128,9 @@ fn from(value: String) -> Self
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.LabelValue.md).
+
+
 A label name or value.
 
 String literals preserve the existing allocation-free path. Dynamic strings
@@ -166,6 +175,9 @@ fn with_type(self, metric_type: MetricType) -> Self
 ```rust
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.Metric.md).
+
 
 Something that tracks a value of interest (metric) during execution.
 
@@ -253,6 +265,9 @@ fn from_iter<T: IntoIterator<Item = Arc<Metric>>>(iter: T) -> Self
 ```rust
 fn into_iter(self) -> Self::IntoIter
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.MetricsSet.md).
+
 
 A snapshot of the metrics for a particular execution plan.
 

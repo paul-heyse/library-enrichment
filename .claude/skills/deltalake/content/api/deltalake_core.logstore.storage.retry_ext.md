@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## ObjectStoreRetryExt
 
 `trait` · `deltalake_core::logstore::storage::retry_ext::ObjectStoreRetryExt`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.storage.retry_ext.ObjectStoreRetryExt.md)
 
 Also reachable as `deltalake::logstore::ObjectStoreRetryExt`, `deltalake_core::logstore::ObjectStoreRetryExt`
 

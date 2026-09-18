@@ -1,0 +1,700 @@
+[
+  {
+    "id": "935e1b04f902c9a95af7c376",
+    "path": "buoyant_kernel::ParquetHandler",
+    "name": "ParquetHandler",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "trait",
+    "signature": "trait ParquetHandler: AsAny",
+    "docs": "Provides Parquet file related functionalities to Delta Kernel.\n\nConnectors can leverage this trait to provide their own custom\nimplementation of Parquet data file functionalities to Delta Kernel.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/lib.rs",
+      "begin": [
+        744,
+        1
+      ],
+      "end": [
+        970,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          5825,
+          7791,
+          11502
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "AsAny",
+                "id": 45,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": [
+          5948
+        ]
+      }
+    },
+    "type_references": {
+      "45": "buoyant_kernel::AsAny"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "5870",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/lib.rs#L744",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "7545",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.ParquetHandler.md",
+    "record_file": "operations/buoyant_kernel.ParquetHandler.json",
+    "anchor": "op-935e1b04f902c9a95af7c376",
+    "aliases": [
+      "delta_kernel::ParquetHandler"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9bb577f7cae9ed4c6da91a35",
+    "path": "buoyant_kernel::ParquetHandler::read_parquet_files",
+    "name": "read_parquet_files",
+    "owner": "buoyant_kernel::ParquetHandler",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn read_parquet_files(&self, files: &[FileMeta], physical_schema: SchemaRef, predicate: Option<PredicateRef>) -> DeltaResult<FileDataReadResultIterator>",
+    "docs": "Read and parse the Parquet file at given locations and return the data as EngineData with\nthe columns requested by physical schema. The ParquetHandler _must_ return exactly the\ncolumns specified in `physical_schema`, and they _must_ be in schema order.\n\n# Resolving Parquet schema to the physical schema\n\nWhen reading the Parquet file, the columns are resolved from the Parquet schema to the\nkernel's `physical_schema`. To do so, the parquet reader must match each Parquet column\nto a [`StructField`] in the `physical_schema`. All columns in the returned `EngineData`\nmust be in the same order as specified in `physical_schema`.\n\nParquet columns are matched to `physical_schema` [`StructField`]s using the following rules:\n1. **Field ID**: If a [`StructField`] in `physical_schema` contains a field ID (specified in\n   [`ColumnMetadataKey::ParquetFieldId`] metadata), use the ID to match the Parquet column's\n   field id\n2. **Field Name**: If no field ID is present in the `physical_schema`'s [`StructField`] or\n   no matching parquet field ID is found, fall back to matching by column name\n\n# Type coercion\n\nA matched Parquet column whose physical type differs from the `physical_schema`\n[`StructField`] must be coerced to the requested type. In particular, timestamp columns MUST\nbe normalized to the protocol specified microsecond precision: a `TIMESTAMP(MILLIS)` (or\nany other non-microsecond unit) column read into a `TIMESTAMP` / `TIMESTAMP_NTZ` field\nmust be rescaled to microseconds (a finer unit such as nanosecond is truncated). The\ndefault engine does this via `arrow::compute::cast` while reordering columns to the\nrequested schema.\n\n# Metadata Columns\n\nThe ParquetHandler must support virtual metadata columns that provide additional information\nabout each row. These columns are not stored in the Parquet file but are generated at read\ntime.\n\n## Row Index Column\n\nWhen a column in `physical_schema` is marked as a row index metadata column (via\n[`StructField::create_metadata_column`] with [`schema::MetadataColumnSpec::RowIndex`]), the\nParquetHandler must populate it with the 0-based row position within the Parquet file:\n\n- **Column name**: User-specified (commonly `\"row_index\"` or `\"_metadata.row_index\"`)\n- **Type**: `LONG` (non-nullable)\n- **Values**: Sequential integers starting at 0 for each file\n- **Use case**: Track row positions for downstream processing, or internally used to compute\n  Row IDs\n\nExample: A file with 5 rows would have row_index values `[0, 1, 2, 3, 4]`.\n\n## File Name Column (Reserved Field ID)\n\nWhen a column in `physical_schema` has the reserved field ID\n[`reserved_field_ids::FILE_NAME`] (2147483646), the ParquetHandler must populate it\nwith the file path/name:\n\n- **Column name**: `\"_file\"`\n- **Type**: `STRING` (non-nullable)\n- **Field ID**: 2147483646 (reserved)\n- **Values**: The file path/URL (e.g., `\"s3://bucket/path/file.parquet\"`)\n- **Use case**: Track which file each row came from in multi-file reads\n\nExample: All rows from the same file would have the same `_file` value.\n\n## Metadata Column Examples\n\n```rust,ignore\n# use buoyant_kernel as delta_kernel;\nuse delta_kernel::schema::{StructType, StructField, DataType, MetadataColumnSpec};\n\n// Example 1: Schema with row_index metadata column\nlet schema_with_row_index = StructType::try_new([\n    StructField::nullable(\"id\", DataType::INTEGER),\n    StructField::create_metadata_column(\"row_index\", MetadataColumnSpec::RowIndex),\n    StructField::nullable(\"value\", DataType::STRING),\n])?;\n\n// Example 2: Schema with _file metadata column (using reserved field ID)\nlet schema_with_file_path = StructType::try_new([\n    StructField::nullable(\"id\", DataType::INTEGER),\n    StructField::create_metadata_column(\"_file\", MetadataColumnSpec::FilePath),\n    StructField::nullable(\"value\", DataType::STRING),\n])?;\n```\n\n---\n\n If no matching Parquet column is found, `NULL` values are returned\n for nullable columns in `physical_schema`. For non-nullable columns, an error is returned.\n\n\n## Column Matching Examples\n\nConsider a `physical_schema` with the following fields:\n- Column 0:  `\"i_logical\"` (integer, non-null) with field ID 1 (via\n  [`ColumnMetadataKey::ParquetFieldId`])\n- Column 1: `\"s\"` (string, nullable) with no field ID metadata\n- Column 2: `\"i2\"` (integer, nullable) with no field ID metadata\n\n[`ColumnMetadataKey::ParquetFieldId`]: crate::schema::ColumnMetadataKey::ParquetFieldId\n\nAnd a Parquet file containing these columns:\n- Column 0: `\"i2\"` (integer, nullable) with field ID 3\n- Column 1: `\"i\"` (integer, non-null) with field ID 1\n- No `\"s\"` column present\n\nThe column matching would work as follows:\n- `\"i_logical\"` matches `\"i\"` by field ID (both have ID 1)\n- `\"i2\"` matches `\"i2\"` by column name (no field ID to match on)\n- `\"s\"` has no matching Parquet column, so NULL values are returned\n\nThe returned data will contain exactly 3 columns in physical schema order:\n`{i_logical: parquet[1], s: NULL.., i2: parquet[0]}`\n\n# Parameters\n\n- `files` - File metadata for files to be read.\n- `physical_schema` - Select list and order of columns to read from the Parquet file.\n- `predicate` - Optional push-down predicate hint (engine is free to ignore it).\n\n# Returns\nA [`DeltaResult`] containing a [`FileDataReadResultIterator`].\nEach element of the iterator is a [`DeltaResult`] of [`EngineData`]. The [`EngineData`]\nhas the contents of `files` and must match the provided `physical_schema`.\n\nNote: The [`FileDataReadResultIterator`] must emit data from files in the order that `files`\nis given. For example if files [\"a\", \"b\"] is provided, then the engine data iterator must\nfirst return all the engine data from file \"a\", _then_ all the engine data from file \"b\".\nMoreover, for a given file, all of its [`EngineData`] and constituent rows must be in order\nthat they occur in the file. Consider a file with rows\n(1, 2, 3). The following are legal iterator batches:\n   iter: [EngineData(1, 2), EngineData(3)]\n   iter: [EngineData(1), EngineData(2, 3)]\n   iter: [EngineData(1, 2, 3)]\nThe following are illegal batches:\n   iter: [EngineData(3), EngineData(1, 2)]\n   iter: [EngineData(1), EngineData(3, 2)]\n   iter: [EngineData(2, 1, 3)]\n\nAdditionally, engines must not merge engine data across file boundaries.\n\n[`ColumnMetadataKey::ParquetFieldId`]: crate::schema::ColumnMetadataKey",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/lib.rs",
+      "begin": [
+        885,
+        5
+      ],
+      "end": [
+        890,
+        50
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "files",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "FileMeta",
+                        "id": 1583,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "physical_schema",
+              {
+                "resolved_path": {
+                  "path": "SchemaRef",
+                  "id": 778,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "predicate",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 23,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "PredicateRef",
+                              "id": 3450,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "FileDataReadResultIterator",
+                          "id": 1652,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1583": "buoyant_kernel::FileMeta",
+      "778": "buoyant_kernel::schema::SchemaRef",
+      "23": "core::option::Option",
+      "3450": "buoyant_kernel::expressions::PredicateRef",
+      "239": "buoyant_kernel::error::DeltaResult",
+      "1652": "buoyant_kernel::FileDataReadResultIterator"
+    },
+    "impl_context": null,
+    "links": {
+      "`reserved_field_ids::FILE_NAME`": 11356,
+      "`StructField::create_metadata_column`": 6877,
+      "`EngineData`": 758,
+      "crate::schema::ColumnMetadataKey::ParquetFieldId": 6770,
+      "`StructField`": 180,
+      "`FileDataReadResultIterator`": 1652,
+      "`DeltaResult`": 239,
+      "`schema::MetadataColumnSpec::RowIndex`": 6814
+    },
+    "link_paths": {
+      "`reserved_field_ids::FILE_NAME`": "buoyant_kernel::reserved_field_ids::FILE_NAME",
+      "`StructField::create_metadata_column`": "buoyant_kernel::schema::StructField::create_metadata_column",
+      "`EngineData`": "buoyant_kernel::engine_data::EngineData",
+      "crate::schema::ColumnMetadataKey::ParquetFieldId": "buoyant_kernel::schema::ColumnMetadataKey::ParquetFieldId",
+      "`StructField`": "buoyant_kernel::schema::StructField",
+      "`FileDataReadResultIterator`": "buoyant_kernel::FileDataReadResultIterator",
+      "`DeltaResult`": "buoyant_kernel::error::DeltaResult",
+      "`schema::MetadataColumnSpec::RowIndex`": "buoyant_kernel::schema::MetadataColumnSpec::RowIndex"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "5825",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/lib.rs#L885",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "7535",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.ParquetHandler.md",
+    "record_file": "operations/buoyant_kernel.ParquetHandler.json",
+    "anchor": "op-9bb577f7cae9ed4c6da91a35",
+    "aliases": [
+      "delta_kernel::ParquetHandler::read_parquet_files"
+    ],
+    "resolved_doc_links": {
+      "`reserved_field_ids::FILE_NAME`": "../operations/buoyant_kernel.reserved_field_ids.FILE_NAME.md#op-a2b742a3c77ba475fda2c18b",
+      "`StructField::create_metadata_column`": "../operations/buoyant_kernel.schema.StructField.md#op-8ab7b61e79cb25d86c9adfd3",
+      "`EngineData`": "../operations/buoyant_kernel.engine_data.EngineData.md#op-f9036ab52623c01f96e1f809",
+      "crate::schema::ColumnMetadataKey::ParquetFieldId": "../operations/buoyant_kernel.schema.ColumnMetadataKey.md#op-bb9afd4dbf92fc431ada321c",
+      "`StructField`": "../operations/buoyant_kernel.schema.StructField.md#op-ebbc3bdce7a671f7a7d1f58d",
+      "`FileDataReadResultIterator`": "../operations/buoyant_kernel.FileDataReadResultIterator.md#op-2c38562abfe66da38e1b8f0e",
+      "`DeltaResult`": "../operations/buoyant_kernel.error.DeltaResult.md#op-3db788f17aa90cfeefaa890f",
+      "`schema::MetadataColumnSpec::RowIndex`": "../operations/buoyant_kernel.schema.MetadataColumnSpec.md#op-1427ded1f654fc5b4ab200ba"
+    }
+  },
+  {
+    "id": "aeee3285fa1beca493453464",
+    "path": "buoyant_kernel::ParquetHandler::read_parquet_footer",
+    "name": "read_parquet_footer",
+    "owner": "buoyant_kernel::ParquetHandler",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn read_parquet_footer(&self, file: &FileMeta) -> DeltaResult<ParquetFooter>",
+    "docs": "Read the footer metadata from a Parquet file without reading the data.\n\nThis method reads only the Parquet file footer (metadata section), which is useful for\nschema inspection, compatibility checking, and determining whether parsed statistics\ncolumns are present and compatible with the current table schema.\n\n# Parameters\n\n- `file` - File metadata for the Parquet file whose footer should be read. The `size` field\n  should contain the actual file size to enable efficient footer reads without additional\n  I/O operations.\n\n# Returns\n\nA [`DeltaResult`] containing a [`ParquetFooter`] with the Parquet file's metadata, including\nthe schema converted to Delta Kernel's format.\n\n# Field IDs\n\nIf the Parquet file contains field IDs (written when column mapping is enabled), they are\npreserved in each [`StructField`]'s metadata. Callers can access field IDs via\n[`StructField::get_config_value`] with [`ColumnMetadataKey::ParquetFieldId`].\n\n# Errors\n\nReturns an error if:\n- The file cannot be accessed or does not exist\n- The file is not a valid Parquet file\n- The footer cannot be read or parsed\n- The schema cannot be converted to Delta Kernel's format\n\n[`StructField`]: crate::schema::StructField\n[`StructField::get_config_value`]: crate::schema::StructField::get_config_value\n[`ColumnMetadataKey::ParquetFieldId`]: crate::schema::ColumnMetadataKey::ParquetFieldId",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/lib.rs",
+      "begin": [
+        969,
+        5
+      ],
+      "end": [
+        969,
+        82
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "file",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "FileMeta",
+                      "id": 1583,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ParquetFooter",
+                          "id": 5947,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1583": "buoyant_kernel::FileMeta",
+      "239": "buoyant_kernel::error::DeltaResult",
+      "5947": "buoyant_kernel::ParquetFooter"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::schema::ColumnMetadataKey::ParquetFieldId": 6770,
+      "crate::schema::StructField": 180,
+      "`DeltaResult`": 239,
+      "crate::schema::StructField::get_config_value": 6885,
+      "`ParquetFooter`": 5947
+    },
+    "link_paths": {
+      "crate::schema::ColumnMetadataKey::ParquetFieldId": "buoyant_kernel::schema::ColumnMetadataKey::ParquetFieldId",
+      "crate::schema::StructField": "buoyant_kernel::schema::StructField",
+      "`DeltaResult`": "buoyant_kernel::error::DeltaResult",
+      "crate::schema::StructField::get_config_value": "buoyant_kernel::schema::StructField::get_config_value",
+      "`ParquetFooter`": "buoyant_kernel::ParquetFooter"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "11502",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/lib.rs#L969",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "17966",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.ParquetHandler.md",
+    "record_file": "operations/buoyant_kernel.ParquetHandler.json",
+    "anchor": "op-aeee3285fa1beca493453464",
+    "aliases": [
+      "delta_kernel::ParquetHandler::read_parquet_footer"
+    ],
+    "resolved_doc_links": {
+      "crate::schema::ColumnMetadataKey::ParquetFieldId": "../operations/buoyant_kernel.schema.ColumnMetadataKey.md#op-bb9afd4dbf92fc431ada321c",
+      "crate::schema::StructField": "../operations/buoyant_kernel.schema.StructField.md#op-ebbc3bdce7a671f7a7d1f58d",
+      "`DeltaResult`": "../operations/buoyant_kernel.error.DeltaResult.md#op-3db788f17aa90cfeefaa890f",
+      "crate::schema::StructField::get_config_value": "../operations/buoyant_kernel.schema.StructField.md#op-89c630064ef5021a1b189724",
+      "`ParquetFooter`": "../operations/buoyant_kernel.ParquetFooter.md#op-b5dbf337ed7e73bfbf58e27d"
+    }
+  },
+  {
+    "id": "2219be84eb11bd25e10fde13",
+    "path": "buoyant_kernel::ParquetHandler::write_parquet_file",
+    "name": "write_parquet_file",
+    "owner": "buoyant_kernel::ParquetHandler",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn write_parquet_file(&self, location: url::Url, data: DeltaResultIteratorStatic<Box<dyn EngineData>>) -> DeltaResult<()>",
+    "docs": "Write data to a Parquet file at the specified URL.\n\nThis method writes the provided `data` to a Parquet file at the given `url`.\n\nThis will overwrite the file if it already exists. For filesystem-backed\nimplementations, the parent directories must be created if they do not exist.\n\n# Parquet field IDs\n\nThe engine must write a Parquet `field_id` correctly when the kernel\n[`StructField`] carries a field-id related annotation, including:\n- [`ColumnMetadataKey::ColumnMappingId`] / [`ColumnMetadataKey::ParquetFieldId`]\n- [`ColumnMetadataKey::ColumnMappingNestedIds`]\n\nFor how to use these keys, refer to the Delta protocol's [Column Mapping] and\n[IcebergCompatV2] sections.\n\n**Non-compliance produces files with incorrect `field_id`s**, which may lead to\nread failures when column mapping mode is `id` and to failures when converting\nthe table to Iceberg.\n\n# Parameters\n\n- `url` - The full URL path where the Parquet file should be written (e.g.,\n  `s3://bucket/path/file.parquet`).\n- `data` - An iterator of engine data to be written to the Parquet file.\n\n# Returns\n\nA [`DeltaResult`] indicating success or failure.\n\n[`StructField`]: crate::schema::StructField\n[`ColumnMetadataKey::ColumnMappingId`]: crate::schema::ColumnMetadataKey::ColumnMappingId\n[`ColumnMetadataKey::ParquetFieldId`]: crate::schema::ColumnMetadataKey::ParquetFieldId\n[`ColumnMetadataKey::ColumnMappingNestedIds`]: crate::schema::ColumnMetadataKey::ColumnMappingNestedIds\n[Column Mapping]: https://github.com/delta-io/delta/blob/master/PROTOCOL.md#column-mapping\n[IcebergCompatV2]: https://github.com/delta-io/delta/blob/master/PROTOCOL.md#iceberg-compatibility-v2",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/lib.rs",
+      "begin": [
+        929,
+        5
+      ],
+      "end": [
+        933,
+        26
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "location",
+              {
+                "resolved_path": {
+                  "path": "url::Url",
+                  "id": 254,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "data",
+              {
+                "resolved_path": {
+                  "path": "DeltaResultIteratorStatic",
+                  "id": 2766,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Box",
+                              "id": 42,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "EngineData",
+                                                "id": 758,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "254": "url::Url",
+      "2766": "buoyant_kernel::error::DeltaResultIteratorStatic",
+      "42": "alloc::boxed::Box",
+      "758": "buoyant_kernel::engine_data::EngineData",
+      "239": "buoyant_kernel::error::DeltaResult"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::schema::ColumnMetadataKey::ParquetFieldId": 6770,
+      "crate::schema::StructField": 180,
+      "crate::schema::ColumnMetadataKey::ColumnMappingId": 6767,
+      "`DeltaResult`": 239,
+      "crate::schema::ColumnMetadataKey::ColumnMappingNestedIds": 6769
+    },
+    "link_paths": {
+      "crate::schema::ColumnMetadataKey::ParquetFieldId": "buoyant_kernel::schema::ColumnMetadataKey::ParquetFieldId",
+      "crate::schema::StructField": "buoyant_kernel::schema::StructField",
+      "crate::schema::ColumnMetadataKey::ColumnMappingId": "buoyant_kernel::schema::ColumnMetadataKey::ColumnMappingId",
+      "`DeltaResult`": "buoyant_kernel::error::DeltaResult",
+      "crate::schema::ColumnMetadataKey::ColumnMappingNestedIds": "buoyant_kernel::schema::ColumnMetadataKey::ColumnMappingNestedIds"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "7791",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/lib.rs#L929",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "11329",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.ParquetHandler.md",
+    "record_file": "operations/buoyant_kernel.ParquetHandler.json",
+    "anchor": "op-2219be84eb11bd25e10fde13",
+    "aliases": [
+      "delta_kernel::ParquetHandler::write_parquet_file"
+    ],
+    "resolved_doc_links": {
+      "crate::schema::ColumnMetadataKey::ParquetFieldId": "../operations/buoyant_kernel.schema.ColumnMetadataKey.md#op-bb9afd4dbf92fc431ada321c",
+      "crate::schema::StructField": "../operations/buoyant_kernel.schema.StructField.md#op-ebbc3bdce7a671f7a7d1f58d",
+      "crate::schema::ColumnMetadataKey::ColumnMappingId": "../operations/buoyant_kernel.schema.ColumnMetadataKey.md#op-00990ceb97ad81328bff74a2",
+      "`DeltaResult`": "../operations/buoyant_kernel.error.DeltaResult.md#op-3db788f17aa90cfeefaa890f",
+      "crate::schema::ColumnMetadataKey::ColumnMappingNestedIds": "../operations/buoyant_kernel.schema.ColumnMetadataKey.md#op-7331cf0773aca42f5baad393"
+    }
+  }
+]

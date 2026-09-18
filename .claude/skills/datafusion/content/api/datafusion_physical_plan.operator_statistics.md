@@ -14,6 +14,9 @@ enum StatisticsResult
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.StatisticsResult.md).
+
+
 Result of attempting to compute statistics with a [`StatisticsProvider`].
 
 ---
@@ -25,6 +28,9 @@ Result of attempting to compute statistics with a [`StatisticsProvider`].
 ```rust
 fn ndv_after_selectivity(original_ndv: usize, original_rows: usize, selectivity: f64) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.ndv_after_selectivity.md).
+
 
 Estimate NDV after applying a selectivity factor (filtering).
 
@@ -46,6 +52,9 @@ NDV_after ~ NDV_before * [1 - (1 - selectivity)^(rows/NDV)]
 ```rust
 fn num_distinct_vals(domain_size: usize, num_selected: usize) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.num_distinct_vals.md).
+
 
 Estimate the number of distinct values when sampling from a population.
 
@@ -79,6 +88,9 @@ struct AggregateStatisticsProvider
 ```rust
 fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.AggregateStatisticsProvider.md).
+
 
 Statistics provider for [`AggregateExec`](crate::aggregates::AggregateExec)
 that estimates output cardinality from the NDV of GROUP BY columns.
@@ -124,6 +136,9 @@ fn new(f: impl Fn(&dyn ExecutionPlan, &[ExtendedStatistics]) -> Result<Statistic
 ```rust
 fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.ClosureStatisticsProvider.md).
+
 
 A [`StatisticsProvider`] backed by a user-supplied closure.
 
@@ -171,6 +186,9 @@ struct DefaultStatisticsProvider
 fn compute_statistics(&self, plan: &dyn ExecutionPlan, _child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.DefaultStatisticsProvider.md).
+
+
 Default statistics provider that delegates to each operator's built-in
 `partition_statistics` implementation.
 
@@ -207,6 +225,9 @@ fn set_extension<T: 'static + Send + Sync>(&mut self, value: T)
 fn from(base: Statistics) -> Self
 fn from(base: Arc<Statistics>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.ExtendedStatistics.md).
+
 
 Statistics with support for custom extensions.
 
@@ -252,6 +273,9 @@ struct FilterStatisticsProvider
 fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.FilterStatisticsProvider.md).
+
+
 Statistics provider for [`FilterExec`](crate::filter::FilterExec) that uses
 pre-computed enhanced child statistics from the registry walk.
 
@@ -281,6 +305,9 @@ struct JoinStatisticsProvider
 ```rust
 fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.JoinStatisticsProvider.md).
+
 
 Statistics provider for equi-joins (hash join, sort-merge join) and cross joins.
 
@@ -321,6 +348,9 @@ struct LimitStatisticsProvider
 fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.LimitStatisticsProvider.md).
+
+
 Statistics provider for [`LocalLimitExec`](crate::limit::LocalLimitExec) and
 [`GlobalLimitExec`](crate::limit::GlobalLimitExec).
 
@@ -346,6 +376,9 @@ struct PassthroughStatisticsProvider
 ```rust
 fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.PassthroughStatisticsProvider.md).
+
 
 Statistics provider for single-input operators with
 [`CardinalityEffect::Equal`](crate::execution_plan::CardinalityEffect::Equal).
@@ -374,6 +407,9 @@ struct ProjectionStatisticsProvider
 ```rust
 fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.ProjectionStatisticsProvider.md).
+
 
 Statistics provider for [`ProjectionExec`](crate::projection::ProjectionExec)
 that uses pre-computed enhanced child statistics from the registry walk.
@@ -406,6 +442,9 @@ fn register(&mut self, provider: Arc<dyn StatisticsProvider>)
 fn with_providers(providers: Vec<Arc<dyn StatisticsProvider>>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.StatisticsRegistry.md).
+
+
 Registry that chains [`StatisticsProvider`] implementations.
 
 The registry is a stateless provider chain: it holds no mutable state
@@ -430,6 +469,9 @@ struct UnionStatisticsProvider
 ```rust
 fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.UnionStatisticsProvider.md).
+
 
 Statistics provider for [`UnionExec`](crate::union::UnionExec).
 
@@ -462,6 +504,9 @@ trait StatisticsProvider: Debug + Send + Sync
 ```rust
 fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.operator_statistics.StatisticsProvider.md).
+
 
 Customize statistics computation for [`ExecutionPlan`] nodes.
 

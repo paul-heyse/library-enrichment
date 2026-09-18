@@ -25,6 +25,9 @@ fn try_new(data_type: &DataType, _metadata: Self::Metadata) -> Result<Self, Arro
 fn validate(data_type: &DataType, _metadata: Self::Metadata) -> Result<(), ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.extension.canonical.uuid.Uuid.md).
+
+
 The extension type for `UUID`.
 
 Extension name: `arrow.uuid`.

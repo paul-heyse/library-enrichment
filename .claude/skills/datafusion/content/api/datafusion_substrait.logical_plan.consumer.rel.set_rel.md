@@ -10,4 +10,7 @@ Crate `datafusion-substrait` · 1 public items · structured records in [`model/
 async fn from_set_rel(consumer: &impl SubstraitConsumer, set: &substrait::proto::SetRel) -> datafusion::common::Result<datafusion::logical_expr::LogicalPlan>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.rel.set_rel.from_set_rel.md).
+
+
 ---

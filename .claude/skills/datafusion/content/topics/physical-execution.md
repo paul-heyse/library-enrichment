@@ -57,7 +57,7 @@ Full table with Rust setters in [`../catalogs/config-options.md`](../catalogs/co
 
 ## Decision rules
 
-- A wrapper operator must forward `statistics`, ordering and filter-pushdown participation, or it becomes an optimization barrier.
+- Derive accurate properties for a custom operator. Forward child ordering, statistics and pushdown only when its transformation preserves their meaning.
 - `execute_stream_partitioned` preserves parallelism; `execute_stream` coalesces to one partition first.
 - Metrics are opt-in per operator and are what `EXPLAIN ANALYZE` reports.
 

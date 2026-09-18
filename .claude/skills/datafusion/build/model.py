@@ -100,6 +100,7 @@ class CrateModel:
     # of a trait almost never lives in the crate that defines the trait.
     impl_edges: list[tuple[str, str]]
     unresolved: list[str]
+    contracts: list[dict] = field(default_factory=list)
 
 
 def _summary(docs: str | None) -> str:
@@ -124,6 +125,7 @@ def _deprecation(item: dict) -> str | None:
 
 def build_crate(name: str, version: str, payload: bytes, supported: list[int]) -> CrateModel:
     """Parse one crate document into items, explicit aliases and unexpanded glob edges."""
+    from contracts import collect
     from render import render_function, render_item_header
 
     format_version = probe_format(payload, supported)
@@ -315,6 +317,7 @@ def build_crate(name: str, version: str, payload: bytes, supported: list[int]) -
         modules=modules,
         impl_edges=impl_edges,
         unresolved=sorted(set(unresolved)),
+        contracts=collect(name, version, document, set(items)),
     )
 
 

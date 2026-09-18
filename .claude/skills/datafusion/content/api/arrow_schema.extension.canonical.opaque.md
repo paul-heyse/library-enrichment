@@ -39,6 +39,9 @@ fn validate(_data_type: &DataType, _metadata: Self::Metadata) -> Result<(), Arro
 fn from(value: OpaqueMetadata) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.extension.canonical.opaque.Opaque.md).
+
+
 The extension type for `Opaque`.
 
 Extension name: `arrow.opaque`.
@@ -84,6 +87,9 @@ fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializ
 ```rust
 fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_schema.extension.canonical.opaque.OpaqueMetadata.md).
+
 
 Extension type metadata for [`Opaque`].
 

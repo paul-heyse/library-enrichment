@@ -88,6 +88,9 @@ fn deref_mut(&mut self) -> &mut [u8]
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.mutable.MutableBuffer.md).
+
+
 A [`MutableBuffer`] is a wrapper over memory regions, used to build
 [`Buffer`]s out of items or slices of items.
 

@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## UpdateBuilder
 
 `struct` · `deltalake_core::operations::update::UpdateBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.update.UpdateBuilder.md)
 
 Also reachable as `deltalake::operations::update::UpdateBuilder`
 
@@ -33,13 +34,6 @@ fn with_writer_properties(self, writer_properties: WriterProperties) -> Self
 fn into_future(self) -> Self::IntoFuture
 ```
 
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
-```
-
 Updates records in the Delta Table.
 See this module's documentation for more information
 
@@ -48,6 +42,7 @@ See this module's documentation for more information
 ## UpdateMetrics
 
 `struct` · `deltalake_core::operations::update::UpdateMetrics`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.update.UpdateMetrics.md)
 
 Also reachable as `deltalake::operations::update::UpdateMetrics`
 

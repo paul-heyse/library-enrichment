@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_first`, `datafusion_functions_nest
 fn array_first(array: datafusion_expr::Expr, lambda: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_first.array_first.md).
+
+
 returns the first element of an array that satisfies the predicate
 
 ---
@@ -23,6 +26,9 @@ returns the first element of an array that satisfies the predicate
 ```rust
 fn array_first_higher_order_function() -> std::sync::Arc<datafusion_expr::HigherOrderUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_first.array_first_higher_order_function.md).
+
 
 HigherOrderFunction that returns a [`HigherOrderUDF`](datafusion_expr::HigherOrderUDF) for 
 ArrayFirst
@@ -59,5 +65,8 @@ fn name(&self) -> &str
 fn return_field_from_args(&self, args: HigherOrderReturnFieldArgs<'_>) -> Result<FieldRef>
 fn signature(&self) -> &HigherOrderSignature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_first.ArrayFirst.md).
+
 
 ---

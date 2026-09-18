@@ -12,6 +12,9 @@ Also reachable as `datafusion::config::DATAFUSION_FFI_CONFIG_NAMESPACE`
 const DATAFUSION_FFI_CONFIG_NAMESPACE: &str = "datafusion_ffi"
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.DATAFUSION_FFI_CONFIG_NAMESPACE.md).
+
+
 This namespace is reserved for interacting with Foreign Function Interface
 (FFI) based configuration extensions.
 
@@ -30,6 +33,9 @@ enum ConfigFileType
 **Variants**: `CSV`, `PARQUET`, `JSON`
 
 **Derives**: Clone, Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ConfigFileType.md).
+
 
 These file types have special built in behavior for configuration.
 Use TableOptions::Extensions for configuring other file types.
@@ -84,6 +90,9 @@ fn set(&mut self, _: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key: &str, description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.Dialect.md).
+
+
 This is the SQL dialect used by DataFusion's parser.
 This mirrors [sqlparser::dialect::Dialect](https://docs.rs/sqlparser/latest/sqlparser/dialect/trait.Dialect.html)
 trait in order to offer an easier API and avoid adding the `sqlparser` dependency
@@ -125,6 +134,9 @@ fn set(&mut self, _: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key: &str, description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.MapKeyDedupPolicy.md).
+
+
 Policy for handling duplicate keys in Spark-compatible map-construction
 functions (`map_from_arrays`, `map_from_entries`, `str_to_map`). Mirrors
 Spark's [`spark.sql.mapKeyDedupPolicy`](https://github.com/apache/spark/blob/cf3a34e19dfcf70e2d679217ff1ba21302212472/sql/catalyst/src/main/scala/org/apache/spark/sql/internal/SQLConf.scala#L4961).
@@ -152,6 +164,9 @@ enum OutputFormat
 ```rust
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.OutputFormat.md).
+
 
 ---
 
@@ -190,6 +205,9 @@ fn set(&mut self, _: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key: &str, description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.SpillCompression.md).
+
+
 ---
 
 ## default_config_transform
@@ -201,6 +219,9 @@ Also reachable as `datafusion::config::default_config_transform`
 ```rust
 fn default_config_transform<T>(input: &str) -> Result<T> where T: FromStr, <T as FromStr>::Err: Sync + Send + Error + 'static
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.default_config_transform.md).
+
 
 Default transformation to parse a [`ConfigField`] for a string.
 
@@ -231,6 +252,9 @@ fn reset(&mut self, key: &str) -> error::Result<()>
 fn set(&mut self, key: &str, value: &str) -> error::Result<()>
 fn visit<V: config::Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.CatalogOptions.md).
+
 
 Options related to catalog and directory scanning
 
@@ -263,6 +287,9 @@ fn set(&mut self, key: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ColumnDecryptionProperties.md).
+
+
 ---
 
 ## ColumnEncryptionProperties
@@ -288,6 +315,9 @@ fn set(&mut self, key: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ColumnEncryptionProperties.md).
+
+
 ---
 
 ## ConfigEntry
@@ -303,6 +333,9 @@ struct ConfigEntry
 **Fields**: `key`, `value`, `description`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ConfigEntry.md).
+
 
 A key value pair, with a corresponding description
 
@@ -337,6 +370,9 @@ fn set(&mut self, key: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ConfigFileDecryptionProperties.md).
+
+
 ---
 
 ## ConfigFileEncryptionProperties
@@ -367,6 +403,9 @@ fn from(f: &Arc<FileEncryptionProperties>) -> Self
 fn set(&mut self, key: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ConfigFileEncryptionProperties.md).
+
 
 ---
 
@@ -410,6 +449,9 @@ fn reset(&mut self, key: &str) -> Result<()>
 fn set(&mut self, key: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key: &str, description: &'static str)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ConfigMinTwoUsize.md).
+
 
 A `usize` configuration value that rejects 0 and 1 when set from strings.
 
@@ -461,6 +503,9 @@ fn set(&mut self, key: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key: &str, description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ConfigNonZeroUsize.md).
+
+
 A `usize` configuration value that rejects zero when set from strings.
 
 Use this for options where zero is never a meaningful runtime value.
@@ -503,6 +548,9 @@ fn reset(&mut self, key: &str) -> Result<()>
 fn set(&mut self, key: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, _key_prefix: &str, _description: &'static str)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ConfigOptions.md).
+
 
 Configuration options struct, able to store both built-in configuration and custom options
 
@@ -557,6 +605,9 @@ fn set(&mut self, key: &str, value: &str) -> error::Result<()>
 fn visit<V: config::Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.CsvOptions.md).
+
+
 Options controlling CSV format
 
 ---
@@ -574,6 +625,9 @@ struct DialectInfo
 **Fields**: `dialect`, `canonical_name`, `display_name`, `aliases`
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.DialectInfo.md).
+
 
 Metadata for a SQL dialect supported by DataFusion configuration.
 
@@ -608,6 +662,9 @@ fn set(&mut self, key: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key: &str, _description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.EncryptionFactoryOptions.md).
+
+
 Holds implementation-specific options for an encryption factory
 
 ---
@@ -635,6 +692,9 @@ fn reset(&mut self, key: &str) -> error::Result<()>
 fn set(&mut self, key: &str, value: &str) -> error::Result<()>
 fn visit<V: config::Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ExecutionOptions.md).
+
 
 Options related to query execution
 
@@ -668,6 +728,9 @@ fn set(&mut self, key: &str, value: &str) -> error::Result<()>
 fn visit<V: config::Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ExplainOptions.md).
+
+
 Options controlling explain output
 
 See also: [`SessionConfig`]
@@ -698,6 +761,9 @@ fn iter(&self) -> impl Iterator<Item = (&'static str, &Box<dyn ExtensionOptions>
 fn new() -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.Extensions.md).
+
+
 A type-safe container for [`ConfigExtension`]
 
 ---
@@ -725,6 +791,9 @@ fn reset(&mut self, key: &str) -> error::Result<()>
 fn set(&mut self, key: &str, value: &str) -> error::Result<()>
 fn visit<V: config::Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.FormatOptions.md).
+
 
 Options controlling the format of output when printing record batches
 Copies [`arrow::util::display::FormatOptions`]
@@ -754,6 +823,9 @@ fn reset(&mut self, key: &str) -> error::Result<()>
 fn set(&mut self, key: &str, value: &str) -> error::Result<()>
 fn visit<V: config::Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.JsonOptions.md).
+
 
 Options controlling JSON format
 
@@ -792,6 +864,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 fn from_str(s: &str) -> Result<Self, Self::Err>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.MaxRowGroupBytes.md).
+
+
 Target maximum size of a Parquet row group in bytes.
 
 Wraps a `usize` so the "must be greater than zero" constraint (arrow-rs
@@ -823,6 +898,9 @@ fn reset(&mut self, key: &str) -> error::Result<()>
 fn set(&mut self, key: &str, value: &str) -> error::Result<()>
 fn visit<V: config::Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.OptimizerOptions.md).
+
 
 Options related to query optimization
 
@@ -869,6 +947,9 @@ fn set(&mut self, key: &str, value: &str) -> error::Result<()>
 fn visit<V: config::Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ParquetCdcOptions.md).
+
+
 Options for content-defined chunking (CDC) when writing parquet files.
 Mirrors `parquet::file::properties::CdcOptions`.
 
@@ -901,6 +982,9 @@ struct ParquetColumnOptions
 fn set(&mut self, key: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ParquetColumnOptions.md).
+
 
 Options controlling parquet format for individual columns.
 
@@ -938,6 +1022,9 @@ fn set(&mut self, key: &str, value: &str) -> error::Result<()>
 fn visit<V: config::Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ParquetEncryptionOptions.md).
+
+
 Options for configuring Parquet Modular Encryption
 
 To use Parquet encryption, you must enable the `parquet_encryption` feature flag, as it is not activated by default.
@@ -974,6 +1061,9 @@ fn set(&mut self, key: &str, value: &str) -> error::Result<()>
 fn visit<V: config::Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ParquetOptions.md).
+
+
 Options for reading and writing parquet files
 
 See also: [`SessionConfig`]
@@ -1006,6 +1096,9 @@ fn set(&mut self, key: &str, value: &str) -> error::Result<()>
 fn visit<V: config::Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.SparkOptions.md).
+
+
 Options controlling DataFusion's Spark-compatibility layer (functions
 under `datafusion/spark`). Keys here mirror their `spark.sql.*`
 equivalents in Apache Spark.
@@ -1035,6 +1128,9 @@ fn reset(&mut self, key: &str) -> error::Result<()>
 fn set(&mut self, key: &str, value: &str) -> error::Result<()>
 fn visit<V: config::Visit>(&self, v: &mut V, key_prefix: &str, _description: &'static str)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.SqlParserOptions.md).
+
 
 Options related to SQL parser
 
@@ -1081,6 +1177,9 @@ fn set(&mut self, key: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, _key_prefix: &str, _description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.TableOptions.md).
+
+
 Represents the configuration options available for handling different table formats within a data processing application.
 This struct encompasses options for various file formats including CSV, Parquet, and JSON, allowing for flexible configuration
 of parsing and writing behaviors specific to each format. Additionally, it supports extending functionality through custom extensions.
@@ -1119,6 +1218,9 @@ fn set(&mut self, key: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key_prefix: &str, description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.TableParquetOptions.md).
+
+
 Options that control how Parquet files are read, including global options
 that apply to all columns and optional column-specific overrides
 
@@ -1142,6 +1244,9 @@ trait ConfigExtension: ExtensionOptions
 
 - `datafusion_ffi::config::extension_options::FFI_ExtensionOptions`
 - `datafusion_ffi::tests::config::ExternalConfig`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ConfigExtension.md).
+
 
 [`ConfigExtension`] provides a mechanism to store third-party configuration
 within DataFusion [`ConfigOptions`]
@@ -1246,6 +1351,9 @@ fn set(&mut self, key: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key: &str, description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ConfigField.md).
+
+
 A trait implemented by `config_namespace` and for field types that provides
 the ability to walk and mutate the configuration tree
 
@@ -1276,6 +1384,9 @@ fn entries(&self) -> Vec<ConfigEntry>
 fn set(&mut self, key: &str, value: &str) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.ExtensionOptions.md).
+
+
 An object-safe API for storing arbitrary configuration.
 
 See [`ConfigExtension`] for user defined configuration
@@ -1291,6 +1402,9 @@ Also reachable as `datafusion::config::OutputFormatExt`
 ```rust
 trait OutputFormatExt: Display
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.OutputFormatExt.md).
+
 
 ---
 
@@ -1310,6 +1424,9 @@ trait Visit
 fn none(&mut self, key: &str, description: &'static str)
 fn some<V: Display>(&mut self, key: &str, value: V, description: &'static str)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.config.Visit.md).
+
 
 An implementation trait used to recursively walk configuration
 

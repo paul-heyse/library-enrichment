@@ -12,6 +12,9 @@ enum RequestError
 
 **Variants**: `BareRedirect`, `Status`, `Response`, `Http`
 
+[Full member, field, variant and typed contracts](../operations/object_store.client.retry.RequestError.md).
+
+
 The reason a request failed
 
 ---
@@ -29,6 +32,9 @@ struct RetryConfig
 **Fields**: `backoff`, `max_retries`, `retry_timeout`
 
 **Derives**: Clone, Debug, Default
+
+[Full member, field, variant and typed contracts](../operations/object_store.client.retry.RetryConfig.md).
+
 
 The configuration for how to respond to request errors
 
@@ -53,6 +59,9 @@ backoff with jitter. See [`BackoffConfig`] for more information
 ```rust
 struct RetryError
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.client.retry.RetryError.md).
+
 
 Retry request error
 

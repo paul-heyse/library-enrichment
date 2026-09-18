@@ -55,6 +55,9 @@ fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.limit.GlobalLimitExec.md).
+
+
 Limit execution plan
 
 ---
@@ -86,6 +89,9 @@ fn schema(&self) -> SchemaRef
 ```rust
 fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.limit.LimitStream.md).
+
 
 A Limit stream skips `skip` rows, and then fetch up to `fetch` rows.
 
@@ -141,6 +147,9 @@ fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.limit.LocalLimitExec.md).
+
 
 LocalLimitExec applies a limit to a single partition
 

@@ -10,6 +10,9 @@ Crate `datafusion-physical-optimizer` · 3 public items · structured records in
 fn pushdown_limit_helper(pushdown_plan: std::sync::Arc<dyn ExecutionPlan>, global_state: GlobalRequirements) -> datafusion_common::error::Result<(datafusion_common::tree_node::Transformed<std::sync::Arc<dyn ExecutionPlan>>, GlobalRequirements)>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.limit_pushdown.pushdown_limit_helper.md).
+
+
 This function is the main helper function of the `LimitPushDown` rule.
 The helper takes an `ExecutionPlan` and a global (algorithm) state which is
 an instance of `GlobalRequirements` and modifies these parameters while
@@ -29,6 +32,9 @@ struct GlobalRequirements
 ```
 
 **Derives**: Clone, Debug, Default
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.limit_pushdown.GlobalRequirements.md).
+
 
 This is a "data class" we use within the [`LimitPushdown`] rule to push
 down limits in the plan. GlobalRequirements are hold as a rule-wide state
@@ -66,6 +72,9 @@ fn name(&self) -> &str
 fn optimize(&self, plan: Arc<dyn ExecutionPlan>, _config: &ConfigOptions) -> Result<Arc<dyn ExecutionPlan>>
 fn schema_check(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.limit_pushdown.LimitPushdown.md).
+
 
 This rule inspects [`ExecutionPlan`]'s and pushes down the fetch limit from
 the parent to the child if applicable.

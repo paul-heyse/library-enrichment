@@ -26,8 +26,8 @@ complete endpoint delivery budgeting. Its implementation remains incomplete.
 [Plan 19](19-unified-runtime-and-delta-cache-completion.md) is the **combined remaining plan**:
 it retains every unfinished Plan 18 obligation and integrates the DataFusion/Delta caching review,
 shared incremental snapshots, positive contract reuse, typed provider values, shared CDF metadata
-and additional source-checked cache opportunities. Use Plan 19 when implementation resumes;
-Plan 18 retains prior receipts. Plan 19 is documentation-only at creation. Full integration tests
+and additional source-checked cache opportunities. Implementation is active under Plan 19;
+Plan 18 retains prior receipts. Plan 19 §10 records implemented owners and remaining scope. Full integration tests
 follow the completed pivot and all verified legacy deletions, including retired installs/state/client
 registrations. Final qualification remains open.
 
@@ -75,7 +75,7 @@ and [final qualification](../reports/plan13-final-qualification-2026-09-15.md).
 | [16 — Complete the remaining unified runtime pivot](16-unified-datafusion-delta-runtime-completion.md) | Current-tree review of Plan 15; 14 remaining packages covering architecture, deletion, qualification and fresh activation | ADR-0041–ADR-0045 | planning checkpoint; execution sequence integrated into Plan 17 |
 | [17 — Schema-governed unified runtime hard pivot](17-schema-governed-unified-runtime-hard-pivot.md) | All Plan 16 obligations plus S01–S12 and E01–E09; complete FP/L/Q/SC requirements and implementation/evidence ledger | ADR-0041–ADR-0045; ADR-0047–ADR-0051 | substantial source implementation; remaining sequence integrated into Plan 18; not finally qualified or installed |
 | [18 — Complete schema-governed runtime and native cache pivot](18-schema-governed-runtime-and-cache-completion.md) | All remaining Plan 17 scope plus CacheFactory, execution-owned materialization, native cache dispositions, L01–L25 deletion and full Q/SC/CF qualification/activation | Existing pivot ADRs; ADR-0052–0054 proposed | in progress; source checkpoint and receipts retained; remaining sequence integrated into Plan 19 |
-| [19 — Unified runtime and Delta cache completion](19-unified-runtime-and-delta-cache-completion.md) | All remaining Plan 18 scope plus caching-review F0–F8 and CX01–CX10; shared snapshot/contract/provider/metadata ownership, binary replay, L01–L33 deletion and Q/SC/CF/DC qualification | Existing pivot ADRs; cache-governance decision and proposed ADR-0053 amendment during CP00 | draft; combined plan created 2026-09-17; no implementation or qualification performed by this planning pass |
+| [19 — Unified runtime and Delta cache completion](19-unified-runtime-and-delta-cache-completion.md) | All remaining Plan 18 scope plus caching-review F0–F8 and CX01–CX10; shared snapshot/contract/provider/metadata ownership, binary replay, L01–L33 deletion and Q/SC/CF/DC qualification | Existing pivot ADRs; cache-governance decision and proposed ADR-0053 amendment during CP00 | in-progress; typed cache, binary replay and exact-protection foundations implemented; CP11 and final qualification remain open |
 
 ## Norms
 

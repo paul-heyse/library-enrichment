@@ -1,0 +1,5285 @@
+[
+  {
+    "id": "3a838cdae998215374fcb4b5",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "name": "BooleanBuffer",
+    "owner": null,
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct BooleanBuffer",
+    "docs": "A slice-able [`Buffer`] containing bit-packed booleans\n\nThis structure represents a sequence of boolean values packed into a\nbyte-aligned [`Buffer`]. Both the offset and length are represented in bits.\n\n# Layout\n\nThe values are represented as little endian bit-packed values, where the\nleast significant bit of each byte represents the first boolean value and\nthen proceeding to the most significant bit.\n\nFor example, the 10 bit bitmask `0b0111001101` has length 10, and is\nrepresented using 2 bytes with offset 0 like this:\n\n```text\n       ┌─────────────────────────────────┐    ┌─────────────────────────────────┐\n       │┌───┬───┬───┬───┬───┬───┬───┬───┐│    │┌───┬───┬───┬───┬───┬───┬───┬───┐│\n       ││ 1 │ 0 │ 1 │ 1 │ 0 │ 0 │ 1 │ 1 ││    ││ 1 │ 0 │ ? │ ? │ ? │ ? │ ? │ ? ││\n       │└───┴───┴───┴───┴───┴───┴───┴───┘│    │└───┴───┴───┴───┴───┴───┴───┴───┘│\nbit    └─────────────────────────────────┘    └─────────────────────────────────┘\noffset  0             Byte 0             7    0              Byte 1            7\n\n        length = 10 bits, offset = 0\n```\n\nThe same bitmask with length 10 and offset 3 would be represented using 2\nbytes like this:\n\n```text\n      ┌─────────────────────────────────┐    ┌─────────────────────────────────┐\n      │┌───┬───┬───┬───┬───┬───┬───┬───┐│    │┌───┬───┬───┬───┬───┬───┬───┬───┐│\n      ││ ? │ ? │ ? │ 1 │ 0 │ 1 │ 1 │ 0 ││    ││ 0 │ 1 │ 1 │ 1 │ 0 │ ? │ ? │ ? ││\n      │└───┴───┴───┴───┴───┴───┴───┴───┘│    │└───┴───┴───┴───┴───┴───┴───┴───┘│\nbit   └─────────────────────────────────┘    └─────────────────────────────────┘\noffset 0             Byte 0             7    0              Byte 1            7\n\n       length = 10 bits, offset = 3\n```\n\nNote that the bits marked `?` are not logically part of the mask and may\ncontain either `0` or `1`\n\n# Bitwise Operations\n\n`BooleanBuffer` implements the standard bitwise traits for creating a new\nbuffer ([`BitAnd`], [`BitOr`], [`BitXor`], [`Not`]) as well as the assign variants\nfor updating an existing buffer in place when possible ([`BitAndAssign`],\n[`BitOrAssign`], [`BitXorAssign`]).\n\n```\n# use arrow_buffer::BooleanBuffer;\nlet mut left = BooleanBuffer::from(&[true, false, true, true] as &[bool]);\nlet right = BooleanBuffer::from(&[true, true, false, true] as &[bool]);\n\n// Create a new buffer by applying bitwise AND\nlet anded = &left & &right;\nassert_eq!(anded, BooleanBuffer::from(&[true, false, false, true] as &[bool]));\n\n// Update `left` in place by applying bitwise AND in place\nleft &= &right;\nassert_eq!(left, BooleanBuffer::from(&[true, false, false, true] as &[bool]));\n```\n\n# See Also\n* [`BooleanBufferBuilder`] for building [`BooleanBuffer`] instances\n* [`NullBuffer`] for representing null values in Arrow arrays\n\n[`NullBuffer`]: crate::NullBuffer",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        97,
+        1
+      ],
+      "end": [
+        104,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          425,
+          426,
+          427,
+          428,
+          429,
+          430,
+          431,
+          432,
+          433,
+          434,
+          435,
+          436,
+          437,
+          438,
+          439,
+          440,
+          441,
+          442,
+          444,
+          446,
+          447,
+          449,
+          452,
+          455,
+          458,
+          461,
+          463,
+          465,
+          467,
+          471,
+          473,
+          475,
+          477,
+          479,
+          481
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`BitOr`": 387,
+      "`BitXor`": 388,
+      "`Buffer`": 123,
+      "`Not`": 389,
+      "crate::NullBuffer": 31,
+      "`BitAnd`": 386,
+      "`BooleanBuffer`": 393,
+      "`BitAndAssign`": 390,
+      "`BitXorAssign`": 392,
+      "`BooleanBufferBuilder`": 215,
+      "`BitOrAssign`": 391
+    },
+    "link_paths": {
+      "`BitOr`": "core::ops::bit::BitOr",
+      "`BitXor`": "core::ops::bit::BitXor",
+      "`Buffer`": "arrow_buffer::buffer::immutable::Buffer",
+      "`Not`": "core::ops::bit::Not",
+      "crate::NullBuffer": "arrow_buffer::buffer::null::NullBuffer",
+      "`BitAnd`": "core::ops::bit::BitAnd",
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer",
+      "`BitAndAssign`": "core::ops::bit::BitAndAssign",
+      "`BitXorAssign`": "core::ops::bit::BitXorAssign",
+      "`BooleanBufferBuilder`": "arrow_buffer::builder::boolean::BooleanBufferBuilder",
+      "`BitOrAssign`": "core::ops::bit::BitOrAssign"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "393",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-3a838cdae998215374fcb4b5",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Buffer`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b",
+      "crate::NullBuffer": "../operations/arrow_buffer.buffer.null.NullBuffer.md#op-d8209d291b86c5deb0050e48",
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5",
+      "`BooleanBufferBuilder`": "../operations/arrow_buffer.builder.boolean.BooleanBufferBuilder.md#op-3b603b0bd38714441734f47c"
+    }
+  },
+  {
+    "id": "00a276f3c27b8548dee98057",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::bit_chunks",
+    "name": "bit_chunks",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn bit_chunks(&self) -> BitChunks<'_>",
+    "docs": "Returns a [`BitChunks`] instance which can be used to iterate over\nthis buffer's bits in `u64` chunks",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        460,
+        5
+      ],
+      "end": [
+        462,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BitChunks",
+              "id": 145,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'_"
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "145": "arrow_buffer::util::bit_chunk_iterator::BitChunks"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BitChunks`": 145
+    },
+    "link_paths": {
+      "`BitChunks`": "arrow_buffer::util::bit_chunk_iterator::BitChunks"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "401",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-00a276f3c27b8548dee98057",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BitChunks`": "../operations/arrow_buffer.util.bit_chunk_iterator.BitChunks.md#op-b8340de6eea8c71484dde9af"
+    }
+  },
+  {
+    "id": "1e5bc4523a1ec5949e250a1c",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::bitand_assign",
+    "name": "bitand_assign",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn bitand_assign(&mut self, rhs: &BooleanBuffer)",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        756,
+        5
+      ],
+      "end": [
+        758,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "rhs",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "BooleanBuffer",
+                      "id": 393,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "393": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "BitAndAssign",
+        "id": "core::ops::bit::BitAndAssign",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "borrowed_ref": {
+                    "lifetime": null,
+                    "is_mutable": false,
+                    "type": {
+                      "resolved_path": {
+                        "path": "BooleanBuffer",
+                        "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::ops::bit::BitAndAssign",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          755,
+          1
+        ],
+        "end": [
+          759,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "462",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-1e5bc4523a1ec5949e250a1c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fba03443d15c07709a9c3067",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::bitor_assign",
+    "name": "bitor_assign",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn bitor_assign(&mut self, rhs: &BooleanBuffer)",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        762,
+        5
+      ],
+      "end": [
+        764,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "rhs",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "BooleanBuffer",
+                      "id": 393,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "393": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "BitOrAssign",
+        "id": "core::ops::bit::BitOrAssign",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "borrowed_ref": {
+                    "lifetime": null,
+                    "is_mutable": false,
+                    "type": {
+                      "resolved_path": {
+                        "path": "BooleanBuffer",
+                        "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::ops::bit::BitOrAssign",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          761,
+          1
+        ],
+        "end": [
+          765,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "464",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-fba03443d15c07709a9c3067",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8ff8d6f6f1e275e09227ce13",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::bitxor_assign",
+    "name": "bitxor_assign",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn bitxor_assign(&mut self, rhs: &BooleanBuffer)",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        768,
+        5
+      ],
+      "end": [
+        770,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "rhs",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "BooleanBuffer",
+                      "id": 393,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "393": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "BitXorAssign",
+        "id": "core::ops::bit::BitXorAssign",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "borrowed_ref": {
+                    "lifetime": null,
+                    "is_mutable": false,
+                    "type": {
+                      "resolved_path": {
+                        "path": "BooleanBuffer",
+                        "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::ops::bit::BitXorAssign",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          767,
+          1
+        ],
+        "end": [
+          771,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "466",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-8ff8d6f6f1e275e09227ce13",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "df11571fa397caabbc88d9a9",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::claim",
+    "name": "claim",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn claim(&self, pool: &dyn MemoryPool)",
+    "docs": "Claim memory used by this buffer in the provided memory pool.\n\nSee [`Buffer::claim`] for details.",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        562,
+        5
+      ],
+      "end": [
+        564,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"pool\"), span: src/buffer/boolean.rs:561:11: 561:27 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "pool",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "crate::MemoryPool",
+                            "id": 26,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "26": "arrow_buffer::pool::MemoryPool"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Buffer::claim`": 151
+    },
+    "link_paths": {
+      "`Buffer::claim`": "arrow_buffer::buffer::immutable::Buffer::claim"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "414",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-df11571fa397caabbc88d9a9",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Buffer::claim`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-3276c69adbc249530c026c94"
+    }
+  },
+  {
+    "id": "b10a84b5c05fd84e25304bf0",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::clone",
+    "name": "clone",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> BooleanBuffer",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        96,
+        17
+      ],
+      "end": [
+        96,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BooleanBuffer",
+              "id": 393,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "393": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          96,
+          17
+        ],
+        "end": [
+          96,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "445",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-b10a84b5c05fd84e25304bf0",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "138375e7b82b623a4cb86e6e",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::collect_bool",
+    "name": "collect_bool",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn collect_bool<F: FnMut(usize) -> bool>(len: usize, f: F) -> Self",
+    "docs": "Invokes `f` with indexes `0..len` collecting the boolean results into a new `BooleanBuffer`",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        157,
+        5
+      ],
+      "end": [
+        160,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "f",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "FnMut",
+                          "id": 252,
+                          "args": {
+                            "parenthesized": {
+                              "inputs": [
+                                {
+                                  "primitive": "usize"
+                                }
+                              ],
+                              "output": {
+                                "primitive": "bool"
+                              }
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "252": "core::ops::function::FnMut"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "397",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-138375e7b82b623a4cb86e6e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5b2be345703d4f67f27c838b",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::count_set_bits",
+    "name": "count_set_bits",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn count_set_bits(&self) -> usize",
+    "docs": "Returns the number of set bits in this buffer",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        438,
+        5
+      ],
+      "end": [
+        441,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "399",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-5b2be345703d4f67f27c838b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "325e6dff591b69b94a4df25f",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::eq",
+    "name": "eq",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &Self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        107,
+        5
+      ],
+      "end": [
+        115,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          106,
+          1
+        ],
+        "end": [
+          116,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "448",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-325e6dff591b69b94a4df25f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "351273c1e2bff3a230ea8697",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::find_nth_set_bit_position",
+    "name": "find_nth_set_bit_position",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn find_nth_set_bit_position(&self, start: usize, n: usize) -> usize",
+    "docs": "Finds the position of the n-th set bit (1-based) starting from `start` index.\nIf fewer than `n` set bits are found, returns the length of the buffer.",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        445,
+        5
+      ],
+      "end": [
+        455,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "start",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "400",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-351273c1e2bff3a230ea8697",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9d9e34890142afa04e7c540a",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::fmt",
+    "name": "fmt",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        96,
+        10
+      ],
+      "end": [
+        96,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 89,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 90,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "89": "core::fmt::Formatter",
+      "90": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          96,
+          10
+        ],
+        "end": [
+          96,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "443",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-9d9e34890142afa04e7c540a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d0c73f5a5e6b0a8d78111842",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::from",
+    "name": "from",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from(builder: BooleanBufferBuilder) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/boolean.rs",
+      "begin": [
+        354,
+        5
+      ],
+      "end": [
+        356,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "builder",
+              {
+                "resolved_path": {
+                  "path": "BooleanBufferBuilder",
+                  "id": 215,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "215": "arrow_buffer::builder::boolean::BooleanBufferBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "crate::BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "BooleanBufferBuilder",
+                    "id": "arrow_buffer::builder::boolean::BooleanBufferBuilder",
+                    "args": null
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/boolean.rs",
+        "begin": [
+          352,
+          1
+        ],
+        "end": [
+          357,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "480",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-d0c73f5a5e6b0a8d78111842",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "da03cb48032224e9d259b729",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::from",
+    "name": "from",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from(value: &[bool]) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        783,
+        5
+      ],
+      "end": [
+        787,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "value",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "bool"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "borrowed_ref": {
+                    "lifetime": null,
+                    "is_mutable": false,
+                    "type": {
+                      "slice": {
+                        "primitive": "bool"
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          782,
+          1
+        ],
+        "end": [
+          788,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "472",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-da03cb48032224e9d259b729",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f577a706c0444169a38dada5",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::from",
+    "name": "from",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from(value: Vec<bool>) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        791,
+        5
+      ],
+      "end": [
+        793,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 128,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "bool"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "Vec",
+                    "id": "alloc::vec::Vec",
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "primitive": "bool"
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          790,
+          1
+        ],
+        "end": [
+          794,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "474",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-f577a706c0444169a38dada5",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "66055f235bdcc81b5959ba91",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::from_bits",
+    "name": "from_bits",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from_bits(src: impl AsRef<[u8]>, offset_in_bits: usize, len_in_bits: usize) -> Self",
+    "docs": "Create a new [`BooleanBuffer`] by copying the relevant bits from an\ninput buffer.\n\n# Notes:\n* The new `BooleanBuffer` may have non zero offset\n  and/or padding bits outside the logical range.\n\n# Example: Create a new [`BooleanBuffer`] copying a bit slice from in input slice\n```\n# use arrow_buffer::BooleanBuffer;\nlet input = [0b11001100u8, 0b10111010u8];\n// // Copy bits 4..16 from input\nlet result = BooleanBuffer::from_bits(&input, 4, 12);\n// output is 12 bits long starting from bit offset 4\nassert_eq!(result.len(), 12);\nassert_eq!(result.offset(), 4);\n// the expected 12 bits are 0b101110101100 (bits 4..16 of the input)\nlet expected_bits = [false, false, true, true, false, true, false, true, true, true, false, true];\nfor (i, v) in expected_bits.into_iter().enumerate() {\n   assert_eq!(result.value(i), v);\n}\n// However, underlying buffer has (ignored) bits set outside the requested range\nassert_eq!(result.values(), &[0b11001100u8, 0b10111010, 0, 0, 0, 0, 0, 0]);",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        185,
+        5
+      ],
+      "end": [
+        187,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "src",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsRef",
+                        "id": 107,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "slice": {
+                                    "primitive": "u8"
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ],
+            [
+              "offset_in_bits",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "len_in_bits",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl AsRef<[u8]>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "AsRef",
+                          "id": 107,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "slice": {
+                                      "primitive": "u8"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "core::convert::AsRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "398",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-66055f235bdcc81b5959ba91",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5"
+    }
+  },
+  {
+    "id": "9333fbfb6fa56e36b57b1265",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::from_bitwise_binary_op",
+    "name": "from_bitwise_binary_op",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from_bitwise_binary_op<F>(left: impl AsRef<[u8]>, left_offset_in_bits: usize, right: impl AsRef<[u8]>, right_offset_in_bits: usize, len_in_bits: usize, op: F) -> Self where F: FnMut(u64, u64) -> u64",
+    "docs": "Create a new [`BooleanBuffer`] by applying the bitwise operation `op` to\nthe relevant bits from two input buffers.\n\nThis function is faster than applying the operation bit by bit as\nit processes input buffers in chunks of 64 bits (8 bytes) at a time\n\n# Notes:\n* `op` takes two `u64` inputs and produces one `u64` output.\n* `op` must only apply bitwise operations\n  on the relevant bits; the input `u64` values may contain irrelevant bits\n  and may be processed differently on different endian architectures.\n* `op` may be called with input bits outside the requested range.\n* Returned `BooleanBuffer` may have non zero offset\n* Returned `BooleanBuffer` may have bits set outside the requested range\n\n# See Also\n- [`BooleanBuffer::from_bitwise_unary_op`] for unary operations on a single input buffer.\n- [`apply_bitwise_binary_op`](bit_util::apply_bitwise_binary_op) for in-place binary bitwise operations\n\n# Example: Create new [`BooleanBuffer`] from bitwise `AND` of two [`Buffer`]s\n```\n# use arrow_buffer::{Buffer, BooleanBuffer};\nlet left = Buffer::from(vec![0b11001100u8, 0b10111010u8]); // 2 bytes = 16 bits\nlet right = Buffer::from(vec![0b10101010u8, 0b11011100u8, 0b11110000u8]); // 3 bytes = 24 bits\n// AND of the first 12 bits\nlet result = BooleanBuffer::from_bitwise_binary_op(\n  &left, 0, &right, 0, 12, |a, b| a & b\n);\nassert_eq!(result.len(), 12);\nfor i in 0..12 {\n    assert_eq!(result.value(i), left.as_slice()[i / 8] >> (i % 8) & 1 == 1\n        && right.as_slice()[i / 8] >> (i % 8) & 1 == 1);\n}\n```\n\n# Example: Create new [`BooleanBuffer`] from bitwise `OR` of two byte slices\n```\n# use arrow_buffer::{BooleanBuffer, bit_util};\nlet left = [0b11001100u8, 0b10111010u8];\nlet right = [0b10101010u8, 0b11011100u8];\n// OR of bits 4..16 from left and bits 0..12 from right\nlet result = BooleanBuffer::from_bitwise_binary_op(\n &left, 4, &right, 0, 12, |a, b| a | b\n);\nassert_eq!(result.len(), 12);\nfor i in 0..12 {\n    let l = bit_util::get_bit(&left, 4 + i);\n    let r = bit_util::get_bit(&right, i);\n    assert_eq!(result.value(i), l | r);\n}\n```",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        332,
+        5
+      ],
+      "end": [
+        435,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "left",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsRef",
+                        "id": 107,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "slice": {
+                                    "primitive": "u8"
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ],
+            [
+              "left_offset_in_bits",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "right",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsRef",
+                        "id": 107,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "slice": {
+                                    "primitive": "u8"
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ],
+            [
+              "right_offset_in_bits",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "len_in_bits",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "op",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "impl AsRef<[u8]>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "AsRef",
+                          "id": 107,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "slice": {
+                                      "primitive": "u8"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            },
+            {
+              "name": "impl AsRef<[u8]>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "AsRef",
+                          "id": 107,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "slice": {
+                                      "primitive": "u8"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "F"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "FnMut",
+                        "id": 252,
+                        "args": {
+                          "parenthesized": {
+                            "inputs": [
+                              {
+                                "primitive": "u64"
+                              },
+                              {
+                                "primitive": "u64"
+                              }
+                            ],
+                            "output": {
+                              "primitive": "u64"
+                            }
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "core::convert::AsRef",
+      "252": "core::ops::function::FnMut"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer::from_bitwise_unary_op`": 314,
+      "bit_util::apply_bitwise_binary_op": 224,
+      "`BooleanBuffer`": 393,
+      "`Buffer`": 123
+    },
+    "link_paths": {
+      "`BooleanBuffer::from_bitwise_unary_op`": "arrow_buffer::buffer::boolean::BooleanBuffer::from_bitwise_unary_op",
+      "bit_util::apply_bitwise_binary_op": "arrow_buffer::util::bit_util::apply_bitwise_binary_op",
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer",
+      "`Buffer`": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "309",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-9333fbfb6fa56e36b57b1265",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer::from_bitwise_unary_op`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-a684517dfe8bfbdb1184fefc",
+      "bit_util::apply_bitwise_binary_op": "../operations/arrow_buffer.util.bit_util.apply_bitwise_binary_op.md#op-1e28964b08a51187f1e0918f",
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5",
+      "`Buffer`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b"
+    }
+  },
+  {
+    "id": "a684517dfe8bfbdb1184fefc",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::from_bitwise_unary_op",
+    "name": "from_bitwise_unary_op",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from_bitwise_unary_op<F>(src: impl AsRef<[u8]>, offset_in_bits: usize, len_in_bits: usize, op: F) -> Self where F: FnMut(u64) -> u64",
+    "docs": "Create a new [`BooleanBuffer`] by applying the bitwise operation to `op`\nto an input buffer.\n\nThis function is faster than applying the operation bit by bit as\nit processes input buffers in chunks of 64 bits (8 bytes) at a time\n\n# Notes:\n* `op` takes a single `u64` inputs and produces one `u64` output.\n* `op` must only apply bitwise operations\n  on the relevant bits; the input `u64` may contain irrelevant bits\n  and may be processed differently on different endian architectures.\n* `op` may be called with input bits outside the requested range\n* Returned `BooleanBuffer` may have non zero offset\n* Returned `BooleanBuffer` may have bits set outside the requested range\n\n# See Also\n- [`BooleanBuffer::from_bitwise_binary_op`] to create a new buffer from a binary operation\n- [`apply_bitwise_unary_op`](bit_util::apply_bitwise_unary_op) for in-place unary bitwise operations\n\n# Example: Create new [`BooleanBuffer`] from bitwise `NOT`\n```\n# use arrow_buffer::BooleanBuffer;\nlet input = [0b11001100u8, 0b10111010u8]; // 2 bytes = 16 bits\n// NOT of bits 4..16\nlet result = BooleanBuffer::from_bitwise_unary_op(\n &input, 4, 12, |a| !a\n);\n// output is 12 bits long starting from bit offset 4\nassert_eq!(result.len(), 12);\nassert_eq!(result.offset(), 4);\n// the expected 12 bits are 0b001100110101, (NOT of the requested bits)\nlet expected_bits = [true, true, false, false, true, false, true, false, false, false, true, false];\nfor (i, v) in expected_bits.into_iter().enumerate() {\n    assert_eq!(result.value(i), v);\n}\n// However, underlying buffer has (ignored) bits set outside the requested range\nlet expected = [0b00110011u8, 0b01000101u8, 255, 255, 255, 255, 255, 255];\nassert_eq!(result.values(), &expected);\n```",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        228,
+        5
+      ],
+      "end": [
+        279,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "src",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsRef",
+                        "id": 107,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "slice": {
+                                    "primitive": "u8"
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ],
+            [
+              "offset_in_bits",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "len_in_bits",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "op",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "impl AsRef<[u8]>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "AsRef",
+                          "id": 107,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "slice": {
+                                      "primitive": "u8"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "F"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "FnMut",
+                        "id": 252,
+                        "args": {
+                          "parenthesized": {
+                            "inputs": [
+                              {
+                                "primitive": "u64"
+                              }
+                            ],
+                            "output": {
+                              "primitive": "u64"
+                            }
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "core::convert::AsRef",
+      "252": "core::ops::function::FnMut"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer::from_bitwise_binary_op`": 309,
+      "`BooleanBuffer`": 393,
+      "bit_util::apply_bitwise_unary_op": 225
+    },
+    "link_paths": {
+      "`BooleanBuffer::from_bitwise_binary_op`": "arrow_buffer::buffer::boolean::BooleanBuffer::from_bitwise_binary_op",
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer",
+      "bit_util::apply_bitwise_unary_op": "arrow_buffer::util::bit_util::apply_bitwise_unary_op"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "314",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-a684517dfe8bfbdb1184fefc",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer::from_bitwise_binary_op`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-9333fbfb6fa56e36b57b1265",
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5",
+      "bit_util::apply_bitwise_unary_op": "../operations/arrow_buffer.util.bit_util.apply_bitwise_unary_op.md#op-61b160ab902fd849eb53361c"
+    }
+  },
+  {
+    "id": "9309118564b6a37b022138c2",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::from_iter",
+    "name": "from_iter",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from_iter<T: IntoIterator<Item = bool>>(iter: T) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        797,
+        5
+      ],
+      "end": [
+        803,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "iter",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "IntoIterator",
+                          "id": 19,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "primitive": "bool"
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "19": "core::iter::traits::collect::IntoIterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FromIterator",
+        "id": "core::iter::traits::collect::FromIterator",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "primitive": "bool"
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::iter::traits::collect::FromIterator",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          796,
+          1
+        ],
+        "end": [
+          804,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "476",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-9309118564b6a37b022138c2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6630da893d64705641e473a9",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::has_false",
+    "name": "has_false",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn has_false(&self) -> bool",
+    "docs": "Returns whether there is at least one `false` value in this buffer.\n\nThis is more efficient than `len() > count_set_bits()` because it can short-circuit\nas soon as a `false` value is found, without counting all set bits.\n\nReturns `false` for empty buffer.",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        660,
+        5
+      ],
+      "end": [
+        687,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "424",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-6630da893d64705641e473a9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "10df92dbd4047d492b3c8ede",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::has_true",
+    "name": "has_true",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn has_true(&self) -> bool",
+    "docs": "Returns whether there is at least one `true` value in this buffer.\n\nThis is more efficient than `count_set_bits() > 0` because it can short-circuit\nas soon as a `true` value is found, without counting all set bits.\n\nReturns `false` for empty buffer.",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        645,
+        5
+      ],
+      "end": [
+        652,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "423",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-10df92dbd4047d492b3c8ede",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "01865de3291f6ce36b609fc8",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::inner",
+    "name": "inner",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn inner(&self) -> &Buffer",
+    "docs": "Returns the inner [`Buffer`]\n\nNote: this does not account for offset and length of this [`BooleanBuffer`]",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        547,
+        5
+      ],
+      "end": [
+        549,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Buffer",
+                  "id": 123,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393,
+      "`Buffer`": 123
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer",
+      "`Buffer`": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "412",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-01865de3291f6ce36b609fc8",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5",
+      "`Buffer`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b"
+    }
+  },
+  {
+    "id": "b7beb5da8e30e546fd88402e",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::into_inner",
+    "name": "into_inner",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_inner(self) -> Buffer",
+    "docs": "Returns the inner [`Buffer`], consuming self\n\nNote: this does not account for offset and length of this [`BooleanBuffer`]",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        554,
+        5
+      ],
+      "end": [
+        556,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Buffer",
+              "id": 123,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393,
+      "`Buffer`": 123
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer",
+      "`Buffer`": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "413",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-b7beb5da8e30e546fd88402e",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5",
+      "`Buffer`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b"
+    }
+  },
+  {
+    "id": "ea68a96cac33b942271ee7ec",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::is_empty",
+    "name": "is_empty",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "Returns true if this [`BooleanBuffer`] is empty",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        478,
+        5
+      ],
+      "end": [
+        480,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "404",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-ea68a96cac33b942271ee7ec",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5"
+    }
+  },
+  {
+    "id": "578e9c3c4b063f01e33799d7",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::iter",
+    "name": "iter",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn iter(&self) -> BitIterator<'_>",
+    "docs": "Returns an iterator over the bits in this [`BooleanBuffer`]",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        610,
+        5
+      ],
+      "end": [
+        612,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BitIterator",
+              "id": 416,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'_"
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "416": "arrow_buffer::util::bit_iterator::BitIterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "415",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-578e9c3c4b063f01e33799d7",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5"
+    }
+  },
+  {
+    "id": "3247acad816f128d0d950d85",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::len",
+    "name": "len",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Returns the length of this [`BooleanBuffer`] in bits (not bytes)",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        472,
+        5
+      ],
+      "end": [
+        474,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "403",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-3247acad816f128d0d950d85",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5"
+    }
+  },
+  {
+    "id": "ed5d4cbddf64226a4050cc46",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::new",
+    "name": "new",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(buffer: Buffer, bit_offset: usize, bit_len: usize) -> Self",
+    "docs": "Create a new [`BooleanBuffer`] from a [`Buffer`], `bit_offset` offset and `bit_len` length\n\n# Panics\n\nThis method will panic if `buffer` is not large enough",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        124,
+        5
+      ],
+      "end": [
+        137,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "buffer",
+              {
+                "resolved_path": {
+                  "path": "Buffer",
+                  "id": 123,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "bit_offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "bit_len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393,
+      "`Buffer`": 123
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer",
+      "`Buffer`": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "394",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-ed5d4cbddf64226a4050cc46",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5",
+      "`Buffer`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b"
+    }
+  },
+  {
+    "id": "0440fc176cbee343fa69beee",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::new_set",
+    "name": "new_set",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_set(length: usize) -> Self",
+    "docs": "Create a new [`BooleanBuffer`] of `length` bits (not bytes) where all values are `true`",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        140,
+        5
+      ],
+      "end": [
+        144,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "length",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "395",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-0440fc176cbee343fa69beee",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5"
+    }
+  },
+  {
+    "id": "71d9bd4220c768bb06da6672",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::new_unset",
+    "name": "new_unset",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new_unset(length: usize) -> Self",
+    "docs": "Create a new [`BooleanBuffer`] of `length` bits (not bytes) where all values are `false`",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        147,
+        5
+      ],
+      "end": [
+        154,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "length",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "396",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-71d9bd4220c768bb06da6672",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5"
+    }
+  },
+  {
+    "id": "d5f2b1222a93ec6bf2c6fc41",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::offset",
+    "name": "offset",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn offset(&self) -> usize",
+    "docs": "Returns the offset of this [`BooleanBuffer`] in bits (not bytes)",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        466,
+        5
+      ],
+      "end": [
+        468,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "402",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-d5f2b1222a93ec6bf2c6fc41",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5"
+    }
+  },
+  {
+    "id": "13c70f00536b4a456c1b0e44",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::ptr_eq",
+    "name": "ptr_eq",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn ptr_eq(&self, other: &Self) -> bool",
+    "docs": "Returns true if this [`BooleanBuffer`] is equal to `other`, using pointer comparisons\nto determine buffer equality. This is cheaper than `PartialEq::eq` but may\nreturn false when the arrays are logically equal",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        537,
+        5
+      ],
+      "end": [
+        541,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "411",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-13c70f00536b4a456c1b0e44",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5"
+    }
+  },
+  {
+    "id": "876e53f813595f49d493348b",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::set_indices",
+    "name": "set_indices",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn set_indices(&self) -> BitIndexIterator<'_>",
+    "docs": "Returns an iterator over the set bit positions in this [`BooleanBuffer`]",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        620,
+        5
+      ],
+      "end": [
+        622,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BitIndexIterator",
+              "id": 418,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'_"
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "418": "arrow_buffer::util::bit_iterator::BitIndexIterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "417",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-876e53f813595f49d493348b",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5"
+    }
+  },
+  {
+    "id": "d0b54d0d7b4908d1ad6a84b8",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::set_indices_u32",
+    "name": "set_indices_u32",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn set_indices_u32(&self) -> BitIndexU32Iterator<'_>",
+    "docs": "Returns a `u32` iterator over set bit positions without any usize->u32 conversion",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        625,
+        5
+      ],
+      "end": [
+        627,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BitIndexU32Iterator",
+              "id": 420,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'_"
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "420": "arrow_buffer::util::bit_iterator::BitIndexU32Iterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "419",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-d0b54d0d7b4908d1ad6a84b8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "548abec08d1016e37ef6686b",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::set_slices",
+    "name": "set_slices",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn set_slices(&self) -> BitSliceIterator<'_>",
+    "docs": "Returns a [`BitSliceIterator`] yielding contiguous ranges of set bits",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        630,
+        5
+      ],
+      "end": [
+        632,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BitSliceIterator",
+              "id": 421,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'_"
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "421": "arrow_buffer::util::bit_iterator::BitSliceIterator"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BitSliceIterator`": 421
+    },
+    "link_paths": {
+      "`BitSliceIterator`": "arrow_buffer::util::bit_iterator::BitSliceIterator"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "422",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-548abec08d1016e37ef6686b",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BitSliceIterator`": "../operations/arrow_buffer.util.bit_iterator.BitSliceIterator.md#op-c825a8467c523296ef7280a9"
+    }
+  },
+  {
+    "id": "2812668114fc891788fceb03",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::shrink_to_fit",
+    "name": "shrink_to_fit",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn shrink_to_fit(&mut self)",
+    "docs": "Free up unused memory.",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        483,
+        5
+      ],
+      "end": [
+        486,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "405",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-2812668114fc891788fceb03",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ae004a8e8e4aaae15a1dbab4",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::slice",
+    "name": "slice",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn slice(&self, offset: usize, len: usize) -> Self",
+    "docs": "Slices this [`BooleanBuffer`] by the provided `offset` and `length`",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        515,
+        5
+      ],
+      "end": [
+        525,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "len",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "409",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-ae004a8e8e4aaae15a1dbab4",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5"
+    }
+  },
+  {
+    "id": "e3d35c51990b3812973a6267",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::sliced",
+    "name": "sliced",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn sliced(&self) -> Buffer",
+    "docs": "Returns a new [`Buffer`] containing the sliced contents of this [`BooleanBuffer`]\n\nEquivalent to `self.buffer.bit_slice(self.offset, self.len)`",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        530,
+        5
+      ],
+      "end": [
+        532,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Buffer",
+              "id": 123,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393,
+      "`Buffer`": 123
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer",
+      "`Buffer`": "arrow_buffer::buffer::immutable::Buffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "410",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-e3d35c51990b3812973a6267",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5",
+      "`Buffer`": "../operations/arrow_buffer.buffer.immutable.Buffer.md#op-f54755e677e7b3529b3edb8b"
+    }
+  },
+  {
+    "id": "5ed0dea58457b2bd4ab75e77",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::value",
+    "name": "value",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn value(&self, idx: usize) -> bool",
+    "docs": "Returns the boolean value at index `i`.\n\n# Panics\n\nPanics if `i >= self.len()`",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        494,
+        5
+      ],
+      "end": [
+        497,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "idx",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "406",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-5ed0dea58457b2bd4ab75e77",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6af8de6634763294e8ad0b2b",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::value_unchecked",
+    "name": "value_unchecked",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn value_unchecked(&self, i: usize) -> bool",
+    "docs": "Returns the boolean value at index `i`.\n\n# Safety\nThis doesn't check bounds, the caller must ensure that index < self.len()",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        504,
+        5
+      ],
+      "end": [
+        506,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "i",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "407",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-6af8de6634763294e8ad0b2b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2790530427a59cfb76de9ae3",
+    "path": "arrow_buffer::buffer::boolean::BooleanBuffer::values",
+    "name": "values",
+    "owner": "arrow_buffer::buffer::boolean::BooleanBuffer",
+    "crate": "arrow-buffer",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn values(&self) -> &[u8]",
+    "docs": "Returns the packed values of this [`BooleanBuffer`] not including any offset",
+    "span": {
+      "filename": "src/buffer/boolean.rs",
+      "begin": [
+        510,
+        5
+      ],
+      "end": [
+        512,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "primitive": "u8"
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "BooleanBuffer",
+          "id": "arrow_buffer::buffer::boolean::BooleanBuffer",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/buffer/boolean.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BooleanBuffer`": 393
+    },
+    "link_paths": {
+      "`BooleanBuffer`": "arrow_buffer::buffer::boolean::BooleanBuffer"
+    },
+    "artifact": {
+      "id": "19e5138cb15da43bbc50a7dda932f87ed8d8874b2c71193241d3fd14de5cb244",
+      "format_version": 61,
+      "item_id": "408",
+      "origin": "https://docs.rs/crate/arrow-buffer/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.md",
+    "record_file": "operations/arrow_buffer.buffer.boolean.BooleanBuffer.json",
+    "anchor": "op-2790530427a59cfb76de9ae3",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BooleanBuffer`": "../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md#op-3a838cdae998215374fcb4b5"
+    }
+  }
+]

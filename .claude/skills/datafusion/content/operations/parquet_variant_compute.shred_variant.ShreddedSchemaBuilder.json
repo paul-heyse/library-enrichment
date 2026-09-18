@@ -1,0 +1,790 @@
+[
+  {
+    "id": "59231827338a5beb604d8c86",
+    "path": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder",
+    "name": "ShreddedSchemaBuilder",
+    "owner": null,
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct ShreddedSchemaBuilder",
+    "docs": "Builder for constructing a variant shredding schema.\n\nThe builder pattern makes it easy to incrementally define which fields\nshould be shredded and with what types. Fields are nullable by default; pass\na `(data_type, nullable)` pair or a `FieldRef` to control nullability.\n\nNote: this builder currently only supports struct fields. List support\nwill be added in the future.\n\n# Example\n\n```\nuse std::sync::Arc;\nuse arrow::datatypes::{DataType, Field, TimeUnit};\nuse parquet_variant::{VariantPath, VariantPathElement};\nuse parquet_variant_compute::ShreddedSchemaBuilder;\n\nfn main() -> Result<(), arrow::error::ArrowError> {\n    // Define the shredding schema using the builder\n    let shredding_type = ShreddedSchemaBuilder::default()\n    // store the \"time\" field as a separate UTC timestamp\n    .with_path(\"time\", (&DataType::Timestamp(TimeUnit::Nanosecond, Some(\"UTC\".into())), true))?\n    // store hostname as non-nullable Utf8\n    .with_path(\"hostname\", (&DataType::Utf8, false))?\n    // pass a FieldRef directly\n    .with_path(\n        \"metadata.trace_id\",\n        Arc::new(Field::new(\"trace_id\", DataType::FixedSizeBinary(16), false)),\n    )?\n    // field name with a dot: use VariantPath to avoid splitting\n    .with_path(\n        VariantPath::from_iter([VariantPathElement::from(\"metrics.cpu\")]),\n        &DataType::Float64,\n    )?\n    .build();\n   Ok(())\n}\n// The shredding_type can now be passed to shred_variant:\n// let shredded = shred_variant(&input, &shredding_type)?;\n```",
+    "span": {
+      "filename": "src/shred_variant.rs",
+      "begin": [
+        561,
+        1
+      ],
+      "end": [
+        563,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          42,
+          43,
+          45,
+          47,
+          49,
+          51,
+          53,
+          55,
+          58,
+          62,
+          65,
+          70,
+          73,
+          77,
+          80,
+          83,
+          88,
+          90,
+          93,
+          96
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "15",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.shred_variant.ShreddedSchemaBuilder.md",
+    "record_file": "operations/parquet_variant_compute.shred_variant.ShreddedSchemaBuilder.json",
+    "anchor": "op-59231827338a5beb604d8c86",
+    "aliases": [
+      "parquet::variant::ShreddedSchemaBuilder",
+      "parquet_variant_compute::ShreddedSchemaBuilder"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "74efda15f0c801b5e44d7e79",
+    "path": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder::build",
+    "name": "build",
+    "owner": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder",
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn build(self) -> DataType",
+    "docs": "Build the final [`DataType`].",
+    "span": {
+      "filename": "src/shred_variant.rs",
+      "begin": [
+        596,
+        5
+      ],
+      "end": [
+        602,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DataType",
+              "id": 17,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "17": "arrow_schema::datatype::DataType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ShreddedSchemaBuilder",
+          "id": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/shred_variant.rs",
+        "begin": [
+          565,
+          1
+        ],
+        "end": [
+          603,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`DataType`": 17
+    },
+    "link_paths": {
+      "`DataType`": "arrow_schema::datatype::DataType"
+    },
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "41",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.shred_variant.ShreddedSchemaBuilder.md",
+    "record_file": "operations/parquet_variant_compute.shred_variant.ShreddedSchemaBuilder.json",
+    "anchor": "op-74efda15f0c801b5e44d7e79",
+    "aliases": [
+      "parquet::variant::ShreddedSchemaBuilder::build",
+      "parquet_variant_compute::ShreddedSchemaBuilder::build"
+    ],
+    "resolved_doc_links": {
+      "`DataType`": "../operations/arrow_schema.datatype.DataType.md#op-bf69df5b14436e006d3a531c"
+    }
+  },
+  {
+    "id": "f171b461ac7b228209046321",
+    "path": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder::clone",
+    "name": "clone",
+    "owner": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder",
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> ShreddedSchemaBuilder",
+    "docs": "",
+    "span": {
+      "filename": "src/shred_variant.rs",
+      "begin": [
+        560,
+        19
+      ],
+      "end": [
+        560,
+        24
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ShreddedSchemaBuilder",
+              "id": 15,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "15": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ShreddedSchemaBuilder",
+          "id": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/shred_variant.rs",
+        "begin": [
+          560,
+          19
+        ],
+        "end": [
+          560,
+          24
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "95",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.shred_variant.ShreddedSchemaBuilder.md",
+    "record_file": "operations/parquet_variant_compute.shred_variant.ShreddedSchemaBuilder.json",
+    "anchor": "op-f171b461ac7b228209046321",
+    "aliases": [
+      "parquet::variant::ShreddedSchemaBuilder::clone",
+      "parquet_variant_compute::ShreddedSchemaBuilder::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "78ec8d0eee10272666b60449",
+    "path": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder::default",
+    "name": "default",
+    "owner": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder",
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn default() -> ShreddedSchemaBuilder",
+    "docs": "",
+    "span": {
+      "filename": "src/shred_variant.rs",
+      "begin": [
+        560,
+        10
+      ],
+      "end": [
+        560,
+        17
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "resolved_path": {
+              "path": "ShreddedSchemaBuilder",
+              "id": 15,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "15": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ShreddedSchemaBuilder",
+          "id": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/shred_variant.rs",
+        "begin": [
+          560,
+          10
+        ],
+        "end": [
+          560,
+          17
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "92",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.shred_variant.ShreddedSchemaBuilder.md",
+    "record_file": "operations/parquet_variant_compute.shred_variant.ShreddedSchemaBuilder.json",
+    "anchor": "op-78ec8d0eee10272666b60449",
+    "aliases": [
+      "parquet::variant::ShreddedSchemaBuilder::default",
+      "parquet_variant_compute::ShreddedSchemaBuilder::default"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "30938660629ea7c8fe91ff36",
+    "path": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder::new",
+    "name": "new",
+    "owner": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder",
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "Create a new empty schema builder.",
+    "span": {
+      "filename": "src/shred_variant.rs",
+      "begin": [
+        567,
+        5
+      ],
+      "end": [
+        569,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ShreddedSchemaBuilder",
+          "id": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/shred_variant.rs",
+        "begin": [
+          565,
+          1
+        ],
+        "end": [
+          603,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "36",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.shred_variant.ShreddedSchemaBuilder.md",
+    "record_file": "operations/parquet_variant_compute.shred_variant.ShreddedSchemaBuilder.json",
+    "anchor": "op-30938660629ea7c8fe91ff36",
+    "aliases": [
+      "parquet::variant::ShreddedSchemaBuilder::new",
+      "parquet_variant_compute::ShreddedSchemaBuilder::new"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0067b94e109334cd5d9f64b7",
+    "path": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder::with_path",
+    "name": "with_path",
+    "owner": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder",
+    "crate": "parquet-variant-compute",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_path<'a, P, F>(self, path: P, field: F) -> Result<Self> where P: TryInto<VariantPath<'a>>, P::Error: std::fmt::Debug, F: IntoShreddingField",
+    "docs": "Insert a typed path into the schema using dot notation (or any\n[`VariantPath`] convertible).\n\nThe path uses dot notation to specify nested fields.\nFor example, \"a.b.c\" will create a nested structure.\n\n# Arguments\n\n* `path` - Anything convertible to [`VariantPath`] (e.g., a `&str`)\n* `field` - Anything convertible via [`IntoShreddingField`] (e.g. `FieldRef`,\n  `&DataType`, or `(&DataType, bool)` to control nullability)",
+    "span": {
+      "filename": "src/shred_variant.rs",
+      "begin": [
+        582,
+        5
+      ],
+      "end": [
+        593,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "path",
+              {
+                "generic": "P"
+              }
+            ],
+            [
+              "field",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 18,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "P",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "P"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "TryInto",
+                        "id": 39,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "VariantPath",
+                                    "id": 37,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "lifetime": "'a"
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "qualified_path": {
+                    "name": "Error",
+                    "args": null,
+                    "self_type": {
+                      "generic": "P"
+                    },
+                    "trait": {
+                      "path": "",
+                      "id": 39,
+                      "args": null
+                    }
+                  }
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "std::fmt::Debug",
+                        "id": 40,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "F"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "IntoShreddingField",
+                        "id": 23,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "18": "arrow::error::Result",
+      "39": "core::convert::TryInto",
+      "37": "parquet_variant::path::VariantPath",
+      "40": "core::fmt::Debug",
+      "23": "parquet_variant_compute::shred_variant::IntoShreddingField"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ShreddedSchemaBuilder",
+          "id": "parquet_variant_compute::shred_variant::ShreddedSchemaBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/shred_variant.rs",
+        "begin": [
+          565,
+          1
+        ],
+        "end": [
+          603,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`IntoShreddingField`": 23,
+      "`VariantPath`": 37
+    },
+    "link_paths": {
+      "`IntoShreddingField`": "parquet_variant_compute::shred_variant::IntoShreddingField",
+      "`VariantPath`": "parquet_variant::path::VariantPath"
+    },
+    "artifact": {
+      "id": "dab2f701cae32ce5d30229554c3930d80254569e4cf9602dbbfdfc02a8353d53",
+      "format_version": 61,
+      "item_id": "38",
+      "origin": "https://docs.rs/crate/parquet-variant-compute/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant_compute.shred_variant.ShreddedSchemaBuilder.md",
+    "record_file": "operations/parquet_variant_compute.shred_variant.ShreddedSchemaBuilder.json",
+    "anchor": "op-0067b94e109334cd5d9f64b7",
+    "aliases": [
+      "parquet::variant::ShreddedSchemaBuilder::with_path",
+      "parquet_variant_compute::ShreddedSchemaBuilder::with_path"
+    ],
+    "resolved_doc_links": {
+      "`IntoShreddingField`": "../operations/parquet_variant_compute.shred_variant.IntoShreddingField.md#op-ce935c201ce8bd7416fe8986",
+      "`VariantPath`": "../operations/parquet_variant.path.VariantPath.md#op-80e1a932cd6b1f8c63058dd5"
+    }
+  }
+]

@@ -30,6 +30,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.slice.SparkSlice.md).
+
+
 Spark slice function implementation
 Main difference from DataFusion's array_slice is that the third argument is the length of the slice and not the end index.
 <https://spark.apache.org/docs/latest/api/sql/index.html#slice>

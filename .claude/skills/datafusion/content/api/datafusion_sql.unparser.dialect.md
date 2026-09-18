@@ -14,6 +14,9 @@ enum CharacterLengthStyle
 
 **Derives**: Clone, Copy, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.CharacterLengthStyle.md).
+
+
 `CharacterLengthStyle` to use for unparsing
 
 Different DBMSs uses different names for function calculating the number of characters in the string
@@ -33,6 +36,9 @@ enum DateFieldExtractStyle
 **Variants**: `DatePart`, `Extract`, `Strftime`
 
 **Derives**: Clone, Copy, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.DateFieldExtractStyle.md).
+
 
 Datetime subfield extraction style for unparsing
 
@@ -56,6 +62,9 @@ enum DistinctFromStyle
 
 **Derives**: Clone, Copy, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.DistinctFromStyle.md).
+
+
 `DistinctFromStyle` to use for unparsing `IsDistinctFrom` and `IsNotDistinctFrom` operators
 
 ---
@@ -71,6 +80,9 @@ enum IntervalStyle
 **Variants**: `PostgresVerbose`, `SQLStandard`, `MySQL`
 
 **Derives**: Clone, Copy
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.IntervalStyle.md).
+
 
 `IntervalStyle` to use for unparsing
 
@@ -117,6 +129,9 @@ fn unnest_as_table_factor(&self) -> bool
 fn utf8_cast_dtype(&self) -> ast::DataType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.BigQueryDialect.md).
+
+
 ---
 
 ## CustomDialect
@@ -158,6 +173,9 @@ fn utf8_cast_dtype(&self) -> ast::DataType
 fn window_func_support_window_frame(&self, _func_name: &str, _start_bound: &WindowFrameBound, _end_bound: &WindowFrameBound) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.CustomDialect.md).
+
+
 ---
 
 ## CustomDialectBuilder
@@ -198,6 +216,9 @@ fn with_utf8_cast_dtype(self, utf8_cast_dtype: ast::DataType) -> Self
 fn with_window_func_support_window_frame(self, window_func_support_window_frame: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.CustomDialectBuilder.md).
+
+
 `CustomDialectBuilder` to build `CustomDialect` using builder pattern
 
 
@@ -231,6 +252,9 @@ struct DefaultDialect
 fn identifier_quote_style(&self, identifier: &str) -> Option<char>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.DefaultDialect.md).
+
+
 ---
 
 ## DuckDBDialect
@@ -262,6 +286,9 @@ fn scalar_function_to_sql_overrides(&self, unparser: &Unparser<'_>, func_name: &
 fn with_custom_scalar_overrides(self, handlers: Vec<(&str, ScalarFnToSqlHandler)>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.DuckDBDialect.md).
+
+
 ---
 
 ## MySqlDialect
@@ -292,6 +319,9 @@ fn timestamp_cast_dtype(&self, _time_unit: &TimeUnit, _tz: &Option<Arc<str>>) ->
 fn utf8_cast_dtype(&self) -> ast::DataType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.MySqlDialect.md).
+
+
 ---
 
 ## PostgreSqlDialect
@@ -318,6 +348,9 @@ fn supports_empty_select_list(&self) -> bool
 fn supports_qualify(&self) -> bool
 fn use_array_keyword_for_array_literals(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.PostgreSqlDialect.md).
+
 
 ---
 
@@ -347,6 +380,9 @@ fn supports_nulls_first_in_sort(&self) -> bool
 fn timestamp_cast_dtype(&self, _time_unit: &TimeUnit, tz: &Option<Arc<str>>) -> ast::DataType
 fn unnest_as_lateral_flatten(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.SnowflakeDialect.md).
+
 
 Dialect for Snowflake SQL.
 
@@ -383,6 +419,9 @@ fn supports_column_alias_in_table_alias(&self) -> bool
 fn supports_qualify(&self) -> bool
 fn timestamp_cast_dtype(&self, _time_unit: &TimeUnit, _tz: &Option<Arc<str>>) -> ast::DataType
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.SqliteDialect.md).
+
 
 ---
 
@@ -441,6 +480,9 @@ fn window_func_support_window_frame(&self, _func_name: &str, _start_bound: &Wind
 fn with_custom_scalar_overrides(self, _handlers: Vec<(&str, ScalarFnToSqlHandler)>) -> Self where Self: Sized
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.Dialect.md).
+
+
 `Dialect` to use for Unparsing
 
 The default dialect tries to avoid quoting identifiers unless necessary (e.g. `a` instead of `"a"`)
@@ -460,5 +502,8 @@ See also the discussion in <https://github.com/apache/datafusion/pull/10625>
 ```rust
 type ScalarFnToSqlHandler = Box<dyn Fn(&super::Unparser<'_>, &[datafusion_expr::Expr]) -> datafusion_common::Result<Option<ast::Expr>> + Send + Sync>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.dialect.ScalarFnToSqlHandler.md).
+
 
 ---

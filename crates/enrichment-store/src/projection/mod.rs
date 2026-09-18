@@ -1,14 +1,10 @@
 //! Native catalog, operation and delivery projections using core Arrow evidence contracts.
 
-pub(crate) mod browse;
 pub mod catalog;
 pub(crate) mod comparison;
 pub(crate) mod comparison_value;
-pub(crate) mod contracts;
 pub mod publication;
 pub(crate) mod render;
-pub(crate) mod score;
-pub(crate) mod search;
 pub(crate) mod staging;
 
 // The core owns the fixed evidence Arrow contracts. These imports are the store's
@@ -46,12 +42,4 @@ pub(crate) fn inspection_schema(
         "api_without_documentation".into(),
     );
     Ok(Arc::new(Schema::new_with_metadata(fields, metadata)))
-}
-
-/// Encode a typed domain subject for a bound native query parameter.
-pub(crate) fn subject_scalar(
-    subject: &enrichment_core::evidence::relational::SubjectRef,
-) -> datafusion::error::Result<datafusion::common::ScalarValue> {
-    let array = encode::subject(&[subject])?;
-    datafusion::common::ScalarValue::try_from_array(array.as_ref(), 0)
 }

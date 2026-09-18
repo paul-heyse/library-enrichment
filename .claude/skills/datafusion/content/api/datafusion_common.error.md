@@ -59,6 +59,9 @@ fn source(&self) -> Option<&dyn Error + 'static>
 fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.error.DataFusionError.md).
+
+
 DataFusion error
 
 ---
@@ -85,6 +88,9 @@ enum SchemaError
 fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.error.SchemaError.md).
+
+
 Schema-related errors
 
 ---
@@ -97,6 +103,9 @@ Schema-related errors
 fn add_possible_columns_to_diag(diagnostic: &mut Diagnostic, field: &Column, valid_fields: &[Column])
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.error.add_possible_columns_to_diag.md).
+
+
 ---
 
 ## field_not_found
@@ -108,6 +117,9 @@ Also reachable as `datafusion::common::field_not_found`, `datafusion_common::fie
 ```rust
 fn field_not_found<R: Into<TableReference>>(qualifier: Option<R>, name: &str, schema: &DFSchema) -> DataFusionError
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.error.field_not_found.md).
+
 
 Create a "field not found" DataFusion::SchemaError
 
@@ -122,6 +134,9 @@ Also reachable as `datafusion::common::unqualified_field_not_found`, `datafusion
 ```rust
 fn unqualified_field_not_found(name: &str, schema: &DFSchema) -> DataFusionError
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.error.unqualified_field_not_found.md).
+
 
 Convenience wrapper over [`field_not_found`] for when there is no qualifier
 
@@ -145,6 +160,9 @@ fn error_or<T>(self, ok: T) -> Result<T, DataFusionError>
 fn new() -> Self
 fn with_error(self, error: DataFusionError) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.error.DataFusionErrorBuilder.md).
+
 
 A builder for [`DataFusionError`]
 
@@ -181,6 +199,9 @@ assert_contains!(
 type GenericError = Box<dyn Error + Send + Sync>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.error.GenericError.md).
+
+
 Error type for generic operations that could result in DataFusionError::External
 
 ---
@@ -205,6 +226,9 @@ fn tnr(self) -> Result<TreeNodeRecursion>
 fn transformed(self) -> Result<bool>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.error.Result.md).
+
+
 Result type for operations that could result in an [DataFusionError]
 
 ---
@@ -218,6 +242,9 @@ Also reachable as `datafusion::common::SharedResult`, `datafusion::error::Shared
 ```rust
 type SharedResult<T> = result::Result<T, std::sync::Arc<DataFusionError>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.error.SharedResult.md).
+
 
 Result type for operations that could result in an [DataFusionError] and needs to be shared (wrapped into `Arc`).
 

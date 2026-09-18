@@ -32,7 +32,12 @@ pub async fn wait_for_answer(service: &Service, response: Value) -> Value {
                 .response
                 .expect("job RPC");
             assert!(response.error.is_none(), "{:?}", response.error);
-            let record = complete_answer(service, response.result.expect("job envelope")).await;
+            let record = complete_answer(
+                service,
+                serde_json::to_value(response.result.expect("job envelope"))
+                    .expect("RPC JSON projection"),
+            )
+            .await;
             assert_eq!(record["data"]["job_id"], id);
             if record["data"]["result"].is_object() {
                 let terminal = &record["data"]["result"];
@@ -93,7 +98,7 @@ pub async fn complete_answer_measured(
                 .response
                 .expect("artifact RPC");
             assert!(result.error.is_none(), "{:?}", result.error);
-            let page = result.result.expect("artifact envelope");
+            let page = serde_json::to_value(result.result.expect("artifact envelope")).expect("RPC JSON projection");
             observed.artifact_calls += 1;
             observed.artifact_response_bytes += serde_json::to_vec(&page)
                 .expect("encoded native result")

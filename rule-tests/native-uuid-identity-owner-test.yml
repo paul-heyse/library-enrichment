@@ -1,0 +1,21 @@
+id: native-uuid-identity-owner
+valid:
+  - "struct Lifecycle { lease_id: RetentionLeaseId, obligation_id: CleanupObligationId, run_id: MaintenanceRunId, owner_id: PhysicalOwnerId, reservation_id: StorageReservationId }"
+  - 'struct Claim { job_id: JobId }'
+  - 'crate::native_struct! { pub struct Claim { job_id: crate::identity::JobId => Rule::Text } }'
+  - 'struct Trace { operation_id: String }'
+  - 'let path = root.join(job_id.to_string());'
+  - 'struct Input { attempt_id: AttemptId, producing_attempt: AttemptId, interest_id: InterestId }'
+invalid:
+  - "struct Lease { lease_id: String }"
+  - "struct Cleanup { obligation_id: String }"
+  - "struct Maintenance { run_id: String }"
+  - "struct Physical { owner_id: String }"
+  - "native_struct! { pub struct Storage { reservation_id: String => Rule::NonEmpty } }"
+  - 'struct Claim { job_id: String }'
+  - 'pub struct Capture { pub job_id: String }'
+  - 'crate::native_struct! { pub struct Claim { job_id: String => Rule::NonEmpty } }'
+  - 'enrichment_core::native_union! { pub enum Scope { Job = "job" { job_id: String => Rule::Text } } }'
+  - 'struct ProducerRun { attempt_id: String }'
+  - 'crate::native_struct! { struct Input { producing_attempt: String => Rule::Text } }'
+  - 'struct Interest { interest_id: String }'

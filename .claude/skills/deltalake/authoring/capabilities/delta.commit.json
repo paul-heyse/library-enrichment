@@ -1,0 +1,130 @@
+{
+  "id": "delta.commit",
+  "title": "Reason about optimistic commits and errors after publication",
+  "reviewed": "2026-09-18",
+  "brief": "Separate data preparation, optimistic log publication and post-commit work. An operation error does not establish that the table is unchanged.",
+  "task_aliases": [
+    "optimistic conflict",
+    "retry commit",
+    "post commit error",
+    "durable write failed",
+    "transaction recovery",
+    "max retries"
+  ],
+  "crates": [
+    "deltalake-core"
+  ],
+  "input": [
+    "actions",
+    "snapshot/read set",
+    "CommitProperties",
+    "execution hooks"
+  ],
+  "output": [
+    "committed version",
+    "updated snapshot",
+    "post-commit result"
+  ],
+  "properties": [
+    "optimistic conflict",
+    "retry commit",
+    "post commit error",
+    "durable write failed",
+    "transaction recovery",
+    "max retries"
+  ],
+  "operations": [
+    "deltalake_core::kernel::transaction::CommitBuilder::build",
+    "deltalake_core::kernel::transaction::CommitProperties::with_max_retries",
+    "deltalake_core::operations::write::WriteBuilder::with_custom_execute_handler",
+    "deltalake_core::kernel::transaction::CommitProperties::with_metadata"
+  ],
+  "choices": [
+    {
+      "candidate": "High-level operation with CommitProperties",
+      "choose_when": "Built-in operation already captures the needed read/write semantics",
+      "tradeoff": "Customize metadata and retry policy without reproducing actions"
+    },
+    {
+      "candidate": "CommitBuilder",
+      "choose_when": "You own valid protocol actions and their transactional meaning",
+      "tradeoff": "You must supply correct operation/read-set semantics and recovery"
+    },
+    {
+      "candidate": "Reload/reconcile after ambiguous error",
+      "choose_when": "The failure may have occurred after log publication",
+      "tradeoff": "Observe table state before retrying data production"
+    }
+  ],
+  "claims": [
+    {
+      "id": "delta.commit.1",
+      "aspect": "failure phase",
+      "statement": "The injected before_post_commit_hook error returned failure while a fresh observer saw the new version and appended rows. This proves local log visibility, not power-loss durability.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "operation_error_can_follow_a_durable_commit"
+    },
+    {
+      "id": "delta.commit.2",
+      "aspect": "retry",
+      "statement": "A stale append with max_retries(0) failed after an intervening commit; the default retry path appended successfully. A stale whole-table update conflicted with an intervening update.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "optimistic_conflict_and_retry_budget"
+    },
+    {
+      "id": "delta.commit.3",
+      "aspect": "backend",
+      "statement": "The publication primitive is delegated to the chosen LogStore/backend. Do not assume every backend commits by the same atomic-rename protocol.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    }
+  ],
+  "implementation": [
+    "Record application/operation metadata sufficient for reconciliation and classify errors by the phase they can occur in.",
+    "Use the returned version/table on success; on an ambiguous error, independently reload and compare committed state.",
+    "Treat max_retries as a transaction policy, not a universal retry around arbitrary source side effects."
+  ],
+  "effects": [
+    "write files",
+    "publish log version",
+    "post-commit checkpoint/cleanup/hooks"
+  ],
+  "errors": [
+    "Precondition failure, optimistic conflict, publication failure and post-commit failure can imply different visible states."
+  ],
+  "unknowns": [
+    "Crash recovery, remote backend atomicity and distributed scheduling are not inferred from local-memory publication."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "scope": "Exact git-capture full contracts for the selected operations"
+    },
+    {
+      "id": "source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/kernel/transaction/mod.rs",
+      "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+    },
+    {
+      "id": "runtime",
+      "kind": "runtime_observation",
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Named local assertions only; see profile, fixtures and source digests",
+      "tests": [
+        "operation_error_can_follow_a_durable_commit",
+        "optimistic_conflict_and_retry_budget"
+      ]
+    }
+  ]
+}

@@ -12,6 +12,9 @@ Also reachable as `datafusion_physical_plan::execution_plan::hash_utils::HLL_RAN
 const HLL_RANDOM_STATE: QualityRandomState = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.hash_utils.HLL_RANDOM_STATE.md).
+
+
 Fixed quality hash state used by HyperLogLog sketches.
 
 The seed is part of the HLL wire/storage semantics: serialized sketches only
@@ -29,6 +32,9 @@ Also reachable as `datafusion_physical_plan::execution_plan::hash_utils::combine
 fn combine_hashes(l: u64, r: u64) -> u64
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.hash_utils.combine_hashes.md).
+
+
 ---
 
 ## create_hashes
@@ -40,6 +46,9 @@ Also reachable as `datafusion_physical_plan::execution_plan::hash_utils::create_
 ```rust
 fn create_hashes<'a, I, T>(arrays: I, random_state: &impl HashState, hashes_buffer: &'a mut [u64]) -> error::Result<&'a mut [u64]> where I: IntoIterator<Item = T>, T: AsDynArray
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.hash_utils.create_hashes.md).
+
 
 Creates hash values for every row, based on the values in the columns.
 
@@ -57,6 +66,9 @@ Also reachable as `datafusion_physical_plan::execution_plan::hash_utils::create_
 ```rust
 fn create_hashes_with_hasher<'a, I, T, S>(arrays: I, hash_builder: &S, hashes_buffer: &'a mut [u64]) -> error::Result<&'a mut [u64]> where I: IntoIterator<Item = T>, T: AsDynArray, S: BuildHasher
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.hash_utils.create_hashes_with_hasher.md).
+
 
 Creates hash values for every row using a caller-provided hash builder.
 
@@ -83,6 +95,9 @@ Also reachable as `datafusion_physical_plan::execution_plan::hash_utils::with_ha
 ```rust
 fn with_hashes<I, T, F, R>(arrays: I, random_state: &impl HashState, callback: F) -> error::Result<R> where I: IntoIterator<Item = T>, T: AsDynArray, F: FnOnce(&[u64]) -> error::Result<R>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.hash_utils.with_hashes.md).
+
 
 Creates hashes for the given arrays using a thread-local buffer, then calls the provided callback
 with an immutable reference to the computed hashes.
@@ -128,6 +143,9 @@ Also reachable as `datafusion_physical_plan::execution_plan::hash_utils::with_ha
 fn with_hashes_with_hasher<I, T, F, R, S>(arrays: I, hash_builder: &S, callback: F) -> error::Result<R> where I: IntoIterator<Item = T>, T: AsDynArray, F: FnOnce(&[u64]) -> error::Result<R>, S: BuildHasher
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.hash_utils.with_hashes_with_hasher.md).
+
+
 Creates hashes for the given arrays using a thread-local buffer and a custom
 hash builder, then calls the provided callback with the computed hashes.
 
@@ -155,6 +173,9 @@ trait AsDynArray
 ```rust
 fn as_dyn_array(&self) -> &dyn Array
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.hash_utils.AsDynArray.md).
+
 
 Something that can be returned as a `&dyn Array`.
 
@@ -189,6 +210,9 @@ trait HashState: BuildHasher
 fn seeded_state(&self, seed: u64) -> Self::SeededState
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.hash_utils.HashState.md).
+
+
 Hash state used by [`create_hashes`].
 
 Multi-column hashing folds the previous column hash into a fresh hasher
@@ -221,6 +245,9 @@ fn hash_one<S: BuildHasher>(&self, state: &S) -> u64
 fn hash_write(&self, hasher: &mut impl Hasher)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.hash_utils.HashValue.md).
+
+
 ---
 
 ## QualityRandomState
@@ -233,6 +260,9 @@ Also reachable as `datafusion_physical_plan::execution_plan::hash_utils::Quality
 type QualityRandomState = foldhash::quality::FixedState
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.hash_utils.QualityRandomState.md).
+
+
 ---
 
 ## RandomState
@@ -244,6 +274,9 @@ Also reachable as `datafusion_physical_plan::execution_plan::hash_utils::RandomS
 ```rust
 type RandomState = foldhash::fast::FixedState
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.hash_utils.RandomState.md).
+
 
 [`RandomState`] is optimized for speed and suitable for hash tables and
 bloom filters. [`QualityRandomState`] is optimized for statistical quality

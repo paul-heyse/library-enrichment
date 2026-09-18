@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_repeat`, `datafusion_functions_nes
 fn array_repeat(element: datafusion_expr::Expr, count: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.repeat.array_repeat.md).
+
+
 returns an array containing element `count` times.
 
 ---
@@ -23,6 +26,9 @@ returns an array containing element `count` times.
 ```rust
 fn array_repeat_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.repeat.array_repeat_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayRepeat
@@ -57,5 +63,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.repeat.ArrayRepeat.md).
+
 
 ---

@@ -10,6 +10,9 @@ Crate `datafusion-datasource-parquet` · 3 public items · structured records in
 fn ordering_from_parquet_metadata(metadata: &parquet::file::metadata::ParquetMetaData, schema: &arrow::datatypes::SchemaRef) -> datafusion_common::Result<Option<datafusion_physical_expr_common::sort_expr::LexOrdering>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.metadata.ordering_from_parquet_metadata.md).
+
+
 Extracts ordering information from Parquet metadata.
 
 This function reads the sorting_columns from the first row group's metadata
@@ -50,6 +53,9 @@ fn extra_info(&self) -> HashMap<String, String>
 fn memory_size(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.metadata.CachedParquetMetaData.md).
+
+
 Wrapper to implement [`FileMetadata`] for [`ParquetMetaData`].
 
 ---
@@ -81,6 +87,9 @@ fn with_file_metadata_cache(self, file_metadata_cache: Option<Arc<FileMetadataCa
 fn with_metadata_size_hint(self, metadata_size_hint: Option<usize>) -> Self
 fn with_page_index_policy(self, page_index_policy: Option<PageIndexPolicy>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.metadata.DFParquetMetadata.md).
+
 
 Handles fetching Parquet file schema, metadata and statistics
 from object store.

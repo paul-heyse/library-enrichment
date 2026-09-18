@@ -12,6 +12,9 @@ enum UnparseToStatementResult
 
 **Variants**: `Modified`, `Unmodified`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.extension_unparser.UnparseToStatementResult.md).
+
+
 The result of unparsing a custom logical node to a statement.
 
 ---
@@ -25,6 +28,9 @@ enum UnparseWithinStatementResult
 ```
 
 **Variants**: `Modified`, `Unmodified`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.extension_unparser.UnparseWithinStatementResult.md).
+
 
 The result of unparsing a custom logical node within a statement.
 
@@ -44,6 +50,9 @@ trait UserDefinedLogicalNodeUnparser
 fn unparse(&self, _node: &dyn UserDefinedLogicalNode, _unparser: &Unparser<'_>, _query: &mut Option<&mut QueryBuilder>, _select: &mut Option<&mut SelectBuilder>, _relation: &mut Option<&mut RelationBuilder>) -> datafusion_common::Result<UnparseWithinStatementResult>
 fn unparse_to_statement(&self, _node: &dyn UserDefinedLogicalNode, _unparser: &Unparser<'_>) -> datafusion_common::Result<UnparseToStatementResult>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.extension_unparser.UserDefinedLogicalNodeUnparser.md).
+
 
 This trait allows users to define custom unparser logic for their custom logical nodes.
 

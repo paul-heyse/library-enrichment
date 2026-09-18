@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::map_keys`, `datafusion_functions_nested:
 fn map_keys(map: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.map_keys.map_keys.md).
+
+
 Return a list of all keys in the map.
 
 ---
@@ -23,6 +26,9 @@ Return a list of all keys in the map.
 ```rust
 fn map_keys_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.map_keys.map_keys_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 MapKeysFunc
@@ -56,5 +62,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.map_keys.MapKeysFunc.md).
+
 
 ---

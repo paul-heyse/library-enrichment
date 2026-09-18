@@ -20,6 +20,9 @@ enum ConversionType
 fn validate(&self, arg_type: &DataType) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.format_string.ConversionType.md).
+
+
 Printf data type
 
 ---
@@ -36,6 +39,9 @@ enum FormatElement<'a>
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.format_string.FormatElement.md).
+
+
 ---
 
 ## NumericParam
@@ -49,6 +55,9 @@ enum NumericParam
 **Variants**: `Literal`, `FromArgument`
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.format_string.NumericParam.md).
+
 
 Width / precision parameter
 
@@ -74,6 +83,9 @@ enum TimeFormat
 fn try_from(value: char) -> Result<Self, Self::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.format_string.TimeFormat.md).
+
+
 ---
 
 ## ConversionSpecifier
@@ -93,6 +105,9 @@ struct ConversionSpecifier
 ```rust
 fn format(&self, string: &mut String, value: &ScalarValue) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.format_string.ConversionSpecifier.md).
+
 
 Parsed printf conversion specifier
 
@@ -127,6 +142,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.format_string.FormatStringFunc.md).
+
+
 Spark-compatible `format_string` expression
 <https://spark.apache.org/docs/latest/api/sql/index.html#format_string>
 
@@ -151,6 +169,9 @@ fn format(&self, args: &[ScalarValue]) -> Result<String>
 fn new(elements: Vec<FormatElement<'a>>) -> Self
 fn parse(fmt: &'a str, arg_types: &[DataType]) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.format_string.Formatter.md).
+
 
 Compatible with `java.util.Formatter`
 

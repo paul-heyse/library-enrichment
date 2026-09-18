@@ -52,6 +52,9 @@ fn from(value: OffsetBufferBuilder<O>) -> Self
 fn deref(&self) -> &Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.offset.OffsetBuffer.md).
+
+
 A non-empty buffer of monotonically increasing, positive integers.
 
 [`OffsetBuffer`] are used to represent ranges of offsets. An

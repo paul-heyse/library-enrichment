@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## WriteMode
 
 `enum` · `deltalake_core::writer::WriteMode`
+[Full member contracts, output types and access classification](../operations/deltalake_core.writer.WriteMode.md)
 
 Also reachable as `deltalake::writer::WriteMode`
 
@@ -23,6 +24,7 @@ Write mode for the [DeltaWriter]
 ## DeltaWriter
 
 `trait` · `deltalake_core::writer::DeltaWriter`
+[Full member contracts, output types and access classification](../operations/deltalake_core.writer.DeltaWriter.md)
 
 Also reachable as `deltalake::writer::DeltaWriter`
 

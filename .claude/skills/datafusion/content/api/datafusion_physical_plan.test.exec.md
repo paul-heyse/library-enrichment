@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 10 public items · structured records in [`m
 async fn assert_strong_count_converges_to_zero<T>(refs: std::sync::Weak<T>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.exec.assert_strong_count_converges_to_zero.md).
+
+
 Asserts that the strong count of the given [`Weak`] pointer converges to zero.
 
 This might take a while but has a timeout.
@@ -59,6 +62,9 @@ fn statistics_from_inputs(&self, _input_stats: &[Arc<Statistics>], args: &Statis
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.exec.BarrierExec.md).
+
+
 A Mock ExecutionPlan that does not start producing input until a
 barrier is called
 
@@ -80,6 +86,9 @@ struct BatchIndex
 fn incr(&self)
 fn value(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.exec.BatchIndex.md).
+
 
 Index into the data that has been returned so far
 
@@ -122,6 +131,9 @@ fn replace_children(Arc<self>, _: Vec<Arc<dyn ExecutionPlan>>, _: ReplaceChildre
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.exec.BlockingExec.md).
+
+
 Execution plan that emits streams that block forever.
 
 This is useful to test shutdown / cancellation behavior of certain execution plans.
@@ -151,6 +163,9 @@ fn schema(&self) -> SchemaRef
 ```rust
 fn poll_next(Pin<&mut self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.exec.BlockingStream.md).
+
 
 A [`RecordBatchStream`] that is pending forever.
 
@@ -191,6 +206,9 @@ fn properties(&self) -> &Arc<PlanProperties>
 fn replace_children(Arc<self>, _: Vec<Arc<dyn ExecutionPlan>>, _: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.exec.ErrorExec.md).
+
 
 A mock execution plan that errors on a call to execute
 
@@ -235,6 +253,9 @@ fn statistics_from_inputs(&self, _input_stats: &[Arc<Statistics>], args: &Statis
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.exec.MockExec.md).
+
+
 A Mock ExecutionPlan that can be used for writing tests of other
 ExecutionPlans
 
@@ -276,6 +297,9 @@ fn properties(&self) -> &Arc<PlanProperties>
 fn replace_children(Arc<self>, _: Vec<Arc<dyn ExecutionPlan>>, _: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.exec.PanicExec.md).
+
 
 Execution plan that emits streams that panics.
 
@@ -320,6 +344,9 @@ fn statistics_from_inputs(&self, _input_stats: &[Arc<Statistics>], args: &Statis
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.exec.StatisticsExec.md).
+
+
 A mock execution plan that simply returns the provided statistics
 
 ---
@@ -355,6 +382,9 @@ fn schema(&self) -> SchemaRef
 fn poll_next(Pin<&mut self>, _: &mut Context<'_>) -> Poll<Option<Self::Item>>
 fn size_hint(&self) -> (usize, Option<usize>)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.test.exec.TestStream.md).
+
 
 Iterator over batches
 

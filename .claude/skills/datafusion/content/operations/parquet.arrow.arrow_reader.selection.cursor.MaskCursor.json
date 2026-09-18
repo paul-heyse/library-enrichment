@@ -1,0 +1,59 @@
+[
+  {
+    "id": "83512e458aa8d9b12ecd5019",
+    "path": "parquet::arrow::arrow_reader::selection::cursor::MaskCursor",
+    "name": "MaskCursor",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct MaskCursor",
+    "docs": "Cursor for iterating a mask-backed [`RowSelection`]\n\nThis is best for dense selections where there are many small skips\nor selections. For example, selecting every other row.\n\nWhen page pruning produces sparse column data, `loaded_row_ranges` limits\neach decoded chunk to rows whose pages are loaded for every projected leaf.\nFor example, two projected columns can have different page boundaries:\n\n```text\nRow ranges:       [0, 4) [4, 6) [6, 8) [8, 10) [10, 12)\nSelection mask:   1000   00     00     00      01\nColumn A pages:   loaded | missing [4, 8) | loaded [8, 12)\nColumn B pages:   loaded [0, 6) | missing [6, 10) | loaded\nLoadedRowRanges:  [0, 4)                         [10, 12)\n```\n\nThe first chunk decodes `[0, 1)` with mask `1`. The next chunk skips to row\n11 and decodes `[11, 12)` with mask `1`. When loaded ranges are present,\nevery returned chunk ends at a selected row and never includes trailing\nunselected rows. [`ParquetRecordBatchReader`] still accumulates both chunks\nand applies the combined mask `11` once.\n\n[`ParquetRecordBatchReader`]: crate::arrow::arrow_reader::ParquetRecordBatchReader",
+    "span": {
+      "filename": "src/arrow/arrow_reader/selection/cursor.rs",
+      "begin": [
+        191,
+        1
+      ],
+      "end": [
+        197,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": []
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "2791",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_reader.selection.cursor.MaskCursor.md",
+    "record_file": "operations/parquet.arrow.arrow_reader.selection.cursor.MaskCursor.json",
+    "anchor": "op-83512e458aa8d9b12ecd5019",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

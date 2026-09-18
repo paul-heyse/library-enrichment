@@ -3,19 +3,17 @@ language: rust
 severity: hint
 message: A write is awaited with no commit properties; a retry can duplicate the data.
 note: |
-  Delta commits are idempotent only when the writer supplies an application transaction id.
-  Without one there is nothing in the log that says "this batch was already written", so a
-  scheduler that retries a write whose result it never saw appends the same rows twice --
-  and the table is then wrong in a way no later read can detect.
-  See content/topics/transactions.md.
+  Inspect the caller's retry and reconciliation contract. At the pinned commit, repeating an
+  application transaction marker on sequential appends does not suppress the second append.
+  CommitProperties can attach useful coordination metadata; it is not an exactly-once switch.
+  See content/capabilities/delta.replay.md and delta.commit.md.
 
-  Precision note: this matches syntax, not types. `RecordBatchWriter::write` also matches, and
-  that call only stages data -- it commits separately through `flush_and_commit`, which is
-  where its commit properties belong. Treat a match as a question about where the commit
-  happens, not as a finding that one is misconfigured.
+  This is a syntax-only lead. Unrelated methods named write also match; staged writer calls
+  may commit elsewhere, and with_commit_properties(Default::default()) escapes this hint
+  without establishing any replay guarantee. Resolve receiver types before acting.
 metadata:
   record: capability-gap
-  capability: idempotent-write
+  capability: replay-coordination
 rule:
   kind: await_expression
   all:

@@ -82,6 +82,9 @@ fn from_iter<I: IntoIterator<Item = Option<&'a str>>>(iter: I) -> Self
 fn from_iter<I: IntoIterator<Item = &'a str>>(iter: I) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.dictionary_array.DictionaryArray.md).
+
+
 An array of [dictionary encoded values](https://arrow.apache.org/docs/format/Columnar.html#dictionary-encoded-layout)
 
 This is mostly used to represent strings or a limited set of primitive types as integers,
@@ -218,6 +221,9 @@ unsafe fn value_unchecked(&self, index: usize) -> Self::Item
 fn into_iter(self) -> Self::IntoIter
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.dictionary_array.TypedDictionaryArray.md).
+
+
 A [`DictionaryArray`] typed on its child values array
 
 Implements [`ArrayAccessor`] allowing fast access to its elements
@@ -258,6 +264,9 @@ fn normalized_keys(&self) -> Vec<usize>
 fn values(&self) -> &ArrayRef
 fn with_values(&self, values: ArrayRef) -> ArrayRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.dictionary_array.AnyDictionaryArray.md).
+
 
 A [`DictionaryArray`] with the key type erased
 
@@ -314,6 +323,9 @@ See [`AsArray::as_any_dictionary_opt`] and [`AsArray::as_any_dictionary`]
 type Int16DictionaryArray = DictionaryArray<Int16Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.dictionary_array.Int16DictionaryArray.md).
+
+
 A [`DictionaryArray`] indexed by `i16`
 
 # Example: Using `collect`
@@ -338,6 +350,9 @@ See [`DictionaryArray`] for more information and examples
 ```rust
 type Int32DictionaryArray = DictionaryArray<Int32Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.dictionary_array.Int32DictionaryArray.md).
+
 
 A [`DictionaryArray`] indexed by `i32`
 
@@ -364,6 +379,9 @@ See [`DictionaryArray`] for more information and examples
 type Int64DictionaryArray = DictionaryArray<Int64Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.dictionary_array.Int64DictionaryArray.md).
+
+
 A [`DictionaryArray`] indexed by `i64`
 
 # Example: Using `collect`
@@ -388,6 +406,9 @@ See [`DictionaryArray`] for more information and examples
 ```rust
 type Int8DictionaryArray = DictionaryArray<Int8Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.dictionary_array.Int8DictionaryArray.md).
+
 
 A [`DictionaryArray`] indexed by `i8`
 
@@ -414,6 +435,9 @@ See [`DictionaryArray`] for more information and examples
 type UInt16DictionaryArray = DictionaryArray<UInt16Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.dictionary_array.UInt16DictionaryArray.md).
+
+
 A [`DictionaryArray`] indexed by `u16`
 
 # Example: Using `collect`
@@ -438,6 +462,9 @@ See [`DictionaryArray`] for more information and examples
 ```rust
 type UInt32DictionaryArray = DictionaryArray<UInt32Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.dictionary_array.UInt32DictionaryArray.md).
+
 
 A [`DictionaryArray`] indexed by `u32`
 
@@ -464,6 +491,9 @@ See [`DictionaryArray`] for more information and examples
 type UInt64DictionaryArray = DictionaryArray<UInt64Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.dictionary_array.UInt64DictionaryArray.md).
+
+
 A [`DictionaryArray`] indexed by `u64`
 
 # Example: Using `collect`
@@ -488,6 +518,9 @@ See [`DictionaryArray`] for more information and examples
 ```rust
 type UInt8DictionaryArray = DictionaryArray<UInt8Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.dictionary_array.UInt8DictionaryArray.md).
+
 
 A [`DictionaryArray`] indexed by `u8`
 

@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_window::expr_fn::row_number`
 fn row_number() -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.row_number.row_number.md).
+
+
 Create a [`WindowFunction`](datafusion_expr::Expr::WindowFunction) expression for
 `RowNumber` user-defined window function.
 
@@ -26,6 +29,9 @@ Returns a unique row number for each row in window partition beginning at 1.
 ```rust
 fn row_number_udwf() -> std::sync::Arc<datafusion_expr::WindowUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.row_number.row_number_udwf.md).
+
 
 Returns a [`WindowUDF`](datafusion_expr::WindowUDF) for [`row_number`].
 
@@ -62,6 +68,9 @@ fn partition_evaluator(&self, _partition_evaluator_args: PartitionEvaluatorArgs<
 fn signature(&self) -> &Signature
 fn sort_options(&self) -> Option<SortOptions>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.row_number.RowNumber.md).
+
 
 row_number expression
 

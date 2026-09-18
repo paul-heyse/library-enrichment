@@ -44,6 +44,9 @@ fn supports_numeric_prefix(&self) -> bool
 fn supports_table_sample_before_alias(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.hive.HiveDialect.md).
+
+
 A [`Dialect`] for [Hive](https://hive.apache.org/).
 
 ---

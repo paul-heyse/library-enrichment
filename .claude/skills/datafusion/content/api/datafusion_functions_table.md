@@ -12,6 +12,9 @@ Also reachable as `datafusion::functions_table::all_default_table_functions`
 fn all_default_table_functions() -> Vec<std::sync::Arc<datafusion_catalog::TableFunction>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_table.all_default_table_functions.md).
+
+
 Returns all default table functions
 
 ---
@@ -26,6 +29,9 @@ Also reachable as `datafusion::functions_table::generate_series`
 fn generate_series() -> Arc<TableFunction>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_table.generate_series.md).
+
+
 ---
 
 ## range
@@ -38,6 +44,9 @@ Also reachable as `datafusion::functions_table::range`
 fn range() -> Arc<TableFunction>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_table.range.md).
+
+
 ---
 
 ## create_udtf_function
@@ -49,6 +58,9 @@ Also reachable as `datafusion::functions_table::create_udtf_function`
 ```rust
 macro_rules! create_udtf_function
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_table.create_udtf_function.md).
+
 
 Creates a singleton instance of a table function
 - `$module`: A struct implementing `TableFunctionImpl` to create the function from

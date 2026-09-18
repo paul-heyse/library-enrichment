@@ -60,6 +60,9 @@ fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn Execut
 fn with_preserve_order(&self, preserve_order: bool) -> Option<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.sorts.sort_preserving_merge.SortPreservingMergeExec.md).
+
+
 Sort preserving merge execution plan
 
 # Overview

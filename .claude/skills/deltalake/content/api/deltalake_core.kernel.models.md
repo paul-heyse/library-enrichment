@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## Action
 
 `enum` · `deltalake_core::kernel::models::Action`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.models.Action.md)
 
 Also reachable as `deltalake::kernel::Action`, `deltalake::kernel::models::Action`, `deltalake_core::kernel::Action`
 

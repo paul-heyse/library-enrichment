@@ -14,6 +14,9 @@ enum NdvFallback
 
 **Derives**: Clone, Copy, Debug, Default, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.stats.NdvFallback.md).
+
+
 Fallback to use when NDV overlap can not be estimated from column bounds.
 
 ---
@@ -72,6 +75,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 fn heap_size(&self, ctx: &mut DFHeapSizeCtx) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.stats.Precision.md).
+
+
 Represents a value with a degree of certainty. `Precision` is used to
 propagate information the precision of statistical values.
 
@@ -84,6 +90,9 @@ propagate information the precision of statistical values.
 ```rust
 fn estimate_ndv_with_overlap(left: &ColumnStatistics, right: &ColumnStatistics, ndv_left: usize, ndv_right: usize) -> Option<usize>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.stats.estimate_ndv_with_overlap.md).
+
 
 Estimates the combined number of distinct values (NDV) when merging two
 column statistics, using range overlap to avoid double-counting shared values.
@@ -158,6 +167,9 @@ fn with_sum_value(self, sum_value: Precision<ScalarValue>) -> Self
 fn heap_size(&self, ctx: &mut DFHeapSizeCtx) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.stats.ColumnStatistics.md).
+
+
 Statistics for a column within a relation
 
 ---
@@ -205,6 +217,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```rust
 fn heap_size(&self, ctx: &mut DFHeapSizeCtx) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.stats.Statistics.md).
+
 
 Statistics for a relation
 Fields are optional and can be inexact because the sources

@@ -33,6 +33,9 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<TableExistsOption, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.command_statement_ingest.table_definition_options.TableExistsOption.md).
+
+
 The action to take if the target table already exists
 
 ---
@@ -67,6 +70,9 @@ fn is_valid(value: i32) -> bool
 ```rust
 fn try_from(value: i32) -> ::core::result::Result<TableNotExistOption, ::prost::UnknownEnumValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.command_statement_ingest.table_definition_options.TableNotExistOption.md).
+
 
 The action to take if the target table does not exist
 

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 4 public items · structured records in [`model/buoyan
 ## DeletionVectorWriteResult
 
 `struct` · `buoyant_kernel::actions::deletion_vector_writer::DeletionVectorWriteResult`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.deletion_vector_writer.DeletionVectorWriteResult.md)
 
 Also reachable as `delta_kernel::actions::deletion_vector_writer::DeletionVectorWriteResult`
 
@@ -33,6 +34,7 @@ after writing the DV to storage.
 ## KernelDeletionVector
 
 `struct` · `buoyant_kernel::actions::deletion_vector_writer::KernelDeletionVector`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.deletion_vector_writer.KernelDeletionVector.md)
 
 Also reachable as `delta_kernel::actions::deletion_vector_writer::KernelDeletionVector`
 
@@ -80,6 +82,7 @@ dv.add_deleted_row_indexes([0, 5, 10]);
 ## StreamingDeletionVectorWriter
 
 `struct` · `buoyant_kernel::actions::deletion_vector_writer::StreamingDeletionVectorWriter`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.deletion_vector_writer.StreamingDeletionVectorWriter.md)
 
 Also reachable as `delta_kernel::actions::deletion_vector_writer::StreamingDeletionVectorWriter`
 
@@ -132,6 +135,7 @@ writer.finalize()?;
 ## DeletionVector
 
 `trait` · `buoyant_kernel::actions::deletion_vector_writer::DeletionVector`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.deletion_vector_writer.DeletionVector.md)
 
 Also reachable as `delta_kernel::actions::deletion_vector_writer::DeletionVector`
 

@@ -22,6 +22,9 @@ struct InvalidPart
 fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.path.parts.InvalidPart.md).
+
+
 Error returned by [`PathPart::parse`]
 
 ---
@@ -60,6 +63,9 @@ fn from(v: &'a str) -> Self
 fn from(v: &'a [u8]) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.path.parts.PathPart.md).
+
+
 The PathPart type exists to validate the directory/file names that form part
 of a path.
 
@@ -95,6 +101,9 @@ fn next_back(&mut self) -> Option<Self::Item>
 ```rust
 fn next(&mut self) -> Option<Self::Item>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.path.parts.PathParts.md).
+
 
 See [`Path::parts`](super::Path::parts)
 

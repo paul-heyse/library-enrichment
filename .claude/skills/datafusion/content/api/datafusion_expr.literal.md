@@ -12,6 +12,9 @@ Also reachable as `datafusion::logical_expr::lit`, `datafusion::prelude::lit`, `
 fn lit<T: Literal>(n: T) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.literal.lit.md).
+
+
 Create a literal expression
 
 ---
@@ -26,6 +29,9 @@ Also reachable as `datafusion::logical_expr::lit_timestamp_nano`, `datafusion::p
 fn lit_timestamp_nano<T: TimestampLiteral>(n: T) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.literal.lit_timestamp_nano.md).
+
+
 Create a literal timestamp expression
 
 ---
@@ -39,6 +45,9 @@ Also reachable as `datafusion::logical_expr::lit_with_metadata`, `datafusion_exp
 ```rust
 fn lit_with_metadata<T: Literal>(n: T, metadata: Option<datafusion_common::metadata::FieldMetadata>) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.literal.lit_with_metadata.md).
+
 
 ---
 
@@ -72,6 +81,9 @@ trait Literal
 fn lit(&self) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.literal.Literal.md).
+
+
 Trait for converting a type to a [`Literal`] literal expression.
 
 ---
@@ -91,6 +103,9 @@ trait TimestampLiteral
 ```rust
 fn lit_timestamp_nano(&self) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.literal.TimestampLiteral.md).
+
 
 Trait for converting a type to a literal timestamp
 

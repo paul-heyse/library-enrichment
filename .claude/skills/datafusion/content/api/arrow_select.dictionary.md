@@ -10,6 +10,9 @@ Crate `arrow-select` · 2 public items · structured records in [`model/arrow_se
 fn garbage_collect_any_dictionary(dictionary: &dyn AnyDictionaryArray) -> Result<arrow_array::ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.dictionary.garbage_collect_any_dictionary.md).
+
+
 Equivalent to [`garbage_collect_dictionary`] but without requiring casting to a specific key type.
 
 ---
@@ -21,6 +24,9 @@ Equivalent to [`garbage_collect_dictionary`] but without requiring casting to a 
 ```rust
 fn garbage_collect_dictionary<K: ArrowDictionaryKeyType>(dictionary: &arrow_array::DictionaryArray<K>) -> Result<arrow_array::DictionaryArray<K>, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_select.dictionary.garbage_collect_dictionary.md).
+
 
 Garbage collects a [DictionaryArray] by removing unreferenced values.
 

@@ -1,0 +1,323 @@
+[
+  {
+    "id": "0bbc5531b193f8f07f05b357",
+    "path": "arrow_string::regexp::regexp_is_match",
+    "name": "regexp_is_match",
+    "owner": null,
+    "crate": "arrow-string",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn regexp_is_match<'a, S1, S2, S3>(array: &'a S1, regex_array: &'a S2, flags_array: Option<&'a S3>) -> Result<BooleanArray, arrow_schema::ArrowError> where &'a S1: StringArrayType<'a>, &'a S2: StringArrayType<'a>, &'a S3: StringArrayType<'a>",
+    "docs": "Return BooleanArray indicating which strings in an array match an array of\nregular expressions.\n\nThis is equivalent to the SQL `array ~ regex_array`, supporting\n[`StringArray`] / [`LargeStringArray`] / [`StringViewArray`].\n\nIf `regex_array` element has an empty value, the corresponding result value is always true.\n\n`flags_array` are optional [`StringArray`] / [`LargeStringArray`] / [`StringViewArray`] flag,\nwhich allow special search modes, such as case-insensitive and multi-line mode.\nSee the documentation [here](https://docs.rs/regex/1.5.4/regex/#grouping-and-flags)\nfor more information.\n\n# See Also\n* [`regexp_is_match_scalar`] for matching a single regular expression against an array of strings\n* [`regexp_match`] for extracting groups from a string array based on a regular expression\n\n# Example\n```\n# use arrow_array::{StringArray, BooleanArray};\n# use arrow_string::regexp::regexp_is_match;\n// First array is the array of strings to match\nlet array = StringArray::from(vec![\"Foo\", \"Bar\", \"FooBar\", \"Baz\"]);\n// Second array is the array of regular expressions to match against\nlet regex_array = StringArray::from(vec![\"^Foo\", \"^Foo\", \"Bar$\", \"Baz\"]);\n// Third array is the array of flags to use for each regular expression, if desired\n// (the type must be provided to satisfy type inference for the third parameter)\nlet flags_array: Option<&StringArray> = None;\n// The result is a BooleanArray indicating when each string in `array`\n// matches the corresponding regular expression in `regex_array`\nlet result = regexp_is_match(&array, &regex_array, flags_array).unwrap();\nassert_eq!(result, BooleanArray::from(vec![true, false, true, true]));\n```",
+    "span": {
+      "filename": "src/regexp.rs",
+      "begin": [
+        69,
+        1
+      ],
+      "end": [
+        149,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "array",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'a",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "S1"
+                  }
+                }
+              }
+            ],
+            [
+              "regex_array",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'a",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "S2"
+                  }
+                }
+              }
+            ],
+            [
+              "flags_array",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 45,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": "'a",
+                              "is_mutable": false,
+                              "type": {
+                                "generic": "S3"
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 4,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "BooleanArray",
+                          "id": 31,
+                          "args": null
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "arrow_schema::ArrowError",
+                          "id": 5,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "S1",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "S2",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "S3",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "borrowed_ref": {
+                    "lifetime": "'a",
+                    "is_mutable": false,
+                    "type": {
+                      "generic": "S1"
+                    }
+                  }
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "StringArrayType",
+                        "id": 28,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "lifetime": "'a"
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "borrowed_ref": {
+                    "lifetime": "'a",
+                    "is_mutable": false,
+                    "type": {
+                      "generic": "S2"
+                    }
+                  }
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "StringArrayType",
+                        "id": 28,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "lifetime": "'a"
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "borrowed_ref": {
+                    "lifetime": "'a",
+                    "is_mutable": false,
+                    "type": {
+                      "generic": "S3"
+                    }
+                  }
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "StringArrayType",
+                        "id": 28,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "lifetime": "'a"
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "45": "core::option::Option",
+      "4": "core::result::Result",
+      "31": "arrow_array::array::boolean_array::BooleanArray",
+      "5": "arrow_schema::error::ArrowError",
+      "28": "arrow_array::array::StringArrayType"
+    },
+    "impl_context": null,
+    "links": {
+      "`regexp_is_match_scalar`": 42,
+      "`StringArray`": 12,
+      "`LargeStringArray`": 41,
+      "`regexp_match`": 43,
+      "`StringViewArray`": 19
+    },
+    "link_paths": {
+      "`regexp_is_match_scalar`": "arrow_string::regexp::regexp_is_match_scalar",
+      "`StringArray`": "arrow_array::array::string_array::StringArray",
+      "`LargeStringArray`": "arrow_array::array::string_array::LargeStringArray",
+      "`regexp_match`": "arrow_string::regexp::regexp_match",
+      "`StringViewArray`": "arrow_array::array::byte_view_array::StringViewArray"
+    },
+    "artifact": {
+      "id": "b822df3af26384b63df0e7eb96a40284a2ea5eb5c15e4e5605de458ace321687",
+      "format_version": 61,
+      "item_id": "44",
+      "origin": "https://docs.rs/crate/arrow-string/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_string.regexp.regexp_is_match.md",
+    "record_file": "operations/arrow_string.regexp.regexp_is_match.json",
+    "anchor": "op-0bbc5531b193f8f07f05b357",
+    "aliases": [
+      "arrow::compute::kernels::comparison::regexp_is_match",
+      "arrow::compute::kernels::regexp::regexp_is_match",
+      "arrow::compute::regexp_is_match"
+    ],
+    "resolved_doc_links": {
+      "`regexp_is_match_scalar`": "../operations/arrow_string.regexp.regexp_is_match_scalar.md#op-2d89cb8af1a8d4ad52e20356",
+      "`StringArray`": "../operations/arrow_array.array.string_array.StringArray.md#op-5d32f770159d415652a55945",
+      "`LargeStringArray`": "../operations/arrow_array.array.string_array.LargeStringArray.md#op-829f12b9a45fbfe752a7ee52",
+      "`regexp_match`": "../operations/arrow_string.regexp.regexp_match.md#op-368b8c3d1636909236c9f0ff",
+      "`StringViewArray`": "../operations/arrow_array.array.byte_view_array.StringViewArray.md#op-f468d0a8f2aaecdb58e1f8c0"
+    }
+  }
+]

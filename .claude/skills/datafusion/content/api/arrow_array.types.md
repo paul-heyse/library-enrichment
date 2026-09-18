@@ -12,6 +12,9 @@ Also reachable as `arrow::datatypes::validate_decimal_precision_and_scale`
 fn validate_decimal_precision_and_scale<T: DecimalType>(precision: u8, scale: i8) -> Result<(), arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.validate_decimal_precision_and_scale.md).
+
+
 Validate that `precision` and `scale` are valid for `T`
 
 Returns an Error if:
@@ -42,6 +45,9 @@ struct BinaryViewType
 fn validate(views: &[u128], buffers: &[Buffer]) -> Result<(), ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.BinaryViewType.md).
+
+
 [`BinaryViewType`] for string arrays
 
 ---
@@ -57,6 +63,9 @@ struct BooleanType
 ```
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.BooleanType.md).
+
 
 A boolean datatype
 
@@ -96,6 +105,9 @@ fn to_naive_date(i: <Date32Type as ArrowPrimitiveType>::Native) -> NaiveDate
 fn to_naive_date_opt(i: <Date32Type as ArrowPrimitiveType>::Native) -> Option<NaiveDate>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Date32Type.md).
+
+
 32-bit date type: the elapsed time since UNIX epoch in days (32 bits).
 
 ---
@@ -127,6 +139,9 @@ fn subtract_year_months_opt(date: <Date64Type as ArrowPrimitiveType>::Native, de
 fn to_naive_date_opt(i: <Date64Type as ArrowPrimitiveType>::Native) -> Option<NaiveDate>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Date64Type.md).
+
+
 64-bit date type: the elapsed time since UNIX epoch in milliseconds (64 bits). Values must be divisible by `86_400_000`. See [`DataType::Date64`] for more details.
 
 ---
@@ -152,6 +167,9 @@ fn format_decimal(value: Self::Native, precision: u8, scale: i8) -> String
 fn is_valid_decimal_precision(value: Self::Native, precision: u8) -> bool
 fn validate_decimal_precision(num: i128, precision: u8, scale: i8) -> Result<(), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Decimal128Type.md).
+
 
 The decimal type for a Decimal128Array
 
@@ -179,6 +197,9 @@ fn is_valid_decimal_precision(value: Self::Native, precision: u8) -> bool
 fn validate_decimal_precision(num: i256, precision: u8, scale: i8) -> Result<(), ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Decimal256Type.md).
+
+
 The decimal type for a Decimal256Array
 
 ---
@@ -204,6 +225,9 @@ fn format_decimal(value: Self::Native, precision: u8, scale: i8) -> String
 fn is_valid_decimal_precision(value: Self::Native, precision: u8) -> bool
 fn validate_decimal_precision(num: i32, precision: u8, scale: i8) -> Result<(), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Decimal32Type.md).
+
 
 The decimal type for a Decimal32Array
 
@@ -231,6 +255,9 @@ fn is_valid_decimal_precision(value: Self::Native, precision: u8) -> bool
 fn validate_decimal_precision(num: i64, precision: u8, scale: i8) -> Result<(), ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Decimal64Type.md).
+
+
 The decimal type for a Decimal64Array
 
 ---
@@ -248,6 +275,9 @@ struct DurationMicrosecondType
 **Implements**: `arrow_array::types::ArrowPrimitiveType`, `arrow_array::types::ArrowTemporalType`, `arrow_cast::parse::Parser`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.DurationMicrosecondType.md).
+
 
 Elapsed time type: microseconds.
 
@@ -267,6 +297,9 @@ struct DurationMillisecondType
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.DurationMillisecondType.md).
+
+
 Elapsed time type: milliseconds.
 
 ---
@@ -284,6 +317,9 @@ struct DurationNanosecondType
 **Implements**: `arrow_array::types::ArrowPrimitiveType`, `arrow_array::types::ArrowTemporalType`, `arrow_cast::parse::Parser`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.DurationNanosecondType.md).
+
 
 Elapsed time type: nanoseconds.
 
@@ -303,6 +339,9 @@ struct DurationSecondType
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.DurationSecondType.md).
+
+
 Elapsed time type: seconds.
 
 ---
@@ -320,6 +359,9 @@ struct Float16Type
 **Implements**: `arrow_array::types::ArrowPrimitiveType`, `arrow_cast::parse::Parser`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Float16Type.md).
+
 
 16-bit floating point number type.
 
@@ -339,6 +381,9 @@ struct Float32Type
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Float32Type.md).
+
+
 32-bit floating point number type.
 
 ---
@@ -356,6 +401,9 @@ struct Float64Type
 **Implements**: `arrow_array::types::ArrowPrimitiveType`, `arrow_cast::parse::Parser`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Float64Type.md).
+
 
 64-bit floating point number type.
 
@@ -379,6 +427,9 @@ struct GenericBinaryType<O: OffsetSizeTrait>
 fn validate(offsets: &OffsetBuffer<Self::Offset>, values: &Buffer) -> Result<(), ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.GenericBinaryType.md).
+
+
 [`ByteArrayType`] for binary arrays
 
 ---
@@ -401,6 +452,9 @@ struct GenericStringType<O: OffsetSizeTrait>
 fn validate(offsets: &OffsetBuffer<Self::Offset>, values: &Buffer) -> Result<(), ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.GenericStringType.md).
+
+
 [`ByteArrayType`] for string arrays
 
 ---
@@ -418,6 +472,9 @@ struct Int16Type
 **Implements**: `arrow_array::types::ArrowDictionaryKeyType`, `arrow_array::types::ArrowPrimitiveType`, `arrow_array::types::RunEndIndexType`, `arrow_cast::parse::Parser`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Int16Type.md).
+
 
 Signed 16-bit integer type.
 
@@ -437,6 +494,9 @@ struct Int32Type
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Int32Type.md).
+
+
 Signed 32-bit integer type.
 
 ---
@@ -455,6 +515,9 @@ struct Int64Type
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Int64Type.md).
+
+
 Signed 64-bit integer type.
 
 ---
@@ -472,6 +535,9 @@ struct Int8Type
 **Implements**: `arrow_array::types::ArrowDictionaryKeyType`, `arrow_array::types::ArrowPrimitiveType`, `arrow_cast::parse::Parser`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Int8Type.md).
+
 
 A signed 8-bit integer type.
 
@@ -498,6 +564,9 @@ fn make_value(days: i32, milliseconds: i32) -> IntervalDayTime
 fn to_parts(i: IntervalDayTime) -> (i32, i32)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.IntervalDayTimeType.md).
+
+
 “Calendar” interval type: days and milliseconds. See [`IntervalDayTime`] for more details.
 
 ---
@@ -522,6 +591,9 @@ struct IntervalMonthDayNanoType
 fn make_value(months: i32, days: i32, nanoseconds: i64) -> IntervalMonthDayNano
 fn to_parts(i: IntervalMonthDayNano) -> (i32, i32, i64)
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.IntervalMonthDayNanoType.md).
+
 
 “Calendar” interval type: months, days, and nanoseconds. See [`IntervalMonthDayNano`] for more details.
 
@@ -548,6 +620,9 @@ fn make_value(years: i32, months: i32) -> <IntervalYearMonthType as ArrowPrimiti
 fn to_months(i: <IntervalYearMonthType as ArrowPrimitiveType>::Native) -> i32
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.IntervalYearMonthType.md).
+
+
 32-bit “calendar” interval type: the number of whole months.
 
 ---
@@ -572,6 +647,9 @@ struct StringViewType
 fn validate(views: &[u128], buffers: &[Buffer]) -> Result<(), ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.StringViewType.md).
+
+
 [`ByteViewType`] for string arrays
 
 ---
@@ -589,6 +667,9 @@ struct Time32MillisecondType
 **Implements**: `arrow::util::data_gen::RandomTemporalValue`, `arrow_array::types::ArrowPrimitiveType`, `arrow_array::types::ArrowTemporalType`, `arrow_cast::parse::Parser`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Time32MillisecondType.md).
+
 
 32-bit time type: the elapsed time since midnight in milliseconds.
 
@@ -608,6 +689,9 @@ struct Time32SecondType
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Time32SecondType.md).
+
+
 32-bit time type: the elapsed time since midnight in seconds.
 
 ---
@@ -626,6 +710,9 @@ struct Time64MicrosecondType
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Time64MicrosecondType.md).
+
+
 64-bit time type: the elapsed time since midnight in microseconds.
 
 ---
@@ -643,6 +730,9 @@ struct Time64NanosecondType
 **Implements**: `arrow::util::data_gen::RandomTemporalValue`, `arrow_array::types::ArrowPrimitiveType`, `arrow_array::types::ArrowTemporalType`, `arrow_cast::parse::Parser`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Time64NanosecondType.md).
+
 
 64-bit time type: the elapsed time since midnight in nanoseconds.
 
@@ -680,6 +770,9 @@ fn from_datetime<Tz: TimeZone>(datetime: DateTime<Tz>) -> Option<i64>
 fn make_value(naive: NaiveDateTime) -> Option<i64>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.TimestampMicrosecondType.md).
+
+
 Timestamp microsecond type with an optional timezone.
 
 ---
@@ -715,6 +808,9 @@ fn subtract_year_months(timestamp: <Self as ArrowPrimitiveType>::Native, delta: 
 fn from_datetime<Tz: TimeZone>(datetime: DateTime<Tz>) -> Option<i64>
 fn make_value(naive: NaiveDateTime) -> Option<i64>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.TimestampMillisecondType.md).
+
 
 Timestamp millisecond type with an optional timezone.
 
@@ -752,6 +848,9 @@ fn from_datetime<Tz: TimeZone>(datetime: DateTime<Tz>) -> Option<i64>
 fn make_value(naive: NaiveDateTime) -> Option<i64>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.TimestampNanosecondType.md).
+
+
 Timestamp nanosecond type with an optional timezone.
 
 ---
@@ -788,6 +887,9 @@ fn from_datetime<Tz: TimeZone>(datetime: DateTime<Tz>) -> Option<i64>
 fn make_value(naive: NaiveDateTime) -> Option<i64>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.TimestampSecondType.md).
+
+
 Timestamp second type with an optional timezone.
 
 ---
@@ -805,6 +907,9 @@ struct UInt16Type
 **Implements**: `arrow_array::types::ArrowDictionaryKeyType`, `arrow_array::types::ArrowPrimitiveType`, `arrow_cast::parse::Parser`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.UInt16Type.md).
+
 
 Unsigned 16-bit integer type.
 
@@ -824,6 +929,9 @@ struct UInt32Type
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.UInt32Type.md).
+
+
 Unsigned 32-bit integer type.
 
 ---
@@ -842,6 +950,9 @@ struct UInt64Type
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.UInt64Type.md).
+
+
 Unsigned 64-bit integer type.
 
 ---
@@ -859,6 +970,9 @@ struct UInt8Type
 **Implements**: `arrow_array::types::ArrowDictionaryKeyType`, `arrow_array::types::ArrowPrimitiveType`, `arrow_cast::parse::Parser`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.UInt8Type.md).
+
 
 Unsigned 8-bit integer type.
 
@@ -884,6 +998,9 @@ trait ArrowDictionaryKeyType: ArrowPrimitiveType
 - `arrow_array::types::UInt32Type`
 - `arrow_array::types::UInt64Type`
 - `arrow_array::types::UInt8Type`
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.ArrowDictionaryKeyType.md).
+
 
 A subtype of primitive type that represents legal dictionary keys.
 See <https://arrow.apache.org/docs/format/Columnar.html>
@@ -941,6 +1058,9 @@ trait ArrowPrimitiveType: primitive::PrimitiveTypeSealed + 'static
 fn default_value() -> Self::Native
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.ArrowPrimitiveType.md).
+
+
 Trait for [primitive values].
 
 This trait bridges the dynamic-typed nature of Arrow
@@ -979,6 +1099,9 @@ trait ArrowTemporalType: ArrowPrimitiveType
 - `arrow_array::types::TimestampNanosecondType`
 - `arrow_array::types::TimestampSecondType`
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.ArrowTemporalType.md).
+
+
 A subtype of primitive type that represents temporal values.
 
 ---
@@ -1008,6 +1131,9 @@ fn from_naive_datetime(naive: NaiveDateTime, tz: Option<&Tz>) -> Option<i64>
 fn make_value(naive: NaiveDateTime) -> Option<i64>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.ArrowTimestampType.md).
+
+
 A timestamp type allows us to create array builders that take a timestamp.
 
 ---
@@ -1032,6 +1158,9 @@ trait ByteArrayType: 'static + Send + Sync + bytes::ByteArrayTypeSealed
 ```rust
 fn validate(offsets: &OffsetBuffer<Self::Offset>, values: &Buffer) -> Result<(), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.ByteArrayType.md).
+
 
 A trait over the variable-size byte array types
 
@@ -1059,6 +1188,9 @@ trait ByteViewType: byte_view::Sealed + 'static + PartialEq + Send + Sync
 ```rust
 fn validate(views: &[u128], buffers: &[Buffer]) -> Result<(), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.ByteViewType.md).
+
 
 A trait over the variable length bytes view array types
 
@@ -1088,6 +1220,9 @@ fn format_decimal(value: Self::Native, precision: u8, scale: i8) -> String
 fn is_valid_decimal_precision(value: Self::Native, precision: u8) -> bool
 fn validate_decimal_precision(value: Self::Native, precision: u8, scale: i8) -> Result<(), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.DecimalType.md).
+
 
 A trait over the decimal types, used by [`PrimitiveArray`] to provide a generic
 implementation across the various decimal types
@@ -1119,6 +1254,9 @@ trait RunEndIndexType: ArrowPrimitiveType
 - `arrow_array::types::Int32Type`
 - `arrow_array::types::Int64Type`
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.RunEndIndexType.md).
+
+
 A subtype of primitive type that is used as run-ends index
 in `RunArray`.
 See <https://arrow.apache.org/docs/format/Columnar.html>
@@ -1135,6 +1273,9 @@ Also reachable as `arrow::datatypes::BinaryType`
 type BinaryType = GenericBinaryType<i32>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.BinaryType.md).
+
+
 An arrow binary array with i32 offsets
 
 ---
@@ -1148,6 +1289,9 @@ Also reachable as `arrow::datatypes::LargeBinaryType`
 ```rust
 type LargeBinaryType = GenericBinaryType<i64>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.LargeBinaryType.md).
+
 
 An arrow binary array with i64 offsets
 
@@ -1163,6 +1307,9 @@ Also reachable as `arrow::datatypes::LargeUtf8Type`
 type LargeUtf8Type = GenericStringType<i64>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.LargeUtf8Type.md).
+
+
 An arrow utf8 array with i64 offsets
 
 ---
@@ -1176,6 +1323,9 @@ Also reachable as `arrow::datatypes::Utf8Type`
 ```rust
 type Utf8Type = GenericStringType<i32>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.types.Utf8Type.md).
+
 
 An arrow utf8 array with i32 offsets
 

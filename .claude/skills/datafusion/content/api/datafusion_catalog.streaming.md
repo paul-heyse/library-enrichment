@@ -31,6 +31,9 @@ fn schema(&self) -> SchemaRef
 fn table_type(&self) -> TableType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.streaming.StreamingTable.md).
+
+
 A [`TableProvider`] that streams a set of [`PartitionStream`]
 
 ---

@@ -1,0 +1,22 @@
+id: native-delivery-borrows-values
+language: Rust
+severity: error
+message: Native delivery measurement borrows Arrow values; whole-result DTO/JSON decoding belongs outside this kernel.
+files:
+  - crates/enrichment-core/src/native_transport.rs
+rule:
+  any:
+    - kind: identifier
+    - kind: field_identifier
+  regex: '^(decode|into_envelope|from_value|from_str|from_slice|from_reader)$'
+  inside:
+    kind: function_item
+    has:
+      field: name
+      regex: '^invoke_with_args$'
+    stopBy: end
+  not:
+    inside:
+      pattern: 'mod tests { $$$BODY }'
+      stopBy: end
+note: This syntactic guard is scoped to the measurement kernel, not external format readers or final RPC encoding.

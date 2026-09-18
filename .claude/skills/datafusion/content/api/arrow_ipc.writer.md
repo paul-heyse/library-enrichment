@@ -14,6 +14,9 @@ enum DictionaryHandling
 
 **Derives**: Clone, Copy, Debug, Default, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.writer.DictionaryHandling.md).
+
+
 Controls how dictionaries are handled in Arrow IPC messages
 
 ---
@@ -30,6 +33,9 @@ enum DictionaryUpdate
 
 **Derives**: Clone, Debug
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.writer.DictionaryUpdate.md).
+
+
 Describes what kind of update took place after a call to [`DictionaryTracker::insert`].
 
 ---
@@ -41,6 +47,9 @@ Describes what kind of update took place after a call to [`DictionaryTracker::in
 ```rust
 fn write_message<W: Write>(writer: W, encoded: EncodedData, write_options: &IpcWriteOptions) -> Result<(usize, usize), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.writer.write_message.md).
+
 
 Write a message's IPC data and buffers, returning metadata and buffer data lengths written
 
@@ -67,6 +76,9 @@ fn new(error_on_replacement: bool) -> Self
 fn next_dict_id(&mut self) -> i64
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.writer.DictionaryTracker.md).
+
+
 Keeps track of dictionaries that have been written, to avoid emitting the same dictionary
 multiple times.
 
@@ -84,6 +96,9 @@ struct EncodedData
 ```
 
 **Fields**: `ipc_message`, `arrow_data`
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.writer.EncodedData.md).
+
 
 Stores the encoded data, which is an crate::Message, and optional Arrow data
 
@@ -121,6 +136,9 @@ fn write_metadata(&mut self, key: impl Into<String>, value: impl Into<String>)
 fn close(self) -> Result<(), ArrowError>
 fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.writer.FileWriter.md).
+
 
 Arrow File Writer
 
@@ -164,6 +182,9 @@ fn encode(&self, batch: &RecordBatch, dictionary_tracker: &mut DictionaryTracker
 fn encoded_batch(&self, batch: &RecordBatch, dictionary_tracker: &mut DictionaryTracker, write_options: &IpcWriteOptions) -> Result<(Vec<EncodedData>, EncodedData), ArrowError>
 fn schema_to_bytes_with_dictionary_tracker(&self, schema: &Schema, dictionary_tracker: &mut DictionaryTracker, write_options: &IpcWriteOptions) -> EncodedData
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.writer.IpcDataGenerator.md).
+
 
 Handles low level details of encoding [`Array`] and [`Schema`] into the
 [Arrow IPC Format].
@@ -220,6 +241,9 @@ fn try_with_compression_level(self, batch_compression_level: Option<i32>) -> Res
 fn with_dictionary_handling(self, dictionary_handling: DictionaryHandling) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.writer.IpcWriteOptions.md).
+
+
 IPC write options used to control the behaviour of the [`IpcDataGenerator`]
 
 ---
@@ -240,6 +264,9 @@ fn finish(self) -> Result<Vec<Buffer>, ArrowError>
 fn try_new(schema: &Schema) -> Result<Self, ArrowError>
 fn try_new_with_options(schema: &Schema, write_options: IpcWriteOptions) -> Result<Self, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.writer.StreamEncoder.md).
+
 
 Arrow IPC stream encoder.
 
@@ -302,6 +329,9 @@ fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>
 fn close(self) -> Result<(), ArrowError>
 fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.writer.StreamWriter.md).
+
 
 Arrow Stream Writer
 

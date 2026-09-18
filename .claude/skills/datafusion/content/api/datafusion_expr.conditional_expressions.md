@@ -21,6 +21,9 @@ fn otherwise(&mut self, else_expr: Expr) -> Result<Expr>
 fn when(&mut self, when: Expr, then: Expr) -> CaseBuilder
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.conditional_expressions.CaseBuilder.md).
+
+
 Helper struct for building [Expr::Case]
 
 ---

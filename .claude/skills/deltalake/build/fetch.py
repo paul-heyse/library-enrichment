@@ -72,8 +72,9 @@ def _get(url: str) -> bytes:
 class Cache:
     """Content cache for pinned inputs. A cached entry is never revalidated: the key is a pin."""
 
-    def __init__(self, root: Path) -> None:
+    def __init__(self, root: Path, *, allow_fetch: bool = False) -> None:
         self.root = root
+        self.allow_fetch = allow_fetch
         self.root.mkdir(parents=True, exist_ok=True)
 
     def path(self, *parts: str) -> Path:
@@ -85,6 +86,10 @@ class Cache:
         target = self.path(*key)
         if target.exists():
             return target.read_bytes()
+        if not self.allow_fetch:
+            raise FetchError(
+                f"Offline input missing: {target}. Acquire explicitly before rebuilding."
+            )
         payload = _get(url)
         target.write_bytes(payload)
         return payload

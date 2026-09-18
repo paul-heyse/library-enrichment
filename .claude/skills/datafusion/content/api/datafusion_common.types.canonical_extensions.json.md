@@ -27,6 +27,9 @@ fn serialize_metadata(&self) -> Option<String>
 fn storage_type(&self) -> DataType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.canonical_extensions.json.DFJson.md).
+
+
 Defines the extension type logic for the canonical `arrow.json` extension type. This extension
 type defines that a particular string field stores JSON values.
 

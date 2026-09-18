@@ -58,6 +58,9 @@ fn supports_table_versioning(&self) -> bool
 fn supports_try_convert(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.mssql.MsSqlDialect.md).
+
+
 A [`Dialect`] for [Microsoft SQL Server](https://www.microsoft.com/en-us/sql-server/)
 
 ---

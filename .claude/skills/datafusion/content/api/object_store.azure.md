@@ -61,6 +61,9 @@ async fn signed_url(&self, method: Method, path: &Path, expires_in: Duration) ->
 async fn signed_urls(&self, method: Method, paths: &[Path], expires_in: Duration) -> Result<Vec<Url>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.azure.MicrosoftAzure.md).
+
+
 Interface for [Microsoft Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/).
 
 ---
@@ -72,6 +75,9 @@ Interface for [Microsoft Azure Blob Storage](https://azure.microsoft.com/en-us/s
 ```rust
 type AzureCredentialProvider = std::sync::Arc<dyn CredentialProvider<Credential = AzureCredential>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.azure.AzureCredentialProvider.md).
+
 
 [`CredentialProvider`] for [`MicrosoftAzure`]
 

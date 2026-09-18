@@ -1,6 +1,6 @@
 //! Release payload fields and codecs are generated from their Rust declarations.
 use super::{
-    cells::{RowSet, batch, column, invalid, text},
+    cells::{RowSet, batch, column, invalid, ruled_column, text},
     decode, encode,
 };
 use crate::{
@@ -23,11 +23,12 @@ pub fn fields(rows: &[ReleaseMetadata]) -> Result<RecordBatch, ArrowError> {
         .downcast_ref::<StructArray>()
         .ok_or_else(|| invalid("release payload is not a struct"))?;
     let mut columns = vec![
-        column(
+        ruled_column(
             "metadata_id",
             text(rows.iter().map(|row| row.metadata_id.as_str())),
             false,
             "key:release-metadata",
+            crate::native_union::Rule::NonEmpty,
         ),
         (
             crate::native_union::field::<crate::identity::ReleaseId>(

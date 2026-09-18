@@ -1,0 +1,1001 @@
+[
+  {
+    "id": "e6ee4714f432a749429a820c",
+    "path": "buoyant_kernel::log_replay::LogReplayProcessor",
+    "name": "LogReplayProcessor",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "trait",
+    "signature": "trait LogReplayProcessor: Sized",
+    "docs": "A trait for processing batches of actions from Delta transaction logs during log replay.\n\nLog replay processors scan transaction logs in **reverse chronological order** (newest to\noldest), filtering and transforming action batches into specialized output types. These\nprocessors:\n\n- **Track and deduplicate file actions** to apply appropriate `Remove` actions to corresponding\n  `Add` actions (and omit the file from the log replay output)\n- **Maintain selection vectors** to indicate which actions in each batch should be included.\n- **Apply custom filtering logic** based on the processor’s purpose (e.g., checkpointing,\n  scanning).\n- **Data skipping** filters are applied to the initial selection vector to reduce the number of\n  rows processed by the processor, (if a filter is provided).\n\n# Implementations\n\n- [`ScanLogReplayProcessor`]: Used for table scans, this processor filters and selects\n  deduplicated `Add` actions from log batches to reconstruct the view of the table at a specific\n  point in time. Note that scans do not expose `Remove` actions. Data skipping may be applied\n  when a predicate is provided.\n\n- [`ActionReconciliationProcessor`]: Used for action reconciliation (including checkpoint\n  writing), this processor filters and selects actions from log batches for inclusion in V1 spec\n  checkpoint files. Unlike scans, action reconciliation processing includes additional actions,\n  such as `Remove`, `Metadata`, and `Protocol`, required to fully reconstruct table state. Data\n  skipping is not applied during action reconciliation processing.\n\n[`ActionReconciliationProcessor`]: crate::action_reconciliation::log_replay::ActionReconciliationProcessor\n\n# Action Iterator Input\n\nThe [`LogReplayProcessor::process_actions_iter`] method is the entry point for log replay\nprocessing. It takes as input an iterator of (actions batch, is_commit_batch flag) tuples and\nreturns an iterator of processor-specific output types with selection vectors. The\nis_commit_batch bool flag in each tuple indicates whether the batch came from a commit log\n(`true`) or checkpoint (`false`). Action batches **must** be sorted by the order of the actions\nin the log from most recent to oldest.\n\nEach row that is selected in the returned output **must** be included in the processor's result\n(e.g., in scan results or checkpoint files), while non-selected rows **must** be ignored.\n\n# Output Types\n\nThe [`LogReplayProcessor::Output`] type represents the material result of log replay, and it\nmust implement the [`HasSelectionVector`] trait to allow filtering of irrelevant rows:\n\n- For **scans**, the output type is [`ScanMetadata`], which contains the file actions (`Add`\n  actions) that need to be applied to build the table's view, accompanied by a **selection\n  vector** that identifies which rows should be included. A transform vector may also be\n  included to handle schema changes, such as renaming columns or modifying data types.\n\n- For **checkpoints**, the output type is [`FilteredEngineData`], which includes the actions\n  necessary to write to the checkpoint file (`Add`, `Remove`, `Metadata`, `Protocol` actions),\n  filtered by the **selection vector** to determine which rows are included in the final\n  checkpoint.\n\nTODO: Refactor the Change Data Feed (CDF) processor to use this trait.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/log_replay/mod.rs",
+      "begin": [
+        319,
+        1
+      ],
+      "end": [
+        390,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[allow(rustdoc::broken_intra_doc_links, rustdoc::private_intra_doc_links)]"
+      },
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"internal-api\"), span: /home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/log_replay/mod.rs:318:1: 318:16 (#8428) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": false,
+        "items": [
+          10096,
+          10097,
+          10098,
+          10099,
+          10100
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sized",
+                "id": 48,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": [
+          6227
+        ]
+      }
+    },
+    "type_references": {
+      "48": "core::marker::Sized"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::action_reconciliation::log_replay::ActionReconciliationProcessor": 10101,
+      "`LogReplayProcessor::process_actions_iter`": 10098,
+      "`HasSelectionVector`": 2485,
+      "`LogReplayProcessor::Output`": 10096
+    },
+    "link_paths": {
+      "crate::action_reconciliation::log_replay::ActionReconciliationProcessor": null,
+      "`LogReplayProcessor::process_actions_iter`": "buoyant_kernel::log_replay::LogReplayProcessor::process_actions_iter",
+      "`HasSelectionVector`": "buoyant_kernel::log_replay::HasSelectionVector",
+      "`LogReplayProcessor::Output`": "buoyant_kernel::log_replay::LogReplayProcessor::Output"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "6189",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/log_replay/mod.rs#L319",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "13",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.log_replay.LogReplayProcessor.md",
+    "record_file": "operations/buoyant_kernel.log_replay.LogReplayProcessor.json",
+    "anchor": "op-e6ee4714f432a749429a820c",
+    "aliases": [
+      "delta_kernel::log_replay::LogReplayProcessor"
+    ],
+    "resolved_doc_links": {
+      "`LogReplayProcessor::process_actions_iter`": "../operations/buoyant_kernel.log_replay.LogReplayProcessor.md#op-1b0ee76968676b614f584243",
+      "`HasSelectionVector`": "../operations/buoyant_kernel.log_replay.HasSelectionVector.md#op-36cc3f5a3879263a644b7e2a",
+      "`LogReplayProcessor::Output`": "../operations/buoyant_kernel.log_replay.LogReplayProcessor.md#op-47ad7bf7a9f16c13fdbcbd40"
+    }
+  },
+  {
+    "id": "47ad7bf7a9f16c13fdbcbd40",
+    "path": "buoyant_kernel::log_replay::LogReplayProcessor::Output",
+    "name": "Output",
+    "owner": "buoyant_kernel::log_replay::LogReplayProcessor",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "assoc_type",
+    "signature": "type Output",
+    "docs": "The type of results produced by this processor must implement the\n[`HasSelectionVector`] trait to allow filtering out batches with no selected rows.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/log_replay/mod.rs",
+      "begin": [
+        322,
+        5
+      ],
+      "end": [
+        322,
+        37
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "HasSelectionVector",
+                "id": 2485,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "type": null,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2485": "buoyant_kernel::log_replay::HasSelectionVector"
+    },
+    "impl_context": null,
+    "links": {
+      "`HasSelectionVector`": 2485
+    },
+    "link_paths": {
+      "`HasSelectionVector`": "buoyant_kernel::log_replay::HasSelectionVector"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "10096",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/log_replay/mod.rs#L322",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15681",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.log_replay.LogReplayProcessor.md",
+    "record_file": "operations/buoyant_kernel.log_replay.LogReplayProcessor.json",
+    "anchor": "op-47ad7bf7a9f16c13fdbcbd40",
+    "aliases": [
+      "delta_kernel::log_replay::LogReplayProcessor::Output"
+    ],
+    "resolved_doc_links": {
+      "`HasSelectionVector`": "../operations/buoyant_kernel.log_replay.HasSelectionVector.md#op-36cc3f5a3879263a644b7e2a"
+    }
+  },
+  {
+    "id": "e030288d72ddf326ed6f6daa",
+    "path": "buoyant_kernel::log_replay::LogReplayProcessor::build_selection_vector",
+    "name": "build_selection_vector",
+    "owner": "buoyant_kernel::log_replay::LogReplayProcessor",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn build_selection_vector(&self, batch: &dyn EngineData) -> DeltaResult<Vec<bool>>",
+    "docs": "Builds the initial selection vector for the action batch, used to filter out rows that\nare not relevant to the current processor's purpose (e.g., checkpointing, scanning).\nThis method performs a first pass of filtering using an optional [`DataSkippingFilter`].\nIf no filter is provided, it assumes that all rows should be selected.\n\nThe selection vector is further updated based on the processor's logic in the\n`process_actions_batch` method.\n\n# Parameters\n- `batch`: A reference to the batch of actions to be processed.\n\n# Returns\nA `DeltaResult<Vec<bool>>`, where each boolean indicates if the corresponding row should be\nincluded. If no filter is provided, all rows are selected.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/log_replay/mod.rs",
+      "begin": [
+        379,
+        5
+      ],
+      "end": [
+        384,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "EngineData",
+                            "id": 758,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 296,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "primitive": "bool"
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "758": "buoyant_kernel::engine_data::EngineData",
+      "239": "buoyant_kernel::error::DeltaResult",
+      "296": "alloc::vec::Vec"
+    },
+    "impl_context": null,
+    "links": {
+      "`DataSkippingFilter`": 6131
+    },
+    "link_paths": {
+      "`DataSkippingFilter`": "buoyant_kernel::scan::data_skipping::DataSkippingFilter"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "10099",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/log_replay/mod.rs#L379",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15683",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.log_replay.LogReplayProcessor.md",
+    "record_file": "operations/buoyant_kernel.log_replay.LogReplayProcessor.json",
+    "anchor": "op-e030288d72ddf326ed6f6daa",
+    "aliases": [
+      "delta_kernel::log_replay::LogReplayProcessor::build_selection_vector"
+    ],
+    "resolved_doc_links": {
+      "`DataSkippingFilter`": "../operations/buoyant_kernel.scan.data_skipping.DataSkippingFilter.md#op-5dd036bf42f274f2ce23a0b0"
+    }
+  },
+  {
+    "id": "d237704be3a8953c3f832bab",
+    "path": "buoyant_kernel::log_replay::LogReplayProcessor::data_skipping_filter",
+    "name": "data_skipping_filter",
+    "owner": "buoyant_kernel::log_replay::LogReplayProcessor",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn data_skipping_filter(&self) -> Option<&DataSkippingFilter>",
+    "docs": "Returns an optional reference to the [`DataSkippingFilter`] used to filter rows\nwhen building the initial selection vector in `build_selection_vector`.\nIf `None` is returned, no filter is applied, and all rows are selected.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/log_replay/mod.rs",
+      "begin": [
+        389,
+        5
+      ],
+      "end": [
+        389,
+        67
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "DataSkippingFilter",
+                              "id": 6131,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "23": "core::option::Option",
+      "6131": "buoyant_kernel::scan::data_skipping::DataSkippingFilter"
+    },
+    "impl_context": null,
+    "links": {
+      "`DataSkippingFilter`": 6131
+    },
+    "link_paths": {
+      "`DataSkippingFilter`": "buoyant_kernel::scan::data_skipping::DataSkippingFilter"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "10100",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/log_replay/mod.rs#L389",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15684",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.log_replay.LogReplayProcessor.md",
+    "record_file": "operations/buoyant_kernel.log_replay.LogReplayProcessor.json",
+    "anchor": "op-d237704be3a8953c3f832bab",
+    "aliases": [
+      "delta_kernel::log_replay::LogReplayProcessor::data_skipping_filter"
+    ],
+    "resolved_doc_links": {
+      "`DataSkippingFilter`": "../operations/buoyant_kernel.scan.data_skipping.DataSkippingFilter.md#op-5dd036bf42f274f2ce23a0b0"
+    }
+  },
+  {
+    "id": "dfd6d40374bcf37d9984e95e",
+    "path": "buoyant_kernel::log_replay::LogReplayProcessor::process_actions_batch",
+    "name": "process_actions_batch",
+    "owner": "buoyant_kernel::log_replay::LogReplayProcessor",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn process_actions_batch(&mut self, actions_batch: ActionsBatch) -> DeltaResult<Self::Output>",
+    "docs": "Processes a batch of actions and returns the filtered results.\n# Parameters\n- `actions_batch` - An [`ActionsBatch`] which includes a boxed [`EngineData`] instance\n  representing a batch of actions and a boolean flag indicating whether the batch originates\n  from a commit log, `false` if from a checkpoint.\n\nReturns a [`DeltaResult`] containing the processor’s output, which includes only selected\nactions.\n\nNote: Since log replay is stateful, processing may update internal processor state (e.g.,\ndeduplication sets).",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/log_replay/mod.rs",
+      "begin": [
+        335,
+        5
+      ],
+      "end": [
+        335,
+        99
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "actions_batch",
+              {
+                "resolved_path": {
+                  "path": "ActionsBatch",
+                  "id": 4480,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Output",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 6189,
+                            "args": null
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4480": "buoyant_kernel::log_replay::ActionsBatch",
+      "239": "buoyant_kernel::error::DeltaResult",
+      "6189": "buoyant_kernel::log_replay::LogReplayProcessor"
+    },
+    "impl_context": null,
+    "links": {
+      "`ActionsBatch`": 4480,
+      "`EngineData`": 758,
+      "`DeltaResult`": 239
+    },
+    "link_paths": {
+      "`ActionsBatch`": "buoyant_kernel::log_replay::ActionsBatch",
+      "`EngineData`": "buoyant_kernel::engine_data::EngineData",
+      "`DeltaResult`": "buoyant_kernel::error::DeltaResult"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "10097",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/log_replay/mod.rs#L335",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15642",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.log_replay.LogReplayProcessor.md",
+    "record_file": "operations/buoyant_kernel.log_replay.LogReplayProcessor.json",
+    "anchor": "op-dfd6d40374bcf37d9984e95e",
+    "aliases": [
+      "delta_kernel::log_replay::LogReplayProcessor::process_actions_batch"
+    ],
+    "resolved_doc_links": {
+      "`ActionsBatch`": "../operations/buoyant_kernel.log_replay.ActionsBatch.md#op-72ca0249e147b15cf59dc008",
+      "`EngineData`": "../operations/buoyant_kernel.engine_data.EngineData.md#op-f9036ab52623c01f96e1f809",
+      "`DeltaResult`": "../operations/buoyant_kernel.error.DeltaResult.md#op-3db788f17aa90cfeefaa890f"
+    }
+  },
+  {
+    "id": "1b0ee76968676b614f584243",
+    "path": "buoyant_kernel::log_replay::LogReplayProcessor::process_actions_iter",
+    "name": "process_actions_iter",
+    "owner": "buoyant_kernel::log_replay::LogReplayProcessor",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn process_actions_iter(self, action_iter: impl Iterator<Item = DeltaResult<ActionsBatch>>) -> impl Iterator<Item = DeltaResult<Self::Output>>",
+    "docs": "Applies the processor to an actions iterator and filters out empty results.\n\nThis method:\n1. Applies `process_actions_batch` to each action batch\n2. Maintains processor state across all batches\n3. Automatically filters out batches with no selected rows\n\n# Parameters\n- `action_iter`: Iterator of [`ActionsBatch`], where each batch contains actions and the\n  boolean flag indicates whether the batch came from a commit log (`true`) or checkpoint\n  (`false`). Actions _must_ be provided in reverse chronological order.\n\n# Returns\nAn iterator that yields the output type of the processor, containing only non-empty results\n(batches where at least one row was selected).",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/log_replay/mod.rs",
+      "begin": [
+        352,
+        5
+      ],
+      "end": [
+        363,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "action_iter",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Iterator",
+                        "id": 138,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [],
+                            "constraints": [
+                              {
+                                "name": "Item",
+                                "args": null,
+                                "binding": {
+                                  "equality": {
+                                    "type": {
+                                      "resolved_path": {
+                                        "path": "DeltaResult",
+                                        "id": 239,
+                                        "args": {
+                                          "angle_bracketed": {
+                                            "args": [
+                                              {
+                                                "type": {
+                                                  "resolved_path": {
+                                                    "path": "ActionsBatch",
+                                                    "id": 4480,
+                                                    "args": null
+                                                  }
+                                                }
+                                              }
+                                            ],
+                                            "constraints": []
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "impl_trait": [
+              {
+                "trait_bound": {
+                  "trait": {
+                    "path": "Iterator",
+                    "id": 138,
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [],
+                        "constraints": [
+                          {
+                            "name": "Item",
+                            "args": null,
+                            "binding": {
+                              "equality": {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "DeltaResult",
+                                    "id": 239,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "qualified_path": {
+                                                "name": "Output",
+                                                "args": null,
+                                                "self_type": {
+                                                  "generic": "Self"
+                                                },
+                                                "trait": {
+                                                  "path": "",
+                                                  "id": 6189,
+                                                  "args": null
+                                                }
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "generic_params": [],
+                  "modifier": "none"
+                }
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Iterator<Item = DeltaResult<ActionsBatch>>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Iterator",
+                          "id": 138,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "DeltaResult",
+                                          "id": 239,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "resolved_path": {
+                                                      "path": "ActionsBatch",
+                                                      "id": 4480,
+                                                      "args": null
+                                                    }
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "138": "core::iter::traits::iterator::Iterator",
+      "239": "buoyant_kernel::error::DeltaResult",
+      "4480": "buoyant_kernel::log_replay::ActionsBatch",
+      "6189": "buoyant_kernel::log_replay::LogReplayProcessor"
+    },
+    "impl_context": null,
+    "links": {
+      "`ActionsBatch`": 4480
+    },
+    "link_paths": {
+      "`ActionsBatch`": "buoyant_kernel::log_replay::ActionsBatch"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "10098",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/log_replay/mod.rs#L352",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "15682",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.log_replay.LogReplayProcessor.md",
+    "record_file": "operations/buoyant_kernel.log_replay.LogReplayProcessor.json",
+    "anchor": "op-1b0ee76968676b614f584243",
+    "aliases": [
+      "delta_kernel::log_replay::LogReplayProcessor::process_actions_iter"
+    ],
+    "resolved_doc_links": {
+      "`ActionsBatch`": "../operations/buoyant_kernel.log_replay.ActionsBatch.md#op-72ca0249e147b15cf59dc008"
+    }
+  }
+]

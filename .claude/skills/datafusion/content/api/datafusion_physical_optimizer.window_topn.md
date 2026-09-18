@@ -28,6 +28,9 @@ fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> Resu
 fn schema_check(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.window_topn.WindowTopN.md).
+
+
 Physical optimizer rule that converts per-partition `ROW_NUMBER` and
 `RANK` top-K queries into a more efficient plan using
 [`PartitionedTopKExec`].

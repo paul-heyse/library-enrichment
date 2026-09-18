@@ -12,6 +12,9 @@ enum MemoryLimit
 
 **Variants**: `Infinite`, `Finite`, `Unknown`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.memory_pool.MemoryLimit.md).
+
+
 Memory limit of `MemoryPool`
 
 ---
@@ -37,6 +40,9 @@ fn new(name: impl Into<String>) -> Self
 fn register(self, pool: &Arc<dyn MemoryPool>) -> MemoryReservation
 fn with_can_spill(self, can_spill: bool) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.memory_pool.MemoryConsumer.md).
+
 
 A memory consumer is a named allocation traced by a particular
 [`MemoryReservation`] in a [`MemoryPool`]. All allocations are registered to
@@ -95,6 +101,9 @@ fn size(&self) -> usize
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.memory_pool.MemoryReservation.md).
+
+
 A [`MemoryReservation`] tracks an individual reservation of a
 number of bytes of memory in a [`MemoryPool`] that is freed back
 to the pool on drop.
@@ -131,6 +140,9 @@ fn shrink(&self, reservation: &MemoryReservation, shrink: usize)
 fn try_grow(&self, reservation: &MemoryReservation, additional: usize) -> Result<()>
 fn unregister(&self, _consumer: &MemoryConsumer)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.memory_pool.MemoryPool.md).
+
 
 Tracks and potentially limits memory use across operators during execution.
 

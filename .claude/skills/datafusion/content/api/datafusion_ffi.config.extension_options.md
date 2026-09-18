@@ -12,6 +12,9 @@ struct ExtensionOptionsPrivateData
 
 **Fields**: `options`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.config.extension_options.ExtensionOptionsPrivateData.md).
+
+
 ---
 
 ## FFI_ExtensionOptions
@@ -57,6 +60,9 @@ fn cloned(&self) -> Box<dyn ExtensionOptions>
 fn entries(&self) -> Vec<ConfigEntry>
 fn set(&mut self, key: &str, value: &str) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.config.extension_options.FFI_ExtensionOptions.md).
+
 
 A stable struct for sharing [`ExtensionOptions`] across FFI boundaries.
 

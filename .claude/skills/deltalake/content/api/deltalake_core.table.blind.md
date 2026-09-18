@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## BlindDeltaTable
 
 `struct` · `deltalake_core::table::blind::BlindDeltaTable`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.blind.BlindDeltaTable.md)
 
 Also reachable as `deltalake::BlindDeltaTable`, `deltalake::table::BlindDeltaTable`, `deltalake_core::BlindDeltaTable`, `deltalake_core::table::BlindDeltaTable`
 

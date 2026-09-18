@@ -1,6 +1,6 @@
 # Custom table providers
 
-`TableProvider` has 3 required methods and 12 provided ones. An implementation that supplies only the required three is correct and slow: no filter pushdown, no statistics, no DML, no limit pushdown. The provided methods are the capability surface, and each one you leave at its default is a planning decision made blind.
+A TableProvider describes schema/capabilities and constructs a physical scan plan. Compare MemTable, ViewTable and ListingTable first. Required methods must still implement the full scan contract; optional defaults may be appropriate. The scan arguments already include projection, filters and limit.
 
 ## Entry points
 
@@ -41,13 +41,13 @@
 
 ## Decision rules
 
-- `supports_filters_pushdown` returning `Inexact` is almost always better than the `Unsupported` default — DataFusion re-applies the filter, so an approximate answer is safe.
+- Inexact pruning must have no false negatives. A residual filter removes false positives but cannot recover discarded matches. Exact means fully enforced SQL semantics; Unsupported is valid when pruning is unavailable or unhelpful.
 - `scan_with_args` is the newer entry point and carries statistics requests the older `scan` cannot express.
 - Read an existing implementor before writing one; there are ten in-tree.
 
 ## Anti-patterns
 
-- Leaving `supports_filters_pushdown` at the default, which forces every filter to run after a full scan.
+- Applying a limit to unfiltered candidates or projecting away predicate inputs before enforcing exact filters.
 - Returning `None` from `statistics` when the source knows its row count.
 
 ## Agent checklist

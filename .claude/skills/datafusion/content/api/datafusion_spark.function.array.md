@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 6 public items · structured records in [`model/data
 fn array() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.array.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of array
 
 ---
@@ -21,6 +24,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of array
 ```rust
 fn array_repeat() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.array_repeat.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of array_repeat
 
@@ -34,6 +40,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of array_repea
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.functions.md).
+
+
 ---
 
 ## shuffle
@@ -43,6 +52,9 @@ fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```rust
 fn shuffle() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.shuffle.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of shuffle
 
@@ -56,6 +68,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of shuffle
 fn slice() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.slice.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of slice
 
 ---
@@ -67,6 +82,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of slice
 ```rust
 fn spark_array_contains() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.spark_array_contains.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of spark_array_contains
 

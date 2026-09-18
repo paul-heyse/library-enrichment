@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 7 public items · structured records in [`model/data
 fn bit_count() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.bitwise.bit_count.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of bit_count
 
 ---
@@ -21,6 +24,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of bit_count
 ```rust
 fn bit_get() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.bitwise.bit_get.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of bit_get
 
@@ -34,6 +40,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of bit_get
 fn bitwise_not() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.bitwise.bitwise_not.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of bitwise_not
 
 ---
@@ -46,6 +55,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of bitwise_not
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.bitwise.functions.md).
+
+
 ---
 
 ## shiftleft
@@ -55,6 +67,9 @@ fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```rust
 fn shiftleft() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.bitwise.shiftleft.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of shiftleft
 
@@ -68,6 +83,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of shiftleft
 fn shiftright() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.bitwise.shiftright.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of shiftright
 
 ---
@@ -79,6 +97,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of shiftright
 ```rust
 fn shiftrightunsigned() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.bitwise.shiftrightunsigned.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of shiftrightunsigned
 

@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_any_value`, `datafusion_functions_
 fn array_any_value(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.extract.array_any_value.md).
+
+
 returns the first non-null element in the array.
 
 ---
@@ -23,6 +26,9 @@ returns the first non-null element in the array.
 ```rust
 fn array_any_value_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.extract.array_any_value_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayAnyValue
@@ -39,6 +45,9 @@ Also reachable as `datafusion::prelude::array_element`, `datafusion_functions_ne
 fn array_element(array: datafusion_expr::Expr, element: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.extract.array_element.md).
+
+
 extracts the element with the index n from the array.
 
 ---
@@ -50,6 +59,9 @@ extracts the element with the index n from the array.
 ```rust
 fn array_element_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.extract.array_element_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayElement
@@ -66,6 +78,9 @@ Also reachable as `datafusion::prelude::array_pop_back`, `datafusion_functions_n
 fn array_pop_back(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.extract.array_pop_back.md).
+
+
 returns the array without the last element.
 
 ---
@@ -77,6 +92,9 @@ returns the array without the last element.
 ```rust
 fn array_pop_back_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.extract.array_pop_back_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayPopBack
@@ -93,6 +111,9 @@ Also reachable as `datafusion::prelude::array_pop_front`, `datafusion_functions_
 fn array_pop_front(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.extract.array_pop_front.md).
+
+
 returns the array without the first element.
 
 ---
@@ -104,6 +125,9 @@ returns the array without the first element.
 ```rust
 fn array_pop_front_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.extract.array_pop_front_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayPopFront
@@ -120,6 +144,9 @@ Also reachable as `datafusion::prelude::array_slice`, `datafusion_functions_nest
 fn array_slice(array: datafusion_expr::Expr, begin: datafusion_expr::Expr, end: datafusion_expr::Expr, stride: Option<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.extract.array_slice.md).
+
+
 returns a slice of the array.
 
 ---
@@ -131,6 +158,9 @@ returns a slice of the array.
 ```rust
 fn array_slice_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.extract.array_slice_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArraySlice
@@ -167,5 +197,8 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn schema_name(&self, args: &[Expr]) -> Result<String>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.extract.ArrayElement.md).
+
 
 ---

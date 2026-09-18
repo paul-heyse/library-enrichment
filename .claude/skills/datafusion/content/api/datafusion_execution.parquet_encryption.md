@@ -19,6 +19,9 @@ fn get_factory(&self, id: &str) -> Result<Arc<dyn EncryptionFactory>>
 fn register_factory(&self, id: &str, factory: Arc<dyn EncryptionFactory>) -> Option<Arc<dyn EncryptionFactory>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.parquet_encryption.EncryptionFactoryRegistry.md).
+
+
 Stores [`EncryptionFactory`] implementations that can be retrieved by a unique string identifier
 
 ---
@@ -37,6 +40,9 @@ trait EncryptionFactory: Send + Sync + std::fmt::Debug + 'static
 async fn get_file_decryption_properties(&self, config: &EncryptionFactoryOptions, file_path: &Path) -> Result<Option<Arc<FileDecryptionProperties>>>
 async fn get_file_encryption_properties(&self, config: &EncryptionFactoryOptions, schema: &SchemaRef, file_path: &Path) -> Result<Option<Arc<FileEncryptionProperties>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.parquet_encryption.EncryptionFactory.md).
+
 
 Trait for types that generate file encryption and decryption properties to
 write and read encrypted Parquet files.

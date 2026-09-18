@@ -10,6 +10,9 @@ Crate `arrow-json` · 4 public items · structured records in [`model/arrow_json
 struct ListSerializer<'a, 'b>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.reader.serializer.ListSerializer.md).
+
+
 ---
 
 ## ObjectSerializer
@@ -19,6 +22,9 @@ struct ListSerializer<'a, 'b>
 ```rust
 struct ObjectSerializer<'a, 'b>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_json.reader.serializer.ObjectSerializer.md).
+
 
 ---
 
@@ -30,6 +36,9 @@ struct ObjectSerializer<'a, 'b>
 struct SerializerError
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.reader.serializer.SerializerError.md).
+
+
 ---
 
 ## TapeSerializer
@@ -39,6 +48,9 @@ struct SerializerError
 ```rust
 struct TapeSerializer<'a>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_json.reader.serializer.TapeSerializer.md).
+
 
 [`Serializer`] for [`TapeElement`]
 

@@ -1,0 +1,291 @@
+[
+  {
+    "id": "ee828df69445bcd4873293f4",
+    "path": "datafusion_physical_plan::windows::bounded_window_agg_exec::WindowStateObserver",
+    "name": "WindowStateObserver",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait WindowStateObserver: Send + Sync",
+    "docs": "Callback receiver for per-partition window state.\n\n`state` is the result of [`Accumulator::state`], which is a `&mut self`\ncall whose trait doc states \"this function should not be called twice.\"\nSeveral built-in aggregates (`median`, `percentile_cont`, `string_agg`,\n`min_max_bytes`/`min_max_struct`) `std::mem::take` their internal\nbuffers to build that state — so `state` is a destructive read, not a\nsnapshot. The exec fires this at most once per group; a callee that\nneeds the value beyond the callback must retain it (e.g. clone into\nowned storage).\n\n[`Accumulator::state`]: datafusion_expr::Accumulator::state",
+    "span": {
+      "filename": "src/windows/bounded_window_agg_exec.rs",
+      "begin": [
+        92,
+        1
+      ],
+      "end": [
+        117,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          5745
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 7,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 9,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": []
+      }
+    },
+    "type_references": {
+      "7": "core::marker::Send",
+      "9": "core::marker::Sync"
+    },
+    "impl_context": null,
+    "links": {
+      "datafusion_expr::Accumulator::state": 539
+    },
+    "link_paths": {
+      "datafusion_expr::Accumulator::state": "datafusion_expr_common::accumulator::Accumulator::state"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5747",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.windows.bounded_window_agg_exec.WindowStateObserver.md",
+    "record_file": "operations/datafusion_physical_plan.windows.bounded_window_agg_exec.WindowStateObserver.json",
+    "anchor": "op-ee828df69445bcd4873293f4",
+    "aliases": [
+      "datafusion_physical_plan::windows::WindowStateObserver"
+    ],
+    "resolved_doc_links": {
+      "datafusion_expr::Accumulator::state": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-e13afcecd1da09f0b485e6dc"
+    }
+  },
+  {
+    "id": "a38fc2622c4d229cf0d9d06e",
+    "path": "datafusion_physical_plan::windows::bounded_window_agg_exec::WindowStateObserver::finalize_window_aggregate",
+    "name": "finalize_window_aggregate",
+    "owner": "datafusion_physical_plan::windows::bounded_window_agg_exec::WindowStateObserver",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn finalize_window_aggregate(&self, partition_idx: usize, window_expr: &Arc<dyn WindowExpr>, partition_key: &PartitionKey, state: Vec<ScalarValue>) -> Result<()>",
+    "docs": "Invoked once per (output-partition-index, window-expression,\nPARTITION BY tuple) as each PARTITION BY group closes, for every\naggregate window expression on the exec. Non-aggregate window\nfunctions (e.g. `row_number`, `rank`, `lead`/`lag`) do not fire this\ncallback.\n\n# Arguments\n\n* `partition_idx` - Output partition index of the [`BoundedWindowAggExec`]\n  stream firing this callback.\n* `window_expr` - The window expression whose state just closed.\n* `partition_key` - The PARTITION BY tuple that just closed.\n* `state` - [`Accumulator::state`] for the closed group of\n  `window_expr`. See the trait-level doc for the destructive-read\n  contract.\n\n[`Accumulator::state`]: datafusion_expr::Accumulator::state",
+    "span": {
+      "filename": "src/windows/bounded_window_agg_exec.rs",
+      "begin": [
+        110,
+        5
+      ],
+      "end": [
+        116,
+        21
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition_idx",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "window_expr",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Arc",
+                      "id": 94,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "dyn_trait": {
+                                  "traits": [
+                                    {
+                                      "trait": {
+                                        "path": "WindowExpr",
+                                        "id": 1830,
+                                        "args": null
+                                      },
+                                      "generic_params": []
+                                    }
+                                  ],
+                                  "lifetime": null
+                                }
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "partition_key",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "PartitionKey",
+                      "id": 5746,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "state",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ScalarValue",
+                              "id": 4729,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "1830": "datafusion_physical_expr::window::window_expr::WindowExpr",
+      "5746": "datafusion_physical_expr::window::window_expr::PartitionKey",
+      "2": "alloc::vec::Vec",
+      "4729": "datafusion_common::scalar::ScalarValue",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {
+      "`BoundedWindowAggExec`": 1590,
+      "datafusion_expr::Accumulator::state": 539
+    },
+    "link_paths": {
+      "`BoundedWindowAggExec`": "datafusion_physical_plan::windows::bounded_window_agg_exec::BoundedWindowAggExec",
+      "datafusion_expr::Accumulator::state": "datafusion_expr_common::accumulator::Accumulator::state"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5745",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.windows.bounded_window_agg_exec.WindowStateObserver.md",
+    "record_file": "operations/datafusion_physical_plan.windows.bounded_window_agg_exec.WindowStateObserver.json",
+    "anchor": "op-a38fc2622c4d229cf0d9d06e",
+    "aliases": [
+      "datafusion_physical_plan::windows::WindowStateObserver::finalize_window_aggregate"
+    ],
+    "resolved_doc_links": {
+      "`BoundedWindowAggExec`": "../operations/datafusion_physical_plan.windows.bounded_window_agg_exec.BoundedWindowAggExec.md#op-4f455d56121cc7d9007e9454",
+      "datafusion_expr::Accumulator::state": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-e13afcecd1da09f0b485e6dc"
+    }
+  }
+]

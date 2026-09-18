@@ -14,6 +14,9 @@ enum Hint
 
 **Derives**: Clone, Copy, Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.function.Hint.md).
+
+
 ---
 
 ## AggregateFunctionSimplification
@@ -23,6 +26,9 @@ enum Hint
 ```rust
 type AggregateFunctionSimplification = Box<dyn Fn(expr::AggregateFunction, &simplify::SimplifyContext) -> datafusion_common::Result<Expr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.function.AggregateFunctionSimplification.md).
+
 
 Type alias for [crate::udaf::AggregateUDFImpl::simplify].
 
@@ -44,6 +50,9 @@ Also reachable as `datafusion::logical_expr::PartitionEvaluatorFactory`, `datafu
 type PartitionEvaluatorFactory = std::sync::Arc<dyn Fn() -> datafusion_common::Result<Box<dyn PartitionEvaluator>> + Send + Sync>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.function.PartitionEvaluatorFactory.md).
+
+
 Factory that creates a PartitionEvaluator for the given window
 function
 
@@ -59,6 +68,9 @@ Also reachable as `datafusion::logical_expr::ReturnTypeFunction`, `datafusion_ex
 type ReturnTypeFunction = std::sync::Arc<dyn Fn(&[arrow::datatypes::DataType]) -> datafusion_common::Result<std::sync::Arc<arrow::datatypes::DataType>> + Send + Sync>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.function.ReturnTypeFunction.md).
+
+
 Factory that returns the functions's return type given the input argument types
 
 ---
@@ -72,6 +84,9 @@ Also reachable as `datafusion::logical_expr::ScalarFunctionImplementation`, `dat
 ```rust
 type ScalarFunctionImplementation = std::sync::Arc<dyn Fn(&[ColumnarValue]) -> datafusion_common::Result<ColumnarValue> + Send + Sync>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.function.ScalarFunctionImplementation.md).
+
 
 Scalar function
 
@@ -94,6 +109,9 @@ Also reachable as `datafusion::logical_expr::StateTypeFunction`, `datafusion_exp
 type StateTypeFunction = std::sync::Arc<dyn Fn(&arrow::datatypes::DataType) -> datafusion_common::Result<std::sync::Arc<Vec<arrow::datatypes::DataType>>> + Send + Sync>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.function.StateTypeFunction.md).
+
+
 Factory that returns the types used by an aggregator to serialize
 its state, given its return datatype.
 
@@ -106,6 +124,9 @@ its state, given its return datatype.
 ```rust
 type WindowFunctionSimplification = Box<dyn Fn(expr::WindowFunction, &simplify::SimplifyContext) -> datafusion_common::Result<Expr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.function.WindowFunctionSimplification.md).
+
 
 Type alias for [crate::udwf::WindowUDFImpl::simplify].
 

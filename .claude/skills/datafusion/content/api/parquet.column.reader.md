@@ -12,6 +12,9 @@ enum ColumnReader
 
 **Variants**: `BoolColumnReader`, `Int32ColumnReader`, `Int64ColumnReader`, `Int96ColumnReader`, `FloatColumnReader`, `DoubleColumnReader`, `ByteArrayColumnReader`, `FixedLenByteArrayColumnReader`
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.reader.ColumnReader.md).
+
+
 Column reader for a Parquet type.
 
 ---
@@ -23,6 +26,9 @@ Column reader for a Parquet type.
 ```rust
 fn get_column_reader(col_descr: schema::types::ColumnDescPtr, col_page_reader: Box<dyn PageReader>) -> ColumnReader
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.reader.get_column_reader.md).
+
 
 Gets a specific column reader corresponding to column descriptor `col_descr`. The
 column reader will read from pages in `col_page_reader`.
@@ -36,6 +42,9 @@ column reader will read from pages in `col_page_reader`.
 ```rust
 fn get_typed_column_reader<T: DataType>(col_reader: ColumnReader) -> ColumnReaderImpl<T>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.reader.get_typed_column_reader.md).
+
 
 Gets a typed column reader for the specific type `T`, by "up-casting" `col_reader` of
 non-generic type to a generic column reader type `ColumnReaderImpl`.
@@ -60,6 +69,9 @@ fn read_records(&mut self, max_records: usize, def_levels: Option<&mut D::Buffer
 fn skip_records(&mut self, num_records: usize) -> Result<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.reader.GenericColumnReader.md).
+
+
 Reads data for a given column chunk, using the provided decoders:
 
 - R: `ColumnLevelDecoder` used to decode repetition levels
@@ -75,6 +87,9 @@ Reads data for a given column chunk, using the provided decoders:
 ```rust
 type ColumnReaderImpl<T> = GenericColumnReader<column::reader::decoder::RepetitionLevelDecoderImpl, column::reader::decoder::DefinitionLevelDecoderImpl, column::reader::decoder::ColumnValueDecoderImpl<T>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.reader.ColumnReaderImpl.md).
+
 
 Typed value reader for a particular primitive column.
 

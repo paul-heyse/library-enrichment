@@ -30,6 +30,9 @@ fn create_partitioning(self, partition_count: usize) -> Partitioning
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.partitioning.Distribution.md).
+
+
 How data is distributed amongst partitions. See [`Partitioning`] for more
 details.
 
@@ -67,6 +70,9 @@ fn try_to_proto(&self, ctx: &datafusion_physical_expr_common::physical_expr::pro
 ```rust
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.partitioning.Partitioning.md).
+
 
 Output partitioning supported by [`ExecutionPlan`]s.
 
@@ -176,6 +182,9 @@ fn is_satisfied(&self) -> bool
 fn is_subset(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.partitioning.PartitioningSatisfaction.md).
+
+
 Represents how a [`Partitioning`] satisfies a [`Distribution`] requirement.
 
 ---
@@ -209,6 +218,9 @@ fn try_new(ordering: LexOrdering, split_points: Vec<SplitPoint>) -> Result<Self>
 ```rust
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.partitioning.RangePartitioning.md).
+
 
 Physical range partitioning.
 

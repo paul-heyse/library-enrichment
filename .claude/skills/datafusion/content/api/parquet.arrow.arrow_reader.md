@@ -10,6 +10,9 @@ Crate `parquet` · 6 public items · structured records in [`model/parquet.arrow
 const DEFAULT_BATCH_SIZE: usize = 1024
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.DEFAULT_BATCH_SIZE.md).
+
+
 Default batch size for reading parquet files
 
 ---
@@ -56,6 +59,9 @@ fn with_row_groups(self, row_groups: Vec<usize>) -> Self
 fn with_row_selection(self, selection: RowSelection) -> Self
 fn with_row_selection_policy(self, policy: RowSelectionPolicy) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md).
+
 
 Builder for constructing Parquet readers that decode into [Apache Arrow]
 arrays.
@@ -128,6 +134,9 @@ fn schema(&self) -> &SchemaRef
 fn try_new(metadata: Arc<ParquetMetaData>, options: ArrowReaderOptions) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.ArrowReaderMetadata.md).
+
+
 The metadata necessary to construct a [`ArrowReaderBuilder`]
 
 Note this structure is cheaply clone-able as it consists of several arcs.
@@ -179,6 +188,9 @@ fn with_skip_arrow_metadata(self, skip_arrow_metadata: bool) -> Self
 fn with_virtual_columns(self, virtual_columns: Vec<FieldRef>) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.ArrowReaderOptions.md).
+
+
 Options that control how [`ParquetMetaData`] is read when constructing
 an Arrow reader.
 
@@ -227,6 +239,9 @@ fn schema(&self) -> SchemaRef
 fn next(&mut self) -> Option<Self::Item>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.ParquetRecordBatchReader.md).
+
+
 Reads Parquet data as Arrow [`RecordBatch`]es
 
 This struct implements the [`RecordBatchReader`] trait and is an
@@ -247,6 +262,9 @@ Created by [`ParquetRecordBatchReaderBuilder`]
 ```rust
 type ParquetRecordBatchReaderBuilder<T> = ArrowReaderBuilder<SyncReader<T>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.ParquetRecordBatchReaderBuilder.md).
+
 
 Creates [`ParquetRecordBatchReader`] for reading Parquet files into Arrow [`RecordBatch`]es
 

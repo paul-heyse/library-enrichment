@@ -31,6 +31,9 @@ fn len(&self) -> usize
 fn size(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.group_values.row.GroupValuesRows.md).
+
+
 A [`GroupValues`] making use of [`Rows`]
 
 This is a general implementation of [`GroupValues`] that works for any

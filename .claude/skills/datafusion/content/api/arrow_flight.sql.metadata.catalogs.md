@@ -31,6 +31,9 @@ fn schema(&self) -> SchemaRef
 fn from(_: CommandGetCatalogs) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.metadata.catalogs.GetCatalogsBuilder.md).
+
+
 A builder for a [`CommandGetCatalogs`] response.
 
 Builds rows like this:

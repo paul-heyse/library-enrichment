@@ -58,6 +58,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 fn from_str(s: &str) -> Result<Self, Self::Err>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.column.Column.md).
+
+
 A named reference to a qualified field in a schema.
 
 ---

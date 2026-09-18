@@ -1,0 +1,539 @@
+{
+  "E01A": {
+    "selected_capability": "Load a snapshot once, record version(), and retain its Delta table provider for the report.",
+    "conditional_alternatives": "Use load_version(v) for a repeatable later reconstruction; refresh/rebuild only when current results are required.",
+    "inputs": "Table URL/storage context and a loaded snapshot at report start.",
+    "outputs": "Arc<dyn TableProvider>; query execution yields Arrow batches at that snapshot.",
+    "effects": "Log/file reads only; later writers do not refresh the retained provider.",
+    "errors": "Log/protocol load errors; retained-file loss may surface during stream consumption.",
+    "unknowns": "Repeatable logical snapshot does not reserve files against vacuum; historical retention is a separate requirement.",
+    "evidence_paths": [
+      "content/capabilities/delta.open.md",
+      "content/capabilities/delta.read.md",
+      "content/capabilities/delta.retention.md"
+    ]
+  },
+  "E01B": {
+    "selected_capability": "Refresh the table with update_incremental(None), rebuild table_provider(), and replace its registration in the reused context each polling cycle.",
+    "conditional_alternatives": "Keep the old provider for repeatable reports; rebuild is required for current dashboard rows.",
+    "inputs": "Existing SessionContext and a table handle sharing the correct log store.",
+    "outputs": "Updated table snapshot and new registered provider, then current Arrow rows.",
+    "effects": "Read latest log and replace caller session registration; no Delta write.",
+    "errors": "Refresh/storage/protocol or scan failures; replacing a registration is not a concurrency synchronization protocol.",
+    "unknowns": "Queries already planned against the old provider can retain old state; define polling boundaries. Test e01b proves old/new rows locally.",
+    "evidence_paths": [
+      "content/capabilities/delta.open.md",
+      "content/capabilities/delta.read.md",
+      "content/capabilities/delta.storage.md"
+    ],
+    "integration_test": {
+      "source": "consumer/tests/decisions.rs",
+      "name": "e01b_refresh_and_replace_provider_in_reused_context",
+      "status": "passed",
+      "log": "logs/attempt-04.log"
+    }
+  },
+  "E02A": {
+    "selected_capability": "Use DataFusion's plain Parquet relation/provider with projection and filtering for immutable non-Delta files.",
+    "conditional_alternatives": "Use a Delta provider if the directory is a Delta table whose log semantics must apply.",
+    "inputs": "Plain Parquet directory, schema/discovery policy, SessionContext, requested columns and predicate.",
+    "outputs": "DataFrame/logical query and resulting batches or stream.",
+    "effects": "Read physical files; no transaction publication.",
+    "errors": "Schema, file, planner and execution/stream errors.",
+    "unknowns": "The Delta reference establishes the boundary; exact plain-Parquet options and performance are not qualified here.",
+    "evidence_paths": [
+      "content/capabilities/delta.read.md"
+    ]
+  },
+  "E02B": {
+    "selected_capability": "Use DeltaTable::table_provider() or its Delta-aware scan rather than querying remaining Parquet files directly.",
+    "conditional_alternatives": "Use raw Parquet only for deliberate physical-file inspection, accepting a different relation.",
+    "inputs": "Loaded Delta snapshot and compatible session/store context.",
+    "outputs": "Logical rows after log removes, deletion vectors and mapping; DataFusion query/stream.",
+    "effects": "Read current active data according to Delta state.",
+    "errors": "Protocol/mapping admission, missing-file and stream errors.",
+    "unknowns": "Pin evidence shows raw Parquet can include logically deleted data; optimizer efficiency is not established.",
+    "evidence_paths": [
+      "content/capabilities/delta.read.md",
+      "content/capabilities/delta.features.md"
+    ]
+  },
+  "E03A": {
+    "selected_capability": "At this pin use table_provider(), DataFrame::select_columns(&[\"id\"]), then execute_stream(); consume batches incrementally.",
+    "conditional_alternatives": "scan_table().with_columns([\"id\"]) is a returned-inferred public call path, but the partition-first fixture exposes a projection-order defect; use only with a matching regression check.",
+    "inputs": "Loaded snapshot, compatible DataFusion context, requested logical field id.",
+    "outputs": "SendableRecordBatchStream; inspect its schema and each batch before downcasting.",
+    "effects": "Read-only; streaming consumption, without collecting the entire relation.",
+    "errors": "Provider/planning errors and errors during try_next are separate.",
+    "unknowns": "Incremental consumption is not a process-memory bound. Test e03a validates name/type/values on a partition-first layout.",
+    "evidence_paths": [
+      "content/capabilities/delta.read.md"
+    ],
+    "integration_test": {
+      "source": "consumer/tests/decisions.rs",
+      "name": "e03a_partitioned_name_projection_streams_only_id",
+      "status": "passed",
+      "log": "logs/attempt-04.log"
+    }
+  },
+  "E03B": {
+    "selected_capability": "Build/register a Delta table provider and compose the existing DataFusion join/filter query.",
+    "conditional_alternatives": "Direct scan_table stream suits a consumer that does not need relational query composition.",
+    "inputs": "Loaded table snapshot, existing SessionContext with the other source, logical join/filter expressions.",
+    "outputs": "DataFrame/LogicalPlan, then Arrow stream or collected batches.",
+    "effects": "Read snapshot files and the other source.",
+    "errors": "Expression/type, planner, object-store and streaming errors.",
+    "unknowns": "Provider freshness remains explicit and query performance needs representative measurements.",
+    "evidence_paths": [
+      "content/capabilities/delta.read.md",
+      "content/capabilities/delta.session.md"
+    ]
+  },
+  "E04A": {
+    "selected_capability": "Supply the concrete SessionState through with_session_state(Arc::new(state)) after ensuring it has Delta's planner.",
+    "conditional_alternatives": "Start with create_session()/a Delta-configured state and add the caller UDF/runtime policy if the original planner lacks Delta support.",
+    "inputs": "Concrete state, required UDF registry and RuntimeEnv, Arrow batches or LogicalPlan.",
+    "outputs": "WriteBuilder awaits Result<DeltaTable, DeltaTableError>.",
+    "effects": "Executes with caller state, writes files and publishes a log version on success.",
+    "errors": "A plain DataFusion planner may fail on MetricObserver; do not silently discard required caller capabilities.",
+    "unknowns": "Concrete state preservation does not make an incompatible planner compatible; test distinguishing UDF and resource behavior.",
+    "evidence_paths": [
+      "content/capabilities/delta.session.md",
+      "content/capabilities/delta.write.md"
+    ]
+  },
+  "E04B": {
+    "selected_capability": "Set SessionFallbackPolicy::DeriveFromTrait explicitly only if its derived runtime/config/function subset satisfies the caller contract.",
+    "conditional_alternatives": "Use RequireSessionState to reject a wrapper when exact behavior is mandatory; require a concrete Delta-capable state. InternalDefaults can lose the required UDF.",
+    "inputs": "Arc<dyn Session>, fallback policy, required runtime/functions and operation input.",
+    "outputs": "Resolved operation session, then Result<DeltaTable, DeltaTableError>.",
+    "effects": "Derives or rejects state before execution; successful write publishes.",
+    "errors": "Wrapper rejection, lost function or missing planner are distinct failures.",
+    "unknowns": "DeriveFromTrait is not a clone of arbitrary planner/catalog/custom Session semantics; UDF preservation alone does not prove complete policy equivalence.",
+    "evidence_paths": [
+      "content/capabilities/delta.session.md"
+    ]
+  },
+  "E05A": {
+    "selected_capability": "DeltaTable::write(batches).with_save_mode(SaveMode::Append).await.",
+    "conditional_alternatives": "Use RecordBatchWriter for staged incremental ingestion with explicit publication; input-plan writing when DataFusion already owns the relation.",
+    "inputs": "Owned table plus IntoIterator<Item=RecordBatch>; schema/protocol-compatible arrays.",
+    "outputs": "Result<DeltaTable, DeltaTableError>, with the updated version.",
+    "effects": "Write data files and publish a Delta log commit.",
+    "errors": "Schema/value/constraint, planning/storage and transaction errors; later hook failures may follow publication.",
+    "unknowns": "Append is the default, but specify intent. SaveMode::Ignore is not a tested dedup/skip mechanism.",
+    "evidence_paths": [
+      "content/capabilities/delta.write.md",
+      "content/capabilities/delta.commit.md"
+    ]
+  },
+  "E05B": {
+    "selected_capability": "Use write(empty batches).with_input_plan(LogicalPlan).with_session_state(Arc::new(caller_delta_state)) and await.",
+    "conditional_alternatives": "Materialize batches only when that resource tradeoff is deliberate; the deprecated with_input_execution_plan accepts Arc<LogicalPlan>, not a physical ExecutionPlan.",
+    "inputs": "Existing table, existing optimized logical plan and Delta-capable state retaining source/UDF/runtime context.",
+    "outputs": "Updated DeltaTable or DeltaTableError.",
+    "effects": "Execute the source plan, append files and publish a commit.",
+    "errors": "Ordinary DataFusion planner can fail on Delta MetricObserver; missing UDF/source/runtime mappings can fail before publication.",
+    "unknowns": "Test e05b appends UDF-produced row 104 while preserving row 1 and uses the caller's RuntimeEnv. No bounded-memory claim follows from plan input.",
+    "evidence_paths": [
+      "content/capabilities/delta.write.md",
+      "content/capabilities/delta.session.md"
+    ],
+    "integration_test": {
+      "source": "consumer/tests/decisions.rs",
+      "name": "e05b_logical_plan_write_preserves_caller_udf_and_runtime",
+      "status": "passed",
+      "log": "logs/attempt-04.log"
+    }
+  },
+  "E06A": {
+    "selected_capability": "Write the replacement batch with SaveMode::Overwrite and no replace_where predicate.",
+    "conditional_alternatives": "Use replace_where for a subset, or merge for key-dependent changes; SchemaMode::Overwrite only when schema replacement is intentional and supported.",
+    "inputs": "Existing table plus replacement RecordBatches.",
+    "outputs": "Updated DeltaTable whose current relation is the new batch.",
+    "effects": "Logically remove old data, write replacement files and publish; old bytes may remain.",
+    "errors": "Schema/partition/protocol/append-only restrictions and commit failures.",
+    "unknowns": "Overwrite does not reclaim disk; physical deletion belongs to retention/vacuum.",
+    "evidence_paths": [
+      "content/capabilities/delta.replace.md",
+      "content/capabilities/delta.write.md",
+      "content/capabilities/delta.retention.md"
+    ]
+  },
+  "E06B": {
+    "selected_capability": "Use SaveMode::Overwrite plus with_replace_where(\"id >= 2\"); reject replacement rows outside the predicate.",
+    "conditional_alternatives": "Use full overwrite when every row is replaced; merge when source-target matching determines actions.",
+    "inputs": "Existing table and replacement batches all satisfying id >= 2.",
+    "outputs": "Updated DeltaTable; rows outside the predicate remain.",
+    "effects": "Rewrite selected slice and publish one new version.",
+    "errors": "Out-of-predicate input fails validation; inspect observed version to establish no publication for this failure.",
+    "unknowns": "Test e06b rejects [0,20] without version advance and replaces [2,3] with [20] while preserving id 1. Other partition/schema combinations need their own evidence.",
+    "evidence_paths": [
+      "content/capabilities/delta.replace.md"
+    ],
+    "integration_test": {
+      "source": "consumer/tests/decisions.rs",
+      "name": "e06b_predicate_replacement_rejects_outside_rows_and_preserves_rest",
+      "status": "passed",
+      "log": "logs/attempt-04.log"
+    }
+  },
+  "E07A": {
+    "selected_capability": "Keep schema evolution disabled and reject incompatible input; explicitly compare the required schema if exact field/type identity is the application contract.",
+    "conditional_alternatives": "Use SchemaMode::Merge only when evolution is intended; use a deliberate cast policy when compatible conversions are acceptable.",
+    "inputs": "Fixed table schema and incoming batches including actual nullability/nested value constraints.",
+    "outputs": "Successful unchanged-schema table, or a rejected write.",
+    "effects": "Successful append publishes; validation failure may leave unreferenced files but must not be assumed committed.",
+    "errors": "Wider/incompatible schemas, invalid values and constraints fail at separate points. with_cast_safety(false) errors on invalid tested casts; true may substitute null.",
+    "unknowns": "Default compatibility/casting is not identical to strict Arrow schema equality; test required invariants and nullability explicitly.",
+    "evidence_paths": [
+      "content/capabilities/delta.schema.md",
+      "content/capabilities/delta.write.md"
+    ]
+  },
+  "E07B": {
+    "selected_capability": "Append with SchemaMode::Merge to admit compatible additive columns.",
+    "conditional_alternatives": "Use ordinary append to enforce the existing schema; SchemaMode::Overwrite belongs to full overwrite and does not express preservation of old rows.",
+    "inputs": "Existing table plus wider batch; verify supported schema/protocol/mapping configuration.",
+    "outputs": "Updated table/schema; existing rows preserved with null in compatible new nullable fields.",
+    "effects": "Append data and update metadata/protocol as required, publishing a commit.",
+    "errors": "Incompatible evolution or mapped-table restrictions can reject before publication.",
+    "unknowns": "Retained evidence covers additive nullable fields; nested evolution, required non-null additions and all mapping combinations are not certified.",
+    "evidence_paths": [
+      "content/capabilities/delta.schema.md",
+      "content/capabilities/delta.replace.md"
+    ]
+  },
+  "E08A": {
+    "selected_capability": "DeltaTable::merge(source_df, qualified_key_equality) with explicit aliases, matched-update and unmatched-insert clauses.",
+    "conditional_alternatives": "Use append for pure additions or replace_where for a complete replacement slice.",
+    "inputs": "DataFrame source with unique non-null keys, target snapshot, qualified join and ordered rules.",
+    "outputs": "Result<(DeltaTable, MergeMetrics), DeltaTableError>.",
+    "effects": "Rewrite/add/remove logical rows and publish; metrics describe actions.",
+    "errors": "Expression/schema/protocol, ambiguity and optimistic-conflict errors.",
+    "unknowns": "Assert final rows and inserted/updated counts; successful merge does not establish a persistent unique-key constraint.",
+    "evidence_paths": [
+      "content/capabilities/delta.merge.md"
+    ]
+  },
+  "E08B": {
+    "selected_capability": "Normalize duplicate keys with an explicit deterministic application rule, or reject them, before merge; define null-key semantics separately.",
+    "conditional_alternatives": "Ordinary equality leaves null keys unmatched; a deliberate null-safe predicate changes matching. Deduplication is only appropriate with a specified tie-break policy.",
+    "inputs": "Source multiplicity/nulls, target keys and clause ordering.",
+    "outputs": "Normalized DataFrame then merge table/metrics, or explicit validation error.",
+    "effects": "Possible update/insert/delete commit after normalization.",
+    "errors": "The tested duplicate matched updates error without advancing version; do not generalize to all duplicate-delete/unmatched-insert combinations.",
+    "unknowns": "Verify duplicates in both source and target, null behavior, first-applicable clause ordering and conflict handling.",
+    "evidence_paths": [
+      "content/capabilities/delta.merge.md"
+    ]
+  },
+  "E09A": {
+    "selected_capability": "Append with CommitProperties::with_application_transaction(Transaction::new(app_id, batch_version)).",
+    "conditional_alternatives": "Plain append when no coordination marker is required; use explicit replay reconciliation for uncertain prior results.",
+    "inputs": "Stable application ID/version, batch input and optional diagnostic commit metadata.",
+    "outputs": "Updated DeltaTable plus persisted txn action observable through transaction_version.",
+    "effects": "Publish rows and coordination metadata in the commit.",
+    "errors": "Write/commit/post-commit failures must be classified before retry.",
+    "unknowns": "A marker records coordination state; it is not an automatic once-only write guarantee at this pin.",
+    "evidence_paths": [
+      "content/capabilities/delta.replay.md",
+      "content/capabilities/delta.commit.md"
+    ]
+  },
+  "E09B": {
+    "selected_capability": "After losing a result, refresh independently and inspect transaction_version, commit metadata/history and data outcome before deciding to retry.",
+    "conditional_alternatives": "If the marker and batch identity prove publication, acknowledge/skip the replay; if absent under exclusive ownership and retained evidence, retry. Ambiguous/mismatched evidence requires reconciliation. Stronger concurrency needs explicit ownership/coordination or a carefully specified domain-key merge.",
+    "inputs": "Stable app/batch identity, source offsets, retained log/txn state and an ownership protocol.",
+    "outputs": "Replay/skip/reconcile decision; only a justified retry invokes write.",
+    "effects": "Reads committed state; an unsafe retry can append duplicates even with the same marker.",
+    "errors": "Storage/transaction/hook uncertainty differs from an already observed marker; retention can erase evidence.",
+    "unknowns": "Pre-read then append is not atomic. Local stale-marker conflict evidence is not distributed exactly-once. Test e09b shows skip after reconciliation and duplicate rows from a naive sequential retry.",
+    "evidence_paths": [
+      "content/capabilities/delta.replay.md",
+      "content/capabilities/delta.commit.md"
+    ],
+    "integration_test": {
+      "source": "consumer/tests/decisions.rs",
+      "name": "e09b_reconcile_marker_before_retry_without_claiming_atomic_dedup",
+      "status": "passed",
+      "log": "logs/attempt-04.log"
+    }
+  },
+  "E10A": {
+    "selected_capability": "Correct the validation failure, verify the observed log version remains unchanged, and resubmit the corrected operation.",
+    "conditional_alternatives": "Use reload/reconciliation when failure phase is not known to precede publication.",
+    "inputs": "Original version, validation error, corrected rows/schema/predicate and an independent observer.",
+    "outputs": "A corrected successful table or another explicit validation error.",
+    "effects": "The rejected transaction is unpublished; staged orphan files may remain and require retention policy.",
+    "errors": "Do not retry invalid input unchanged or treat every generic error as pre-publication.",
+    "unknowns": "Version stability is observed evidence for the particular failure, not a universal property of all error returns.",
+    "evidence_paths": [
+      "content/capabilities/delta.replace.md",
+      "content/capabilities/delta.schema.md",
+      "content/capabilities/delta.commit.md"
+    ]
+  },
+  "E10B": {
+    "selected_capability": "Treat the hook error as an ambiguous commit: independently refresh and reconcile version, application marker, metadata and resulting rows before replay.",
+    "conditional_alternatives": "Retry only when non-publication is established under the application's ownership policy; repair/retry post-commit work separately when the data commit is already visible.",
+    "inputs": "Operation identity, previous version, hook phase and retained committed evidence.",
+    "outputs": "Published/not-published/unresolved recovery decision.",
+    "effects": "A before_post_commit_hook failure can follow visible log publication; duplicate replay is a material risk.",
+    "errors": "Error return does not establish rollback; backend publication and post-commit failures have different meanings.",
+    "unknowns": "Local visibility evidence does not prove power-loss durability or remote backend atomicity.",
+    "evidence_paths": [
+      "content/capabilities/delta.commit.md",
+      "content/capabilities/delta.replay.md"
+    ]
+  },
+  "E11A": {
+    "selected_capability": "Load/refresh the current table and use a Delta provider or scan_table stream for its snapshot contents.",
+    "conditional_alternatives": "Use CDF for incremental row changes with operation metadata, not for current-state reconstruction by default.",
+    "inputs": "Loaded current snapshot and session/storage context.",
+    "outputs": "Current logical RecordBatches or stream.",
+    "effects": "Read-only scan of live data.",
+    "errors": "Protocol, missing-file and stream errors.",
+    "unknowns": "Current means the explicit load/refresh point; retained providers are not live subscriptions.",
+    "evidence_paths": [
+      "content/capabilities/delta.read.md",
+      "content/capabilities/delta.open.md"
+    ]
+  },
+  "E11B": {
+    "selected_capability": "Use scan_cdf().with_starting_version(start).with_ending_version(end) and DeltaCdfTableProvider::try_new for a DataFusion relation.",
+    "conditional_alternatives": "Use CdfLoadBuilder::build(session, filters) for a physical plan with explicit execution/residual handling; a snapshot scan does not return change history.",
+    "inputs": "CDF-enabled retained interval; inclusive explicit versions and supported table features.",
+    "outputs": "Change rows with _change_type, _commit_version and _commit_timestamp; preserve insert/delete/update_preimage/update_postimage. The executed consumer observed UInt64 commit versions and Timestamp(Millisecond, None) commit timestamps; inspect and decode actual array types.",
+    "effects": "Read log and change/data files; checkpoint the processed interval only after downstream success.",
+    "errors": "Unrecorded/disabled CDF, invalid bounds, column mapping, missing files and planning/stream errors are distinct.",
+    "unknowns": "Test e11b covers insert, update images and delete across versions 1..=3. It does not qualify timestamp boundaries or downstream exactly-once processing.",
+    "evidence_paths": [
+      "content/capabilities/delta.cdf.md"
+    ],
+    "integration_test": {
+      "source": "consumer/tests/decisions.rs",
+      "name": "e11b_cdf_preserves_insert_update_delete_and_explicit_versions",
+      "status": "passed",
+      "log": "logs/attempt-04.log"
+    }
+  },
+  "E12A": {
+    "selected_capability": "Read the explicit inclusive CDF interval through DeltaCdfTableProvider or CdfLoadBuilder::build.",
+    "conditional_alternatives": "Use snapshot comparison or a separate application log if required changes are unavailable, with a different recovery contract.",
+    "inputs": "Starting/ending versions fully inside retained historically enabled CDF.",
+    "outputs": "Changes with commit metadata and both update images as applicable.",
+    "effects": "Read-only; downstream checkpoint follows successful processing.",
+    "errors": "Retention races, missing files, mapping restrictions and planner failures remain possible.",
+    "unknowns": "Current enablement alone is insufficient evidence; confirm enablement across the requested history.",
+    "evidence_paths": [
+      "content/capabilities/delta.cdf.md",
+      "content/capabilities/delta.retention.md"
+    ]
+  },
+  "E12B": {
+    "selected_capability": "Inspect current head and historical CDF enablement, then bound the processed interval to actually available commits.",
+    "conditional_alternatives": "Wait/retry later for future commits; for pre-enablement history use an explicit bootstrap snapshot/application recovery contract rather than fabricate missing changes.",
+    "inputs": "Requested interval, observed head, enablement history and retained files.",
+    "outputs": "Available CDF rows or explicit unavailable/empty-range decision.",
+    "effects": "Read-only; persist only the successfully processed observed end.",
+    "errors": "At this pin beyond-head ending versions clamp even without opt-in; beyond-head start normally rejects unless allow_out_of_range permits empty. Crossing earlier disabled history fails.",
+    "unknowns": "Do not checkpoint the requested future end. All timestamp/transition combinations are not exhaustively tested.",
+    "evidence_paths": [
+      "content/capabilities/delta.cdf.md"
+    ]
+  },
+  "E13A": {
+    "selected_capability": "Use table.optimize().with_type(OptimizeType::Compact) for many small live files.",
+    "conditional_alternatives": "Use ZOrder(columns) when measured filtering patterns justify clustering; leave layout unchanged when rewrite cost exceeds benefit.",
+    "inputs": "Loaded table, target-size/partition/concurrency policy.",
+    "outputs": "Result<(DeltaTable, Metrics), DeltaTableError>.",
+    "effects": "Rewrite files and publish layout changes, possibly no-op on repeated runs; preserve logical rows.",
+    "errors": "Read/protocol/resource and transaction failures.",
+    "unknowns": "Measure file counts and real scan metrics; local row-preservation evidence does not establish a speedup or exact target file sizes.",
+    "evidence_paths": [
+      "content/capabilities/delta.optimize.md"
+    ]
+  },
+  "E13B": {
+    "selected_capability": "Preview table.vacuum().with_dry_run(true) with explicit mode and retention policy.",
+    "conditional_alternatives": "Use Lite for tracked tombstones; Full to consider eligible untracked orphans; optimize changes live layout and is not disk reclamation.",
+    "inputs": "Loaded table, safe retention interval and required historical/CDF readership.",
+    "outputs": "Result<(DeltaTable, VacuumMetrics), DeltaTableError>; inspect candidate paths.",
+    "effects": "Preview performs no deletion; actual vacuum physically removes eligible objects. Defaults are dry_run=false and Lite.",
+    "errors": "Retention enforcement rejects unsafe short intervals; missing historical data may later fail scan consumption.",
+    "unknowns": "Choose retention for active readers and recovery. Cloud listing/deletion behavior is unqualified.",
+    "evidence_paths": [
+      "content/capabilities/delta.retention.md",
+      "content/capabilities/delta.optimize.md"
+    ]
+  },
+  "E14A": {
+    "selected_capability": "Clone/build a separate table handle and load_version(0), then query that historical provider.",
+    "conditional_alternatives": "Use restore only when a new current version must be published.",
+    "inputs": "Table/log context and retained version-0 files.",
+    "outputs": "Historical DeltaTable snapshot and its rows.",
+    "effects": "Read-only version selection; no current-head commit.",
+    "errors": "Metadata load can succeed while later data reads fail after vacuum.",
+    "unknowns": "An already loaded provider builder's version option may lose to its existing snapshot; select version on the table before building the provider.",
+    "evidence_paths": [
+      "content/capabilities/delta.history.md",
+      "content/capabilities/delta.open.md"
+    ]
+  },
+  "E14B": {
+    "selected_capability": "table.restore().with_version_to_restore(0).await to publish a new head with version-0 data state.",
+    "conditional_alternatives": "Use load_version(0) for a read-only historical view; a checkpoint only accelerates reconstruction.",
+    "inputs": "Current table plus retained version-0 data and compatible protocol.",
+    "outputs": "Result<(DeltaTable, RestoreMetrics), DeltaTableError>; new monotonically later commit.",
+    "effects": "Publish restore history while retaining prior versions subject to retention.",
+    "errors": "Missing historical files and protocol constraints can prevent restore; restore cannot recreate deleted bytes.",
+    "unknowns": "Test e14b verifies v0 -> v1 -> restored v2 and keeps v1's two-row state readable.",
+    "evidence_paths": [
+      "content/capabilities/delta.history.md",
+      "content/capabilities/delta.retention.md"
+    ],
+    "integration_test": {
+      "source": "consumer/tests/decisions.rs",
+      "name": "e14b_restore_publishes_new_head_preserving_intermediate_history",
+      "status": "passed",
+      "log": "logs/attempt-04.log"
+    }
+  },
+  "E15A": {
+    "selected_capability": "Check consumer Cargo features, table protocol and ordinary Delta provider preconditions; the pinned mapped-column fixture reads logical names successfully.",
+    "conditional_alternatives": "Use the feature/operation matrix for discovery; use raw Parquet only for physical inspection, where physical mapped names differ.",
+    "inputs": "Column-mapped table snapshot and exact pinned profile.",
+    "outputs": "Normal logical Delta rows or operation-specific admission error.",
+    "effects": "Read-only.",
+    "errors": "Unsupported protocol/Cargo profile, mapping configuration and data access errors remain separate.",
+    "unknowns": "The successful scan fixture is evidence for that path, not every mapped-schema evolution or operation.",
+    "evidence_paths": [
+      "content/capabilities/delta.features.md",
+      "content/capabilities/delta.read.md",
+      "content/capabilities/delta.schema.md"
+    ]
+  },
+  "E15B": {
+    "selected_capability": "Treat CDF separately: this pin's CDF build rejects non-None column mapping, despite ordinary scan support.",
+    "conditional_alternatives": "Use a supported change source or explicitly designed snapshot comparison/recovery approach; do not strip mapping metadata to force access.",
+    "inputs": "Mapped table and requested historically enabled CDF interval.",
+    "outputs": "Operation-specific rejection rather than a supported CDF relation.",
+    "effects": "No successful CDF output; no table mutation is justified by feature recognition.",
+    "errors": "Recognized feature names and checker acceptance are weaker than the CDF operation precondition.",
+    "unknowns": "Future versions may change this cell; rerun exact-profile operation probes before claiming support.",
+    "evidence_paths": [
+      "content/capabilities/delta.cdf.md",
+      "content/capabilities/delta.features.md"
+    ]
+  },
+  "E16A": {
+    "selected_capability": "Ensure the session has the table's correct root store mapping before execution; Delta registration helpers populate missing mappings.",
+    "conditional_alternatives": "Register explicitly through RuntimeEnv::register_object_store(root_url, root_object_store) when the caller owns store setup.",
+    "inputs": "Compatible Session runtime, table LogStore root URL and correctly scoped root object store.",
+    "outputs": "Configured object-store registry, then executable provider/plan.",
+    "effects": "Mutates caller runtime configuration; performs object I/O on execution.",
+    "errors": "URL/prefix mismatch, credentials and absent backend features can still fail.",
+    "unknowns": "Automatic check-and-register is not atomic concurrency coordination and will not repair an existing wrong mapping.",
+    "evidence_paths": [
+      "content/capabilities/delta.storage.md",
+      "content/capabilities/delta.session.md"
+    ]
+  },
+  "E16B": {
+    "selected_capability": "Explicitly replace the stale mapping with RuntimeEnv::register_object_store(table.log_store().root_url(), table.log_store().root_object_store(None)).",
+    "conditional_alternatives": "Keep the existing mapping only after establishing it is the intended store; an absent mapping can use normal helper registration.",
+    "inputs": "Caller runtime, target root URL, trusted table root store and coordination over shared registry changes.",
+    "outputs": "Repaired mapping and successful reads through the provider.",
+    "effects": "Replaces shared runtime routing; ordinary registration helpers preserve old mappings.",
+    "errors": "Wrong mappings survive provider setup and fail execution; prefix and root scope must be correct.",
+    "unknowns": "Test e16b proves failure through the bad store and success after explicit replacement; concurrent registry mutation is not qualified.",
+    "evidence_paths": [
+      "content/capabilities/delta.storage.md"
+    ],
+    "integration_test": {
+      "source": "consumer/tests/decisions.rs",
+      "name": "e16b_stale_store_mapping_requires_explicit_runtime_replacement",
+      "status": "passed",
+      "log": "logs/attempt-04.log"
+    }
+  },
+  "H01": {
+    "selected_capability": "Prefer DeltaCdfTableProvider with a DataFusion filter; its scan enforces a row-level residual.",
+    "conditional_alternatives": "With lower-level CdfLoadBuilder::build, wrap the resulting plan in an exact residual FilterExec as required; internal builder filter state is only a partition-pruning lead.",
+    "inputs": "CDF interval, non-partition predicate, compatible Session/TaskContext and PhysicalExpr when using low-level execution.",
+    "outputs": "Only predicate-matching change rows, preserving change metadata.",
+    "effects": "Read-only; file pruning reduces candidates but cannot establish row-level correctness.",
+    "errors": "Planning/type errors, disabled/missing CDF and mapping restrictions remain material.",
+    "unknowns": "Retained provider test filters id > 5 to the update postimage. Verify all predicate columns remain available and do not assume a pushed expression was fully applied.",
+    "evidence_paths": [
+      "content/capabilities/delta.cdf.md"
+    ]
+  },
+  "H02": {
+    "selected_capability": "Treat Arrow/kernel conversion, value casting, Delta normalization and schema evolution as separate operations.",
+    "conditional_alternatives": "Use existing compatible schema for fixed writes; SchemaMode::Merge only for intentional supported evolution; reject lossy casts when null substitution is unacceptable.",
+    "inputs": "Nullable nested arrays/schema, timestamp units/timezone, exact Cargo feature profile and table protocol.",
+    "outputs": "Normalized Delta schema and persisted values; conversion errors remain explicit.",
+    "effects": "Normalization/casting can alter schema meaning; writes may update metadata/protocol and publish.",
+    "errors": "Test nested parent/child nulls, invalid non-null values, timestamp precision/ranges/timezones and protocol feature admission.",
+    "unknowns": "The reference proves nested decimal schema fidelity but nanosecond UTC normalizes to microseconds and UInt64 schema round-trips Int64 in its profile. It does not prove all actual value conversions are lossless.",
+    "evidence_paths": [
+      "content/capabilities/delta.schema.md",
+      "content/capabilities/delta.features.md"
+    ]
+  },
+  "H03": {
+    "selected_capability": "Choose Full vacuum to discover eligible untracked orphan files, with_dry_run(true), safe retention and with_keep_versions for required historical snapshots.",
+    "conditional_alternatives": "Lite derives candidates from tracked tombstones and will miss untracked orphans; leave files when necessary history/readers cannot be protected.",
+    "inputs": "Explicit mode, age/retention policy, required versions and retained log/data availability.",
+    "outputs": "Preview candidates/VacuumMetrics; after reviewed policy, actual removal results.",
+    "effects": "Full lists storage; actual vacuum removes bytes and can invalidate historical/CDF reads.",
+    "errors": "Retention guards, missing retained history, permissions/listing/deletion errors.",
+    "unknowns": "keep_versions is experimental and not indefinite retention; test the protected versions by consuming their data after cleanup. Remote backend behavior remains unqualified.",
+    "evidence_paths": [
+      "content/capabilities/delta.retention.md",
+      "content/capabilities/delta.history.md"
+    ]
+  },
+  "H04": {
+    "selected_capability": "Use built-in deltalake-catalog-glue or deltalake-catalog-unity for identity discovery; DataCatalog::get_table_storage_location returns the storage location.",
+    "conditional_alternatives": "Use UnityCatalogList/UnityCatalogProvider/UnitySchemaProvider for DataFusion catalog/schema/table integration; direct URLs suffice when already resolved.",
+    "inputs": "Catalog/database/table IDs plus exact adapter features and authentication options.",
+    "outputs": "Resolved storage URL, or DataFusion catalog/provider objects; then load using appropriate storage adapters.",
+    "effects": "Catalog service lookups followed by storage/log access; provider freshness requires a caller policy.",
+    "errors": "Not-found/auth/service errors differ from storage credentials, table protocol and query errors.",
+    "unknowns": "Live Glue/Unity, cloud auth and catalog caching/freshness are not runtime-qualified by these local tests. Catalog access does not prove table-read compatibility.",
+    "evidence_paths": [
+      "content/capabilities/delta.catalog.md",
+      "content/capabilities/delta.storage.md",
+      "content/capabilities/delta.open.md"
+    ]
+  },
+  "H05": {
+    "selected_capability": "RecordBatchWriter::for_table(&table), write batches, then explicitly publish through flush_and_commit(&mut table).",
+    "conditional_alternatives": "Use high-level DeltaTable::write for a complete write-and-commit operation; use flush actions with CommitBuilder only if you own correct transactional semantics.",
+    "inputs": "Loaded table/schema, incoming RecordBatches and mutable writer/table handle for publication.",
+    "outputs": "write buffers input; flush returns Add actions/staged files; flush_and_commit returns a committed Version.",
+    "effects": "File staging is not log visibility; only publication makes rows part of a Delta snapshot.",
+    "errors": "Write/flush failure may leave unreferenced files; publication or post-commit error needs reconciliation before replay.",
+    "unknowns": "The reader's visibility probe sees new rows only after commit. Do not flush and discard Add actions, then assume a later empty flush commits previously returned actions.",
+    "evidence_paths": [
+      "content/capabilities/delta.write.md",
+      "content/capabilities/delta.commit.md"
+    ]
+  },
+  "H06": {
+    "selected_capability": "Reopen the capability decision when the refreshed candidate surface adds a relevant built-in, even if the old selected signature is unchanged.",
+    "conditional_alternatives": "Retain the current recommendation only after comparing conditions, tradeoffs and evidence against the new built-in.",
+    "inputs": "New immutable capture/revision, lock/features, neighboring candidates and old decision/claims.",
+    "outputs": "Reviewed alternatives/recommendation plus refreshed evidence and invalidation record.",
+    "effects": "Regenerate from authoring/captures; rerun affected consumer/probe assertions and retain old identities.",
+    "errors": "Unlinked semantic changes can escape automatic invalidation; absent matches do not prove no impact.",
+    "unknowns": "scripts/invalidation.py supplies review hints across selected contracts, source, profiles and neighboring candidate surfaces; it is not a proof of semantic equivalence.",
+    "evidence_paths": [
+      "MAINTENANCE.md",
+      "scripts/invalidation.py"
+    ]
+  }
+}

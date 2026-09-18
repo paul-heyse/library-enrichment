@@ -10,6 +10,9 @@ Crate `arrow-flight` · 4 public items · structured records in [`model/arrow_fl
 struct GetXdbcTypeInfoBuilder<'a>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.metadata.xdbc_info.GetXdbcTypeInfoBuilder.md).
+
+
 A builder for a [`CommandGetXdbcTypeInfo`] response.
 
 ---
@@ -27,6 +30,9 @@ struct XdbcTypeInfo
 **Fields**: `type_name`, `data_type`, `column_size`, `literal_prefix`, `literal_suffix`, `create_params`, `nullable`, `case_sensitive`, `searchable`, `unsigned_attribute`, `fixed_prec_scale`, `auto_increment`, `local_type_name`, `minimum_scale`, `maximum_scale`, `sql_data_type`, `datetime_subcode`, `num_prec_radix`, `interval_precision`
 
 **Derives**: Clone, Debug, Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.metadata.xdbc_info.XdbcTypeInfo.md).
+
 
 Data structure representing type information for xdbc types.
 
@@ -48,6 +54,9 @@ struct XdbcTypeInfoData
 fn record_batch(&self, data_type: impl Into<Option<i32>>) -> Result<RecordBatch>
 fn schema(&self) -> SchemaRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.metadata.xdbc_info.XdbcTypeInfoData.md).
+
 
 Helper to create [`CommandGetXdbcTypeInfo`] responses.
 
@@ -79,6 +88,9 @@ fn build(self) -> Result<XdbcTypeInfoData>
 fn new() -> Self
 fn schema(&self) -> SchemaRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.metadata.xdbc_info.XdbcTypeInfoDataBuilder.md).
+
 
 A builder for [`XdbcTypeInfoData`] which is used to create [`CommandGetXdbcTypeInfo`] responses.
 

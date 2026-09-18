@@ -40,6 +40,9 @@ fn poll_frame(Pin<&mut self>, _cx: &mut Context<'_>) -> Poll<Option<Result<Frame
 fn size_hint(&self) -> SizeHint
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.client.http.body.HttpRequestBody.md).
+
+
 The [`Body`] of an [`HttpRequest`]
 
 ---
@@ -80,6 +83,9 @@ fn poll_frame(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Result<Frame<
 fn size_hint(&self) -> SizeHint
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.client.http.body.HttpResponseBody.md).
+
+
 The body of an [`HttpResponse`]
 
 ---
@@ -92,6 +98,9 @@ The body of an [`HttpResponse`]
 type HttpRequest = http::Request<HttpRequestBody>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.client.http.body.HttpRequest.md).
+
+
 An HTTP Request
 
 ---
@@ -103,6 +112,9 @@ An HTTP Request
 ```rust
 type HttpResponse = http::Response<HttpResponseBody>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.client.http.body.HttpResponse.md).
+
 
 An HTTP response
 

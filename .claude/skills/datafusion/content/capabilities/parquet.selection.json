@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "id": "parquet.selection",
+  "title": "Compose row-group pruning, row selection and decode filters",
+  "task_aliases": [
+    "Parquet row selection",
+    "skip row groups",
+    "page index",
+    "predicate decode",
+    "retained row coordinates"
+  ],
+  "crates": [
+    "parquet",
+    "datafusion-datasource-parquet"
+  ],
+  "input": [
+    "Parquet bytes",
+    "row groups",
+    "RowSelection",
+    "RowFilter"
+  ],
+  "output": [
+    "RecordBatch",
+    "reader"
+  ],
+  "properties": [
+    "pruning",
+    "coordinates",
+    "projection",
+    "io",
+    "metadata"
+  ],
+  "operations": [
+    "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_groups",
+    "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+    "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_filter",
+    "parquet::arrow::arrow_reader::selection::RowSelection"
+  ],
+  "brief": "with_row_groups applies before RowSelection. Selection coordinates describe only retained groups; predicate decode and output projection are additional stages with distinct I/O effects.",
+  "choices": [
+    {
+      "candidate": "DataFusion ParquetSource",
+      "choose_when": "Pruning should follow a relational predicate",
+      "tradeoff": "Reuses planner, statistics and source integration.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "RowSelection",
+      "choose_when": "Known row ranges can be skipped",
+      "tradeoff": "Rebase to retained groups; page indexes can make skipping more efficient.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "RowFilter",
+      "choose_when": "Predicates need decoded values",
+      "tradeoff": "Decode predicate columns before final projected output; measure predicate ordering/I/O.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "row-group statistics / bloom / page index",
+      "choose_when": "Metadata can exclude candidates",
+      "tradeoff": "Depends on metadata written and predicates supported; these are not exact row filters.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "parquet.selection.coordinates",
+      "aspect": "coordinates",
+      "statement": "Rows belonging to excluded groups must not be counted in RowSelection. For 3-row groups [0,1,2] retaining [0,2], original row 7 has selected-domain position 4.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "parquet.selection.shape",
+      "aspect": "shape",
+      "statement": "ArrowReaderBuilder consumes configuration and builds a batch reader. RowSelection describes alternating selected/skipped row counts; output values and schema depend on projection/filter configuration.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "parquet.selection.io",
+      "aspect": "io",
+      "statement": "Selection restricts rows decoded and can avoid fetching pages. Page metadata enables efficient skipping, but output equality alone does not establish bytes read or decode cost.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Choose groups first, then generate/rebase selection coordinates.",
+    "Retain predicate columns until evaluation even when absent from output.",
+    "Compare row identities against an unpruned reader; instrument I/O separately for performance claims."
+  ],
+  "unknowns": [
+    "The fixture records metadata and scan bytes requested from its in-memory ChunkReader plus output identities. It does not measure network traffic, decoder CPU, page-index or bloom-filter effectiveness."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_groups",
+        "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+        "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_filter",
+        "parquet::arrow::arrow_reader::selection::RowSelection"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    },
+    {
+      "id": "probe",
+      "kind": "runtime_observation",
+      "tests": [
+        "parquet_selection_is_relative_to_retained_row_groups"
+      ],
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Only the named assertions in the recorded Cargo profile."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_groups",
+      "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+      "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_filter",
+      "parquet::arrow::arrow_reader::selection::RowSelection"
+    ],
+    "candidate_set": [
+      "DataFusion ParquetSource",
+      "RowSelection",
+      "RowFilter",
+      "row-group statistics / bloom / page index"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  },
+  "resolved_operations": [
+    {
+      "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_groups",
+      "id": "a242cc258e7519b5c6886ed9",
+      "kind": "function",
+      "crate": "parquet",
+      "record": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+      "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-a242cc258e7519b5c6886ed9",
+      "signature": "fn with_row_groups(self, row_groups: Vec<usize>) -> Self"
+    },
+    {
+      "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+      "id": "521e662260c093bdc9d5c113",
+      "kind": "function",
+      "crate": "parquet",
+      "record": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+      "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-521e662260c093bdc9d5c113",
+      "signature": "fn with_row_selection(self, selection: RowSelection) -> Self"
+    },
+    {
+      "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_filter",
+      "id": "8bea3b5ddc8fa0db0c89f3ec",
+      "kind": "function",
+      "crate": "parquet",
+      "record": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+      "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-8bea3b5ddc8fa0db0c89f3ec",
+      "signature": "fn with_row_filter(self, filter: RowFilter) -> Self"
+    },
+    {
+      "path": "parquet::arrow::arrow_reader::selection::RowSelection",
+      "id": "42015b29e86ada83b6a84ed5",
+      "kind": "struct",
+      "crate": "parquet",
+      "record": "operations/parquet.arrow.arrow_reader.selection.RowSelection.json",
+      "page": "operations/parquet.arrow.arrow_reader.selection.RowSelection.md#op-42015b29e86ada83b6a84ed5",
+      "signature": "struct RowSelection"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/parquet.selection.json"
+}

@@ -7,14 +7,21 @@ pub mod description;
 mod handoff;
 mod inventory;
 pub(crate) mod ownership;
+mod preparation;
 mod python_closure;
+#[cfg(test)]
+mod qualification_tests;
 pub(crate) mod readiness;
 pub mod rustdoc;
 use cleanup::{ContainerGuard, Supervisor};
+use enrichment_core::identity::PhysicalOwnerId;
 use enrichment_core::{
-    capsule_protocol::{self as protocol, Mode, Operation, OutputKind},
+    capsule_protocol::{self as protocol, Launch, Mode, Network, Operation},
     config::Execution,
-    execution::{ProcessEnd, ProcessObservation},
+    execution::{
+        ProcessEnd, ProcessObservation,
+        producer::{Command as ProducerCommand, Invocation},
+    },
 };
 use enrichment_store::physical_ownership::{
     ExecutionRoot, OwnershipObservation, OwnershipStore, PhysicalOwner, PhysicalState,
@@ -35,7 +42,7 @@ use tokio::process::Command;
 /// Holds the [`ContainerGuard`], so dropping this removes the container and its descendants
 /// rather than merely detaching from them.
 pub struct ServedSession {
-    pub operation_id: String,
+    pub operation_id: enrichment_core::identity::ProcessOperationId,
     pub authority: enrichment_core::execution::ProcessAuthority,
     operation: Operation,
     runner: Runner,
@@ -43,7 +50,7 @@ pub struct ServedSession {
     /// The exact immutable host generation copied into this server's private scratch.
     pub inputs_root: PathBuf,
     /// The owned container's name.
-    pub name: String,
+    pub owner_id: PhysicalOwnerId,
     /// The attached broker client. Reaped on shutdown.
     pub child: tokio::process::Child,
     /// The server's stdin: framed LSP messages go here. Taken once by the session that owns it.
@@ -61,6 +68,30 @@ pub struct ServedSession {
 }
 
 impl ServedSession {
+    pub(crate) fn prepared(
+        &self,
+    ) -> io::Result<&enrichment_core::operation::ownership::PreparedCapsule> {
+        self.operation
+            .prepared
+            .as_ref()
+            .ok_or_else(|| io::Error::other("language server has no admitted prepared capsule"))
+    }
+    pub(crate) async fn semantic_conversation(
+        &self,
+        prepared: enrichment_store::semantic_grants::Prepared,
+        encoding: enrichment_core::native_semantics::PositionEncoding,
+    ) -> io::Result<enrichment_store::semantic_grants::ConversationGrant> {
+        match &self.dispatch {
+            Dispatch::Command(grant) => {
+                enrichment_store::semantic_grants::admit(grant.as_ref().clone(), prepared, encoding)
+                    .await
+                    .map_err(io::Error::other)
+            }
+            Dispatch::Qualification(_) => Err(io::Error::other(
+                "qualification cannot authorize a semantic conversation",
+            )),
+        }
+    }
     /// Warm resources retain physical ownership, not permission from an earlier job.
     pub(crate) async fn admit_current_command(&mut self) -> io::Result<()> {
         let dispatch = self
@@ -78,6 +109,7 @@ impl ServedSession {
 
 #[derive(Debug, Clone)]
 pub struct Runner {
+    prepared: Option<enrichment_core::operation::ownership::PreparedCapsule>,
     root: PathBuf,
     cache: PathBuf,
     ownership: OwnershipStore,
@@ -97,7 +129,7 @@ enum Authority {
 #[derive(Clone)]
 enum Dispatch {
     Command(Arc<enrichment_store::process_grants::ProcessGrant>),
-    Qualification(String),
+    Qualification(enrichment_core::identity::ProcessOperationId),
 }
 impl Dispatch {
     fn operation(&self, probe: Operation) -> Operation {
@@ -137,11 +169,11 @@ struct OperationRecord {
     registered: bool,
 }
 impl OperationRecord {
-    fn write(root: &Path, name: &str, operation: &Operation) -> io::Result<Self> {
+    fn write(root: &Path, name: &PhysicalOwnerId, operation: &Operation) -> io::Result<Self> {
         let directory = root.join("operations");
         std::fs::create_dir_all(&directory)?;
         let record = Self {
-            path: directory.join(format!("{name}.json")),
+            path: directory.join(format!("{}.json", name.broker_name())),
             registered: false,
         };
         enrichment_store::atomic::write_atomic(&record.path, &serde_json::to_vec(operation)?)?;
@@ -200,6 +232,7 @@ impl Runner {
             ));
         }
         Ok(Self {
+            prepared: None,
             cache: cache.canonicalize()?,
             ownership,
             root: physical_root,
@@ -263,6 +296,13 @@ impl Runner {
         self
     }
 
+    pub(crate) fn input_reader(&self) -> io::Result<cleanup::InputReader> {
+        self.lease
+            .as_ref()
+            .map(cleanup::Lease::input_reader)
+            .ok_or_else(|| io::Error::other("capsule input read requires continuous ownership"))
+    }
+
     /// Delete regenerable scratch only once the container that can use it is confirmed absent.
     /// On retry exhaustion or runtime shutdown, retain it for explicit reconciliation/cleanup.
     pub(crate) fn discard_workspace(&self, path: PathBuf) {
@@ -273,7 +313,7 @@ impl Runner {
             );
             return;
         };
-        if !lease.active_container() {
+        if !lease.active_container() && !lease.inputs_active() {
             if let Err(error) = std::fs::remove_dir_all(&path)
                 && error.kind() != io::ErrorKind::NotFound
             {
@@ -322,7 +362,7 @@ impl Runner {
     fn create_supervised(
         &self,
         mut command: Command,
-        name: String,
+        name: PhysicalOwnerId,
         dispatch: Dispatch,
     ) -> tokio::task::JoinHandle<io::Result<std::process::Output>> {
         let runner = self.clone();
@@ -385,7 +425,7 @@ impl Runner {
     }
     async fn reserve_owner(
         &self,
-        name: &str,
+        name: &PhysicalOwnerId,
         capsule: &Path,
         image: &str,
         operation: &Operation,
@@ -394,7 +434,7 @@ impl Runner {
         self.register_root().await?;
         self.ownership
             .reserve_owner(PhysicalOwner {
-                name: name.into(),
+                owner_id: *name,
                 root: path_text(&self.root)?,
                 cache: path_text(&self.cache)?,
                 capsule: path_text(capsule)?,
@@ -428,30 +468,49 @@ impl Runner {
         description::containment_identity(&self.limits)
     }
 
-    fn operation(
+    pub(crate) fn for_capsule(&self, capsule: &capsule::Capsule) -> Self {
+        let mut runner = self.clone();
+        runner.prepared = Some(capsule.prepared.clone());
+        runner
+    }
+
+    async fn operation(
         &self,
-        _name: &str,
         image: &str,
         capsule: &Path,
-        args: &[String],
-        mode: Mode,
-        outputs: std::collections::BTreeMap<String, OutputKind>,
+        invocation: &Invocation,
     ) -> io::Result<Operation> {
+        let command = enrichment_store::producer_plan::lower(self.ownership.runtime(), invocation)
+            .await
+            .map_err(io::Error::other)?;
+        self.operation_from_command(image, capsule, Some(invocation.clone()), command)
+    }
+
+    fn operation_from_command(
+        &self,
+        image: &str,
+        capsule: &Path,
+        invocation: Option<Invocation>,
+        command: ProducerCommand,
+    ) -> io::Result<Operation> {
+        let outputs = command.outputs();
         let operation = Operation {
             version: protocol::VERSION,
-            mode,
-            argv: args.to_vec(),
+            invocation,
+            prepared: self.prepared.clone(),
+            mode: command.mode,
+            argv: command.argv,
             inputs: inventory::capture(capsule, self.limits.scratch_bytes())?,
             outputs,
-            data_bytes: self.limits.scratch_bytes(),
-            output_bytes: self.limits.output_bytes.clamp(1024, 1048576),
-            deadline_millis: self.limits.deadline_seconds.clamp(1, 600) * 1000,
-            binding: Operation::binding(image, &self.containment_identity()?)
-                .map_err(io::Error::other)?,
+            launch: Launch::for_execution(
+                &self.limits,
+                image,
+                &self.containment_identity()?,
+                command.network == Network::Registry,
+            )?,
         };
         operation.validate()?;
-        let bytes = serde_json::to_vec(&operation)?;
-        if bytes.len() > protocol::HEADER_LIMIT {
+        if serde_json::to_vec(&operation)?.len() > protocol::HEADER_LIMIT {
             return Err(io::Error::other(
                 "operation input inventory exceeds frame bound",
             ));
@@ -468,17 +527,16 @@ impl Runner {
     /// wall clock expires).
     fn create_args(
         &self,
-        name: &str,
-        image: &str,
+        name: &PhysicalOwnerId,
         capsule: &Path,
-        acquisition: bool,
-        timeout_seconds: Option<u64>,
-        interactive: bool,
+        operation: &Operation,
     ) -> io::Result<Vec<String>> {
+        operation.validate()?;
+        let launch = &operation.launch;
         let mut args = capsule::strings(&[
             "create",
             "--pull=never",
-            if acquisition {
+            if launch.network == Network::Registry {
                 "--network=slirp4netns"
             } else {
                 "--network=none"
@@ -499,41 +557,42 @@ impl Runner {
             "--no-hosts",
             "--workdir=/capsule",
         ]);
-        let resources = self.limits.resources()?;
-        args.push(format!("--cpus={}", self.limits.cpus));
+        let resources = &launch.resources;
+        args.push(format!(
+            "--cpus={}",
+            resources.cpu_quota_micros / resources.cpu_period_micros
+        ));
         args.push(format!("--memory={}", resources.memory_bytes));
         args.push(format!("--memory-swap={}", resources.memory_bytes));
         args.push(format!("--pids-limit={}", resources.pids));
-        if interactive {
+        if operation.mode == Mode::LanguageServer {
             // Without this at *create* time the container has no stdin, and `start --attach
             // --interactive` then attaches to a pipe nothing is reading. A language server sees
             // immediate end-of-input and exits before answering `initialize`.
             args.push("--interactive".to_owned());
         }
-        if let Some(seconds) = timeout_seconds {
-            args.push(format!("--timeout={seconds}"));
+        if operation.mode == Mode::Command {
+            args.push(format!(
+                "--timeout={}",
+                launch.deadline_millis.div_ceil(1000) + 2
+            ));
         }
-        args.extend(capsule::strings(&[
-            "--env=HOME=/capsule/.executor/home",
-            "--env=TMPDIR=/capsule/.executor/tmp",
-            "--env=TMP=/capsule/.executor/tmp",
-            "--env=TEMP=/capsule/.executor/tmp",
-            "--env=XDG_CONFIG_HOME=/opt/libenr-empty-config",
-            "--env=CARGO_HOME=/capsule/cargo-home",
-            "--env=CARGO_TARGET_DIR=/capsule/target",
-            "--env=PYTHONNOUSERSITE=1",
-            "--env=UV_NO_CONFIG=1",
-            "--env=UV_NO_PYTHON_DOWNLOADS=1",
-            "--env=UV_CACHE_DIR=/capsule/.executor/uv",
-        ]));
+        args.extend(
+            launch
+                .environment
+                .iter()
+                .map(|(key, value)| format!("--env={key}={value}")),
+        );
         args.push(format!(
-            "--tmpfs=/capsule:rw,exec,nosuid,nodev,size={}m,mode=1777,notmpcopyup",
-            self.limits.scratch_bytes() / (1024 * 1024)
+            "--tmpfs=/capsule:rw,exec,nosuid,nodev,size={},mode=1777,notmpcopyup",
+            resources.scratch_bytes
         ));
         for (source, destination, permission) in [
             (capsule.to_owned(), "/inputs", "noexec"),
             (
-                self.root.join("operations").join(format!("{name}.json")),
+                self.root
+                    .join("operations")
+                    .join(format!("{}.json", name.broker_name())),
                 "/operation.json",
                 "noexec",
             ),
@@ -544,8 +603,8 @@ impl Runner {
             }
             args.push(format!("--mount=type=bind,src={},dst={destination},ro=true,bind-nonrecursive,bind-propagation=rprivate,nosuid,nodev,{permission}", source.display()));
         }
-        args.push(format!("--name={name}"));
-        args.push(image.to_owned());
+        args.push(format!("--name={}", name.broker_name()));
+        args.push(launch.image.clone());
         args.push("--operation=/operation.json".into());
         Ok(args)
     }
@@ -564,12 +623,12 @@ impl Runner {
         &self,
         image: &str,
         capsule: &Path,
-        args: &[String],
+        invocation: &Invocation,
     ) -> io::Result<ServedSession> {
         self.clone()
             .admitted()
             .await?
-            .serve_admitted(image, capsule, args)
+            .serve_admitted(image, capsule, invocation)
             .await
     }
 
@@ -577,9 +636,9 @@ impl Runner {
         &self,
         image: &str,
         capsule: &Path,
-        args: &[String],
+        invocation: &Invocation,
     ) -> io::Result<ServedSession> {
-        if !Self::valid_image(image) || args.is_empty() {
+        if !Self::valid_image(image) {
             return Err(io::Error::other(
                 "an immutable sha256 image and concrete server command are required",
             ));
@@ -588,30 +647,25 @@ impl Runner {
         if capsule.to_string_lossy().contains([':', ',', '\n']) {
             return Err(io::Error::other("capsule path contains a mount delimiter"));
         }
-        let name = format!("libenr-{}", uuid::Uuid::new_v4().simple());
-        let operation = self.operation(
-            &name,
-            image,
-            &capsule,
-            args,
-            Mode::LanguageServer,
-            Default::default(),
-        )?;
+        let name = PhysicalOwnerId::new();
+        let operation = self.operation(image, &capsule, invocation).await?;
+        if operation.mode != Mode::LanguageServer {
+            return Err(io::Error::other("producer is not a language server"));
+        }
         let dispatch = self.authorize_process(image, &operation, false).await?;
         let operation = dispatch.operation(operation);
-        let create_args = self.create_args(&name, image, &capsule, false, None, true)?;
+        let create_args = self.create_args(&name, &capsule, &operation)?;
         let mut operation_record = OperationRecord::write(&self.root, &name, &operation)?;
         let started_at =
             enrichment_core::native_time::ObservationTime::now().map_err(std::io::Error::other)?;
         self.reserve_owner(&name, &capsule, image, &operation, &dispatch)
             .await?;
-        let mut guard =
-            ContainerGuard::register(self.clone(), Arc::clone(&self.supervisor), name.clone())?;
+        let mut guard = ContainerGuard::register(self.clone(), Arc::clone(&self.supervisor), name)?;
         operation_record.registered = true;
 
         let mut command = self.broker();
         command.args(create_args);
-        let creator = self.create_supervised(command, name.clone(), dispatch.clone());
+        let creator = self.create_supervised(command, name, dispatch.clone());
         let created = tokio::time::timeout(Duration::from_secs(15), creator).await;
         match created {
             Ok(Ok(Ok(output))) if output.status.success() => {}
@@ -638,7 +692,7 @@ impl Runner {
         dispatch.check().await?;
         let mut child = match self
             .broker()
-            .args(["start", "--attach", "--interactive", &name])
+            .args(["start", "--attach", "--interactive", &name.broker_name()])
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -689,7 +743,7 @@ impl Runner {
             runner: self.clone(),
             dispatch,
             inputs_root: capsule,
-            name,
+            owner_id: name,
             child,
             stdin: Some(stdin),
             stdout: Some(stdout),
@@ -700,74 +754,63 @@ impl Runner {
         })
     }
 
-    /// Execute an admitted producer inside its private capsule; terminate the entire container on every exit path.
+    /// Execute one finite producer declaration. Native policy chooses argv, network and outputs.
     pub async fn run(
         &self,
         image: &str,
         capsule: &Path,
-        args: &[String],
+        invocation: &Invocation,
         cancel: Arc<AtomicBool>,
     ) -> io::Result<ProcessObservation> {
-        self.clone()
-            .admitted()
-            .await?
-            .execute(image, capsule, args, cancel, false, Default::default())
-            .await
+        let runner = self.clone().admitted().await?;
+        let operation = runner.operation(image, capsule, invocation).await?;
+        runner.execute(image, capsule, operation, cancel).await
     }
 
-    /// Network access belongs only to validated dependency acquisition, never target execution.
-    pub(crate) async fn acquire(
+    /// Only the private operator qualification path supplies these fixed probes. Command grants
+    /// refuse the missing invocation, and Qualification checks the exact finite probe list.
+    async fn run_qualification(
         &self,
         image: &str,
         capsule: &Path,
-        args: &[String],
+        argv: &[String],
         cancel: Arc<AtomicBool>,
-        outputs: std::collections::BTreeMap<String, OutputKind>,
     ) -> io::Result<ProcessObservation> {
-        self.clone()
-            .admitted()
-            .await?
-            .execute(image, capsule, args, cancel, true, outputs)
-            .await
-    }
-
-    /// Preparation only: return explicitly selected outputs after validated handoff and cleanup.
-    pub async fn prepare_outputs(
-        &self,
-        image: &str,
-        capsule: &Path,
-        args: &[String],
-        cancel: Arc<AtomicBool>,
-        outputs: std::collections::BTreeMap<String, OutputKind>,
-    ) -> io::Result<ProcessObservation> {
-        self.clone()
-            .admitted()
-            .await?
-            .execute(image, capsule, args, cancel, false, outputs)
-            .await
+        let runner = self.clone().admitted().await?;
+        let operation = runner.operation_from_command(
+            image,
+            capsule,
+            None,
+            ProducerCommand {
+                mode: Mode::Command,
+                network: Network::Offline,
+                argv: argv.to_vec(),
+                files: vec![],
+                directories: vec![],
+                required_files: vec![],
+            },
+        )?;
+        runner.execute(image, capsule, operation, cancel).await
     }
 
     async fn execute(
         &self,
         image: &str,
         capsule: &Path,
-        args: &[String],
+        operation: Operation,
         cancel: Arc<AtomicBool>,
-        acquisition: bool,
-        outputs: std::collections::BTreeMap<String, OutputKind>,
     ) -> io::Result<ProcessObservation> {
-        if !Self::valid_image(image) || args.is_empty() {
+        if !Self::valid_image(image) || operation.mode != Mode::Command {
             return Err(io::Error::other(
-                "an immutable sha256 image and concrete producer command are required",
+                "immutable image and command producer required",
             ));
         }
         let capsule = capsule.canonicalize()?;
         if capsule.to_string_lossy().contains([':', ',', '\n']) {
             return Err(io::Error::other("capsule path contains a mount delimiter"));
         }
-        let name = format!("libenr-{}", uuid::Uuid::new_v4().simple());
-        let deadline = self.limits.deadline_seconds.clamp(1, 600);
-        let operation = self.operation(&name, image, &capsule, args, Mode::Command, outputs)?;
+        let name = PhysicalOwnerId::new();
+        let acquisition = operation.launch.network == Network::Registry;
         let dispatch = self
             .authorize_process(image, &operation, acquisition)
             .await?;
@@ -777,32 +820,25 @@ impl Runner {
             if operation.outputs.is_empty() {
                 0
             } else {
-                operation.data_bytes
+                operation.launch.resources.scratch_bytes
             },
             self.limits.capsule_budget_mib.saturating_mul(1024 * 1024),
         )
         .await?;
-        let until = tokio::time::Instant::now() + Duration::from_secs(deadline);
+        let until =
+            tokio::time::Instant::now() + Duration::from_millis(operation.launch.deadline_millis);
         let mut cmd = self.broker();
-        cmd.args(self.create_args(
-            &name,
-            image,
-            &capsule,
-            acquisition,
-            Some(deadline + 2),
-            false,
-        )?)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
+        cmd.args(self.create_args(&name, &capsule, &operation)?)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
         let mut operation_record = OperationRecord::write(&self.root, &name, &operation)?;
         let started_at =
             enrichment_core::native_time::ObservationTime::now().map_err(std::io::Error::other)?;
         self.reserve_owner(&name, &capsule, image, &operation, &dispatch)
             .await?;
-        let mut guard =
-            ContainerGuard::register(self.clone(), Arc::clone(&self.supervisor), name.clone())?;
+        let mut guard = ContainerGuard::register(self.clone(), Arc::clone(&self.supervisor), name)?;
         operation_record.registered = true;
-        let creator = self.create_supervised(cmd, name.clone(), dispatch.clone());
+        let creator = self.create_supervised(cmd, name, dispatch.clone());
         let created = tokio::time::timeout_at(
             until.min(tokio::time::Instant::now() + Duration::from_secs(15)),
             creator,
@@ -843,7 +879,7 @@ impl Runner {
                 operation_id: operation.id(),
                 authority: dispatch.observation(),
                 image_id: image.into(),
-                command: args.to_vec(),
+                command: operation.argv.clone(),
                 started_at,
                 finished_at: enrichment_core::native_time::ObservationTime::now()
                     .map_err(std::io::Error::other)?,
@@ -856,7 +892,7 @@ impl Runner {
         }
         let mut start_command = self.broker();
         start_command
-            .args(["start", "--attach", &name])
+            .args(["start", "--attach", &name.broker_name()])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
         dispatch.check().await?;
@@ -920,7 +956,8 @@ impl Runner {
                     && captured.end == ProcessEnd::Exited
                     && captured.exit_code == Some(0)
                 {
-                    let current = inventory::capture(&capsule, operation.data_bytes)?;
+                    let current =
+                        inventory::capture(&capsule, operation.launch.resources.scratch_bytes)?;
                     if current != operation.inputs {
                         return Err(io::Error::other("admitted inputs changed during execution"));
                     }
@@ -944,7 +981,7 @@ impl Runner {
                                 sum.checked_add(entry.bytes())
                                     .ok_or_else(|| io::Error::other("preparation size overflow"))
                             })?;
-                    if new_bytes > operation.data_bytes {
+                    if new_bytes > operation.launch.resources.scratch_bytes {
                         return Err(io::Error::other(
                             "promoted outputs exceed preparation byte reservation",
                         ));
@@ -997,7 +1034,7 @@ impl Runner {
             operation_id: operation.id(),
             authority: dispatch.observation(),
             image_id: image.into(),
-            command: args.to_vec(),
+            command: operation.argv.clone(),
             started_at,
             finished_at: enrichment_core::native_time::ObservationTime::now()
                 .map_err(std::io::Error::other)?,
@@ -1009,7 +1046,7 @@ impl Runner {
         })
     }
 
-    async fn remove(&self, name: &str) -> io::Result<()> {
+    async fn remove(&self, name: &PhysicalOwnerId) -> io::Result<()> {
         let boot = boot_id()?;
         let owners = self
             .ownership
@@ -1025,7 +1062,7 @@ impl Runner {
         let output = tokio::time::timeout(
             Duration::from_secs(15),
             self.broker()
-                .args(["rm", "--force", "--ignore", "--time=0", name])
+                .args(["rm", "--force", "--ignore", "--time=0", &name.broker_name()])
                 .stdout(Stdio::null())
                 .stderr(Stdio::null())
                 .status(),
@@ -1040,7 +1077,7 @@ impl Runner {
         let status = tokio::time::timeout(
             Duration::from_secs(5),
             self.broker()
-                .args(["container", "exists", name])
+                .args(["container", "exists", &name.broker_name()])
                 .stdout(Stdio::null())
                 .stderr(Stdio::null())
                 .status(),
@@ -1054,7 +1091,10 @@ impl Runner {
             .observe(name, OwnershipObservation::Absent { boot_id: boot })
             .await
             .map_err(io::Error::other)?;
-        let operation = self.root.join("operations").join(format!("{name}.json"));
+        let operation = self
+            .root
+            .join("operations")
+            .join(format!("{}.json", name.broker_name()));
         if operation.try_exists()? {
             std::fs::remove_file(operation)?;
         }
@@ -1082,7 +1122,7 @@ impl Runner {
                 broker: root.broker.clone().into(),
                 ..self.clone()
             }
-            .remove(&owner.name)
+            .remove(&owner.owner_id)
             .await?;
         }
         Ok(())
@@ -1156,12 +1196,11 @@ mod tests {
         .unwrap();
         for _ in 0..3 {
             let result = runner
-                .prepare_outputs(
+                .run(
                     &format!("sha256:{}", "a".repeat(64)),
                     input.path(),
-                    &["/bin/true".into()],
+                    &Invocation::PythonInstall,
                     Arc::new(AtomicBool::new(false)),
-                    [("out".into(), OutputKind::File)].into(),
                 )
                 .await;
             assert!(
@@ -1174,15 +1213,14 @@ mod tests {
         assert!(!runner.root.join("operations").exists());
         let operation = runner
             .operation(
-                "unused",
-                "image",
+                &format!("sha256:{}", "a".repeat(64)),
                 input.path(),
-                &["/bin/true".into()],
-                Mode::Command,
-                Default::default(),
+                &Invocation::PythonIdentity,
             )
+            .await
             .unwrap();
-        let record = OperationRecord::write(&runner.root, "unstarted", &operation).unwrap();
+        let record =
+            OperationRecord::write(&runner.root, &PhysicalOwnerId::new(), &operation).unwrap();
         drop(record);
         assert_eq!(
             std::fs::read_dir(runner.root.join("operations"))
@@ -1203,17 +1241,16 @@ mod tests {
             test_ownership(dir.path()),
         )
         .expect("runner");
-        let name = format!("libenr-{}", "a".repeat(32));
-        let dispatch = Dispatch::Qualification("unspawned-fixture".into());
+        let name = PhysicalOwnerId::new();
+        let dispatch =
+            Dispatch::Qualification(format!("process_{}", "1".repeat(64)).try_into().unwrap());
         let operation = runner
             .operation(
-                &name,
-                "image",
+                &format!("sha256:{}", "a".repeat(64)),
                 dir.path(),
-                &["/bin/true".into()],
-                Mode::Command,
-                Default::default(),
+                &Invocation::PythonIdentity,
             )
+            .await
             .unwrap();
         runner
             .reserve_owner(&name, dir.path(), "image", &operation, &dispatch)
@@ -1221,7 +1258,7 @@ mod tests {
             .unwrap();
         let absent = dir.path().join("no-such-executable");
         let error = runner
-            .create_supervised(Command::new(absent), name.clone(), dispatch)
+            .create_supervised(Command::new(absent), name, dispatch)
             .await
             .expect("task")
             .expect_err("spawn fails");

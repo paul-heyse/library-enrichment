@@ -33,4 +33,7 @@ fn is_valid(value: i32) -> bool
 fn try_from(value: i32) -> ::core::result::Result<EndTransaction, ::prost::UnknownEnumValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.gen.action_end_transaction_request.EndTransaction.md).
+
+
 ---

@@ -84,7 +84,7 @@ struct Binding {
     observer: Observer,
     input: LogicalPlan,
     session: SessionState,
-    options: Vec<(String, Option<String>)>,
+    options: Arc<crate::session_witness::Witness>,
     state: Arc<AtomicU8>,
     fill: OnceLock<SharedFill>,
     metrics: ExecutionPlanMetricsSet,
@@ -100,23 +100,14 @@ impl fmt::Debug for Binding {
             .finish_non_exhaustive()
     }
 }
-fn options(session: &dyn Session) -> Vec<(String, Option<String>)> {
-    let mut entries: Vec<_> = session
-        .config_options()
-        .entries()
-        .into_iter()
-        .map(|entry| (entry.key, entry.value))
-        .collect();
-    entries.sort();
-    entries
-}
+
 fn invalid(rule: &str) -> DataFusionError {
     crate::preparation::InvariantFailure::contract(rule, "operation_materialization", vec![])
 }
 impl Binding {
     fn require(&self, session: &dyn Session) -> Result<()> {
         self.observer.operation.require_current()?;
-        if self.options != options(session)
+        if self.options != crate::session_witness::Witness::get(session)
             || !Arc::ptr_eq(&self.runtime.session().runtime_env(), session.runtime_env())
         {
             return Err(invalid("materialization session policy/runtime changed"));
@@ -196,15 +187,12 @@ impl Binding {
 
 #[derive(Debug, Clone)]
 struct Materialization {
-    input: LogicalPlan,
     binding: Arc<Binding>,
     admitted: bool,
 }
 impl PartialEq for Materialization {
     fn eq(&self, other: &Self) -> bool {
-        self.binding.id == other.binding.id
-            && self.admitted == other.admitted
-            && self.input == other.input
+        self.binding.id == other.binding.id && self.admitted == other.admitted
     }
 }
 impl Eq for Materialization {}
@@ -212,7 +200,6 @@ impl Hash for Materialization {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.binding.id.hash(state);
         self.admitted.hash(state);
-        self.input.hash(state);
     }
 }
 impl PartialOrd for Materialization {
@@ -229,7 +216,11 @@ impl UserDefinedLogicalNodeCore for Materialization {
         "OperationMaterialization"
     }
     fn inputs(&self) -> Vec<&LogicalPlan> {
-        vec![&self.input]
+        // A captured base is a source to subsequent consumers, not their rewritable child.
+        // The exact admitted plan remains inspectable in Binding and in the physical tree.
+        // Logical rewrites such as sort transposition rebuild intermediate children before
+        // restoring equivalent outer nodes; accepting those children could change one fill.
+        vec![]
     }
     fn schema(&self) -> &DFSchemaRef {
         self.binding.input.schema()
@@ -246,28 +237,13 @@ impl UserDefinedLogicalNodeCore for Materialization {
             self.binding.observer.operation.id().unwrap_or("unbound")
         )
     }
-    fn with_exprs_and_inputs(
-        &self,
-        exprs: Vec<Expr>,
-        mut inputs: Vec<LogicalPlan>,
-    ) -> Result<Self> {
-        if !exprs.is_empty() || inputs.len() != 1 {
+    fn with_exprs_and_inputs(&self, exprs: Vec<Expr>, inputs: Vec<LogicalPlan>) -> Result<Self> {
+        if !exprs.is_empty() || !inputs.is_empty() {
             return Err(invalid(
                 "materialization input changed; bind a new intermediate",
             ));
         }
-        let input = inputs.remove(0);
-        if input != self.binding.input
-            && self.binding.session.optimize(&input)? != self.binding.input
-        {
-            return Err(invalid(
-                "materialization input changed; bind a new intermediate",
-            ));
-        }
-        Ok(Self {
-            input: self.binding.input.clone(),
-            ..self.clone()
-        })
+        Ok(self.clone())
     }
     // Default predicate/projection/limit barriers keep every reader outside the shared base.
 }
@@ -401,7 +377,7 @@ pub(crate) async fn cache(
         },
         runtime: runtime.clone(),
         input: input.clone(),
-        options: options(&state),
+        options: crate::session_witness::Witness::get(&state),
         session: state.clone(),
         state: Arc::new(AtomicU8::new(UNSTARTED)),
         fill: OnceLock::new(),
@@ -411,7 +387,6 @@ pub(crate) async fn cache(
         state,
         LogicalPlan::Extension(Extension {
             node: Arc::new(Materialization {
-                input,
                 binding,
                 admitted: false,
             }),
@@ -434,10 +409,13 @@ pub(crate) async fn count(runtime: &QueryRuntime, frame: DataFrame) -> Result<u6
             .alias("count"),
         ],
     )?;
-    let output = runtime
-        .execute_family(counted, Some(QueryFamily::CountUnsigned))
-        .await?;
-    Ok(crate::projection::search::count(&output.batches)?)
+    enrichment_core::native_struct! { struct Count {count:u64=>enrichment_core::native_union::Rule::Text} }
+    runtime
+        .records::<Count>(counted, 1)
+        .await?
+        .pop()
+        .map(|row| row.count)
+        .ok_or_else(|| invalid("native count requires one aggregate"))
 }
 
 pub(crate) struct MaterializationPlanner;
@@ -445,9 +423,9 @@ pub(crate) struct MaterializationPlanner;
 impl ExtensionPlanner for MaterializationPlanner {
     async fn plan_extension(
         &self,
-        _: &dyn PhysicalPlanner,
+        planner: &dyn PhysicalPlanner,
         node: &dyn UserDefinedLogicalNode,
-        _: &[&LogicalPlan],
+        logical_inputs: &[&LogicalPlan],
         inputs: &[Arc<dyn ExecutionPlan>],
         session: &dyn Session,
         _: &PhysicalPlanningContext,
@@ -455,12 +433,17 @@ impl ExtensionPlanner for MaterializationPlanner {
         let Some(cache) = node.as_any().downcast_ref::<Materialization>() else {
             return Ok(None);
         };
-        if !cache.admitted || inputs.len() != 1 {
+        if !cache.admitted || !inputs.is_empty() || !logical_inputs.is_empty() {
             return Err(invalid("unadmitted materialization or physical arity"));
         }
         cache.binding.require(session)?;
+        // This only prepares the sealed base. Execution remains lazy and shared across
+        // every separately prepared consumer through Binding::shared, including EXPLAIN.
+        let input = planner
+            .create_physical_plan(&cache.binding.input, &cache.binding.session)
+            .await?;
         Ok(Some(Arc::new(MaterializationExec::new(
-            inputs[0].clone(),
+            input,
             cache.binding.clone(),
         )?)))
     }

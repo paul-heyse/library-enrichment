@@ -18,6 +18,9 @@ fn schema(&self) -> SchemaRef
 fn try_new(path: PathBuf, batches: impl IntoIterator<Item = RecordBatch>) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.test_util.csv.TestCsvFile.md).
+
+
 a CSV file that has been created for testing.
 
 ---

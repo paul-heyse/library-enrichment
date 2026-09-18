@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::any_value`
 fn any_value(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.any_value.any_value.md).
+
+
 Returns an arbitrary non-null value
 
 ---
@@ -23,6 +26,9 @@ Returns an arbitrary non-null value
 ```rust
 fn any_value_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.any_value.any_value_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`AnyValue`]
 
@@ -58,5 +64,8 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.any_value.AnyValue.md).
+
 
 ---

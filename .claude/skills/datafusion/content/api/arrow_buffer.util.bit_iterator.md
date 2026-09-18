@@ -12,6 +12,9 @@ Also reachable as `arrow::util::bit_iterator::try_for_each_valid_idx`, `arrow_da
 fn try_for_each_valid_idx<E, F: FnMut(usize) -> Result<(), E>>(len: usize, offset: usize, null_count: usize, nulls: Option<&[u8]>, f: F) -> Result<(), E>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_iterator.try_for_each_valid_idx.md).
+
+
 Calls the provided closure for each index in the provided null mask that is set,
 using an adaptive strategy based on the null count
 
@@ -56,6 +59,9 @@ fn new(buffer: &'a [u8], offset: usize, len: usize) -> Self
 fn next(&mut self) -> Option<Self::Item>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_iterator.BitIndexIterator.md).
+
+
 An iterator of `usize` whose index in a provided bitmask is true
 
 This provides the best performance on most masks, apart from those which contain
@@ -88,6 +94,9 @@ fn new(buffer: &'a [u8], offset: usize, len: usize) -> Self
 ```rust
 fn next(&mut self) -> Option<u32>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_iterator.BitIndexU32Iterator.md).
+
 
 An iterator of u32 whose index in a provided bitmask is true
 Respects arbitrary offsets and slice lead/trail padding exactly like BitIndexIterator
@@ -132,6 +141,9 @@ fn nth(&mut self, n: usize) -> Option<Self::Item>
 fn size_hint(&self) -> (usize, Option<usize>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_iterator.BitIterator.md).
+
+
 Iterator over the bits within a packed bitmask
 
 To efficiently iterate over just the set bits see [`BitIndexIterator`] and [`BitSliceIterator`]
@@ -163,6 +175,9 @@ fn new(buffer: &'a [u8], offset: usize, len: usize) -> Self
 ```rust
 fn next(&mut self) -> Option<Self::Item>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_iterator.BitSliceIterator.md).
+
 
 Iterator of contiguous ranges of set bits within a provided packed bitmask
 

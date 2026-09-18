@@ -39,6 +39,9 @@ fn nth(&mut self, n: usize) -> Option<Self::Item>
 fn size_hint(&self) -> (usize, Option<usize>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.iterator.ArrayIter.md).
+
+
 An iterator that returns Some(T) or None, that can be used on any [`ArrayAccessor`]
 
 # Performance
@@ -72,6 +75,9 @@ Also reachable as `arrow::array::BooleanIter`
 type BooleanIter<'a> = ArrayIter<&'a array::BooleanArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.iterator.BooleanIter.md).
+
+
 an iterator that returns Some(T) or None, that can be used on any BooleanArray
 
 ---
@@ -85,6 +91,9 @@ Also reachable as `arrow::array::FixedSizeBinaryIter`
 ```rust
 type FixedSizeBinaryIter<'a> = ArrayIter<&'a array::FixedSizeBinaryArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.iterator.FixedSizeBinaryIter.md).
+
 
 an iterator that returns Some(T) or None, that can be used on any FixedSizeBinaryArray
 
@@ -100,6 +109,9 @@ Also reachable as `arrow::array::FixedSizeListIter`
 type FixedSizeListIter<'a> = ArrayIter<&'a FixedSizeListArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.iterator.FixedSizeListIter.md).
+
+
 an iterator that returns Some(T) or None, that can be used on any FixedSizeListArray
 
 ---
@@ -113,6 +125,9 @@ Also reachable as `arrow::array::GenericBinaryIter`
 ```rust
 type GenericBinaryIter<'a, T> = ArrayIter<&'a array::GenericBinaryArray<T>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.iterator.GenericBinaryIter.md).
+
 
 an iterator that returns Some(T) or None, that can be used on any BinaryArray
 
@@ -128,6 +143,9 @@ Also reachable as `arrow::array::GenericListArrayIter`
 type GenericListArrayIter<'a, O> = ArrayIter<&'a array::GenericListArray<O>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.iterator.GenericListArrayIter.md).
+
+
 an iterator that returns Some(T) or None, that can be used on any ListArray
 
 ---
@@ -141,6 +159,9 @@ Also reachable as `arrow::array::GenericListViewArrayIter`
 ```rust
 type GenericListViewArrayIter<'a, O> = ArrayIter<&'a GenericListViewArray<O>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.iterator.GenericListViewArrayIter.md).
+
 
 an iterator that returns Some(T) or None, that can be used on any ListArray
 
@@ -156,6 +177,9 @@ Also reachable as `arrow::array::GenericStringIter`
 type GenericStringIter<'a, T> = ArrayIter<&'a array::GenericStringArray<T>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.iterator.GenericStringIter.md).
+
+
 an iterator that returns Some(T) or None, that can be used on any Utf8Array
 
 ---
@@ -170,6 +194,9 @@ Also reachable as `arrow::array::MapArrayIter`
 type MapArrayIter<'a> = ArrayIter<&'a MapArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.iterator.MapArrayIter.md).
+
+
 an iterator that returns Some(T) or None, that can be used on any MapArray
 
 ---
@@ -183,6 +210,9 @@ Also reachable as `arrow::array::PrimitiveIter`
 ```rust
 type PrimitiveIter<'a, T> = ArrayIter<&'a array::PrimitiveArray<T>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.iterator.PrimitiveIter.md).
+
 
 an iterator that returns Some(T) or None, that can be used on any PrimitiveArray
 

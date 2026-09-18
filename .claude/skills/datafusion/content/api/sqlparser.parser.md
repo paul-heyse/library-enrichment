@@ -12,6 +12,9 @@ enum IsLateral
 
 **Variants**: `Lateral`, `NotLateral`
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.parser.IsLateral.md).
+
+
 Indicates if a table expression is lateral.
 
 ---
@@ -27,6 +30,9 @@ enum IsOptional
 **Variants**: `Optional`, `Mandatory`
 
 **Derives**: Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.parser.IsOptional.md).
+
 
 Indicates whether a parser element is optional or mandatory.
 
@@ -58,6 +64,9 @@ fn from(e: TokenizerError) -> Self
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.parser.ParserError.md).
+
+
 Errors produced by the SQL parser.
 
 ---
@@ -71,6 +80,9 @@ enum WildcardExpr
 ```
 
 **Variants**: `Expr`, `QualifiedWildcard`, `Wildcard`
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.parser.WildcardExpr.md).
+
 
 Represents a wildcard expression used in SELECT lists.
 
@@ -429,6 +441,9 @@ fn with_tokens(self, tokens: Vec<Token>) -> Self
 fn with_tokens_with_locations(self, tokens: Vec<TokenWithSpan>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.parser.Parser.md).
+
+
 A SQL Parser
 
 This struct is the main entry point for parsing SQL queries.
@@ -487,6 +502,9 @@ fn new() -> Self
 fn with_trailing_commas(self, trailing_commas: bool) -> Self
 fn with_unescape(self, unescape: bool) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.parser.ParserOptions.md).
+
 
 Options that control how the [`Parser`] parses SQL text
 

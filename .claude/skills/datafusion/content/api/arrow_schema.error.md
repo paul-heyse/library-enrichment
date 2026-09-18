@@ -45,6 +45,9 @@ fn source(&self) -> Option<&dyn Error + 'static>
 fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.error.ArrowError.md).
+
+
 Many different operations in the `arrow` crate return this error type.
 
 ---

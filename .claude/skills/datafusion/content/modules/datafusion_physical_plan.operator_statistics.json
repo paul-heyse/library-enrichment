@@ -1,0 +1,112 @@
+[
+  {
+    "id": "4a39e5c7429ec59fa523cba3",
+    "path": "datafusion_physical_plan::operator_statistics",
+    "name": "operator_statistics",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "module",
+    "signature": "mod operator_statistics",
+    "docs": "Pluggable statistics propagation for physical plans.\n\nThis module provides an extensible mechanism for computing statistics\non [`ExecutionPlan`] nodes, following the chain of responsibility pattern\nsimilar to `RelationPlanner` for SQL parsing.\n\n# Overview\n\nThe default implementation delegates to each operator's built-in\n`partition_statistics`. Users can register custom [`StatisticsProvider`]\nimplementations to:\n\n1. Provide statistics for custom [`ExecutionPlan`] implementations\n2. Override default estimation with advanced approaches (e.g., histograms)\n3. Plug in domain-specific knowledge for better cardinality estimation\n\n# Architecture\n\n- [`StatisticsProvider`]: Chain element that computes statistics for specific operators\n- [`StatisticsRegistry`]: Chains providers, lives in SessionState\n- [`ExtendedStatistics`]: Statistics with type-safe custom extensions\n\n# Built-in Providers\n\nThe following providers are included and can be registered in this order:\n\n1. [`FilterStatisticsProvider`] - selectivity-based filter estimation\n2. [`ProjectionStatisticsProvider`] - column mapping through projections\n3. [`PassthroughStatisticsProvider`] - passthrough for cardinality-preserving operators\n4. [`AggregateStatisticsProvider`] - NDV-based GROUP BY cardinality estimation\n5. [`JoinStatisticsProvider`] - NDV-based join output estimation (hash, sort-merge, cross)\n6. [`LimitStatisticsProvider`] - caps output at the fetch limit (local and global)\n7. [`UnionStatisticsProvider`] - sums input row counts\n8. [`DefaultStatisticsProvider`] - fallback to `partition_statistics(None)`\n\n# Relationship to [#20184](https://github.com/apache/datafusion/issues/20184)\n\nThis module performs its own bottom-up tree walk in [`StatisticsRegistry::compute`],\nseparate from the walk optimizer rules do via `transform_up`. This means existing\nrules that call `partition_statistics` directly bypass the registry.\n\n[#20184](https://github.com/apache/datafusion/issues/20184) adds a `child_stats`\nparameter to `partition_statistics`. Once it lands, the registry can feed enriched\n**base** [`Statistics`] into operators' built-in `partition_statistics` calls,\nremoving redundancy for the base-stats path (row counts, column stats). However,\nthe separate registry walk is still required for [`ExtendedStatistics`] extension\npropagation: `partition_statistics` returns `Arc<Statistics>`, so extensions\n(histograms, sketches, etc.) are stripped at that boundary and can only flow\nthrough the registry walk.\n\nIf [`Statistics`] itself were extended to carry a type-erased extension map\n(similar to [`ExtendedStatistics`]), the registry walk could be dropped entirely:\nextensions would flow naturally through `partition_statistics(child_stats)` and\nthe registry would become a pure chain-of-responsibility on top of the existing\ntraversal with no separate walk needed.\n\n# Example\n\n```ignore\nuse datafusion_physical_plan::operator_statistics::*;\n\n// Create registry with default provider\nlet mut registry = StatisticsRegistry::new();\n\n// Register custom provider (higher priority)\nregistry.register(Arc::new(MyHistogramProvider));\n\n// Compute statistics through the chain\nlet stats = registry.compute(plan.as_ref())?;\n```",
+    "span": {
+      "filename": "src/operator_statistics/mod.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        2342,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          4157,
+          4201,
+          4200,
+          4223,
+          4270,
+          4303,
+          4304,
+          4226,
+          4229,
+          4232,
+          4235,
+          4238,
+          4241,
+          4244,
+          4247
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`ExtendedStatistics`": 4157,
+      "`FilterStatisticsProvider`": 4226,
+      "`StatisticsRegistry`": 4270,
+      "`UnionStatisticsProvider`": 4244,
+      "`ProjectionStatisticsProvider`": 4229,
+      "`JoinStatisticsProvider`": 4238,
+      "`AggregateStatisticsProvider`": 4235,
+      "`StatisticsRegistry::compute`": 4276,
+      "`Statistics`": 806,
+      "`LimitStatisticsProvider`": 4241,
+      "`DefaultStatisticsProvider`": 4223,
+      "`ExecutionPlan`": 126,
+      "`PassthroughStatisticsProvider`": 4232,
+      "`StatisticsProvider`": 4200
+    },
+    "link_paths": {
+      "`ExtendedStatistics`": "datafusion_physical_plan::operator_statistics::ExtendedStatistics",
+      "`FilterStatisticsProvider`": "datafusion_physical_plan::operator_statistics::FilterStatisticsProvider",
+      "`StatisticsRegistry`": "datafusion_physical_plan::operator_statistics::StatisticsRegistry",
+      "`UnionStatisticsProvider`": "datafusion_physical_plan::operator_statistics::UnionStatisticsProvider",
+      "`ProjectionStatisticsProvider`": "datafusion_physical_plan::operator_statistics::ProjectionStatisticsProvider",
+      "`JoinStatisticsProvider`": "datafusion_physical_plan::operator_statistics::JoinStatisticsProvider",
+      "`AggregateStatisticsProvider`": "datafusion_physical_plan::operator_statistics::AggregateStatisticsProvider",
+      "`StatisticsRegistry::compute`": "datafusion_physical_plan::operator_statistics::StatisticsRegistry::compute",
+      "`Statistics`": "datafusion_common::stats::Statistics",
+      "`LimitStatisticsProvider`": "datafusion_physical_plan::operator_statistics::LimitStatisticsProvider",
+      "`DefaultStatisticsProvider`": "datafusion_physical_plan::operator_statistics::DefaultStatisticsProvider",
+      "`ExecutionPlan`": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "`PassthroughStatisticsProvider`": "datafusion_physical_plan::operator_statistics::PassthroughStatisticsProvider",
+      "`StatisticsProvider`": "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "4474",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/datafusion_physical_plan.operator_statistics.md",
+    "record_file": "modules/datafusion_physical_plan.operator_statistics.json",
+    "anchor": "op-4a39e5c7429ec59fa523cba3",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ExtendedStatistics`": "../operations/datafusion_physical_plan.operator_statistics.ExtendedStatistics.md#op-b8de662ae83c9d7215d8ad00",
+      "`FilterStatisticsProvider`": "../operations/datafusion_physical_plan.operator_statistics.FilterStatisticsProvider.md#op-59066bd11e2065860e644852",
+      "`StatisticsRegistry`": "../operations/datafusion_physical_plan.operator_statistics.StatisticsRegistry.md#op-058fa5423a9fbd82dda192ea",
+      "`UnionStatisticsProvider`": "../operations/datafusion_physical_plan.operator_statistics.UnionStatisticsProvider.md#op-57284633242dfde6dceb8223",
+      "`ProjectionStatisticsProvider`": "../operations/datafusion_physical_plan.operator_statistics.ProjectionStatisticsProvider.md#op-c2b09bcaeb037f1e11a4b411",
+      "`JoinStatisticsProvider`": "../operations/datafusion_physical_plan.operator_statistics.JoinStatisticsProvider.md#op-192cd9d26ef10e0d08f3f4ef",
+      "`AggregateStatisticsProvider`": "../operations/datafusion_physical_plan.operator_statistics.AggregateStatisticsProvider.md#op-d28aa37ea36e0bf183ef455b",
+      "`StatisticsRegistry::compute`": "../operations/datafusion_physical_plan.operator_statistics.StatisticsRegistry.md#op-bbf9cc3b14d694b23398d7a8",
+      "`Statistics`": "../operations/datafusion_common.stats.Statistics.md#op-06d2580fbefe2068a74aafb6",
+      "`LimitStatisticsProvider`": "../operations/datafusion_physical_plan.operator_statistics.LimitStatisticsProvider.md#op-146faf3a043b4d34b5169fa8",
+      "`DefaultStatisticsProvider`": "../operations/datafusion_physical_plan.operator_statistics.DefaultStatisticsProvider.md#op-5664b61a0d6c36c14eab5141",
+      "`ExecutionPlan`": "../operations/datafusion_physical_plan.execution_plan.ExecutionPlan.md#op-ac09436cd73f869917923673",
+      "`PassthroughStatisticsProvider`": "../operations/datafusion_physical_plan.operator_statistics.PassthroughStatisticsProvider.md#op-644756eff17c7a9b7fd6c3a5",
+      "`StatisticsProvider`": "../operations/datafusion_physical_plan.operator_statistics.StatisticsProvider.md#op-b3050eb3d6b996dd9e336fb5"
+    }
+  }
+]

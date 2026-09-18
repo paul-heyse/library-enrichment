@@ -16,6 +16,9 @@ enum RowSelectionCursor
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.selection.cursor.RowSelectionCursor.md).
+
+
 Cursor for iterating a [`RowSelection`] during execution within a
 [`ReadPlan`](crate::arrow::arrow_reader::ReadPlan).
 
@@ -38,6 +41,9 @@ enum RowSelectionPolicy
 
 **Derives**: Clone, Copy, Debug, Default, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.selection.cursor.RowSelectionPolicy.md).
+
+
 Policy for picking a strategy to materialize [`RowSelection`] during execution.
 
 ---
@@ -52,6 +58,9 @@ struct MaskChunk
 
 **Fields**: `initial_skip`, `chunk_rows`, `selected_rows`, `mask_start`
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.selection.cursor.MaskChunk.md).
+
+
 Result of computing the next chunk to read when using a [`MaskCursor`]
 
 ---
@@ -63,6 +72,9 @@ Result of computing the next chunk to read when using a [`MaskCursor`]
 ```rust
 struct MaskCursor
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.selection.cursor.MaskCursor.md).
+
 
 Cursor for iterating a mask-backed [`RowSelection`]
 
@@ -98,6 +110,9 @@ and applies the combined mask `11` once.
 ```rust
 struct SelectorsCursor
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.selection.cursor.SelectorsCursor.md).
+
 
 Cursor for iterating a selector-backed [`RowSelection`]
 

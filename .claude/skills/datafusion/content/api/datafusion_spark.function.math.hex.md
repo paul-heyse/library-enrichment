@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 4 public items · structured records in [`model/data
 fn compute_hex(args: &[datafusion_expr::ColumnarValue], lowercase: bool) -> Result<datafusion_expr::ColumnarValue, datafusion_common::DataFusionError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.hex.compute_hex.md).
+
+
 ---
 
 ## spark_hex
@@ -19,6 +22,9 @@ fn compute_hex(args: &[datafusion_expr::ColumnarValue], lowercase: bool) -> Resu
 ```rust
 fn spark_hex(args: &[datafusion_expr::ColumnarValue]) -> Result<datafusion_expr::ColumnarValue, datafusion_common::DataFusionError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.hex.spark_hex.md).
+
 
 Spark-compatible `hex` function
 
@@ -31,6 +37,9 @@ Spark-compatible `hex` function
 ```rust
 fn spark_sha2_hex(args: &[datafusion_expr::ColumnarValue]) -> Result<datafusion_expr::ColumnarValue, datafusion_common::DataFusionError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.hex.spark_sha2_hex.md).
+
 
 Spark-compatible `sha2` function
 
@@ -63,6 +72,9 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> datafusion_common::Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.hex.SparkHex.md).
+
 
 <https://spark.apache.org/docs/latest/api/sql/index.html#hex>
 

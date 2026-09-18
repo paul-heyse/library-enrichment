@@ -33,6 +33,9 @@ trait RecordBatchStream: Stream<Item = datafusion_common::Result<arrow::record_b
 fn schema(&self) -> SchemaRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.stream.RecordBatchStream.md).
+
+
 Trait for types that stream [RecordBatch]
 
 See [`SendableRecordBatchStream`] for more details.
@@ -48,6 +51,9 @@ Also reachable as `datafusion::execution::SendableRecordBatchStream`, `datafusio
 ```rust
 type SendableRecordBatchStream = std::pin::Pin<Box<dyn RecordBatchStream + Send>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.stream.SendableRecordBatchStream.md).
+
 
 Trait for a [`Stream`] of [`RecordBatch`]es that can be passed between threads
 

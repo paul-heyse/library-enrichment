@@ -22,6 +22,9 @@ enum FFI_ColumnarValue
 fn try_from(value: ColumnarValue) -> Result<Self, Self::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.expr.columnar_value.FFI_ColumnarValue.md).
+
+
 A stable struct for sharing [`ColumnarValue`] across FFI boundaries.
 Scalar values are passed as an Arrow array of length 1.
 

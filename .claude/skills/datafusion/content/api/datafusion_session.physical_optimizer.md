@@ -24,6 +24,9 @@ fn config_options(&self) -> &ConfigOptions
 fn statistics_registry(&self) -> Option<&StatisticsRegistry>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_session.physical_optimizer.PhysicalOptimizerContext.md).
+
+
 Context available to physical optimizer rules.
 
 This trait provides access to configuration options and an optional statistics
@@ -71,6 +74,9 @@ fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> Resu
 fn optimize_with_context(&self, plan: Arc<dyn ExecutionPlan>, context: &dyn PhysicalOptimizerContext) -> Result<Arc<dyn ExecutionPlan>>
 fn schema_check(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_session.physical_optimizer.PhysicalOptimizerRule.md).
+
 
 `PhysicalOptimizerRule` transforms one [`ExecutionPlan`] into another which
 computes the same results, but in a potentially more efficient way.

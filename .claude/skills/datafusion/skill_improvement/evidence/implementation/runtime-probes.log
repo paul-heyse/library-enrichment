@@ -1,0 +1,79 @@
+   Compiling datafusion-skill-reference-probes v0.1.0 (/home/paul/library-enrichment/.claude/skills/datafusion/skill_improvement/evidence/implementation/probes)
+    Finished `test` profile [unoptimized] target(s) in 4.08s
+     Running unittests src/bin/registry.rs (.claude/skills/datafusion/skill_improvement/evidence/.build-target-implementation/debug/deps/registry-9a51b80d8513726a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/arrow_contracts.rs (.claude/skills/datafusion/skill_improvement/evidence/.build-target-implementation/debug/deps/arrow_contracts-d4f3cc6b248cdeda)
+
+running 7 tests
+test batch_construction_checks_top_level_nullability ... ok
+test empty_schema_exposes_different_batch_selection_contracts ... ok
+test row_order_changes_with_null_placement ... ok
+test take_preserves_requested_order_duplicates_and_null_indices ... ok
+test filter_null_is_not_selected_and_metadata_is_retained ... ok
+test cast_safe_true_nulls_failed_parses_but_false_errors ... ok
+test row_decode_hydrates_dictionary_and_preserves_values ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/engine_contracts.rs (.claude/skills/datafusion/skill_improvement/evidence/.build-target-implementation/debug/deps/engine_contracts-95090e67861c4a6d)
+
+running 4 tests
+uncoerced simplification: BinaryExpr(BinaryExpr { left: Literal(Int32(1), None), op: Plus, right: Literal(Int64(2), None) })
+test expressions_require_coercion_before_direct_simplification ... ok
+provider exact=true query=SELECT a FROM p WHERE b > 5 plan=TableScan: p projection=[a], full_filters=[p.b > Int32(5)]
+restricted sort plan: SortExec: expr=[x@0 ASC NULLS LAST], preserve_partitioning=[false]
+  DataSourceExec: partitions=1, partition_sizes=[1]
+
+pool control: Not enough memory to continue external sort. Consider increasing the memory limit config: 'datafusion.runtime.memory_limit', or decreasing the config: 'datafusion.execution.sort_spill_reservation_bytes'.
+caused by
+Resources exhausted: Failed to allocate additional 10.0 MB for ExternalSorterMerge[0] with 0.0 B already allocated for this reservation - 1.0 B remain available for the total memory pool: greedy(used: 0.0 B, pool_size: 1.0 B)
+provider exact=true query=SELECT a FROM p WHERE b > 5 LIMIT 2 plan=Limit: skip=0, fetch=2
+  TableScan: p projection=[a], full_filters=[p.b > Int32(5)], fetch=2
+scan observations: [ObservedScan { projection: Some([0]), filters: 1, limit: None }, ObservedScan { projection: Some([0]), filters: 1, limit: Some(2) }]
+test stream_collect_cache_and_sort_resource_error ... ok
+provider exact=false query=SELECT a FROM p WHERE b > 5 plan=Projection: p.a
+  Filter: p.b > Int32(5)
+    TableScan: p projection=[a, b], partial_filters=[p.b > Int32(5)]
+provider exact=false query=SELECT a FROM p WHERE b > 5 LIMIT 2 plan=Projection: p.a
+  Limit: skip=0, fetch=2
+    Filter: p.b > Int32(5)
+      TableScan: p projection=[a, b], partial_filters=[p.b > Int32(5)]
+scan observations: [ObservedScan { projection: Some([0, 1]), filters: 1, limit: None }, ObservedScan { projection: Some([0, 1]), filters: 1, limit: None }]
+test provider_exact_inexact_projection_limit_match_reference ... ok
+window frame control: [RecordBatch { schema: Schema { fields: [Field { name: "x", data_type: Int64 }, Field { name: "peers", data_type: Int64 }, Field { name: "explicit_rows", data_type: Int64 }], metadata: {} }, columns: [PrimitiveArray<Int64>
+[
+  1,
+  1,
+], PrimitiveArray<Int64>
+[
+  2,
+  2,
+], PrimitiveArray<Int64>
+[
+  1,
+  2,
+]], row_count: 2 }, RecordBatch { schema: Schema { fields: [Field { name: "x", data_type: Int64 }, Field { name: "peers", data_type: Int64 }, Field { name: "explicit_rows", data_type: Int64 }], metadata: {} }, columns: [PrimitiveArray<Int64>
+[
+  2,
+], PrimitiveArray<Int64>
+[
+  3,
+], PrimitiveArray<Int64>
+[
+  3,
+]], row_count: 1 }]
+test joins_sets_and_window_frames_have_distinct_cardinality ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/parquet_contracts.rs (.claude/skills/datafusion/skill_improvement/evidence/.build-target-implementation/debug/deps/parquet_contracts-8faaebf950b7fd86)
+
+running 1 test
+test parquet_selection_is_relative_to_retained_row_groups ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

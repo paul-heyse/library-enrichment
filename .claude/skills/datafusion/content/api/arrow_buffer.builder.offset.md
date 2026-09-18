@@ -30,6 +30,9 @@ fn reserve(&mut self, additional: usize)
 fn deref(&self) -> &Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.builder.offset.OffsetBufferBuilder.md).
+
+
 Builder of [`OffsetBuffer`]
 
 ---

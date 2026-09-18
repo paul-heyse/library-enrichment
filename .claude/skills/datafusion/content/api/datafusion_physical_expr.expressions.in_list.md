@@ -12,6 +12,9 @@ Also reachable as `datafusion_physical_expr::expressions::in_list`, `datafusion_
 fn in_list(expr: std::sync::Arc<dyn PhysicalExpr>, list: Vec<std::sync::Arc<dyn PhysicalExpr>>, negated: &bool, schema: &Schema) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.in_list.in_list.md).
+
+
 Creates a unary expression InList
 
 ---
@@ -60,6 +63,9 @@ fn nullable(&self, input_schema: &Schema) -> Result<bool>
 fn try_to_proto(&self, ctx: &datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalExprNode>>
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.in_list.InListExpr.md).
+
 
 InList
 

@@ -30,6 +30,9 @@ fn from_schema(table_schema: SchemaRef) -> Box<dyn SchemaAdapter>
 fn create(&self, projected_table_schema: SchemaRef, _table_schema: SchemaRef) -> Box<dyn SchemaAdapter>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.schema_adapter.DefaultSchemaAdapterFactory.md).
+
+
 Deprecated: Default [`SchemaAdapterFactory`] for mapping schemas.
 
 This struct has been removed.
@@ -72,6 +75,9 @@ fn map_batch(&self, _batch: RecordBatch) -> Result<RecordBatch>
 fn map_column_statistics(&self, _file_col_statistics: &[ColumnStatistics]) -> Result<Vec<ColumnStatistics>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.schema_adapter.SchemaMapping.md).
+
+
 Deprecated: The SchemaMapping struct held a mapping from the file schema to the table schema.
 
 This struct has been removed.
@@ -110,6 +116,9 @@ fn map_column_index(&self, index: usize, file_schema: &Schema) -> Option<usize>
 fn map_schema(&self, file_schema: &Schema) -> Result<(Arc<dyn SchemaMapper>, Vec<usize>)>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.schema_adapter.SchemaAdapter.md).
+
+
 Deprecated: Creates [`SchemaMapper`]s to map file-level [`RecordBatch`]es to a table schema.
 
 This trait has been removed. Use [`PhysicalExprAdapterFactory`] instead.
@@ -141,6 +150,9 @@ trait SchemaAdapterFactory: Debug + Send + Sync + 'static
 fn create(&self, projected_table_schema: SchemaRef, table_schema: SchemaRef) -> Box<dyn SchemaAdapter>
 fn create_with_projected_schema(&self, projected_table_schema: SchemaRef) -> Box<dyn SchemaAdapter>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.schema_adapter.SchemaAdapterFactory.md).
+
 
 Deprecated: Factory for creating [`SchemaAdapter`].
 
@@ -174,6 +186,9 @@ fn map_batch(&self, batch: RecordBatch) -> Result<RecordBatch>
 fn map_column_statistics(&self, file_col_statistics: &[ColumnStatistics]) -> Result<Vec<ColumnStatistics>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.schema_adapter.SchemaMapper.md).
+
+
 Deprecated: Maps columns from a specific file schema to the table schema.
 
 This trait has been removed. Use [`PhysicalExprAdapterFactory`] instead.
@@ -194,6 +209,9 @@ Also reachable as `datafusion::datasource::schema_adapter::CastColumnFn`
 ```rust
 type CastColumnFn = dyn Fn(&arrow::array::ArrayRef, &arrow::datatypes::Field, &arrow::compute::CastOptions<'_>) -> datafusion_common::Result<arrow::array::ArrayRef> + Send + Sync
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.schema_adapter.CastColumnFn.md).
+
 
 Deprecated: Function type for casting columns.
 

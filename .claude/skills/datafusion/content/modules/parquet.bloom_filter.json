@@ -1,0 +1,62 @@
+[
+  {
+    "id": "af709d60395fc7196360df11",
+    "path": "parquet::bloom_filter",
+    "name": "bloom_filter",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod bloom_filter",
+    "docs": "Bloom filter implementation specific to Parquet, as described\nin the [spec][parquet-bf-spec].\n\n# Bloom Filter Size\n\nParquet uses the [Split Block Bloom Filter][sbbf-paper] (SBBF) as its bloom filter\nimplementation. For each column upon which bloom filters are enabled, the offset and length of an SBBF\nis stored in  the metadata for each row group in the parquet file. The size of each filter is\ninitialized using a calculation based on the desired number of distinct values (NDV) and false\npositive probability (FPP). The FPP for a SBBF can be approximated as<sup>[1][bf-formulae]</sup>:\n\n```text\nf = (1 - e^(-k * n / m))^k\n```\n\nWhere, `f` is the FPP, `k` the number of hash functions, `n` the NDV, and `m` the total number\nof bits in the bloom filter. This can be re-arranged to determine the total number of bits\nrequired to achieve a given FPP and NDV:\n\n```text\nm = -k * n / ln(1 - f^(1/k))\n```\n\nSBBFs use eight hash functions to cleanly fit in SIMD lanes<sup>[2][sbbf-paper]</sup>, therefore\n`k` is set to 8. The SBBF will spread those `m` bits accross a set of `b` blocks that\nare each 256 bits, i.e., 32 bytes, in size. The number of blocks is chosen as:\n\n```text\nb = NP2(m/8) / 32\n```\n\nWhere, `NP2` denotes *the next power of two*, and `m` is divided by 8 to be represented as bytes.\n\nHere is a table of calculated sizes for various FPP and NDV:\n\n| NDV       | FPP       | b       | Size (KB) |\n|-----------|-----------|---------|-----------|\n| 10,000    | 0.1       | 256     | 8         |\n| 10,000    | 0.01      | 512     | 16        |\n| 10,000    | 0.001     | 1,024   | 32        |\n| 10,000    | 0.0001    | 1,024   | 32        |\n| 100,000   | 0.1       | 4,096   | 128       |\n| 100,000   | 0.01      | 4,096   | 128       |\n| 100,000   | 0.001     | 8,192   | 256       |\n| 100,000   | 0.0001    | 16,384  | 512       |\n| 100,000   | 0.00001   | 16,384  | 512       |\n| 1,000,000 | 0.1       | 32,768  | 1,024     |\n| 1,000,000 | 0.01      | 65,536  | 2,048     |\n| 1,000,000 | 0.001     | 65,536  | 2,048     |\n| 1,000,000 | 0.0001    | 131,072 | 4,096     |\n| 1,000,000 | 0.00001   | 131,072 | 4,096     |\n| 1,000,000 | 0.000001  | 262,144 | 8,192     |\n\n# Structure: Filter → Blocks → Words → Bits\n\nAn SBBF is an array of **blocks**. Each block is 256 bits (32 bytes),\ndivided into eight 32-bit **words**. A word is just a `u32` — an array of\n32 individual bits that can each be \"set\" (1) or \"not set\" (0).\n\n```text\n  Sbbf (the whole filter)\n  ┌──────────┬──────────┬──────────┬─── ─── ──┬──────────┐\n  │ Block 0  │ Block 1  │ Block 2  │   ...    │ Block N-1│\n  └──────────┴──────────┴──────────┴─── ─── ──┴──────────┘\n       │\n       ▼\n  One Block = 256 bits = 8 words\n  ┌────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┐\n  │ word 0 │ word 1 │ word 2 │ word 3 │ word 4 │ word 5 │ word 6 │ word 7 │\n  │ (u32)  │ (u32)  │ (u32)  │ (u32)  │ (u32)  │ (u32)  │ (u32)  │ (u32)  │\n  └────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┘\n       │\n       ▼\n  One Word = 32 individual bits\n  ┌─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┬─┐\n  │0│0│1│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│0│  ← bit 29 is set\n  └─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┴─┘\n```\n\n**Inserting** a value hashes it to a 64-bit number, then:\n 1. The upper 32 bits pick which **block** (via `Sbbf::hash_to_block_index`).\n 2. The lower 32 bits pick one bit position in each of the 8 **words** (via `Block::mask`).\n    So each insert sets exactly **8 bits** (one per word) in a single block.\n\n**Checking** does the same two steps and returns `true` only if all 8 bits\nare already set — meaning the value was *probably* inserted (or is a false\npositive).\n\n# Bloom Filter Folding\n\nAfter inserting all values into a bloom filter it can be \"folded\" to minimize it's size.\nSee [`Sbbf::fold_to_target_fpp`] for details  on the algorithm and its mathematical basis.\n\n[parquet-bf-spec]: https://github.com/apache/parquet-format/blob/master/BloomFilter.md\n[sbbf-paper]: https://arxiv.org/pdf/2101.01719\n[bf-formulae]: http://tfk.mit.edu/pdf/bloom.pdf",
+    "span": {
+      "filename": "src/bloom_filter/mod.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        1240,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          4855,
+          3021,
+          4887,
+          4888
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Sbbf::fold_to_target_fpp`": 4885
+    },
+    "link_paths": {
+      "`Sbbf::fold_to_target_fpp`": "parquet::bloom_filter::Sbbf::fold_to_target_fpp"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4920",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/parquet.bloom_filter.md",
+    "record_file": "modules/parquet.bloom_filter.json",
+    "anchor": "op-af709d60395fc7196360df11",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Sbbf::fold_to_target_fpp`": "../operations/parquet.bloom_filter.Sbbf.md#op-943c66e12ec73793b98e3132"
+    }
+  }
+]

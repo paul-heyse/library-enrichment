@@ -36,6 +36,9 @@ fn with_interceptor<F>(inner: T, interceptor: F) -> FlightServiceClient<Intercep
 fn with_origin(inner: T, origin: Uri) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.gen.flight_service_client.FlightServiceClient.md).
+
+
 
 A flight service is an endpoint for retrieving or storing Arrow data. A
 flight service can expose one or more predefined endpoints that can be

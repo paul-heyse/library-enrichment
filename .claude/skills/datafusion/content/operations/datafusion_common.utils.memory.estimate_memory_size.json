@@ -1,0 +1,114 @@
+[
+  {
+    "id": "79acd21252d94afe33c7aeca",
+    "path": "datafusion_common::utils::memory::estimate_memory_size",
+    "name": "estimate_memory_size",
+    "owner": null,
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn estimate_memory_size<T>(num_elements: usize, fixed_size: usize) -> Result<usize>",
+    "docs": "Estimates the memory size required for a hash table prior to allocation.\n\n# Parameters\n- `num_elements`: The number of elements expected in the hash table.\n- `fixed_size`: A fixed overhead size associated with the collection\n  (e.g., HashSet or HashTable).\n- `T`: The type of elements stored in the hash table.\n\n# Details\nThis function calculates the estimated memory size by considering:\n- An overestimation of buckets to keep approximately 1/8 of them empty.\n- The total memory size is computed as:\n  - The size of each entry (`T`) multiplied by the estimated number of\n    buckets.\n  - One byte overhead for each bucket.\n  - The fixed size overhead of the collection.\n- If the estimation overflows, we return a [`crate::error::DataFusionError`]\n\n# Examples\n---\n\n## From within a struct\n\n```rust\n# use datafusion_common::utils::memory::estimate_memory_size;\n# use datafusion_common::Result;\n\nstruct MyStruct<T> {\n    values: Vec<T>,\n    other_data: usize,\n}\n\nimpl<T> MyStruct<T> {\n    fn size(&self) -> Result<usize> {\n        let num_elements = self.values.len();\n        let fixed_size =\n            std::mem::size_of_val(self) + std::mem::size_of_val(&self.values);\n\n        estimate_memory_size::<T>(num_elements, fixed_size)\n    }\n}\n```\n---\n## With a simple collection\n\n```rust\n# use datafusion_common::utils::memory::estimate_memory_size;\n# use std::collections::HashMap;\n\nlet num_rows = 100;\nlet fixed_size = std::mem::size_of::<HashMap<u64, u64>>();\nlet estimated_hashtable_size =\n    estimate_memory_size::<(u64, u64)>(num_rows, fixed_size)\n        .expect(\"Size estimation failed\");\n```",
+    "span": {
+      "filename": "src/utils/memory.rs",
+      "begin": [
+        82,
+        1
+      ],
+      "end": [
+        103,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "num_elements",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "fixed_size",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "crate::Result",
+              "id": 21,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "21": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {
+      "`crate::error::DataFusionError`": 227
+    },
+    "link_paths": {
+      "`crate::error::DataFusionError`": "datafusion_common::error::DataFusionError"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "5717",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.utils.memory.estimate_memory_size.md",
+    "record_file": "operations/datafusion_common.utils.memory.estimate_memory_size.json",
+    "anchor": "op-79acd21252d94afe33c7aeca",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`crate::error::DataFusionError`": "../operations/datafusion_common.error.DataFusionError.md#op-d335eb18d3c98363748854bb"
+    }
+  }
+]

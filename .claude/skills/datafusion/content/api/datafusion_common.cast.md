@@ -10,6 +10,9 @@ Crate `datafusion-common` · 55 public items · structured records in [`model/da
 fn as_binary_array(array: &dyn Array) -> Result<&arrow::array::BinaryArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_binary_array.md).
+
+
 ---
 
 ## as_binary_view_array
@@ -19,6 +22,9 @@ fn as_binary_array(array: &dyn Array) -> Result<&arrow::array::BinaryArray>
 ```rust
 fn as_binary_view_array(array: &dyn Array) -> Result<&arrow::array::BinaryViewArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_binary_view_array.md).
+
 
 ---
 
@@ -30,6 +36,9 @@ fn as_binary_view_array(array: &dyn Array) -> Result<&arrow::array::BinaryViewAr
 fn as_boolean_array(array: &dyn Array) -> Result<&arrow::array::BooleanArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_boolean_array.md).
+
+
 ---
 
 ## as_date32_array
@@ -39,6 +48,9 @@ fn as_boolean_array(array: &dyn Array) -> Result<&arrow::array::BooleanArray>
 ```rust
 fn as_date32_array(array: &dyn Array) -> Result<&arrow::array::Date32Array>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_date32_array.md).
+
 
 ---
 
@@ -50,6 +62,9 @@ fn as_date32_array(array: &dyn Array) -> Result<&arrow::array::Date32Array>
 fn as_date64_array(array: &dyn Array) -> Result<&arrow::array::Date64Array>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_date64_array.md).
+
+
 ---
 
 ## as_decimal128_array
@@ -59,6 +74,9 @@ fn as_date64_array(array: &dyn Array) -> Result<&arrow::array::Date64Array>
 ```rust
 fn as_decimal128_array(array: &dyn Array) -> Result<&arrow::array::Decimal128Array>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_decimal128_array.md).
+
 
 ---
 
@@ -70,6 +88,9 @@ fn as_decimal128_array(array: &dyn Array) -> Result<&arrow::array::Decimal128Arr
 fn as_decimal256_array(array: &dyn Array) -> Result<&arrow::array::Decimal256Array>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_decimal256_array.md).
+
+
 ---
 
 ## as_decimal32_array
@@ -79,6 +100,9 @@ fn as_decimal256_array(array: &dyn Array) -> Result<&arrow::array::Decimal256Arr
 ```rust
 fn as_decimal32_array(array: &dyn Array) -> Result<&arrow::array::Decimal32Array>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_decimal32_array.md).
+
 
 ---
 
@@ -90,6 +114,9 @@ fn as_decimal32_array(array: &dyn Array) -> Result<&arrow::array::Decimal32Array
 fn as_decimal64_array(array: &dyn Array) -> Result<&arrow::array::Decimal64Array>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_decimal64_array.md).
+
+
 ---
 
 ## as_dictionary_array
@@ -99,6 +126,9 @@ fn as_decimal64_array(array: &dyn Array) -> Result<&arrow::array::Decimal64Array
 ```rust
 fn as_dictionary_array<T: ArrowDictionaryKeyType>(array: &dyn Array) -> Result<&arrow::array::DictionaryArray<T>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_dictionary_array.md).
+
 
 ---
 
@@ -110,6 +140,9 @@ fn as_dictionary_array<T: ArrowDictionaryKeyType>(array: &dyn Array) -> Result<&
 fn as_duration_microsecond_array(array: &dyn Array) -> Result<&arrow::array::DurationMicrosecondArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_duration_microsecond_array.md).
+
+
 ---
 
 ## as_duration_millisecond_array
@@ -119,6 +152,9 @@ fn as_duration_microsecond_array(array: &dyn Array) -> Result<&arrow::array::Dur
 ```rust
 fn as_duration_millisecond_array(array: &dyn Array) -> Result<&arrow::array::DurationMillisecondArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_duration_millisecond_array.md).
+
 
 ---
 
@@ -130,6 +166,9 @@ fn as_duration_millisecond_array(array: &dyn Array) -> Result<&arrow::array::Dur
 fn as_duration_nanosecond_array(array: &dyn Array) -> Result<&arrow::array::DurationNanosecondArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_duration_nanosecond_array.md).
+
+
 ---
 
 ## as_duration_second_array
@@ -139,6 +178,9 @@ fn as_duration_nanosecond_array(array: &dyn Array) -> Result<&arrow::array::Dura
 ```rust
 fn as_duration_second_array(array: &dyn Array) -> Result<&arrow::array::DurationSecondArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_duration_second_array.md).
+
 
 ---
 
@@ -150,6 +192,9 @@ fn as_duration_second_array(array: &dyn Array) -> Result<&arrow::array::Duration
 fn as_fixed_size_binary_array(array: &dyn Array) -> Result<&arrow::array::FixedSizeBinaryArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_fixed_size_binary_array.md).
+
+
 ---
 
 ## as_fixed_size_list_array
@@ -159,6 +204,9 @@ fn as_fixed_size_binary_array(array: &dyn Array) -> Result<&arrow::array::FixedS
 ```rust
 fn as_fixed_size_list_array(array: &dyn Array) -> Result<&arrow::array::FixedSizeListArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_fixed_size_list_array.md).
+
 
 ---
 
@@ -170,6 +218,9 @@ fn as_fixed_size_list_array(array: &dyn Array) -> Result<&arrow::array::FixedSiz
 fn as_float16_array(array: &dyn Array) -> Result<&arrow::array::Float16Array>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_float16_array.md).
+
+
 ---
 
 ## as_float32_array
@@ -179,6 +230,9 @@ fn as_float16_array(array: &dyn Array) -> Result<&arrow::array::Float16Array>
 ```rust
 fn as_float32_array(array: &dyn Array) -> Result<&arrow::array::Float32Array>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_float32_array.md).
+
 
 ---
 
@@ -190,6 +244,9 @@ fn as_float32_array(array: &dyn Array) -> Result<&arrow::array::Float32Array>
 fn as_float64_array(array: &dyn Array) -> Result<&arrow::array::Float64Array>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_float64_array.md).
+
+
 ---
 
 ## as_generic_binary_array
@@ -199,6 +256,9 @@ fn as_float64_array(array: &dyn Array) -> Result<&arrow::array::Float64Array>
 ```rust
 fn as_generic_binary_array<T: OffsetSizeTrait>(array: &dyn Array) -> Result<&arrow::array::GenericBinaryArray<T>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_generic_binary_array.md).
+
 
 ---
 
@@ -210,6 +270,9 @@ fn as_generic_binary_array<T: OffsetSizeTrait>(array: &dyn Array) -> Result<&arr
 fn as_generic_list_array<T: OffsetSizeTrait>(array: &dyn Array) -> Result<&arrow::array::GenericListArray<T>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_generic_list_array.md).
+
+
 ---
 
 ## as_generic_string_array
@@ -219,6 +282,9 @@ fn as_generic_list_array<T: OffsetSizeTrait>(array: &dyn Array) -> Result<&arrow
 ```rust
 fn as_generic_string_array<T: OffsetSizeTrait>(array: &dyn Array) -> Result<&arrow::array::GenericStringArray<T>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_generic_string_array.md).
+
 
 ---
 
@@ -230,6 +296,9 @@ fn as_generic_string_array<T: OffsetSizeTrait>(array: &dyn Array) -> Result<&arr
 fn as_int16_array(array: &dyn Array) -> Result<&arrow::array::Int16Array>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_int16_array.md).
+
+
 ---
 
 ## as_int32_array
@@ -239,6 +308,9 @@ fn as_int16_array(array: &dyn Array) -> Result<&arrow::array::Int16Array>
 ```rust
 fn as_int32_array(array: &dyn Array) -> Result<&arrow::array::Int32Array>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_int32_array.md).
+
 
 ---
 
@@ -250,6 +322,9 @@ fn as_int32_array(array: &dyn Array) -> Result<&arrow::array::Int32Array>
 fn as_int64_array(array: &dyn Array) -> Result<&arrow::array::Int64Array>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_int64_array.md).
+
+
 ---
 
 ## as_int8_array
@@ -259,6 +334,9 @@ fn as_int64_array(array: &dyn Array) -> Result<&arrow::array::Int64Array>
 ```rust
 fn as_int8_array(array: &dyn Array) -> Result<&arrow::array::Int8Array>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_int8_array.md).
+
 
 ---
 
@@ -270,6 +348,9 @@ fn as_int8_array(array: &dyn Array) -> Result<&arrow::array::Int8Array>
 fn as_interval_dt_array(array: &dyn Array) -> Result<&arrow::array::IntervalDayTimeArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_interval_dt_array.md).
+
+
 ---
 
 ## as_interval_mdn_array
@@ -279,6 +360,9 @@ fn as_interval_dt_array(array: &dyn Array) -> Result<&arrow::array::IntervalDayT
 ```rust
 fn as_interval_mdn_array(array: &dyn Array) -> Result<&arrow::array::IntervalMonthDayNanoArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_interval_mdn_array.md).
+
 
 ---
 
@@ -290,6 +374,9 @@ fn as_interval_mdn_array(array: &dyn Array) -> Result<&arrow::array::IntervalMon
 fn as_interval_ym_array(array: &dyn Array) -> Result<&arrow::array::IntervalYearMonthArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_interval_ym_array.md).
+
+
 ---
 
 ## as_large_binary_array
@@ -299,6 +386,9 @@ fn as_interval_ym_array(array: &dyn Array) -> Result<&arrow::array::IntervalYear
 ```rust
 fn as_large_binary_array(array: &dyn Array) -> Result<&arrow::array::LargeBinaryArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_large_binary_array.md).
+
 
 ---
 
@@ -310,6 +400,9 @@ fn as_large_binary_array(array: &dyn Array) -> Result<&arrow::array::LargeBinary
 fn as_large_list_array(array: &dyn Array) -> Result<&arrow::array::LargeListArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_large_list_array.md).
+
+
 ---
 
 ## as_large_list_view_array
@@ -319,6 +412,9 @@ fn as_large_list_array(array: &dyn Array) -> Result<&arrow::array::LargeListArra
 ```rust
 fn as_large_list_view_array(array: &dyn Array) -> Result<&arrow::array::LargeListViewArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_large_list_view_array.md).
+
 
 ---
 
@@ -330,6 +426,9 @@ fn as_large_list_view_array(array: &dyn Array) -> Result<&arrow::array::LargeLis
 fn as_large_string_array(array: &dyn Array) -> Result<&arrow::array::LargeStringArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_large_string_array.md).
+
+
 ---
 
 ## as_list_array
@@ -339,6 +438,9 @@ fn as_large_string_array(array: &dyn Array) -> Result<&arrow::array::LargeString
 ```rust
 fn as_list_array(array: &dyn Array) -> Result<&arrow::array::ListArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_list_array.md).
+
 
 ---
 
@@ -350,6 +452,9 @@ fn as_list_array(array: &dyn Array) -> Result<&arrow::array::ListArray>
 fn as_list_view_array(array: &dyn Array) -> Result<&arrow::array::ListViewArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_list_view_array.md).
+
+
 ---
 
 ## as_map_array
@@ -359,6 +464,9 @@ fn as_list_view_array(array: &dyn Array) -> Result<&arrow::array::ListViewArray>
 ```rust
 fn as_map_array(array: &dyn Array) -> Result<&arrow::array::MapArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_map_array.md).
+
 
 ---
 
@@ -370,6 +478,9 @@ fn as_map_array(array: &dyn Array) -> Result<&arrow::array::MapArray>
 fn as_null_array(array: &dyn Array) -> Result<&arrow::array::NullArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_null_array.md).
+
+
 ---
 
 ## as_primitive_array
@@ -379,6 +490,9 @@ fn as_null_array(array: &dyn Array) -> Result<&arrow::array::NullArray>
 ```rust
 fn as_primitive_array<T: ArrowPrimitiveType>(array: &dyn Array) -> Result<&arrow::array::PrimitiveArray<T>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_primitive_array.md).
+
 
 ---
 
@@ -390,6 +504,9 @@ fn as_primitive_array<T: ArrowPrimitiveType>(array: &dyn Array) -> Result<&arrow
 fn as_run_array<T: RunEndIndexType>(array: &dyn Array) -> Result<&arrow::array::RunArray<T>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_run_array.md).
+
+
 ---
 
 ## as_string_array
@@ -399,6 +516,9 @@ fn as_run_array<T: RunEndIndexType>(array: &dyn Array) -> Result<&arrow::array::
 ```rust
 fn as_string_array(array: &dyn Array) -> Result<&arrow::array::StringArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_string_array.md).
+
 
 ---
 
@@ -410,6 +530,9 @@ fn as_string_array(array: &dyn Array) -> Result<&arrow::array::StringArray>
 fn as_string_view_array(array: &dyn Array) -> Result<&arrow::array::StringViewArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_string_view_array.md).
+
+
 ---
 
 ## as_struct_array
@@ -419,6 +542,9 @@ fn as_string_view_array(array: &dyn Array) -> Result<&arrow::array::StringViewAr
 ```rust
 fn as_struct_array(array: &dyn Array) -> Result<&arrow::array::StructArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_struct_array.md).
+
 
 ---
 
@@ -430,6 +556,9 @@ fn as_struct_array(array: &dyn Array) -> Result<&arrow::array::StructArray>
 fn as_time32_millisecond_array(array: &dyn Array) -> Result<&arrow::array::Time32MillisecondArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_time32_millisecond_array.md).
+
+
 ---
 
 ## as_time32_second_array
@@ -439,6 +568,9 @@ fn as_time32_millisecond_array(array: &dyn Array) -> Result<&arrow::array::Time3
 ```rust
 fn as_time32_second_array(array: &dyn Array) -> Result<&arrow::array::Time32SecondArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_time32_second_array.md).
+
 
 ---
 
@@ -450,6 +582,9 @@ fn as_time32_second_array(array: &dyn Array) -> Result<&arrow::array::Time32Seco
 fn as_time64_microsecond_array(array: &dyn Array) -> Result<&arrow::array::Time64MicrosecondArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_time64_microsecond_array.md).
+
+
 ---
 
 ## as_time64_nanosecond_array
@@ -459,6 +594,9 @@ fn as_time64_microsecond_array(array: &dyn Array) -> Result<&arrow::array::Time6
 ```rust
 fn as_time64_nanosecond_array(array: &dyn Array) -> Result<&arrow::array::Time64NanosecondArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_time64_nanosecond_array.md).
+
 
 ---
 
@@ -470,6 +608,9 @@ fn as_time64_nanosecond_array(array: &dyn Array) -> Result<&arrow::array::Time64
 fn as_timestamp_microsecond_array(array: &dyn Array) -> Result<&arrow::array::TimestampMicrosecondArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_timestamp_microsecond_array.md).
+
+
 ---
 
 ## as_timestamp_millisecond_array
@@ -479,6 +620,9 @@ fn as_timestamp_microsecond_array(array: &dyn Array) -> Result<&arrow::array::Ti
 ```rust
 fn as_timestamp_millisecond_array(array: &dyn Array) -> Result<&arrow::array::TimestampMillisecondArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_timestamp_millisecond_array.md).
+
 
 ---
 
@@ -490,6 +634,9 @@ fn as_timestamp_millisecond_array(array: &dyn Array) -> Result<&arrow::array::Ti
 fn as_timestamp_nanosecond_array(array: &dyn Array) -> Result<&arrow::array::TimestampNanosecondArray>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_timestamp_nanosecond_array.md).
+
+
 ---
 
 ## as_timestamp_second_array
@@ -499,6 +646,9 @@ fn as_timestamp_nanosecond_array(array: &dyn Array) -> Result<&arrow::array::Tim
 ```rust
 fn as_timestamp_second_array(array: &dyn Array) -> Result<&arrow::array::TimestampSecondArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_timestamp_second_array.md).
+
 
 ---
 
@@ -510,6 +660,9 @@ fn as_timestamp_second_array(array: &dyn Array) -> Result<&arrow::array::Timesta
 fn as_uint16_array(array: &dyn Array) -> Result<&arrow::array::UInt16Array>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_uint16_array.md).
+
+
 ---
 
 ## as_uint32_array
@@ -519,6 +672,9 @@ fn as_uint16_array(array: &dyn Array) -> Result<&arrow::array::UInt16Array>
 ```rust
 fn as_uint32_array(array: &dyn Array) -> Result<&arrow::array::UInt32Array>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_uint32_array.md).
+
 
 ---
 
@@ -530,6 +686,9 @@ fn as_uint32_array(array: &dyn Array) -> Result<&arrow::array::UInt32Array>
 fn as_uint64_array(array: &dyn Array) -> Result<&arrow::array::UInt64Array>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_uint64_array.md).
+
+
 ---
 
 ## as_uint8_array
@@ -540,6 +699,9 @@ fn as_uint64_array(array: &dyn Array) -> Result<&arrow::array::UInt64Array>
 fn as_uint8_array(array: &dyn Array) -> Result<&arrow::array::UInt8Array>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_uint8_array.md).
+
+
 ---
 
 ## as_union_array
@@ -549,5 +711,8 @@ fn as_uint8_array(array: &dyn Array) -> Result<&arrow::array::UInt8Array>
 ```rust
 fn as_union_array(array: &dyn Array) -> Result<&arrow::array::UnionArray>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cast.as_union_array.md).
+
 
 ---

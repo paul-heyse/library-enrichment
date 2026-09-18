@@ -57,6 +57,9 @@ fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 fn heap_size(&self, ctx: &mut DFHeapSizeCtx) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.table_reference.TableReference.md).
+
+
 A multi part identifier (path) to a table that may require further
 resolution (e.g. `foo.bar`).
 
@@ -119,6 +122,9 @@ struct ResolvedTableReference
 ```rust
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.table_reference.ResolvedTableReference.md).
+
 
 A fully resolved path to a table of the form "catalog.schema.table"
 

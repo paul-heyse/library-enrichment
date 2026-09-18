@@ -18,11 +18,13 @@ pub async fn comparison_prerequisites(
     use enrichment_core::request::{CompareRequest, ResolveRequest};
     crate::request_admission::research(runtime, &request.clone().into(), input_bound).await?;
     let session = runtime.session();
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "comparison_request",
         CompareRequest::batch(std::slice::from_ref(request))?,
     )?;
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "resolution_defaults",
         ResolveRequest::batch(&[ResolveRequest::default()])?,
     )?;
@@ -48,7 +50,8 @@ pub async fn inspection(
 ) -> Result<Vec<AspectSelection>> {
     let session = runtime.session();
     let values = ResearchSelection::encode(&[Some(selection)])?;
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "selection",
         arrow::record_batch::RecordBatch::from(
             datafusion::common::cast::as_struct_array(&values)?.clone(),
@@ -74,7 +77,8 @@ pub async fn discovery(
         struct Input { facets: Option<Vec<DiscoverySelection>> => enrichment_core::native_union::Rule::Sequence }
     }
     let session = runtime.session();
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "selection",
         Input::batch(&[Input {
             facets: selection.clone(),

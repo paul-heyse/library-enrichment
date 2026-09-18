@@ -24,6 +24,9 @@ fn with_on_error(self, on_error: OnError) -> Self
 fn with_partition(self, partition: usize) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_stream.builder.FileStreamBuilder.md).
+
+
 Builder for constructing a [`FileStream`].
 
 ---

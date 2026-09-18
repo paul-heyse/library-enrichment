@@ -12,6 +12,9 @@ Also reachable as `datafusion_expr::expr_rewriter::rewrite_with_guarantees`
 fn rewrite_with_guarantees<'a>(expr: Expr, guarantees: impl IntoIterator<Item = &'a (Expr, datafusion_expr_common::interval_arithmetic::NullableInterval)>) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<Expr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.guarantees.rewrite_with_guarantees.md).
+
+
 Rewrite expressions to incorporate guarantees.
 
 Guarantees are a mapping from an expression (which currently is always a
@@ -41,6 +44,9 @@ Also reachable as `datafusion_expr::expr_rewriter::rewrite_with_guarantees_map`
 ```rust
 fn rewrite_with_guarantees_map<'a>(expr: Expr, guarantees: &'a datafusion_common::HashMap<&'a Expr, &'a datafusion_expr_common::interval_arithmetic::NullableInterval>) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<Expr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.guarantees.rewrite_with_guarantees_map.md).
+
 
 Rewrite expressions to incorporate guarantees.
 
@@ -76,6 +82,9 @@ fn new(guarantees: impl IntoIterator<Item = &'a (Expr, NullableInterval)>) -> Se
 ```rust
 fn f_up(&mut self, expr: Expr) -> Result<Transformed<Expr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr_rewriter.guarantees.GuaranteeRewriter.md).
+
 
 Rewrite expressions to incorporate guarantees.
 

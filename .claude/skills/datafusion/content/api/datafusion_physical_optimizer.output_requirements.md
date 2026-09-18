@@ -49,6 +49,9 @@ fn try_swapping_with_projection(&self, projection: &ProjectionExec) -> Result<Op
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.output_requirements.OutputRequirementExec.md).
+
+
 An ancillary, non-executable operator whose sole purpose is to track global
 requirements during optimization. It imposes
 - the ordering requirement in its `order_requirement` attribute.
@@ -84,6 +87,9 @@ fn name(&self) -> &str
 fn optimize(&self, plan: Arc<dyn ExecutionPlan>, _config: &ConfigOptions) -> Result<Arc<dyn ExecutionPlan>>
 fn schema_check(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.output_requirements.OutputRequirements.md).
+
 
 This rule either adds or removes [`OutputRequirements`]s to/from the physical
 plan according to its `mode` attribute, which is set by the constructors

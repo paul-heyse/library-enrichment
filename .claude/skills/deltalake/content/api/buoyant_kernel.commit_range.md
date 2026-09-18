@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## CommitRange
 
 `struct` · `buoyant_kernel::commit_range::CommitRange`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.commit_range.CommitRange.md)
 
 Also reachable as `delta_kernel::commit_range::CommitRange`
 

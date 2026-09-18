@@ -22,6 +22,9 @@ fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<BloomFilterEnabledOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_models.generated.datafusion.parquet_column_options.BloomFilterEnabledOpt.md).
+
+
 ---
 
 ## BloomFilterFppOpt
@@ -43,6 +46,9 @@ fn encode(&self, buf: &mut impl ::prost::bytes::BufMut)
 fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<BloomFilterFppOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_models.generated.datafusion.parquet_column_options.BloomFilterFppOpt.md).
+
 
 ---
 
@@ -66,6 +72,9 @@ fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<BloomFilterNdvOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_models.generated.datafusion.parquet_column_options.BloomFilterNdvOpt.md).
+
+
 ---
 
 ## CompressionOpt
@@ -87,6 +96,9 @@ fn encode(&self, buf: &mut impl ::prost::bytes::BufMut)
 fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<CompressionOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_models.generated.datafusion.parquet_column_options.CompressionOpt.md).
+
 
 ---
 
@@ -110,6 +122,9 @@ fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<DictionaryEnabledOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_models.generated.datafusion.parquet_column_options.DictionaryEnabledOpt.md).
+
+
 ---
 
 ## EncodingOpt
@@ -132,6 +147,9 @@ fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<EncodingOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_models.generated.datafusion.parquet_column_options.EncodingOpt.md).
+
+
 ---
 
 ## StatisticsEnabledOpt
@@ -153,5 +171,8 @@ fn encode(&self, buf: &mut impl ::prost::bytes::BufMut)
 fn encoded_len(&self) -> usize
 fn merge(field: &mut ::core::option::Option<StatisticsEnabledOpt>, tag: u32, wire_type: ::prost::encoding::wire_type::WireType, buf: &mut impl ::prost::bytes::Buf, ctx: ::prost::encoding::DecodeContext) -> ::core::result::Result<(), ::prost::DecodeError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_models.generated.datafusion.parquet_column_options.StatisticsEnabledOpt.md).
+
 
 ---

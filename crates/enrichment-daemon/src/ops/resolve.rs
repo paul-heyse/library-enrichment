@@ -35,8 +35,7 @@ use enrichment_core::wire::data::{
     HostedJsonReport, HostedJsonState, ResolveData, SnapshotSummary,
 };
 use enrichment_core::wire::{
-    ArtifactHandle, Coverage, Envelope, ErrorCode, Evidence, EvidenceClass, Freshness,
-    SourceVersionMatch,
+    Envelope, ErrorCode, Evidence, EvidenceClass, Freshness, SourceVersionMatch,
 };
 use serde::Deserialize;
 
@@ -187,51 +186,15 @@ pub(super) async fn render_retained(
     environment: &Environment,
     context: &Context,
 ) -> Result<Envelope, enrichment_store::QueryError> {
-    use enrichment_core::evidence::metadata::ReleaseDetails;
     let manifest = reader.manifest();
     let snapshot_id = &manifest.snapshot_id;
     let producer_runs = reader.producer_runs().await?;
-    let mut observed_configuration = None;
-    let mut python = None;
-    for metadata in reader.release_metadata().await? {
-        match metadata.details {
-            ReleaseDetails::RustDocs(value) => {
-                if observed_configuration
-                    .as_ref()
-                    .is_some_and(|prior| prior != &value)
-                {
-                    return Err(std::io::Error::other(
-                        "retained Rust metadata has conflicting qualified alternatives",
-                    )
-                    .into());
-                }
-                observed_configuration = Some(value);
-            }
-            ReleaseDetails::PythonDistribution(value) => {
-                if python.as_ref().is_some_and(|prior| prior != &value) {
-                    return Err(std::io::Error::other(
-                        "retained Python metadata has conflicting qualified alternatives",
-                    )
-                    .into());
-                }
-                python = Some(value);
-            }
-        }
-    }
-    let coverage_rows = reader.coverage().await?;
-    let mut gaps = Vec::new();
-    for coverage in coverage_rows {
-        for gap in coverage.gaps {
-            if !gaps.contains(&gap) {
-                gaps.push(gap);
-            }
-        }
-    }
+    let retained = enrichment_store::research_resolution::retained(reader).await?;
+    let observed_configuration = retained.metadata.observed_configuration;
+    let python = retained.metadata.python;
+    let gaps = retained.gaps;
     let artifacts = reader.artifacts().await?;
-    let hosted = artifacts.iter().find(|a| {
-        a.kind == ArtifactKind::RustdocJson
-            && (a.source_uri.starts_with("https://") || a.source_uri.starts_with("http://"))
-    });
+    let hosted = retained.hosted;
     let hosted_rustdoc_json = hosted.map(|a| HostedJsonReport {
         state: HostedJsonState::Available,
         format_version: manifest
@@ -266,9 +229,14 @@ pub(super) async fn render_retained(
         producer_runs,
         answered_from_cache: true,
     };
-    let mut coverage = reader.assess_acquisition().await?;
-    let complete = coverage.complete();
-    coverage.limitations.push("Exact validated evidence is retained without age-based expiry. This call did not consult the mutable registry; freshness=revalidate checks it.".into());
+    let coverage = reader.assess_acquisition().await?;
+    let complete = enrichment_store::coverage::complete(reader.runtime(), &coverage).await?;
+    let coverage = enrichment_store::research_resolution::retained_coverage(
+        reader.runtime(),
+        &coverage,
+        false,
+    )
+    .await?;
     let result = Research {
         summary: format!(
             "{} {}: retained evidence from {}",
@@ -340,19 +308,32 @@ pub(super) async fn replay_selected(
     exact.name = selected.key.package.clone();
     exact.version = Some(selected.key.version.clone());
     let mut replay = replay_recorded(service, &exact, &selected.key.version).await?;
-    replay.freshness.registry_checked_at =
-        Some(match enrichment_core::native_time::AcquisitionTime::now() {
-            Ok(time) => time,
-            Err(error) => return Some(super::common::operation_error(&error, "acquisition_clock")),
-        });
-    replay.freshness.latest_verified = upstream.is_some();
+    replay.freshness = match enrichment_store::research_resolution::freshness(
+        &service.repository.runtime,
+        request,
+        replay.freshness.source_version_match,
+        &acquisition.artifacts,
+    )
+    .await
+    {
+        Ok(value) => value,
+        Err(error) => return Some(common::operation_error(&error, "resolution_freshness")),
+    };
     if let Some(upstream) = upstream
         && let enrichment_core::wire::data::ToolData::ResolveLibrary(data) = &mut replay.data
     {
         data.upstream = Some(upstream.clone());
     }
-    replay.coverage.limitations.pop();
-    replay.coverage.limitations.push("The mutable registry selection was revalidated; unchanged exact artifact and environment reuse retained evidence without running extraction again.".into());
+    replay.coverage = match enrichment_store::research_resolution::retained_coverage(
+        &service.repository.runtime,
+        &replay.coverage,
+        true,
+    )
+    .await
+    {
+        Ok(value) => value,
+        Err(error) => return Some(common::operation_error(&error, "resolution_coverage")),
+    };
     replay.evidence.extend(acquisition.evidence.clone());
     for artifact in &acquisition.artifacts {
         if let Some(handle) =
@@ -391,14 +372,26 @@ pub(super) async fn replay_selected(
             Ok(value) => value,
             Err(error) => return Some(super::common::operation_error(&error, "producer_clock")),
         };
-        if let Err(error) = acquisition.run(
-            "registry-selection",
-            "1",
-            acquisition.semantic_inputs(),
-            observed_at,
-            RunOutcome::Succeeded,
-            Vec::new(),
-        ) {
+        let inputs = match acquisition.semantic_inputs().await {
+            Ok(inputs) => inputs,
+            Err(error) => {
+                return Some(super::common::operation_error(
+                    &std::io::Error::other(error),
+                    "producer_inputs",
+                ));
+            }
+        };
+        if let Err(error) = acquisition
+            .run(
+                "registry-selection",
+                "1",
+                inputs,
+                observed_at,
+                RunOutcome::Succeeded,
+                Vec::new(),
+            )
+            .await
+        {
             return Some(super::common::operation_error(
                 &std::io::Error::other(error),
                 "producer_clock",
@@ -473,7 +466,7 @@ pub(super) struct Acquisition<'a> {
     pub(super) gaps: Vec<Gap>,
     pub(super) runs: Vec<ProducerRun>,
     pub(super) indexed: BTreeSet<EvidenceKind>,
-    pub(super) receipt_ids: BTreeSet<String>,
+    pub(super) receipts: Vec<Artifact>,
     pub(super) delivery_template: Option<Envelope>,
 }
 
@@ -489,7 +482,7 @@ impl<'a> Acquisition<'a> {
             gaps: Vec::new(),
             runs: Vec::new(),
             indexed: BTreeSet::new(),
-            receipt_ids: BTreeSet::new(),
+            receipts: Vec::new(),
             delivery_template: None,
         }
     }
@@ -522,27 +515,32 @@ impl<'a> Acquisition<'a> {
     /// Source file reads, hashing and durable artifact writes run on the blocking pool.
     pub(super) async fn store_source_file(
         &mut self,
-        path: std::path::PathBuf,
+        tree: super::source_tree::SourceTree,
+        file: String,
         kind: ArtifactKind,
-        media: &'static str,
+        media: String,
         source: String,
     ) -> std::io::Result<Option<Artifact>> {
         self.check_cancelled()?;
         let blobs = self.service.blobs.clone();
-        let artifact = tokio::task::spawn_blocking(move || {
-            let bytes = enrichment_core::producer::source::read_file(&path)?;
-            if std::str::from_utf8(&bytes).is_err() {
-                return Ok::<_, std::io::Error>(None);
-            }
-            let retrieved_at = enrichment_core::native_time::AcquisitionTime::now()
-                .map_err(std::io::Error::other)?;
-            let stored = blobs.put(&bytes, |_| {
-                Artifact::describe(&bytes, kind, media, &source, retrieved_at)
-            })?;
-            Ok(Some(stored.acquired))
-        })
-        .await
-        .map_err(std::io::Error::other)??;
+        let artifact = self
+            .service
+            .repository
+            .runtime
+            .blocking(move || {
+                let bytes = enrichment_core::producer::source::read_file(&tree.join(file))?;
+                if std::str::from_utf8(&bytes).is_err() {
+                    return Ok::<_, std::io::Error>(None);
+                }
+                let retrieved_at = enrichment_core::native_time::AcquisitionTime::now()
+                    .map_err(std::io::Error::other)?;
+                let stored = blobs.put(&bytes, |_| {
+                    Artifact::describe(&bytes, kind, &media, &source, retrieved_at)
+                })?;
+                Ok(Some(stored.acquired))
+            })
+            .await
+            .map_err(std::io::Error::other)??;
         self.check_cancelled()?;
         artifact
             .map(|artifact| self.remember_artifact(artifact))
@@ -550,12 +548,17 @@ impl<'a> Acquisition<'a> {
     }
 
     /// Operational acquisition receipts are retained, but are not semantic snapshot inputs.
-    pub(super) fn semantic_inputs(&self) -> BTreeMap<String, String> {
-        self.artifacts
-            .iter()
-            .filter(|artifact| !self.receipt_ids.contains(&artifact.artifact_id))
-            .map(|artifact| (artifact.artifact_id.clone(), artifact.sha256.clone()))
-            .collect()
+    pub(super) async fn semantic_inputs(&self) -> Result<BTreeMap<String, String>, String> {
+        Ok(enrichment_store::producer_run_plan::semantic_inputs(
+            &self.service.repository.runtime,
+            &self.artifacts,
+            &self.receipts,
+        )
+        .await
+        .map_err(|error| error.to_string())?
+        .into_iter()
+        .map(|input| (input.role, input.sha256))
+        .collect())
     }
 
     pub(super) fn store(
@@ -605,7 +608,7 @@ impl<'a> Acquisition<'a> {
         self.remember_artifact(stored.acquired)
     }
 
-    pub(super) fn run(
+    pub(super) async fn run(
         &mut self,
         producer: &str,
         version: &str,
@@ -614,32 +617,43 @@ impl<'a> Acquisition<'a> {
         outcome: RunOutcome,
         gaps: Vec<Gap>,
     ) -> Result<(), String> {
-        self.runs.push(ProducerRun {
-            attempt_id: uuid::Uuid::new_v4().to_string(),
-            producer: producer.to_owned(),
-            producer_version: version.to_owned(),
-            config_digest: enrichment_core::native_key::Key::AcquisitionConfiguration
-                .hex_digest(
-                    &enrichment_core::operation::identities::AcquisitionConfiguration {
-                        producer: producer.into(),
-                        configuration: self.config.producers.clone(),
-                    },
-                )
-                .map_err(|error| error.to_string())?,
-            inputs,
-            profile: ExecutionProfile::Static,
-            started_at,
-            finished_at: enrichment_core::native_time::ObservationTime::now()
-                .map_err(|error| error.to_string())?,
-            outcome,
-            gaps: gaps.clone(),
-            log: None,
-        });
+        use enrichment_store::producer_run_plan::{Attempt, Input};
+        let inputs: Vec<_> = inputs
+            .into_iter()
+            .map(|(role, sha256)| Input { role, sha256 })
+            .collect();
+        let run = enrichment_store::producer_run_plan::compose(
+            &self.service.repository.runtime,
+            Attempt {
+                attempt_id: enrichment_core::identity::AttemptId::new(),
+                producer: producer.to_owned(),
+                producer_version: version.to_owned(),
+                config_digest: enrichment_core::native_key::Key::AcquisitionConfiguration
+                    .hex_digest(
+                        &enrichment_core::operation::identities::AcquisitionConfiguration {
+                            producer: producer.into(),
+                            configuration: self.config.producers.clone(),
+                        },
+                    )
+                    .map_err(|error| error.to_string())?,
+                profile: ExecutionProfile::Static,
+                started_at,
+                finished_at: enrichment_core::native_time::ObservationTime::now()
+                    .map_err(|error| error.to_string())?,
+                outcome,
+                gaps: gaps.clone(),
+                log: None,
+            },
+            &inputs,
+        )
+        .await
+        .map_err(|error| error.to_string())?;
+        self.runs.push(run);
         self.gaps.extend(gaps);
         Ok(())
     }
 
-    fn evidence(
+    async fn evidence(
         &mut self,
         label: &str,
         artifact: &Artifact,
@@ -661,19 +675,24 @@ impl<'a> Acquisition<'a> {
             locator,
             evidence_class: EvidenceClass::Declared,
         };
-        self.evidence.push(
-            Evidence::new(
-                artifact.artifact_id.clone(),
-                SubjectRef::Document {
+        let evidence = enrichment_store::research_citations::inputs(
+            &self.service.repository.runtime,
+            vec![enrichment_store::research_citations::CitationInput {
+                fact_id: artifact.artifact_id.clone(),
+                subject: SubjectRef::Document {
                     artifact_id: artifact.artifact_id.clone(),
-                    heading: label.to_owned(),
+                    heading: label.into(),
                 },
-                label.to_owned(),
+                display_subject: label.into(),
                 source,
-                truncate(excerpt, self.config.limits.excerpt_characters),
-            )
-            .map_err(std::io::Error::other)?,
-        );
+                text: excerpt.into(),
+            }],
+            1,
+            self.config.limits.excerpt_characters,
+        )
+        .await
+        .map_err(std::io::Error::other)?;
+        self.evidence.extend(evidence);
         Ok(())
     }
 
@@ -701,15 +720,6 @@ impl<'a> Acquisition<'a> {
             },
         }
     }
-}
-
-fn truncate(text: &str, max_chars: usize) -> String {
-    if text.chars().count() <= max_chars {
-        return text.to_owned();
-    }
-    let mut out: String = text.chars().take(max_chars.saturating_sub(1)).collect();
-    out.push('…');
-    out
 }
 
 fn to_object(data: &ResolveData) -> enrichment_core::wire::data::ToolData {
@@ -781,10 +791,6 @@ async fn local_rustdoc(
                 .to_owned(),
         ));
     };
-    let tarball = service
-        .blobs
-        .read(&extracted.tarball.sha256)
-        .map_err(|e| gap(GapReason::ExtractionFailed, e.to_string()))?;
 
     let work = acq.work.ok_or_else(|| {
         gap(
@@ -803,12 +809,28 @@ async fn local_rustdoc(
     )
     .map_err(|e| gap(GapReason::PolicyDenied, e.to_string()))?
     .using_lease(lease);
+    let blobs = service.blobs.clone();
+    let receipt = extracted.tarball.clone();
+    let pool = service
+        .repository
+        .runtime
+        .session()
+        .runtime_env()
+        .memory_pool
+        .clone();
+    let tarball = service
+        .repository
+        .runtime
+        .blocking(move || blobs.read_owned(&receipt, rustdoc::facts::MAX_BYTES, &pool))
+        .await
+        .map_err(|error| gap(GapReason::ExtractionFailed, error.to_string()))?
+        .map_err(|error| gap(GapReason::ExtractionFailed, error.to_string()))?;
     let result = crate::execution::rustdoc::build(
         &runner,
         image,
         &service.paths.cache_root.join("capsules"),
         service.config.execution.capsule_budget_mib,
-        &tarball,
+        tarball,
         &extracted.facts,
         &environment_for(request),
         std::sync::Arc::clone(&work.cancel),
@@ -927,7 +949,6 @@ pub(super) async fn acquire(
             false,
         );
     };
-    let registry_checked_at = index_fetched.retrieved_at;
     let index_artifact = match acq.store(
         &index_fetched,
         ArtifactKind::RegistryIndexEntry,
@@ -1022,23 +1043,29 @@ pub(super) async fn acquire(
     }
     let mut registry_inputs = BTreeMap::new();
     registry_inputs.insert("index".to_owned(), index_artifact.sha256.clone());
-    if let Err(error) = acq.run(
-        cratesio::PRODUCER,
-        cratesio::VERSION,
-        registry_inputs,
-        started,
-        RunOutcome::Succeeded,
-        Vec::new(),
-    ) {
+    if let Err(error) = acq
+        .run(
+            cratesio::PRODUCER,
+            cratesio::VERSION,
+            registry_inputs,
+            started,
+            RunOutcome::Succeeded,
+            Vec::new(),
+        )
+        .await
+    {
         return super::common::operation_error(&std::io::Error::other(error), "producer_clock");
     }
 
-    if let Err(error) = acq.evidence(
-        &format!("{}@{}", selected.name, selected.vers),
-        &index_artifact,
-        enrichment_core::evidence::relational::Locator::RegistryLine { line: line_no },
-        &excerpt,
-    ) {
+    if let Err(error) = acq
+        .evidence(
+            &format!("{}@{}", selected.name, selected.vers),
+            &index_artifact,
+            enrichment_core::evidence::relational::Locator::RegistryLine { line: line_no },
+            &excerpt,
+        )
+        .await
+    {
         return common::operation_error(&error, "citation_identity");
     }
 
@@ -1153,14 +1180,17 @@ pub(super) async fn acquire(
     } else {
         RunOutcome::Failed
     };
-    if let Err(error) = acq.run(
-        cratesio::TARBALL_PRODUCER,
-        cratesio::VERSION,
-        tarball_inputs,
-        started,
-        tarball_outcome,
-        tarball_gaps,
-    ) {
+    if let Err(error) = acq
+        .run(
+            cratesio::TARBALL_PRODUCER,
+            cratesio::VERSION,
+            tarball_inputs,
+            started,
+            tarball_outcome,
+            tarball_gaps,
+        )
+        .await
+    {
         return super::common::operation_error(&std::io::Error::other(error), "producer_clock");
     }
 
@@ -1169,15 +1199,18 @@ pub(super) async fn acquire(
     {
         let rendered = serde_json::to_string(&extracted.facts.docs_rs)
             .expect("documentation configuration serializes");
-        if let Err(error) = acq.evidence(
-            "documentation_build_config",
-            artifact,
-            enrichment_core::evidence::relational::Locator::ManifestTable {
-                file: "Cargo.toml".into(),
-                table: "package.metadata.docs.rs".into(),
-            },
-            &rendered,
-        ) {
+        if let Err(error) = acq
+            .evidence(
+                "documentation_build_config",
+                artifact,
+                enrichment_core::evidence::relational::Locator::ManifestTable {
+                    file: "Cargo.toml".into(),
+                    table: "package.metadata.docs.rs".into(),
+                },
+                &rendered,
+            )
+            .await
+        {
             return common::operation_error(&error, "citation_identity");
         }
     }
@@ -1321,14 +1354,17 @@ pub(super) async fn acquire(
     } else {
         RunOutcome::Failed
     };
-    if let Err(error) = acq.run(
-        docsrs::PRODUCER,
-        docsrs::VERSION,
-        json_inputs.clone(),
-        started,
-        json_outcome,
-        json_gaps,
-    ) {
+    if let Err(error) = acq
+        .run(
+            docsrs::PRODUCER,
+            docsrs::VERSION,
+            json_inputs.clone(),
+            started,
+            json_outcome,
+            json_gaps,
+        )
+        .await
+    {
         return super::common::operation_error(&std::io::Error::other(error), "producer_clock");
     }
 
@@ -1338,12 +1374,18 @@ pub(super) async fn acquire(
     // Kept apart from `hosted_state` on purpose: that tuple is the hosted report, and a
     // document docs.rs never served has no business setting a field in it.
     let mut local_format_version: Option<u32> = None;
-    let needs_requested_build = extracted
-        .as_ref()
-        .is_some_and(|source| hosted_requires_requested_build(request, &source.facts.docs_rs));
-    if request.allow_local_build
-        && (!json_inputs.contains_key("rustdoc_json") || needs_requested_build)
+    let needs_requested_build = match enrichment_store::research_resolution::local_rustdoc_required(
+        &service.repository.runtime,
+        request,
+        extracted.as_ref().map(|source| &source.facts.docs_rs),
+        json_inputs.contains_key("rustdoc_json"),
+    )
+    .await
     {
+        Ok(required) => required,
+        Err(error) => return common::operation_error(&error, "hosted_build_selection"),
+    };
+    if needs_requested_build {
         match local_rustdoc(service, request, extracted.as_ref(), &mut acq).await {
             Ok(Some(built)) => {
                 match acq.store_bytes(
@@ -1371,25 +1413,44 @@ pub(super) async fn acquire(
                             Ok(value) => value,
                             Err(e) => return common::operation_error(&e, "acquisition_storage"),
                         };
-                        let provenance = match serde_json::to_vec(
-                            &serde_json::json!({"environment":built.environment,"rustc":built.rustc_identity,"producer": "local-rustdoc/2", "format_version":built.format_version,"image_id":built.image_id,"containment_identity":built.containment_identity}),
-                        ) {
+                        let build_configuration =
+                            enrichment_core::operation::identities::RustdocBuildConfiguration {
+                                environment: built.environment.clone(),
+                                rustc_identity: built.rustc_identity.clone(),
+                                producer_version: "local-rustdoc/2".into(),
+                                format_version: built.format_version,
+                                image_id: built.image_id.clone(),
+                                containment_identity: built.containment_identity.clone(),
+                            };
+                        let provenance = match build_configuration.canonical_bytes() {
                             Ok(value) => value,
-                            Err(e) => {
-                                return super::common::operation_error(&e, "acquisition_storage");
+                            Err(error) => {
+                                return common::operation_error(&error, "producer_configuration");
                             }
                         };
+                        let configuration_digest =
+                            match enrichment_core::native_key::Key::RustdocBuildConfiguration
+                                .hex_digest(&build_configuration)
+                            {
+                                Ok(value) => value,
+                                Err(error) => {
+                                    return common::operation_error(
+                                        &error,
+                                        "producer_configuration",
+                                    );
+                                }
+                            };
                         let configuration = match acq.store_bytes(
                             &provenance,
                             ArtifactKind::Other,
-                            "application/json",
+                            "application/vnd.library-enrichment.canonical-arrow",
                             &format!("{}#build-configuration", artifact.source_uri),
                             None,
                         ) {
                             Ok(value) => value,
                             Err(e) => return common::operation_error(&e, "acquisition_storage"),
                         };
-                        let attempt_id = uuid::Uuid::new_v4().to_string();
+                        let attempt_id = enrichment_core::identity::AttemptId::new();
                         let receipt_bytes = match serde_json::to_vec(&built.observations) {
                             Ok(value) => value,
                             Err(e) => {
@@ -1406,25 +1467,41 @@ pub(super) async fn acquire(
                             Ok(value) => value,
                             Err(e) => return common::operation_error(&e, "acquisition_storage"),
                         };
-                        acq.receipt_ids.insert(receipt.artifact_id.clone());
-                        acq.runs.push(ProducerRun {
-                            attempt_id,
-                            producer: rustdoc::LOCAL_PRODUCER.into(),
-                            producer_version: "local-rustdoc/2".into(),
-                            config_digest: configuration.sha256.clone(),
-                            inputs: BTreeMap::from([
-                                ("rustdoc_json".into(), artifact.sha256.clone()),
-                                ("cargo_lock".into(), lock.sha256),
-                                ("configuration".into(), configuration.sha256),
-                                ("crate_tarball".into(), selected.cksum.clone()),
-                            ]),
-                            profile: ExecutionProfile::Build,
-                            started_at: built.started_at,
-                            finished_at: built.finished_at,
-                            outcome: RunOutcome::Succeeded,
-                            gaps: Vec::new(),
-                            log: Some(receipt.artifact_id),
+                        acq.receipts.push(receipt.clone());
+                        use enrichment_store::producer_run_plan::{Attempt, Input};
+                        let inputs = [
+                            ("rustdoc_json", artifact.sha256.clone()),
+                            ("cargo_lock", lock.sha256),
+                            ("configuration", configuration.sha256.clone()),
+                            ("crate_tarball", selected.cksum.clone()),
+                        ]
+                        .map(|(role, sha256)| Input {
+                            role: role.into(),
+                            sha256,
                         });
+                        let run = enrichment_store::producer_run_plan::compose(
+                            &service.repository.runtime,
+                            Attempt {
+                                attempt_id,
+                                producer: rustdoc::LOCAL_PRODUCER.into(),
+                                producer_version: "local-rustdoc/2".into(),
+                                config_digest: configuration_digest,
+                                profile: ExecutionProfile::Build,
+                                started_at: built.started_at,
+                                finished_at: built.finished_at,
+                                outcome: RunOutcome::Succeeded,
+                                gaps: Vec::new(),
+                                log: Some(receipt.artifact_id),
+                            },
+                            &inputs,
+                        )
+                        .await;
+                        match run {
+                            Ok(run) => acq.runs.push(run),
+                            Err(error) => {
+                                return common::operation_error(&error, "producer_provenance");
+                            }
+                        }
                         local_build = Some(built);
                     }
                     Err(err) => acq.gaps.push(Gap {
@@ -1483,82 +1560,45 @@ pub(super) async fn acquire(
         answered_from_cache: false,
     };
 
-    let partial = !acq.gaps.is_empty() || hosted_state.0 != HostedJsonState::Available;
-    let mut limitations = vec![
-        "Public API facts describe declarations in the selected rustdoc build. External trait definitions and their inherited method details are not expanded.".into(),
-        "Hosted documentation reflects the maintainer's docs.rs build configuration \
-         (observed_configuration), not the calling project's features or target."
-            .to_owned(),
-    ];
-    if environment.resolution == enrichment_core::identity::EnvironmentResolution::Unspecified {
-        limitations.push(
-            "No project environment was declared; availability claims are about the documented \
-             build only."
-                .to_owned(),
-        );
-    }
-    if let Some(built) = &local_build {
-        // The load-bearing sentence of §4.4. A nightly build establishing the API surface says
-        // nothing about whether the crate compiles on the project's stable compiler, and this
-        // is the only place a caller is told so.
-        limitations.push(format!(
-            "This API was compiled locally by {} ({}), not downloaded from docs.rs. A successful \
-             nightly build is not evidence that this crate compiles on the project's stable \
-             compiler; use verify_usage for that.",
-            crate::execution::rustdoc::TOOLCHAIN,
-            built.rustc_identity.trim().replace('\n', "; ")
-        ));
-    }
-    let summary = summarize(&release, &upstream, hosted_state.0, None);
-    let coverage = Coverage {
-        details: None,
-        assessments: Vec::new(),
-        scope: format!(
-            "release identity, registry metadata, crate source, hosted documentation and the \
-             normalized public API of {} {}",
-            release.key.package, release.key.version
+    let presentation = match enrichment_store::research_resolution::acquisition_presentation(
+        &service.repository.runtime,
+        &data,
+        &acq.indexed.iter().copied().collect::<Vec<_>>(),
+        None,
+        local_build.as_ref().map(
+            |built| enrichment_store::research_resolution::LocalCompiler {
+                toolchain: crate::execution::rustdoc::TOOLCHAIN.into(),
+                identity: built.rustc_identity.clone(),
+            },
         ),
-        indexed: acq.indexed.iter().map(|k| k.as_str().to_owned()).collect(),
-        missing: acq
-            .gaps
-            .iter()
-            .map(|g| g.kind.as_str().to_owned())
-            .collect(),
-        limitations,
+    )
+    .await
+    {
+        Ok(value) => value,
+        Err(error) => return common::operation_error(&error, "acquisition_presentation"),
     };
-    let freshness = Freshness {
-        registry_checked_at: Some(registry_checked_at),
+    let freshness = match enrichment_store::research_resolution::freshness(
+        &service.repository.runtime,
+        request,
         source_version_match,
-        latest_verified: true,
+        &acq.artifacts,
+    )
+    .await
+    {
+        Ok(value) => value,
+        Err(error) => return common::operation_error(&error, "resolution_freshness"),
     };
-    let handles: Vec<ArtifactHandle> = acq
-        .artifacts
-        .iter()
-        .filter_map(|a| {
-            envelope::artifact_uri(&format!("artifacts/{}", a.artifact_id))
-                .ok()
-                .map(|uri| ArtifactHandle {
-                    receipt: a.clone(),
-                    uri,
-                    description: format!(
-                        "{:?} for {} {}",
-                        a.kind, release.key.package, release.key.version
-                    ),
-                })
-        })
-        .collect();
-
     let research = Research {
-        summary,
+        summary: presentation.summary,
         data: to_object(&data),
-        coverage,
+        coverage: presentation.coverage,
         freshness,
         context_id: Some(context.context_id.clone()),
         snapshot_id: None,
         evidence: acq.evidence.clone(),
-        artifacts: handles,
+        artifacts: presentation.artifacts,
     };
-    acq.delivery_template = Some(if partial {
+    acq.delivery_template = Some(if presentation.partial {
         research.partial()
     } else {
         research.ok()
@@ -1589,14 +1629,17 @@ pub(super) async fn acquire(
                 Err(gap) => {
                     let mut inputs = BTreeMap::new();
                     inputs.insert("rustdoc_json".to_owned(), json_sha);
-                    if let Err(error) = acq.run(
-                        rustdoc::PRODUCER,
-                        rustdoc::NORMALIZER_VERSION,
-                        inputs,
-                        started,
-                        RunOutcome::Failed,
-                        vec![gap],
-                    ) {
+                    if let Err(error) = acq
+                        .run(
+                            rustdoc::PRODUCER,
+                            rustdoc::NORMALIZER_VERSION,
+                            inputs,
+                            started,
+                            RunOutcome::Failed,
+                            vec![gap],
+                        )
+                        .await
+                    {
                         return super::common::operation_error(
                             &std::io::Error::other(error),
                             "producer_clock",
@@ -1651,30 +1694,6 @@ fn gap_reason_for(err: &FetchError) -> GapReason {
     }
 }
 
-/// Hosted configuration is author evidence, not a proof of the requested project build.
-/// When explicit requested settings cannot be established from that configuration, an
-/// opted-in local build supplies the requested observation. The hosted artifact stays retained.
-fn hosted_requires_requested_build(
-    request: &ResolveRequest,
-    docs: &docsrs::DocsRsMetadata,
-) -> bool {
-    request
-        .target
-        .as_ref()
-        .is_some_and(|target| *target != docs.default_target)
-        || request
-            .default_features
-            .is_some_and(|defaults| defaults == docs.no_default_features)
-        || request.features.as_ref().is_some_and(|features| {
-            docs.all_features
-                || features.iter().collect::<BTreeSet<_>>()
-                    != docs.features.iter().collect::<BTreeSet<_>>()
-                || !docs.rustc_args.is_empty()
-                || !docs.rustdoc_args.is_empty()
-                || !docs.cargo_args.is_empty()
-        })
-}
-
 /// What normalization needs from the acquisition so far.
 struct NormalizeRequest<'a> {
     json_sha: Option<&'a str>,
@@ -1711,20 +1730,18 @@ async fn normalize_and_publish(
         .await
         .map_err(|e| gap(GapReason::PolicyDenied, e.to_string()))?;
     let normalized = if let Some(json_sha) = request.json_sha {
-        let artifact = acq
-            .artifacts
-            .iter()
-            .find(|a| a.sha256 == json_sha)
-            .cloned()
-            .ok_or_else(|| {
-                gap(
-                    GapReason::ExtractionFailed,
-                    "rustdoc acquisition descriptor missing".into(),
-                )
-            })?;
+        let artifact = enrichment_store::producer_run_plan::input_artifact(
+            &service.repository.runtime,
+            &acq.artifacts,
+            json_sha,
+            ArtifactKind::RustdocJson,
+        )
+        .await
+        .map_err(|error| gap(GapReason::ExtractionFailed, error.to_string()))?;
         Some(
             enrichment_store::native_rustdoc::from_artifact(
                 &service.repository.runtime,
+                service.repository.retention(),
                 service.blobs.clone(),
                 artifact,
                 service.config.limits.excerpt_characters,
@@ -1777,13 +1794,11 @@ async fn normalize_and_publish(
     if let Some(json_sha) = request.json_sha {
         inputs.insert("rustdoc_json".to_owned(), json_sha.to_owned());
     }
-    for artifact in acq
-        .artifacts
-        .iter()
-        .filter(|a| !acq.receipt_ids.contains(&a.artifact_id))
-    {
-        inputs.insert(artifact.artifact_id.clone(), artifact.sha256.clone());
-    }
+    inputs.extend(
+        acq.semantic_inputs()
+            .await
+            .map_err(|error| gap(GapReason::ExtractionFailed, error))?,
+    );
     let mut producers = BTreeMap::new();
     if let Some(facts) = &normalized {
         producers.insert(
@@ -1857,28 +1872,30 @@ async fn normalize_and_publish(
         }
 
         // Keep qualified descriptors; publication captures and visits one document at a time.
-        let source_root = extracted.crate_root.to_path_buf();
-        let source_files = tokio::task::spawn_blocking(move || source::text_files(&source_root))
+        let source_root = extracted.crate_root.clone();
+        let source_files = service
+            .repository
+            .runtime
+            .blocking(move || enrichment_core::producer::python::archive::files(&source_root))
             .await
             .map_err(|e| gap(GapReason::ExtractionFailed, e.to_string()))?
             .map_err(|e| gap(GapReason::ExtractionFailed, e.to_string()))?;
-        for (file, kind) in source_files {
-            let artifact_kind = match kind {
-                FragmentKind::ReadmeSection => ArtifactKind::Readme,
-                FragmentKind::ChangelogSection => ArtifactKind::Changelog,
-                _ => ArtifactKind::SourceFile,
-            };
-            let media = if file.ends_with(".md") {
-                "text/markdown"
-            } else {
-                "text/x-rust"
-            };
+        let captures = enrichment_store::source_capture::select(
+            &service.repository.runtime,
+            source_files,
+            enrichment_store::source_capture::Family::RustPackage,
+        )
+        .await
+        .map_err(|e| gap(GapReason::ExtractionFailed, e.to_string()))?;
+        for capture in captures {
+            let file = capture.path;
             let source_uri = format!("{}#{file}", extracted.tarball.source_uri);
             let Some(artifact) = acq
                 .store_source_file(
-                    extracted.crate_root.join(&file),
-                    artifact_kind,
-                    media,
+                    extracted.crate_root.clone(),
+                    file.clone(),
+                    capture.artifact_kind,
+                    capture.media_type,
                     source_uri,
                 )
                 .await
@@ -1886,9 +1903,11 @@ async fn normalize_and_publish(
             else {
                 continue;
             };
-            documents
-                .file(file, kind, artifact, true)
-                .map_err(|e| gap(GapReason::ExtractionFailed, e))?;
+            if let Some(kind) = capture.fragment_kind {
+                documents
+                    .file(file, kind, artifact, true)
+                    .map_err(|e| gap(GapReason::ExtractionFailed, e))?;
+            }
         }
         let manifest = extracted.manifest_artifact.clone().ok_or_else(|| {
             gap(
@@ -1922,7 +1941,11 @@ async fn normalize_and_publish(
 
     acq.indexed.extend(indexed.iter().cloned());
 
-    inputs.extend(acq.semantic_inputs());
+    inputs.extend(
+        acq.semantic_inputs()
+            .await
+            .map_err(|error| gap(GapReason::ExtractionFailed, error))?,
+    );
     acq.run(
         if request.json_sha.is_some() {
             rustdoc::PRODUCER
@@ -1935,6 +1958,7 @@ async fn normalize_and_publish(
         RunOutcome::Succeeded,
         Vec::new(),
     )
+    .await
     .map_err(|error| gap(GapReason::ExtractionFailed, error))?;
     let details = request.extracted.and_then(|e| {
         e.manifest_artifact
@@ -1985,36 +2009,6 @@ async fn normalize_and_publish(
     })
 }
 
-fn summarize(
-    release: &Release,
-    upstream: &UpstreamCheck,
-    hosted: HostedJsonState,
-    snapshot: Option<&SnapshotSummary>,
-) -> String {
-    let newer = match (&upstream.newest_stable, upstream.resolved_is_newest_stable) {
-        (Some(newest), false) => format!("; the newest stable release is {newest}"),
-        _ => String::new(),
-    };
-    let json = match (hosted, snapshot) {
-        (HostedJsonState::Available, Some(s)) => format!(
-            "snapshot {} published with {} definitions",
-            s.snapshot_id, s.counts.definitions
-        ),
-        (HostedJsonState::Available, None) => {
-            "hosted rustdoc JSON was stored but could not be normalized".to_owned()
-        }
-        (HostedJsonState::Missing, _) => "docs.rs has no rustdoc JSON for this release".to_owned(),
-        (HostedJsonState::Unsupported, _) => {
-            "docs.rs rustdoc JSON is in a format this build cannot read".to_owned()
-        }
-        (HostedJsonState::NotAttempted, _) => "hosted rustdoc JSON could not be checked".to_owned(),
-    };
-    format!(
-        "Resolved {} {} on crates.io{newer}; {json}.",
-        release.key.package, release.key.version
-    )
-}
-
 fn selection_error(err: SelectionError) -> Envelope {
     let next = match &err {
         SelectionError::VersionNotFound { nearest, .. } if !nearest.is_empty() => {
@@ -2034,32 +2028,39 @@ fn selection_error(err: SelectionError) -> Envelope {
     envelope::error(ErrorCode::VersionNotFound, err.to_string(), next, false)
 }
 
-/// Extract the tarball under the cache root and read its manifest.
+/// Extract the tarball under a durable private owner and read its manifest.
 ///
 /// Returns the manifest facts, the manifest text, and the crate root (the archive's single
 /// top-level directory).
 async fn extract_and_read_manifest(
     service: &Service,
     artifact: &Artifact,
-    bytes: Vec<u8>,
+    bytes: bytes::Bytes,
 ) -> Result<(ManifestFacts, String, super::source_tree::SourceTree), String> {
-    let root = service.paths.unpacked();
-    let digest = artifact.sha256.clone();
-    tokio::task::spawn_blocking(move || {
-        let crate_root =
-            super::source_tree::open(&root, &digest, &bytes[..]).map_err(|e| e.to_string())?;
-        let manifest_path = crate_root.join("Cargo.toml");
-        let text = String::from_utf8(
-            source::read_file(&manifest_path)
-                .map_err(|e| format!("cannot read {}: {e}", manifest_path.display()))?,
-        )
+    let directory = service
+        .repository
+        .source_directory()
+        .await
         .map_err(|e| e.to_string())?;
-        let facts =
-            docsrs::manifest_facts(&text).map_err(|e| format!("Cargo.toml is not valid: {e}"))?;
-        Ok((facts, text, crate_root))
-    })
-    .await
-    .map_err(|e| e.to_string())?
+    let digest = artifact.sha256.clone();
+    service
+        .repository
+        .runtime
+        .blocking(move || {
+            let crate_root = super::source_tree::open(directory, &digest, &bytes[..])
+                .map_err(|e| e.to_string())?;
+            let manifest_path = crate_root.join("Cargo.toml");
+            let text = String::from_utf8(
+                source::read_file(&manifest_path)
+                    .map_err(|e| format!("cannot read {}: {e}", manifest_path.display()))?,
+            )
+            .map_err(|e| e.to_string())?;
+            let facts = docsrs::manifest_facts(&text)
+                .map_err(|e| format!("Cargo.toml is not valid: {e}"))?;
+            Ok((facts, text, crate_root))
+        })
+        .await
+        .map_err(|e| e.to_string())?
 }
 
 #[derive(Deserialize)]
@@ -2077,27 +2078,14 @@ fn peek_crate_version(payload: &str) -> Option<String> {
 mod provenance_tests {
     use super::*;
     fn python_digest(config: Config) -> String {
-        let dir = tempfile::tempdir().expect("dir");
-        let service = Service::open(
-            config,
-            enrichment_store::StatePaths::explicit(
-                dir.path().join("cache"),
-                dir.path().join("data"),
-            ),
-        )
-        .expect("service");
-        let mut acquisition = Acquisition::new(&service);
-        acquisition
-            .run(
-                "python-static",
-                "1",
-                BTreeMap::new(),
-                enrichment_core::native_time::ObservationTime::now().unwrap(),
-                RunOutcome::Succeeded,
-                Vec::new(),
+        enrichment_core::native_key::Key::AcquisitionConfiguration
+            .hex_digest(
+                &enrichment_core::operation::identities::AcquisitionConfiguration {
+                    producer: "python-static".into(),
+                    configuration: config.producers,
+                },
             )
-            .unwrap();
-        acquisition.runs[0].config_digest.clone()
+            .expect("native producer configuration")
     }
     #[test]
     fn python_producer_identity_includes_registry_and_worker_configuration() {
@@ -2107,7 +2095,7 @@ mod provenance_tests {
         changed.producers.python.pypi_url = "https://example.com/pypi".into();
         assert_ne!(baseline, python_digest(changed));
         let mut changed = config.clone();
-        changed.producers.python.worker_python = "/service/python".into();
+        changed.producers.python.worker_python = Some("/service/python".into());
         assert_ne!(baseline, python_digest(changed));
         let mut changed = config;
         changed.producers.python.worker_timeout_seconds += 1;

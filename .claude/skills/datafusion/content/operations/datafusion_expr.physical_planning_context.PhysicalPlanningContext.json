@@ -1,0 +1,1159 @@
+[
+  {
+    "id": "6c42198b3422be2c46b9cf8b",
+    "path": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+    "name": "PhysicalPlanningContext",
+    "owner": null,
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct PhysicalPlanningContext",
+    "docs": "Context used while converting a logical plan subtree into a physical plan.\n\nUnlike [`ExecutionProps`](crate::execution_props::ExecutionProps), which\napplies to the overall planning and execution of a query, this context can\ndiffer between recursively planned subtrees. It currently carries:\n\n* the state needed to create physical expressions for\n  [`Expr::ScalarSubquery`] nodes that read from a shared\n  [`ScalarSubqueryResults`] container, and\n* the qualifiers assigned to the [`Expr::LambdaVariable`]s that are in scope.\n\nThe physical planner builds this context from the set of uncorrelated scalar\nsubqueries it has scheduled for a subtree. It is then passed explicitly\nthrough `create_physical_expr` so that function can find the slot index for\neach [`Subquery`]. While planning the body of a lambda,\n`create_physical_expr` extends the context with the lambda's parameters via\n[`Self::with_qualified_lambda_variables`].\n\nAn empty [`PhysicalPlanningContext`] (the [`Default`]) is what every\nnon-physical-planner caller passes; if such a caller encounters a scalar\nsubquery, `create_physical_expr` returns a `not_impl_err`.\n\n[`Expr::ScalarSubquery`]: crate::Expr::ScalarSubquery\n[`Expr::LambdaVariable`]: crate::Expr::LambdaVariable\n[`Subquery`]: crate::logical_plan::Subquery",
+    "span": {
+      "filename": "src/physical_planning_context.rs",
+      "begin": [
+        50,
+        1
+      ],
+      "end": [
+        58,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          3147,
+          3148,
+          3149,
+          3150,
+          3151,
+          3152,
+          3153,
+          3154,
+          3155,
+          3156,
+          3157,
+          3158,
+          3159,
+          3160,
+          3161,
+          3162,
+          3163,
+          3164,
+          3166,
+          3168,
+          3170
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "crate::Expr::LambdaVariable": 1413,
+      "`PhysicalPlanningContext`": 3141,
+      "`ScalarSubqueryResults`": 3139,
+      "crate::execution_props::ExecutionProps": 1217,
+      "crate::logical_plan::Subquery": 1387,
+      "crate::Expr::ScalarSubquery": 1388,
+      "`Self::with_qualified_lambda_variables`": 3140,
+      "`Default`": 1249
+    },
+    "link_paths": {
+      "crate::Expr::LambdaVariable": "datafusion_expr::expr::Expr::LambdaVariable",
+      "`PhysicalPlanningContext`": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+      "`ScalarSubqueryResults`": "datafusion_expr::physical_planning_context::ScalarSubqueryResults",
+      "crate::execution_props::ExecutionProps": "datafusion_expr::execution_props::ExecutionProps",
+      "crate::logical_plan::Subquery": "datafusion_expr::logical_plan::plan::Subquery",
+      "crate::Expr::ScalarSubquery": "datafusion_expr::expr::Expr::ScalarSubquery",
+      "`Self::with_qualified_lambda_variables`": "datafusion_expr::physical_planning_context::PhysicalPlanningContext::with_qualified_lambda_variables",
+      "`Default`": "core::default::Default"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "3141",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.md",
+    "record_file": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.json",
+    "anchor": "op-6c42198b3422be2c46b9cf8b",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::Expr::LambdaVariable": "../operations/datafusion_expr.expr.Expr.md#op-cc0cdf367b4568c7d809b291",
+      "`PhysicalPlanningContext`": "../operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.md#op-6c42198b3422be2c46b9cf8b",
+      "`ScalarSubqueryResults`": "../operations/datafusion_expr.physical_planning_context.ScalarSubqueryResults.md#op-6b0683e0d87a9cc813cb37e5",
+      "crate::execution_props::ExecutionProps": "../operations/datafusion_expr.execution_props.ExecutionProps.md#op-52e4deb424494aeff92bf188",
+      "crate::logical_plan::Subquery": "../operations/datafusion_expr.logical_plan.plan.Subquery.md#op-86bb296d75e0cfbc352cad3b",
+      "crate::Expr::ScalarSubquery": "../operations/datafusion_expr.expr.Expr.md#op-3d92059d3752418645a48ac8",
+      "`Self::with_qualified_lambda_variables`": "../operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.md#op-076df30d35680178ef2bdde3"
+    }
+  },
+  {
+    "id": "794068f39581125589c4a998",
+    "path": "datafusion_expr::physical_planning_context::PhysicalPlanningContext::clone",
+    "name": "clone",
+    "owner": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> PhysicalPlanningContext",
+    "docs": "",
+    "span": {
+      "filename": "src/physical_planning_context.rs",
+      "begin": [
+        49,
+        10
+      ],
+      "end": [
+        49,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "PhysicalPlanningContext",
+              "id": 3141,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3141": "datafusion_expr::physical_planning_context::PhysicalPlanningContext"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PhysicalPlanningContext",
+          "id": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/physical_planning_context.rs",
+        "begin": [
+          49,
+          10
+        ],
+        "end": [
+          49,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "3165",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.md",
+    "record_file": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.json",
+    "anchor": "op-794068f39581125589c4a998",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f72267d685ac744af0b121e3",
+    "path": "datafusion_expr::physical_planning_context::PhysicalPlanningContext::default",
+    "name": "default",
+    "owner": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn default() -> PhysicalPlanningContext",
+    "docs": "",
+    "span": {
+      "filename": "src/physical_planning_context.rs",
+      "begin": [
+        49,
+        24
+      ],
+      "end": [
+        49,
+        31
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "resolved_path": {
+              "path": "PhysicalPlanningContext",
+              "id": 3141,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3141": "datafusion_expr::physical_planning_context::PhysicalPlanningContext"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PhysicalPlanningContext",
+          "id": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/physical_planning_context.rs",
+        "begin": [
+          49,
+          24
+        ],
+        "end": [
+          49,
+          31
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "3169",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.md",
+    "record_file": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.json",
+    "anchor": "op-f72267d685ac744af0b121e3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "68982347f8a87fba061913e5",
+    "path": "datafusion_expr::physical_planning_context::PhysicalPlanningContext::fmt",
+    "name": "fmt",
+    "owner": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/physical_planning_context.rs",
+      "begin": [
+        49,
+        17
+      ],
+      "end": [
+        49,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 78,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 79,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "78": "core::fmt::Formatter",
+      "79": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PhysicalPlanningContext",
+          "id": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/physical_planning_context.rs",
+        "begin": [
+          49,
+          17
+        ],
+        "end": [
+          49,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "3167",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.md",
+    "record_file": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.json",
+    "anchor": "op-68982347f8a87fba061913e5",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "70ee9ae1256d3087e6a16c2f",
+    "path": "datafusion_expr::physical_planning_context::PhysicalPlanningContext::index_of",
+    "name": "index_of",
+    "owner": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn index_of(&self, subquery: &logical_plan::Subquery) -> Option<SubqueryIndex>",
+    "docs": "Returns the slot index assigned to `subquery`, if any.",
+    "span": {
+      "filename": "src/physical_planning_context.rs",
+      "begin": [
+        76,
+        5
+      ],
+      "end": [
+        81,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "subquery",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::logical_plan::Subquery",
+                      "id": 1387,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 91,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SubqueryIndex",
+                          "id": 3143,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1387": "datafusion_expr::logical_plan::plan::Subquery",
+      "91": "core::option::Option",
+      "3143": "datafusion_expr::physical_planning_context::SubqueryIndex"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PhysicalPlanningContext",
+          "id": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/physical_planning_context.rs",
+        "begin": [
+          60,
+          1
+        ],
+        "end": [
+          108,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "3144",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.md",
+    "record_file": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.json",
+    "anchor": "op-70ee9ae1256d3087e6a16c2f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "68e0cba00a39c8c6672ef574",
+    "path": "datafusion_expr::physical_planning_context::PhysicalPlanningContext::lambda_variable_qualifier",
+    "name": "lambda_variable_qualifier",
+    "owner": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn lambda_variable_qualifier(&self, name: &str) -> Option<&TableReference>",
+    "docs": "Returns the qualifier of the lambda variable `name`, if it is in scope.",
+    "span": {
+      "filename": "src/physical_planning_context.rs",
+      "begin": [
+        105,
+        5
+      ],
+      "end": [
+        107,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "name",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "primitive": "str"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 91,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "TableReference",
+                              "id": 1390,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "91": "core::option::Option",
+      "1390": "datafusion_common::table_reference::TableReference"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PhysicalPlanningContext",
+          "id": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/physical_planning_context.rs",
+        "begin": [
+          60,
+          1
+        ],
+        "end": [
+          108,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "3146",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.md",
+    "record_file": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.json",
+    "anchor": "op-68e0cba00a39c8c6672ef574",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ee24dc3ecd8e3b7681fa7278",
+    "path": "datafusion_expr::physical_planning_context::PhysicalPlanningContext::new",
+    "name": "new",
+    "owner": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(indexes: HashMap<logical_plan::Subquery, SubqueryIndex>, results: ScalarSubqueryResults) -> Self",
+    "docs": "Create a [`PhysicalPlanningContext`] from an index map and a shared\nresults container. The index map must use the same indices as slots in\n`results`.",
+    "span": {
+      "filename": "src/physical_planning_context.rs",
+      "begin": [
+        64,
+        5
+      ],
+      "end": [
+        73,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "indexes",
+              {
+                "resolved_path": {
+                  "path": "HashMap",
+                  "id": 1214,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "crate::logical_plan::Subquery",
+                              "id": 1387,
+                              "args": null
+                            }
+                          }
+                        },
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "SubqueryIndex",
+                              "id": 3143,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "results",
+              {
+                "resolved_path": {
+                  "path": "ScalarSubqueryResults",
+                  "id": 3139,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1214": "datafusion_common::HashMap",
+      "1387": "datafusion_expr::logical_plan::plan::Subquery",
+      "3143": "datafusion_expr::physical_planning_context::SubqueryIndex",
+      "3139": "datafusion_expr::physical_planning_context::ScalarSubqueryResults"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PhysicalPlanningContext",
+          "id": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/physical_planning_context.rs",
+        "begin": [
+          60,
+          1
+        ],
+        "end": [
+          108,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`PhysicalPlanningContext`": 3141
+    },
+    "link_paths": {
+      "`PhysicalPlanningContext`": "datafusion_expr::physical_planning_context::PhysicalPlanningContext"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "3142",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.md",
+    "record_file": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.json",
+    "anchor": "op-ee24dc3ecd8e3b7681fa7278",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`PhysicalPlanningContext`": "../operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.md#op-6c42198b3422be2c46b9cf8b"
+    }
+  },
+  {
+    "id": "38214bef2b192de00869c00e",
+    "path": "datafusion_expr::physical_planning_context::PhysicalPlanningContext::results",
+    "name": "results",
+    "owner": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn results(&self) -> &ScalarSubqueryResults",
+    "docs": "Returns the shared results container.",
+    "span": {
+      "filename": "src/physical_planning_context.rs",
+      "begin": [
+        84,
+        5
+      ],
+      "end": [
+        86,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ScalarSubqueryResults",
+                  "id": 3139,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3139": "datafusion_expr::physical_planning_context::ScalarSubqueryResults"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PhysicalPlanningContext",
+          "id": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/physical_planning_context.rs",
+        "begin": [
+          60,
+          1
+        ],
+        "end": [
+          108,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "3145",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.md",
+    "record_file": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.json",
+    "anchor": "op-38214bef2b192de00869c00e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "076df30d35680178ef2bdde3",
+    "path": "datafusion_expr::physical_planning_context::PhysicalPlanningContext::with_qualified_lambda_variables",
+    "name": "with_qualified_lambda_variables",
+    "owner": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_qualified_lambda_variables(self, qualifier: &TableReference, variables: &[String]) -> Self",
+    "docs": "Adds a mapping for each variable to the given qualifier. Existing\nvariables with conflicting names are shadowed.",
+    "span": {
+      "filename": "src/physical_planning_context.rs",
+      "begin": [
+        90,
+        5
+      ],
+      "end": [
+        102,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "qualifier",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "TableReference",
+                      "id": 1390,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "variables",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "String",
+                        "id": 298,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1390": "datafusion_common::table_reference::TableReference",
+      "298": "alloc::string::String"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PhysicalPlanningContext",
+          "id": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/physical_planning_context.rs",
+        "begin": [
+          60,
+          1
+        ],
+        "end": [
+          108,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "3140",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.md",
+    "record_file": "operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.json",
+    "anchor": "op-076df30d35680178ef2bdde3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

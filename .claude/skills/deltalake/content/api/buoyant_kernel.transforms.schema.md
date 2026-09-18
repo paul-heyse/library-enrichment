@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## SchemaDepthChecker
 
 `struct` · `buoyant_kernel::transforms::schema::SchemaDepthChecker`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transforms.schema.SchemaDepthChecker.md)
 
 Also reachable as `buoyant_kernel::transforms::SchemaDepthChecker`, `delta_kernel::transforms::schema::SchemaDepthChecker`
 
@@ -38,6 +39,7 @@ that a schema has reasonable depth before attempting to work with it.
 ## SchemaTransform
 
 `trait` · `buoyant_kernel::transforms::schema::SchemaTransform`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transforms.schema.SchemaTransform.md)
 
 Also reachable as `buoyant_kernel::transforms::SchemaTransform`, `delta_kernel::transforms::schema::SchemaTransform`
 

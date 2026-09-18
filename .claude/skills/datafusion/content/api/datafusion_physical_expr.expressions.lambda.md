@@ -12,6 +12,9 @@ Also reachable as `datafusion_physical_expr::expressions::lambda`, `datafusion_p
 fn lambda(params: impl IntoIterator<Item = impl Into<String>>, body: std::sync::Arc<dyn PhysicalExpr>) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.lambda.lambda.md).
+
+
 Create a lambda expression.
 
 ---
@@ -57,6 +60,9 @@ fn nullable(&self, _input_schema: &Schema) -> Result<bool>
 fn try_to_proto(&self, ctx: &datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalExprNode>>
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.lambda.LambdaExpr.md).
+
 
 Represents a lambda with the given parameters names and body
 

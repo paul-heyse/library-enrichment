@@ -40,6 +40,7 @@ pub fn schema() -> SchemaRef {
         "version": VERSION, "protocol": PROTOCOL, "encoder": ENCODER, "griffe": GRIFFE,
         "max_bytes": MAX_BYTES, "batch_bytes": MAX_BATCH_BYTES, "batch_rows": MAX_BATCH_ROWS,
         "max_observations": MAX_OBSERVATIONS, "max_files": MAX_FILES,
+        "request_bytes": crate::execution::static_worker::REQUEST_BYTES,
     }).to_string())])))
 }
 

@@ -26,7 +26,7 @@ Delta tables reach DataFusion as a `TableProvider` built from a snapshot, so the
 
 ## Decision rules
 
-- Reuse one `SessionContext` across queries; building one per query discards every cache.
+- Reuse an appropriately configured session/runtime when its shared resources match the workload. Delta operations need the Delta planner; trait-wrapper fallback policy determines which caller capabilities survive.
 - Rebuild the provider when you need a newer version -- it is bound to the snapshot it was made from.
 - Check `EXPLAIN` for the file count actually scanned before concluding pruning works.
 
@@ -37,6 +37,6 @@ Delta tables reach DataFusion as a `TableProvider` built from a snapshot, so the
 
 ## Agent checklist
 
-- Is the session reused?
+- Does the session preserve the required planner, functions, store mappings and resource settings?
 - Does EXPLAIN show pruning reaching the file level?
 - Is the provider rebuilt when freshness matters?

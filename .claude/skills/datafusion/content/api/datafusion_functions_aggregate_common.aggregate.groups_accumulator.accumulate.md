@@ -14,6 +14,9 @@ enum SeenValues
 
 **Derives**: Debug, Default
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.accumulate.SeenValues.md).
+
+
 If the input has nulls, then the accumulator must potentially
 handle each input null value specially (e.g. for `SUM` to mark the
 corresponding sum as null)
@@ -33,6 +36,9 @@ if they have seen values for a particular group.
 ```rust
 fn accumulate<T, F>(group_indices: &[usize], values: &arrow::array::PrimitiveArray<T>, opt_filter: Option<&arrow::array::BooleanArray>, value_fn: F) where T: ArrowPrimitiveType + Send, F: FnMut(usize, T::Native) + Send
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.accumulate.accumulate.md).
+
 
 Invokes `value_fn(group_index, value)` for each non null, non
 filtered value of `value`,
@@ -83,6 +89,9 @@ value_fn(0, 300)
 fn accumulate_indices<F>(group_indices: &[usize], nulls: Option<&arrow::buffer::NullBuffer>, opt_filter: Option<&arrow::array::BooleanArray>, index_fn: F) where F: FnMut(usize) + Send
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.accumulate.accumulate_indices.md).
+
+
 This function is called to update the accumulator state per row
 when the value is not needed (e.g. COUNT)
 
@@ -102,6 +111,9 @@ arguments.
 ```rust
 fn accumulate_multiple<T, F>(group_indices: &[usize], value_columns: &[&arrow::array::PrimitiveArray<T>], opt_filter: Option<&arrow::array::BooleanArray>, value_fn: F) where T: ArrowPrimitiveType + Send, F: FnMut(usize, usize, &[&arrow::array::PrimitiveArray<T>]) + Send
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.accumulate.accumulate_multiple.md).
+
 
 Accumulates with multiple accumulate(value) columns. (e.g. `corr(c1, c2)`)
 
@@ -142,6 +154,9 @@ fn build(&mut self, emit_to: EmitTo) -> Option<NullBuffer>
 fn new() -> Self
 fn size(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.accumulate.NullState.md).
+
 
 Track the accumulator null state per row: if any values for that
 group were null and if any values have been seen at all for that group.

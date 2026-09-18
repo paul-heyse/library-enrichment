@@ -12,6 +12,9 @@ Also reachable as `datafusion_spark::expr_fn::abs`
 fn abs(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.abs.md).
+
+
 Returns abs(expr)
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `datafusion_spark::expr_fn::atan2`
 ```rust
 fn atan2(arg1: datafusion_expr::Expr, arg2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.atan2.md).
+
 
 Returns the angle in radians between the positive x-axis and the point (exprX, exprY).
 
@@ -40,6 +46,9 @@ Also reachable as `datafusion_spark::expr_fn::bin`
 fn bin(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.bin.md).
+
+
 Returns the string representation of the long value represented in binary.
 
 ---
@@ -53,6 +62,9 @@ Also reachable as `datafusion_spark::expr_fn::ceil`
 ```rust
 fn ceil(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.ceil.md).
+
 
 Returns the ceiling of expr.
 
@@ -68,6 +80,9 @@ Also reachable as `datafusion_spark::expr_fn::csc`
 fn csc(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.csc.md).
+
+
 Returns the cosecant of expr.
 
 ---
@@ -81,6 +96,9 @@ Also reachable as `datafusion_spark::expr_fn::expm1`
 ```rust
 fn expm1(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.expm1.md).
+
 
 Returns exp(expr) - 1 as a Float64.
 
@@ -96,6 +114,9 @@ Also reachable as `datafusion_spark::expr_fn::factorial`
 fn factorial(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.factorial.md).
+
+
 Returns the factorial of expr. expr is [0..20]. Otherwise, null.
 
 ---
@@ -109,6 +130,9 @@ Also reachable as `datafusion_spark::expr_fn::floor`
 ```rust
 fn floor(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.floor.md).
+
 
 Returns floor of expr.
 
@@ -124,6 +148,9 @@ Also reachable as `datafusion_spark::expr_fn::hex`
 fn hex(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.hex.md).
+
+
 Computes hex value of the given column.
 
 ---
@@ -137,6 +164,9 @@ Also reachable as `datafusion_spark::expr_fn::hypot`
 ```rust
 fn hypot(arg1: datafusion_expr::Expr, arg2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.hypot.md).
+
 
 Returns sqrt(a^2 + b^2) without intermediate overflow or underflow.
 
@@ -152,6 +182,9 @@ Also reachable as `datafusion_spark::expr_fn::modulus`
 fn modulus(arg1: datafusion_expr::Expr, arg2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.modulus.md).
+
+
 Returns the remainder of division of the first argument by the second argument.
 
 ---
@@ -165,6 +198,9 @@ Also reachable as `datafusion_spark::expr_fn::negative`
 ```rust
 fn negative(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.negative.md).
+
 
 Returns the negation of expr (unary minus).
 
@@ -180,6 +216,9 @@ Also reachable as `datafusion_spark::expr_fn::pmod`
 fn pmod(arg1: datafusion_expr::Expr, arg2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.pmod.md).
+
+
 Returns the positive remainder of division of the first argument by the second argument.
 
 ---
@@ -193,6 +232,9 @@ Also reachable as `datafusion_spark::expr_fn::pow`
 ```rust
 fn pow(arg1: datafusion_expr::Expr, arg2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.pow.md).
+
 
 Returns base raised to the power of exponent. Returns Infinity for pow(0, negative).
 
@@ -208,6 +250,9 @@ Also reachable as `datafusion_spark::expr_fn::rint`
 fn rint(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.rint.md).
+
+
 Returns the double value that is closest in value to the argument and is equal to a mathematical integer.
 
 ---
@@ -221,6 +266,9 @@ Also reachable as `datafusion_spark::expr_fn::round`
 ```rust
 fn round(arg1: datafusion_expr::Expr, arg2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.round.md).
+
 
 Rounds the value of expr to scale decimal places using HALF_UP rounding mode.
 
@@ -236,6 +284,9 @@ Also reachable as `datafusion_spark::expr_fn::sec`
 fn sec(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.sec.md).
+
+
 Returns the secant of expr.
 
 ---
@@ -250,6 +301,9 @@ Also reachable as `datafusion_spark::expr_fn::unhex`
 fn unhex(arg1: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.unhex.md).
+
+
 Converts hexadecimal string to binary.
 
 ---
@@ -263,6 +317,9 @@ Also reachable as `datafusion_spark::expr_fn::width_bucket`
 ```rust
 fn width_bucket(arg1: datafusion_expr::Expr, arg2: datafusion_expr::Expr, arg3: datafusion_expr::Expr, arg4: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expr_fn.width_bucket.md).
+
 
 Returns the bucket number into which the value of this expression would fall after being evaluated.
 

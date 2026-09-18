@@ -14,6 +14,9 @@ enum AggregateInputMode
 
 **Derives**: Clone, Copy, Debug, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.AggregateInputMode.md).
+
+
 Whether an aggregate stage consumes raw input data or intermediate
 accumulator state from a previous aggregation stage.
 
@@ -40,6 +43,9 @@ enum AggregateMode
 fn input_mode(&self) -> AggregateInputMode
 fn output_mode(&self) -> AggregateOutputMode
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.AggregateMode.md).
+
 
 Aggregation modes
 
@@ -74,6 +80,9 @@ enum AggregateOutputMode
 
 **Derives**: Clone, Copy, Debug, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.AggregateOutputMode.md).
+
+
 Whether an aggregate stage produces intermediate accumulator state
 or final output values.
 
@@ -89,6 +98,9 @@ for how this relates to aggregate modes.
 ```rust
 fn aggregate_expressions(aggr_expr: &[std::sync::Arc<datafusion_physical_expr::aggregate::AggregateFunctionExpr>], mode: &AggregateMode, col_idx_base: usize) -> datafusion_common::Result<Vec<Vec<std::sync::Arc<dyn PhysicalExpr>>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.aggregate_expressions.md).
+
 
 Returns physical expressions for arguments to evaluate against a batch.
 
@@ -106,6 +118,9 @@ The expressions are different depending on `mode`:
 fn concat_slices<T: Clone>(lhs: &[T], rhs: &[T]) -> Vec<T>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.concat_slices.md).
+
+
 Concatenates the given slices.
 
 ---
@@ -118,6 +133,9 @@ Concatenates the given slices.
 fn create_accumulators(aggr_expr: &[std::sync::Arc<datafusion_physical_expr::aggregate::AggregateFunctionExpr>]) -> datafusion_common::Result<Vec<AccumulatorItem>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.create_accumulators.md).
+
+
 ---
 
 ## evaluate_group_by
@@ -127,6 +145,9 @@ fn create_accumulators(aggr_expr: &[std::sync::Arc<datafusion_physical_expr::agg
 ```rust
 fn evaluate_group_by(group_by: &PhysicalGroupBy, batch: &arrow::record_batch::RecordBatch) -> datafusion_common::Result<Vec<Vec<arrow::array::ArrayRef>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.evaluate_group_by.md).
+
 
 Evaluate a group by expression against a `RecordBatch`
 
@@ -175,6 +196,9 @@ The output is:
 fn evaluate_many(expr: &[Vec<std::sync::Arc<dyn PhysicalExpr>>], batch: &arrow::record_batch::RecordBatch) -> datafusion_common::Result<Vec<Vec<arrow::array::ArrayRef>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.evaluate_many.md).
+
+
 Evaluates groups of expressions against a record batch.
 
 ---
@@ -186,6 +210,9 @@ Evaluates groups of expressions against a record batch.
 ```rust
 fn finalize_aggregation(accumulators: &mut [AccumulatorItem], mode: &AggregateMode) -> datafusion_common::Result<Vec<arrow::array::ArrayRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.finalize_aggregation.md).
+
 
 returns a vector of ArrayRefs, where each entry corresponds to either the
 final value (mode = Final, FinalPartitioned and Single) or states (mode = Partial)
@@ -199,6 +226,9 @@ final value (mode = Final, FinalPartitioned and Single) or states (mode = Partia
 ```rust
 fn get_finer_aggregate_exprs_requirement(aggr_exprs: &mut [std::sync::Arc<datafusion_physical_expr::aggregate::AggregateFunctionExpr>], group_by: &PhysicalGroupBy, eq_properties: &datafusion_physical_expr::EquivalenceProperties, agg_mode: &AggregateMode) -> datafusion_common::Result<Vec<datafusion_physical_expr_common::sort_expr::PhysicalSortRequirement>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.get_finer_aggregate_exprs_requirement.md).
+
 
 Gets the common requirement that satisfies all the aggregate expressions.
 When possible, chooses the requirement that is already satisfied by the
@@ -230,6 +260,9 @@ conflicting requirements.
 ```rust
 fn topk_types_supported(key_type: &arrow::datatypes::DataType, value_type: &arrow::datatypes::DataType) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.topk_types_supported.md).
+
 
 Returns true if TopK aggregation data structures support the provided key and value types.
 
@@ -311,6 +344,9 @@ fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.AggregateExec.md).
+
+
 Hash aggregate execution plan
 
 ---
@@ -335,6 +371,9 @@ fn limit(&self) -> usize
 fn new(limit: usize) -> Self
 fn new_with_order(limit: usize, descending: bool) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.LimitOptions.md).
+
 
 Configuration for limit-based optimizations in aggregation
 
@@ -370,6 +409,9 @@ fn num_group_exprs(&self) -> usize
 fn output_exprs(&self) -> Vec<Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.PhysicalGroupBy.md).
+
+
 Represents `GROUP BY` clause in the plan (including the more general GROUPING SET)
 In the case of a simple `GROUP BY a, b` clause, this will contain the expression [a, b]
 and a single group [false, false].
@@ -398,5 +440,8 @@ PhysicalGroupBy {
 ```rust
 type AccumulatorItem = Box<dyn Accumulator>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.AccumulatorItem.md).
+
 
 ---

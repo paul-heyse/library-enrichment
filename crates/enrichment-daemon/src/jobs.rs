@@ -30,15 +30,15 @@ impl std::ops::Deref for JobRecord {
     }
 }
 impl JobRecord {
-    pub fn data(&self, token: Option<String>) -> JobData {
+    pub fn data(&self, token: Option<enrichment_core::identity::InterestId>) -> JobData {
         JobData {
-            job_id: self.job_id.clone(),
+            job_id: self.job_id,
             state: self.state,
             stage: self.stage.clone(),
             interest_token: token,
             active_interests: self.active_interests,
-            submitted_at: self.submitted_at.to_string(),
-            updated_at: self.updated_at.to_string(),
+            submitted_at: self.submitted_at,
+            updated_at: self.updated_at,
             result: self.result.as_ref().map(Into::into),
         }
     }
@@ -78,7 +78,7 @@ pub struct Jobs {
     cache_root: std::path::PathBuf,
     blobs: BlobStore,
     execution: Arc<crate::execution::cleanup::Supervisor>,
-    handles: Mutex<BTreeMap<String, OwnedHandle>>,
+    handles: Mutex<BTreeMap<enrichment_core::identity::JobId, OwnedHandle>>,
     pub permits: Arc<tokio::sync::Semaphore>,
 }
 impl Jobs {
@@ -126,12 +126,12 @@ impl Jobs {
     pub async fn submit(
         &self,
         request: impl Into<Arguments>,
-    ) -> io::Result<(JobRecord, String, bool)> {
+    ) -> io::Result<(JobRecord, enrichment_core::identity::InterestId, bool)> {
         self.reconcile_finished().await?;
         let specification = request.into();
         let kind = specification.command_kind();
         let arguments = specification;
-        let interest = format!("interest_{}", uuid::Uuid::new_v4().simple());
+        let interest = enrichment_core::identity::InterestId::new();
         let (id, fresh) = self
             .native
             .submit(
@@ -139,7 +139,7 @@ impl Jobs {
                     .command_input(arguments)
                     .await
                     .map_err(io::Error::other)?,
-                interest.clone(),
+                interest,
             )
             .await
             .map_err(io::Error::other)?;
@@ -148,7 +148,7 @@ impl Jobs {
                 .lock()
                 .map_err(|_| io::Error::other("owned handle lock"))?
                 .insert(
-                    id.clone(),
+                    id,
                     OwnedHandle {
                         kind,
                         cancel: Arc::new(AtomicBool::new(false)),
@@ -161,7 +161,7 @@ impl Jobs {
         }
         Ok((self.get(&id).await?, interest, fresh))
     }
-    pub async fn get(&self, id: &str) -> io::Result<JobRecord> {
+    pub async fn get(&self, id: &enrichment_core::identity::JobId) -> io::Result<JobRecord> {
         let pin = self.native.pin().await.map_err(io::Error::other)?;
         let snapshot = self
             .native
@@ -195,7 +195,10 @@ impl Jobs {
         }
         Ok(())
     }
-    pub fn cancellation(&self, id: &str) -> io::Result<Arc<AtomicBool>> {
+    pub fn cancellation(
+        &self,
+        id: &enrichment_core::identity::JobId,
+    ) -> io::Result<Arc<AtomicBool>> {
         self.handles
             .lock()
             .map_err(|_| io::Error::other("owned handle lock"))?
@@ -203,7 +206,11 @@ impl Jobs {
             .map(|handle| Arc::clone(&handle.cancel))
             .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "no local effect owner"))
     }
-    pub async fn cancel(&self, id: &str, token: &str) -> io::Result<JobRecord> {
+    pub async fn cancel(
+        &self,
+        id: &enrichment_core::identity::JobId,
+        token: &enrichment_core::identity::InterestId,
+    ) -> io::Result<JobRecord> {
         self.native
             .cancel(id, token)
             .await
@@ -216,7 +223,7 @@ impl Jobs {
         }
         Ok(record)
     }
-    pub async fn start(&self, id: &str) -> io::Result<bool> {
+    pub async fn start(&self, id: &enrichment_core::identity::JobId) -> io::Result<bool> {
         let execution = self.native.config().execution.clone();
         let cache = self.cache_root.clone();
         let cleanup = match self.execution.admission() {
@@ -237,7 +244,7 @@ impl Jobs {
         .await
         .map_err(io::Error::other)?;
         let period = self.native.renewal_period().map_err(io::Error::other)?;
-        let attempt = format!("attempt_{}", uuid::Uuid::new_v4().simple());
+        let attempt = enrichment_core::identity::AttemptId::new();
         // No expiry grants a replacement owner. Physical cleanup and the persisted fence do.
         if !self
             .native
@@ -294,7 +301,7 @@ impl Jobs {
     }
     pub fn publication_fence(
         &self,
-        id: &str,
+        id: &enrichment_core::identity::JobId,
     ) -> io::Result<enrichment_store::control::PublicationFence> {
         Ok(enrichment_store::control::PublicationFence {
             owner: self.native.owner().into(),
@@ -303,7 +310,7 @@ impl Jobs {
                 .ok_or_else(|| io::Error::other("job has no native claim"))?,
         })
     }
-    fn fence(&self, id: &str) -> io::Result<Option<u64>> {
+    fn fence(&self, id: &enrichment_core::identity::JobId) -> io::Result<Option<u64>> {
         Ok(self
             .handles
             .lock()
@@ -312,7 +319,11 @@ impl Jobs {
             .ok_or_else(|| io::Error::other("unknown effect owner"))?
             .fence)
     }
-    pub async fn pin_resolution(&self, id: &str, stage: Resolution) -> io::Result<()> {
+    pub async fn pin_resolution(
+        &self,
+        id: &enrichment_core::identity::JobId,
+        stage: Resolution,
+    ) -> io::Result<()> {
         self.native
             .pin_resolution(
                 id,
@@ -332,7 +343,12 @@ impl Jobs {
             .await
             .map_err(io::Error::other)
     }
-    pub async fn finish(&self, id: &str, state: JobState, result: Envelope) -> io::Result<()> {
+    pub async fn finish(
+        &self,
+        id: &enrichment_core::identity::JobId,
+        state: JobState,
+        result: Envelope,
+    ) -> io::Result<()> {
         self.native
             .settle_result(id, self.fence(id)?, state, || self.store_result(result))
             .await
@@ -345,7 +361,7 @@ impl Jobs {
     pub fn spawn(
         self: &Arc<Self>,
         runtime: &enrichment_store::runtime::QueryRuntime,
-        id: String,
+        id: enrichment_core::identity::JobId,
         work: impl std::future::Future<Output = ()> + Send + 'static,
     ) -> io::Result<()> {
         use futures::FutureExt;
@@ -365,10 +381,9 @@ impl Jobs {
         let work = Box::pin(work);
         handle.task = Some(runtime.spawn(async move {
             // The future and all of its local guards are dropped before cleanup is observed.
-            let completion =
-                std::panic::AssertUnwindSafe(command_runtime.command(id.clone(), kind, work))
-                    .catch_unwind()
-                    .await;
+            let completion = std::panic::AssertUnwindSafe(command_runtime.command(id, kind, work))
+                .catch_unwind()
+                .await;
             if !matches!(completion, Ok(Ok(()))) {
                 eprintln!("native job {id}: driver failed; retained state requires reconciliation");
             }
@@ -390,7 +405,7 @@ impl Jobs {
         Ok(())
     }
 
-    async fn settle_returned(&self, id: &str) -> io::Result<()> {
+    async fn settle_returned(&self, id: &enrichment_core::identity::JobId) -> io::Result<()> {
         self.native
             .settle_unfinished(id, self.fence(id)?, || {
                 self.store_result(crate::envelope::error(
@@ -420,7 +435,7 @@ impl Jobs {
             .map_err(|_| io::Error::other("owned handle lock"))?
             .iter()
             .filter(|(_, handle)| handle.physically_finished)
-            .map(|(id, _)| id.clone())
+            .map(|(id, _)| *id)
             .collect::<Vec<_>>();
         for id in &ids {
             self.settle_returned(id).await?;
@@ -438,7 +453,11 @@ impl Jobs {
         }
         Ok(())
     }
-    pub async fn fail_unfinished(&self, id: &str, error: &io::Error) -> io::Result<()> {
+    pub async fn fail_unfinished(
+        &self,
+        id: &enrichment_core::identity::JobId,
+        error: &io::Error,
+    ) -> io::Result<()> {
         if terminal(self.get(id).await?.state) {
             return Ok(());
         }
@@ -482,13 +501,13 @@ mod tests {
             })
             .await
             .unwrap();
-        let id = record.job_id.clone();
+        let id = record.job_id;
         let jobs = Arc::clone(&service.jobs);
         let (terminal_sent, terminal_seen) = tokio::sync::oneshot::channel();
         let (release, exit) = tokio::sync::oneshot::channel();
         service
             .jobs
-            .spawn(&service.repository.runtime, id.clone(), async move {
+            .spawn(&service.repository.runtime, id, async move {
                 assert!(jobs.start(&id).await.unwrap());
                 jobs.finish(
                     &id,

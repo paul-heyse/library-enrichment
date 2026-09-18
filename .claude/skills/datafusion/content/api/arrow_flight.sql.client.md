@@ -12,6 +12,9 @@ enum ArrowFlightData
 
 **Variants**: `RecordBatch`, `Schema`
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.client.ArrowFlightData.md).
+
+
 A polymorphic structure to natively represent different types of data contained in `FlightData`
 
 ---
@@ -23,6 +26,9 @@ A polymorphic structure to natively represent different types of data contained 
 ```rust
 fn arrow_data_from_flight_data(flight_data: FlightData, arrow_schema_ref: &arrow_schema::SchemaRef) -> std::result::Result<ArrowFlightData, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.client.arrow_data_from_flight_data.md).
+
 
 Extract `Schema` or `RecordBatch`es from the `FlightData` wire representation
 
@@ -73,6 +79,9 @@ fn set_token(&mut self, token: String)
 fn token(&self) -> Option<&String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.client.FlightSqlServiceClient.md).
+
+
 A FlightSQLServiceClient is an endpoint for retrieving or storing Arrow data
 by FlightSQL protocol.
 
@@ -98,6 +107,9 @@ async fn execute_update(&mut self) -> Result<i64>
 fn parameter_schema(&self) -> Result<&Schema>
 fn set_parameters(&mut self, parameter_binding: RecordBatch) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.client.PreparedStatement.md).
+
 
 A PreparedStatement
 

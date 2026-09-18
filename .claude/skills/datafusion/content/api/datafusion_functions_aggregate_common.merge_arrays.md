@@ -10,6 +10,9 @@ Crate `datafusion-functions-aggregate-common` · 1 public items · structured re
 fn merge_ordered_arrays(values: &mut [std::collections::VecDeque<datafusion_common::ScalarValue>], ordering_values: &mut [std::collections::VecDeque<Vec<datafusion_common::ScalarValue>>], sort_options: &[arrow::compute::SortOptions]) -> datafusion_common::Result<(Vec<datafusion_common::ScalarValue>, Vec<Vec<datafusion_common::ScalarValue>>)>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.merge_arrays.merge_ordered_arrays.md).
+
+
 This functions merges `values` array (`&[Vec<ScalarValue>]`) into single array `Vec<ScalarValue>`
 Merging done according to ordering values stored inside `ordering_values` (`&[Vec<Vec<ScalarValue>>]`)
 Inner `Vec<ScalarValue>` in the `ordering_values` can be thought as ordering information for

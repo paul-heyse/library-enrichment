@@ -1,0 +1,1120 @@
+[
+  {
+    "id": "efe5f6895e277f3bfd68ba9f",
+    "path": "arrow_schema::extension::ExtensionType",
+    "name": "ExtensionType",
+    "owner": null,
+    "crate": "arrow-schema",
+    "version": "59.3.0",
+    "kind": "trait",
+    "signature": "trait ExtensionType: Sized",
+    "docs": "Extension types.\n\nUser-defined “extension” types can be defined setting certain key value\npairs in the [`Field`] metadata structure. These extension keys are:\n- [`EXTENSION_TYPE_NAME_KEY`]\n- [`EXTENSION_TYPE_METADATA_KEY`]\n\nCanonical extension types support in this crate requires the\n`canonical_extension_types` feature.\n\nExtension types may or may not use the [`EXTENSION_TYPE_METADATA_KEY`]\nfield.\n\n# Example\n\nThe example below demonstrates how to implement this trait for a `Uuid`\ntype. Note this is not the canonical extension type for `Uuid`, which does\nnot include information about the `Uuid` version.\n\n```\n# use arrow_schema::ArrowError;\n# fn main() -> Result<(), ArrowError> {\nuse arrow_schema::{DataType, extension::ExtensionType, Field};\nuse std::{fmt, str::FromStr};\n\n/// The different Uuid versions.\n#[derive(Clone, Copy, Debug, PartialEq)]\nenum UuidVersion {\n    V1,\n    V2,\n    V3,\n    V4,\n    V5,\n    V6,\n    V7,\n    V8,\n}\n\n// We'll use `Display` to serialize.\nimpl fmt::Display for UuidVersion {\n    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {\n        write!(\n            f,\n            \"{}\",\n            match self {\n                Self::V1 => \"V1\",\n                Self::V2 => \"V2\",\n                Self::V3 => \"V3\",\n                Self::V4 => \"V4\",\n                Self::V5 => \"V5\",\n                Self::V6 => \"V6\",\n                Self::V7 => \"V7\",\n                Self::V8 => \"V8\",\n            }\n        )\n    }\n}\n\n// And `FromStr` to deserialize.\nimpl FromStr for UuidVersion {\n    type Err = ArrowError;\n\n    fn from_str(s: &str) -> Result<Self, Self::Err> {\n        match s {\n            \"V1\" => Ok(Self::V1),\n            \"V2\" => Ok(Self::V2),\n            \"V3\" => Ok(Self::V3),\n            \"V4\" => Ok(Self::V4),\n            \"V5\" => Ok(Self::V5),\n            \"V6\" => Ok(Self::V6),\n            \"V7\" => Ok(Self::V7),\n            \"V8\" => Ok(Self::V8),\n            _ => Err(ArrowError::ParseError(\"Invalid UuidVersion\".to_owned())),\n        }\n    }\n}\n\n/// This is the extension type, not the container for Uuid values. It\n/// stores the Uuid version (this is the metadata of this extension type).\n#[derive(Clone, Copy, Debug, PartialEq)]\nstruct Uuid(UuidVersion);\n\nimpl ExtensionType for Uuid {\n    // We use a namespace as suggested by the specification.\n    const NAME: &'static str = \"myorg.example.uuid\";\n\n    // The metadata type is the Uuid version.\n    type Metadata = UuidVersion;\n\n    // We just return a reference to the Uuid version.\n    fn metadata(&self) -> &Self::Metadata {\n        &self.0\n    }\n\n    // We use the `Display` implementation to serialize the Uuid\n    // version.\n    fn serialize_metadata(&self) -> Option<String> {\n        Some(self.0.to_string())\n    }\n\n    // We use the `FromStr` implementation to deserialize the Uuid\n    // version.\n    fn deserialize_metadata(metadata: Option<&str>) -> Result<Self::Metadata, ArrowError> {\n        metadata.map_or_else(\n            || {\n                Err(ArrowError::InvalidArgumentError(\n                    \"Uuid extension type metadata missing\".to_owned(),\n                ))\n            },\n            str::parse,\n        )\n    }\n\n    // The only supported data type is `FixedSizeBinary(16)`.\n    fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError> {\n        match data_type {\n            DataType::FixedSizeBinary(16) => Ok(()),\n            data_type => Err(ArrowError::InvalidArgumentError(format!(\n                \"Uuid data type mismatch, expected FixedSizeBinary(16), found {data_type}\"\n            ))),\n        }\n    }\n\n    // We should always check if the data type is supported before\n    // constructing the extension type.\n    fn try_new(data_type: &DataType, metadata: Self::Metadata) -> Result<Self, ArrowError> {\n        let uuid = Self(metadata);\n        uuid.supports_data_type(data_type)?;\n        Ok(uuid)\n    }\n}\n\n// We can now construct the extension type.\nlet uuid_v1 = Uuid(UuidVersion::V1);\n\n// And add it to a field.\nlet mut field =\n    Field::new(\"\", DataType::FixedSizeBinary(16), false).with_extension_type(uuid_v1);\n\n// And extract it from this field.\nassert_eq!(field.try_extension_type::<Uuid>()?, uuid_v1);\n\n// When we try to add this to a field with an unsupported data type we\n// get an error.\nlet result = Field::new(\"\", DataType::Null, false).try_with_extension_type(uuid_v1);\nassert!(result.is_err());\n# Ok(()) }\n```\n\n<https://arrow.apache.org/docs/format/Columnar.html#extension-types>\n\n[`Field`]: crate::Field",
+    "span": {
+      "filename": "src/extension/mod.rs",
+      "begin": [
+        187,
+        1
+      ],
+      "end": [
+        310,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": false,
+        "items": [
+          915,
+          916,
+          917,
+          918,
+          919,
+          920,
+          921,
+          922,
+          923
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sized",
+                "id": 125,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": [
+          466,
+          514,
+          591,
+          661,
+          734,
+          773,
+          819
+        ]
+      }
+    },
+    "type_references": {
+      "125": "core::marker::Sized"
+    },
+    "impl_context": null,
+    "links": {
+      "`EXTENSION_TYPE_NAME_KEY`": 912,
+      "`EXTENSION_TYPE_METADATA_KEY`": 913,
+      "crate::Field": 102
+    },
+    "link_paths": {
+      "`EXTENSION_TYPE_NAME_KEY`": "arrow_schema::extension::EXTENSION_TYPE_NAME_KEY",
+      "`EXTENSION_TYPE_METADATA_KEY`": "arrow_schema::extension::EXTENSION_TYPE_METADATA_KEY",
+      "crate::Field": "arrow_schema::field::Field"
+    },
+    "artifact": {
+      "id": "d8b2654e49f3f7d5b3cf8a3b430e529667d8c73f4a799b716f4071b217572b55",
+      "format_version": 61,
+      "item_id": "460",
+      "origin": "https://docs.rs/crate/arrow-schema/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_schema.extension.ExtensionType.md",
+    "record_file": "operations/arrow_schema.extension.ExtensionType.json",
+    "anchor": "op-efe5f6895e277f3bfd68ba9f",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`EXTENSION_TYPE_NAME_KEY`": "../operations/arrow_schema.extension.EXTENSION_TYPE_NAME_KEY.md#op-1d143f6e8f659d207021ff6f",
+      "`EXTENSION_TYPE_METADATA_KEY`": "../operations/arrow_schema.extension.EXTENSION_TYPE_METADATA_KEY.md#op-c38aeda07fc1041ad3e5ea8f",
+      "crate::Field": "../operations/arrow_schema.field.Field.md#op-66eb7ef45bcc129b0a0189cf"
+    }
+  },
+  {
+    "id": "7f9576d5351b22ca3595d907",
+    "path": "arrow_schema::extension::ExtensionType::Metadata",
+    "name": "Metadata",
+    "owner": "arrow_schema::extension::ExtensionType",
+    "crate": "arrow-schema",
+    "version": "59.3.0",
+    "kind": "assoc_type",
+    "signature": "Metadata",
+    "docs": "The metadata type of this extension type.\n\nImplementations can use strongly or loosly typed data structures here\ndepending on the complexity of the metadata.\n\nImplementations can also use `Self` here if the extension type can be\nconstructed directly from its metadata.\n\nIf an extension type defines no metadata it should use `()` to indicate\nthis.",
+    "span": {
+      "filename": "src/extension/mod.rs",
+      "begin": [
+        219,
+        5
+      ],
+      "end": [
+        219,
+        19
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "type": null,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "d8b2654e49f3f7d5b3cf8a3b430e529667d8c73f4a799b716f4071b217572b55",
+      "format_version": 61,
+      "item_id": "916",
+      "origin": "https://docs.rs/crate/arrow-schema/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_schema.extension.ExtensionType.md",
+    "record_file": "operations/arrow_schema.extension.ExtensionType.json",
+    "anchor": "op-7f9576d5351b22ca3595d907",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fc4fcaa150f20d01bc853b71",
+    "path": "arrow_schema::extension::ExtensionType::NAME",
+    "name": "NAME",
+    "owner": "arrow_schema::extension::ExtensionType",
+    "crate": "arrow-schema",
+    "version": "59.3.0",
+    "kind": "assoc_const",
+    "signature": "NAME",
+    "docs": "The name identifying this extension type.\n\nThis is the string value that is used for the\n[`EXTENSION_TYPE_NAME_KEY`] in the [`Field::metadata`] of a [`Field`]\nto identify this extension type.\n\nWe recommend that you use a “namespace”-style prefix for extension\ntype names to minimize the possibility of conflicts with multiple Arrow\nreaders and writers in the same application. For example, use\n`myorg.name_of_type` instead of simply `name_of_type`.\n\nExtension names beginning with `arrow.` are reserved for canonical\nextension types, they should not be used for third-party extension\ntypes.\n\nExtension names are case-sensitive.\n\n[`Field`]: crate::Field\n[`Field::metadata`]: crate::Field::metadata",
+    "span": {
+      "filename": "src/extension/mod.rs",
+      "begin": [
+        207,
+        5
+      ],
+      "end": [
+        207,
+        30
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_const": {
+        "type": {
+          "borrowed_ref": {
+            "lifetime": "'static",
+            "is_mutable": false,
+            "type": {
+              "primitive": "str"
+            }
+          }
+        },
+        "value": null,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "crate::Field::metadata": 914,
+      "crate::Field": 102,
+      "`EXTENSION_TYPE_NAME_KEY`": 912
+    },
+    "link_paths": {
+      "crate::Field::metadata": "arrow_schema::field::Field::metadata",
+      "crate::Field": "arrow_schema::field::Field",
+      "`EXTENSION_TYPE_NAME_KEY`": "arrow_schema::extension::EXTENSION_TYPE_NAME_KEY"
+    },
+    "artifact": {
+      "id": "d8b2654e49f3f7d5b3cf8a3b430e529667d8c73f4a799b716f4071b217572b55",
+      "format_version": 61,
+      "item_id": "915",
+      "origin": "https://docs.rs/crate/arrow-schema/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_schema.extension.ExtensionType.md",
+    "record_file": "operations/arrow_schema.extension.ExtensionType.json",
+    "anchor": "op-fc4fcaa150f20d01bc853b71",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::Field::metadata": "../operations/arrow_schema.field.Field.md#op-f61bfa31b9a7f4ea04e0aad1",
+      "crate::Field": "../operations/arrow_schema.field.Field.md#op-66eb7ef45bcc129b0a0189cf",
+      "`EXTENSION_TYPE_NAME_KEY`": "../operations/arrow_schema.extension.EXTENSION_TYPE_NAME_KEY.md#op-1d143f6e8f659d207021ff6f"
+    }
+  },
+  {
+    "id": "8dc143b1119a7546255404f2",
+    "path": "arrow_schema::extension::ExtensionType::deserialize_metadata",
+    "name": "deserialize_metadata",
+    "owner": "arrow_schema::extension::ExtensionType",
+    "crate": "arrow-schema",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn deserialize_metadata(metadata: Option<&str>) -> Result<Self::Metadata, ArrowError>",
+    "docs": "Deserialize the metadata of this extension type from the serialized\nrepresentation of the metadata. An extension type that defines no\nmetadata should expect `None` for the serialized metadata and return\n`Ok(())`.\n\nThis function should return an error when\n- expected metadata is missing (for extensions types with non-optional\n  metadata)\n- unexpected metadata is set (for extension types without metadata)\n- deserialization of metadata fails",
+    "span": {
+      "filename": "src/extension/mod.rs",
+      "begin": [
+        247,
+        5
+      ],
+      "end": [
+        247,
+        91
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "metadata",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 16,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "primitive": "str"
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 143,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "qualified_path": {
+                          "name": "Metadata",
+                          "args": null,
+                          "self_type": {
+                            "generic": "Self"
+                          },
+                          "trait": {
+                            "path": "",
+                            "id": 460,
+                            "args": null
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 199,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "16": "core::option::Option",
+      "143": "core::result::Result",
+      "460": "arrow_schema::extension::ExtensionType",
+      "199": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "d8b2654e49f3f7d5b3cf8a3b430e529667d8c73f4a799b716f4071b217572b55",
+      "format_version": 61,
+      "item_id": "919",
+      "origin": "https://docs.rs/crate/arrow-schema/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_schema.extension.ExtensionType.md",
+    "record_file": "operations/arrow_schema.extension.ExtensionType.json",
+    "anchor": "op-8dc143b1119a7546255404f2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8134ca5e175f9de2cf842438",
+    "path": "arrow_schema::extension::ExtensionType::metadata",
+    "name": "metadata",
+    "owner": "arrow_schema::extension::ExtensionType",
+    "crate": "arrow-schema",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn metadata(&self) -> &Self::Metadata",
+    "docs": "Returns a reference to the metadata of this extension type, or `&()` if\nif this extension type defines no metadata (`Self::Metadata=()`).",
+    "span": {
+      "filename": "src/extension/mod.rs",
+      "begin": [
+        223,
+        5
+      ],
+      "end": [
+        223,
+        43
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "qualified_path": {
+                  "name": "Metadata",
+                  "args": null,
+                  "self_type": {
+                    "generic": "Self"
+                  },
+                  "trait": {
+                    "path": "",
+                    "id": 460,
+                    "args": null
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "460": "arrow_schema::extension::ExtensionType"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "d8b2654e49f3f7d5b3cf8a3b430e529667d8c73f4a799b716f4071b217572b55",
+      "format_version": 61,
+      "item_id": "917",
+      "origin": "https://docs.rs/crate/arrow-schema/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_schema.extension.ExtensionType.md",
+    "record_file": "operations/arrow_schema.extension.ExtensionType.json",
+    "anchor": "op-8134ca5e175f9de2cf842438",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "95048e2ed1972cc07160097a",
+    "path": "arrow_schema::extension::ExtensionType::serialize_metadata",
+    "name": "serialize_metadata",
+    "owner": "arrow_schema::extension::ExtensionType",
+    "crate": "arrow-schema",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn serialize_metadata(&self) -> Option<String>",
+    "docs": "Returns the serialized representation of the metadata of this extension\ntype, or `None` if this extension type defines no metadata\n(`Self::Metadata=()`).\n\nThis is string value that is used for the\n[`EXTENSION_TYPE_METADATA_KEY`] in the [`Field::metadata`] of a\n[`Field`].\n\n[`Field`]: crate::Field\n[`Field::metadata`]: crate::Field::metadata",
+    "span": {
+      "filename": "src/extension/mod.rs",
+      "begin": [
+        235,
+        5
+      ],
+      "end": [
+        235,
+        52
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 16,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "String",
+                          "id": 159,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "16": "core::option::Option",
+      "159": "alloc::string::String"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::Field::metadata": 914,
+      "`EXTENSION_TYPE_METADATA_KEY`": 913,
+      "crate::Field": 102
+    },
+    "link_paths": {
+      "crate::Field::metadata": "arrow_schema::field::Field::metadata",
+      "`EXTENSION_TYPE_METADATA_KEY`": "arrow_schema::extension::EXTENSION_TYPE_METADATA_KEY",
+      "crate::Field": "arrow_schema::field::Field"
+    },
+    "artifact": {
+      "id": "d8b2654e49f3f7d5b3cf8a3b430e529667d8c73f4a799b716f4071b217572b55",
+      "format_version": 61,
+      "item_id": "918",
+      "origin": "https://docs.rs/crate/arrow-schema/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_schema.extension.ExtensionType.md",
+    "record_file": "operations/arrow_schema.extension.ExtensionType.json",
+    "anchor": "op-95048e2ed1972cc07160097a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::Field::metadata": "../operations/arrow_schema.field.Field.md#op-f61bfa31b9a7f4ea04e0aad1",
+      "`EXTENSION_TYPE_METADATA_KEY`": "../operations/arrow_schema.extension.EXTENSION_TYPE_METADATA_KEY.md#op-c38aeda07fc1041ad3e5ea8f",
+      "crate::Field": "../operations/arrow_schema.field.Field.md#op-66eb7ef45bcc129b0a0189cf"
+    }
+  },
+  {
+    "id": "3521ef845c8e02ad4e4d2450",
+    "path": "arrow_schema::extension::ExtensionType::supports_data_type",
+    "name": "supports_data_type",
+    "owner": "arrow_schema::extension::ExtensionType",
+    "crate": "arrow-schema",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError>",
+    "docs": "Returns `Ok(())` iff the given data type is supported by this extension\ntype.",
+    "span": {
+      "filename": "src/extension/mod.rs",
+      "begin": [
+        251,
+        5
+      ],
+      "end": [
+        251,
+        82
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "data_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DataType",
+                      "id": 62,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 143,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 199,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "62": "arrow_schema::datatype::DataType",
+      "143": "core::result::Result",
+      "199": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "d8b2654e49f3f7d5b3cf8a3b430e529667d8c73f4a799b716f4071b217572b55",
+      "format_version": 61,
+      "item_id": "920",
+      "origin": "https://docs.rs/crate/arrow-schema/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_schema.extension.ExtensionType.md",
+    "record_file": "operations/arrow_schema.extension.ExtensionType.json",
+    "anchor": "op-3521ef845c8e02ad4e4d2450",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "226955309e0587a6d6c9751b",
+    "path": "arrow_schema::extension::ExtensionType::try_new",
+    "name": "try_new",
+    "owner": "arrow_schema::extension::ExtensionType",
+    "crate": "arrow-schema",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new(data_type: &DataType, metadata: Self::Metadata) -> Result<Self, ArrowError>",
+    "docs": "Construct this extension type for a field with the given data type and\nmetadata.\n\nThis should return an error if the given data type is not supported by\nthis extension type.",
+    "span": {
+      "filename": "src/extension/mod.rs",
+      "begin": [
+        258,
+        5
+      ],
+      "end": [
+        258,
+        92
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DataType",
+                      "id": 62,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "metadata",
+              {
+                "qualified_path": {
+                  "name": "Metadata",
+                  "args": null,
+                  "self_type": {
+                    "generic": "Self"
+                  },
+                  "trait": {
+                    "path": "",
+                    "id": 460,
+                    "args": null
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 143,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 199,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "62": "arrow_schema::datatype::DataType",
+      "460": "arrow_schema::extension::ExtensionType",
+      "143": "core::result::Result",
+      "199": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "d8b2654e49f3f7d5b3cf8a3b430e529667d8c73f4a799b716f4071b217572b55",
+      "format_version": 61,
+      "item_id": "921",
+      "origin": "https://docs.rs/crate/arrow-schema/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_schema.extension.ExtensionType.md",
+    "record_file": "operations/arrow_schema.extension.ExtensionType.json",
+    "anchor": "op-226955309e0587a6d6c9751b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "937e747629ba2188834f2a79",
+    "path": "arrow_schema::extension::ExtensionType::try_new_from_field_metadata",
+    "name": "try_new_from_field_metadata",
+    "owner": "arrow_schema::extension::ExtensionType",
+    "crate": "arrow-schema",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_from_field_metadata(data_type: &DataType, metadata: &HashMap<String, String>) -> Result<Self, ArrowError>",
+    "docs": "Construct this extension type from field metadata and data type.\n\nThis is a provided method that extracts extension type information from\nmetadata (using [`EXTENSION_TYPE_NAME_KEY`] and\n[`EXTENSION_TYPE_METADATA_KEY`]) and delegates to [`Self::try_new`].\n\nReturns an error if:\n- The extension type name is missing or doesn't match [`Self::NAME`]\n- Metadata deserialization fails\n- The data type is not supported\n\nThis method enables extension type checking without requiring a full\n[`Field`] instance, useful when only metadata and data type are available.\n\n[`Field`]: crate::Field",
+    "span": {
+      "filename": "src/extension/mod.rs",
+      "begin": [
+        284,
+        5
+      ],
+      "end": [
+        309,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DataType",
+                      "id": 62,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "metadata",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "HashMap",
+                      "id": 924,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "resolved_path": {
+                                  "path": "String",
+                                  "id": 159,
+                                  "args": null
+                                }
+                              }
+                            },
+                            {
+                              "type": {
+                                "resolved_path": {
+                                  "path": "String",
+                                  "id": 159,
+                                  "args": null
+                                }
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 143,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 199,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "62": "arrow_schema::datatype::DataType",
+      "924": "std::collections::hash::map::HashMap",
+      "159": "alloc::string::String",
+      "143": "core::result::Result",
+      "199": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::try_new`": 921,
+      "`Self::NAME`": 915,
+      "`EXTENSION_TYPE_METADATA_KEY`": 913,
+      "crate::Field": 102,
+      "`EXTENSION_TYPE_NAME_KEY`": 912
+    },
+    "link_paths": {
+      "`Self::try_new`": "arrow_schema::extension::ExtensionType::try_new",
+      "`Self::NAME`": "arrow_schema::extension::ExtensionType::NAME",
+      "`EXTENSION_TYPE_METADATA_KEY`": "arrow_schema::extension::EXTENSION_TYPE_METADATA_KEY",
+      "crate::Field": "arrow_schema::field::Field",
+      "`EXTENSION_TYPE_NAME_KEY`": "arrow_schema::extension::EXTENSION_TYPE_NAME_KEY"
+    },
+    "artifact": {
+      "id": "d8b2654e49f3f7d5b3cf8a3b430e529667d8c73f4a799b716f4071b217572b55",
+      "format_version": 61,
+      "item_id": "923",
+      "origin": "https://docs.rs/crate/arrow-schema/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_schema.extension.ExtensionType.md",
+    "record_file": "operations/arrow_schema.extension.ExtensionType.json",
+    "anchor": "op-937e747629ba2188834f2a79",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::try_new`": "../operations/arrow_schema.extension.ExtensionType.md#op-226955309e0587a6d6c9751b",
+      "`Self::NAME`": "../operations/arrow_schema.extension.ExtensionType.md#op-fc4fcaa150f20d01bc853b71",
+      "`EXTENSION_TYPE_METADATA_KEY`": "../operations/arrow_schema.extension.EXTENSION_TYPE_METADATA_KEY.md#op-c38aeda07fc1041ad3e5ea8f",
+      "crate::Field": "../operations/arrow_schema.field.Field.md#op-66eb7ef45bcc129b0a0189cf",
+      "`EXTENSION_TYPE_NAME_KEY`": "../operations/arrow_schema.extension.EXTENSION_TYPE_NAME_KEY.md#op-1d143f6e8f659d207021ff6f"
+    }
+  },
+  {
+    "id": "e773d8931cb5b2cb39d2a6a0",
+    "path": "arrow_schema::extension::ExtensionType::validate",
+    "name": "validate",
+    "owner": "arrow_schema::extension::ExtensionType",
+    "crate": "arrow-schema",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn validate(data_type: &DataType, metadata: Self::Metadata) -> Result<(), ArrowError>",
+    "docs": "Validate this extension type for a field with the given data type and\nmetadata.\n\nThe default implementation delegates to [`Self::try_new`]. Extension\ntypes may override this to validate without constructing `Self`.",
+    "span": {
+      "filename": "src/extension/mod.rs",
+      "begin": [
+        265,
+        5
+      ],
+      "end": [
+        267,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DataType",
+                      "id": 62,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "metadata",
+              {
+                "qualified_path": {
+                  "name": "Metadata",
+                  "args": null,
+                  "self_type": {
+                    "generic": "Self"
+                  },
+                  "trait": {
+                    "path": "",
+                    "id": 460,
+                    "args": null
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 143,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 199,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "62": "arrow_schema::datatype::DataType",
+      "460": "arrow_schema::extension::ExtensionType",
+      "143": "core::result::Result",
+      "199": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::try_new`": 921
+    },
+    "link_paths": {
+      "`Self::try_new`": "arrow_schema::extension::ExtensionType::try_new"
+    },
+    "artifact": {
+      "id": "d8b2654e49f3f7d5b3cf8a3b430e529667d8c73f4a799b716f4071b217572b55",
+      "format_version": 61,
+      "item_id": "922",
+      "origin": "https://docs.rs/crate/arrow-schema/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_schema.extension.ExtensionType.md",
+    "record_file": "operations/arrow_schema.extension.ExtensionType.json",
+    "anchor": "op-e773d8931cb5b2cb39d2a6a0",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::try_new`": "../operations/arrow_schema.extension.ExtensionType.md#op-226955309e0587a6d6c9751b"
+    }
+  }
+]

@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::rank::rank`, `arrow::compute::rank`
 fn rank(array: &dyn Array, options: Option<arrow_schema::SortOptions>) -> Result<Vec<u32>, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ord.rank.rank.md).
+
+
 Assigns a rank to each value in `array` based on its position in the sorted order
 
 Where values are equal, they will be assigned the highest of their ranks,

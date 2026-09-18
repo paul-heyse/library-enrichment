@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::map_entries`, `datafusion_functions_nest
 fn map_entries(map: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.map_entries.map_entries.md).
+
+
 Return a list of all entries in the map.
 
 ---
@@ -23,6 +26,9 @@ Return a list of all entries in the map.
 ```rust
 fn map_entries_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.map_entries.map_entries_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 MapEntriesFunc
@@ -56,5 +62,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.map_entries.MapEntriesFunc.md).
+
 
 ---

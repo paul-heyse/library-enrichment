@@ -1,0 +1,982 @@
+[
+  {
+    "id": "5cef0074657f4dfb224c1d39",
+    "path": "parquet::file::writer::SerializedRowGroupWriter",
+    "name": "SerializedRowGroupWriter",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct SerializedRowGroupWriter<'a, W: Write>",
+    "docs": "Parquet row group writer API.\n\nProvides methods to access column writers in an iterator-like fashion, order is\nguaranteed to match the order of schema leaves (column descriptors).\n\nAll columns should be written sequentially; the main workflow is:\n- Request the next column using `next_column` method - this will return `None` if no\n  more columns are available to write.\n- Once done writing a column, close column writer with `close`\n- Once all columns have been written, close row group writer with `close`\n  method. The close method will return row group metadata and is no-op\n  on already closed row group.",
+    "span": {
+      "filename": "src/file/writer.rs",
+      "begin": [
+        515,
+        1
+      ],
+      "end": [
+        533,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "W",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Write",
+                          "id": 1102,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          7087,
+          7088,
+          7089,
+          7090,
+          7091,
+          7092,
+          7093,
+          7094,
+          7095,
+          7096,
+          7097,
+          7098,
+          7099,
+          7100,
+          7101
+        ]
+      }
+    },
+    "type_references": {
+      "1102": "core::io::write::Write"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3318",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.writer.SerializedRowGroupWriter.md",
+    "record_file": "operations/parquet.file.writer.SerializedRowGroupWriter.json",
+    "anchor": "op-5cef0074657f4dfb224c1d39",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7408154d8e7f89424877aa43",
+    "path": "parquet::file::writer::SerializedRowGroupWriter::append_column",
+    "name": "append_column",
+    "owner": "parquet::file::writer::SerializedRowGroupWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_column<R: ChunkReader>(&mut self, reader: &R, close: ColumnCloseResult) -> Result<()>",
+    "docs": "Append an encoded column chunk from `reader` directly to the underlying\nwriter.\n\nThis method can be used for efficiently concatenating or projecting\nParquet data, or encoding Parquet data to temporary in-memory buffers.\n\nArguments:\n- `reader`: a [`ChunkReader`] containing the encoded column data\n- `close`: the [`ColumnCloseResult`] metadata returned from closing\n  the column writer that wrote the data in `reader`.\n\nSee Also:\n1. [`get_column_writer`]  for creating writers that can encode data.\n2. [`Self::next_column`] for writing data that isn't already encoded",
+    "span": {
+      "filename": "src/file/writer.rs",
+      "begin": [
+        686,
+        5
+      ],
+      "end": [
+        699,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "reader",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              }
+            ],
+            [
+              "close",
+              {
+                "resolved_path": {
+                  "path": "ColumnCloseResult",
+                  "id": 3313,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "R",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ChunkReader",
+                          "id": 3024,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3313": "parquet::column::writer::ColumnCloseResult",
+      "107": "parquet::errors::Result",
+      "3024": "parquet::file::reader::ChunkReader"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SerializedRowGroupWriter",
+          "id": "parquet::file::writer::SerializedRowGroupWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                },
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/writer.rs",
+        "begin": [
+          535,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::next_column`": 7085,
+      "`get_column_writer`": 4337,
+      "`ChunkReader`": 3024,
+      "`ColumnCloseResult`": 3313
+    },
+    "link_paths": {
+      "`Self::next_column`": "parquet::file::writer::SerializedRowGroupWriter::next_column",
+      "`get_column_writer`": "parquet::column::writer::get_column_writer",
+      "`ChunkReader`": "parquet::file::reader::ChunkReader",
+      "`ColumnCloseResult`": "parquet::column::writer::ColumnCloseResult"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "7086",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.writer.SerializedRowGroupWriter.md",
+    "record_file": "operations/parquet.file.writer.SerializedRowGroupWriter.json",
+    "anchor": "op-7408154d8e7f89424877aa43",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::next_column`": "../operations/parquet.file.writer.SerializedRowGroupWriter.md#op-490035e9e13384b58116961f",
+      "`get_column_writer`": "../operations/parquet.column.writer.get_column_writer.md#op-e0f41296e3e94d003a567aec",
+      "`ChunkReader`": "../operations/parquet.file.reader.ChunkReader.md#op-8eae425b3b94361396eb9d94",
+      "`ColumnCloseResult`": "../operations/parquet.column.writer.ColumnCloseResult.md#op-1f8b8cac3518e50577a9d9b2"
+    }
+  },
+  {
+    "id": "f0ccaef92234231a7ab199f0",
+    "path": "parquet::file::writer::SerializedRowGroupWriter::close",
+    "name": "close",
+    "owner": "parquet::file::writer::SerializedRowGroupWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn close(self) -> Result<RowGroupMetaDataPtr>",
+    "docs": "Closes this row group writer and returns row group metadata.",
+    "span": {
+      "filename": "src/file/writer.rs",
+      "begin": [
+        852,
+        5
+      ],
+      "end": [
+        881,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "RowGroupMetaDataPtr",
+                          "id": 5647,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "5647": "parquet::file::metadata::RowGroupMetaDataPtr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SerializedRowGroupWriter",
+          "id": "parquet::file::writer::SerializedRowGroupWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                },
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/writer.rs",
+        "begin": [
+          535,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "7036",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.writer.SerializedRowGroupWriter.md",
+    "record_file": "operations/parquet.file.writer.SerializedRowGroupWriter.json",
+    "anchor": "op-f0ccaef92234231a7ab199f0",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1f4193b7b471923aee07a5d0",
+    "path": "parquet::file::writer::SerializedRowGroupWriter::new",
+    "name": "new",
+    "owner": "parquet::file::writer::SerializedRowGroupWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(schema_descr: SchemaDescPtr, properties: WriterPropertiesPtr, buf: &'a mut TrackedWrite<W>, row_group_index: i16, on_close: Option<OnCloseRowGroup<'a, W>>) -> Self",
+    "docs": "Creates a new `SerializedRowGroupWriter` with:\n\n- `schema_descr` - the schema to write\n- `properties` - writer properties\n- `buf` - the buffer to write data to\n- `row_group_index` - row group index in this parquet file.\n- `file_offset` - file offset of this row group in this parquet file.\n- `on_close` - an optional callback that will invoked on [`Self::close`]",
+    "span": {
+      "filename": "src/file/writer.rs",
+      "begin": [
+        544,
+        5
+      ],
+      "end": [
+        572,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "schema_descr",
+              {
+                "resolved_path": {
+                  "path": "SchemaDescPtr",
+                  "id": 5244,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "properties",
+              {
+                "resolved_path": {
+                  "path": "WriterPropertiesPtr",
+                  "id": 3382,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "buf",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'a",
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "TrackedWrite",
+                      "id": 5415,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "W"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "row_group_index",
+              {
+                "primitive": "i16"
+              }
+            ],
+            [
+              "on_close",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 74,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "OnCloseRowGroup",
+                              "id": 7021,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "lifetime": "'a"
+                                    },
+                                    {
+                                      "type": {
+                                        "generic": "W"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "5244": "parquet::schema::types::SchemaDescPtr",
+      "3382": "parquet::file::properties::WriterPropertiesPtr",
+      "5415": "parquet::file::writer::TrackedWrite",
+      "74": "core::option::Option",
+      "7021": "parquet::file::writer::OnCloseRowGroup"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SerializedRowGroupWriter",
+          "id": "parquet::file::writer::SerializedRowGroupWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                },
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/writer.rs",
+        "begin": [
+          535,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::close`": 7036
+    },
+    "link_paths": {
+      "`Self::close`": "parquet::file::writer::SerializedRowGroupWriter::close"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "7084",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.writer.SerializedRowGroupWriter.md",
+    "record_file": "operations/parquet.file.writer.SerializedRowGroupWriter.json",
+    "anchor": "op-1f4193b7b471923aee07a5d0",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::close`": "../operations/parquet.file.writer.SerializedRowGroupWriter.md#op-f0ccaef92234231a7ab199f0"
+    }
+  },
+  {
+    "id": "490035e9e13384b58116961f",
+    "path": "parquet::file::writer::SerializedRowGroupWriter::next_column",
+    "name": "next_column",
+    "owner": "parquet::file::writer::SerializedRowGroupWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn next_column(&mut self) -> Result<Option<SerializedColumnWriter<'_>>>",
+    "docs": "Returns the next column writer, if available; otherwise returns `None`.\nIn case of any IO error or Thrift error, or if row group writer has already been\nclosed returns `Err`.",
+    "span": {
+      "filename": "src/file/writer.rs",
+      "begin": [
+        665,
+        5
+      ],
+      "end": [
+        670,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 74,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "SerializedColumnWriter",
+                                      "id": 7033,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "lifetime": "'_"
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "74": "core::option::Option",
+      "7033": "parquet::file::writer::SerializedColumnWriter"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SerializedRowGroupWriter",
+          "id": "parquet::file::writer::SerializedRowGroupWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                },
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Send",
+                        "id": "core::marker::Send",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/writer.rs",
+        "begin": [
+          535,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "7085",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.writer.SerializedRowGroupWriter.md",
+    "record_file": "operations/parquet.file.writer.SerializedRowGroupWriter.json",
+    "anchor": "op-490035e9e13384b58116961f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

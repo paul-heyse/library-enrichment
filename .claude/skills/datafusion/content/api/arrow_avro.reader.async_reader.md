@@ -27,6 +27,9 @@ fn schema(&self) -> SchemaRef
 fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.reader.async_reader.AsyncAvroFileReader.md).
+
+
 An asynchronous Avro file reader that implements `Stream<Item = Result<RecordBatch, ArrowError>>`.
 This uses an [`AsyncFileReader`] to fetch data ranges as needed, starting with fetching the header,
 then reading all the blocks in the provided range where:

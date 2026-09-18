@@ -12,6 +12,9 @@ Also reachable as `datafusion_physical_expr::expressions::binary`, `datafusion_p
 fn binary(lhs: std::sync::Arc<dyn PhysicalExpr>, op: datafusion_expr::Operator, rhs: std::sync::Arc<dyn PhysicalExpr>, _input_schema: &Schema) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.binary.binary.md).
+
+
 Create a binary expression whose arguments are correctly coerced.
 This function errors if it is not possible to coerce the arguments
 to computational types supported by the operator.
@@ -27,6 +30,9 @@ Also reachable as `datafusion_physical_expr::expressions::similar_to`, `datafusi
 ```rust
 fn similar_to(negated: bool, case_insensitive: bool, expr: std::sync::Arc<dyn PhysicalExpr>, pattern: std::sync::Arc<dyn PhysicalExpr>) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.binary.similar_to.md).
+
 
 Create a similar to expression
 
@@ -78,6 +84,9 @@ fn propagate_constraints(&self, interval: &Interval, children: &[&Interval]) -> 
 fn try_to_proto(&self, ctx: &datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalExprNode>>
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.binary.BinaryExpr.md).
+
 
 Binary expression
 

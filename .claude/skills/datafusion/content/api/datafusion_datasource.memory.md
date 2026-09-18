@@ -33,6 +33,9 @@ async fn write_all(&self, data: SendableRecordBatchStream, _context: &Arc<TaskCo
 fn fmt_as(&self, t: DisplayFormatType, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.memory.MemSink.md).
+
+
 Implements for writing to a [`MemTable`]
 
 [`MemTable`]: <https://docs.rs/datafusion/latest/datafusion/datasource/memory/struct.MemTable.html>
@@ -88,6 +91,9 @@ fn try_to_proto(&self, ctx: &datafusion_physical_plan::proto::ExecutionPlanEncod
 fn with_fetch(&self, limit: Option<usize>) -> Option<Arc<dyn DataSource>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.memory.MemorySourceConfig.md).
+
+
 Data source configuration for reading in-memory batches of data
 
 ---
@@ -99,6 +105,9 @@ Data source configuration for reading in-memory batches of data
 ```rust
 type PartitionData = std::sync::Arc<tokio::sync::RwLock<Vec<arrow::array::RecordBatch>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.memory.PartitionData.md).
+
 
 Type alias for partition data
 

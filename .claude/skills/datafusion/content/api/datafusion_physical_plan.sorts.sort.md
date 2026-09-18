@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 3 public items · structured records in [`mo
 fn sort_batch(batch: &arrow::array::RecordBatch, expressions: &datafusion_physical_expr::LexOrdering, fetch: Option<usize>) -> datafusion_common::Result<arrow::array::RecordBatch>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.sorts.sort.sort_batch.md).
+
+
 ---
 
 ## sort_batch_chunked
@@ -19,6 +22,9 @@ fn sort_batch(batch: &arrow::array::RecordBatch, expressions: &datafusion_physic
 ```rust
 fn sort_batch_chunked(batch: &arrow::array::RecordBatch, expressions: &datafusion_physical_expr::LexOrdering, batch_size: usize) -> datafusion_common::Result<Vec<arrow::array::RecordBatch>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.sorts.sort.sort_batch_chunked.md).
+
 
 Sort a batch and return the result as multiple batches of size `batch_size`.
 This is useful when you want to avoid creating one large sorted batch in memory,
@@ -85,6 +91,9 @@ fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option
 fn with_fetch(&self, limit: Option<usize>) -> Option<Arc<dyn ExecutionPlan>>
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.sorts.sort.SortExec.md).
+
 
 Sort execution plan.
 

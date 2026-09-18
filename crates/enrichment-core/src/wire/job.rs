@@ -34,7 +34,7 @@ crate::native_struct! {
 /// A receipt for submitted work. Never evidence that the work finished.
 pub struct JobHandle {
     /// Durable core job identity. Distinct from the request ID: jobs are shared and reusable.
-    job_id: String => crate::native_union::Rule::Text,
+    job_id: crate::identity::JobId => crate::native_union::Rule::Text,
     /// Where the job is now.
     state: JobState => crate::native_union::Rule::Text,
     /// Which stage is executing, for a caller to report progress.

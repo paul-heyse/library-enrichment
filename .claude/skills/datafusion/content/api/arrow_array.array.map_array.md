@@ -63,6 +63,9 @@ fn to_data(&self) -> ArrayData
 fn from(data: ArrayData) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.map_array.MapArray.md).
+
+
 An array of key-value maps
 
 Keys should always be non-null, but values can be null.

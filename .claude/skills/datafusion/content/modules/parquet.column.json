@@ -1,0 +1,56 @@
+[
+  {
+    "id": "a3b712261433211946b80977",
+    "path": "parquet::column",
+    "name": "column",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod column",
+    "docs": "Low level column reader and writer APIs.\n\nThis API is designed for reading and writing column values, definition and repetition\nlevels directly.\n\n# Example of writing and reading data\n\nData has the following format:\n```text\n+---------------+\n|         values|\n+---------------+\n|[1, 2]         |\n|[3, null, null]|\n+---------------+\n```\n\nThe example uses column writer and reader APIs to write raw values, definition and\nrepetition levels and read them to verify write/read correctness.\n\n```rust,no_run\n# use std::{fs, path::Path, sync::Arc};\n#\n# use parquet::{\n#    column::{reader::ColumnReader, writer::ColumnWriter},\n#    data_type::Int32Type,\n#    file::{\n#        properties::WriterProperties,\n#        reader::{FileReader, SerializedFileReader},\n#        writer::SerializedFileWriter,\n#    },\n#    schema::parser::parse_message_type,\n# };\n\nlet path = Path::new(\"/path/to/column_sample.parquet\");\n\n// Writing data using column writer API.\n\nlet message_type = \"\n  message schema {\n    optional group values (LIST) {\n      repeated group list {\n        optional INT32 element;\n      }\n    }\n  }\n\";\nlet schema = Arc::new(parse_message_type(message_type).unwrap());\nlet file = fs::File::create(path).unwrap();\nlet mut writer = SerializedFileWriter::new(file, schema, Default::default()).unwrap();\n\nlet mut row_group_writer = writer.next_row_group().unwrap();\nwhile let Some(mut col_writer) = row_group_writer.next_column().unwrap() {\n    col_writer\n        .typed::<Int32Type>()\n        .write_batch(&[1, 2, 3], Some(&[3, 3, 3, 2, 2]), Some(&[0, 1, 0, 1, 1]))\n        .unwrap();\n    col_writer.close().unwrap();\n}\nrow_group_writer.close().unwrap();\n\nwriter.close().unwrap();\n\n// Reading data using column reader API.\n\nlet file = fs::File::open(path).unwrap();\nlet reader = SerializedFileReader::new(file).unwrap();\nlet metadata = reader.metadata();\n\nlet mut values = vec![];\nlet mut def_levels = vec![];\nlet mut rep_levels = vec![];\n\nfor i in 0..metadata.num_row_groups() {\n    let row_group_reader = reader.get_row_group(i).unwrap();\n    let row_group_metadata = metadata.row_group(i);\n\n    for j in 0..row_group_metadata.num_columns() {\n        let mut column_reader = row_group_reader.get_column_reader(j).unwrap();\n        match column_reader {\n            // You can also use `get_typed_column_reader` method to extract typed reader.\n            ColumnReader::Int32ColumnReader(ref mut typed_reader) => {\n                let (records, values, levels) = typed_reader.read_records(\n                    8, // maximum records to read\n                    Some(&mut def_levels),\n                    Some(&mut rep_levels),\n                    &mut values,\n                ).unwrap();\n                assert_eq!(records, 2);\n                assert_eq!(levels, 5);\n                assert_eq!(values, 3);\n            }\n            _ => {}\n        }\n    }\n}\n\nassert_eq!(values, vec![1, 2, 3]);\nassert_eq!(def_levels, vec![3, 3, 3, 2, 2]);\nassert_eq!(rep_levels, vec![0, 1, 0, 1, 1]);\n```",
+    "span": {
+      "filename": "src/column/mod.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        130,
+        16
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          4066,
+          4178,
+          4274,
+          4434
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "4435",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/parquet.column.md",
+    "record_file": "modules/parquet.column.json",
+    "anchor": "op-a3b712261433211946b80977",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

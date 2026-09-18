@@ -20,6 +20,9 @@ fn insert_batch(&mut self, batch: RecordBatch) -> Result<()>
 fn try_new(partition_id: usize, schema: SchemaRef, common_sort_prefix: Vec<PhysicalSortExpr>, expr: LexOrdering, k: usize, batch_size: usize, runtime: Arc<RuntimeEnv>, metrics: &ExecutionPlanMetricsSet, filter: Arc<RwLock<TopKDynamicFilters>>) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.topk.TopK.md).
+
+
 TopK
 
 # Background
@@ -87,6 +90,9 @@ This operator tracks the top K items using a `TopKHeap`.
 ```rust
 struct TopKDynamicFilters
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.topk.TopKDynamicFilters.md).
+
 
 For more background, please also see the [Dynamic Filters: Passing Information Between Operators During Execution for 25x Faster Queries blog]
 

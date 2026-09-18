@@ -13,9 +13,8 @@ use datafusion::{
 use enrichment_core::{
     evidence::{
         FragmentKind, SymbolHeader, TextFragment,
-        metadata::ReleaseMetadata,
         path::PublicPath,
-        relational::{CoverageFact, InputArtifact, RelationshipObservation},
+        relational::{InputArtifact, RelationshipObservation},
         snapshot::EvidenceManifest,
     },
     identity::SnapshotId,
@@ -107,44 +106,80 @@ pub struct NativePage<T> {
 }
 
 impl<T> NativePage<T> {
-    fn selected(mut items: Vec<T>, limit: usize, key: impl Fn(&T) -> &str) -> Self {
-        let has_more = items.len() > limit;
-        items.truncate(limit);
-        let next_key = has_more
+    fn selected(
+        items: Vec<T>,
+        boundary: crate::page_plan::Boundary,
+        key: impl Fn(&T) -> &str,
+    ) -> Result<Self, QueryError> {
+        if items.len() as u64 != boundary.returned {
+            return Err(DataFusionError::Internal(
+                "native page decoder changed row cardinality".into(),
+            )
+            .into());
+        }
+        let next_key = boundary
+            .has_more
             .then(|| items.last().map(|item| key(item).to_owned()))
             .flatten();
-        Self {
+        Ok(Self {
             items,
-            has_more,
+            has_more: boundary.has_more,
             next_key,
-        }
+        })
     }
 }
 
+struct PageOutput {
+    batches: Vec<arrow::record_batch::RecordBatch>,
+    boundary: crate::page_plan::Boundary,
+}
+
 impl SnapshotReader {
-    async fn page_rows(
+    async fn page_selection(
         &self,
         mut frame: DataFrame,
         key: &str,
         family: crate::preparation::QueryFamily,
         limit: usize,
         after: Option<&str>,
-    ) -> Result<crate::runtime::QueryOutput, QueryError> {
-        if !(1..=1024).contains(&limit) {
-            return Err(DataFusionError::Plan("page requires 1..1024 items".into()).into());
-        }
+    ) -> Result<crate::page_plan::Selected, QueryError> {
+        family.require(frame.schema().as_arrow())?;
         if let Some(after) = after {
             frame = frame.filter(col(key).gt(lit(after)))?;
         }
-        Ok(self
+        let selected = crate::page_plan::select(
+            &self.runtime,
+            frame.sort(vec![col(key).sort(true, false)])?,
+            crate::page_plan::Policy {
+                page_size: limit as u64,
+                offset: 0,
+                total: None,
+                detail: false,
+            },
+        )
+        .await?;
+        Ok(selected)
+    }
+
+    async fn page_rows(
+        &self,
+        frame: DataFrame,
+        key: &str,
+        family: crate::preparation::QueryFamily,
+        limit: usize,
+        after: Option<&str>,
+    ) -> Result<PageOutput, QueryError> {
+        let selected = self
+            .page_selection(frame, key, family, limit, after)
+            .await?;
+        let output = self
             .runtime
-            .execute_family(
-                frame
-                    .sort(vec![col(key).sort(true, false)])?
-                    .limit(0, Some(limit + 1))?,
-                Some(family),
-            )
-            .await?)
+            .execute_family(selected.frame, Some(family))
+            .await?;
+        Ok(PageOutput {
+            batches: output.batches,
+            boundary: selected.boundary,
+        })
     }
 
     /// Independently page qualified API observations before decoding selected leaves.
@@ -171,30 +206,29 @@ impl SnapshotReader {
                 after,
             )
             .await?;
-        Ok(NativePage::selected(
+        NativePage::selected(
             projection::render::api_observations(&out.batches, docs)?,
-            limit,
+            out.boundary,
             |item| item.observation_id.as_str(),
-        ))
+        )
     }
 
-    /// Relationship identities preserve direction, self edges and external endpoints.
+    /// Consensus over independently qualified ancillary observations.
     pub async fn ancillary_facts(
         &self,
         symbol: &str,
     ) -> Result<enrichment_core::evidence::model::AncillaryFacts, QueryError> {
-        let plan = self.ctx.sql("SELECT
-            CASE WHEN count(DISTINCT payload.cfg_hints)=1 THEN first_value(payload.cfg_hints) ELSE NULL END AS cfg_hints,
-            CASE WHEN count(DISTINCT source.locator)=1 THEN first_value(source.locator) ELSE NULL END AS locator,
-            CAST(count(DISTINCT payload.cfg_hints) AS BIGINT UNSIGNED) AS cfg_alternatives,
-            CAST(count(DISTINCT source.locator) AS BIGINT UNSIGNED) AS locator_alternatives
+        let plan = self
+            .ctx
+            .sql(
+                "SELECT payload.cfg_hints AS cfg_hints, source.locator AS locator
             FROM snapshot.evidence.inspection_observations o
             LEFT SEMI JOIN snapshot.domain.inspection_bound b
-                ON o.observation_id=b.observation_id AND b.binding_id=$1")
-            .await?.with_param_values(vec![datafusion::common::ScalarValue::from(symbol)])?;
-        self.runtime.records(plan, 1).await?.pop().ok_or_else(|| {
-            DataFusionError::Internal("ancillary aggregate returned no row".into()).into()
-        })
+                ON o.observation_id=b.observation_id AND b.binding_id=$1",
+            )
+            .await?
+            .with_param_values(vec![datafusion::common::ScalarValue::from(symbol)])?;
+        Ok(crate::research_inspection::ancillary(&self.runtime, plan).await?)
     }
 
     /// Relationship identities preserve direction, self edges and external endpoints.
@@ -233,9 +267,7 @@ impl SnapshotReader {
             .into_iter()
             .flatten()
             .collect();
-        Ok(NativePage::selected(items, limit, |item| {
-            item.relationship_id.as_str()
-        }))
+        NativePage::selected(items, out.boundary, |item| item.relationship_id.as_str())
     }
 
     /// SymbolHeader documentation and examples are reachable without complete-set hydration.
@@ -273,11 +305,11 @@ impl SnapshotReader {
                 after,
             )
             .await?;
-        Ok(NativePage::selected(
+        NativePage::selected(
             projection::render::symbol_headers(&out.batches)?,
-            limit,
+            out.boundary,
             |s| s.symbol_id.as_str(),
-        ))
+        )
     }
 
     /// SymbolHeader documentation and examples are reachable without complete-set hydration.
@@ -288,7 +320,7 @@ impl SnapshotReader {
         limit: usize,
         after: Option<&str>,
         max_characters: Option<usize>,
-    ) -> Result<NativePage<(TextFragment, bool)>, QueryError> {
+    ) -> Result<NativePage<crate::research_fragments::SelectedFragment>, QueryError> {
         self.fragment_projection(Some(symbol), kinds, limit, after, max_characters)
             .await
     }
@@ -299,7 +331,7 @@ impl SnapshotReader {
         limit: usize,
         after: Option<&str>,
         max_characters: Option<usize>,
-    ) -> Result<NativePage<(TextFragment, bool)>, QueryError> {
+    ) -> Result<NativePage<crate::research_fragments::SelectedFragment>, QueryError> {
         self.fragment_projection(None, &[kind], limit, after, max_characters)
             .await
     }
@@ -311,7 +343,7 @@ impl SnapshotReader {
         limit: usize,
         after: Option<&str>,
         max_characters: Option<usize>,
-    ) -> Result<NativePage<(TextFragment, bool)>, QueryError> {
+    ) -> Result<NativePage<crate::research_fragments::SelectedFragment>, QueryError> {
         let relation = if symbol.is_some() {
             "snapshot.domain.fragment_surface f LEFT SEMI JOIN snapshot.domain.fragment_paths p ON f.fragment_id = p.fragment_id AND p.symbol_id = $2"
         } else {
@@ -324,7 +356,11 @@ impl SnapshotReader {
             FROM {relation}"
         );
         let mut params = vec![datafusion::common::ScalarValue::from(
-            max_characters.map_or(i64::MAX, |n| n as i64),
+            max_characters
+                .map(i64::try_from)
+                .transpose()
+                .map_err(|error| DataFusionError::Plan(error.to_string()))?
+                .unwrap_or(i64::MAX),
         )];
         if let Some(symbol) = symbol {
             params.push(datafusion::common::ScalarValue::from(symbol));
@@ -335,8 +371,8 @@ impl SnapshotReader {
             .await?
             .with_param_values(params)?
             .filter(col("kind").in_list(kinds.iter().map(|k| lit(k.as_str())).collect(), false))?;
-        let out = self
-            .page_rows(
+        let selected = self
+            .page_selection(
                 frame,
                 "fragment_id",
                 crate::preparation::QueryFamily::FragmentProjection { bounded: true },
@@ -344,26 +380,20 @@ impl SnapshotReader {
                 after,
             )
             .await?;
-        let mut items = Vec::new();
-        for batch in out.batches {
-            let complete = batch
-                .column_by_name("text_complete")
-                .and_then(|a| a.as_any().downcast_ref::<arrow::array::BooleanArray>())
-                .ok_or_else(|| {
-                    DataFusionError::Internal("fragment projection lacks text_complete".into())
-                })?;
-            let fragments = projection::render::fragments(std::slice::from_ref(&batch))?;
-            items.extend(
-                fragments
-                    .into_iter()
-                    .enumerate()
-                    .map(|(i, fragment)| (fragment, complete.value(i))),
-            );
-        }
-        Ok(NativePage::selected(items, limit, |item| {
-            item.0.fragment_id.as_str()
-        }))
+        let items = self
+            .runtime
+            .records(
+                crate::research_fragments::from_surface(selected.frame)?,
+                limit,
+            )
+            .await?;
+        NativePage::selected(
+            items,
+            selected.boundary,
+            |item: &crate::research_fragments::SelectedFragment| item.fragment.fragment_id.as_str(),
+        )
     }
+
     /// # Errors
     /// Membership, exact file integrity and admission must all succeed before domain views exist.
     pub async fn open(
@@ -401,21 +431,17 @@ impl SnapshotReader {
 
     /// Dependency identities of static declarations, excluding mutable registry selection
     /// and execution-only inputs. This bounded identity projection never hydrates API text.
-    pub async fn static_inputs(&self) -> Result<Vec<(String, String)>, QueryError> {
-        let frame = self.ctx.sql("WITH bindings AS (SELECT source.producer_binding_id AS id FROM snapshot.evidence.api_observations UNION SELECT source.producer_binding_id AS id FROM snapshot.evidence.fragments WHERE source.evidence_class IN ('declared', 'statically_extracted')) SELECT DISTINCT i.sha256, i.source_uri FROM snapshot.evidence.input_artifacts i LEFT SEMI JOIN bindings b ON i.producer_binding_id = b.id WHERE i.kind NOT IN ('registry_index_entry', 'registry_version_metadata') ORDER BY i.sha256, i.source_uri LIMIT 8193").await?;
-        let out = self
-            .runtime
-            .execute_family(frame, Some(crate::preparation::QueryFamily::StaticInputs))
-            .await?;
-        if out.rows > 8192 {
-            return Err(DataFusionError::ResourcesExhausted(
-                "static dependency identity projection exceeds 8192 inputs".into(),
-            )
-            .into());
-        }
-        let digests = projection::render::strings(&out.batches, "sha256")?;
-        let sources = projection::render::strings(&out.batches, "source_uri")?;
-        Ok(digests.into_iter().zip(sources).collect())
+    async fn static_input_plan(&self) -> Result<DataFrame, QueryError> {
+        Ok(self.ctx.sql("WITH bindings AS (SELECT source.producer_binding_id AS id FROM snapshot.evidence.api_observations UNION SELECT source.producer_binding_id AS id FROM snapshot.evidence.fragments WHERE source.evidence_class IN ('declared', 'statically_extracted')) SELECT DISTINCT i.sha256, i.source_uri FROM snapshot.evidence.input_artifacts i LEFT SEMI JOIN bindings b ON i.producer_binding_id = b.id WHERE i.kind NOT IN ('registry_index_entry', 'registry_version_metadata') LIMIT 8193").await?)
+    }
+
+    /// Keep paired digest/locator values relational; no parallel arrays, zip or Rust set policy.
+    pub async fn same_static_inputs(&self, other: &Self) -> Result<bool, QueryError> {
+        let left = self.static_input_plan().await?;
+        let right = other.static_input_plan().await?;
+        crate::environment_plan::same_static_inputs(&self.runtime, left, right)
+            .await
+            .map_err(Into::into)
     }
 
     /// Native retained execution selection, with a sentinel rather than silent alternatives loss.
@@ -479,9 +505,7 @@ impl SnapshotReader {
         for batch in output.batches {
             observations.extend(projection::execution::decode(&batch)?);
         }
-        Ok(NativePage::selected(observations, limit, |item| {
-            &item.observation_id
-        }))
+        NativePage::selected(observations, output.boundary, |item| &item.observation_id)
     }
 
     async fn execution_frame(
@@ -852,28 +876,21 @@ impl SnapshotReader {
             .collect())
     }
     /// # Errors
-    /// Role lookup never falls back to a different acquisition.
-    pub async fn inputs_for_role(&self, role: &str) -> Result<Vec<InputArtifact>, QueryError> {
-        let output = self
-            .runtime
-            .execute_family(
-                self.ctx
-                    .table("snapshot.evidence.input_artifacts")
-                    .await?
-                    .filter(col("role").eq(lit(role)))?,
-                Some(crate::preparation::QueryFamily::Relation(
-                    crate::admission::Relation::InputArtifacts,
-                )),
-            )
-            .await?;
-        Ok(output
-            .batches
-            .iter()
-            .map(projection::input_artifacts_from_batch)
-            .collect::<Result<Vec<_>, _>>()?
-            .into_iter()
-            .flatten()
-            .collect())
+    /// Native source coordinates, bounded window and exact acquisition consensus.
+    pub async fn source_read(
+        &self,
+        ecosystem: enrichment_core::identity::Ecosystem,
+        locator: Option<&enrichment_core::evidence::relational::Locator>,
+        max_lines: usize,
+    ) -> Result<Option<crate::research_source::Read>, QueryError> {
+        Ok(crate::research_source::select(
+            &self.runtime,
+            self.ctx.table("snapshot.evidence.input_artifacts").await?,
+            ecosystem,
+            locator,
+            max_lines,
+        )
+        .await?)
     }
     /// # Errors
     /// Returned attempts belong to this pinned snapshot's catalog generation.
@@ -905,7 +922,7 @@ impl SnapshotReader {
     /// Exact attempt lookup refuses ambiguous identities rather than selecting a receipt.
     pub async fn attempt(
         &self,
-        id: &str,
+        id: &enrichment_core::identity::AttemptId,
     ) -> Result<enrichment_core::evidence::catalog::SnapshotAttempt, QueryError> {
         let session = self.opened.catalog.session(&self.runtime).await?;
         let output = self
@@ -1034,49 +1051,6 @@ impl SnapshotReader {
             artifacts.extend(projection::catalog::selected_artifacts(&batch)?);
         }
         Ok(artifacts)
-    }
-
-    /// # Errors
-    /// Coverage remains explicit for successful empty and missing scopes.
-    pub async fn coverage(&self) -> Result<Vec<CoverageFact>, QueryError> {
-        let output = self
-            .runtime
-            .execute_family(
-                self.ctx.table("snapshot.evidence.coverage").await?,
-                Some(crate::preparation::QueryFamily::Relation(
-                    crate::admission::Relation::Coverage,
-                )),
-            )
-            .await?;
-        Ok(output
-            .batches
-            .iter()
-            .map(projection::coverage_from_batch)
-            .collect::<Result<Vec<_>, _>>()?
-            .into_iter()
-            .flatten()
-            .collect())
-    }
-    /// # Errors
-    /// Offline resolution never re-runs archive extraction to recreate these facts.
-    pub async fn release_metadata(&self) -> Result<Vec<ReleaseMetadata>, QueryError> {
-        let output = self
-            .runtime
-            .execute_family(
-                self.ctx.table("snapshot.evidence.release_metadata").await?,
-                Some(crate::preparation::QueryFamily::Relation(
-                    crate::admission::Relation::ReleaseMetadata,
-                )),
-            )
-            .await?;
-        Ok(output
-            .batches
-            .iter()
-            .map(projection::metadata::decode)
-            .collect::<Result<Vec<_>, _>>()?
-            .into_iter()
-            .flatten()
-            .collect())
     }
 }
 

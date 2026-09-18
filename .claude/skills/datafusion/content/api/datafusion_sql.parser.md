@@ -22,6 +22,9 @@ enum CopyToSource
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.parser.CopyToSource.md).
+
+
 ---
 
 ## ParserInput
@@ -42,6 +45,9 @@ enum ParserInput<'a>
 fn from(tokens: Vec<TokenWithSpan>) -> Self
 fn from(sql: &'a str) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.parser.ParserInput.md).
+
 
 Describes a possible input for parser
 
@@ -67,6 +73,9 @@ enum ResetStatement
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.parser.ResetStatement.md).
+
+
 DataFusion extension for `RESET`
 
 ---
@@ -90,6 +99,9 @@ enum Statement
 ```rust
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.parser.Statement.md).
+
 
 DataFusion SQL Statement.
 
@@ -120,6 +132,9 @@ struct CopyToStatement
 ```rust
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.parser.CopyToStatement.md).
+
 
 DataFusion extension DDL for `COPY`
 
@@ -166,6 +181,9 @@ struct CreateExternalTable
 ```rust
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.parser.CreateExternalTable.md).
+
 
 DataFusion extension DDL for `CREATE EXTERNAL TABLE`
 
@@ -226,6 +244,9 @@ fn parse_statement(&mut self) -> Result<Statement, DataFusionError>
 fn parse_statements(&mut self) -> Result<VecDeque<Statement>, DataFusionError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.parser.DFParser.md).
+
+
 DataFusion SQL Parser based on [`sqlparser`]
 
 Parses DataFusion's SQL dialect, often delegating to [`sqlparser`]'s [`Parser`].
@@ -253,6 +274,9 @@ fn new(input: impl Into<ParserInput<'a>>) -> Self
 fn with_dialect(self, dialect: &'b dyn Dialect) -> Self
 fn with_recursion_limit(self, recursion_limit: usize) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.parser.DFParserBuilder.md).
+
 
 Builder for [`DFParser`]
 
@@ -308,6 +332,9 @@ struct ExplainStatement
 ```rust
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.parser.ExplainStatement.md).
+
 
 DataFusion specific `EXPLAIN`
 

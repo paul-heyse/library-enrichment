@@ -16,6 +16,9 @@ enum InvariantLevel
 
 **Derives**: Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.invariants.InvariantLevel.md).
+
+
 ---
 
 ## assert_expected_schema
@@ -27,6 +30,9 @@ Also reachable as `datafusion::logical_expr::assert_expected_schema`, `datafusio
 ```rust
 fn assert_expected_schema(schema: &datafusion_common::DFSchemaRef, plan: &LogicalPlan) -> datafusion_common::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.invariants.assert_expected_schema.md).
+
 
 Returns an error if the plan does not have the expected schema.
 Ignores metadata and nullability.
@@ -42,6 +48,9 @@ Also reachable as `datafusion::logical_expr::check_subquery_expr`, `datafusion_e
 ```rust
 fn check_subquery_expr(outer_plan: &LogicalPlan, inner_plan: &LogicalPlan, expr: &Expr) -> datafusion_common::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.invariants.check_subquery_expr.md).
+
 
 Do necessary check on subquery expressions and fail the invalid plan
 1) Check whether the outer plan is in the allowed outer plans list to use subquery expressions,

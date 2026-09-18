@@ -10,6 +10,9 @@ Crate `datafusion-expr` · 39 public items · structured records in [`model/data
 const OUTER_REFERENCE_COLUMN_PREFIX: &str = "outer_ref"
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.OUTER_REFERENCE_COLUMN_PREFIX.md).
+
+
 ---
 
 ## UNNEST_COLUMN_PREFIX
@@ -19,6 +22,9 @@ const OUTER_REFERENCE_COLUMN_PREFIX: &str = "outer_ref"
 ```rust
 const UNNEST_COLUMN_PREFIX: &str = "UNNEST"
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.UNNEST_COLUMN_PREFIX.md).
+
 
 ---
 
@@ -242,6 +248,9 @@ fn metadata(&self, schema: &dyn ExprSchema) -> Result<FieldMetadata>
 fn nullable(&self, input_schema: &dyn ExprSchema) -> Result<bool>
 fn to_field(&self, schema: &dyn ExprSchema) -> Result<(Option<TableReference>, Arc<Field>)>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.Expr.md).
+
 
 Represents logical expressions such as `A + 1`, or `CAST(c1 AS int)`.
 
@@ -494,6 +503,9 @@ enum GetFieldAccess
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.GetFieldAccess.md).
+
+
 Access a sub field of a nested type, such as `Field` or `List`
 
 ---
@@ -517,6 +529,9 @@ enum GroupingSet
 ```rust
 fn distinct_expr(&self) -> Vec<&Expr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.GroupingSet.md).
+
 
 Grouping sets
 
@@ -554,6 +569,9 @@ fn from(t: protobuf::NullTreatment) -> Self
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.NullTreatment.md).
+
+
 ---
 
 ## SetQuantifier
@@ -575,6 +593,9 @@ enum SetQuantifier
 ```rust
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.SetQuantifier.md).
+
 
 Whether the set comparison uses `ANY`/`SOME` or `ALL`
 
@@ -618,6 +639,9 @@ fn from(value: Arc<AggregateUDF>) -> Self
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.WindowFunctionDefinition.md).
+
+
 A function used as a SQL window function
 
 In SQL, you can use:
@@ -634,6 +658,9 @@ In SQL, you can use:
 fn display_comma_separated<T>(slice: &[T]) -> String where T: Display
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.display_comma_separated.md).
+
+
 ---
 
 ## intersect_metadata_for_union
@@ -643,6 +670,9 @@ fn display_comma_separated<T>(slice: &[T]) -> String where T: Display
 ```rust
 fn intersect_metadata_for_union<'a>(metadatas: impl IntoIterator<Item = &'a SchemaFieldMetadata>) -> SchemaFieldMetadata
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.intersect_metadata_for_union.md).
+
 
 Intersects multiple metadata instances for UNION operations.
 
@@ -676,6 +706,9 @@ A new `SchemaFieldMetadata` containing only the intersected metadata
 fn physical_name(expr: &Expr) -> datafusion_common::Result<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.physical_name.md).
+
+
 The name of the column (field) that this `Expr` will produce in the physical plan.
 The difference from [Expr::schema_name] is that top-level columns are unqualified.
 
@@ -689,6 +722,9 @@ The difference from [Expr::schema_name] is that top-level columns are unqualifie
 fn schema_name_from_exprs(exprs: &[Expr]) -> datafusion_common::Result<String, fmt::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.schema_name_from_exprs.md).
+
+
 Get schema_name for Vector of expressions
 
 ---
@@ -700,6 +736,9 @@ Get schema_name for Vector of expressions
 ```rust
 fn schema_name_from_sorts(sorts: &[Sort]) -> datafusion_common::Result<String, fmt::Error>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.schema_name_from_sorts.md).
+
 
 ---
 
@@ -721,6 +760,9 @@ struct AggregateFunction
 fn new_udf(func: Arc<AggregateUDF>, args: Vec<Expr>, distinct: bool, filter: Option<Box<Expr>>, order_by: Vec<Sort>, null_treatment: Option<NullTreatment>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.AggregateFunction.md).
+
+
 Aggregate function
 
 See also  [`ExprFunctionExt`] to set these fields on `Expr`
@@ -740,6 +782,9 @@ struct AggregateFunctionParams
 **Fields**: `args`, `distinct`, `filter`, `order_by`, `null_treatment`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.AggregateFunctionParams.md).
+
 
 ---
 
@@ -761,6 +806,9 @@ struct Alias
 fn new(expr: Expr, relation: Option<impl Into<TableReference>>, name: impl Into<String>) -> Self
 fn with_metadata(self, metadata: Option<FieldMetadata>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.Alias.md).
+
 
 Alias expression
 
@@ -785,6 +833,9 @@ struct Between
 ```rust
 fn new(expr: Box<Expr>, negated: bool, low: Box<Expr>, high: Box<Expr>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.Between.md).
+
 
 BETWEEN expression
 
@@ -818,6 +869,9 @@ fn new(left: Box<Expr>, op: Operator, right: Box<Expr>) -> Self
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.BinaryExpr.md).
+
+
 Binary expression for [`Expr::BinaryExpr`]
 
 ---
@@ -841,6 +895,9 @@ struct Case
 ```rust
 fn new(expr: Option<Box<Expr>>, when_then_expr: Vec<(Box<Expr>, Box<Expr>)>, else_expr: Option<Box<Expr>>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.Case.md).
+
 
 CASE expression
 
@@ -889,6 +946,9 @@ fn new(expr: Box<Expr>, data_type: DataType) -> Self
 fn new_from_field(expr: Box<Expr>, field: FieldRef) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.Cast.md).
+
+
 Cast expression
 
 ---
@@ -910,6 +970,9 @@ struct Exists
 ```rust
 fn new(subquery: Subquery, negated: bool) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.Exists.md).
+
 
 EXISTS expression
 
@@ -938,6 +1001,9 @@ fn new(exprs: &'a [Expr], sep: &'a str) -> Self
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.ExprListDisplay.md).
+
+
 Formats a list of `&Expr` with a custom separator using SQL display format
 
 ---
@@ -962,6 +1028,9 @@ fn name(&self) -> &str
 fn new(func: Arc<HigherOrderUDF>, args: Vec<Expr>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.HigherOrderFunction.md).
+
+
 Invoke a [`HigherOrderUDF`] with a set of arguments
 
 ---
@@ -983,6 +1052,9 @@ struct InList
 ```rust
 fn new(expr: Box<Expr>, list: Vec<Expr>, negated: bool) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.InList.md).
+
 
 InList expression
 
@@ -1006,6 +1078,9 @@ struct InSubquery
 fn new(expr: Box<Expr>, subquery: Subquery, negated: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.InSubquery.md).
+
+
 IN subquery
 
 ---
@@ -1027,6 +1102,9 @@ struct Lambda
 ```rust
 fn new(params: Vec<String>, body: Expr) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.Lambda.md).
+
 
 A Lambda expression with a set of parameters names and a body
 
@@ -1050,6 +1128,9 @@ struct LambdaVariable
 fn new(name: String, field: Option<FieldRef>) -> Self
 fn spans_mut(&mut self) -> &mut Spans
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.LambdaVariable.md).
+
 
 A named reference to a lambda parameter which includes it's own [`FieldRef`],
 which is used to implement [`ExprSchemable`], for example. It is an option only to make
@@ -1089,6 +1170,9 @@ struct Like
 fn new(negated: bool, expr: Box<Expr>, pattern: Box<Expr>, escape_char: Option<char>, case_insensitive: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.Like.md).
+
+
 LIKE expression
 
 ---
@@ -1111,6 +1195,9 @@ struct Placeholder
 fn new(id: String, data_type: Option<DataType>) -> Self
 fn new_with_field(id: String, field: Option<FieldRef>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.Placeholder.md).
+
 
 Placeholder, representing bind parameter values such as `$1` or `$name`.
 
@@ -1146,6 +1233,9 @@ fn items(&self) -> &[ReplaceSelectElement]
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.PlannedReplaceSelectItem.md).
+
+
 The planned expressions for `REPLACE`
 
 ---
@@ -1168,6 +1258,9 @@ struct ScalarFunction
 fn name(&self) -> &str
 fn new_udf(udf: Arc<ScalarUDF>, args: Vec<Expr>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.ScalarFunction.md).
+
 
 Invoke a [`ScalarUDF`] with a set of arguments
 
@@ -1192,6 +1285,9 @@ struct SetComparison
 ```rust
 fn new(expr: Box<Expr>, subquery: Subquery, op: Operator, quantifier: SetQuantifier) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.SetComparison.md).
+
 
 Set comparison subquery (e.g. `= ANY`, `> ALL`)
 
@@ -1234,6 +1330,9 @@ fn apply_elements<F: FnMut(&'a Expr) -> Result<TreeNodeRecursion>>(&'a self, f: 
 fn map_elements<F: FnMut(Expr) -> Result<Transformed<Expr>>>(self, f: F) -> Result<Transformed<Self>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.Sort.md).
+
+
 SORT expression
 
 ---
@@ -1259,6 +1358,9 @@ fn new(expr: Box<Expr>, data_type: DataType) -> Self
 fn new_from_field(expr: Box<Expr>, field: FieldRef) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.TryCast.md).
+
+
 TryCast Expression
 
 ---
@@ -1282,6 +1384,9 @@ fn new(expr: Expr) -> Self
 fn new_boxed(boxed: Box<Expr>) -> Self
 fn new_outer(expr: Expr) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.Unnest.md).
+
 
 UNNEST expression.
 
@@ -1318,6 +1423,9 @@ fn with_replace(self, replace: PlannedReplaceSelectItem) -> Self
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.WildcardOptions.md).
+
+
 Additional options for wildcards, e.g. Snowflake `EXCLUDE`/`RENAME` and Bigquery `EXCEPT`.
 
 ---
@@ -1340,6 +1448,9 @@ struct WindowFunction
 fn new(fun: impl Into<WindowFunctionDefinition>, args: Vec<Expr>) -> Self
 fn simplify(&self) -> Option<WindowFunctionSimplification>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.WindowFunction.md).
+
 
 Window function
 
@@ -1368,6 +1479,9 @@ struct WindowFunctionParams
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.WindowFunctionParams.md).
+
+
 ---
 
 ## SchemaFieldMetadata
@@ -1377,6 +1491,9 @@ struct WindowFunctionParams
 ```rust
 type SchemaFieldMetadata = std::collections::HashMap<String, String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.expr.SchemaFieldMetadata.md).
+
 
 The metadata used in [`Field::metadata`].
 

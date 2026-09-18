@@ -28,6 +28,9 @@ fn optimize(&self, original: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> 
 fn schema_check(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.limit_pushdown_past_window.LimitPushPastWindows.md).
+
+
 This rule inspects [`ExecutionPlan`]'s attempting to find fetch limits that were not pushed
 down by `LimitPushdown` because [BoundedWindowAggExec]s were "in the way". If the window is
 bounded by [WindowFrameUnits::Rows] then we calculate the adjustment needed to grow the limit

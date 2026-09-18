@@ -21,9 +21,12 @@ mod tests {
             value.summary = "é α 🦀 \"quoted\" \\ slash\nline\tcontrol".into();
             let record = ResultRecord::from_envelope(&value).unwrap();
             let session = runtime.session();
-            let frame = session
-                .read_batch(ResultRecord::batch(&[record]).unwrap())
-                .unwrap();
+            let frame = crate::native_catalog::batch(
+                &session,
+                "result_measure",
+                ResultRecord::batch(&[record]).unwrap(),
+            )
+            .unwrap();
             let expr = enrichment_core::evidence::arrow_model::expressions::record(
                 &ResultRecord::data_type(),
                 &ResultRecord::fields()
@@ -62,30 +65,21 @@ mod tests {
                     ])
                     .unwrap();
                 let rows = runtime.records::<Measured>(measured, 1).await.unwrap();
-                let expected = match &profile {
-                    DeliveryProfile::Envelope => serde_json::to_vec(&value).unwrap().len(),
-                    DeliveryProfile::McpResourceStdio {
-                        era,
-                        framing_bytes,
-                        uri,
-                    } => {
-                        serde_json::to_vec(
-                            &enrichment_core::mcp_delivery::project_resource(&value, era, uri)
-                                .unwrap(),
-                        )
-                        .unwrap()
-                        .len()
-                            + *framing_bytes as usize
-                    }
-                    DeliveryProfile::McpStdio { era, framing_bytes } => {
-                        serde_json::to_vec(
-                            &enrichment_core::mcp_delivery::project(&value, era).unwrap(),
-                        )
-                        .unwrap()
-                        .len()
-                            + *framing_bytes as usize
+                let framing = match &profile {
+                    DeliveryProfile::Envelope => 0,
+                    DeliveryProfile::McpStdio { framing_bytes, .. }
+                    | DeliveryProfile::McpResourceStdio { framing_bytes, .. } => {
+                        *framing_bytes as usize
                     }
                 };
+                let expected = serde_json::to_vec(
+                    &profile
+                        .project(&value, &runtime.session().runtime_env().memory_pool)
+                        .unwrap(),
+                )
+                .unwrap()
+                .len()
+                    + framing;
                 assert_eq!(rows[0].bytes as usize, expected);
                 // Each codec/outcome is measured above; exercise the exact selection boundary
                 // once per transport profile rather than repeating the same predicate.

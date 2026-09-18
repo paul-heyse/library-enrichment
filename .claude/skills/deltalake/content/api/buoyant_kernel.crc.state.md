@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 3 public items · structured records in [`model/buoyan
 ## DomainMetadataState
 
 `enum` · `buoyant_kernel::crc::state::DomainMetadataState`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.crc.state.DomainMetadataState.md)
 
 Also reachable as `buoyant_kernel::crc::DomainMetadataState`, `delta_kernel::crc::state::DomainMetadataState`
 
@@ -23,6 +24,7 @@ The completeness state of cached domain metadata in a CRC.
 ## FileStatsState
 
 `enum` · `buoyant_kernel::crc::state::FileStatsState`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.crc.state.FileStatsState.md)
 
 Also reachable as `buoyant_kernel::crc::FileStatsState`, `delta_kernel::crc::state::FileStatsState`
 
@@ -55,6 +57,7 @@ The state of file statistics for a CRC.
 ## SetTransactionState
 
 `enum` · `buoyant_kernel::crc::state::SetTransactionState`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.crc.state.SetTransactionState.md)
 
 Also reachable as `buoyant_kernel::crc::SetTransactionState`, `delta_kernel::crc::state::SetTransactionState`
 

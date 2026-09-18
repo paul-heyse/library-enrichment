@@ -20,4 +20,7 @@ struct WindowFunctionPlanner
 fn plan_window(&self, raw_expr: RawWindowExpr) -> Result<PlannerResult<RawWindowExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.planner.WindowFunctionPlanner.md).
+
+
 ---

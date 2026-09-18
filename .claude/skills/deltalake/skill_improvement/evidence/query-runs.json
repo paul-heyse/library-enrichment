@@ -1,0 +1,71 @@
+[
+  {
+    "id": "impls",
+    "argv": [
+      "ast-grep",
+      "run",
+      "-l",
+      "rust",
+      "-p",
+      "impl $TRAIT for $TYPE { $$$BODY }",
+      "--json=compact",
+      "sources/delta-rs/crates/core/src"
+    ],
+    "exit_code": 0,
+    "output": "queries/impls.json",
+    "sha256": "78bc398be3b2b791a9b32abfe64bd8d402d5e07b3e45c43090b0553d71c229b9",
+    "matches": 246
+  },
+  {
+    "id": "await-outputs",
+    "argv": [
+      "rg",
+      "-n",
+      "type Output =|pub (async )?fn (scan_table|scan_cdf|table_provider|write)|pub enum SessionFallbackPolicy",
+      "sources/delta-rs/crates/core/src"
+    ],
+    "exit_code": 0,
+    "output": "queries/await-outputs.txt",
+    "sha256": "9b7a1fccfe7af1967f794b809708f7e9feebdc51265deb20822107c8e981e481"
+  },
+  {
+    "id": "transaction-phases",
+    "argv": [
+      "rg",
+      "-n",
+      "with_application_transaction|transaction_version|check_for_updated_application|write_commit_entry|before_post_commit_hook",
+      "sources/delta-rs/crates/core/src"
+    ],
+    "exit_code": 0,
+    "output": "queries/transaction-phases.txt",
+    "sha256": "500b756b2282d88922a6baeacd4911f447a93b4a39df79a5e163f48caa17e36e"
+  },
+  {
+    "id": "protocol-admission",
+    "argv": [
+      "rg",
+      "-n",
+      "reader_features.insert|writer_features.insert|can_read_from|can_write_to|cfg\\(feature",
+      "sources/delta-rs/crates/core/src/kernel/transaction/protocol.rs"
+    ],
+    "exit_code": 0,
+    "output": "queries/protocol-admission.txt",
+    "sha256": "80d9a79bdafaecddd3d9ff15761e79bcbc471c01305dd2d0ca5ca98968367b88"
+  },
+  {
+    "id": "syntax-controls",
+    "argv": [
+      "ast-grep",
+      "scan",
+      "--rule",
+      "queries/baseline-write-rule.yml",
+      "--json=compact",
+      "query-fixture.rs"
+    ],
+    "exit_code": 0,
+    "output": "queries/syntax-controls.json",
+    "sha256": "203e47b1ea4927dd2bfaddb2b500f90abc32926a47cabe912cf3869a5e83e62b",
+    "matches": 2,
+    "interpretation": "One Delta lead and one unrelated same-name match; with_commit_properties(default) escapes the rule without establishing replay protection."
+  }
+]

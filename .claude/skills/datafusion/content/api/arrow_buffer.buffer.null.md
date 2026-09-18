@@ -61,6 +61,9 @@ fn from(value: &[bool]) -> Self
 fn from_iter<T: IntoIterator<Item = bool>>(iter: T) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.null.NullBuffer.md).
+
+
 A [`BooleanBuffer`] used to encode validity (null values) for Arrow arrays
 
 In the [Arrow specification], array validity is encoded in a packed bitmask with a

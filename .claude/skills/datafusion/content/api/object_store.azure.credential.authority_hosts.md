@@ -12,6 +12,9 @@ Also reachable as `object_store::azure::authority_hosts::AZURE_CHINA`
 const AZURE_CHINA: &str = "https://login.chinacloudapi.cn"
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.azure.credential.authority_hosts.AZURE_CHINA.md).
+
+
 China-based Azure Authority Host
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `object_store::azure::authority_hosts::AZURE_GERMANY`
 ```rust
 const AZURE_GERMANY: &str = "https://login.microsoftonline.de"
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.azure.credential.authority_hosts.AZURE_GERMANY.md).
+
 
 Germany-based Azure Authority Host
 
@@ -40,6 +46,9 @@ Also reachable as `object_store::azure::authority_hosts::AZURE_GOVERNMENT`
 const AZURE_GOVERNMENT: &str = "https://login.microsoftonline.us"
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.azure.credential.authority_hosts.AZURE_GOVERNMENT.md).
+
+
 US Government Azure Authority Host
 
 ---
@@ -53,6 +62,9 @@ Also reachable as `object_store::azure::authority_hosts::AZURE_PUBLIC_CLOUD`
 ```rust
 const AZURE_PUBLIC_CLOUD: &str = "https://login.microsoftonline.com"
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.azure.credential.authority_hosts.AZURE_PUBLIC_CLOUD.md).
+
 
 Public Cloud Azure Authority Host
 

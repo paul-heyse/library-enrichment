@@ -38,6 +38,9 @@ fn poll(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Self::Output>
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common_runtime.common.SpawnedTask.md).
+
+
 Helper that  provides a simple API to spawn a single task and join it.
 Provides guarantees of aborting on `Drop` to keep it cancel-safe.
 Note that if the task was spawned with `spawn_blocking`, it will only be

@@ -27,6 +27,9 @@ fn new(array: T) -> Self
 fn get(&self) -> (&dyn Array, bool)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.scalar.Scalar.md).
+
+
 A wrapper around a single value [`Array`] that implements
 [`Datum`] and indicates [compute] kernels should treat this array
 as a scalar value (a single value).
@@ -73,6 +76,9 @@ trait Datum
 ```rust
 fn get(&self) -> (&dyn Array, bool)
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.scalar.Datum.md).
+
 
 A possibly [`Scalar`] [`Array`]
 

@@ -62,29 +62,6 @@ impl Coverage {
             limitations: Vec::new(),
         }
     }
-
-    /// Project the already evaluated scope states; do not infer coverage from payload rows.
-    pub fn refresh_kinds(&mut self) {
-        self.indexed.clear();
-        self.missing.clear();
-        for assessment in &self.assessments {
-            if assessment.state == ScopeState::Indexed {
-                self.indexed.insert(assessment.kind.as_str().into());
-            } else {
-                self.missing.insert(assessment.kind.as_str().into());
-            }
-        }
-        self.indexed.retain(|kind| !self.missing.contains(kind));
-    }
-
-    #[must_use]
-    pub fn complete(&self) -> bool {
-        !self.assessments.is_empty()
-            && self
-                .assessments
-                .iter()
-                .all(|item| item.state == ScopeState::Indexed)
-    }
 }
 
 crate::native_vocabulary! {

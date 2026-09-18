@@ -81,24 +81,13 @@ impl SearchCursor {
     /// # Errors
     /// A failed serialization is not an empty cursor.
     pub fn encode(&self) -> Result<String, serde_json::Error> {
-        Ok(format!(
-            "search10_{}",
-            super::hex(&serde_json::to_vec(self)?)
-        ))
+        crate::native_cursor::Kind::Search.encode(self)
     }
 
     /// # Errors
     /// Malformed, corrupted, cross-query or cross-snapshot cursors are rejected.
     pub fn decode(text: &str, scope: &SearchScope, digest: &str) -> Result<Self, CursorError> {
-        if text.len() > 32768 {
-            return Err(CursorError::Malformed);
-        }
-        let bytes = super::unhex(
-            text.strip_prefix("search10_")
-                .ok_or(CursorError::Malformed)?,
-        )
-        .ok_or(CursorError::Malformed)?;
-        let value: Self = serde_json::from_slice(&bytes).map_err(|_| CursorError::Malformed)?;
+        let value: Self = crate::native_cursor::Kind::Search.decode(text)?;
         if value.after.hit_order > 1
             || value.after.candidate_id.is_empty()
             || value.contract != Self::contract()

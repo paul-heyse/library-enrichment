@@ -10,6 +10,9 @@ Crate `datafusion-expr` · 4 public items · structured records in [`model/dataf
 fn is_datetime(dt: &arrow::datatypes::DataType) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.type_coercion.is_datetime.md).
+
+
 Determine whether the given data type `dt` is a `Date` or `Timestamp`.
 
 ---
@@ -21,6 +24,9 @@ Determine whether the given data type `dt` is a `Date` or `Timestamp`.
 ```rust
 fn is_interval(dt: &arrow::datatypes::DataType) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.type_coercion.is_interval.md).
+
 
 Determine whether the given data type 'dt' is a `Interval`.
 
@@ -34,6 +40,9 @@ Determine whether the given data type 'dt' is a `Interval`.
 fn is_signed_numeric(dt: &arrow::datatypes::DataType) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.type_coercion.is_signed_numeric.md).
+
+
 Determine whether the given data type `dt` represents signed numeric values.
 
 ---
@@ -45,6 +54,9 @@ Determine whether the given data type `dt` represents signed numeric values.
 ```rust
 fn is_timestamp(dt: &arrow::datatypes::DataType) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.type_coercion.is_timestamp.md).
+
 
 Determine whether the given data type `dt` is a `Timestamp`.
 

@@ -32,6 +32,9 @@ fn signature(&self) -> &Signature
 fn simplify(&self, args: Vec<Expr>, info: &SimplifyContext) -> Result<ExprSimplifyResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.arrow_try_cast.ArrowTryCastFunc.md).
+
+
 Like [`arrow_cast`](super::arrow_cast::ArrowCastFunc) but returns NULL on cast failure instead of erroring.
 
 This is implemented by simplifying `arrow_try_cast(expr, 'Type')` into

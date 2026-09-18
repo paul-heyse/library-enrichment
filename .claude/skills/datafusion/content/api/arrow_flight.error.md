@@ -43,6 +43,9 @@ fn source(&self) -> Option<&dyn Error + 'static>
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.error.FlightError.md).
+
+
 Errors for the Apache Arrow Flight crate
 
 ---
@@ -54,6 +57,9 @@ Errors for the Apache Arrow Flight crate
 ```rust
 type Result<T> = std::result::Result<T, FlightError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.error.Result.md).
+
 
 Result type for the Apache Arrow Flight crate
 

@@ -41,6 +41,9 @@ fn partition_by(&self) -> &[Arc<dyn PhysicalExpr>]
 fn uses_bounded_memory(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.window.aggregate.PlainAggregateWindowExpr.md).
+
+
 A window expr that takes the form of an aggregate function.
 
 See comments on [`WindowExpr`] for more details.

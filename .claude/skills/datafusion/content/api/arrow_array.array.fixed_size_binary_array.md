@@ -73,6 +73,9 @@ fn try_from(v: Vec<Option<&[u8; N]>>) -> Result<Self, Self::Error>
 fn try_from(v: Vec<&[u8; N]>) -> Result<Self, Self::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.fixed_size_binary_array.FixedSizeBinaryArray.md).
+
+
 An array of [fixed-size binary values](https://arrow.apache.org/docs/format/Columnar.html#fixed-size-primitive-layout)
 
 Each element in a [`FixedSizeBinaryArray`] has `value_length` bytes, where

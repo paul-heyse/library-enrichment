@@ -10,6 +10,9 @@ Crate `datafusion-common` · 6 public items · structured records in [`model/dat
 fn adapt_batch_to_schema(batch: arrow::array::RecordBatch, target_schema: &arrow::datatypes::SchemaRef) -> error::Result<arrow::array::RecordBatch>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.nested_struct.adapt_batch_to_schema.md).
+
+
 Adapts a `RecordBatch` to conform to `target_schema`, verifying that each target field
 type contains the incoming column data type (as verified by [`arrow::datatypes::DataType::contains`])
 and transforms the metadata/types of differing columns to match `target_schema`
@@ -29,6 +32,9 @@ Also reachable as `datafusion::common::cast_column`, `datafusion_common::cast_co
 ```rust
 fn cast_column(source_col: &arrow::array::ArrayRef, target_type: &arrow::datatypes::DataType, cast_options: &arrow::compute::CastOptions<'_>) -> error::Result<arrow::array::ArrayRef>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.nested_struct.cast_column.md).
+
 
 Cast a column to match the target field type, with special handling for nested structs.
 
@@ -95,6 +101,9 @@ Returns an error if:
 fn has_one_of_more_common_fields(source_fields: &[arrow::datatypes::FieldRef], target_fields: &[arrow::datatypes::FieldRef]) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.nested_struct.has_one_of_more_common_fields.md).
+
+
 Check if two field lists have at least one common field by name.
 
 This is useful for validating struct compatibility when casting between structs,
@@ -109,6 +118,9 @@ ensuring that source and target fields have overlapping names.
 ```rust
 fn requires_nested_struct_cast(source_type: &arrow::datatypes::DataType, target_type: &arrow::datatypes::DataType) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.nested_struct.requires_nested_struct_cast.md).
+
 
 Returns true if casting from `source_type` to `target_type` requires
 name-based nested struct casting logic, rather than Arrow's standard cast.
@@ -131,6 +143,9 @@ through [`cast_column`] instead of Arrow's generic cast).
 fn validate_data_type_compatibility(field_name: &str, source_type: &arrow::datatypes::DataType, target_type: &arrow::datatypes::DataType) -> error::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.nested_struct.validate_data_type_compatibility.md).
+
+
 Validates that `source_type` can be cast to `target_type`, recursively
 handling container types that wrap structs.
 
@@ -143,6 +158,9 @@ handling container types that wrap structs.
 ```rust
 fn validate_struct_compatibility(source_fields: &[arrow::datatypes::FieldRef], target_fields: &[arrow::datatypes::FieldRef]) -> error::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.nested_struct.validate_struct_compatibility.md).
+
 
 Validates compatibility between source and target struct fields for casting operations.
 

@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::substring::substring`
 fn substring(array: &dyn Array, start: i64, length: Option<u64>) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_string.substring.substring.md).
+
+
 Returns an [`ArrayRef`] with substrings of all the elements in `array`.
 
 # Arguments
@@ -64,6 +67,9 @@ Also reachable as `arrow::compute::kernels::substring::substring_by_char`
 ```rust
 fn substring_by_char<OffsetSize: OffsetSizeTrait>(array: &GenericStringArray<OffsetSize>, start: i64, length: Option<u64>) -> Result<GenericStringArray<OffsetSize>, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_string.substring.substring_by_char.md).
+
 
 Substrings based on character index
 

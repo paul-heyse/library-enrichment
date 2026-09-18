@@ -19,6 +19,9 @@ fn new(array_reader: Box<dyn ArrayReader>, predicate: &'a mut dyn ArrowPredicate
 fn with_limit(self, limit: usize, total_rows: usize) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.read_plan.PredicateOptions.md).
+
+
 Options for [`ReadPlanBuilder::with_predicate_options`].
 
 ---
@@ -42,6 +45,9 @@ fn batch_size(&self) -> usize
 fn row_selection_cursor_mut(&mut self) -> &mut RowSelectionCursor
 fn selection_mut(&mut self) -> Option<&mut VecDeque<RowSelector>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.read_plan.ReadPlan.md).
+
 
 A plan reading specific rows from a Parquet Row Group.
 
@@ -75,6 +81,9 @@ fn with_predicate_options(self, options: PredicateOptions<'_>) -> Result<Self>
 fn with_row_selection_policy(self, policy: RowSelectionPolicy) -> Self
 fn with_selection(self, selection: Option<RowSelection>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.read_plan.ReadPlanBuilder.md).
+
 
 A builder for [`ReadPlan`]
 

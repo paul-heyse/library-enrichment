@@ -64,6 +64,9 @@ fn supports_retract_batch(&self) -> bool
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.accumulator.Accumulator.md).
+
+
 Tracks an aggregate function's state.
 
 `Accumulator`s are stateful objects that implement a single group. They

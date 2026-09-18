@@ -5,6 +5,7 @@ Crate `deltalake-aws` · 2 public items · structured records in [`model/deltala
 ## register_handlers
 
 `function` · `deltalake_aws::register_handlers`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.register_handlers.md)
 
 Also reachable as `deltalake::aws::register_handlers`
 
@@ -21,6 +22,7 @@ Register an [ObjectStoreFactory] for common S3 url schemes.
 ## S3LogStoreFactory
 
 `struct` · `deltalake_aws::S3LogStoreFactory`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.S3LogStoreFactory.md)
 
 Also reachable as `deltalake::aws::S3LogStoreFactory`
 

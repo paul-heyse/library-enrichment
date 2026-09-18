@@ -1,0 +1,5195 @@
+[
+  {
+    "id": "cb3b0e2705ba6dce197aab0f",
+    "path": "datafusion_datasource_parquet::source::ParquetSource",
+    "name": "ParquetSource",
+    "owner": null,
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct ParquetSource",
+    "docs": "Execution plan for reading one or more Parquet files.\n\n```text\n            ▲\n            │\n            │  Produce a stream of\n            │  RecordBatches\n            │\n┌───────────────────────┐\n│                       │\n│     DataSourceExec    │\n│                       │\n└───────────────────────┘\n            ▲\n            │  Asynchronously read from one\n            │  or more parquet files via\n            │  ObjectStore interface\n            │\n            │\n  .───────────────────.\n │                     )\n │`───────────────────'│\n │    ObjectStore      │\n │.───────────────────.│\n │                     )\n  `───────────────────'\n```\n\n# Example: Create a `DataSourceExec`\n```\n# use std::sync::Arc;\n# use arrow::datatypes::Schema;\n# use datafusion_datasource::file_scan_config::{FileScanConfig, FileScanConfigBuilder};\n# use datafusion_datasource_parquet::source::ParquetSource;\n# use datafusion_datasource::PartitionedFile;\n# use datafusion_execution::object_store::ObjectStoreUrl;\n# use datafusion_physical_expr::expressions::lit;\n# use datafusion_datasource::source::DataSourceExec;\n# use datafusion_common::config::TableParquetOptions;\n\n# let file_schema = Arc::new(Schema::empty());\n# let object_store_url = ObjectStoreUrl::local_filesystem();\n# let predicate = lit(true);\nlet source = Arc::new(\n    ParquetSource::new(Arc::clone(&file_schema))\n        .with_predicate(predicate)\n);\n// Create a DataSourceExec for reading `file1.parquet` with a file size of 100MB\nlet config = FileScanConfigBuilder::new(object_store_url, source)\n   .with_file(PartitionedFile::new(\"file1.parquet\", 100*1024*1024)).build();\nlet exec = DataSourceExec::from_data_source(config);\n```\n\n# Features\n\nSupports the following optimizations:\n\n* Concurrent reads: reads from one or more files in parallel as multiple\n  partitions, including concurrently reading multiple row groups from a single\n  file.\n\n* Predicate push down: skips row groups, pages, rows based on metadata\n  and late materialization. See \"Predicate Pushdown\" below.\n\n* Projection pushdown: reads and decodes only the columns required.\n\n* Limit pushdown: stop execution early after some number of rows are read.\n\n* Custom readers: customize reading  parquet files, e.g. to cache metadata,\n  coalesce I/O operations, etc. See [`ParquetFileReaderFactory`] for more\n  details.\n\n* Schema evolution: read parquet files with different schemas into a unified\n  table schema. See [`DefaultPhysicalExprAdapterFactory`] for more details.\n\n* metadata_size_hint: controls the number of bytes read from the end of the\n  file in the initial I/O when the default [`ParquetFileReaderFactory`]. If a\n  custom reader is used, it supplies the metadata directly and this parameter\n  is ignored. [`ParquetSource::with_metadata_size_hint`] for more details.\n\n* User provided  `ParquetAccessPlan`s to skip row groups and/or pages\n  based on external information. See \"Implementing External Indexes\" below\n\n# Predicate Pushdown\n\n`DataSourceExec` uses the provided [`PhysicalExpr`] predicate as a filter to\nskip reading unnecessary data and improve query performance using several techniques:\n\n* Row group pruning: skips entire row groups based on min/max statistics\n  found in [`ParquetMetaData`] and any Bloom filters that are present.\n\n* Page pruning: skips individual pages within a ColumnChunk using the\n  [Parquet PageIndex], if present.\n\n* Row filtering: skips rows within a page using a form of late\n  materialization. When possible, predicates are applied by the parquet\n  decoder *during* decode (see [`ArrowPredicate`] and [`RowFilter`] for more\n  details). This is only enabled if `ParquetScanOptions::pushdown_filters` is set to true.\n\nNote: If the predicate can not be used to accelerate the scan, it is ignored\n(no error is raised on predicate evaluation errors).\n\n[`ArrowPredicate`]: parquet::arrow::arrow_reader::ArrowPredicate\n[`RowFilter`]: parquet::arrow::arrow_reader::RowFilter\n[Parquet PageIndex]: https://github.com/apache/parquet-format/blob/master/PageIndex.md\n\n# Example: rewriting `DataSourceExec`\n\nYou can modify a `DataSourceExec` using [`ParquetSource`], for example\nto change files or add a predicate.\n\n```no_run\n# use std::sync::Arc;\n# use arrow::datatypes::Schema;\n# use datafusion_datasource::file_scan_config::{FileScanConfig, FileScanConfigBuilder};\n# use datafusion_datasource::PartitionedFile;\n# use datafusion_datasource::source::DataSourceExec;\n\n# fn parquet_exec() -> DataSourceExec { unimplemented!() }\n// Split a single DataSourceExec into multiple DataSourceExecs, one for each file\nlet exec = parquet_exec();\nlet data_source = exec.data_source();\nlet base_config = data_source.downcast_ref::<FileScanConfig>().unwrap();\nlet existing_file_groups = &base_config.file_groups;\nlet new_execs = existing_file_groups\n  .iter()\n  .map(|file_group| {\n    // create a new exec by copying the existing exec's source config\n    let new_config = FileScanConfigBuilder::from(base_config.clone())\n       .with_file_groups(vec![file_group.clone()])\n      .build();\n\n    (DataSourceExec::from_data_source(new_config))\n  })\n  .collect::<Vec<_>>();\n```\n\n# Implementing External Indexes\n\nIt is possible to restrict the row groups and selections within those row\ngroups that the DataSourceExec will consider by providing an initial\n`ParquetAccessPlan` as `extensions` on `PartitionedFile`. This can be\nused to implement external indexes on top of parquet files and select only\nportions of the files.\n\nIf the external index naturally produces a file-level\n[`RowSelection`](parquet::arrow::arrow_reader::RowSelection), wrap it in\n[`ParquetRowSelection`](crate::ParquetRowSelection) and provide it as an\nextension. DataFusion will use the parquet metadata to split the selection\ninto row-group-level access.\n\nThe `DataSourceExec` will try and reduce any provided `ParquetAccessPlan`\nfurther based on the contents of `ParquetMetadata` and other settings.\n\n## Example of providing a ParquetAccessPlan\n\n```\n# use std::sync::Arc;\n# use arrow::datatypes::{Schema, SchemaRef};\n# use datafusion_datasource::PartitionedFile;\n# use datafusion_datasource_parquet::ParquetAccessPlan;\n# use datafusion_datasource::file_scan_config::{FileScanConfig, FileScanConfigBuilder};\n# use datafusion_datasource_parquet::source::ParquetSource;\n# use datafusion_execution::object_store::ObjectStoreUrl;\n# use datafusion_datasource::source::DataSourceExec;\n\n# fn schema() -> SchemaRef {\n#   Arc::new(Schema::empty())\n# }\n// create an access plan to scan row group 0, 1 and 3 and skip row groups 2 and 4\nlet mut access_plan = ParquetAccessPlan::new_all(5);\naccess_plan.skip(2);\naccess_plan.skip(4);\n// provide the plan as extension to the FileScanConfig\nlet partitioned_file = PartitionedFile::new(\"my_file.parquet\", 1234)\n  .with_extension(access_plan);\n// create a FileScanConfig to scan this file\nlet config = FileScanConfigBuilder::new(ObjectStoreUrl::local_filesystem(), Arc::new(ParquetSource::new(schema())))\n    .with_file(partitioned_file).build();\n// this parquet DataSourceExec will not even try to read row groups 2 and 4. Additional\n// pruning based on predicates may also happen\nlet exec = DataSourceExec::from_data_source(config);\n```\n\nFor a complete example, see the [`advanced_parquet_index` example]).\n\n[`parquet_index_advanced` example]: https://github.com/apache/datafusion/blob/main/datafusion-examples/examples/data_io/parquet_advanced_index.rs\n\n# Execution Overview\n\n* Step 1: `DataSourceExec::execute` is called, returning a `FileStream`\n  configured to morselize parquet files with a `ParquetMorselizer`.\n\n* Step 2: When the stream is polled, the `ParquetMorselizer` is called to\n  plan the file.\n\n* Step 3: The `ParquetMorselizer` gets the [`ParquetMetaData`] (file metadata)\n  via [`ParquetFileReaderFactory`], creating a `ParquetAccessPlan` by\n  applying predicates to metadata. The plan and projections are used to\n  determine what pages must be read.\n\n* Step 4: The stream begins reading data, fetching the required parquet\n  pages incrementally decoding them, and applying any row filters (see\n  [`Self::with_pushdown_filters`]).\n\n* Step 5: As each [`RecordBatch`] is read, it may be adapted by a\n  [`DefaultPhysicalExprAdapterFactory`] to match the table schema. By default missing columns are\n  filled with nulls, but this can be customized via [`PhysicalExprAdapterFactory`].\n\n[`RecordBatch`]: arrow::record_batch::RecordBatch\n[`ParquetMetadata`]: parquet::file::metadata::ParquetMetaData\n[`PhysicalExprAdapterFactory`]: datafusion_physical_expr_adapter::PhysicalExprAdapterFactory",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        289,
+        1
+      ],
+      "end": [
+        317,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          819,
+          821,
+          822,
+          823,
+          824,
+          825,
+          826,
+          827,
+          828,
+          829,
+          830,
+          831,
+          832,
+          833,
+          834,
+          835,
+          836,
+          837,
+          838,
+          839,
+          841,
+          843,
+          845,
+          870
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "parquet::arrow::arrow_reader::ArrowPredicate": 797,
+      "parquet::arrow::arrow_reader::RowFilter": 648,
+      "`ParquetSource::with_metadata_size_hint`": 796,
+      "`DefaultPhysicalExprAdapterFactory`": 795,
+      "`Self::with_pushdown_filters`": 799,
+      "`PhysicalExpr`": 508,
+      "`ParquetSource`": 798,
+      "crate::ParquetRowSelection": 103,
+      "arrow::record_batch::RecordBatch": 800,
+      "datafusion_physical_expr_adapter::PhysicalExprAdapterFactory": 801,
+      "parquet::file::metadata::ParquetMetaData": 367,
+      "parquet::arrow::arrow_reader::RowSelection": 8,
+      "`ParquetFileReaderFactory`": 363
+    },
+    "link_paths": {
+      "parquet::arrow::arrow_reader::ArrowPredicate": "parquet::arrow::arrow_reader::filter::ArrowPredicate",
+      "parquet::arrow::arrow_reader::RowFilter": "parquet::arrow::arrow_reader::filter::RowFilter",
+      "`ParquetSource::with_metadata_size_hint`": "datafusion_datasource_parquet::source::ParquetSource::with_metadata_size_hint",
+      "`DefaultPhysicalExprAdapterFactory`": "datafusion_physical_expr_adapter::schema_rewriter::DefaultPhysicalExprAdapterFactory",
+      "`Self::with_pushdown_filters`": "datafusion_datasource_parquet::source::ParquetSource::with_pushdown_filters",
+      "`PhysicalExpr`": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "`ParquetSource`": "datafusion_datasource_parquet::source::ParquetSource",
+      "crate::ParquetRowSelection": "datafusion_datasource_parquet::access_plan::ParquetRowSelection",
+      "arrow::record_batch::RecordBatch": "arrow_array::record_batch::RecordBatch",
+      "datafusion_physical_expr_adapter::PhysicalExprAdapterFactory": "datafusion_physical_expr_adapter::schema_rewriter::PhysicalExprAdapterFactory",
+      "parquet::file::metadata::ParquetMetaData": "parquet::file::metadata::ParquetMetaData",
+      "parquet::arrow::arrow_reader::RowSelection": "parquet::arrow::arrow_reader::selection::RowSelection",
+      "`ParquetFileReaderFactory`": "datafusion_datasource_parquet::reader::ParquetFileReaderFactory"
+    },
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "798",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-cb3b0e2705ba6dce197aab0f",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource"
+    ],
+    "resolved_doc_links": {
+      "parquet::arrow::arrow_reader::ArrowPredicate": "../operations/parquet.arrow.arrow_reader.filter.ArrowPredicate.md#op-bf093cc5f111fb8b2d44eb01",
+      "parquet::arrow::arrow_reader::RowFilter": "../operations/parquet.arrow.arrow_reader.filter.RowFilter.md#op-a310d73e2b8ee5aca56c0c1f",
+      "`ParquetSource::with_metadata_size_hint`": "../operations/datafusion_datasource_parquet.source.ParquetSource.md#op-99bf9fba04a1db8ef6551cac",
+      "`DefaultPhysicalExprAdapterFactory`": "../operations/datafusion_physical_expr_adapter.schema_rewriter.DefaultPhysicalExprAdapterFactory.md#op-a4e5de845da9e33105dd28ae",
+      "`Self::with_pushdown_filters`": "../operations/datafusion_datasource_parquet.source.ParquetSource.md#op-a9698d2934b7a9fab8ce4634",
+      "`PhysicalExpr`": "../operations/datafusion_physical_expr_common.physical_expr.PhysicalExpr.md#op-fe8284c43330456b0d4e6af7",
+      "`ParquetSource`": "../operations/datafusion_datasource_parquet.source.ParquetSource.md#op-cb3b0e2705ba6dce197aab0f",
+      "crate::ParquetRowSelection": "../operations/datafusion_datasource_parquet.access_plan.ParquetRowSelection.md#op-e174196529fc82e4a9f028f8",
+      "arrow::record_batch::RecordBatch": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "datafusion_physical_expr_adapter::PhysicalExprAdapterFactory": "../operations/datafusion_physical_expr_adapter.schema_rewriter.PhysicalExprAdapterFactory.md#op-66df2b6b668622dcee375500",
+      "parquet::file::metadata::ParquetMetaData": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b",
+      "parquet::arrow::arrow_reader::RowSelection": "../operations/parquet.arrow.arrow_reader.selection.RowSelection.md#op-42015b29e86ada83b6a84ed5",
+      "`ParquetFileReaderFactory`": "../operations/datafusion_datasource_parquet.reader.ParquetFileReaderFactory.md#op-864a9023955965d6e936e916"
+    }
+  },
+  {
+    "id": "89517c10b3c2ba11f90326f4",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::apply_expressions",
+    "name": "apply_expressions",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> datafusion_common::Result<TreeNodeRecursion>) -> datafusion_common::Result<TreeNodeRecursion>",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        1062,
+        5
+      ],
+      "end": [
+        1074,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "FnMut",
+                            "id": 867,
+                            "args": {
+                              "parenthesized": {
+                                "inputs": [
+                                  {
+                                    "borrowed_ref": {
+                                      "lifetime": null,
+                                      "is_mutable": false,
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Arc",
+                                          "id": 257,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "dyn_trait": {
+                                                      "traits": [
+                                                        {
+                                                          "trait": {
+                                                            "path": "PhysicalExpr",
+                                                            "id": 508,
+                                                            "args": null
+                                                          },
+                                                          "generic_params": []
+                                                        }
+                                                      ],
+                                                      "lifetime": null
+                                                    }
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                "output": {
+                                  "resolved_path": {
+                                    "path": "datafusion_common::Result",
+                                    "id": 14,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "TreeNodeRecursion",
+                                                "id": 868,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 14,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "TreeNodeRecursion",
+                          "id": 868,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "867": "core::ops::function::FnMut",
+      "257": "alloc::sync::Arc",
+      "508": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "14": "datafusion_common::error::Result",
+      "868": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "866",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-89517c10b3c2ba11f90326f4",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::apply_expressions"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d04e3de9f821913a95a8b575",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::clone",
+    "name": "clone",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> ParquetSource",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        288,
+        10
+      ],
+      "end": [
+        288,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ParquetSource",
+              "id": 798,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "798": "datafusion_datasource_parquet::source::ParquetSource"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          288,
+          10
+        ],
+        "end": [
+          288,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "840",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-d04e3de9f821913a95a8b575",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "525a6cf8aeced9fe99cb06b7",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::create_file_opener",
+    "name": "create_file_opener",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn create_file_opener(&self, _object_store: Arc<dyn ObjectStore>, _base_config: &FileScanConfig, _partition: usize) -> datafusion_common::Result<Arc<dyn FileOpener>>",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        560,
+        5
+      ],
+      "end": [
+        569,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_object_store",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 257,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ObjectStore",
+                                    "id": 313,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_base_config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "FileScanConfig",
+                      "id": 326,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_partition",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 14,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 257,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "FileOpener",
+                                            "id": 847,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "257": "alloc::sync::Arc",
+      "313": "object_store::ObjectStore",
+      "326": "datafusion_datasource::file_scan_config::FileScanConfig",
+      "14": "datafusion_common::error::Result",
+      "847": "datafusion_datasource::file_stream::FileOpener"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "846",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-525a6cf8aeced9fe99cb06b7",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::create_file_opener"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "480350bbe6b8607ec14b908f",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::create_morselizer",
+    "name": "create_morselizer",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn create_morselizer(&self, object_store: Arc<dyn ObjectStore>, base_config: &FileScanConfig, partition: usize) -> datafusion_common::Result<Box<dyn Morselizer>>",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        571,
+        5
+      ],
+      "end": [
+        664,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "object_store",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 257,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ObjectStore",
+                                    "id": 313,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "base_config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "FileScanConfig",
+                      "id": 326,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 14,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 316,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "Morselizer",
+                                            "id": 849,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "257": "alloc::sync::Arc",
+      "313": "object_store::ObjectStore",
+      "326": "datafusion_datasource::file_scan_config::FileScanConfig",
+      "14": "datafusion_common::error::Result",
+      "316": "alloc::boxed::Box",
+      "849": "datafusion_datasource::morsel::Morselizer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "848",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-480350bbe6b8607ec14b908f",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::create_morselizer"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "453790fe0fb9c876fe8dcf27",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::file_type",
+    "name": "file_type",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn file_type(&self) -> &str",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        730,
+        5
+      ],
+      "end": [
+        732,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "858",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-453790fe0fb9c876fe8dcf27",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::file_type"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6b3ede38c380d03bf3651007",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::filter",
+    "name": "filter",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn filter(&self) -> Option<Arc<dyn PhysicalExpr>>",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        682,
+        5
+      ],
+      "end": [
+        684,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 257,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "PhysicalExpr",
+                                            "id": 508,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "23": "core::option::Option",
+      "257": "alloc::sync::Arc",
+      "508": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "852",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-6b3ede38c380d03bf3651007",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::filter"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d58eaf54ab81ec8ad6d887d1",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::fmt",
+    "name": "fmt",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        288,
+        17
+      ],
+      "end": [
+        288,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 89,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 90,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "89": "core::fmt::Formatter",
+      "90": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          288,
+          17
+        ],
+        "end": [
+          288,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "842",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-d58eaf54ab81ec8ad6d887d1",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "01cfb6219bb71495ecc1cd76",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::fmt_extra",
+    "name": "fmt_extra",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt_extra(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        734,
+        5
+      ],
+      "end": [
+        819,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "t",
+              {
+                "resolved_path": {
+                  "path": "DisplayFormatType",
+                  "id": 756,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Formatter",
+                      "id": 89,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 90,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "756": "datafusion_physical_plan::display::DisplayFormatType",
+      "89": "core::fmt::Formatter",
+      "90": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "859",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-01cfb6219bb71495ecc1cd76",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::fmt_extra"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0ec38b1cd6dad203e894e693",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::max_in_list_size",
+    "name": "max_in_list_size",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn max_in_list_size(&self) -> usize",
+    "docs": "Return the maximum size of an `IN (...)` list that the pruning\npredicate will rewrite into per-value statistics checks. Lists\nlonger than this skip container-level pruning. Reads from\n`datafusion.execution.parquet.max_in_list_size`.",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        493,
+        5
+      ],
+      "end": [
+        495,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "818",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-0ec38b1cd6dad203e894e693",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::max_in_list_size"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e8ffc8a8bf22407dde56bed2",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::max_predicate_cache_size",
+    "name": "max_predicate_cache_size",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn max_predicate_cache_size(&self) -> Option<usize>",
+    "docs": "Return the maximum predicate cache size, in bytes, used when\n`pushdown_filters`",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        485,
+        5
+      ],
+      "end": [
+        487,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "23": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "817",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-e8ffc8a8bf22407dde56bed2",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::max_predicate_cache_size"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3069ecbd35ca62ced6fdd035",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::metrics",
+    "name": "metrics",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn metrics(&self) -> &ExecutionPlanMetricsSet",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        726,
+        5
+      ],
+      "end": [
+        728,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ExecutionPlanMetricsSet",
+                  "id": 473,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "473": "datafusion_physical_expr_common::metrics::ExecutionPlanMetricsSet"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "857",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-3069ecbd35ca62ced6fdd035",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::metrics"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9c3953a4190084ac9fd3142f",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::new",
+    "name": "new",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(table_schema: impl Into<TableSchema>) -> Self",
+    "docs": "Create a new ParquetSource to read the data specified in the file scan\nconfiguration with the provided schema.\n\nUses default `TableParquetOptions`.\nTo set custom options, use [ParquetSource::with_table_parquet_options`].",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        325,
+        5
+      ],
+      "end": [
+        344,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "table_schema",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 59,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "TableSchema",
+                                    "id": 332,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Into<TableSchema>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 59,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "TableSchema",
+                                      "id": 332,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "59": "core::convert::Into",
+      "332": "datafusion_datasource::table_schema::TableSchema"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {
+      "ParquetSource::with_table_parquet_options`": 802
+    },
+    "link_paths": {
+      "ParquetSource::with_table_parquet_options`": "datafusion_datasource_parquet::source::ParquetSource::with_table_parquet_options"
+    },
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "803",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-9c3953a4190084ac9fd3142f",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::new"
+    ],
+    "resolved_doc_links": {
+      "ParquetSource::with_table_parquet_options`": "../operations/datafusion_datasource_parquet.source.ParquetSource.md#op-3c481c9badaace7f7d559c06"
+    }
+  },
+  {
+    "id": "c0ac1acd5b92c74d98d396a5",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::parquet_file_reader_factory",
+    "name": "parquet_file_reader_factory",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn parquet_file_reader_factory(&self) -> Option<&Arc<dyn ParquetFileReaderFactory>>",
+    "docs": "return the optional file reader factory",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        400,
+        5
+      ],
+      "end": [
+        404,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 257,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ParquetFileReaderFactory",
+                                                "id": 363,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "23": "core::option::Option",
+      "257": "alloc::sync::Arc",
+      "363": "datafusion_datasource_parquet::reader::ParquetFileReaderFactory"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "810",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-c0ac1acd5b92c74d98d396a5",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::parquet_file_reader_factory"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9c58a97a2aa639115e033812",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::predicate",
+    "name": "predicate",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn predicate(&self) -> Option<&Arc<dyn PhysicalExpr>>",
+    "docs": "Optional predicate.",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        395,
+        5
+      ],
+      "end": [
+        397,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": {
+      "since": "50.2.0",
+      "note": "use `filter` instead"
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 257,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "PhysicalExpr",
+                                                "id": 508,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "23": "core::option::Option",
+      "257": "alloc::sync::Arc",
+      "508": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "809",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-9c58a97a2aa639115e033812",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::predicate"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ad2e2d8cd432866b7faa6c8d",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::projection",
+    "name": "projection",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn projection(&self) -> Option<&ProjectionExprs>",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        722,
+        5
+      ],
+      "end": [
+        724,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 23,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "ProjectionExprs",
+                              "id": 855,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "23": "core::option::Option",
+      "855": "datafusion_physical_expr::projection::ProjectionExprs"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "856",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-ad2e2d8cd432866b7faa6c8d",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::projection"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "badbae01ed6ece8fa8971302",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::reorder_files",
+    "name": "reorder_files",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn reorder_files(&self, files: Vec<datafusion_datasource::PartitionedFile>) -> Vec<datafusion_datasource::PartitionedFile>",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        666,
+        5
+      ],
+      "end": [
+        676,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "files",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 7,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "datafusion_datasource::PartitionedFile",
+                              "id": 101,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 7,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "datafusion_datasource::PartitionedFile",
+                          "id": 101,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "7": "alloc::vec::Vec",
+      "101": "datafusion_datasource::PartitionedFile"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "850",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-badbae01ed6ece8fa8971302",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::reorder_files"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "87ce35ee187aa1a1c5d577d1",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::table_parquet_options",
+    "name": "table_parquet_options",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn table_parquet_options(&self) -> &TableParquetOptions",
+    "docs": "Options passed to the parquet reader for this scan",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        389,
+        5
+      ],
+      "end": [
+        391,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "TableParquetOptions",
+                  "id": 229,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "229": "datafusion_common::config::TableParquetOptions"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "808",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-87ce35ee187aa1a1c5d577d1",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::table_parquet_options"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "172231f345694497f07e1028",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::table_schema",
+    "name": "table_schema",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn table_schema(&self) -> &TableSchema",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        678,
+        5
+      ],
+      "end": [
+        680,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "TableSchema",
+                  "id": 332,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "332": "datafusion_datasource::table_schema::TableSchema"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "851",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-172231f345694497f07e1028",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::table_schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "41820a05b5c25517e01d68b1",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::try_from_proto",
+    "name": "try_from_proto",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &datafusion_physical_plan::proto::ExecutionPlanDecodeCtx<'_>) -> datafusion_common::Result<Arc<dyn datafusion_physical_plan::ExecutionPlan>>",
+    "docs": "Reconstructs a `DataSourceExec` from a protobuf `ParquetScan`.\n\nRebuilds the reader factory from the decode context because it is not serialized.",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        1110,
+        5
+      ],
+      "end": [
+        1203,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "node",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                      "id": 734,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_physical_plan::proto::ExecutionPlanDecodeCtx",
+                      "id": 735,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 14,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 257,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "datafusion_physical_plan::ExecutionPlan",
+                                            "id": 327,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "734": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode",
+      "735": "datafusion_physical_plan::proto::ExecutionPlanDecodeCtx",
+      "14": "datafusion_common::error::Result",
+      "257": "alloc::sync::Arc",
+      "327": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          1106,
+          1
+        ],
+        "end": [
+          1204,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "820",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-41820a05b5c25517e01d68b1",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::try_from_proto"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3f8da94fc6af96f1c1d2d784",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::try_pushdown_filters",
+    "name": "try_pushdown_filters",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_pushdown_filters(&self, filters: Vec<Arc<dyn PhysicalExpr>>, config: &ConfigOptions) -> datafusion_common::Result<FilterPushdownPropagation<Arc<dyn FileSource>>>",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        821,
+        5
+      ],
+      "end": [
+        892,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "filters",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 7,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 257,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "PhysicalExpr",
+                                                "id": 508,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ConfigOptions",
+                      "id": 860,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 14,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "FilterPushdownPropagation",
+                          "id": 861,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 257,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "FileSource",
+                                                        "id": 333,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "7": "alloc::vec::Vec",
+      "257": "alloc::sync::Arc",
+      "508": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "860": "datafusion_common::config::ConfigOptions",
+      "14": "datafusion_common::error::Result",
+      "861": "datafusion_physical_plan::filter_pushdown::FilterPushdownPropagation",
+      "333": "datafusion_datasource::file::FileSource"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "804",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-3f8da94fc6af96f1c1d2d784",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::try_pushdown_filters"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "aa3ba6b288106ad4b24531da",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::try_pushdown_projection",
+    "name": "try_pushdown_projection",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_pushdown_projection(&self, projection: &ProjectionExprs) -> datafusion_common::Result<Option<Arc<dyn FileSource>>>",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        692,
+        5
+      ],
+      "end": [
+        720,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "projection",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ProjectionExprs",
+                      "id": 855,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 14,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 23,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 257,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "FileSource",
+                                                        "id": 333,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "855": "datafusion_physical_expr::projection::ProjectionExprs",
+      "14": "datafusion_common::error::Result",
+      "23": "core::option::Option",
+      "257": "alloc::sync::Arc",
+      "333": "datafusion_datasource::file::FileSource"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "854",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-aa3ba6b288106ad4b24531da",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::try_pushdown_projection"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "013f1614b82377abbd796366",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::try_pushdown_sort",
+    "name": "try_pushdown_sort",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_pushdown_sort(&self, order: &[PhysicalSortExpr], eq_properties: &EquivalenceProperties) -> datafusion_common::Result<SortOrderPushdownResult<Arc<dyn FileSource>>>",
+    "docs": "Try to optimize the scan to produce data in the requested sort order.\n\nInputs:\n1. The query's required ordering (`order` parameter)\n2. The source's equivalence properties (`eq_properties`)\n\n# Returns\n- `Exact`: the source's natural ordering already satisfies the\n  request. The surrounding `SortExec` can be eliminated provided\n  files within each group are non-overlapping (verified by\n  `FileScanConfig`).\n- `Inexact`: the source can approximate the request via two\n  composable runtime steps — stats-based row-group reorder\n  (skipped when the leading sort key isn't a plain `Column`\n  in the file schema) and row-group iteration reverse. A\n  `SortExec` is still required for full correctness, but limit\n  pushdown and `TopK` benefit immediately.\n- `Unsupported`: no approximation is available.\n\n# How the Inexact result is communicated\n\nThe result is carried through two fields on `ParquetSource`:\n\n- `sort_order_for_reorder`: set to the request's `LexOrdering`\n  whenever the pushdown fires, regardless of whether the\n  leading expression is a plain `Column`. The opener invokes\n  `PreparedAccessPlan::reorder_by_statistics`, which skips\n  when the expression can't be looked up in parquet metadata.\n  Exposing the field unconditionally keeps `EXPLAIN` honest\n  about what the source was asked to approximate.\n- `reverse_row_groups`: drives the opener's iteration flip.\n  When stats reorder applies (column-in-schema), this is just\n  the request's direction — the reorder produces ASC-by-min,\n  so reverse iff the query asks for DESC. When stats reorder\n  doesn't apply but the reversed source ordering satisfies\n  the request (function-wrapped case), this is always `true`\n  because we're flipping the file's natural order.",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        931,
+        5
+      ],
+      "end": [
+        1060,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "order",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "PhysicalSortExpr",
+                        "id": 863,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "eq_properties",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "EquivalenceProperties",
+                      "id": 864,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 14,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SortOrderPushdownResult",
+                          "id": 865,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 257,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "FileSource",
+                                                        "id": 333,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "863": "datafusion_physical_expr_common::sort_expr::PhysicalSortExpr",
+      "864": "datafusion_physical_expr::equivalence::properties::EquivalenceProperties",
+      "14": "datafusion_common::error::Result",
+      "865": "datafusion_physical_plan::sort_pushdown::SortOrderPushdownResult",
+      "257": "alloc::sync::Arc",
+      "333": "datafusion_datasource::file::FileSource"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "862",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-013f1614b82377abbd796366",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::try_pushdown_sort"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7c1f6d2e55a5b37643e60540",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::try_to_proto",
+    "name": "try_to_proto",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_to_proto(&self, base: &FileScanConfig, ctx: &datafusion_physical_plan::proto::ExecutionPlanEncodeCtx<'_>) -> datafusion_common::Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+    "docs": "Emit a `ParquetScan` node wrapping the shared base config plus the\nParquet-specific pushdown predicate and `TableParquetOptions`.",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        1079,
+        5
+      ],
+      "end": [
+        1102,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"proto\"), span: src/source.rs:1078:11: 1078:28 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "base",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "FileScanConfig",
+                      "id": 326,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx",
+                      "id": 772,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 14,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 23,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                                      "id": 734,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "326": "datafusion_datasource::file_scan_config::FileScanConfig",
+      "772": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx",
+      "14": "datafusion_common::error::Result",
+      "23": "core::option::Option",
+      "734": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "869",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-7c1f6d2e55a5b37643e60540",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::try_to_proto"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5213ad0e9462e45217fd8901",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::with_batch_size",
+    "name": "with_batch_size",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_batch_size(&self, batch_size: usize) -> Arc<dyn FileSource>",
+    "docs": "",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        686,
+        5
+      ],
+      "end": [
+        690,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch_size",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Arc",
+              "id": 257,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "FileSource",
+                                "id": 333,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "257": "alloc::sync::Arc",
+      "333": "datafusion_datasource::file::FileSource"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "FileSource",
+        "id": "datafusion_datasource::file::FileSource",
+        "args": null
+      },
+      "trait_path": "datafusion_datasource::file::FileSource",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          559,
+          1
+        ],
+        "end": [
+          1103,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "853",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-5213ad0e9462e45217fd8901",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::with_batch_size"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d49248ce90b26b376b64b131",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::with_bloom_filter_on_read",
+    "name": "with_bloom_filter_on_read",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_bloom_filter_on_read(self, bloom_filter_on_read: bool) -> Self",
+    "docs": "If enabled, the reader will read by the bloom filter",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        463,
+        5
+      ],
+      "end": [
+        466,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "bloom_filter_on_read",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "815",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-d49248ce90b26b376b64b131",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::with_bloom_filter_on_read"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5ebe781b823267ad7b1ca142",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::with_bloom_filter_on_write",
+    "name": "with_bloom_filter_on_write",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_bloom_filter_on_write(self, enable_bloom_filter_on_write: bool) -> Self",
+    "docs": "If enabled, the writer will write by the bloom filter",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        469,
+        5
+      ],
+      "end": [
+        476,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "enable_bloom_filter_on_write",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "816",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-5ebe781b823267ad7b1ca142",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::with_bloom_filter_on_write"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0b055491d9033f18b6b26b08",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::with_enable_page_index",
+    "name": "with_enable_page_index",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_enable_page_index(self, enable_page_index: bool) -> Self",
+    "docs": "If enabled, the reader will read the page index\nThis is used to optimize filter pushdown\nvia `RowSelector` and `RowFilter` by\neliminating unnecessary IO and decoding",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        452,
+        5
+      ],
+      "end": [
+        455,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "enable_page_index",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "814",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-0b055491d9033f18b6b26b08",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::with_enable_page_index"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d56fee10df8ba471d02db9b9",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::with_encryption_factory",
+    "name": "with_encryption_factory",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_encryption_factory(self, encryption_factory: Arc<dyn EncryptionFactory>) -> Self",
+    "docs": "Set the encryption factory to use to generate file decryption properties",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        380,
+        5
+      ],
+      "end": [
+        386,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"parquet_encryption\"), span: src/source.rs:379:11: 379:41 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "encryption_factory",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 257,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "EncryptionFactory",
+                                    "id": 807,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "257": "alloc::sync::Arc",
+      "807": "datafusion_execution::parquet_encryption::EncryptionFactory"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "806",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-d56fee10df8ba471d02db9b9",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::with_encryption_factory"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "99bf9fba04a1db8ef6551cac",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::with_metadata_size_hint",
+    "name": "with_metadata_size_hint",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_metadata_size_hint(self, metadata_size_hint: usize) -> Self",
+    "docs": "Set the metadata size hint\n\nThis value determines how many bytes at the end of the file the default\n[`ParquetFileReaderFactory`] will request in the initial IO. If this is\ntoo small, the ParquetSource will need to make additional IO requests to\nread the footer.",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        361,
+        5
+      ],
+      "end": [
+        364,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "metadata_size_hint",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetFileReaderFactory`": 363
+    },
+    "link_paths": {
+      "`ParquetFileReaderFactory`": "datafusion_datasource_parquet::reader::ParquetFileReaderFactory"
+    },
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "796",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-99bf9fba04a1db8ef6551cac",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::with_metadata_size_hint"
+    ],
+    "resolved_doc_links": {
+      "`ParquetFileReaderFactory`": "../operations/datafusion_datasource_parquet.reader.ParquetFileReaderFactory.md#op-864a9023955965d6e936e916"
+    }
+  },
+  {
+    "id": "12d9c88f8bd2e26e89737647",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::with_parquet_file_reader_factory",
+    "name": "with_parquet_file_reader_factory",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_parquet_file_reader_factory(self, parquet_file_reader_factory: Arc<dyn ParquetFileReaderFactory>) -> Self",
+    "docs": "Optional user defined parquet file reader factory.",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        407,
+        5
+      ],
+      "end": [
+        413,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "parquet_file_reader_factory",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 257,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ParquetFileReaderFactory",
+                                    "id": 363,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "257": "alloc::sync::Arc",
+      "363": "datafusion_datasource_parquet::reader::ParquetFileReaderFactory"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "811",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-12d9c88f8bd2e26e89737647",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::with_parquet_file_reader_factory"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e9960cbad86e133ce01e19f9",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::with_predicate",
+    "name": "with_predicate",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_predicate(&self, predicate: Arc<dyn PhysicalExpr>) -> Self",
+    "docs": "Set predicate information.\n\nPredicates referencing virtual columns must go through\n[`Self::try_pushdown_filters`]. Passing them here with pushdown\nenabled trips a debug assert in the opener.",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        372,
+        5
+      ],
+      "end": [
+        376,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[expect(clippy::needless_pass_by_value)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "predicate",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 257,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "PhysicalExpr",
+                                    "id": 508,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "257": "alloc::sync::Arc",
+      "508": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::try_pushdown_filters`": 804
+    },
+    "link_paths": {
+      "`Self::try_pushdown_filters`": "datafusion_datasource_parquet::source::ParquetSource::try_pushdown_filters"
+    },
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "805",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-e9960cbad86e133ce01e19f9",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::with_predicate"
+    ],
+    "resolved_doc_links": {
+      "`Self::try_pushdown_filters`": "../operations/datafusion_datasource_parquet.source.ParquetSource.md#op-3f8da94fc6af96f1c1d2d784"
+    }
+  },
+  {
+    "id": "a9698d2934b7a9fab8ce4634",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::with_pushdown_filters",
+    "name": "with_pushdown_filters",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_pushdown_filters(self, pushdown_filters: bool) -> Self",
+    "docs": "If true, the predicate will be used during the parquet scan.\nDefaults to false.",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        417,
+        5
+      ],
+      "end": [
+        420,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "pushdown_filters",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "799",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-a9698d2934b7a9fab8ce4634",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::with_pushdown_filters"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "afd3f69bf3abcb495408f12d",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::with_reorder_filters",
+    "name": "with_reorder_filters",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_reorder_filters(self, reorder_filters: bool) -> Self",
+    "docs": "If true, the `RowFilter` made by `pushdown_filters` may try to\nminimize the cost of filter evaluation by reordering the\npredicate [`Expr`]s. If false, the predicates are applied in\nthe same order as specified in the query. Defaults to false.\n\n[`Expr`]: datafusion_expr::Expr",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        433,
+        5
+      ],
+      "end": [
+        436,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "reorder_filters",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {
+      "datafusion_expr::Expr": 812
+    },
+    "link_paths": {
+      "datafusion_expr::Expr": "datafusion_expr::expr::Expr"
+    },
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "813",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-afd3f69bf3abcb495408f12d",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::with_reorder_filters"
+    ],
+    "resolved_doc_links": {
+      "datafusion_expr::Expr": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc"
+    }
+  },
+  {
+    "id": "3c481c9badaace7f7d559c06",
+    "path": "datafusion_datasource_parquet::source::ParquetSource::with_table_parquet_options",
+    "name": "with_table_parquet_options",
+    "owner": "datafusion_datasource_parquet::source::ParquetSource",
+    "crate": "datafusion-datasource-parquet",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_table_parquet_options(self, table_parquet_options: TableParquetOptions) -> Self",
+    "docs": "Set the `TableParquetOptions` for this ParquetSource.",
+    "span": {
+      "filename": "src/source.rs",
+      "begin": [
+        347,
+        5
+      ],
+      "end": [
+        353,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "table_parquet_options",
+              {
+                "resolved_path": {
+                  "path": "TableParquetOptions",
+                  "id": 229,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "229": "datafusion_common::config::TableParquetOptions"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetSource",
+          "id": "datafusion_datasource_parquet::source::ParquetSource",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/source.rs",
+        "begin": [
+          319,
+          1
+        ],
+        "end": [
+          519,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "98f04a002d5e69b3582101c0d77e5d677e81496543c3fd600575569da677eef6",
+      "format_version": 61,
+      "item_id": "802",
+      "origin": "https://docs.rs/crate/datafusion-datasource-parquet/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource_parquet.source.ParquetSource.md",
+    "record_file": "operations/datafusion_datasource_parquet.source.ParquetSource.json",
+    "anchor": "op-3c481c9badaace7f7d559c06",
+    "aliases": [
+      "datafusion::datasource::physical_plan::ParquetSource::with_table_parquet_options"
+    ],
+    "resolved_doc_links": {}
+  }
+]

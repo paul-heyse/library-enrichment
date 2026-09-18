@@ -1,0 +1,756 @@
+[
+  {
+    "id": "99506f92b515415a11439278",
+    "path": "datafusion_expr::expr_fn::ExprFunctionExt",
+    "name": "ExprFunctionExt",
+    "owner": null,
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait ExprFunctionExt",
+    "docs": "Extensions for configuring [`Expr::AggregateFunction`] or [`Expr::WindowFunction`]\n\nAdds methods to [`Expr`] that make it easy to set optional options\nsuch as `ORDER BY`, `FILTER` and `DISTINCT`\n\n# Example\n```no_run\n# use datafusion_common::Result;\n# use datafusion_expr::expr::NullTreatment;\n# use datafusion_expr::test::function_stub::count;\n# use datafusion_expr::{ExprFunctionExt, lit, Expr, col};\n# // first_value is an aggregate function in another crate\n# fn first_value(_arg: Expr) -> Expr {\nunimplemented!() }\n# fn main() -> Result<()> {\n// Create an aggregate count, filtering on column y > 5\nlet agg = count(col(\"x\")).filter(col(\"y\").gt(lit(5))).build()?;\n\n// Find the first value in an aggregate sorted by column y\n// equivalent to:\n// `FIRST_VALUE(x ORDER BY y ASC IGNORE NULLS)`\nlet sort_expr = col(\"y\").sort(true, true);\nlet agg = first_value(col(\"x\"))\n    .order_by(vec![sort_expr])\n    .null_treatment(NullTreatment::IgnoreNulls)\n    .build()?;\n\n// Create a window expression for percent rank partitioned on column a\n// equivalent to:\n// `PERCENT_RANK() OVER (PARTITION BY a ORDER BY b ASC NULLS LAST IGNORE NULLS)`\n// percent_rank is an udwf function in another crate\n# fn percent_rank() -> Expr {\nunimplemented!() }\nlet window = percent_rank()\n    .partition_by(vec![col(\"a\")])\n    .order_by(vec![col(\"b\").sort(true, true)])\n    .null_treatment(NullTreatment::IgnoreNulls)\n    .build()?;\n#     Ok(())\n# }\n```",
+    "span": {
+      "filename": "src/expr_fn.rs",
+      "begin": [
+        784,
+        1
+      ],
+      "end": [
+        800,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": false,
+        "items": [
+          2897,
+          2898,
+          2899,
+          2900,
+          2901,
+          2902
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "implementations": [
+          2909,
+          1606
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Expr::WindowFunction`": 1373,
+      "`Expr`": 301,
+      "`Expr::AggregateFunction`": 1371
+    },
+    "link_paths": {
+      "`Expr::WindowFunction`": "datafusion_expr::expr::Expr::WindowFunction",
+      "`Expr`": "datafusion_expr::expr::Expr",
+      "`Expr::AggregateFunction`": "datafusion_expr::expr::Expr::AggregateFunction"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "1018",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.expr_fn.ExprFunctionExt.md",
+    "record_file": "operations/datafusion_expr.expr_fn.ExprFunctionExt.json",
+    "anchor": "op-99506f92b515415a11439278",
+    "aliases": [
+      "datafusion::logical_expr::ExprFunctionExt",
+      "datafusion::prelude::ExprFunctionExt",
+      "datafusion_expr::ExprFunctionExt"
+    ],
+    "resolved_doc_links": {
+      "`Expr::WindowFunction`": "../operations/datafusion_expr.expr.Expr.md#op-1ab47cd303f22d10dd7f4cec",
+      "`Expr`": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc",
+      "`Expr::AggregateFunction`": "../operations/datafusion_expr.expr.Expr.md#op-98c26e3c882c5c14cacb82a2"
+    }
+  },
+  {
+    "id": "6a9c00eb246788bcbb40473b",
+    "path": "datafusion_expr::expr_fn::ExprFunctionExt::distinct",
+    "name": "distinct",
+    "owner": "datafusion_expr::expr_fn::ExprFunctionExt",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn distinct(self) -> ExprFuncBuilder",
+    "docs": "Add `DISTINCT`",
+    "span": {
+      "filename": "src/expr_fn.rs",
+      "begin": [
+        790,
+        5
+      ],
+      "end": [
+        790,
+        42
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ExprFuncBuilder",
+              "id": 1599,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1599": "datafusion_expr::expr_fn::ExprFuncBuilder"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "2899",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.expr_fn.ExprFunctionExt.md",
+    "record_file": "operations/datafusion_expr.expr_fn.ExprFunctionExt.json",
+    "anchor": "op-6a9c00eb246788bcbb40473b",
+    "aliases": [
+      "datafusion::logical_expr::ExprFunctionExt::distinct",
+      "datafusion::prelude::ExprFunctionExt::distinct",
+      "datafusion_expr::ExprFunctionExt::distinct"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d5293f83797428d55704e265",
+    "path": "datafusion_expr::expr_fn::ExprFunctionExt::filter",
+    "name": "filter",
+    "owner": "datafusion_expr::expr_fn::ExprFunctionExt",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn filter(self, filter: Expr) -> ExprFuncBuilder",
+    "docs": "Add `FILTER <filter>`",
+    "span": {
+      "filename": "src/expr_fn.rs",
+      "begin": [
+        788,
+        5
+      ],
+      "end": [
+        788,
+        54
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "filter",
+              {
+                "resolved_path": {
+                  "path": "Expr",
+                  "id": 301,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ExprFuncBuilder",
+              "id": 1599,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "301": "datafusion_expr::expr::Expr",
+      "1599": "datafusion_expr::expr_fn::ExprFuncBuilder"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "2898",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.expr_fn.ExprFunctionExt.md",
+    "record_file": "operations/datafusion_expr.expr_fn.ExprFunctionExt.json",
+    "anchor": "op-d5293f83797428d55704e265",
+    "aliases": [
+      "datafusion::logical_expr::ExprFunctionExt::filter",
+      "datafusion::prelude::ExprFunctionExt::filter",
+      "datafusion_expr::ExprFunctionExt::filter"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5f475d2212cf5e359b0583b7",
+    "path": "datafusion_expr::expr_fn::ExprFunctionExt::null_treatment",
+    "name": "null_treatment",
+    "owner": "datafusion_expr::expr_fn::ExprFunctionExt",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn null_treatment(self, null_treatment: impl Into<Option<NullTreatment>>) -> ExprFuncBuilder",
+    "docs": "Add `RESPECT NULLS` or `IGNORE NULLS`",
+    "span": {
+      "filename": "src/expr_fn.rs",
+      "begin": [
+        792,
+        5
+      ],
+      "end": [
+        795,
+        26
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "null_treatment",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 40,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Option",
+                                    "id": 91,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "NullTreatment",
+                                                "id": 1264,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ExprFuncBuilder",
+              "id": 1599,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Into<Option<NullTreatment>>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 40,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Option",
+                                      "id": 91,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "resolved_path": {
+                                                  "path": "NullTreatment",
+                                                  "id": 1264,
+                                                  "args": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "40": "core::convert::Into",
+      "91": "core::option::Option",
+      "1264": "datafusion_expr::expr::NullTreatment",
+      "1599": "datafusion_expr::expr_fn::ExprFuncBuilder"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "2900",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.expr_fn.ExprFunctionExt.md",
+    "record_file": "operations/datafusion_expr.expr_fn.ExprFunctionExt.json",
+    "anchor": "op-5f475d2212cf5e359b0583b7",
+    "aliases": [
+      "datafusion::logical_expr::ExprFunctionExt::null_treatment",
+      "datafusion::prelude::ExprFunctionExt::null_treatment",
+      "datafusion_expr::ExprFunctionExt::null_treatment"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d8b15fef2f0a8509568b69b0",
+    "path": "datafusion_expr::expr_fn::ExprFunctionExt::order_by",
+    "name": "order_by",
+    "owner": "datafusion_expr::expr_fn::ExprFunctionExt",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn order_by(self, order_by: Vec<Sort>) -> ExprFuncBuilder",
+    "docs": "Add `ORDER BY <order_by>`",
+    "span": {
+      "filename": "src/expr_fn.rs",
+      "begin": [
+        786,
+        5
+      ],
+      "end": [
+        786,
+        63
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "order_by",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 6,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Sort",
+                              "id": 1453,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ExprFuncBuilder",
+              "id": 1599,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6": "alloc::vec::Vec",
+      "1453": "datafusion_expr::expr::Sort",
+      "1599": "datafusion_expr::expr_fn::ExprFuncBuilder"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "2897",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.expr_fn.ExprFunctionExt.md",
+    "record_file": "operations/datafusion_expr.expr_fn.ExprFunctionExt.json",
+    "anchor": "op-d8b15fef2f0a8509568b69b0",
+    "aliases": [
+      "datafusion::logical_expr::ExprFunctionExt::order_by",
+      "datafusion::prelude::ExprFunctionExt::order_by",
+      "datafusion_expr::ExprFunctionExt::order_by"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "afd76d8405511ca0813279f2",
+    "path": "datafusion_expr::expr_fn::ExprFunctionExt::partition_by",
+    "name": "partition_by",
+    "owner": "datafusion_expr::expr_fn::ExprFunctionExt",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn partition_by(self, partition_by: Vec<Expr>) -> ExprFuncBuilder",
+    "docs": "Add `PARTITION BY`",
+    "span": {
+      "filename": "src/expr_fn.rs",
+      "begin": [
+        797,
+        5
+      ],
+      "end": [
+        797,
+        71
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "partition_by",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 6,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Expr",
+                              "id": 301,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ExprFuncBuilder",
+              "id": 1599,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6": "alloc::vec::Vec",
+      "301": "datafusion_expr::expr::Expr",
+      "1599": "datafusion_expr::expr_fn::ExprFuncBuilder"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "2901",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.expr_fn.ExprFunctionExt.md",
+    "record_file": "operations/datafusion_expr.expr_fn.ExprFunctionExt.json",
+    "anchor": "op-afd76d8405511ca0813279f2",
+    "aliases": [
+      "datafusion::logical_expr::ExprFunctionExt::partition_by",
+      "datafusion::prelude::ExprFunctionExt::partition_by",
+      "datafusion_expr::ExprFunctionExt::partition_by"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9027b7152a6900898ac5813a",
+    "path": "datafusion_expr::expr_fn::ExprFunctionExt::window_frame",
+    "name": "window_frame",
+    "owner": "datafusion_expr::expr_fn::ExprFunctionExt",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn window_frame(self, window_frame: WindowFrame) -> ExprFuncBuilder",
+    "docs": "Add appropriate window frame conditions",
+    "span": {
+      "filename": "src/expr_fn.rs",
+      "begin": [
+        799,
+        5
+      ],
+      "end": [
+        799,
+        73
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "window_frame",
+              {
+                "resolved_path": {
+                  "path": "WindowFrame",
+                  "id": 1605,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ExprFuncBuilder",
+              "id": 1599,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1605": "datafusion_expr::window_frame::WindowFrame",
+      "1599": "datafusion_expr::expr_fn::ExprFuncBuilder"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "2902",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.expr_fn.ExprFunctionExt.md",
+    "record_file": "operations/datafusion_expr.expr_fn.ExprFunctionExt.json",
+    "anchor": "op-9027b7152a6900898ac5813a",
+    "aliases": [
+      "datafusion::logical_expr::ExprFunctionExt::window_frame",
+      "datafusion::prelude::ExprFunctionExt::window_frame",
+      "datafusion_expr::ExprFunctionExt::window_frame"
+    ],
+    "resolved_doc_links": {}
+  }
+]

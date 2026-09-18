@@ -80,6 +80,9 @@ fn bitor_assign(&mut self, rhs: &BooleanBuffer)
 fn bitxor_assign(&mut self, rhs: &BooleanBuffer)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.buffer.boolean.BooleanBuffer.md).
+
+
 A slice-able [`Buffer`] containing bit-packed booleans
 
 This structure represents a sequence of boolean values packed into a

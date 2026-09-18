@@ -28,6 +28,9 @@ fn optimize(&self, plan: Arc<dyn ExecutionPlan>, _config: &ConfigOptions) -> Res
 fn schema_check(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.projection_pushdown.ProjectionPushdown.md).
+
+
 This rule inspects `ProjectionExec`'s in the given physical plan and tries to
 remove or swap with its child.
 

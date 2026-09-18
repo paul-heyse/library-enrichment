@@ -64,6 +64,9 @@ fn index(&self, index: usize) -> &Self::Output
 fn index_mut(&mut self, index: usize) -> &mut Self::Output
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_groups.FileGroup.md).
+
+
 Represents a group of partitioned files that'll be processed by a single thread.
 Maintains optional statistics across all files in the group.
 
@@ -102,6 +105,9 @@ fn with_preserve_order_within_groups(self, preserve_order_within_groups: bool) -
 fn with_repartition_file_min_size(self, repartition_file_min_size: usize) -> Self
 fn with_target_partitions(self, target_partitions: usize) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_groups.FileGroupPartitioner.md).
+
 
 Repartition input files into `target_partitions` partitions, if total file size exceed
 `repartition_file_min_size`

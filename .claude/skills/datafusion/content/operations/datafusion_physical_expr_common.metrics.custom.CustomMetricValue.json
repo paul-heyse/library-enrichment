@@ -1,0 +1,673 @@
+[
+  {
+    "id": "704fc39805dfc975c900f015",
+    "path": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue",
+    "name": "CustomMetricValue",
+    "owner": null,
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait CustomMetricValue: Display + Debug + Send + Sync",
+    "docs": "A trait for implementing custom metric values.\n\nThis trait enables defining application- or operator-specific metric types\nthat can be aggregated and displayed alongside standard metrics. These\ncustom metrics integrate with [`MetricValue::Custom`] and support\naggregation logic, introspection, and optional numeric representation.\n\n# Requirements\nImplementations of `CustomMetricValue` must satisfy the following:\n\n1. [`Self::aggregate`]: Defines how two metric values are combined\n2. [`Self::new_empty`]: Returns a new, zero-value instance for accumulation\n3. [`Self::as_any`]: Enables dynamic downcasting for type-specific operations\n4. [`Self::as_usize`]: Optionally maps the value to a `usize` (for sorting, display, etc.)\n5. [`Self::is_eq`]: Implements comparison between two values, this isn't reusing the std\n   PartialEq trait because this trait is used dynamically in the context of\n   [`MetricValue::Custom`]\n\n# Examples\n```\n# use std::sync::Arc;\n# use std::fmt::{Debug, Display};\n# use std::any::Any;\n# use std::sync::atomic::{AtomicUsize, Ordering};\n\n# use datafusion_physical_expr_common::metrics::CustomMetricValue;\n\n#[derive(Debug, Default)]\nstruct MyCounter {\n    count: AtomicUsize,\n}\n\nimpl Display for MyCounter {\n    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {\n        write!(f, \"count: {}\", self.count.load(Ordering::Relaxed))\n    }\n}\n\nimpl CustomMetricValue for MyCounter {\n    fn new_empty(&self) -> Arc<dyn CustomMetricValue> {\n        Arc::new(Self::default())\n    }\n\n    fn aggregate(&self, other: Arc<dyn CustomMetricValue>) {\n        let other = other.as_any().downcast_ref::<Self>().unwrap();\n        self.count\n            .fetch_add(other.count.load(Ordering::Relaxed), Ordering::Relaxed);\n    }\n\n    fn as_any(&self) -> &dyn Any {\n        self\n    }\n\n    fn as_usize(&self) -> usize {\n        self.count.load(Ordering::Relaxed)\n    }\n\n    fn is_eq(&self, other: &Arc<dyn CustomMetricValue>) -> bool {\n        let Some(other) = other.as_any().downcast_ref::<Self>() else {\n            return false;\n        };\n\n        self.count.load(Ordering::Relaxed) == other.count.load(Ordering::Relaxed)\n    }\n}\n```\n\n[`MetricValue::Custom`]: super::MetricValue::Custom",
+    "span": {
+      "filename": "src/metrics/custom.rs",
+      "begin": [
+        90,
+        1
+      ],
+      "end": [
+        114,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          418,
+          420,
+          421,
+          422,
+          423
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Display",
+                "id": 425,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Debug",
+                "id": 69,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 6,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 8,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": []
+      }
+    },
+    "type_references": {
+      "425": "core::fmt::Display",
+      "69": "core::fmt::Debug",
+      "6": "core::marker::Send",
+      "8": "core::marker::Sync"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::is_eq`": 423,
+      "`Self::aggregate`": 420,
+      "super::MetricValue::Custom": 424,
+      "`Self::as_usize`": 422,
+      "`Self::as_any`": 421,
+      "`Self::new_empty`": 418
+    },
+    "link_paths": {
+      "`Self::is_eq`": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue::is_eq",
+      "`Self::aggregate`": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue::aggregate",
+      "super::MetricValue::Custom": "datafusion_physical_expr_common::metrics::value::MetricValue::Custom",
+      "`Self::as_usize`": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue::as_usize",
+      "`Self::as_any`": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue::as_any",
+      "`Self::new_empty`": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue::new_empty"
+    },
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "419",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.md",
+    "record_file": "operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.json",
+    "anchor": "op-704fc39805dfc975c900f015",
+    "aliases": [
+      "datafusion_physical_expr_common::metrics::CustomMetricValue",
+      "datafusion_physical_plan::metrics::CustomMetricValue"
+    ],
+    "resolved_doc_links": {
+      "`Self::is_eq`": "../operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.md#op-832287bd5cf6f5862d9bb943",
+      "`Self::aggregate`": "../operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.md#op-d81922d97f52b4918fd98f37",
+      "super::MetricValue::Custom": "../operations/datafusion_physical_expr_common.metrics.value.MetricValue.md#op-18b4cb9ab0036bddac7ddeeb",
+      "`Self::as_usize`": "../operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.md#op-2a06a94486168b5a61196453",
+      "`Self::as_any`": "../operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.md#op-e4186d0720a30490a520a4e5",
+      "`Self::new_empty`": "../operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.md#op-74c90cd32e5b78e04f0ac92d"
+    }
+  },
+  {
+    "id": "d81922d97f52b4918fd98f37",
+    "path": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue::aggregate",
+    "name": "aggregate",
+    "owner": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue",
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn aggregate(&self, other: Arc<dyn CustomMetricValue + 'static>)",
+    "docs": "Merges another metric value into this one.\n\nThe type of `other` could be of a different custom type as long as it's aggregatable into self.",
+    "span": {
+      "filename": "src/metrics/custom.rs",
+      "begin": [
+        99,
+        5
+      ],
+      "end": [
+        99,
+        70
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 254,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "CustomMetricValue",
+                                    "id": 419,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": "'static"
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "254": "alloc::sync::Arc",
+      "419": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "420",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.md",
+    "record_file": "operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.json",
+    "anchor": "op-d81922d97f52b4918fd98f37",
+    "aliases": [
+      "datafusion_physical_expr_common::metrics::CustomMetricValue::aggregate",
+      "datafusion_physical_plan::metrics::CustomMetricValue::aggregate"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e4186d0720a30490a520a4e5",
+    "path": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue::as_any",
+    "name": "as_any",
+    "owner": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue",
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn as_any(&self) -> &dyn Any",
+    "docs": "Returns this value as a [`Any`] to support dynamic downcasting.",
+    "span": {
+      "filename": "src/metrics/custom.rs",
+      "begin": [
+        102,
+        5
+      ],
+      "end": [
+        102,
+        34
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 48,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "48": "core::any::Any"
+    },
+    "impl_context": null,
+    "links": {
+      "`Any`": 48
+    },
+    "link_paths": {
+      "`Any`": "core::any::Any"
+    },
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "421",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.md",
+    "record_file": "operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.json",
+    "anchor": "op-e4186d0720a30490a520a4e5",
+    "aliases": [
+      "datafusion_physical_expr_common::metrics::CustomMetricValue::as_any",
+      "datafusion_physical_plan::metrics::CustomMetricValue::as_any"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2a06a94486168b5a61196453",
+    "path": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue::as_usize",
+    "name": "as_usize",
+    "owner": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue",
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn as_usize(&self) -> usize",
+    "docs": "Optionally returns a numeric representation of the value, if meaningful.\nOtherwise will default to zero.\n\nThis is used for sorting and summarizing metrics.",
+    "span": {
+      "filename": "src/metrics/custom.rs",
+      "begin": [
+        108,
+        5
+      ],
+      "end": [
+        110,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "422",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.md",
+    "record_file": "operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.json",
+    "anchor": "op-2a06a94486168b5a61196453",
+    "aliases": [
+      "datafusion_physical_expr_common::metrics::CustomMetricValue::as_usize",
+      "datafusion_physical_plan::metrics::CustomMetricValue::as_usize"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "832287bd5cf6f5862d9bb943",
+    "path": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue::is_eq",
+    "name": "is_eq",
+    "owner": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue",
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn is_eq(&self, other: &Arc<dyn CustomMetricValue>) -> bool",
+    "docs": "Compares this value with another custom value.",
+    "span": {
+      "filename": "src/metrics/custom.rs",
+      "begin": [
+        113,
+        5
+      ],
+      "end": [
+        113,
+        65
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Arc",
+                      "id": 254,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "dyn_trait": {
+                                  "traits": [
+                                    {
+                                      "trait": {
+                                        "path": "CustomMetricValue",
+                                        "id": 419,
+                                        "args": null
+                                      },
+                                      "generic_params": []
+                                    }
+                                  ],
+                                  "lifetime": null
+                                }
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "254": "alloc::sync::Arc",
+      "419": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "423",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.md",
+    "record_file": "operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.json",
+    "anchor": "op-832287bd5cf6f5862d9bb943",
+    "aliases": [
+      "datafusion_physical_expr_common::metrics::CustomMetricValue::is_eq",
+      "datafusion_physical_plan::metrics::CustomMetricValue::is_eq"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "74c90cd32e5b78e04f0ac92d",
+    "path": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue::new_empty",
+    "name": "new_empty",
+    "owner": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue",
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new_empty(&self) -> Arc<dyn CustomMetricValue>",
+    "docs": "Returns a new, zero-initialized version of this metric value.\n\nThis value is used during metric aggregation to accumulate results.",
+    "span": {
+      "filename": "src/metrics/custom.rs",
+      "begin": [
+        94,
+        5
+      ],
+      "end": [
+        94,
+        55
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Arc",
+              "id": 254,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "CustomMetricValue",
+                                "id": 419,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "254": "alloc::sync::Arc",
+      "419": "datafusion_physical_expr_common::metrics::custom::CustomMetricValue"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "418",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.md",
+    "record_file": "operations/datafusion_physical_expr_common.metrics.custom.CustomMetricValue.json",
+    "anchor": "op-74c90cd32e5b78e04f0ac92d",
+    "aliases": [
+      "datafusion_physical_expr_common::metrics::CustomMetricValue::new_empty",
+      "datafusion_physical_plan::metrics::CustomMetricValue::new_empty"
+    ],
+    "resolved_doc_links": {}
+  }
+]

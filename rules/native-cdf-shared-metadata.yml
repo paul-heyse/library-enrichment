@@ -1,0 +1,17 @@
+id: native-cdf-shared-metadata
+language: Rust
+severity: error
+message: CDF must use the supplied session's metadata cache and canonical root-store reader.
+files:
+  - vendor/delta-rs/crates/core/src/delta_datafusion/cdf/**
+rule:
+  any:
+    - pattern: 'DefaultCache::new($$$ARGS)'
+    - pattern: 'CacheManager::try_new($$$ARGS)'
+    - pattern: 'SessionContext::new()'
+    - pattern: 'DeltaSessionContext::default()'
+  not:
+    inside:
+      pattern: 'mod tests { $$$BODY }'
+      stopBy: end
+note: A private cache or fallback session loses ordinary-scan reuse and can mix table-relative metadata identities. Independent upstream tests retain their own contexts.

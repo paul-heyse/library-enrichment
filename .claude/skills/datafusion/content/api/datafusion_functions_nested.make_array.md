@@ -10,6 +10,9 @@ Crate `datafusion-functions-nested` · 5 public items · structured records in [
 fn array_array<O: OffsetSizeTrait>(args: &[arrow::array::ArrayRef], data_type: arrow::datatypes::DataType, field_name: &str) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.make_array.array_array.md).
+
+
 Convert one or more [`ArrayRef`] of the same type into a
 `ListArray` or 'LargeListArray' depending on the offset size.
 
@@ -61,6 +64,9 @@ of the corresponding elements of col1 and col2.
 fn coerce_types_inner(arg_types: &[arrow::datatypes::DataType], name: &str) -> datafusion_common::Result<Vec<arrow::datatypes::DataType>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.make_array.coerce_types_inner.md).
+
+
 ---
 
 ## make_array
@@ -73,6 +79,9 @@ Also reachable as `datafusion::prelude::make_array`, `datafusion_functions_neste
 fn make_array(arg: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.make_array.make_array.md).
+
+
 Returns an Arrow array using the specified input expressions.
 
 ---
@@ -84,6 +93,9 @@ Returns an Arrow array using the specified input expressions.
 ```rust
 fn make_array_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.make_array.make_array_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 MakeArray
@@ -119,5 +131,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.make_array.MakeArray.md).
+
 
 ---

@@ -10,6 +10,9 @@ Crate `datafusion-substrait` · 4 public items · structured records in [`model/
 fn lambda_parameters_map(producer: &mut impl SubstraitProducer, lambda_parameters: Vec<datafusion::arrow::datatypes::FieldRef>) -> datafusion::common::Result<datafusion::common::HashMap<String, (usize, substrait::proto::Type)>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.substrait_producer.lambda_parameters_map.md).
+
+
 Produces a map of lambda parameters as expected by [DefaultSubstraitLambdaProducer::push_lambda_parameters]
 
 ---
@@ -33,6 +36,9 @@ fn new() -> Self
 fn pop_lambda_parameters(&mut self) -> datafusion::common::Result<()>
 fn push_lambda_parameters(&mut self, lambda_parameters: HashMap<String, (usize, substrait::proto::Type)>)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.substrait_producer.DefaultSubstraitLambdaProducer.md).
+
 
 Default implementation of lambda related methods of the [SubstraitProducer] trait
 
@@ -68,6 +74,9 @@ fn push_lambda_parameters(&mut self, lambda_parameters: Vec<FieldRef>) -> datafu
 fn register_function(&mut self, fn_name: String) -> u32
 fn register_type(&mut self, type_name: String) -> u32
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.substrait_producer.DefaultSubstraitProducer.md).
+
 
 ---
 
@@ -133,6 +142,9 @@ fn push_lambda_parameters(&mut self, _lambda_parameters: Vec<FieldRef>) -> dataf
 fn register_function(&mut self, signature: String) -> u32
 fn register_type(&mut self, name: String) -> u32
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.substrait_producer.SubstraitProducer.md).
+
 
 This trait is used to produce Substrait plans, converting them from DataFusion Logical Plans.
 It can be implemented by users to allow for custom handling of relations, expressions, etc.

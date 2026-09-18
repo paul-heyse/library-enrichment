@@ -32,4 +32,7 @@ fn signature(&self) -> &Signature
 fn struct_field_mapping(&self, literal_args: &[Option<ScalarValue>]) -> Option<StructFieldMapping>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.named_struct.NamedStructFunc.md).
+
+
 ---

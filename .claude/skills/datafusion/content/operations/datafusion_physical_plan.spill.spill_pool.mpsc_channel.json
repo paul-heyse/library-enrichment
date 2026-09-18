@@ -1,0 +1,134 @@
+[
+  {
+    "id": "03f7c46cd235c8bd43a84cfe",
+    "path": "datafusion_physical_plan::spill::spill_pool::mpsc_channel",
+    "name": "mpsc_channel",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn mpsc_channel(max_file_size_bytes: usize, spill_manager: std::sync::Arc<super::spill_manager::SpillManager>) -> (SpillPoolWriter, datafusion_execution::SendableRecordBatchStream)",
+    "docs": "Creates a paired writer and reader for a spill pool with MPSC (multi-producer,\nsingle-consumer) semantics. See [`spsc_channel`] for the general architecture description\nof the spill pool.\n\nAdditional writers can be created by cloning the returned [`SpillPoolWriter`].\n\nIn contrast to [`spsc_channel`], this implementation provides no guarantees regarding\nthe read order of the returned [`SendableRecordBatchStream`].\n\nIf you need strict end-to-end FIFO (a single writer whose batches are read back in exact\nwrite order), use [`spsc_channel`] instead.\n\n# File Management\n\nThe shared channel uses the same size-based rotation trigger as the [single producer channel](spsc_channel).\nAll writers share the same pool of write files and coordinate file rotation. The number of open\nfiles is kept as small as possible. When more writes occur concurrently than there are open write\nfiles an additional file will be opened to write to. This prevents multiple writers from blocking\neach other.\n\nWhen the last writer clone is dropped, it finalizes any remaining open write files so that all\nwritten data can be accessed by the reader.\n\n# Returns\n\nA tuple of `(SpillPoolWriter, SendableRecordBatchStream)` that share the same\nunderlying pool. The reader is returned as a stream for immediate use with\nasync stream combinators. The writer can be cloned to create additional writers.",
+    "span": {
+      "filename": "src/spill/spill_pool.rs",
+      "begin": [
+        515,
+        1
+      ],
+      "end": [
+        521,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "max_file_size_bytes",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "spill_manager",
+              {
+                "resolved_path": {
+                  "path": "std::sync::Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "super::spill_manager::SpillManager",
+                              "id": 5144,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "tuple": [
+              {
+                "resolved_path": {
+                  "path": "SpillPoolWriter",
+                  "id": 5221,
+                  "args": null
+                }
+              },
+              {
+                "resolved_path": {
+                  "path": "datafusion_execution::SendableRecordBatchStream",
+                  "id": 103,
+                  "args": null
+                }
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "5144": "datafusion_physical_plan::spill::spill_manager::SpillManager",
+      "5221": "datafusion_physical_plan::spill::spill_pool::SpillPoolWriter",
+      "103": "datafusion_execution::stream::SendableRecordBatchStream"
+    },
+    "impl_context": null,
+    "links": {
+      "spsc_channel": 5224,
+      "`SpillPoolWriter`": 5221,
+      "`SendableRecordBatchStream`": 103,
+      "`spsc_channel`": 5224
+    },
+    "link_paths": {
+      "spsc_channel": "datafusion_physical_plan::spill::spill_pool::spsc_channel",
+      "`SpillPoolWriter`": "datafusion_physical_plan::spill::spill_pool::SpillPoolWriter",
+      "`SendableRecordBatchStream`": "datafusion_execution::stream::SendableRecordBatchStream",
+      "`spsc_channel`": "datafusion_physical_plan::spill::spill_pool::spsc_channel"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "5220",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.spill.spill_pool.mpsc_channel.md",
+    "record_file": "operations/datafusion_physical_plan.spill.spill_pool.mpsc_channel.json",
+    "anchor": "op-03f7c46cd235c8bd43a84cfe",
+    "aliases": [],
+    "resolved_doc_links": {
+      "spsc_channel": "../operations/datafusion_physical_plan.spill.spill_pool.spsc_channel.md#op-334be7f1fdba1ab78f028f38",
+      "`SpillPoolWriter`": "../operations/datafusion_physical_plan.spill.spill_pool.SpillPoolWriter.md#op-e6eb74ac5d1a8f5d6893d42a",
+      "`SendableRecordBatchStream`": "../operations/datafusion_execution.stream.SendableRecordBatchStream.md#op-7cf25e4c554567392af11cb6",
+      "`spsc_channel`": "../operations/datafusion_physical_plan.spill.spill_pool.spsc_channel.md#op-334be7f1fdba1ab78f028f38"
+    }
+  }
+]

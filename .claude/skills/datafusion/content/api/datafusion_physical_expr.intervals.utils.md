@@ -10,6 +10,9 @@ Crate `datafusion-physical-expr` · 6 public items · structured records in [`mo
 fn check_support(expr: &std::sync::Arc<dyn PhysicalExpr>, schema: &arrow::datatypes::SchemaRef) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.intervals.utils.check_support.md).
+
+
 Indicates whether interval arithmetic is supported for the given expression.
 Currently, we do not support all [`PhysicalExpr`]s for interval calculations.
 We do not support every type of [`Operator`]s either. Over time, this check
@@ -26,6 +29,9 @@ Currently, [`CastExpr`], [`NegativeExpr`], [`BinaryExpr`], [`Column`] and [`Lite
 fn convert_duration_type_to_interval(interval: &datafusion_expr::interval_arithmetic::Interval) -> Option<datafusion_expr::interval_arithmetic::Interval>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.intervals.utils.convert_duration_type_to_interval.md).
+
+
 Converts an [`Interval`] of `Duration`s to one of time intervals, if applicable. Otherwise, returns [`None`].
 
 ---
@@ -37,6 +43,9 @@ Converts an [`Interval`] of `Duration`s to one of time intervals, if applicable.
 ```rust
 fn convert_interval_type_to_duration(interval: &datafusion_expr::interval_arithmetic::Interval) -> Option<datafusion_expr::interval_arithmetic::Interval>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.intervals.utils.convert_interval_type_to_duration.md).
+
 
 Converts an [`Interval`] of time intervals to one of `Duration`s, if applicable. Otherwise, returns [`None`].
 
@@ -50,6 +59,9 @@ Converts an [`Interval`] of time intervals to one of `Duration`s, if applicable.
 fn get_inverse_op(op: datafusion_expr::Operator) -> datafusion_common::Result<datafusion_expr::Operator>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.intervals.utils.get_inverse_op.md).
+
+
 ---
 
 ## is_datatype_supported
@@ -59,6 +71,9 @@ fn get_inverse_op(op: datafusion_expr::Operator) -> datafusion_common::Result<da
 ```rust
 fn is_datatype_supported(data_type: &arrow::datatypes::DataType) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.intervals.utils.is_datatype_supported.md).
+
 
 Indicates whether interval arithmetic is supported for the given data type.
 
@@ -71,6 +86,9 @@ Indicates whether interval arithmetic is supported for the given data type.
 ```rust
 fn is_operator_supported(op: &datafusion_expr::Operator) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.intervals.utils.is_operator_supported.md).
+
 
 Indicates whether interval arithmetic is supported for the given operator.
 

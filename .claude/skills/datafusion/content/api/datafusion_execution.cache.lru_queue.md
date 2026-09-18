@@ -29,6 +29,9 @@ fn put(&mut self, key: K, value: V) -> Option<V>
 fn remove(&mut self, key: &K) -> Option<V>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.cache.lru_queue.LruQueue.md).
+
+
 Provides a Least Recently Used queue with unbounded capacity.
 
 # Examples

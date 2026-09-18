@@ -106,7 +106,7 @@ fn observations() -> Vec<ApiObservation> {
                 } else {
                     ApiOrigin::Stub
                 },
-                "env_fixture".into(),
+                format!("env_{}", "a".repeat(64)).try_into().unwrap(),
                 ApiPayload {
                     declared_kind: enrichment_core::evidence::SymbolKind::Function,
                     signature: Some(format!("def f{i:02}(x: str) -> bytes")),
@@ -338,7 +338,10 @@ async fn attempts_inputs_and_coverage_retain_structured_provenance_through_dataf
         }),
     };
     let first = ProducerRun {
-        attempt_id: "attempt-a".into(),
+        attempt_id: "attempt_00000000000000000000000000000001"
+            .to_owned()
+            .try_into()
+            .unwrap(),
         producer: "griffe-static".into(),
         producer_version: "1".into(),
         config_digest: enrichment_core::canonical::sha256_hex(b"config"),
@@ -359,7 +362,10 @@ async fn attempts_inputs_and_coverage_retain_structured_provenance_through_dataf
         log: Some(String::new()),
     };
     let second = ProducerRun {
-        attempt_id: "attempt-b".into(),
+        attempt_id: "attempt_00000000000000000000000000000002"
+            .to_owned()
+            .try_into()
+            .unwrap(),
         started_at: enrichment_core::native_time::ObservationTime::try_from(
             "2026-09-14T01:00:00.000000Z".to_owned(),
         )
@@ -377,7 +383,7 @@ async fn attempts_inputs_and_coverage_retain_structured_provenance_through_dataf
     let missing = CoverageFact::new(
         first.semantic_binding_id(),
         SubjectRef::Library {
-            release_id: "rel_fixture".into(),
+            release_id: format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
         },
         EvidenceKind::RuntimeApi,
         CoverageOutcome::Missing,
@@ -387,7 +393,7 @@ async fn attempts_inputs_and_coverage_retain_structured_provenance_through_dataf
     let indexed = CoverageFact::new(
         first.semantic_binding_id(),
         SubjectRef::Library {
-            release_id: "rel_fixture".into(),
+            release_id: format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
         },
         EvidenceKind::PublicApi,
         CoverageOutcome::Indexed,
@@ -502,12 +508,12 @@ async fn release_metadata_roundtrip() {
     };
     let mut rows = vec![
         ReleaseMetadata::new(
-            "rel_fixture".into(),
+            format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
             ReleaseDetails::RustDocs(DocsRsMetadata::default()),
             source.clone(),
         ),
         ReleaseMetadata::new(
-            "rel_fixture".into(),
+            format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
             ReleaseDetails::RustDocs(DocsRsMetadata {
                 targets: Some(vec![]),
                 ..DocsRsMetadata::default()
@@ -515,7 +521,7 @@ async fn release_metadata_roundtrip() {
             source.clone(),
         ),
         ReleaseMetadata::new(
-            "rel_fixture".into(),
+            format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
             ReleaseDetails::PythonDistribution(distribution.clone()),
             source.clone(),
         ),
@@ -531,7 +537,7 @@ async fn release_metadata_roundtrip() {
             }
         }
         rows.push(ReleaseMetadata::new(
-            "rel_fixture".into(),
+            format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
             ReleaseDetails::PythonDistribution(unbuilt),
             source.clone(),
         ));
@@ -550,7 +556,7 @@ async fn release_metadata_roundtrip() {
                 values.into_iter().map(str::to_owned).collect(),
             );
             let row = ReleaseMetadata::new(
-                "rel_fixture".into(),
+                format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
                 ReleaseDetails::PythonDistribution(invalid),
                 source.clone(),
             );
@@ -564,7 +570,7 @@ async fn release_metadata_roundtrip() {
                 invalid.version = value;
             }
             let row = ReleaseMetadata::new(
-                "rel_fixture".into(),
+                format!("rel_{}", "a".repeat(64)).try_into().unwrap(),
                 ReleaseDetails::PythonDistribution(invalid),
                 source.clone(),
             );

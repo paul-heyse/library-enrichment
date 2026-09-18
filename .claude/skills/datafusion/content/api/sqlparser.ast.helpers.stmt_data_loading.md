@@ -46,6 +46,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.helpers.stmt_data_loading.StageLoadSelectItemKind.md).
+
+
 This enum enables support for both standard SQL select item expressions
 and Snowflake-specific ones for data loading.
 
@@ -95,6 +98,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.helpers.stmt_data_loading.FileStagingCommand.md).
+
+
 A command to stage files to a named stage.
 
 ---
@@ -143,6 +149,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.helpers.stmt_data_loading.StageLoadSelectItem.md).
+
+
 A single item in the `SELECT` list for data loading from staged files.
 
 ---
@@ -190,6 +199,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 ```rust
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.helpers.stmt_data_loading.StageParamsObject.md).
+
 
 Parameters for a named stage object used in data loading/unloading.
 

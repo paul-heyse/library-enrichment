@@ -48,6 +48,9 @@ fn from_iter<T: IntoIterator<Item = RowSelection>>(iter: T) -> Self
 fn from_iter<T: IntoIterator<Item = RowSelector>>(iter: T) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.selection.RowSelection.md).
+
+
 [`RowSelection`] represents selecting a subset of rows
 when scanning a parquet file.
 

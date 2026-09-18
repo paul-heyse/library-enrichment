@@ -10,6 +10,9 @@ Crate `datafusion-expr-common` · 12 public items · structured records in [`mod
 const FIXED_SIZE_LIST_WILDCARD: i32 = i32::MIN
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.signature.FIXED_SIZE_LIST_WILDCARD.md).
+
+
 Constant that is used as a placeholder for any valid fixed size list.
 This is used where a function can accept a fixed size list type with any
 valid length. It exists to avoid the need to enumerate all possible fixed size list lengths.
@@ -25,6 +28,9 @@ Also reachable as `datafusion::logical_expr::TIMEZONE_WILDCARD`, `datafusion_exp
 ```rust
 const TIMEZONE_WILDCARD: &str = "+TZ"
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.signature.TIMEZONE_WILDCARD.md).
+
 
 Constant that is used as a placeholder for any valid timezone.
 This is used where a function can accept a timestamp type with any
@@ -48,6 +54,9 @@ enum Arity
 **Variants**: `Fixed`, `Variable`
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.signature.Arity.md).
+
 
 Represents the arity (number of arguments) of a function signature
 
@@ -75,6 +84,9 @@ enum ArrayFunctionArgument
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.signature.ArrayFunctionArgument.md).
+
+
 ---
 
 ## ArrayFunctionSignature
@@ -98,6 +110,9 @@ enum ArrayFunctionSignature
 ```rust
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.signature.ArrayFunctionSignature.md).
+
 
 ---
 
@@ -135,6 +150,9 @@ fn with_encoding_preservation(self, encoding_preservation: EncodingPreservation)
 ```rust
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.signature.Coercion.md).
+
 
 Represents type coercion rules for function arguments, specifying both the desired type
 and optional implicit coercion rules for source types.
@@ -197,6 +215,9 @@ fn used_to_support_zero_arguments(&self) -> bool
 ```rust
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.signature.TypeSignature.md).
+
 
 The types of arguments for which a function has implementations.
 
@@ -287,6 +308,9 @@ fn matches_native_type(&self, logical_type: &NativeType) -> bool
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.signature.TypeSignatureClass.md).
+
+
 Represents the class of types that can be used in a function signature.
 
 This is used to specify what types are valid for function arguments in a more flexible way than
@@ -313,6 +337,9 @@ enum Volatility
 **Implements**: `core::convert::From`
 
 **Derives**: Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.signature.Volatility.md).
+
 
 How a function's output changes with respect to a fixed input
 
@@ -343,6 +370,9 @@ const fn preserve_dictionary(self) -> bool
 const fn with_dictionary(self) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.signature.EncodingPreservation.md).
+
+
 Controls whether a [`Coercion`] preserves an argument's physical encoding
 (e.g. dictionary) instead of materializing it to the coerced value type.
 
@@ -365,6 +395,9 @@ struct ImplicitCoercion
 ```rust
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.signature.ImplicitCoercion.md).
+
 
 Defines rules for implicit type coercion, specifying which source types can be
 coerced and the default type to use when coercing.
@@ -428,6 +461,9 @@ fn variadic(common_types: Vec<DataType>, volatility: Volatility) -> Self
 fn variadic_any(volatility: Volatility) -> Self
 fn with_parameter_names(self, names: Vec<impl Into<String>>) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.signature.Signature.md).
+
 
 Provides  information necessary for calling a function.
 

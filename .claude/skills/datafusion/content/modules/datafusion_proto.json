@@ -1,0 +1,93 @@
+[
+  {
+    "id": "ceaba88e62b38147773cc9a5",
+    "path": "datafusion_proto",
+    "name": "datafusion_proto",
+    "owner": null,
+    "crate": "datafusion-proto",
+    "version": "55.1.0",
+    "kind": "module",
+    "signature": "mod datafusion_proto",
+    "docs": "Serialize / Deserialize DataFusion Plans to bytes\n\nThis crate provides support for serializing and deserializing the\nfollowing structures to and from bytes:\n\n1. [`LogicalPlan`]'s (including [`Expr`]),\n2. [`ExecutionPlan`]s (including [`PhysicalExpr`])\n\n[`LogicalPlan`]: datafusion_expr::LogicalPlan\n[`Expr`]: datafusion_expr::Expr\n[`ExecutionPlan`]: datafusion_physical_plan::ExecutionPlan\n[`PhysicalExpr`]: datafusion_physical_expr::PhysicalExpr\n\nInternally, this crate is implemented by converting the plans to [protocol\nbuffers] using [prost].\n\n[protocol buffers]: https://developers.google.com/protocol-buffers\n[prost]: https://docs.rs/prost/latest/prost/\n\n# Version Compatibility\n\nThe serialized form are not guaranteed to be compatible across\nDataFusion versions. A plan serialized with one version of DataFusion\nmay not be able to deserialized with a different version.\n\n# See Also\n\nThe binary format created by this crate supports the full range of DataFusion\nplans, but is DataFusion specific. See [datafusion-substrait] for a crate\nwhich can encode many DataFusion plans using the [substrait.io] standard.\n\n[datafusion-substrait]: https://docs.rs/datafusion-substrait/latest/datafusion_substrait\n[substrait.io]: https://substrait.io\n\n# Example: Serializing [`Expr`]s\n```\n# use datafusion_common::Result;\n# use datafusion_expr::{col, lit, Expr};\n# use datafusion_proto::bytes::Serializeable;\n# fn main() -> Result<()>{\n// Create a new `Expr` a < 32\nlet expr = col(\"a\").lt(lit(5i32));\n\n// Convert it to bytes (for sending over the network, etc.)\nlet bytes = expr.to_bytes()?;\n\n// Decode bytes from somewhere (over network, etc.) back to Expr\nlet decoded_expr = Expr::from_bytes(&bytes)?;\nassert_eq!(expr, decoded_expr);\n# Ok(())\n# }\n```\n\n# Example: Serializing [`LogicalPlan`]s\n```\n# use datafusion::prelude::*;\n# use datafusion_common::Result;\n# use datafusion_proto::bytes::{logical_plan_from_bytes, logical_plan_to_bytes};\n# #[tokio::main]\n# async fn main() -> Result<()>{\n // Create a plan that scans table 't'\n let ctx = SessionContext::new();\n ctx.register_csv(\"t1\", \"tests/testdata/test.csv\", CsvReadOptions::default()).await?;\n let plan = ctx.table(\"t1\").await?.into_optimized_plan()?;\n\n // Convert the plan into bytes (for sending over the network, etc.)\n let bytes = logical_plan_to_bytes(&plan)?;\n\n // Decode bytes from somewhere (over network, etc.) back to LogicalPlan\n let logical_round_trip = logical_plan_from_bytes(&bytes, &ctx.task_ctx())?;\n assert_eq!(format!(\"{:?}\", plan), format!(\"{:?}\", logical_round_trip));\n# Ok(())\n# }\n```\n# Example: Serializing [`ExecutionPlan`]s\n\n```\n# use datafusion::prelude::*;\n# use datafusion_common::Result;\n# use datafusion_proto::bytes::{physical_plan_from_bytes,physical_plan_to_bytes};\n# #[tokio::main]\n# async fn main() -> Result<()>{\n // Create a plan that scans table 't'\n let ctx = SessionContext::new();\n ctx.register_csv(\"t1\", \"tests/testdata/test.csv\", CsvReadOptions::default()).await?;\n let physical_plan = ctx.table(\"t1\").await?.create_physical_plan().await?;\n\n // Convert the plan into bytes (for sending over the network, etc.)\n let bytes = physical_plan_to_bytes(physical_plan.clone())?;\n\n // Decode bytes from somewhere (over network, etc.) back to ExecutionPlan\n let physical_round_trip = physical_plan_from_bytes(&bytes, &ctx.task_ctx())?;\n assert_eq!(format!(\"{:?}\", physical_plan), format!(\"{:?}\", physical_round_trip));\n# Ok(())\n# }\n```",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        174,
+        60
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[deny(clippy::clone_on_ref_ptr)]"
+      },
+      {
+        "other": "#[attr = CfgAttrTrace([NameValue { name: \"docsrs\", value: None, span: src/lib.rs:22:13: 22:19 (#0) },\nNameValue { name: \"test\", value: None, span: src/lib.rs:26:13: 26:17 (#0) }])]"
+      },
+      {
+        "other": "#[doc(html_favicon_url = \"https://raw.githubusercontent.com/apache/datafusion/19fe44cf2f30cbdd63d4a4f52c74055163c6cc38/docs/logos/standalone_logo/logo_original.svg\")]"
+      },
+      {
+        "other": "#[doc(html_logo_url = \"https://raw.githubusercontent.com/apache/datafusion/19fe44cf2f30cbdd63d4a4f52c74055163c6cc38/docs/logos/standalone_logo/logo_original.svg\")]"
+      },
+      {
+        "other": "#[attr = Feature([doc_cfg#0])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": true,
+        "items": [
+          35,
+          36,
+          305,
+          539,
+          574,
+          579,
+          580,
+          581,
+          582,
+          583
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "datafusion_expr::Expr": 6,
+      "datafusion_physical_plan::ExecutionPlan": 25,
+      "datafusion_expr::LogicalPlan": 13,
+      "datafusion_physical_expr::PhysicalExpr": 316
+    },
+    "link_paths": {
+      "datafusion_expr::Expr": "datafusion_expr::expr::Expr",
+      "datafusion_physical_plan::ExecutionPlan": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "datafusion_expr::LogicalPlan": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "datafusion_physical_expr::PhysicalExpr": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+    },
+    "artifact": {
+      "id": "720894fe02394ee28f0a37a8daf379d67fc3b7d2adb9a3e2e747b873da9e4cb7",
+      "format_version": 61,
+      "item_id": "584",
+      "origin": "https://docs.rs/crate/datafusion-proto/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/datafusion_proto.md",
+    "record_file": "modules/datafusion_proto.json",
+    "anchor": "op-ceaba88e62b38147773cc9a5",
+    "aliases": [],
+    "resolved_doc_links": {
+      "datafusion_expr::Expr": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc",
+      "datafusion_physical_plan::ExecutionPlan": "../operations/datafusion_physical_plan.execution_plan.ExecutionPlan.md#op-ac09436cd73f869917923673",
+      "datafusion_expr::LogicalPlan": "../operations/datafusion_expr.logical_plan.plan.LogicalPlan.md#op-2f2092c4f87ff1cc0b33c3da",
+      "datafusion_physical_expr::PhysicalExpr": "../operations/datafusion_physical_expr_common.physical_expr.PhysicalExpr.md#op-fe8284c43330456b0d4e6af7"
+    }
+  }
+]

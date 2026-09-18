@@ -20,6 +20,9 @@ trait IndexAccessor
 fn index(self, key: Expr) -> Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.expr_ext.IndexAccessor.md).
+
+
 Return access to the element field. Example `expr["name"]`
 
 ## Example Access element 2 from column "c1"
@@ -58,6 +61,9 @@ trait SliceAccessor
 ```rust
 fn range(self, start: Expr, stop: Expr) -> Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.expr_ext.SliceAccessor.md).
+
 
 Return elements between `1` based `start` and `stop`, for
 example `expr[1:3]`

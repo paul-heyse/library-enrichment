@@ -29,6 +29,9 @@ fn from(s: UninitializedFieldError) -> Self
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.ast.BuilderError.md).
+
+
 ---
 
 ## DerivedRelationBuilder
@@ -48,6 +51,9 @@ fn alias(&mut self, value: Option<ast::TableAlias>) -> &mut Self
 fn lateral(&mut self, value: bool) -> &mut Self
 fn subquery(&mut self, value: Box<ast::Query>) -> &mut Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.ast.DerivedRelationBuilder.md).
+
 
 ---
 
@@ -71,6 +77,9 @@ fn build(&self) -> Result<ast::TableFactor, BuilderError>
 fn input_expr(&mut self, value: ast::Expr) -> &mut Self
 fn outer(&mut self, value: bool) -> &mut Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.ast.FlattenRelationBuilder.md).
+
 
 Builds a `LATERAL FLATTEN(INPUT => expr, OUTER => bool)` table factor
 for Snowflake-style unnesting.
@@ -105,6 +114,9 @@ fn take_body(&mut self) -> Option<Box<ast::SetExpr>>
 fn with(&mut self, value: Option<ast::With>) -> &mut Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.ast.QueryBuilder.md).
+
+
 ---
 
 ## RelationBuilder
@@ -130,6 +142,9 @@ fn nested_join(&mut self, value: ast::TableWithJoins, alias: Option<ast::TableAl
 fn table(&mut self, value: TableRelationBuilder) -> &mut Self
 fn unnest(&mut self, value: UnnestRelationBuilder) -> &mut Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.ast.RelationBuilder.md).
+
 
 ---
 
@@ -175,6 +190,9 @@ fn top(&mut self, value: Option<ast::Top>) -> &mut Self
 fn value_table_mode(&mut self, value: Option<ast::ValueTableMode>) -> &mut Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.ast.SelectBuilder.md).
+
+
 ---
 
 ## TableRelationBuilder
@@ -200,6 +218,9 @@ fn version(&mut self, value: Option<ast::TableVersion>) -> &mut Self
 fn with_hints(&mut self, value: Vec<ast::Expr>) -> &mut Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.ast.TableRelationBuilder.md).
+
+
 ---
 
 ## TableWithJoinsBuilder
@@ -220,6 +241,9 @@ fn joins(&mut self, value: Vec<ast::Join>) -> &mut Self
 fn push_join(&mut self, value: ast::Join) -> &mut Self
 fn relation(&mut self, value: RelationBuilder) -> &mut Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.ast.TableWithJoinsBuilder.md).
+
 
 ---
 
@@ -254,6 +278,9 @@ fn from(field_name: &'static str) -> Self
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.ast.UninitializedFieldError.md).
+
+
 Runtime error when a `build()` method is called and one or more required fields
 do not have a value.
 
@@ -281,5 +308,8 @@ fn with_offset(&mut self, value: bool) -> &mut Self
 fn with_offset_alias(&mut self, value: Option<ast::Ident>) -> &mut Self
 fn with_ordinality(&mut self, value: bool) -> &mut Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.ast.UnnestRelationBuilder.md).
+
 
 ---

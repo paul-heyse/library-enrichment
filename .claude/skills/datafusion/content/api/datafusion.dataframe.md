@@ -80,6 +80,9 @@ async fn write_parquet(self, path: &str, options: DataFrameWriteOptions, writer_
 async fn write_table(self, table_name: &str, write_options: DataFrameWriteOptions) -> Result<Vec<RecordBatch>, DataFusionError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.dataframe.DataFrame.md).
+
+
 Represents a logical set of rows with the same named columns.
 
 Similar to a [Pandas DataFrame] or [Spark DataFrame], a DataFusion DataFrame
@@ -180,6 +183,9 @@ fn with_partition_by(self, partition_by: Vec<String>) -> Self
 fn with_single_file_output(self, single_file_output: bool) -> Self
 fn with_sort_by(self, sort_by: Vec<SortExpr>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.dataframe.DataFrameWriteOptions.md).
+
 
 Contains options that control how data is
 written out from a DataFrame

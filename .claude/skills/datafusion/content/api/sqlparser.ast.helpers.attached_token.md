@@ -50,6 +50,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.helpers.attached_token.AttachedToken.md).
+
+
 A wrapper over [`TokenWithSpan`]s that ignores the token and source
 location in comparisons and hashing.
 

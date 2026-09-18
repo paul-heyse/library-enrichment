@@ -57,6 +57,9 @@ fn len(&self) -> usize
 fn extend<T: IntoIterator<Item = Option<P::Native>>>(&mut self, iter: T)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.primitive_dictionary_builder.PrimitiveDictionaryBuilder.md).
+
+
 Builder for [`DictionaryArray`] of [`PrimitiveArray`]
 
 # Example:

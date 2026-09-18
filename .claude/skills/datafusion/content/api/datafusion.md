@@ -10,6 +10,9 @@ Crate `datafusion` · 2 public items · structured records in [`model/datafusion
 const DATAFUSION_VERSION: &str = "55.1.0"
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.DATAFUSION_VERSION.md).
+
+
 DataFusion crate version
 
 ---
@@ -23,6 +26,9 @@ Also reachable as `datafusion::prelude::dataframe`
 ```rust
 macro_rules! dataframe
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.dataframe.md).
+
 
 Macro for creating DataFrame.
 # Example

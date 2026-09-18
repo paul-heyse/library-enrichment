@@ -1,0 +1,10 @@
+id: native-delta-load-owner
+valid:
+  - 'delta.load("evidence", Some(version)).await?;'
+  - 'mod tests { async fn upstream() { table.load_version(7).await?; } }'
+  - '// DeltaTableBuilder and update_incremental belong to the load owner.'
+invalid:
+  - 'table.load_version(version).await?;'
+  - 'table.update_incremental(None).await?;'
+  - 'let builder = DeltaTableBuilder::from_url(url);'
+  - 'deltalake::open_table(uri).await?;'

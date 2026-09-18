@@ -1,7 +1,9 @@
 //! Internal executor protocol. The daemon owns requests and validates every returned byte.
 //! This is not an MCP command surface and does not confer execution permission.
 pub mod inventory;
+mod launch;
 use crate::execution::ProcessEnd;
+pub use launch::{Launch, Network};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
@@ -9,7 +11,7 @@ use std::{
     path::{Component, Path},
 };
 
-pub const VERSION: u32 = 4;
+pub const VERSION: u32 = 9;
 pub const DATA_LIMIT: u64 = 64 * 1024 * 1024 * 1024;
 pub const HEADER_LIMIT: usize = 16 * 1024 * 1024;
 pub const ENTRY_LIMIT: usize = 100_000;
@@ -32,33 +34,25 @@ pub enum OutputKind {
 crate::native_struct! {
 pub struct Operation {
     version: u32 => crate::native_union::Rule::Text,
+    invocation: Option<crate::execution::producer::Invocation> => crate::native_union::Rule::Text,
+    prepared: Option<crate::operation::ownership::PreparedCapsule> => crate::native_union::Rule::Text,
     mode: Mode => crate::native_union::Rule::Text,
     argv: Vec<String> => crate::native_union::Rule::Sequence,
     inputs: inventory::Inventory => crate::native_union::Rule::Map,
     outputs: BTreeMap<String, OutputKind> => crate::native_union::Rule::Map,
-    data_bytes: u64 => crate::native_union::Rule::Text,
-    output_bytes: usize => crate::native_union::Rule::Text,
-    deadline_millis: u64 => crate::native_union::Rule::Text,
-    /// Host-selected image, helper and containment description digest.
-    binding: String => crate::native_union::Rule::Text,
+    /// Exact physical contract consumed by both the broker and the in-container helper.
+    launch: Launch => crate::native_union::Rule::Text,
 }
 }
 
 impl Operation {
-    pub fn binding(image: &str, containment: &str) -> datafusion::error::Result<String> {
-        crate::native_key::Key::ProcessBinding.record(&crate::operation::jobs::ProcessBinding {
-            image: image.into(),
-            containment: containment.into(),
-        })
-    }
-
-    pub fn id(&self) -> String {
-        crate::native_key::Key::ProcessOperation
-            .record(self)
+    pub fn id(&self) -> crate::identity::ProcessOperationId {
+        crate::identity::ProcessOperationId::try_from_record(self)
             .expect("declared bounded executor Arrow contract")
     }
 
     pub fn validate(&self) -> io::Result<()> {
+        self.launch.validate()?;
         if self.version != VERSION
             || self.argv.is_empty()
             || !self.argv[0].starts_with('/')
@@ -74,11 +68,8 @@ impl Operation {
                 .any(|s| s.len() > 1024 * 1024 || s.contains('\0'))
             || self.inputs.len() > ENTRY_LIMIT
             || self.outputs.len() > 32
-            || self.data_bytes == 0
-            || self.data_bytes > DATA_LIMIT
-            || !(1024..=1024 * 1024).contains(&self.output_bytes)
-            || !(1..=600_000).contains(&self.deadline_millis)
             || (self.mode == Mode::LanguageServer && !self.outputs.is_empty())
+            || (self.mode == Mode::LanguageServer && self.launch.network != Network::Offline)
         {
             return Err(io::Error::other(
                 "invalid or unsupported executor operation",
@@ -137,14 +128,14 @@ pub fn validate_path(path: &str) -> io::Result<()> {
 pub enum Frame {
     Start {
         version: u32,
-        operation_id: String,
+        operation_id: crate::identity::ProcessOperationId,
     },
     Entry {
         path: String,
         entry: inventory::Entry,
     },
     Complete {
-        operation_id: String,
+        operation_id: crate::identity::ProcessOperationId,
         inventory_digest: String,
         exit_code: Option<i32>,
         end: ProcessEnd,
@@ -171,6 +162,8 @@ mod native_identity_tests {
     fn process_identity_binds_program_bytes_inputs_outputs_and_limits() {
         let original = Operation {
             version: VERSION,
+            invocation: None,
+            prepared: None,
             mode: Mode::Command,
             argv: vec!["/bin/tool".into(), "input".into()],
             inputs: [
@@ -189,15 +182,18 @@ mod native_identity_tests {
             ]
             .into(),
             outputs: [("result".into(), OutputKind::File)].into(),
-            data_bytes: 1024,
-            output_bytes: 1024,
-            deadline_millis: 1000,
-            binding: "exact-image-and-helper".into(),
+            launch: Launch::for_execution(
+                &crate::config::Execution::default(),
+                &format!("sha256:{}", "a".repeat(64)),
+                "exact-image-and-helper",
+                false,
+            )
+            .unwrap(),
         };
         original.validate().unwrap();
         let id = original.id();
-        assert!(id.starts_with("process_"));
-        for change in 0..8 {
+        assert!(id.to_string().starts_with("process_"));
+        for change in 0..13 {
             let mut changed = original.clone();
             match change {
                 0 => changed.argv.push("--other".into()),
@@ -214,11 +210,24 @@ mod native_identity_tests {
                 2 => {
                     changed.outputs.insert("another".into(), OutputKind::File);
                 }
-                3 => changed.data_bytes += 1,
-                4 => changed.output_bytes += 1,
-                5 => changed.deadline_millis += 1,
-                6 => changed.binding.push('2'),
-                _ => changed.mode = Mode::LanguageServer,
+                3 => changed.launch.resources.scratch_bytes += 1,
+                4 => changed.launch.output_bytes += 1,
+                5 => changed.launch.deadline_millis += 1,
+                6 => changed.launch.containment.push('2'),
+                7 => changed.mode = Mode::LanguageServer,
+                8 => changed.launch.image.push('b'),
+                9 => changed.launch.network = Network::Registry,
+                10 => {
+                    changed
+                        .launch
+                        .environment
+                        .insert("PATH".into(), "/other".into());
+                }
+                11 => changed.launch.resources.memory_bytes += 1,
+                _ => {
+                    changed.invocation =
+                        Some(crate::execution::producer::Invocation::PythonIdentity)
+                }
             }
             assert_ne!(id, changed.id(), "changed process field {change}");
         }

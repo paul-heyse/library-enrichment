@@ -1,0 +1,2457 @@
+[
+  {
+    "id": "447f14acc2b0df76e4cd3de1",
+    "path": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+    "name": "ArrowBytesMap",
+    "owner": null,
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct ArrowBytesMap<O, V> where O: OffsetSizeTrait, V: Debug + PartialEq + Eq + Clone + Copy + Default",
+    "docs": "Optimized map for storing Arrow \"bytes\" types (`String`, `LargeString`,\n`Binary`, and `LargeBinary`) values that can produce the set of keys on\noutput as `GenericBinaryArray` without copies.\n\nEquivalent to `HashSet<String, V>` but with better performance if you need\nto emit the keys as an Arrow `StringArray` / `BinaryArray`. For other\npurposes it is the same as a `HashMap<String, V>`\n\n# Generic Arguments\n\n* `O`: OffsetSize (String/LargeString)\n* `V`: payload type\n\n# Description\n\nThis is a specialized HashMap with the following properties:\n\n1. Optimized for storing and emitting Arrow byte types  (e.g.\n   `StringArray` / `BinaryArray`) very efficiently by minimizing copying of\n   the string values themselves, both when inserting and when emitting the\n   final array.\n\n\n2. Retains the insertion order of entries in the final array. The values are\n   in the same order as they were inserted.\n\nNote this structure can be used as a `HashSet` by specifying the value type\nas `()`, as is done by [`ArrowBytesSet`].\n\nThis map is used by the special `COUNT DISTINCT` aggregate function to\nstore the distinct values, and by the `GROUP BY` operator to store\ngroup values when they are a single string array.\n\n# Example\n\nThe following diagram shows how the map would store the four strings\n\"Foo\", NULL, \"Bar\", \"TheQuickBrownFox\":\n\n* `hashtable` stores entries for each distinct string that has been\n  inserted. The entries contain the payload as well as information about the\n  value (either an offset or the actual bytes, see `Entry` docs for more\n  details)\n\n* `offsets` stores offsets into `buffer` for each distinct string value,\n  following the same convention as the offsets in a `StringArray` or\n  `LargeStringArray`.\n\n* `buffer` stores the actual byte data\n\n* `null`: stores the index and payload of the null value, in this case the\n  second value (index 1)\n\n```text\n┌───────────────────────────────────┐    ┌─────┐    ┌────┐\n│                ...                │    │  0  │    │FooB│\n│ ┌──────────────────────────────┐  │    │  0  │    │arTh│\n│ │      <Entry for \"Bar\">       │  │    │  3  │    │eQui│\n│ │            len: 3            │  │    │  3  │    │ckBr│\n│ │   offset_or_inline: \"Bar\"    │  │    │  6  │    │ownF│\n│ │         payload:...          │  │    │     │    │ox  │\n│ └──────────────────────────────┘  │    │     │    │    │\n│                ...                │    └─────┘    └────┘\n│ ┌──────────────────────────────┐  │\n│ │<Entry for \"TheQuickBrownFox\">│  │    offsets    buffer\n│ │           len: 16            │  │\n│ │     offset_or_inline: 6      │  │    ┌───────────────┐\n│ │         payload: ...         │  │    │    Some(1)    │\n│ └──────────────────────────────┘  │    │ payload: ...  │\n│                ...                │    └───────────────┘\n└───────────────────────────────────┘\n                                             null\n              HashTable\n```\n\n# Entry Format\n\nEntries stored in a [`ArrowBytesMap`] represents a value that is either\nstored inline or in the buffer\n\nThis helps the case where there are many short (less than 8 bytes) strings\nthat are the same (e.g. \"MA\", \"CA\", \"NY\", \"TX\", etc)\n\n```text\n                                                               ┌──────────────────┐\n                                                 ─ ─ ─ ─ ─ ─ ─▶│...               │\n                                                │              │TheQuickBrownFox  │\n                                                               │...               │\n                                                │              │                  │\n                                                               └──────────────────┘\n                                                │               buffer of u8\n\n                                                │\n                       ┌────────────────┬───────────────┬───────────────┐\n Storing               │                │ starting byte │  length, in   │\n \"TheQuickBrownFox\"    │   hash value   │   offset in   │  bytes (not   │\n (long string)         │                │    buffer     │  characters)  │\n                       └────────────────┴───────────────┴───────────────┘\n                             8 bytes          8 bytes       4 or 8\n\n\n                        ┌───────────────┬─┬─┬─┬─┬─┬─┬─┬─┬───────────────┐\nStoring \"foobar\"        │               │ │ │ │ │ │ │ │ │  length, in   │\n(short string)          │  hash value   │?│?│f│o│o│b│a│r│  bytes (not   │\n                        │               │ │ │ │ │ │ │ │ │  characters)  │\n                        └───────────────┴─┴─┴─┴─┴─┴─┴─┴─┴───────────────┘\n                             8 bytes         8 bytes        4 or 8\n```",
+    "span": {
+      "filename": "src/binary_map.rs",
+      "begin": [
+        210,
+        1
+      ],
+      "end": [
+        236,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "O",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "V",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "O"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": 82,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "V"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Debug",
+                        "id": 69,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "PartialEq",
+                        "id": 78,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Eq",
+                        "id": 58,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Clone",
+                        "id": 28,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Copy",
+                        "id": 73,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Default",
+                        "id": 120,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "impls": [
+          131,
+          132,
+          136,
+          137,
+          138,
+          139,
+          140,
+          141,
+          142,
+          143,
+          144,
+          145,
+          146,
+          147,
+          148,
+          149,
+          150,
+          152
+        ]
+      }
+    },
+    "type_references": {
+      "82": "arrow_array::array::list_array::OffsetSizeTrait",
+      "69": "core::fmt::Debug",
+      "78": "core::cmp::PartialEq",
+      "58": "core::cmp::Eq",
+      "28": "core::clone::Clone",
+      "73": "core::marker::Copy",
+      "120": "core::default::Default"
+    },
+    "impl_context": null,
+    "links": {
+      "`ArrowBytesMap`": 94,
+      "`ArrowBytesSet`": 81
+    },
+    "link_paths": {
+      "`ArrowBytesMap`": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+      "`ArrowBytesSet`": "datafusion_physical_expr_common::binary_map::ArrowBytesSet"
+    },
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "94",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.md",
+    "record_file": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.json",
+    "anchor": "op-447f14acc2b0df76e4cd3de1",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ArrowBytesMap`": "../operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.md#op-447f14acc2b0df76e4cd3de1",
+      "`ArrowBytesSet`": "../operations/datafusion_physical_expr_common.binary_map.ArrowBytesSet.md#op-7a4c9a98e6de3999c7bf14fd"
+    }
+  },
+  {
+    "id": "740f673d2017f98ac83a6854",
+    "path": "datafusion_physical_expr_common::binary_map::ArrowBytesMap::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/binary_map.rs",
+      "begin": [
+        568,
+        5
+      ],
+      "end": [
+        576,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::fmt::Formatter",
+                      "id": 66,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 67,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "66": "core::fmt::Formatter",
+      "67": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowBytesMap",
+          "id": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "O"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "O",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "PartialEq",
+                      "id": "core::cmp::PartialEq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Eq",
+                      "id": "core::cmp::Eq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Clone",
+                      "id": "core::clone::Clone",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Copy",
+                      "id": "core::marker::Copy",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Default",
+                      "id": "core::default::Default",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/binary_map.rs",
+        "begin": [
+          564,
+          1
+        ],
+        "end": [
+          577,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "151",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.md",
+    "record_file": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.json",
+    "anchor": "op-740f673d2017f98ac83a6854",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ef4cc07697c1e9df2a2fa7c7",
+    "path": "datafusion_physical_expr_common::binary_map::ArrowBytesMap::insert_if_new",
+    "name": "insert_if_new",
+    "owner": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn insert_if_new<MP, OP>(&mut self, values: &ArrayRef, make_payload_fn: MP, observe_payload_fn: OP) where MP: FnMut(Option<&[u8]>) -> V, OP: FnMut(V)",
+    "docs": "Inserts each value from `values` into the map, invoking `payload_fn` for\neach value if *not* already present, deferring the allocation of the\npayload until it is needed.\n\nNote that this is different than a normal map that would replace the\nexisting entry\n\n# Arguments:\n\n`values`: array whose values are inserted\n\n`make_payload_fn`:  invoked for each value that is not already present\nto create the payload, in order of the values in `values`\n\n`observe_payload_fn`: invoked once, for each value in `values`, that was\nalready present in the map, with corresponding payload value.\n\n# Returns\n\nThe payload value for the entry, either the existing value or\nthe newly inserted value\n\n# Safety:\n\nNote that `make_payload_fn` and `observe_payload_fn` are only invoked\nwith valid values from `values`, not for the `NULL` value.",
+    "span": {
+      "filename": "src/binary_map.rs",
+      "begin": [
+        293,
+        5
+      ],
+      "end": [
+        328,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ArrayRef",
+                      "id": 86,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "make_payload_fn",
+              {
+                "generic": "MP"
+              }
+            ],
+            [
+              "observe_payload_fn",
+              {
+                "generic": "OP"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "MP",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "OP",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "MP"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "FnMut",
+                        "id": 124,
+                        "args": {
+                          "parenthesized": {
+                            "inputs": [
+                              {
+                                "resolved_path": {
+                                  "path": "Option",
+                                  "id": 125,
+                                  "args": {
+                                    "angle_bracketed": {
+                                      "args": [
+                                        {
+                                          "type": {
+                                            "borrowed_ref": {
+                                              "lifetime": null,
+                                              "is_mutable": false,
+                                              "type": {
+                                                "slice": {
+                                                  "primitive": "u8"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      ],
+                                      "constraints": []
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "output": {
+                              "generic": "V"
+                            }
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "OP"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "FnMut",
+                        "id": 124,
+                        "args": {
+                          "parenthesized": {
+                            "inputs": [
+                              {
+                                "generic": "V"
+                              }
+                            ],
+                            "output": null
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "86": "arrow_array::array::ArrayRef",
+      "124": "core::ops::function::FnMut",
+      "125": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowBytesMap",
+          "id": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "O"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "O",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "PartialEq",
+                      "id": "core::cmp::PartialEq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Eq",
+                      "id": "core::cmp::Eq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Clone",
+                      "id": "core::clone::Clone",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Copy",
+                      "id": "core::marker::Copy",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Default",
+                      "id": "core::default::Default",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/binary_map.rs",
+        "begin": [
+          242,
+          1
+        ],
+        "end": [
+          552,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "123",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.md",
+    "record_file": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.json",
+    "anchor": "op-ef4cc07697c1e9df2a2fa7c7",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "896db70f7067c570cb9e93ad",
+    "path": "datafusion_physical_expr_common::binary_map::ArrowBytesMap::into_state",
+    "name": "into_state",
+    "owner": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn into_state(self) -> ArrayRef",
+    "docs": "Converts this set into a `StringArray`, `LargeStringArray`,\n`BinaryArray`, or `LargeBinaryArray` containing each distinct value\nthat was inserted. This is done without copying the values.\n\nThe values are guaranteed to be returned in the same order in which\nthey were first seen.",
+    "span": {
+      "filename": "src/binary_map.rs",
+      "begin": [
+        485,
+        5
+      ],
+      "end": [
+        527,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 86,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "86": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowBytesMap",
+          "id": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "O"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "O",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "PartialEq",
+                      "id": "core::cmp::PartialEq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Eq",
+                      "id": "core::cmp::Eq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Clone",
+                      "id": "core::clone::Clone",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Copy",
+                      "id": "core::marker::Copy",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Default",
+                      "id": "core::default::Default",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/binary_map.rs",
+        "begin": [
+          242,
+          1
+        ],
+        "end": [
+          552,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "126",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.md",
+    "record_file": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.json",
+    "anchor": "op-896db70f7067c570cb9e93ad",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "35cd45100f6342556c13a2bc",
+    "path": "datafusion_physical_expr_common::binary_map::ArrowBytesMap::is_empty",
+    "name": "is_empty",
+    "owner": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "Is the set empty?",
+    "span": {
+      "filename": "src/binary_map.rs",
+      "begin": [
+        535,
+        5
+      ],
+      "end": [
+        537,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowBytesMap",
+          "id": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "O"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "O",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "PartialEq",
+                      "id": "core::cmp::PartialEq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Eq",
+                      "id": "core::cmp::Eq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Clone",
+                      "id": "core::clone::Clone",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Copy",
+                      "id": "core::marker::Copy",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Default",
+                      "id": "core::default::Default",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/binary_map.rs",
+        "begin": [
+          242,
+          1
+        ],
+        "end": [
+          552,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "128",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.md",
+    "record_file": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.json",
+    "anchor": "op-35cd45100f6342556c13a2bc",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bf2eab556fc44a4e711b4d34",
+    "path": "datafusion_physical_expr_common::binary_map::ArrowBytesMap::len",
+    "name": "len",
+    "owner": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Total number of entries (including null, if present)",
+    "span": {
+      "filename": "src/binary_map.rs",
+      "begin": [
+        530,
+        5
+      ],
+      "end": [
+        532,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowBytesMap",
+          "id": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "O"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "O",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "PartialEq",
+                      "id": "core::cmp::PartialEq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Eq",
+                      "id": "core::cmp::Eq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Clone",
+                      "id": "core::clone::Clone",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Copy",
+                      "id": "core::marker::Copy",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Default",
+                      "id": "core::default::Default",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/binary_map.rs",
+        "begin": [
+          242,
+          1
+        ],
+        "end": [
+          552,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "127",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.md",
+    "record_file": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.json",
+    "anchor": "op-bf2eab556fc44a4e711b4d34",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "dfb9093e7d8be3273bc7fd16",
+    "path": "datafusion_physical_expr_common::binary_map::ArrowBytesMap::new",
+    "name": "new",
+    "owner": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(output_type: OutputType) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/binary_map.rs",
+      "begin": [
+        246,
+        5
+      ],
+      "end": [
+        257,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "output_type",
+              {
+                "resolved_path": {
+                  "path": "OutputType",
+                  "id": 4,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4": "datafusion_physical_expr_common::binary_map::OutputType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowBytesMap",
+          "id": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "O"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "O",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "PartialEq",
+                      "id": "core::cmp::PartialEq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Eq",
+                      "id": "core::cmp::Eq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Clone",
+                      "id": "core::clone::Clone",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Copy",
+                      "id": "core::marker::Copy",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Default",
+                      "id": "core::default::Default",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/binary_map.rs",
+        "begin": [
+          242,
+          1
+        ],
+        "end": [
+          552,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "121",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.md",
+    "record_file": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.json",
+    "anchor": "op-dfb9093e7d8be3273bc7fd16",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ea8dafc91aeccf15e2867537",
+    "path": "datafusion_physical_expr_common::binary_map::ArrowBytesMap::non_null_len",
+    "name": "non_null_len",
+    "owner": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn non_null_len(&self) -> usize",
+    "docs": "Number of non null entries",
+    "span": {
+      "filename": "src/binary_map.rs",
+      "begin": [
+        540,
+        5
+      ],
+      "end": [
+        542,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowBytesMap",
+          "id": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "O"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "O",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "PartialEq",
+                      "id": "core::cmp::PartialEq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Eq",
+                      "id": "core::cmp::Eq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Clone",
+                      "id": "core::clone::Clone",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Copy",
+                      "id": "core::marker::Copy",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Default",
+                      "id": "core::default::Default",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/binary_map.rs",
+        "begin": [
+          242,
+          1
+        ],
+        "end": [
+          552,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "129",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.md",
+    "record_file": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.json",
+    "anchor": "op-ea8dafc91aeccf15e2867537",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "cbad5423d6e8e46a9b159eb4",
+    "path": "datafusion_physical_expr_common::binary_map::ArrowBytesMap::size",
+    "name": "size",
+    "owner": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn size(&self) -> usize",
+    "docs": "Return the total size, in bytes, of memory used to store the data in\nthis set, not including `self`",
+    "span": {
+      "filename": "src/binary_map.rs",
+      "begin": [
+        546,
+        5
+      ],
+      "end": [
+        551,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowBytesMap",
+          "id": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "O"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "O",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "PartialEq",
+                      "id": "core::cmp::PartialEq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Eq",
+                      "id": "core::cmp::Eq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Clone",
+                      "id": "core::clone::Clone",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Copy",
+                      "id": "core::marker::Copy",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Default",
+                      "id": "core::default::Default",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/binary_map.rs",
+        "begin": [
+          242,
+          1
+        ],
+        "end": [
+          552,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "130",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.md",
+    "record_file": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.json",
+    "anchor": "op-cbad5423d6e8e46a9b159eb4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4697b6ebafd2bdbb881fa1a7",
+    "path": "datafusion_physical_expr_common::binary_map::ArrowBytesMap::take",
+    "name": "take",
+    "owner": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+    "crate": "datafusion-physical-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn take(&mut self) -> Self",
+    "docs": "Return the contents of this map and replace it with a new empty map with\nthe same output type",
+    "span": {
+      "filename": "src/binary_map.rs",
+      "begin": [
+        261,
+        5
+      ],
+      "end": [
+        265,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowBytesMap",
+          "id": "datafusion_physical_expr_common::binary_map::ArrowBytesMap",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "O"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "O",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "OffsetSizeTrait",
+                        "id": "arrow_array::array::list_array::OffsetSizeTrait",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "PartialEq",
+                      "id": "core::cmp::PartialEq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Eq",
+                      "id": "core::cmp::Eq",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Clone",
+                      "id": "core::clone::Clone",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Copy",
+                      "id": "core::marker::Copy",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "Default",
+                      "id": "core::default::Default",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/binary_map.rs",
+        "begin": [
+          242,
+          1
+        ],
+        "end": [
+          552,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "b814ce63ec0c0fd9947395954d0ef6bae10e078d0af6875bba47f1427b027974",
+      "format_version": 61,
+      "item_id": "122",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.md",
+    "record_file": "operations/datafusion_physical_expr_common.binary_map.ArrowBytesMap.json",
+    "anchor": "op-4697b6ebafd2bdbb881fa1a7",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

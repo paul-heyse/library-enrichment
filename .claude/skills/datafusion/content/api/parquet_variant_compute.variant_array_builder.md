@@ -10,6 +10,9 @@ Crate `parquet-variant-compute` · 5 public items · structured records in [`mod
 struct ArrayBuilderState<'a>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.variant_array_builder.ArrayBuilderState.md).
+
+
 Builder-specific state for array building that manages array-level offsets and nulls. See
 [`VariantBuilderExt`] for details.
 
@@ -22,6 +25,9 @@ Builder-specific state for array building that manages array-level offsets and n
 ```rust
 struct ValueArrayBuilderState<'a>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.variant_array_builder.ValueArrayBuilderState.md).
+
 
 Builder-specific state for array building that manages array-level offsets and nulls. See
 [`VariantBuilderExt`] for details.
@@ -66,6 +72,9 @@ fn append_value<'m, 'v>(&mut self, value: impl Into<Variant<'m, 'v>>)
 fn try_new_list(&mut self) -> Result<ListBuilder<'_, Self::State<'_>>, ArrowError>
 fn try_new_object(&mut self) -> Result<ObjectBuilder<'_, Self::State<'_>>, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.variant_array_builder.VariantArrayBuilder.md).
+
 
 A builder for [`VariantArray`]
 
@@ -154,6 +163,9 @@ fn new(row_capacity: usize) -> Self
 fn parent_state<'a>(&'a mut self, metadata_builder: &'a mut dyn MetadataBuilder) -> ParentState<'a, ValueArrayBuilderState<'a>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.variant_array_builder.VariantValueArrayBuilder.md).
+
+
 A builder for creating only the value column of a [`VariantArray`]
 
 This builder is used when you have existing metadata and only need to build
@@ -191,6 +203,9 @@ assert_eq!(value_array.len(), 3);
 ```rust
 struct VariantValueArrayBuilderExt<'a>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.variant_array_builder.VariantValueArrayBuilderExt.md).
+
 
 A thin [`VariantBuilderExt`] wrapper that hides the short-lived (per-row)
 [`ReadOnlyMetadataBuilder`] instances that [`VariantValueArrayBuilder`] requires.

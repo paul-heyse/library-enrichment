@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::first_value`
 fn first_value(expression: datafusion_expr::Expr, order_by: Vec<datafusion_expr::SortExpr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.first_last.first_value.md).
+
+
 Returns the first value in a group of values.
 
 ---
@@ -23,6 +26,9 @@ Returns the first value in a group of values.
 ```rust
 fn first_value_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.first_last.first_value_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`FirstValue`]
 
@@ -38,6 +44,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::last_value`
 fn last_value(expression: datafusion_expr::Expr, order_by: Vec<datafusion_expr::SortExpr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.first_last.last_value.md).
+
+
 Returns the last value in a group of values.
 
 ---
@@ -49,6 +58,9 @@ Returns the last value in a group of values.
 ```rust
 fn last_value_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.first_last.last_value_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`LastValue`]
 
@@ -90,6 +102,9 @@ fn supports_null_handling_clause(&self) -> bool
 fn with_beneficial_ordering(Arc<self>, beneficial_ordering: bool) -> Result<Option<Arc<dyn AggregateUDFImpl>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.first_last.FirstValue.md).
+
+
 ---
 
 ## FirstValueAccumulator
@@ -119,6 +134,9 @@ fn size(&self) -> usize
 fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.first_last.FirstValueAccumulator.md).
+
 
 ---
 
@@ -158,6 +176,9 @@ fn supports_null_handling_clause(&self) -> bool
 fn with_beneficial_ordering(Arc<self>, beneficial_ordering: bool) -> Result<Option<Arc<dyn AggregateUDFImpl>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.first_last.LastValue.md).
+
+
 ---
 
 ## TrivialFirstValueAccumulator
@@ -187,6 +208,9 @@ fn size(&self) -> usize
 fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.first_last.TrivialFirstValueAccumulator.md).
+
 
 This accumulator is used when there is no ordering specified for the
 `FIRST_VALUE` aggregation. It simply returns the first value it sees
@@ -222,6 +246,9 @@ fn size(&self) -> usize
 fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.first_last.TrivialLastValueAccumulator.md).
+
 
 This accumulator is used when there is no ordering specified for the
 `LAST_VALUE` aggregation. It simply updates the last value it sees

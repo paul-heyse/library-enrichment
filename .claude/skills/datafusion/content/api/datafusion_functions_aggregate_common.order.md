@@ -26,6 +26,9 @@ fn is_beneficial(&self) -> bool
 fn is_insensitive(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.order.AggregateOrderSensitivity.md).
+
+
 Represents the sensitivity of an aggregate expression to ordering.
 
 ---

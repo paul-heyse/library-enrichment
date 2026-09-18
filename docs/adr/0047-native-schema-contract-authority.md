@@ -137,3 +137,41 @@ operator patch installation boundary.
 ## Status history
 
 - 2026-09-16 — supersedes ADR-0043 and ADR-0037 mechanisms for the authorized Plan 17 hard pivot; preserved functional and ownership obligations are stated above.
+
+- 2026-09-18 — implementation checkpoint: binary Job/Interest/Attempt domains, full-field
+  parameters/collections, typed job/qualification clocks and a shared native diagnostic owner
+  advance the accepted declaration contract. Source is state 22/snapshot 12.0/wire 8.0.
+  The active tool guide is sealed in `docs/provenance/bundle-2026-09-18-native-identities/`;
+  prior sealed bytes remain unchanged. Plan 19 records scoped units and the still-open
+  architecture/deletion/qualification boundary; no new implementation acceptance is asserted.
+
+- 2026-09-18 — implementation checkpoint: native binary GrantId and canonical claim admission;
+  one generated Rust resource catalog; full-field SQL coalesce; fresh exact Delta history before
+  cached table/provider/descriptor reuse. Source is state 23/snapshot 13.0/wire 9.0, executor 8
+  and native-rustdoc-arrow/4. The active guide is sealed in
+  `docs/provenance/bundle-2026-09-18-native-grants-resources/`; earlier seals are preserved.
+  These implement existing decisions; terminal Plan 19 qualification remains open.
+
+- 2026-09-18 — implementation checkpoint: eight typed immutable-definition identities,
+  declaration-bound definition storage, and one admitted retention row selection used for
+  semantic reads, pending-writer recovery and native Delta binary deletion. Source is state
+  24/snapshot 14.0/wire 10.0 and executor 9; decoder remains native-rustdoc-arrow/4. The active
+  guide is sealed in `docs/provenance/bundle-2026-09-18-typed-definitions/`. This implements
+  existing decisions; no predecessor reader is retained and terminal qualification remains open.
+
+- 2026-09-18 — implementation checkpoint: six typed lifecycle/physical-ownership UUID domains,
+  typed inline retention-policy identity, one private-directory dependency union and native
+  cleanup/admission joins. Broker names and quarantine leaves are boundary renderings; legacy
+  dependency variants and redundant stored path components are removed. Source is state 25 /
+  snapshot 15.0 / wire 11.0; executor 9 and native-rustdoc-arrow/4 are unchanged. The active guide
+  is sealed in `docs/provenance/bundle-2026-09-18-typed-ownership/`. This implements the accepted
+  declaration contract; full storage/restart/client qualification remains deferred behind CP11.
+
+- 2026-09-18 — implementation checkpoint: shared Delta table/version/selection/CDF references,
+  binary CohortId and SchemaContractId, native schema-registry records, returned-state capture
+  and shared exact-read admission across evidence/results/definitions/replay. Legacy flat
+  binding types and string semantic identity authority are removed. Source is state 26 /
+  snapshot 16.0 / wire 12.0; executor/decoder/provider codec framing is unchanged. The active
+  guide is sealed in `docs/provenance/bundle-2026-09-18-typed-delta-references/`. Sixteen distinct
+  scoped units pass; Plan 19 records the initial byte-bound validator failure and repair.
+  This implements the accepted contract; terminal qualification remains deferred behind CP11.

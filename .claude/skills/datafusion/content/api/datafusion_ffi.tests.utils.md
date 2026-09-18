@@ -10,6 +10,9 @@ Crate `datafusion-ffi` · 2 public items · structured records in [`model/datafu
 fn get_module() -> datafusion_common::Result<tests::ForeignLibraryModule>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.tests.utils.get_module.md).
+
+
 ---
 
 ## get_module_copy
@@ -19,6 +22,9 @@ fn get_module() -> datafusion_common::Result<tests::ForeignLibraryModule>
 ```rust
 fn get_module_copy(name: &str) -> datafusion_common::Result<tests::ForeignLibraryModule>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.tests.utils.get_module_copy.md).
+
 
 Load an independent copy of the integration-test cdylib.
 

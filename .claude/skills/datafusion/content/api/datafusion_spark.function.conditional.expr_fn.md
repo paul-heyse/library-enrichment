@@ -12,6 +12,9 @@ Also reachable as `datafusion_spark::expr_fn::if`
 fn if(arg1: datafusion_expr::Expr, arg2: datafusion_expr::Expr, arg3: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.conditional.expr_fn.if.md).
+
+
 If arg1 evaluates to true, then returns arg2; otherwise returns arg3
 
 ---

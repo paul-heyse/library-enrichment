@@ -134,11 +134,21 @@ impl Service {
                     },
                 )
                 .expect("declared native research request identity"),
-            policy_digest: enrichment_core::native_key::Key::OperationPolicy
-                .record(&self.config)
+            policy_digest: enrichment_core::identity::OperationPolicyId::try_from_record(
+                &self.config,
+            )
+            .expect("validated typed effective configuration")
+            .to_string(),
+        }
+    }
+    pub fn selection_witness(&self) -> enrichment_core::operation::selections::SelectionWitness {
+        enrichment_core::operation::selections::SelectionWitness {
+            runtime: self.repository.runtime.selection_witness().1.clone(),
+            policy: enrichment_core::identity::OperationPolicyId::try_from_record(&self.config)
                 .expect("validated typed effective configuration"),
         }
     }
+
     /// Assemble the service over explicit roots.
     ///
     /// # Errors
@@ -164,7 +174,6 @@ impl Service {
                     "another writer owns this data root: {e}"
                 )))
             })?;
-        enrichment_store::state::recover_staging(&paths).map_err(store_err(&paths.data_root))?;
         let cache_writer_lock =
             enrichment_store::state::exclusive(&paths.cache_root, ".execution-owner.lock")
                 .map_err(|e| {
@@ -222,11 +231,20 @@ impl Service {
         let recovery_paths = paths.clone();
         let recovery_supervisor = execution.clone();
         let recovery_retention = repository.retention();
+        let recovery_repository = repository.clone();
         repository
             .runtime
             .bootstrap(async move {
                 recovery_retention
                     .reconcile_processes()
+                    .await
+                    .map_err(io::Error::other)?;
+                recovery_retention
+                    .reconcile_writers()
+                    .await
+                    .map_err(io::Error::other)?;
+                recovery_repository
+                    .recover_private_directories()
                     .await
                     .map_err(io::Error::other)?;
                 crate::execution::ownership::validate_for_state(

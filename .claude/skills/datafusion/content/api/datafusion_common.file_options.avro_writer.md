@@ -12,4 +12,7 @@ struct AvroWriterOptions
 
 **Derives**: Clone, Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.file_options.avro_writer.AvroWriterOptions.md).
+
+
 ---

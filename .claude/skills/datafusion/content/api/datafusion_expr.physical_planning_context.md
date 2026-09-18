@@ -22,6 +22,9 @@ fn results(&self) -> &ScalarSubqueryResults
 fn with_qualified_lambda_variables(self, qualifier: &TableReference, variables: &[String]) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.physical_planning_context.PhysicalPlanningContext.md).
+
+
 Context used while converting a logical plan subtree into a physical plan.
 
 Unlike [`ExecutionProps`](crate::execution_props::ExecutionProps), which
@@ -70,6 +73,9 @@ fn ptr_eq(this: &Self, other: &Self) -> bool
 fn set(&self, index: SubqueryIndex, value: ScalarValue) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.physical_planning_context.ScalarSubqueryResults.md).
+
+
 Shared results container for uncorrelated scalar subqueries.
 
 Each entry corresponds to one scalar subquery, identified by its index.
@@ -95,6 +101,9 @@ struct SubqueryIndex
 const fn as_usize(self) -> usize
 const fn new(index: usize) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.physical_planning_context.SubqueryIndex.md).
+
 
 Index of a scalar subquery within a [`ScalarSubqueryResults`] container.
 

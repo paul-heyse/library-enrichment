@@ -5,14 +5,13 @@
 //! documentation and release-note headings and example names -- never a flat dump of every
 //! symbol. Definitions are counted once however many paths reach them (gate R07).
 
-use enrichment_core::evidence::EvidenceKind;
 use enrichment_core::request::OverviewRequest;
 use enrichment_core::search::row_page::RowCursor;
 use enrichment_core::wire::data::{OverviewData, SnapshotSummary};
 use enrichment_core::wire::research::DiscoverySelection;
 use enrichment_core::wire::{Envelope, ErrorCode, Freshness, Page, RecoveryAction};
 
-use super::common::{self, evidence_from_fragment};
+use super::common;
 use crate::envelope::Research;
 use crate::service::Service;
 
@@ -38,30 +37,44 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
         Ok(opened) => opened,
         Err(envelope) => return *envelope,
     };
-    let per_namespace = request
-        .max_items
-        .map_or(service.config.limits.namespace_entries, |m| {
-            m.clamp(1, service.config.limits.namespace_entries)
-        });
-    let area = request
-        .area
-        .as_deref()
-        .map(str::trim)
-        .filter(|a| !a.is_empty());
+    let overview_selection = match enrichment_store::research_overview::select(
+        &service.repository.runtime,
+        request.area.as_deref(),
+        request.max_items,
+        service.config.limits.namespace_entries,
+    )
+    .await
+    {
+        Ok(value) => value,
+        Err(error) => return common::operation_error(&error, "overview_selection"),
+    };
+    let per_namespace = overview_selection.per_namespace;
+    let area = overview_selection.area.as_deref();
     let raw = match opened.reader.overview(area, per_namespace).await {
         Ok(raw) => raw,
         Err(err) => return common::query_error(&err),
     };
     let manifest = opened.reader.manifest().clone();
 
-    let budget = common::byte_budget(service, request.max_bytes);
+    let budget = match common::byte_budget(service, request.max_bytes).await {
+        Ok(value) => value,
+        Err(error) => return common::query_error(&error),
+    };
     let namespaces = raw.namespaces;
     let truncated_namespaces = raw.truncated_namespaces;
     let mut discovery = Vec::new();
     for selection in selections {
         let kind = selection.kind;
         discovery.push(
-            match discovery_facet(&opened, &request, selection, budget).await {
+            match discovery_facet(
+                &opened,
+                &request,
+                selection,
+                budget,
+                &service.selection_witness(),
+            )
+            .await
+            {
                 Ok(facet) => facet,
                 Err(error) => enrichment_core::wire::data::DiscoveryFacet {
                     kind,
@@ -90,17 +103,20 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
     // Cite only the selected discovery fragments; namespace counts come from the admitted
     // snapshot. An ancillary module-doc query must not override independent facet outcomes.
     let excerpt_chars = service.config.limits.excerpt_characters;
-    let mut evidence = Vec::new();
-    for fragment in discovery
-        .iter()
-        .flat_map(|facet| &facet.items)
-        .take(per_namespace)
+    let evidence = match enrichment_store::research_citations::fragments(
+        &service.repository.runtime,
+        discovery
+            .iter()
+            .flat_map(|facet| facet.items.iter().map(|item| &item.fragment))
+            .collect(),
+        per_namespace,
+        excerpt_chars,
+    )
+    .await
     {
-        match evidence_from_fragment(&fragment.fragment, excerpt_chars) {
-            Ok(citation) => evidence.push(citation),
-            Err(error) => return common::operation_error(&error, "citation_identity"),
-        }
-    }
+        Ok(evidence) => evidence,
+        Err(error) => return common::operation_error(&error, "citation_projection"),
+    };
 
     let mut data = OverviewData {
         crate_name: manifest.crate_name.clone(),
@@ -121,29 +137,21 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
         unresolved_reexports: raw.unresolved_reexports,
     };
 
-    let mut limitations = vec![
-        "Discovery facets describe library-level source documents; area narrows the namespace tree. Each facet has its own continuation.".into(),
-        "Counts and samples describe the documented build (observed_configuration), not the \
-         calling project's feature set or target."
-            .to_owned(),
-        "Namespace samples are bounded; `truncated_children` and `truncated_namespaces` say \
-         how much was left out. Use `search_evidence` to reach the rest."
-            .to_owned(),
-    ];
-    if data.unresolved_reexports > 0 {
-        limitations.push(format!(
-            "{} re-export(s) point outside this crate and are listed by source path only.",
-            data.unresolved_reexports
-        ));
-    }
-    let mut kinds = vec![EvidenceKind::PublicApi];
-    for facet in &data.discovery {
-        kinds.push(facet.kind.evidence_kind());
-    }
+    let presentation = match enrichment_store::research_overview::present(
+        &service.repository.runtime,
+        &data,
+        &opened.release.key.package,
+        &opened.release.key.version,
+    )
+    .await
+    {
+        Ok(value) => value,
+        Err(error) => return common::operation_error(&error, "overview_presentation"),
+    };
     let mut coverage = match opened
         .reader
         .assess(
-            &kinds,
+            &presentation.kinds,
             None,
             format!(
                 "overview of {} {} from snapshot {}",
@@ -167,19 +175,9 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
     };
     data.discovery = disposition.facets;
     let partial = disposition.partial;
-    coverage.limitations.extend(limitations);
+    coverage.limitations.extend(presentation.limitations);
     let research = Research {
-        summary: format!(
-            "{} {}: {} definitions across {} namespace(s); {} retained discovery fragments in this page.",
-            opened.release.key.package,
-            opened.release.key.version,
-            data.definitions_by_kind.values().sum::<u64>(),
-            data.namespaces.len() as u64 + truncated_namespaces,
-            data.discovery
-                .iter()
-                .map(|facet| facet.items.len())
-                .sum::<usize>()
-        ),
+        summary: presentation.summary,
         data: common::payload(&data),
         coverage,
         freshness: Freshness {
@@ -199,8 +197,13 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
     }
 }
 
-fn discovery_digest(selection: &DiscoverySelection, budget: usize) -> String {
+fn discovery_digest(
+    witness: &enrichment_core::operation::selections::SelectionWitness,
+    selection: &DiscoverySelection,
+    budget: usize,
+) -> String {
     enrichment_core::operation::selections::DiscoverySelection {
+        witness: witness.clone(),
         kind: selection.kind,
         max_items: selection.max_items,
         max_characters: selection.max_characters,
@@ -214,9 +217,10 @@ async fn discovery_facet(
     request: &OverviewRequest,
     selection: DiscoverySelection,
     budget: usize,
+    witness: &enrichment_core::operation::selections::SelectionWitness,
 ) -> Result<enrichment_core::wire::data::DiscoveryFacet, Box<Envelope>> {
     let manifest = opened.reader.manifest();
-    let digest = discovery_digest(&selection, budget);
+    let digest = discovery_digest(witness, &selection, budget);
     let after = match selection
         .cursor
         .as_deref()
@@ -261,47 +265,39 @@ async fn discovery_facet(
         }
     };
     let accounting = Page::new(page.items.len() as u64, None, page.has_more, next_cursor);
-    let mut items = Vec::new();
-    for (fragment, text_complete) in page.items {
-        let complete = if text_complete {
-            None
-        } else {
-            let mut full = selection.clone();
-            full.max_characters = None;
-            let full_digest = discovery_digest(&full, budget);
-            full.cursor = after.as_ref().map(|key| {
-                RowCursor::encode(&manifest.snapshot_id, &full_digest, key.clone())
-                    .expect("bounded retained identity serializes")
-            });
-            Some(RecoveryAction::CallTool {
-                request: Box::new(enrichment_core::request::ResearchRequest::Overview(
-                    OverviewRequest {
-                        context_id: request.context_id.clone(),
-                        snapshot_id: Some(manifest.snapshot_id.clone()),
-                        area: request.area.clone(),
-                        max_items: request.max_items,
-                        max_bytes: request.max_bytes,
-                        discovery: Some(vec![full]),
-                    },
-                )),
-            })
-        };
-        items.push(enrichment_core::wire::data::FragmentProjection {
-            fragment,
-            text_complete,
-            complete,
-        });
-    }
+    let mut full = selection.clone();
+    full.max_characters = None;
+    let full_digest = discovery_digest(witness, &full, budget);
+    full.cursor = after.as_ref().map(|key| {
+        RowCursor::encode(&manifest.snapshot_id, &full_digest, key.clone())
+            .expect("bounded retained identity serializes")
+    });
+    let recovery = RecoveryAction::CallTool {
+        request: Box::new(enrichment_core::request::ResearchRequest::Overview(
+            OverviewRequest {
+                context_id: request.context_id.clone(),
+                snapshot_id: Some(manifest.snapshot_id.clone()),
+                area: request.area.clone(),
+                max_items: request.max_items,
+                max_bytes: request.max_bytes,
+                discovery: Some(vec![full]),
+            },
+        )),
+    };
+    let delivery = enrichment_store::research_fragments::deliver(
+        opened.reader.runtime(),
+        page.items,
+        recovery,
+        page.has_more,
+    )
+    .await
+    .map_err(|error| Box::new(common::operation_error(&error, "fragment_delivery")))?;
     Ok(enrichment_core::wire::data::DiscoveryFacet {
         kind: selection.kind,
-        state: if items.is_empty() {
-            enrichment_core::wire::AspectState::Absent
-        } else {
-            enrichment_core::wire::AspectState::Available
-        },
+        state: enrichment_core::wire::AspectState::Available,
         reason: None,
         diagnostic: None,
-        items,
+        items: delivery.items,
         page: Some(accounting),
     })
 }

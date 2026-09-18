@@ -38,8 +38,14 @@ pub fn collect(
                 .acquired;
             let runtime = QueryRuntime::new(&root.path().join("spill"), Default::default())
                 .map_err(|e| e.to_string())?;
+            let control =
+                enrichment_store::control::ControlStore::open(root.path(), runtime.clone())
+                    .map_err(|e| e.to_string())?;
+            let retention =
+                enrichment_store::retention::RetentionStore::new(control, runtime.clone());
             let facts = enrichment_store::native_rustdoc::from_artifact(
                 &runtime,
+                retention,
                 blobs,
                 artifact.clone(),
                 240,
@@ -76,11 +82,13 @@ pub fn collect(
             }
             let base = super::native_ingest::normalize(context, documents)?;
             evidence.extend(base);
+            let header = facts.header.clone();
+            drop(facts);
             runtime
                 .close_diagnostics()
                 .await
                 .map_err(|e| e.to_string())?;
-            Ok((facts.header, evidence))
+            Ok((header, evidence))
         })
     })
     .join()

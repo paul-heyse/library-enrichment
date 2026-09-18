@@ -117,6 +117,9 @@ fn visit<V: sqlparser::ast::Visitor>(&self, visitor: &mut V) -> ::std::ops::Cont
 fn visit<V: sqlparser::ast::VisitorMut>(&mut self, visitor: &mut V) -> ::std::ops::ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.helpers.stmt_create_table.CreateTableBuilder.md).
+
+
 Builder for create table statement variant ([1]).
 
 This structure helps building and accessing a create table with more ease, without needing to:

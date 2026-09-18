@@ -10,4 +10,7 @@ Crate `datafusion-substrait` · 1 public items · structured records in [`model/
 async fn from_window_function(consumer: &impl SubstraitConsumer, window: &substrait::proto::expression::WindowFunction, input_schema: &datafusion::common::DFSchema) -> datafusion::common::Result<datafusion::logical_expr::Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.expr.window_function.from_window_function.md).
+
+
 ---

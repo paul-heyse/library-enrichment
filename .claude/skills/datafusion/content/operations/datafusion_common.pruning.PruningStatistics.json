@@ -1,0 +1,845 @@
+[
+  {
+    "id": "a18da0087d8b285319f91952",
+    "path": "datafusion_common::pruning::PruningStatistics",
+    "name": "PruningStatistics",
+    "owner": null,
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait PruningStatistics",
+    "docs": "A source of runtime statistical information to [`PruningPredicate`]s.\n\n# Supported Information\n\n1. Minimum and maximum values for columns\n\n2. Null counts and row counts for columns\n\n3. Whether the values in a column are contained in a set of literals\n\n# Vectorized Interface\n\nInformation for containers / files are returned as Arrow [`ArrayRef`], so\nthe evaluation happens once on a single `RecordBatch`, which amortizes the\noverhead of evaluating the predicate. This is important when pruning 1000s\nof containers which often happens in analytic systems that have 1000s of\npotential files to consider.\n\nFor example, for the following three files with a single column `a`:\n```text\nfile1: column a: min=5, max=10\nfile2: column a: No stats\nfile2: column a: min=20, max=30\n```\n\nPruningStatistics would return:\n\n```text\nmin_values(\"a\") -> Some([5, Null, 20])\nmax_values(\"a\") -> Some([10, Null, 30])\nmin_values(\"X\") -> None\n```\n\n[`PruningPredicate`]: https://docs.rs/datafusion/latest/datafusion/physical_optimizer/pruning/struct.PruningPredicate.html",
+    "span": {
+      "filename": "src/pruning.rs",
+      "begin": [
+        63,
+        1
+      ],
+      "end": [
+        132,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          3961,
+          3962,
+          3960,
+          3963,
+          3964,
+          3965
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "implementations": [
+          3973,
+          3981,
+          3989
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`ArrayRef`": 3564
+    },
+    "link_paths": {
+      "`ArrayRef`": "arrow_array::array::ArrayRef"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "3966",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.pruning.PruningStatistics.md",
+    "record_file": "operations/datafusion_common.pruning.PruningStatistics.json",
+    "anchor": "op-a18da0087d8b285319f91952",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningStatistics",
+      "datafusion_pruning::PruningStatistics"
+    ],
+    "resolved_doc_links": {
+      "`ArrayRef`": "../operations/arrow_array.array.ArrayRef.md#op-657cc3ff3d24afcacda590e1"
+    }
+  },
+  {
+    "id": "ce199de49dd127f0662b232f",
+    "path": "datafusion_common::pruning::PruningStatistics::contained",
+    "name": "contained",
+    "owner": "datafusion_common::pruning::PruningStatistics",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn contained(&self, column: &Column, values: &HashSet<ScalarValue>) -> Option<BooleanArray>",
+    "docs": "Returns [`BooleanArray`] where each row represents information known\nabout specific literal `values` in a column.\n\nFor example, Parquet Bloom Filters implement this API to communicate\nthat `values` are known not to be present in a Row Group.\n\nThe returned array has one row for each container, with the following\nmeanings:\n* `true` if the values in `column`  ONLY contain values from `values`\n* `false` if the values in `column` are NOT ANY of `values`\n* `null` if the neither of the above holds or is unknown.\n\nIf these statistics can not determine column membership for any\ncontainer, return `None` (the default).\n\nNote: the returned array must contain [`Self::num_containers`] rows",
+    "span": {
+      "filename": "src/pruning.rs",
+      "begin": [
+        127,
+        5
+      ],
+      "end": [
+        131,
+        31
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(clippy::allow_attributes, clippy::mutable_key_type)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "column",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Column",
+                      "id": 7,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "HashSet",
+                      "id": 20,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "resolved_path": {
+                                  "path": "ScalarValue",
+                                  "id": 628,
+                                  "args": null
+                                }
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 1,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "BooleanArray",
+                          "id": 1015,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "7": "datafusion_common::column::Column",
+      "20": "std::collections::hash::set::HashSet",
+      "628": "datafusion_common::scalar::ScalarValue",
+      "1": "core::option::Option",
+      "1015": "arrow_array::array::boolean_array::BooleanArray"
+    },
+    "impl_context": null,
+    "links": {
+      "`BooleanArray`": 1015,
+      "`Self::num_containers`": 3960
+    },
+    "link_paths": {
+      "`BooleanArray`": "arrow_array::array::boolean_array::BooleanArray",
+      "`Self::num_containers`": "datafusion_common::pruning::PruningStatistics::num_containers"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "3965",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.pruning.PruningStatistics.md",
+    "record_file": "operations/datafusion_common.pruning.PruningStatistics.json",
+    "anchor": "op-ce199de49dd127f0662b232f",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningStatistics::contained",
+      "datafusion_pruning::PruningStatistics::contained"
+    ],
+    "resolved_doc_links": {
+      "`BooleanArray`": "../operations/arrow_array.array.boolean_array.BooleanArray.md#op-da9041df4f2e5d0ab93f8505",
+      "`Self::num_containers`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-818d4c4680deaa1cf783a443"
+    }
+  },
+  {
+    "id": "df936253c52bf6f48b06ff68",
+    "path": "datafusion_common::pruning::PruningStatistics::max_values",
+    "name": "max_values",
+    "owner": "datafusion_common::pruning::PruningStatistics",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn max_values(&self, column: &Column) -> Option<ArrayRef>",
+    "docs": "Return the maximum values for the named column, if known.\n\nSee [`Self::min_values`] for when to return `None` and null values.\n\nNote: the returned array must contain [`Self::num_containers`] rows",
+    "span": {
+      "filename": "src/pruning.rs",
+      "begin": [
+        78,
+        5
+      ],
+      "end": [
+        78,
+        63
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "column",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Column",
+                      "id": 7,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 1,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrayRef",
+                          "id": 3564,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "7": "datafusion_common::column::Column",
+      "1": "core::option::Option",
+      "3564": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::min_values`": 3961,
+      "`Self::num_containers`": 3960
+    },
+    "link_paths": {
+      "`Self::min_values`": "datafusion_common::pruning::PruningStatistics::min_values",
+      "`Self::num_containers`": "datafusion_common::pruning::PruningStatistics::num_containers"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "3962",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.pruning.PruningStatistics.md",
+    "record_file": "operations/datafusion_common.pruning.PruningStatistics.json",
+    "anchor": "op-df936253c52bf6f48b06ff68",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningStatistics::max_values",
+      "datafusion_pruning::PruningStatistics::max_values"
+    ],
+    "resolved_doc_links": {
+      "`Self::min_values`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-17b86d88f7f1c17005006104",
+      "`Self::num_containers`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-818d4c4680deaa1cf783a443"
+    }
+  },
+  {
+    "id": "17b86d88f7f1c17005006104",
+    "path": "datafusion_common::pruning::PruningStatistics::min_values",
+    "name": "min_values",
+    "owner": "datafusion_common::pruning::PruningStatistics",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn min_values(&self, column: &Column) -> Option<ArrayRef>",
+    "docs": "Return the minimum values for the named column, if known.\n\nIf the minimum value for a particular container is not known, the\nreturned array should have `null` in that row. If the minimum value is\nnot known for any row, return `None`.\n\nNote: the returned array must contain [`Self::num_containers`] rows",
+    "span": {
+      "filename": "src/pruning.rs",
+      "begin": [
+        71,
+        5
+      ],
+      "end": [
+        71,
+        63
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "column",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Column",
+                      "id": 7,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 1,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrayRef",
+                          "id": 3564,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "7": "datafusion_common::column::Column",
+      "1": "core::option::Option",
+      "3564": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::num_containers`": 3960
+    },
+    "link_paths": {
+      "`Self::num_containers`": "datafusion_common::pruning::PruningStatistics::num_containers"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "3961",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.pruning.PruningStatistics.md",
+    "record_file": "operations/datafusion_common.pruning.PruningStatistics.json",
+    "anchor": "op-17b86d88f7f1c17005006104",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningStatistics::min_values",
+      "datafusion_pruning::PruningStatistics::min_values"
+    ],
+    "resolved_doc_links": {
+      "`Self::num_containers`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-818d4c4680deaa1cf783a443"
+    }
+  },
+  {
+    "id": "8a629a8dabd17f9d56f3de3c",
+    "path": "datafusion_common::pruning::PruningStatistics::null_counts",
+    "name": "null_counts",
+    "owner": "datafusion_common::pruning::PruningStatistics",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn null_counts(&self, column: &Column) -> Option<ArrayRef>",
+    "docs": "Return the number of null values for the named column as an\n[`UInt64Array`]\n\nSee [`Self::min_values`] for when to return `None` and null values.\n\nNote: the returned array must contain [`Self::num_containers`] rows\n\n[`UInt64Array`]: arrow::array::UInt64Array",
+    "span": {
+      "filename": "src/pruning.rs",
+      "begin": [
+        96,
+        5
+      ],
+      "end": [
+        96,
+        64
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "column",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Column",
+                      "id": 7,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 1,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrayRef",
+                          "id": 3564,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "7": "datafusion_common::column::Column",
+      "1": "core::option::Option",
+      "3564": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::num_containers`": 3960,
+      "`Self::min_values`": 3961,
+      "arrow::array::UInt64Array": 993
+    },
+    "link_paths": {
+      "`Self::num_containers`": "datafusion_common::pruning::PruningStatistics::num_containers",
+      "`Self::min_values`": "datafusion_common::pruning::PruningStatistics::min_values",
+      "arrow::array::UInt64Array": "arrow_array::array::primitive_array::UInt64Array"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "3963",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.pruning.PruningStatistics.md",
+    "record_file": "operations/datafusion_common.pruning.PruningStatistics.json",
+    "anchor": "op-8a629a8dabd17f9d56f3de3c",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningStatistics::null_counts",
+      "datafusion_pruning::PruningStatistics::null_counts"
+    ],
+    "resolved_doc_links": {
+      "`Self::num_containers`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-818d4c4680deaa1cf783a443",
+      "`Self::min_values`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-17b86d88f7f1c17005006104",
+      "arrow::array::UInt64Array": "../operations/arrow_array.array.primitive_array.UInt64Array.md#op-47e7828263162b82ce927cad"
+    }
+  },
+  {
+    "id": "818d4c4680deaa1cf783a443",
+    "path": "datafusion_common::pruning::PruningStatistics::num_containers",
+    "name": "num_containers",
+    "owner": "datafusion_common::pruning::PruningStatistics",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn num_containers(&self) -> usize",
+    "docs": "Return the number of containers (e.g. Row Groups) being pruned with\nthese statistics.\n\nThis value corresponds to the size of the [`ArrayRef`] returned by\n[`Self::min_values`], [`Self::max_values`], [`Self::null_counts`],\nand [`Self::row_counts`].",
+    "span": {
+      "filename": "src/pruning.rs",
+      "begin": [
+        86,
+        5
+      ],
+      "end": [
+        86,
+        39
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Self::row_counts`": 3964,
+      "`Self::min_values`": 3961,
+      "`Self::max_values`": 3962,
+      "`Self::null_counts`": 3963,
+      "`ArrayRef`": 3564
+    },
+    "link_paths": {
+      "`Self::row_counts`": "datafusion_common::pruning::PruningStatistics::row_counts",
+      "`Self::min_values`": "datafusion_common::pruning::PruningStatistics::min_values",
+      "`Self::max_values`": "datafusion_common::pruning::PruningStatistics::max_values",
+      "`Self::null_counts`": "datafusion_common::pruning::PruningStatistics::null_counts",
+      "`ArrayRef`": "arrow_array::array::ArrayRef"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "3960",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.pruning.PruningStatistics.md",
+    "record_file": "operations/datafusion_common.pruning.PruningStatistics.json",
+    "anchor": "op-818d4c4680deaa1cf783a443",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningStatistics::num_containers",
+      "datafusion_pruning::PruningStatistics::num_containers"
+    ],
+    "resolved_doc_links": {
+      "`Self::row_counts`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-1633eb2d4d1c3b04f61c62de",
+      "`Self::min_values`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-17b86d88f7f1c17005006104",
+      "`Self::max_values`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-df936253c52bf6f48b06ff68",
+      "`Self::null_counts`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-8a629a8dabd17f9d56f3de3c",
+      "`ArrayRef`": "../operations/arrow_array.array.ArrayRef.md#op-657cc3ff3d24afcacda590e1"
+    }
+  },
+  {
+    "id": "1633eb2d4d1c3b04f61c62de",
+    "path": "datafusion_common::pruning::PruningStatistics::row_counts",
+    "name": "row_counts",
+    "owner": "datafusion_common::pruning::PruningStatistics",
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn row_counts(&self) -> Option<ArrayRef>",
+    "docs": "Return the number of rows in each container as an [`UInt64Array`].\n\nRow counts are container-level (not column-specific) — the value\nis the same regardless of which column is being considered.\n\nSee [`Self::min_values`] for when to return `None` and null values.\n\nNote: the returned array must contain [`Self::num_containers`] rows\n\n[`UInt64Array`]: arrow::array::UInt64Array",
+    "span": {
+      "filename": "src/pruning.rs",
+      "begin": [
+        108,
+        5
+      ],
+      "end": [
+        108,
+        46
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 1,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrayRef",
+                          "id": 3564,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "core::option::Option",
+      "3564": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::num_containers`": 3960,
+      "`Self::min_values`": 3961,
+      "arrow::array::UInt64Array": 993
+    },
+    "link_paths": {
+      "`Self::num_containers`": "datafusion_common::pruning::PruningStatistics::num_containers",
+      "`Self::min_values`": "datafusion_common::pruning::PruningStatistics::min_values",
+      "arrow::array::UInt64Array": "arrow_array::array::primitive_array::UInt64Array"
+    },
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "3964",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.pruning.PruningStatistics.md",
+    "record_file": "operations/datafusion_common.pruning.PruningStatistics.json",
+    "anchor": "op-1633eb2d4d1c3b04f61c62de",
+    "aliases": [
+      "datafusion_physical_optimizer::pruning::PruningStatistics::row_counts",
+      "datafusion_pruning::PruningStatistics::row_counts"
+    ],
+    "resolved_doc_links": {
+      "`Self::num_containers`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-818d4c4680deaa1cf783a443",
+      "`Self::min_values`": "../operations/datafusion_common.pruning.PruningStatistics.md#op-17b86d88f7f1c17005006104",
+      "arrow::array::UInt64Array": "../operations/arrow_array.array.primitive_array.UInt64Array.md#op-47e7828263162b82ce927cad"
+    }
+  }
+]

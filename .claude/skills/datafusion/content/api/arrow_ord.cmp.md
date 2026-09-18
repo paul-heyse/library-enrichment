@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::cmp::compare_byte_view`
 fn compare_byte_view<T: ByteViewType>(left: &arrow_array::GenericByteViewArray<T>, left_idx: usize, right: &arrow_array::GenericByteViewArray<T>, right_idx: usize) -> std::cmp::Ordering
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ord.cmp.compare_byte_view.md).
+
+
 Compares two [`GenericByteViewArray`] at index `left_idx` and `right_idx`
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `arrow::compute::kernels::cmp::distinct`
 ```rust
 fn distinct(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<arrow_array::BooleanArray, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ord.cmp.distinct.md).
+
 
 Perform `left IS DISTINCT FROM right` operation on two [`Datum`]
 
@@ -53,6 +59,9 @@ Also reachable as `arrow::compute::kernels::cmp::eq`
 fn eq(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<arrow_array::BooleanArray, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ord.cmp.eq.md).
+
+
 Perform `left == right` operation on two [`Datum`].
 
 Comparing null values on either side will yield a null in the corresponding
@@ -78,6 +87,9 @@ Also reachable as `arrow::compute::kernels::cmp::gt`
 ```rust
 fn gt(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<arrow_array::BooleanArray, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ord.cmp.gt.md).
+
 
 Perform `left > right` operation on two [`Datum`].
 
@@ -105,6 +117,9 @@ Also reachable as `arrow::compute::kernels::cmp::gt_eq`
 fn gt_eq(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<arrow_array::BooleanArray, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ord.cmp.gt_eq.md).
+
+
 Perform `left >= right` operation on two [`Datum`].
 
 Comparing null values on either side will yield a null in the corresponding
@@ -130,6 +145,9 @@ Also reachable as `arrow::compute::kernels::cmp::lt`
 ```rust
 fn lt(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<arrow_array::BooleanArray, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ord.cmp.lt.md).
+
 
 Perform `left < right` operation on two [`Datum`].
 
@@ -157,6 +175,9 @@ Also reachable as `arrow::compute::kernels::cmp::lt_eq`
 fn lt_eq(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<arrow_array::BooleanArray, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ord.cmp.lt_eq.md).
+
+
 Perform `left <= right` operation on two [`Datum`].
 
 Comparing null values on either side will yield a null in the corresponding
@@ -183,6 +204,9 @@ Also reachable as `arrow::compute::kernels::cmp::neq`
 fn neq(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<arrow_array::BooleanArray, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ord.cmp.neq.md).
+
+
 Perform `left != right` operation on two [`Datum`].
 
 Comparing null values on either side will yield a null in the corresponding
@@ -208,6 +232,9 @@ Also reachable as `arrow::compute::kernels::cmp::not_distinct`
 ```rust
 fn not_distinct(lhs: &dyn Datum, rhs: &dyn Datum) -> Result<arrow_array::BooleanArray, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ord.cmp.not_distinct.md).
+
 
 Perform `left IS NOT DISTINCT FROM right` operation on two [`Datum`]
 

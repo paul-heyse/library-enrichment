@@ -5,6 +5,7 @@ Crate `deltalake-aws` · 4 public items · structured records in [`model/deltala
 ## S3ObjectStoreFactory
 
 `struct` · `deltalake_aws::storage::S3ObjectStoreFactory`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.storage.S3ObjectStoreFactory.md)
 
 ```rust
 struct S3ObjectStoreFactory
@@ -25,6 +26,7 @@ fn parse_url_opts(&self, url: &Url, config: &StorageConfig) -> DeltaResult<(Obje
 ## S3StorageBackend
 
 `struct` · `deltalake_aws::storage::S3StorageBackend`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.storage.S3StorageBackend.md)
 
 ```rust
 struct S3StorageBackend
@@ -68,6 +70,7 @@ An S3 implementation of the [ObjectStore] trait
 ## S3StorageOptions
 
 `struct` · `deltalake_aws::storage::S3StorageOptions`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.storage.S3StorageOptions.md)
 
 ```rust
 struct S3StorageOptions
@@ -94,6 +97,7 @@ Available options are described in [constants].
 ## S3StorageOptionsBuilder
 
 `struct` · `deltalake_aws::storage::S3StorageOptionsBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.storage.S3StorageOptionsBuilder.md)
 
 ```rust
 struct S3StorageOptionsBuilder<TypedBuilderFields = ((), ())>

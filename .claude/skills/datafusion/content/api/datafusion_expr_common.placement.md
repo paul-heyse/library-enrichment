@@ -24,6 +24,9 @@ enum ExpressionPlacement
 fn should_push_to_leaves(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.placement.ExpressionPlacement.md).
+
+
 Describes where an expression should be placed in the query plan for
 optimal execution. This is used by optimizers to make decisions about
 expression placement, such as whether to push expressions down through

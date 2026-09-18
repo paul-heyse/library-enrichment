@@ -5,6 +5,7 @@ Crate `deltalake-opendal` · 3 public items · structured records in [`model/del
 ## OPENDAL_SCHEME_PREFIX
 
 `constant` · `deltalake_opendal::OPENDAL_SCHEME_PREFIX`
+[Full member contracts, output types and access classification](../operations/deltalake_opendal.OPENDAL_SCHEME_PREFIX.md)
 
 Also reachable as `deltalake::opendal::OPENDAL_SCHEME_PREFIX`
 
@@ -20,6 +21,7 @@ e.g. `opendal+s3://`. `+` is a valid URL scheme character (RFC 3986).
 ## register_handlers
 
 `function` · `deltalake_opendal::register_handlers`
+[Full member contracts, output types and access classification](../operations/deltalake_opendal.register_handlers.md)
 
 Also reachable as `deltalake::opendal::register_handlers`
 
@@ -40,6 +42,7 @@ can't form a bare `scheme://` URL (e.g. `ftp`) — see [`GENERIC_SERVICES`].
 ## register_opendal_handlers
 
 `function` · `deltalake_opendal::register_opendal_handlers`
+[Full member contracts, output types and access classification](../operations/deltalake_opendal.register_opendal_handlers.md)
 
 Also reachable as `deltalake::opendal::register_opendal_handlers`
 

@@ -54,6 +54,9 @@ fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.buffer.BufferExec.md).
+
+
 WARNING: EXPERIMENTAL
 
 Decouples production and consumption of record batches with an internal queue per partition,
@@ -122,6 +125,9 @@ fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>
 fn size_hint(&self) -> (usize, Option<usize>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.buffer.MemoryBufferedStream.md).
+
+
 Decouples production and consumption of messages in a stream with an internal queue, eagerly
 filling it up to the specified maximum capacity even before any message is requested.
 
@@ -147,6 +153,9 @@ trait SizedMessage
 ```rust
 fn size(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.buffer.SizedMessage.md).
+
 
 Represents anything that occupies a capacity in a [MemoryBufferedStream].
 

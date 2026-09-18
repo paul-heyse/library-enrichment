@@ -1,0 +1,203 @@
+{
+  "id": "delta.read",
+  "title": "Choose a Delta-aware scan or table provider",
+  "reviewed": "2026-09-18",
+  "brief": "Use the Delta provider for query composition and reliable name-based projection; scan_table provides a direct batch stream. The retained partition-first fixture exposes a LoadBuilder projection-order defect. Raw Parquet reads a different physical relation.",
+  "task_aliases": [
+    "read delta rows",
+    "scan projection",
+    "raw parquet",
+    "deletion vectors",
+    "column mapping",
+    "provider freshness",
+    "dictionary partition"
+  ],
+  "crates": [
+    "deltalake-core"
+  ],
+  "input": [
+    "DeltaTable snapshot",
+    "projection",
+    "DataFusion filters"
+  ],
+  "output": [
+    "Arc<dyn TableProvider>",
+    "SendableRecordBatchStream",
+    "Arrow RecordBatch"
+  ],
+  "properties": [
+    "read delta rows",
+    "scan projection",
+    "raw parquet",
+    "deletion vectors",
+    "column mapping",
+    "provider freshness",
+    "dictionary partition"
+  ],
+  "operations": [
+    "deltalake_core::table::DeltaTable::table_provider",
+    "deltalake_core::table::DeltaTable::scan_table",
+    "deltalake_core::operations::load::LoadBuilder::with_columns",
+    "deltalake_core::operations::load::LoadBuilder::Output",
+    "deltalake_core::delta_datafusion::table_provider::TableProviderBuilder::with_table_version",
+    "deltalake_core::delta_datafusion::table_provider::TableProviderBuilder::with_session"
+  ],
+  "choices": [
+    {
+      "candidate": "table_provider",
+      "choose_when": "SQL, projection/filter planning or joins should compose with DataFusion",
+      "tradeoff": "The provider holds snapshot state; session-derived scan settings do not imply automatic freshness"
+    },
+    {
+      "candidate": "scan_table().with_columns(...)",
+      "choose_when": "You need a direct stream of selected logical columns",
+      "tradeoff": "LoadBuilder is callable by inference but its private canonical module is not an import path"
+    },
+    {
+      "candidate": "Raw Parquet scan",
+      "choose_when": "You intentionally inspect physical files independently of Delta semantics",
+      "tradeoff": "Removed rows/files, deletion vectors, partition reconstruction and physical names need separate treatment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "delta.read.1",
+      "aspect": "input/output",
+      "statement": "LoadBuilder's IntoFuture::Output contains DeltaTable and SendableRecordBatchStream inside DeltaResult; keep streaming errors distinct from builder errors.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.read.2",
+      "aspect": "logical rows",
+      "statement": "The tombstone and deletion-vector fixtures return 0 vs 2 and 8 vs 10 rows respectively when compared with raw Parquet. Column-mapping scans expose logical field names.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "deletion_vectors_filter_rows_and_optimize_keeps_logical_rows"
+    },
+    {
+      "id": "delta.read.3",
+      "aspect": "schema",
+      "statement": "The partition-first schema fixture exposed a positional projection defect: scan_table().with_columns([\"id\"]) returned the label column. The full scan reconstructed id correctly, and projecting id by name through a DataFusion provider returned the requested values. Inspect returned field names and types; do not blindly downcast by position.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "unloaded_handle_explicit_version_and_partition_reconstruction"
+    },
+    {
+      "id": "delta.read.4",
+      "aspect": "snapshot",
+      "statement": "A retained provider continues reading its old snapshot after another table handle appends; rebuild from a refreshed table when current results are required.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "provider_snapshot_and_unnameable_load_builder"
+    }
+  ],
+  "implementation": [
+    "Resolve access paths through aliases; canonical paths document identity, not guaranteed public imports.",
+    "Preserve the stream schema and apply Arrow kernels that support the actual array representation.",
+    "Treat file pruning and row filtering as different promises; inspect TableProvider pushdown contracts.",
+    "At this pin prefer provider/DataFrame name-based projection for partitioned schemas; retain the LoadBuilder projection regression control."
+  ],
+  "effects": [
+    "read snapshot files",
+    "stream batches"
+  ],
+  "errors": [
+    "A constructed stream can fail during consumption, including after vacuum removed historical files."
+  ],
+  "unknowns": [
+    "Predicate pushdown efficiency, allocations and RSS are not measured by the row-correctness fixtures."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "scope": "Exact git-capture full contracts for the selected operations"
+    },
+    {
+      "id": "source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/delta_datafusion/table_provider.rs",
+      "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+    },
+    {
+      "id": "runtime",
+      "kind": "runtime_observation",
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Named local assertions only; see profile, fixtures and source digests",
+      "tests": [
+        "provider_snapshot_and_unnameable_load_builder",
+        "delta_snapshot_excludes_removed_parquet_files",
+        "deletion_vectors_filter_rows_and_optimize_keeps_logical_rows",
+        "unloaded_handle_explicit_version_and_partition_reconstruction"
+      ]
+    }
+  ],
+  "resolved_operations": [
+    {
+      "path": "deltalake_core::table::DeltaTable::table_provider",
+      "id": "e4d0e5daa6b84019197e3110",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.table.DeltaTable.json",
+      "page": "operations/deltalake_core.table.DeltaTable.md#op-e4d0e5daa6b84019197e3110",
+      "signature": "fn table_provider(&self) -> TableProviderBuilder"
+    },
+    {
+      "path": "deltalake_core::table::DeltaTable::scan_table",
+      "id": "d8d9f3a456c209a46d18989d",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.table.DeltaTable.json",
+      "page": "operations/deltalake_core.table.DeltaTable.md#op-d8d9f3a456c209a46d18989d",
+      "signature": "fn scan_table(&self) -> LoadBuilder"
+    },
+    {
+      "path": "deltalake_core::operations::load::LoadBuilder::with_columns",
+      "id": "3cbadb75441606b267067afa",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.load.LoadBuilder.json",
+      "page": "operations/deltalake_core.operations.load.LoadBuilder.md#op-3cbadb75441606b267067afa",
+      "signature": "fn with_columns(self, columns: impl IntoIterator<Item = impl Into<String>>) -> Self"
+    },
+    {
+      "path": "deltalake_core::operations::load::LoadBuilder::Output",
+      "id": "10d61fc5ea060fbd1511386d",
+      "kind": "assoc_type",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.load.LoadBuilder.json",
+      "page": "operations/deltalake_core.operations.load.LoadBuilder.md#op-10d61fc5ea060fbd1511386d",
+      "signature": "type Output = Result<(DeltaTable, Pin<Box<dyn RecordBatchStream<Item = Result<RecordBatch, DataFusionError>> + Send>>), DeltaTableError>"
+    },
+    {
+      "path": "deltalake_core::delta_datafusion::table_provider::TableProviderBuilder::with_table_version",
+      "id": "871e0b2228633a876325f515",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.delta_datafusion.table_provider.TableProviderBuilder.json",
+      "page": "operations/deltalake_core.delta_datafusion.table_provider.TableProviderBuilder.md#op-871e0b2228633a876325f515",
+      "signature": "fn with_table_version(self, version: impl Into<Option<Version>>) -> Self"
+    },
+    {
+      "path": "deltalake_core::delta_datafusion::table_provider::TableProviderBuilder::with_session",
+      "id": "0369e5839026aab638b06488",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.delta_datafusion.table_provider.TableProviderBuilder.json",
+      "page": "operations/deltalake_core.delta_datafusion.table_provider.TableProviderBuilder.md#op-0369e5839026aab638b06488",
+      "signature": "fn with_session<S>(self, session: Arc<S>) -> Self where S: Session + 'static"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/delta.read.json"
+}

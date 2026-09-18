@@ -15,16 +15,21 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+import capabilities
 import catalogs
+import contracts
 import emit
 import fetch
+import inputs
 import link
 import model
 import queries
+import routes
 import topics
 import traits
 
@@ -403,6 +408,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     manifest = load_manifest(args.manifest)
+    inputs.verify(SKILL_ROOT)
     cache = fetch.Cache(CACHE)
     content = args.content
 
@@ -434,6 +440,12 @@ def main(argv: list[str] | None = None) -> int:
     say(f"\nwriting {len(grouped)} module pages")
     emit.write_model(grouped, content)
     emit.write_api(grouped, content)
+
+    say("preserving full git-capture member contracts")
+    full_models = contracts.acquire_contracts(models, items, crate_specs(manifest), acquired_root)
+    counts.update(
+        contracts.write(full_models, items, content, SKILL_ROOT / "authoring/contract-notes.json")
+    )
 
     say("fetching corpora")
     corpora = write_corpora(manifest, cache, content)
@@ -476,6 +488,36 @@ def main(argv: list[str] | None = None) -> int:
     say("writing capability topic pages")
     topic_pages = topics.write_topics(items, content, HERE.joinpath("topics.json"))
     say(f"  {topic_pages} topics")
+
+    counts.update(routes.write(SKILL_ROOT, content))
+    catalog_counts["awaitable_builder_subset"] = catalog_counts.pop("operations")
+    catalog_counts["feature_variants_before_name_union"] = catalog_counts.pop("table_features")
+    capture = fetch.acquisition(acquired_root(manifest["crate_sets"][0]))
+    (content / "profile.json").write_text(
+        json.dumps(
+            {
+                "documentation_capture": capture,
+                "runtime_profile": "skill_improvement/evidence/implementation/runtime-profile.json",
+                "runtime_receipt": "skill_improvement/evidence/implementation/probe-results.json",
+                "distinction": (
+                    "Documentation capture is broader than the local runtime prof"
+                    "ile; package build features and table protocol features are "
+                    "separate."
+                ),
+                "version_label": (
+                    "The 1.0.0+58f07cd6 model label identifies the git capture, n"
+                    "ot each package's published version. Consult captured manife"
+                    "sts and runtime profile."
+                ),
+                "corpus_lock": "build/inputs.lock.json",
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    for folder in ["integration", "licenses"]:
+        shutil.copytree(SKILL_ROOT / "authoring" / folder, content / folder, dirs_exist_ok=True)
+    counts.update(capabilities.write(SKILL_ROOT, content))
 
     say("generating rules from the model")
     crate_roots = sorted(

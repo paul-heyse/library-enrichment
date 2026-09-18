@@ -1,0 +1,361 @@
+[
+  {
+    "id": "c01470dd82ba77667f5ee248",
+    "path": "arrow_arith::arity::binary_mut",
+    "name": "binary_mut",
+    "owner": null,
+    "crate": "arrow-arith",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn binary_mut<T, U, F>(a: PrimitiveArray<T>, b: &PrimitiveArray<U>, op: F) -> Result<Result<PrimitiveArray<T>, arrow_schema::ArrowError>, PrimitiveArray<T>> where T: ArrowPrimitiveType, U: ArrowPrimitiveType, F: Fn(T::Native, U::Native) -> T::Native",
+    "docs": "Applies a binary and infallible function to values in two arrays, replacing\nthe values in the first array in place.\n\n# Details\n\nGiven two arrays of length `len`, calls `op(a[i], b[i])` for `i` in\n`0..len`, modifying the [`PrimitiveArray`] `a` in place, if possible.\n\nIf any index is null in either `a` or `b`, the corresponding index in the\nresult will also be null.\n\n# Buffer Reuse\n\nIf the underlying buffers in `a` are not shared with other arrays,  mutates\nthe underlying buffer in place, without allocating.\n\nIf the underlying buffer in `a` are shared, returns Err(self)\n\nLike [`unary`] the provided function is evaluated for every index, ignoring validity. This\nis beneficial when the cost of the operation is low compared to the cost of branching, and\nespecially when the operation can be vectorised, however, requires `op` to be infallible\nfor all possible values of its inputs\n\n# Errors\n\n* If the arrays have different lengths\n* If the array is not mutable (see \"Buffer Reuse\")\n\n# See Also\n\n* Documentation on [`PrimitiveArray::unary_mut`] for operating on [`ArrayRef`].\n\n# Example\n```\n# use arrow_arith::arity::binary_mut;\n# use arrow_array::{Float32Array, Int32Array};\n# use arrow_array::types::Int32Type;\n// compute a + b for each element\nlet a = Float32Array::from(vec![Some(5.1f32), None, Some(6.8)]);\nlet b = Int32Array::from(vec![Some(1), None, Some(2)]);\n// compute a + b, updating the value in a in place if possible\nlet a = binary_mut(a, &b, |a, b| a + b as f32).unwrap().unwrap();\n// a is updated in place\nassert_eq!(a, Float32Array::from(vec![Some(6.1), None, Some(8.8)]));\n```\n\n# Example with shared buffers\n```\n# use arrow_arith::arity::binary_mut;\n# use arrow_array::Float32Array;\n# use arrow_array::types::Int32Type;\nlet a = Float32Array::from(vec![Some(5.1f32), None, Some(6.8)]);\nlet b = Float32Array::from(vec![Some(1.0f32), None, Some(2.0)]);\n// a_clone shares the buffer with a\nlet a_cloned = a.clone();\n// try to update a in place, but it is shared. Returns Err(a)\nlet a = binary_mut(a, &b, |a, b| a + b).unwrap_err();\nassert_eq!(a_cloned, a);\n// drop shared reference\ndrop(a_cloned);\n// now a is not shared, so we can update it in place\nlet a = binary_mut(a, &b, |a, b| a + b).unwrap().unwrap();\nassert_eq!(a, Float32Array::from(vec![Some(6.1), None, Some(8.8)]));\n```",
+    "span": {
+      "filename": "src/arity.rs",
+      "begin": [
+        201,
+        1
+      ],
+      "end": [
+        240,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "a",
+              {
+                "resolved_path": {
+                  "path": "PrimitiveArray",
+                  "id": 31,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "T"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "PrimitiveArray",
+                      "id": 31,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "U"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "op",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 26,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Result",
+                          "id": 26,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "PrimitiveArray",
+                                      "id": 31,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "generic": "T"
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "arrow_schema::ArrowError",
+                                      "id": 27,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "PrimitiveArray",
+                          "id": 31,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "generic": "T"
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "U",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "T"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowPrimitiveType",
+                        "id": 23,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "U"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowPrimitiveType",
+                        "id": 23,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "F"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Fn",
+                        "id": 63,
+                        "args": {
+                          "parenthesized": {
+                            "inputs": [
+                              {
+                                "qualified_path": {
+                                  "name": "Native",
+                                  "args": null,
+                                  "self_type": {
+                                    "generic": "T"
+                                  },
+                                  "trait": {
+                                    "path": "",
+                                    "id": 23,
+                                    "args": null
+                                  }
+                                }
+                              },
+                              {
+                                "qualified_path": {
+                                  "name": "Native",
+                                  "args": null,
+                                  "self_type": {
+                                    "generic": "U"
+                                  },
+                                  "trait": {
+                                    "path": "",
+                                    "id": 23,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "output": {
+                              "qualified_path": {
+                                "name": "Native",
+                                "args": null,
+                                "self_type": {
+                                  "generic": "T"
+                                },
+                                "trait": {
+                                  "path": "",
+                                  "id": 23,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "31": "arrow_array::array::primitive_array::PrimitiveArray",
+      "26": "core::result::Result",
+      "27": "arrow_schema::error::ArrowError",
+      "23": "arrow_array::types::ArrowPrimitiveType",
+      "63": "core::ops::function::Fn"
+    },
+    "impl_context": null,
+    "links": {
+      "`unary`": 62,
+      "`PrimitiveArray::unary_mut`": 64,
+      "`PrimitiveArray`": 31,
+      "`ArrayRef`": 71
+    },
+    "link_paths": {
+      "`unary`": "arrow_arith::arity::unary",
+      "`PrimitiveArray::unary_mut`": "arrow_array::array::primitive_array::PrimitiveArray::unary_mut",
+      "`PrimitiveArray`": "arrow_array::array::primitive_array::PrimitiveArray",
+      "`ArrayRef`": "arrow_array::array::ArrayRef"
+    },
+    "artifact": {
+      "id": "566f6ab5128600963c32df46f794ecd209b4260701174bbf107de07fb2f0c3bf",
+      "format_version": 61,
+      "item_id": "72",
+      "origin": "https://docs.rs/crate/arrow-arith/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_arith.arity.binary_mut.md",
+    "record_file": "operations/arrow_arith.arity.binary_mut.json",
+    "anchor": "op-c01470dd82ba77667f5ee248",
+    "aliases": [
+      "arrow::compute::binary_mut",
+      "arrow::compute::kernels::arity::binary_mut"
+    ],
+    "resolved_doc_links": {
+      "`unary`": "../operations/arrow_arith.arity.unary.md#op-53e0a88375dd8e9cf37488a9",
+      "`PrimitiveArray`": "../operations/arrow_array.array.primitive_array.PrimitiveArray.md#op-bc88178d283a743ead5dd814",
+      "`ArrayRef`": "../operations/arrow_array.array.ArrayRef.md#op-657cc3ff3d24afcacda590e1"
+    }
+  }
+]

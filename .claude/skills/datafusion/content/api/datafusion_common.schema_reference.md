@@ -30,4 +30,7 @@ fn schema_name(&self) -> &str
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.schema_reference.SchemaReference.md).
+
+
 ---

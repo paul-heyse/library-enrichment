@@ -12,6 +12,9 @@ Also reachable as `arrow::datatypes::MAX_DECIMAL128_FOR_EACH_PRECISION`
 const MAX_DECIMAL128_FOR_EACH_PRECISION: [i128; 39] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.MAX_DECIMAL128_FOR_EACH_PRECISION.md).
+
+
 `MAX_DECIMAL128_FOR_EACH_PRECISION[p]` holds the maximum `i128` value that can
 be stored in [`Decimal128`] value of precision `p`.
 
@@ -39,6 +42,9 @@ Also reachable as `arrow::datatypes::MAX_DECIMAL256_FOR_EACH_PRECISION`
 ```rust
 const MAX_DECIMAL256_FOR_EACH_PRECISION: [arrow_buffer::i256; 77] = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.MAX_DECIMAL256_FOR_EACH_PRECISION.md).
+
 
 `MAX_DECIMAL256_FOR_EACH_PRECISION[p]` holds the maximum [`i256`] value that can
 be stored in a [`Decimal256`] value of precision `p`.
@@ -73,6 +79,9 @@ Also reachable as `arrow::datatypes::MAX_DECIMAL32_FOR_EACH_PRECISION`
 const MAX_DECIMAL32_FOR_EACH_PRECISION: [i32; 10] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.MAX_DECIMAL32_FOR_EACH_PRECISION.md).
+
+
 `MAX_DECIMAL32_FOR_EACH_PRECISION[p]` holds the maximum `i32` value that can
 be stored in [`Decimal32`] value of precision `p`.
 
@@ -100,6 +109,9 @@ Also reachable as `arrow::datatypes::MAX_DECIMAL64_FOR_EACH_PRECISION`
 ```rust
 const MAX_DECIMAL64_FOR_EACH_PRECISION: [i64; 19] = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.MAX_DECIMAL64_FOR_EACH_PRECISION.md).
+
 
 `MAX_DECIMAL64_FOR_EACH_PRECISION[p]` holds the maximum `i64` value that can
 be stored in [`Decimal64`] value of precision `p`.
@@ -129,6 +141,9 @@ Also reachable as `arrow::datatypes::MIN_DECIMAL128_FOR_EACH_PRECISION`
 const MIN_DECIMAL128_FOR_EACH_PRECISION: [i128; 39] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.MIN_DECIMAL128_FOR_EACH_PRECISION.md).
+
+
 `MIN_DECIMAL_FOR_EACH_PRECISION[p]` holds the minimum `i128` value that can
 be stored in a [`Decimal128`] value of precision `p`.
 
@@ -156,6 +171,9 @@ Also reachable as `arrow::datatypes::MIN_DECIMAL256_FOR_EACH_PRECISION`
 ```rust
 const MIN_DECIMAL256_FOR_EACH_PRECISION: [arrow_buffer::i256; 77] = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.MIN_DECIMAL256_FOR_EACH_PRECISION.md).
+
 
 `MIN_DECIMAL256_FOR_EACH_PRECISION[p]` holds the minimum [`i256`] value that can
 be stored in a [`Decimal256`] value of precision `p`.
@@ -189,6 +207,9 @@ Also reachable as `arrow::datatypes::MIN_DECIMAL32_FOR_EACH_PRECISION`
 const MIN_DECIMAL32_FOR_EACH_PRECISION: [i32; 10] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.MIN_DECIMAL32_FOR_EACH_PRECISION.md).
+
+
 `MIN_DECIMAL32_FOR_EACH_PRECISION[p]` holds the minimum `ialue that can
 be stored in a [`Decimal32`] value of precision `p`.
 
@@ -216,6 +237,9 @@ Also reachable as `arrow::datatypes::MIN_DECIMAL64_FOR_EACH_PRECISION`
 ```rust
 const MIN_DECIMAL64_FOR_EACH_PRECISION: [i64; 19] = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.MIN_DECIMAL64_FOR_EACH_PRECISION.md).
+
 
 `MIN_DECIMAL64_FOR_EACH_PRECISION[p]` holds the minimum `i64` value that can
 be stored in a [`Decimal64`] value of precision `p`.
@@ -245,6 +269,9 @@ Also reachable as `arrow::datatypes::format_decimal_str`
 fn format_decimal_str(value_str: &str, precision: usize, scale: i8) -> String
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.format_decimal_str.md).
+
+
 Formats a decimal string given the precision and scale.
 
 ---
@@ -258,6 +285,9 @@ Also reachable as `arrow::datatypes::is_validate_decimal256_precision`
 ```rust
 fn is_validate_decimal256_precision(value: arrow_buffer::i256, precision: u8) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.is_validate_decimal256_precision.md).
+
 
 Return true if the specified `i256` value can be properly
 interpreted as a [`Decimal256`] number with precision `precision`
@@ -276,6 +306,9 @@ Also reachable as `arrow::datatypes::is_validate_decimal32_precision`
 fn is_validate_decimal32_precision(value: i32, precision: u8) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.is_validate_decimal32_precision.md).
+
+
 Returns true if the specified `i32` value can be properly
 interpreted as a [`Decimal32`] number with precision `precision`
 
@@ -292,6 +325,9 @@ Also reachable as `arrow::datatypes::is_validate_decimal64_precision`
 ```rust
 fn is_validate_decimal64_precision(value: i64, precision: u8) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.is_validate_decimal64_precision.md).
+
 
 Returns true if the specified `i64` value can be properly
 interpreted as a [`Decimal64`] number with precision `precision`
@@ -310,6 +346,9 @@ Also reachable as `arrow::datatypes::is_validate_decimal_precision`
 fn is_validate_decimal_precision(value: i128, precision: u8) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.is_validate_decimal_precision.md).
+
+
 Returns true if the specified `i128` value can be properly
 interpreted as a [`Decimal128`] number with precision `precision`
 
@@ -326,6 +365,9 @@ Also reachable as `arrow::datatypes::validate_decimal256_precision`
 ```rust
 fn validate_decimal256_precision(value: arrow_buffer::i256, precision: u8, scale: i8) -> Result<(), arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.validate_decimal256_precision.md).
+
 
 Validates that the specified `i256` of value can be properly
 interpreted as a [`Decimal256`] number with precision `precision`
@@ -344,6 +386,9 @@ Also reachable as `arrow::datatypes::validate_decimal32_precision`
 fn validate_decimal32_precision(value: i32, precision: u8, scale: i8) -> Result<(), arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.validate_decimal32_precision.md).
+
+
 Validates that the specified `i32` value can be properly
 interpreted as a [`Decimal32`] number with precision `precision`
 
@@ -361,6 +406,9 @@ Also reachable as `arrow::datatypes::validate_decimal64_precision`
 fn validate_decimal64_precision(value: i64, precision: u8, scale: i8) -> Result<(), arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.validate_decimal64_precision.md).
+
+
 Validates that the specified `i64` value can be properly
 interpreted as a [`Decimal64`] number with precision `precision`
 
@@ -377,6 +425,9 @@ Also reachable as `arrow::datatypes::validate_decimal_precision`
 ```rust
 fn validate_decimal_precision(value: i128, precision: u8, scale: i8) -> Result<(), arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_data.decimal.validate_decimal_precision.md).
+
 
 Validates that the specified `i128` value can be properly
 interpreted as a [`Decimal128`] number with precision `precision`

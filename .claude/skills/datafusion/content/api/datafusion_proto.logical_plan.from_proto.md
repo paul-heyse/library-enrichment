@@ -10,6 +10,9 @@ Crate `datafusion-proto` · 6 public items · structured records in [`model/data
 fn from_proto_binary_op(op: &str) -> datafusion_common::Result<datafusion_expr::Operator, datafusion_proto_common::FromProtoError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.from_proto.from_proto_binary_op.md).
+
+
 ---
 
 ## parse_expr
@@ -20,6 +23,9 @@ fn from_proto_binary_op(op: &str) -> datafusion_common::Result<datafusion_expr::
 fn parse_expr(proto: &protobuf::LogicalExprNode, ctx: &datafusion_execution::TaskContext, codec: &dyn LogicalExtensionCodec) -> datafusion_common::Result<datafusion_expr::Expr, datafusion_proto_common::FromProtoError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.from_proto.parse_expr.md).
+
+
 ---
 
 ## parse_exprs
@@ -29,6 +35,9 @@ fn parse_expr(proto: &protobuf::LogicalExprNode, ctx: &datafusion_execution::Tas
 ```rust
 fn parse_exprs<'a, I>(protos: I, ctx: &datafusion_execution::TaskContext, codec: &dyn LogicalExtensionCodec) -> datafusion_common::Result<Vec<datafusion_expr::Expr>, datafusion_proto_common::FromProtoError> where I: IntoIterator<Item = &'a protobuf::LogicalExprNode>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.from_proto.parse_exprs.md).
+
 
 Parse a vector of `protobuf::LogicalExprNode`s.
 
@@ -42,6 +51,9 @@ Parse a vector of `protobuf::LogicalExprNode`s.
 fn parse_sort(sort: &protobuf::SortExprNode, ctx: &datafusion_execution::TaskContext, codec: &dyn LogicalExtensionCodec) -> datafusion_common::Result<datafusion_expr::expr::Sort, datafusion_proto_common::FromProtoError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.from_proto.parse_sort.md).
+
+
 ---
 
 ## parse_sorts
@@ -52,6 +64,9 @@ fn parse_sort(sort: &protobuf::SortExprNode, ctx: &datafusion_execution::TaskCon
 fn parse_sorts<'a, I>(protos: I, ctx: &datafusion_execution::TaskContext, codec: &dyn LogicalExtensionCodec) -> datafusion_common::Result<Vec<datafusion_expr::expr::Sort>, datafusion_proto_common::FromProtoError> where I: IntoIterator<Item = &'a protobuf::SortExprNode>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.from_proto.parse_sorts.md).
+
+
 ---
 
 ## parse_write_op
@@ -61,6 +76,9 @@ fn parse_sorts<'a, I>(protos: I, ctx: &datafusion_execution::TaskContext, codec:
 ```rust
 fn parse_write_op(node: &protobuf::DmlNode, ctx: &datafusion_execution::TaskContext, codec: &dyn LogicalExtensionCodec) -> datafusion_common::Result<datafusion_expr::WriteOp, datafusion_proto_common::FromProtoError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.from_proto.parse_write_op.md).
+
 
 Reconstruct a [`WriteOp`] from a [`protobuf::DmlNode`], reading the
 `merge_into` payload when the type tag is `MergeInto`.

@@ -24,6 +24,9 @@ fn name(&self) -> &str
 fn schema(&self) -> &DFSchemaRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.statement.Statement.md).
+
+
 Various types of Statements.
 
 # Transactions:
@@ -48,6 +51,9 @@ enum TransactionAccessMode
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.statement.TransactionAccessMode.md).
+
+
 Indicates if this transaction is allowed to write
 
 ---
@@ -65,6 +71,9 @@ enum TransactionConclusion
 **Variants**: `Commit`, `Rollback`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.statement.TransactionConclusion.md).
+
 
 Indicates if a transaction was committed or aborted
 
@@ -84,6 +93,9 @@ enum TransactionIsolationLevel
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.statement.TransactionIsolationLevel.md).
+
+
 Indicates ANSI transaction isolation level
 
 ---
@@ -101,6 +113,9 @@ struct Deallocate
 **Fields**: `name`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.statement.Deallocate.md).
+
 
 Deallocate a prepared statement.
 
@@ -120,6 +135,9 @@ struct Execute
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.statement.Execute.md).
+
+
 Execute a prepared statement.
 
 ---
@@ -137,6 +155,9 @@ struct Prepare
 **Fields**: `name`, `fields`, `input`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.statement.Prepare.md).
+
 
 Prepare a statement but do not execute it. Prepare statements can have 0 or more
 `Expr::Placeholder` expressions that are filled in during execution
@@ -157,6 +178,9 @@ struct ResetVariable
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.statement.ResetVariable.md).
+
+
 Reset a configuration variable to its default
 
 ---
@@ -174,6 +198,9 @@ struct SetVariable
 **Fields**: `variable`, `value`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.statement.SetVariable.md).
+
 
 Set a Variable's value -- value in
 [`ConfigOptions`](datafusion_common::config::ConfigOptions)
@@ -194,6 +221,9 @@ struct TransactionEnd
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.statement.TransactionEnd.md).
+
+
 Indicator that any current transaction should be terminated
 
 ---
@@ -211,6 +241,9 @@ struct TransactionStart
 **Fields**: `access_mode`, `isolation_level`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.statement.TransactionStart.md).
+
 
 Indicator that the following statements should be committed or rolled back atomically
 

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## AlterTableTransaction
 
 `type_alias` · `buoyant_kernel::transaction::alter_table::AlterTableTransaction`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.alter_table.AlterTableTransaction.md)
 
 Also reachable as `buoyant_kernel::transaction::AlterTableTransaction`, `delta_kernel::transaction::alter_table::AlterTableTransaction`
 

@@ -27,6 +27,9 @@ fn name(&self) -> &str
 fn rewrite(&self, plan: LogicalPlan, _config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.rewrite_set_comparison.RewriteSetComparison.md).
+
+
 Rewrite `SetComparison` expressions to scalar subqueries that return the
 correct boolean value (including SQL NULL semantics). After this rule
 runs, later rules such as `ScalarSubqueryToJoin` can decorrelate and

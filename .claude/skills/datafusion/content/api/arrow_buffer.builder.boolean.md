@@ -42,6 +42,9 @@ fn set_bit(&mut self, index: usize, v: bool)
 fn truncate(&mut self, len: usize)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.builder.boolean.BooleanBufferBuilder.md).
+
+
  Builder for [`BooleanBuffer`]
 
  Builds a packed buffer of bits representing boolean values. Each bit in the

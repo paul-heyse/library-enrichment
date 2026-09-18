@@ -1,0 +1,71 @@
+[
+  {
+    "id": "b725a1de54eced6ce05f9387",
+    "path": "arrow_array::ffi",
+    "name": "ffi",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod ffi",
+    "docs": "Contains declarations to bind to the [C Data Interface](https://arrow.apache.org/docs/format/CDataInterface.html).\n\nGenerally, this module is divided in two main interfaces:\nOne interface maps C ABI to native Rust types, i.e. convert c-pointers, c_char, to native rust.\nThis is handled by [FFI_ArrowSchema] and [FFI_ArrowArray].\n\nThe second interface maps native Rust types to the Rust-specific implementation of Arrow such as `format` to `Datatype`,\n`Buffer`, etc. This is handled by `from_ffi` and `to_ffi`.\n\n\nExport to FFI\n\n```rust\n# use std::sync::Arc;\n# use arrow_array::{Int32Array, Array, make_array};\n# use arrow_data::ArrayData;\n# use arrow_array::ffi::{to_ffi, from_ffi};\n# use arrow_schema::ArrowError;\n# fn main() -> Result<(), ArrowError> {\n// create an array natively\n\nlet array = Int32Array::from(vec![Some(1), None, Some(3)]);\nlet data = array.into_data();\n\n// Export it\nlet (out_array, out_schema) = to_ffi(&data)?;\n\n// import it\nlet data = unsafe { from_ffi(out_array, &out_schema) }?;\nlet array = Int32Array::from(data);\n\n// verify\nassert_eq!(array, Int32Array::from(vec![Some(1), None, Some(3)]));\n#\n# Ok(())\n# }\n```\n\nImport from FFI\n\n```\n# use std::ptr::addr_of_mut;\n# use arrow_array::ffi::{from_ffi, FFI_ArrowArray};\n# use arrow_array::{ArrayRef, make_array};\n# use arrow_schema::{ArrowError, ffi::FFI_ArrowSchema};\n#\n/// A foreign data container that can export to C Data interface\nstruct ForeignArray {};\n\nimpl ForeignArray {\n    /// Export from foreign array representation to C Data interface\n    /// e.g. <https://github.com/apache/arrow/blob/fc1f9ebbc4c3ae77d5cfc2f9322f4373d3d19b8a/python/pyarrow/array.pxi#L1552>\n    fn export_to_c(&self, array: *mut FFI_ArrowArray, schema: *mut FFI_ArrowSchema) {\n        // ...\n    }\n}\n\n/// Import an [`ArrayRef`] from a [`ForeignArray`]\nfn import_array(foreign: &ForeignArray) -> Result<ArrayRef, ArrowError> {\n    let mut schema = FFI_ArrowSchema::empty();\n    let mut array = FFI_ArrowArray::empty();\n    foreign.export_to_c(addr_of_mut!(array), addr_of_mut!(schema));\n    Ok(make_array(unsafe { from_ffi(array, &schema) }?))\n}\n```",
+    "span": {
+      "filename": "src/ffi.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        1968,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"ffi\"), span: src/lib.rs:252:7: 252:22 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          3409,
+          3411,
+          3413,
+          3414,
+          3415,
+          3416
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "FFI_ArrowSchema": 3412,
+      "FFI_ArrowArray": 3410
+    },
+    "link_paths": {
+      "FFI_ArrowSchema": "arrow_schema::ffi::FFI_ArrowSchema",
+      "FFI_ArrowArray": "arrow_data::ffi::FFI_ArrowArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3417",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/arrow_array.ffi.md",
+    "record_file": "modules/arrow_array.ffi.json",
+    "anchor": "op-b725a1de54eced6ce05f9387",
+    "aliases": [],
+    "resolved_doc_links": {
+      "FFI_ArrowSchema": "../operations/arrow_schema.ffi.FFI_ArrowSchema.md#op-702e6726e4207bb5becbbc93",
+      "FFI_ArrowArray": "../operations/arrow_data.ffi.FFI_ArrowArray.md#op-c531e3ad0f070327205a60e2"
+    }
+  }
+]

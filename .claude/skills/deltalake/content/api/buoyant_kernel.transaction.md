@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 10 public items · structured records in [`model/buoya
 ## CommitResult
 
 `enum` · `buoyant_kernel::transaction::CommitResult`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.CommitResult.md)
 
 Also reachable as `delta_kernel::transaction::CommitResult`
 
@@ -39,6 +40,7 @@ The commit result can be one of the following:
 ## AlterTable
 
 `struct` · `buoyant_kernel::transaction::AlterTable`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.AlterTable.md)
 
 Also reachable as `delta_kernel::transaction::AlterTable`
 
@@ -58,6 +60,7 @@ available at compile time because `AlterTable` does not implement [`SupportsData
 ## CommittedTransaction
 
 `struct` · `buoyant_kernel::transaction::CommittedTransaction`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.CommittedTransaction.md)
 
 Also reachable as `delta_kernel::transaction::CommittedTransaction`
 
@@ -88,6 +91,7 @@ struct.
 ## ConflictedTransaction
 
 `struct` · `buoyant_kernel::transaction::ConflictedTransaction`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.ConflictedTransaction.md)
 
 Also reachable as `delta_kernel::transaction::ConflictedTransaction`
 
@@ -113,6 +117,7 @@ this struct. In the future a rebase API will be provided (issue #1389).
 ## CreateTable
 
 `struct` · `buoyant_kernel::transaction::CreateTable`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.CreateTable.md)
 
 Also reachable as `delta_kernel::transaction::CreateTable`
 
@@ -134,6 +139,7 @@ invalid for table creation (e.g. file removal, domain metadata removal) are not 
 ## ExistingTable
 
 `struct` · `buoyant_kernel::transaction::ExistingTable`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.ExistingTable.md)
 
 Also reachable as `delta_kernel::transaction::ExistingTable`
 
@@ -155,6 +161,7 @@ including file removal, deletion vector updates, and blind append semantics.
 ## PostCommitStats
 
 `struct` · `buoyant_kernel::transaction::PostCommitStats`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.PostCommitStats.md)
 
 Also reachable as `delta_kernel::transaction::PostCommitStats`
 
@@ -174,6 +181,7 @@ trigger actions like checkpointing or log compaction. This struct holds that inf
 ## RetryableTransaction
 
 `struct` · `buoyant_kernel::transaction::RetryableTransaction`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.RetryableTransaction.md)
 
 Also reachable as `delta_kernel::transaction::RetryableTransaction`
 
@@ -194,6 +202,7 @@ associated error can be inspected via `RetryableTransaction::error`.
 ## Transaction
 
 `struct` · `buoyant_kernel::transaction::Transaction`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.Transaction.md)
 
 Also reachable as `delta_kernel::transaction::Transaction`
 
@@ -254,6 +263,7 @@ txn.commit(&engine)?;
 ## SupportsDataFiles
 
 `trait` · `buoyant_kernel::transaction::SupportsDataFiles`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.SupportsDataFiles.md)
 
 Also reachable as `delta_kernel::transaction::SupportsDataFiles`
 

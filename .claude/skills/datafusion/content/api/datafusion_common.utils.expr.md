@@ -12,6 +12,9 @@ Also reachable as `datafusion_expr::utils::COUNT_STAR_EXPANSION`
 const COUNT_STAR_EXPANSION: ScalarValue = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.utils.expr.COUNT_STAR_EXPANSION.md).
+
+
 The value to which `COUNT(*)` is expanded to in
 `COUNT(<constant>)` expressions
 

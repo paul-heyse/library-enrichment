@@ -5,6 +5,7 @@ Crate `deltalake-catalog-glue` · 2 public items · structured records in [`mode
 ## GlueError
 
 `enum` · `deltalake_catalog_glue::GlueError`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_glue.GlueError.md)
 
 ```rust
 enum GlueError
@@ -39,6 +40,7 @@ fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Resu
 ## GlueDataCatalog
 
 `struct` · `deltalake_catalog_glue::GlueDataCatalog`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_glue.GlueDataCatalog.md)
 
 ```rust
 struct GlueDataCatalog

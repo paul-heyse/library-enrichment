@@ -10,6 +10,9 @@ Crate `datafusion-physical-optimizer` · 3 public items · structured records in
 fn hash_join_swap_subrule(input: std::sync::Arc<dyn ExecutionPlan>, _config_options: &datafusion_common::config::ConfigOptions) -> datafusion_common::error::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.join_selection.hash_join_swap_subrule.md).
+
+
 This subrule will swap build/probe sides of a hash join depending on whether
 one of its inputs may produce an infinite stream of records. The rule ensures
 that the left (build) side of the hash join always operates on an input stream
@@ -80,6 +83,9 @@ fn optimize_with_context(&self, plan: Arc<dyn ExecutionPlan>, context: &dyn Phys
 fn schema_check(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.join_selection.JoinSelection.md).
+
+
 The [`JoinSelection`] rule tries to modify a given plan so that it can
 accommodate infinite sources and optimize joins in the plan according to
 available statistical information, if there is any.
@@ -93,6 +99,9 @@ available statistical information, if there is any.
 ```rust
 type PipelineFixerSubrule = dyn Fn(std::sync::Arc<dyn ExecutionPlan>, &datafusion_common::config::ConfigOptions) -> datafusion_common::error::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.join_selection.PipelineFixerSubrule.md).
+
 
 Pipeline-fixing join selection subrule.
 

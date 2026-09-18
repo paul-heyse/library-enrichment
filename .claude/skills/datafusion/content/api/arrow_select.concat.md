@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::concat`, `arrow::compute::kernels::concat::co
 fn concat(arrays: &[&dyn Array]) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.concat.concat.md).
+
+
 Concatenate multiple [Array] of the same type into a single [ArrayRef].
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `arrow::compute::concat_batches`, `arrow::compute::kernels::co
 ```rust
 fn concat_batches<'a>(schema: &arrow_schema::SchemaRef, input_batches: impl IntoIterator<Item = &'a RecordBatch>) -> Result<RecordBatch, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_select.concat.concat_batches.md).
+
 
 Concatenates `batches` together into a single [`RecordBatch`].
 

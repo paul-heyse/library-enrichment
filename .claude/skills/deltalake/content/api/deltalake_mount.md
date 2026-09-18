@@ -5,6 +5,7 @@ Crate `deltalake-mount` · 2 public items · structured records in [`model/delta
 ## register_handlers
 
 `function` · `deltalake_mount::register_handlers`
+[Full member contracts, output types and access classification](../operations/deltalake_mount.register_handlers.md)
 
 ```rust
 fn register_handlers(_additional_prefixes: Option<url::Url>)
@@ -17,6 +18,7 @@ Register an [ObjectStoreFactory] for common Mount [Url] schemes
 ## MountFactory
 
 `struct` · `deltalake_mount::MountFactory`
+[Full member contracts, output types and access classification](../operations/deltalake_mount.MountFactory.md)
 
 ```rust
 struct MountFactory

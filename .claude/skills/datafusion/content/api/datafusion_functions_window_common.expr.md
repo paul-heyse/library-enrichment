@@ -22,6 +22,9 @@ fn input_fields(&self) -> &'a [FieldRef]
 fn new(input_exprs: &'a [Arc<dyn PhysicalExpr>], input_fields: &'a [FieldRef]) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window_common.expr.ExpressionArgs.md).
+
+
 Arguments passed to user-defined window function
 
 ---

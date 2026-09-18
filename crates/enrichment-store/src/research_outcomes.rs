@@ -49,7 +49,8 @@ pub async fn non_execution_kinds(
     observations: &[enrichment_core::evidence::execution::ExecutionObservation],
 ) -> Result<Vec<EvidenceKind>> {
     let session = runtime.session();
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "requested_kinds",
         Kind::batch(
             &kinds
@@ -58,7 +59,8 @@ pub async fn non_execution_kinds(
                 .collect::<Vec<_>>(),
         )?,
     )?;
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "execution_observations",
         enrichment_core::evidence::execution::ExecutionObservation::batch(observations)?,
     )?;
@@ -80,7 +82,8 @@ pub async fn source_version(
     requested: &str,
 ) -> Result<enrichment_core::wire::SourceVersionMatch> {
     let session = runtime.session();
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "source_version",
         SourceVersion::batch(&[SourceVersion {
             mode,
@@ -117,7 +120,8 @@ fn scope(
     configuration_available: bool,
 ) -> Result<SessionContext> {
     let session = runtime.session();
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "research_scope",
         Scope::batch(&[Scope {
             ecosystem,
@@ -141,7 +145,11 @@ pub async fn inspection_kinds(
         false,
         false,
     )?;
-    session.register_batch("aspect_selection", AspectSelection::batch(selection)?)?;
+    crate::native_catalog::input(
+        &session,
+        "aspect_selection",
+        AspectSelection::batch(selection)?,
+    )?;
     let frame = session.sql("SELECT DISTINCT CASE WHEN s.ecosystem='python' THEN d.python_evidence ELSE d.rust_evidence END AS kind FROM aspect_selection a JOIN operation.declarations.inspection_aspects d ON a.aspect=d.aspect CROSS JOIN research_scope s ORDER BY kind").await?;
     Ok(runtime
         .records::<Kind>(frame, InspectionAspect::VALUES.len())
@@ -171,28 +179,30 @@ pub async fn inspection(
         .enumerate()
         .map(|(ordinal, outcome)| InspectionRow { ordinal, outcome })
         .collect::<Vec<_>>();
-    session.register_batch("research_outcomes", InspectionRow::batch(&rows)?)?;
+    crate::native_catalog::input(&session, "research_outcomes", InspectionRow::batch(&rows)?)?;
     let frame = session.sql(r#"
       WITH assessments AS (SELECT unnest(coverage.assessments) AS item FROM research_scope),
-      qualified AS (SELECT item.kind AS kind,bool_and(item.state='indexed') AS complete FROM assessments GROUP BY item.kind),
+      qualified AS (SELECT item.kind AS kind,bool_and((item.state='indexed')) AS complete FROM assessments GROUP BY item.kind),
       classified AS (
         SELECT r.*,s.source_available,s.configuration_available,d.observation,
+          CASE WHEN r.outcome.state='available' AND r.outcome.page.returned=0 THEN 'absent' ELSE r.outcome.state END AS effective_state,
           coalesce(q.complete,false) AS complete
         FROM research_outcomes r JOIN operation.declarations.inspection_aspects d ON r.outcome.aspect=d.aspect CROSS JOIN research_scope s
         LEFT JOIN qualified q ON q.kind=CASE WHEN s.ecosystem='python' THEN d.python_evidence ELSE d.rust_evidence END
       )
       SELECT *, CASE
-        WHEN outcome.state='failed' THEN outcome.state
-        WHEN (outcome.state='absent' AND NOT complete)
+        WHEN effective_state='failed' THEN effective_state
+        WHEN (effective_state='absent' AND NOT complete)
           OR (observation='source' AND NOT source_available)
           OR (observation='configuration' AND NOT configuration_available)
           OR (observation='execution' AND outcome.page.returned=0) THEN 'unavailable'
-        ELSE outcome.state END AS selected_state,
-        CASE WHEN outcome.state='failed' THEN outcome.reason
+        ELSE effective_state END AS selected_state,
+        CASE WHEN effective_state='failed' THEN outcome.reason
           WHEN observation='source' AND NOT source_available THEN 'No trustworthy recorded source window is available'
           WHEN observation='configuration' AND NOT configuration_available THEN 'No observed build configuration is retained; availability has not been established for the requested environment'
           WHEN observation='execution' AND outcome.page.returned=0 THEN 'No retained execution result for this scope; explicit execution intent and an enabled profile are required'
-          WHEN outcome.state='absent' AND NOT complete THEN 'No retained match; this aspect lacks complete qualified coverage.'
+          WHEN effective_state='absent' AND NOT complete THEN 'No retained match; this aspect lacks complete qualified coverage.'
+          WHEN effective_state='absent' THEN 'No retained rows match this selection; see coverage before inferring absence'
           ELSE outcome.reason END AS selected_reason FROM classified
     "#).await?;
     crate::native_catalog::work(&session, "selected_outcomes", frame.clone().into_view())?;
@@ -222,15 +232,16 @@ pub async fn discovery(
         .enumerate()
         .map(|(ordinal, outcome)| DiscoveryRow { ordinal, outcome })
         .collect::<Vec<_>>();
-    session.register_batch("research_outcomes", DiscoveryRow::batch(&rows)?)?;
+    crate::native_catalog::input(&session, "research_outcomes", DiscoveryRow::batch(&rows)?)?;
     let frame = session.sql(r#"
       WITH assessments AS (SELECT unnest(coverage.assessments) AS item FROM research_scope),
-      qualified AS (SELECT item.kind AS kind,bool_and(item.state='indexed') AS complete FROM assessments GROUP BY item.kind)
-      SELECT r.*,CASE WHEN r.outcome.state='absent' AND NOT coalesce(q.complete,false) THEN 'unavailable' ELSE r.outcome.state END AS selected_state,
-        CASE WHEN r.outcome.state<>'absent' THEN r.outcome.reason
+      qualified AS (SELECT item.kind AS kind,bool_and((item.state='indexed')) AS complete FROM assessments GROUP BY item.kind),
+      normalized AS (SELECT r.*,CASE WHEN r.outcome.state='available' AND r.outcome.page.returned=0 THEN 'absent' ELSE r.outcome.state END AS effective_state FROM research_outcomes r)
+      SELECT r.*,CASE WHEN r.effective_state='absent' AND NOT coalesce(q.complete,false) THEN 'unavailable' ELSE r.effective_state END AS selected_state,
+        CASE WHEN r.effective_state<>'absent' THEN r.outcome.reason
           WHEN NOT coalesce(q.complete,false) THEN 'No retained match; this facet lacks complete qualified coverage.'
           ELSE 'No retained match in this qualified discovery scope.' END AS selected_reason
-      FROM research_outcomes r JOIN operation.declarations.discovery_facets d ON r.outcome.kind=d.kind
+      FROM normalized r JOIN operation.declarations.discovery_facets d ON r.outcome.kind=d.kind
       LEFT JOIN qualified q ON q.kind=d.evidence_kind
     "#).await?;
     crate::native_catalog::work(&session, "selected_outcomes", frame.clone().into_view())?;
@@ -263,7 +274,7 @@ fn project<T: NativeStruct>(frame: DataFrame) -> Result<DataFrame> {
 async fn partial(runtime: &QueryRuntime, session: &SessionContext) -> Result<bool> {
     let frame = session.sql(r#"
       WITH assessments AS (SELECT unnest(coverage.assessments) AS item FROM research_scope),
-      assessed AS (SELECT count(*)>0 AND coalesce(bool_and(item.state='indexed'),false) AS complete FROM assessments),
+      assessed AS (SELECT count(*)>0 AND coalesce(bool_and((item.state='indexed')),false) AS complete FROM assessments),
       outcomes AS (SELECT coalesce(bool_or(selected_state IN ('failed','unavailable')),false) AS incomplete FROM selected_outcomes)
       SELECT NOT a.complete OR cardinality(s.coverage.missing)>0 OR o.incomplete AS partial
       FROM research_scope s CROSS JOIN assessed a CROSS JOIN outcomes o
@@ -276,4 +287,95 @@ async fn partial(runtime: &QueryRuntime, session: &SessionContext) -> Result<boo
             datafusion::common::DataFusionError::Execution("research scope missing".into())
         })?
         .partial)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use enrichment_core::{
+        evidence::relational::SubjectRef,
+        wire::{
+            AspectState, Page,
+            evidence::{ScopeAssessment, ScopeState},
+        },
+    };
+    #[tokio::test]
+    async fn native_research_empty_page_is_absent_only_with_qualified_coverage() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let runtime = QueryRuntime::new(root.path(), Default::default())?;
+        let mut coverage = Coverage::unassessed("documentation");
+        let facet = DiscoveryFacet {
+            kind: DiscoveryKind::Documentation,
+            state: AspectState::Available,
+            reason: None,
+            diagnostic: None,
+            items: vec![],
+            page: Some(Page::new(0, None, false, None)),
+        };
+        let aspect = AspectOutcome {
+            aspect: InspectionAspect::Documentation,
+            state: AspectState::Available,
+            reason: None,
+            page: facet.page.clone(),
+            diagnostic: None,
+        };
+        for complete in [false, true] {
+            if complete {
+                coverage.assessments.push(ScopeAssessment {
+                    snapshot_id: format!("snap_{}", "1".repeat(64)).try_into().unwrap(),
+                    subject: SubjectRef::Library {
+                        release_id: format!("rel_{}", "2".repeat(64)).try_into().unwrap(),
+                    },
+                    kind: EvidenceKind::Documentation,
+                    state: ScopeState::Indexed,
+                    witness_id: Some("coverage_fixture".into()),
+                });
+                coverage
+                    .indexed
+                    .insert(EvidenceKind::Documentation.as_str().into());
+            }
+            let discovered = discovery(&runtime, vec![facet.clone()], &coverage).await?;
+            let inspected = inspection(
+                &runtime,
+                Ecosystem::Rust,
+                vec![aspect.clone()],
+                &coverage,
+                false,
+                false,
+            )
+            .await?;
+            let expected = if complete {
+                AspectState::Absent
+            } else {
+                AspectState::Unavailable
+            };
+            assert_eq!(discovered.facets[0].state, expected);
+            assert_eq!(inspected.outcomes[0].state, expected);
+            assert_eq!(discovered.partial, !complete);
+            assert_eq!(inspected.partial, !complete);
+            assert!(inspected.returned.is_empty());
+        }
+        let failed = AspectOutcome {
+            state: AspectState::Failed,
+            reason: Some("upstream failure".into()),
+            ..aspect
+        };
+        let failed = inspection(
+            &runtime,
+            Ecosystem::Rust,
+            vec![failed],
+            &coverage,
+            false,
+            false,
+        )
+        .await?;
+        assert_eq!(failed.outcomes[0].state, AspectState::Failed);
+        assert_eq!(
+            failed.outcomes[0].reason.as_deref(),
+            Some("upstream failure")
+        );
+        assert!(failed.partial);
+        runtime.close_diagnostics().await?;
+        Ok(())
+    }
 }

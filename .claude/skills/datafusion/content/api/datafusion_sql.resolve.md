@@ -10,6 +10,9 @@ Crate `datafusion-sql` · 1 public items · structured records in [`model/datafu
 fn resolve_table_references(statement: &parser::Statement, enable_ident_normalization: bool) -> datafusion_common::Result<(Vec<datafusion_common::TableReference>, Vec<datafusion_common::TableReference>)>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.resolve.resolve_table_references.md).
+
+
 Collects all tables and views referenced in the SQL statement. CTEs are collected separately.
 This can be used to determine which tables need to be in the catalog for a query to be planned.
 

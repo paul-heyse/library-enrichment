@@ -1,6 +1,6 @@
 # Sessions and runtime
 
-A `SessionContext` is a handle over a `SessionState`, which pairs a `SessionConfig` (planning and execution settings) with a `RuntimeEnv` (memory pool, disk manager, object store registry, caches). `SessionContext::new()` takes the defaults for both, and the default `RuntimeEnv` has **no memory limit and no spill path** — a sort or aggregation larger than RAM aborts rather than spilling. Anything you want bounded is configured before the context exists, not after.
+A SessionContext holds SessionState: planning configuration plus a RuntimeEnv containing memory pool, disk manager, stores and caches. The default memory pool is unbounded; DiskManagerBuilder defaults to the OS temporary directory. Incremental output does not bound operator state or process RSS. Configuration lifetime differs between session settings and runtime resources.
 
 ## Entry points
 
@@ -63,14 +63,13 @@ Full table with Rust setters in [`../catalogs/config-options.md`](../catalogs/co
 
 ## Decision rules
 
-- Bounded work needs `RuntimeEnvBuilder` with a memory pool (`FairSpillPool` or `GreedyMemoryPool`), `with_temp_file_path`, and `with_max_temp_directory_size`; pass the result to `SessionContext::new_with_config_rt`.
-- `SessionStateBuilder::new_from_existing` is the way to install a custom query planner, optimizer rule or analyzer rule while keeping everything else.
-- A `SessionContext` is cheap to clone and shares its state; build one per service, not per query.
+- Configure pool, spill policy/location/capacity and concurrency for the participating operators. Some allocations are outside pool accounting; inspect plans and metrics under the workload.
+- `SessionStateBuilder::new_from_existing` supports extending state; inspect which rules and registries are inherited.
+- Clones share session state. Share or isolate contexts according to catalog, configuration, credentials and workload boundaries; RuntimeEnv can be shared separately.
 
 ## Anti-patterns
 
-- `SessionContext::new()` in anything that touches user-sized data — the default runtime is unbounded.
-- Reading only the constructor. `SessionConfig` carries 64 methods and none of them appear in `new()`.
+- Treating the default pool, a stream return type, or a configured pool limit as a process-memory guarantee.
 
 ## Agent checklist
 

@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## SetTablePropertiesBuilder
 
 `struct` · `deltalake_core::operations::set_tbl_properties::SetTablePropertiesBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.set_tbl_properties.SetTablePropertiesBuilder.md)
 
 Also reachable as `deltalake::operations::set_tbl_properties::SetTablePropertiesBuilder`
 
@@ -27,13 +28,6 @@ fn with_raise_if_not_exists(self, raise: bool) -> Self
 
 ```rust
 fn into_future(self) -> Self::IntoFuture
-```
-
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
 ```
 
 Remove constraints from the table

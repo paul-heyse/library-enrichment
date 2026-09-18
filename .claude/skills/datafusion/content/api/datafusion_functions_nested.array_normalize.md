@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_normalize`, `datafusion_functions_
 fn array_normalize(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_normalize.array_normalize.md).
+
+
 returns the L2-normalized vector for a numeric array.
 
 ---
@@ -23,6 +26,9 @@ returns the L2-normalized vector for a numeric array.
 ```rust
 fn array_normalize_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_normalize.array_normalize_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayNormalize
@@ -58,5 +64,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.array_normalize.ArrayNormalize.md).
+
 
 ---

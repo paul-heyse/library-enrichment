@@ -10,7 +10,35 @@ use crate::{
 };
 
 crate::native_struct! {
+    /// Complete immutable runtime meaning retained beside its canonical identity.
+    pub struct RuntimeWitness {
+        definition: String => Rule::NonEmpty,
+        options: std::collections::BTreeMap<String, Option<String>> => Rule::Map,
+        native: crate::config::NativeQueryConfig => Rule::Text,
+        caches: crate::config::NativeCachePolicy => Rule::Text,
+        memory_bytes: usize => Rule::Text,
+        spill_bytes: u64 => Rule::Text,
+        batch_rows: usize => Rule::Text,
+        partitions: usize => Rule::Text,
+        concurrency: usize => Rule::Text,
+        result_rows: usize => Rule::Text,
+        result_bytes: usize => Rule::Text,
+        deadline_nanoseconds: u64 => Rule::Text,
+    }
+}
+crate::native_struct! {
+    /// Input snapshots/artifacts are separately bound by the concrete cursor. The compiled
+    /// runtime covers function/transform/codec/schema revisions and effective session options;
+    /// policy covers the complete effective service configuration.
+    pub struct SelectionWitness {
+        runtime: String => Rule::NonEmpty,
+        policy: crate::identity::OperationPolicyId => Rule::Text,
+    }
+}
+
+crate::native_struct! {
     pub struct SearchSelection {
+        witness: SelectionWitness => Rule::Text,
         spec: SearchSpec => Rule::Text,
         kinds: Vec<String> => Rule::Set,
         area: Option<PublicPath> => Rule::Text,
@@ -20,6 +48,7 @@ crate::native_struct! {
 }
 crate::native_struct! {
     pub struct InspectionSelection {
+        witness: SelectionWitness => Rule::Text,
         symbol_id: String => Rule::Reference(crate::native_union::Domain::Symbol),
         aspect: InspectionAspect => Rule::Text,
         max_items: usize => Rule::Text,
@@ -30,6 +59,7 @@ crate::native_struct! {
 }
 crate::native_struct! {
     pub struct DiscoverySelection {
+        witness: SelectionWitness => Rule::Text,
         kind: DiscoveryKind => Rule::Text,
         max_items: usize => Rule::Text,
         max_characters: Option<usize> => Rule::Text,
@@ -38,6 +68,7 @@ crate::native_struct! {
 }
 crate::native_struct! {
     pub struct ComparisonSelection {
+        witness: SelectionWitness => Rule::Text,
         scopes: Vec<Scope> => Rule::Set,
         max_items: Option<usize> => Rule::Text,
         max_bytes: usize => Rule::Text,
@@ -61,6 +92,7 @@ selection_key!(
 
 crate::native_struct! {
     pub struct ArtifactSelection {
+        witness: SelectionWitness => Rule::Text,
         section: Option<String> => Rule::Text,
         start: usize => Rule::Text,
         end: usize => Rule::Text,

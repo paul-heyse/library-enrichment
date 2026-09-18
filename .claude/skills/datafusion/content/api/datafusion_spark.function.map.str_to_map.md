@@ -30,6 +30,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.map.str_to_map.SparkStrToMap.md).
+
+
 Spark-compatible `str_to_map` expression
 <https://spark.apache.org/docs/latest/api/sql/index.html#str_to_map>
 

@@ -10,6 +10,9 @@ Crate `datafusion-physical-expr-adapter` · 4 public items · structured records
 fn expr_references_scalar_udf<T: ScalarUDFImpl>(expr: &std::sync::Arc<dyn PhysicalExpr>) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_adapter.rewrite.expr_references_scalar_udf.md).
+
+
 Return true if a [`PhysicalExpr`] references scalar UDF `T`.
 
 This matches the concrete [`ScalarUDFImpl`] type rather than the function
@@ -24,6 +27,9 @@ name, so unrelated UDFs with the same name are not treated as matches.
 ```rust
 fn rewrite_file_row_index_expr(expr: std::sync::Arc<dyn PhysicalExpr>, row_index_name: &str, row_index_idx: usize) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_adapter.rewrite.rewrite_file_row_index_expr.md).
+
 
 Rewrite [`file_row_index()`][FileRowIndexFunc] in a [`PhysicalExpr`] to
 read from a source-provided row-index column.
@@ -43,6 +49,9 @@ return field without source-specific extension metadata.
 ```rust
 fn rewrite_file_row_index_projection(base_projection: &datafusion_physical_expr::projection::ProjectionExprs, projection: &datafusion_physical_expr::projection::ProjectionExprs, row_index_col: &datafusion_physical_expr::expressions::Column) -> datafusion_common::Result<datafusion_physical_expr::projection::ProjectionExprs>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_adapter.rewrite.rewrite_file_row_index_projection.md).
+
 
 Rewrite [`file_row_index()`][FileRowIndexFunc] in pushed [`ProjectionExprs`]
 to read from a source-provided row-index column.
@@ -66,6 +75,9 @@ row-index column and then merged on top of the extended base projection.
 ```rust
 fn rewrite_input_file_name_in_projection(projection: datafusion_physical_expr::projection::ProjectionExprs, file_name: &str) -> datafusion_common::Result<datafusion_physical_expr::projection::ProjectionExprs>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_adapter.rewrite.rewrite_input_file_name_in_projection.md).
+
 
 Rewrite [`input_file_name()`][InputFileNameFunc] in pushed
 [`ProjectionExprs`] to a per-file [`Literal`] holding `file_name`.

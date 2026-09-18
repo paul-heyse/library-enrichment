@@ -1,0 +1,9 @@
+id: native-static-worker-launch
+valid:
+  - 'async fn run() { static_worker::OwnedChild::spawn(&runtime, &prepared, lease).await?; }'
+  - 'async fn run() { static_worker::prepare(parent, &source, input, output).await?; }'
+  - 'mod tests { fn fixture() { tokio::process::Command::new("/bin/sleep"); } }'
+invalid:
+  - 'fn run() { tokio::process::Command::new(python); }'
+  - 'fn run() { Command::new("python3"); }'
+  - 'async fn run() { tokio::task::spawn_blocking(move || worker()).await?; }'

@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## commit_uri_from_version
 
 `function` · `deltalake_core::logstore::storage::utils::commit_uri_from_version`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.storage.utils.commit_uri_from_version.md)
 
 Also reachable as `deltalake::logstore::commit_uri_from_version`, `deltalake_core::logstore::commit_uri_from_version`
 

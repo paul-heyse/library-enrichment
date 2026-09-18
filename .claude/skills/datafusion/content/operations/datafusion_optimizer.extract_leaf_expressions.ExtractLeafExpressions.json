@@ -1,0 +1,727 @@
+[
+  {
+    "id": "0a731b241a2648730b745694",
+    "path": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions",
+    "name": "ExtractLeafExpressions",
+    "owner": null,
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct ExtractLeafExpressions",
+    "docs": "Extracts `MoveTowardsLeafNodes` sub-expressions from non-projection nodes\ninto **extraction projections** (pass 1 of 2).\n\nThis handles Filter, Sort, Limit, Aggregate, and Join nodes. For Projection\nnodes, extraction and pushdown are handled by [`PushDownLeafProjections`].\n\n# Key Concepts\n\n**Extraction projection**: a projection inserted *below* a node that\npre-computes a cheap expression and exposes it under an alias\n(`__datafusion_extracted_N`). The parent node then references the alias\ninstead of the original expression.\n\n**Recovery projection**: a projection inserted *above* a node to restore\nthe original output schema when extraction changes it.\nSchema-preserving nodes (Filter, Sort, Limit) gain extra columns from\nthe extraction projection that bubble up; the recovery projection selects\nonly the original columns to hide the extras.\n\n# Example\n\nGiven a filter with a struct field access:\n\n```text\nFilter: user['status'] = 'active'\n  TableScan: t [id, user]\n```\n\nThis rule:\n1. Inserts an **extraction projection** below the filter:\n2. Adds a **recovery projection** above to hide the extra column:\n\n```text\nProjection: id, user                                                        <-- recovery projection\n  Filter: __datafusion_extracted_1 = 'active'\n    Projection: user['status'] AS __datafusion_extracted_1, id, user         <-- extraction projection\n      TableScan: t [id, user]\n```\n\n**Important:** The `PushDownFilter` rule is aware of projections created by this rule\nand will not push filters through them. It uses `ExpressionPlacement` to detect\n`MoveTowardsLeafNodes` expressions and skip filter pushdown past them.",
+    "span": {
+      "filename": "src/extract_leaf_expressions.rs",
+      "begin": [
+        103,
+        1
+      ],
+      "end": [
+        103,
+        37
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": false
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          573,
+          574,
+          575,
+          576,
+          577,
+          578,
+          579,
+          580,
+          581,
+          582,
+          583,
+          584,
+          585,
+          586,
+          587,
+          588,
+          589,
+          591,
+          593,
+          596
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`PushDownLeafProjections`": 570
+    },
+    "link_paths": {
+      "`PushDownLeafProjections`": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "571",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.md",
+    "record_file": "operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.json",
+    "anchor": "op-0a731b241a2648730b745694",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`PushDownLeafProjections`": "../operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.md#op-4b118316543e73e6c579a135"
+    }
+  },
+  {
+    "id": "67367e99325c4a4ada5e78b6",
+    "path": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions::default",
+    "name": "default",
+    "owner": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn default() -> ExtractLeafExpressions",
+    "docs": "",
+    "span": {
+      "filename": "src/extract_leaf_expressions.rs",
+      "begin": [
+        102,
+        10
+      ],
+      "end": [
+        102,
+        17
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "resolved_path": {
+              "path": "ExtractLeafExpressions",
+              "id": 571,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "571": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ExtractLeafExpressions",
+          "id": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/extract_leaf_expressions.rs",
+        "begin": [
+          102,
+          10
+        ],
+        "end": [
+          102,
+          17
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "590",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.md",
+    "record_file": "operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.json",
+    "anchor": "op-67367e99325c4a4ada5e78b6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b12fd55a7e7ebe1a2e4c940e",
+    "path": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions::fmt",
+    "name": "fmt",
+    "owner": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/extract_leaf_expressions.rs",
+      "begin": [
+        102,
+        19
+      ],
+      "end": [
+        102,
+        24
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 53,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 54,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "53": "core::fmt::Formatter",
+      "54": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ExtractLeafExpressions",
+          "id": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/extract_leaf_expressions.rs",
+        "begin": [
+          102,
+          19
+        ],
+        "end": [
+          102,
+          24
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "592",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.md",
+    "record_file": "operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.json",
+    "anchor": "op-b12fd55a7e7ebe1a2e4c940e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7365e50aa6519f82eef2f17b",
+    "path": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions::name",
+    "name": "name",
+    "owner": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &str",
+    "docs": "",
+    "span": {
+      "filename": "src/extract_leaf_expressions.rs",
+      "begin": [
+        113,
+        5
+      ],
+      "end": [
+        115,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ExtractLeafExpressions",
+          "id": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/extract_leaf_expressions.rs",
+        "begin": [
+          112,
+          1
+        ],
+        "end": [
+          135,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "594",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.md",
+    "record_file": "operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.json",
+    "anchor": "op-7365e50aa6519f82eef2f17b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "18ff3013d53dc305f8a76fba",
+    "path": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions::new",
+    "name": "new",
+    "owner": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "Create a new [`ExtractLeafExpressions`]",
+    "span": {
+      "filename": "src/extract_leaf_expressions.rs",
+      "begin": [
+        107,
+        5
+      ],
+      "end": [
+        109,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ExtractLeafExpressions",
+          "id": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/extract_leaf_expressions.rs",
+        "begin": [
+          105,
+          1
+        ],
+        "end": [
+          110,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ExtractLeafExpressions`": 571
+    },
+    "link_paths": {
+      "`ExtractLeafExpressions`": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "572",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.md",
+    "record_file": "operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.json",
+    "anchor": "op-18ff3013d53dc305f8a76fba",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ExtractLeafExpressions`": "../operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.md#op-0a731b241a2648730b745694"
+    }
+  },
+  {
+    "id": "9091545770309c5e8e5a7183",
+    "path": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions::rewrite",
+    "name": "rewrite",
+    "owner": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/extract_leaf_expressions.rs",
+      "begin": [
+        117,
+        5
+      ],
+      "end": [
+        134,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "plan",
+              {
+                "resolved_path": {
+                  "path": "LogicalPlan",
+                  "id": 59,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "OptimizerConfig",
+                            "id": 223,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Transformed",
+                          "id": 148,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "LogicalPlan",
+                                      "id": 59,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "59": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "223": "datafusion_optimizer::optimizer::OptimizerConfig",
+      "61": "datafusion_common::error::Result",
+      "148": "datafusion_common::tree_node::Transformed"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ExtractLeafExpressions",
+          "id": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/extract_leaf_expressions.rs",
+        "begin": [
+          112,
+          1
+        ],
+        "end": [
+          135,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "595",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.md",
+    "record_file": "operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.json",
+    "anchor": "op-9091545770309c5e8e5a7183",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

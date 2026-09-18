@@ -1,0 +1,75 @@
+[
+  {
+    "id": "3caae2f40567c01aae388544",
+    "path": "datafusion_ffi::query_planner",
+    "name": "query_planner",
+    "owner": null,
+    "crate": "datafusion-ffi",
+    "version": "55.1.0",
+    "kind": "module",
+    "signature": "mod query_planner",
+    "docs": "FFI support for [`QueryPlanner`].\n\nA typical deployment has three libraries. Library A (for example,\n`datafusion-python`) owns the [`Session`] and codec registry. Library B owns\na custom table provider and its extension nodes. Library C (for example,\nBallista or `datafusion-distributed`) owns the query planner. A serializes a\nlogical plan and invokes C, while `FFI_SessionRef` lets C call session\nservices in A. C deserializes the logical plan, creates a physical plan,\nserializes that result, and returns it for A to deserialize. The logical and\nphysical extension codecs preserve nodes supplied by B.\n\nThe physical result is serialized instead of returned as an\n[`crate::execution_plan::FFI_ExecutionPlan`]. An FFI execution-plan handle is\na foreign trait-object proxy, so even a built-in plan created in C cannot be\ndowncast to its concrete\ntype in A. Serialization reconstructs known plan nodes with A's local Rust\ntype identities, allowing A's optimizers and other consumers to downcast\nthem. Extension codecs control how custom nodes are reconstructed.\n\nA node returned by B while C is planning is still foreign to C unless a\ncodec boundary reconstructs it in C. The query-planner boundary guarantees\nthat C-local serializable nodes, and extension nodes understood by the\nconfigured codecs, are reconstructed for A when the completed plan returns.\n\n# Delegating back to library A\n\nC commonly wants A's built-in planning as a starting point, then rewrites the\nresult. A must export its planner *before* installing C's planner on the\nsession, and C must retain that handle: after the swap,\n[`Session::query_planner`] reports C's own planner, and\n[`Session::create_physical_plan`] dispatches to it, so either one is a\nself-call. Delegating to the retained handle is safe, because DataFusion's\nbuilt-in physical planner never re-dispatches through [`Session`].\n\nRetain the planner rather than the session. [`FFI_QueryPlanner`] owns a\nreference-counted planner, so it outlives A's original session, whereas\n`FFI_SessionRef` borrows its session with the lifetime erased.",
+    "span": {
+      "filename": "src/query_planner.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        481,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          1901,
+          1906
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Session::query_planner`": 1969,
+      "`Session::create_physical_plan`": 1970,
+      "`crate::execution_plan::FFI_ExecutionPlan`": 613,
+      "`FFI_QueryPlanner`": 1901,
+      "`Session`": 1908,
+      "`QueryPlanner`": 1900
+    },
+    "link_paths": {
+      "`Session::query_planner`": "datafusion_session::session::Session::query_planner",
+      "`Session::create_physical_plan`": "datafusion_session::session::Session::create_physical_plan",
+      "`crate::execution_plan::FFI_ExecutionPlan`": "datafusion_ffi::execution_plan::FFI_ExecutionPlan",
+      "`FFI_QueryPlanner`": "datafusion_ffi::query_planner::FFI_QueryPlanner",
+      "`Session`": "datafusion_session::session::Session",
+      "`QueryPlanner`": "datafusion_session::planner::QueryPlanner"
+    },
+    "artifact": {
+      "id": "1da7a4472325de66bc7ea1ac3642b62c46ca0d1d35e2dd22321a26a597d5d750",
+      "format_version": 61,
+      "item_id": "1971",
+      "origin": "https://docs.rs/crate/datafusion-ffi/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/datafusion_ffi.query_planner.md",
+    "record_file": "modules/datafusion_ffi.query_planner.json",
+    "anchor": "op-3caae2f40567c01aae388544",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Session::query_planner`": "../operations/datafusion_session.session.Session.md#op-d9a5770e1d1190279fe94203",
+      "`Session::create_physical_plan`": "../operations/datafusion_session.session.Session.md#op-f8a00c1a238fc9102cc1e8b7",
+      "`crate::execution_plan::FFI_ExecutionPlan`": "../operations/datafusion_ffi.execution_plan.FFI_ExecutionPlan.md#op-9600304f9dbd2887afcc0a23",
+      "`FFI_QueryPlanner`": "../operations/datafusion_ffi.query_planner.FFI_QueryPlanner.md#op-3c95c5a8ef88787dcecb3bd4",
+      "`Session`": "../operations/datafusion_session.session.Session.md#op-75302dfa669885e17a5c9093",
+      "`QueryPlanner`": "../operations/datafusion_session.planner.QueryPlanner.md#op-d105e63a68841dd69dcdcc42"
+    }
+  }
+]

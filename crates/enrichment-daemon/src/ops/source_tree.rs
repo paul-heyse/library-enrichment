@@ -4,33 +4,59 @@ use std::{
     fs,
     io::{self, Read, Seek},
     path::{Path, PathBuf},
+    sync::Arc,
 };
 
+#[derive(Clone)]
 pub(super) struct SourceTree {
-    scratch: tempfile::TempDir,
+    owner: Arc<enrichment_store::PrivateDirectory>,
     root: PathBuf,
+}
+impl SourceTree {
+    pub(super) fn owner(&self) -> Arc<enrichment_store::PrivateDirectory> {
+        self.owner.clone()
+    }
+    pub(super) fn owned(
+        owner: Arc<enrichment_store::PrivateDirectory>,
+        root: PathBuf,
+    ) -> io::Result<Self> {
+        if !root.starts_with(owner.path())
+            || root
+                .components()
+                .any(|c| matches!(c, std::path::Component::ParentDir))
+        {
+            return Err(io::Error::other("source tree escaped its private owner"));
+        }
+        Ok(Self { owner, root })
+    }
 }
 impl std::ops::Deref for SourceTree {
     type Target = Path;
     fn deref(&self) -> &Path {
-        // Keep the private directory owner alive for every member read.
-        debug_assert!(self.root.starts_with(self.scratch.path()));
+        debug_assert!(self.root.starts_with(self.owner.path()));
         &self.root
     }
 }
 
 /// Verify the same open archive that will be extracted, then retain the private directory
-/// owner until the caller finishes reading. Old extracted cache contents are never opened.
-pub(super) fn open(root: &Path, digest: &str, source: impl Read) -> io::Result<SourceTree> {
-    fs::create_dir_all(root)?;
-    if fs::symlink_metadata(root)?.file_type().is_symlink() {
-        return Err(io::Error::other("source scratch root is a link"));
+/// owner in the caller until physical reads finish. The destination has a durable obligation.
+pub(super) fn open(
+    owner: Arc<enrichment_store::PrivateDirectory>,
+    digest: &str,
+    source: impl Read,
+) -> io::Result<SourceTree> {
+    let root = extract(owner.path(), digest, source)?;
+    SourceTree::owned(owner, root)
+}
+
+fn extract(root: &Path, digest: &str, source: impl Read) -> io::Result<PathBuf> {
+    if !fs::symlink_metadata(root)?.is_dir() || fs::read_dir(root)?.next().is_some() {
+        return Err(io::Error::other(
+            "source scratch is not an empty owned directory",
+        ));
     }
-    let scratch = tempfile::Builder::new()
-        .prefix(".source-read-")
-        .tempdir_in(root)?;
     // Verify private captured bytes, not a mutable file checked and reopened later.
-    let mut captured = tempfile::tempfile_in(scratch.path())?;
+    let mut captured = tempfile::tempfile_in(root)?;
     let limit = 256 * 1024 * 1024;
     if io::copy(&mut source.take(limit + 1), &mut captured)? > limit {
         return Err(io::Error::other("source archive exceeds byte bound"));
@@ -43,7 +69,7 @@ pub(super) fn open(root: &Path, digest: &str, source: impl Read) -> io::Result<S
         ));
     }
     captured.rewind()?;
-    let destination = scratch.path().join("content");
+    let destination = root.join("content");
     let extracted = archive::extract_tar_gz(captured, &destination, &ArchivePolicy::default())
         .map_err(io::Error::other)?;
     let top = extracted
@@ -53,7 +79,7 @@ pub(super) fn open(root: &Path, digest: &str, source: impl Read) -> io::Result<S
     if !fs::symlink_metadata(&root)?.is_dir() {
         return Err(io::Error::other("archive root is not a directory"));
     }
-    Ok(SourceTree { scratch, root })
+    Ok(root)
 }
 
 #[cfg(test)]
@@ -63,39 +89,25 @@ mod tests {
         include_bytes!("../../../../tests/fixtures/upstream/static/enr-fixture-0.1.0.crate");
 
     #[test]
-    fn old_cache_bytes_never_supply_retained_source() {
+    fn private_extraction_requires_empty_root_and_verified_bytes() {
         let temp = tempfile::tempdir().unwrap();
         let digest = canonical::sha256_hex(ARCHIVE);
-        let old = temp.path().join(&digest).join("enr-fixture-0.1.0/src");
-        fs::create_dir_all(&old).unwrap();
-        fs::write(
-            old.parent().unwrap().parent().unwrap().join(".complete"),
-            format!("retained-source-cache/1\n{digest}\n"),
-        )
-        .unwrap();
-        fs::write(old.join("lib.rs"), "poison").unwrap();
-        let tree = open(temp.path(), &digest, ARCHIVE).unwrap();
+        let tree = extract(temp.path(), &digest, ARCHIVE).unwrap();
         let expected = fs::read(tree.join("src/lib.rs")).unwrap();
-        assert_ne!(expected, b"poison");
-        let root = tree.root.clone();
-        drop(tree);
-        assert!(!root.exists());
+        assert!(!expected.is_empty());
+        assert!(extract(temp.path(), &digest, ARCHIVE).is_err());
+        let extracted = tree.clone();
+        drop(temp);
+        assert!(!extracted.exists());
+        let invalid = tempfile::tempdir().unwrap();
+        assert!(extract(invalid.path(), &digest, &b"changed archive"[..]).is_err());
+        assert!(fs::read_dir(invalid.path()).unwrap().next().is_none());
         #[cfg(unix)]
         {
-            fs::remove_file(old.join("lib.rs")).unwrap();
-            let foreign = temp.path().join("foreign");
-            fs::write(&foreign, vec![b'x'; expected.len()]).unwrap();
-            std::os::unix::fs::symlink(&foreign, old.join("lib.rs")).unwrap();
-            let tree = open(temp.path(), &digest, ARCHIVE).unwrap();
-            assert_eq!(fs::read(tree.join("src/lib.rs")).unwrap(), expected);
-            assert_eq!(fs::read(foreign).unwrap(), vec![b'x'; expected.len()]);
+            let parent = tempfile::tempdir().unwrap();
+            let link = parent.path().join("linked-root");
+            std::os::unix::fs::symlink(invalid.path(), &link).unwrap();
+            assert!(extract(&link, &digest, ARCHIVE).is_err());
         }
-        assert!(open(temp.path(), &digest, &b"changed archive"[..]).is_err());
-        assert!(fs::read_dir(temp.path()).unwrap().all(|p| {
-            !p.unwrap()
-                .file_name()
-                .to_string_lossy()
-                .starts_with(".source-read-")
-        }));
     }
 }

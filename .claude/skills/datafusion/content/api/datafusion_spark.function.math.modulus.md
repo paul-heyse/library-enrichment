@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 4 public items · structured records in [`model/data
 fn spark_mod(args: &[datafusion_expr::ColumnarValue], enable_ansi_mode: bool) -> datafusion_common::Result<datafusion_expr::ColumnarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.modulus.spark_mod.md).
+
+
 Spark-compatible `mod` function
 In ANSI mode, division by zero throws an error.
 In legacy mode, division by zero returns NULL (Spark behavior).
@@ -23,6 +26,9 @@ In legacy mode, division by zero returns NULL (Spark behavior).
 ```rust
 fn spark_pmod(args: &[datafusion_expr::ColumnarValue], enable_ansi_mode: bool) -> datafusion_common::Result<datafusion_expr::ColumnarValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.modulus.spark_pmod.md).
+
 
 Spark-compatible `pmod` function
 In ANSI mode, division by zero throws an error.
@@ -57,6 +63,9 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.modulus.SparkMod.md).
+
+
 SparkMod implements the Spark-compatible modulo function
 
 ---
@@ -87,6 +96,9 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.modulus.SparkPmod.md).
+
 
 SparkMod implements the Spark-compatible modulo function
 

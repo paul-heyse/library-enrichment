@@ -29,6 +29,9 @@ fn new_with_level(writer_options: WriterBuilder, compression: CompressionTypeVar
 fn try_from(value: &CsvOptions) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.file_options.csv_writer.CsvWriterOptions.md).
+
+
 Options for writing CSV files
 
 ---

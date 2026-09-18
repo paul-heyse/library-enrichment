@@ -12,6 +12,9 @@ Also reachable as `object_store::aws::resolve_bucket_region`
 async fn resolve_bucket_region(bucket: &str, client_options: &ClientOptions) -> Result<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.aws.resolve.resolve_bucket_region.md).
+
+
 Get the bucket region using the [HeadBucket API]. This will fail if the bucket does not exist.
 
 [HeadBucket API]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadBucket.html

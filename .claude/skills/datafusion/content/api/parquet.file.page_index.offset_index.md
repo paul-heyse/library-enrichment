@@ -21,6 +21,9 @@ fn page_locations(&self) -> &Vec<PageLocation>
 fn unencoded_byte_array_data_bytes(&self) -> Option<&Vec<i64>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.page_index.offset_index.OffsetIndexMetaData.md).
+
+
 [`OffsetIndex`] information for a column chunk. Contains offsets and sizes for each page
 in the chunk. Optionally stores fully decoded page sizes for BYTE_ARRAY columns.
 
@@ -42,6 +45,9 @@ struct PageLocation
 **Fields**: `offset`, `compressed_page_size`, `first_row_index`
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.page_index.offset_index.PageLocation.md).
+
 
 Page location information for [`OffsetIndexMetaData`]
 

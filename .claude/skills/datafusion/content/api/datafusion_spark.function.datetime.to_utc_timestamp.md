@@ -30,6 +30,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.to_utc_timestamp.SparkToUtcTimestamp.md).
+
+
 Apache Spark `to_utc_timestamp` function.
 
 Interprets the given timestamp in the provided timezone and then converts it to UTC.

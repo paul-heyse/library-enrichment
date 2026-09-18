@@ -30,6 +30,9 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.repeat.SparkArrayRepeat.md).
+
+
 Spark-compatible `array_repeat` expression. The difference with DataFusion's `array_repeat` is the handling of NULL count: in Spark if the count is NULL, the result is NULL.
 <https://spark.apache.org/docs/latest/api/sql/index.html#array_repeat>
 

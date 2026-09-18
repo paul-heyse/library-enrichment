@@ -1,0 +1,16 @@
+# `sqlparser::ast::Statement::Return`
+
+Full upstream contracts; raw type trees and source locators in [structured records](sqlparser.ast.Statement.Return.json).
+
+<a id="op-480fcfe755dc4ab72883c1b7"></a>
+## 0
+
+`struct_field` · `sqlparser::ast::Statement::Return::0` · sqlparser 0.62.0
+
+```rust
+0: ReturnStatement
+```
+
+Source: `src/ast/mod.rs:4899`. [Exact documentation build](https://docs.rs/crate/sqlparser/0.62.0/json).
+
+No upstream documentation on this item; consult its owner/trait contract.

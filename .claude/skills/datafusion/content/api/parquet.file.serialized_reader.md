@@ -10,6 +10,9 @@ Crate `parquet` · 6 public items · structured records in [`model/parquet.file.
 struct ReadOptions
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.serialized_reader.ReadOptions.md).
+
+
 A collection of options for reading a Parquet file.
 
 Predicates are currently only supported on row group metadata.
@@ -42,6 +45,9 @@ fn with_range(self, start: i64, end: i64) -> Self
 fn with_reader_properties(self, properties: ReaderProperties) -> Self
 fn with_size_stats_policy(self, policy: ParquetStatisticsPolicy) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.serialized_reader.ReadOptionsBuilder.md).
+
 
 A builder for [`ReadOptions`].
 For the predicates that are added to the builder,
@@ -92,6 +98,9 @@ fn metadata(&self) -> &ParquetMetaData
 fn num_row_groups(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.serialized_reader.SerializedFileReader.md).
+
+
 A serialized implementation for Parquet [`FileReader`].
 
 ---
@@ -130,6 +139,9 @@ fn peek_next_page(&mut self) -> Result<Option<PageMetadata>>
 fn skip_next_page(&mut self) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.serialized_reader.SerializedPageReader.md).
+
+
 A serialized implementation for Parquet [`PageReader`].
 
 ---
@@ -160,6 +172,9 @@ fn metadata(&self) -> &RowGroupMetaData
 fn num_columns(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.serialized_reader.SerializedRowGroupReader.md).
+
+
 A serialized implementation for Parquet [`RowGroupReader`].
 
 ---
@@ -171,6 +186,9 @@ A serialized implementation for Parquet [`RowGroupReader`].
 ```rust
 type ReadGroupPredicate = Box<dyn FnMut(&RowGroupMetaData, usize) -> bool>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.serialized_reader.ReadGroupPredicate.md).
+
 
 A predicate for filtering row groups, invoked with the metadata and index
 of each row group in the file. Only row groups for which the predicate

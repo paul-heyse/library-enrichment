@@ -1,0 +1,82 @@
+[
+  {
+    "id": "d6413286518a7310fe84c9dd",
+    "path": "datafusion_proto_common",
+    "name": "datafusion_proto_common",
+    "owner": null,
+    "crate": "datafusion-proto-common",
+    "version": "55.1.0",
+    "kind": "module",
+    "signature": "mod datafusion_proto_common",
+    "docs": "Serialize / Deserialize DataFusion Primitive Types to bytes\n\nThis crate provides support for serializing and deserializing the\nfollowing structures to and from bytes:\n\n1. [`ScalarValue`]'s\n\n[`ScalarValue`]: datafusion_common::ScalarValue\n\nInternally, this crate is implemented by converting the common types to [protocol\nbuffers] using [prost].\n\n[protocol buffers]: https://developers.google.com/protocol-buffers\n[prost]: https://docs.rs/prost/latest/prost/\n\n# Version Compatibility\n\nThe serialized form are not guaranteed to be compatible across\nDataFusion versions. A plan serialized with one version of DataFusion\nmay not be able to deserialized with a different version.\n\n# See Also\n\nThe binary format created by this crate supports the full range of DataFusion\nplans, but is DataFusion specific. See [datafusion-substrait] for a crate\nwhich can encode many DataFusion plans using the [substrait.io] standard.\n\n[datafusion-substrait]: https://docs.rs/datafusion-substrait/latest/datafusion_substrait\n[substrait.io]: https://substrait.io\n\n# Example: Serializing [`ScalarValue`]s\n```\n# use datafusion_common::{ScalarValue, Result};\n# use prost::{bytes::{Bytes, BytesMut}};\n# use datafusion_common::plan_datafusion_err;\n# use datafusion_proto_common::protobuf_common;\n# use prost::Message;\n# fn main() -> Result<()>{\n// Create a new ScalarValue\nlet val = ScalarValue::UInt64(Some(3));\nlet mut buffer = BytesMut::new();\nlet protobuf: protobuf_common::ScalarValue = match val {\n    ScalarValue::UInt64(Some(val)) => protobuf_common::ScalarValue {\n        value: Some(protobuf_common::scalar_value::Value::Uint64Value(val)),\n    },\n    _ => unreachable!(),\n};\n\nprotobuf\n    .encode(&mut buffer)\n    .map_err(|e| plan_datafusion_err!(\"Error encoding protobuf as bytes: {e}\"))?;\n// Convert it to bytes (for sending over the network, etc.)\nlet bytes: Bytes = buffer.into();\n\nlet protobuf = protobuf_common::ScalarValue::decode(bytes).map_err(|e| {\n    plan_datafusion_err!(\"Error decoding ScalarValue as protobuf: {e}\")\n})?;\n// Decode bytes from somewhere (over network, etc.) back to ScalarValue\nlet decoded_val: ScalarValue = match protobuf.value {\n    Some(protobuf_common::scalar_value::Value::Uint64Value(val)) => {\n        ScalarValue::UInt64(Some(val))\n    }\n    _ => unreachable!(),\n};\nassert_eq!(val, decoded_val);\n# Ok(())\n# }\n```",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        108,
+        60
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[deny(clippy::clone_on_ref_ptr)]"
+      },
+      {
+        "other": "#[attr = CfgAttrTrace([NameValue { name: \"test\", value: None, span: src/lib.rs:18:13: 18:17 (#0) },\nNameValue { name: \"docsrs\", value: None, span: src/lib.rs:23:13: 23:19 (#0) }])]"
+      },
+      {
+        "other": "#[doc(html_favicon_url = \"https://raw.githubusercontent.com/apache/datafusion/19fe44cf2f30cbdd63d4a4f52c74055163c6cc38/docs/logos/standalone_logo/logo_original.svg\")]"
+      },
+      {
+        "other": "#[doc(html_logo_url = \"https://raw.githubusercontent.com/apache/datafusion/19fe44cf2f30cbdd63d4a4f52c74055163c6cc38/docs/logos/standalone_logo/logo_original.svg\")]"
+      },
+      {
+        "other": "#[attr = Feature([doc_cfg#0])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": true,
+        "items": [
+          4,
+          96,
+          4769,
+          4803,
+          4804,
+          4805,
+          4806,
+          4807
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "datafusion_common::ScalarValue": 3014
+    },
+    "link_paths": {
+      "datafusion_common::ScalarValue": "datafusion_common::scalar::ScalarValue"
+    },
+    "artifact": {
+      "id": "072d416ccb9d91f9ced702f4d3085c768c3e12811b8a36f1660b7a16c46f18a7",
+      "format_version": 61,
+      "item_id": "4808",
+      "origin": "https://docs.rs/crate/datafusion-proto-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/datafusion_proto_common.md",
+    "record_file": "modules/datafusion_proto_common.json",
+    "anchor": "op-d6413286518a7310fe84c9dd",
+    "aliases": [],
+    "resolved_doc_links": {
+      "datafusion_common::ScalarValue": "../operations/datafusion_common.scalar.ScalarValue.md#op-360b267c379d0a7a93dce87b"
+    }
+  }
+]

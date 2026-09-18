@@ -10,6 +10,9 @@ Crate `object_store` · 5 public items · structured records in [`model/object_s
 const DELIMITER: &str = "/"
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.path.DELIMITER.md).
+
+
 The delimiter to separate object namespaces, creating a directory structure.
 
 ---
@@ -22,6 +25,9 @@ The delimiter to separate object namespaces, creating a directory structure.
 const DELIMITER_BYTE: u8 = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.path.DELIMITER_BYTE.md).
+
+
 The path delimiter as a single byte
 
 ---
@@ -33,6 +39,9 @@ The path delimiter as a single byte
 ```rust
 const DELIMITER_CHAR: char = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.path.DELIMITER_CHAR.md).
+
 
 The path delimiter as a single char
 
@@ -63,6 +72,9 @@ fn source(&self) -> ::core::option::Option<&dyn ::thiserror::__private18::Error 
 ```rust
 fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.path.Error.md).
+
 
 Error returned by [`Path::parse`]
 
@@ -129,6 +141,9 @@ fn extend<T: IntoIterator<Item = I>>(&mut self, iter: T)
 ```rust
 fn from_iter<T: IntoIterator<Item = I>>(iter: T) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.path.Path.md).
+
 
 A parsed path representation that can be safely written to object storage
 

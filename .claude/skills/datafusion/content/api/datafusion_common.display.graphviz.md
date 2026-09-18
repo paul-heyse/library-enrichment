@@ -25,4 +25,7 @@ fn start_cluster(&mut self, f: &mut fmt::Formatter<'_>, title: &str) -> fmt::Res
 fn start_graph(&mut self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.display.graphviz.GraphvizBuilder.md).
+
+
 ---

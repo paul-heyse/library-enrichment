@@ -1,0 +1,49 @@
+   Compiling deltalake-skill-reference-probes v0.1.0 (/home/paul/library-enrichment/.claude/skills/deltalake/skill_improvement/evidence/implementation/probes)
+error[E0277]: the trait bound `StructType: TryIntoArrow<_>` is not satisfied
+  --> tests/boundaries.rs:16:32
+   |
+16 |     let arrow: Schema = kernel.try_into_arrow().unwrap();
+   |                                ^^^^^^^^^^^^^^ the trait `TryIntoArrow<_>` is not implemented for `StructType`
+   |
+   = note: required for `StructType` to implement `TryIntoArrow<arrow_schema::Schema>`
+help: consider borrowing here
+   |
+16 |     let arrow: Schema = (&kernel).try_into_arrow().unwrap();
+   |                         ++      +
+
+error[E0277]: the trait bound `arrow_schema::Schema: TryIntoKernel<_>` is not satisfied
+  --> tests/boundaries.rs:20:68
+   |
+20 |     let result: Result<deltalake::kernel::StructType,_> = unsigned.try_into_kernel();
+   |                                                                    ^^^^^^^^^^^^^^^ the trait `TryIntoKernel<_>` is not implemented for `arrow_schema::Schema`
+   |
+   = note: required for `arrow_schema::Schema` to implement `TryIntoKernel<StructType>`
+help: consider borrowing here
+   |
+20 |     let result: Result<deltalake::kernel::StructType,_> = (&unsigned).try_into_kernel();
+   |                                                           ++        +
+
+error[E0277]: the trait bound `url::Url: AsRef<url::Url>` is not satisfied
+    --> tests/boundaries.rs:49:51
+     |
+  49 |     let current = ctx.runtime_env().object_store(&root).unwrap();
+     |                                     ------------  ^^^^ the trait `AsRef<url::Url>` is not implemented for `url::Url`
+     |                                     |
+     |                                     required by a bound introduced by this call
+     |
+help: the trait `AsRef<url::Url>` is not implemented for `url::Url`
+      but trait `AsRef<str>` is implemented for it
+    --> /home/paul/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/url-2.5.8/src/lib.rs:2867:1
+     |
+2867 | impl AsRef<str> for Url {
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `str`, found `url::Url`
+     = note: required for `&url::Url` to implement `AsRef<url::Url>`
+note: required by a bound in `RuntimeEnv::object_store`
+    --> /home/paul/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/datafusion-execution-55.1.0/src/runtime_env.rs:223:42
+     |
+ 223 |     pub fn object_store(&self, url: impl AsRef<Url>) -> Result<Arc<dyn ObjectStore>> {
+     |                                          ^^^^^^^^^^ required by this bound in `RuntimeEnv::object_store`
+
+For more information about this error, try `rustc --explain E0277`.
+error: could not compile `deltalake-skill-reference-probes` (test "boundaries") due to 3 previous errors

@@ -43,4 +43,7 @@ fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where 
 fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto_models.generated.datafusion.merge_into_clause_node.Kind.md).
+
+
 ---

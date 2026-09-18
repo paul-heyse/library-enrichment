@@ -30,6 +30,14 @@ def available() -> bool:
 
 
 def _run(args: list[str]) -> list[dict]:
+    # The corpus is an explicitly selected immutable input, not the host project's files.
+    # Do not let ancestor/global ignore configuration change which examples are observed.
+    flags = [
+        flag
+        for kind in ("parent", "vcs", "dot", "exclude", "global")
+        for flag in ("--no-ignore", kind)
+    ]
+    args = [*args[:2], *flags, *args[2:]]
     done = subprocess.run(args, capture_output=True, text=True, check=False)
     if done.returncode not in (0, 1):
         raise AstGrepMissing(f"ast-grep failed: {done.stderr.strip()[:300]}")

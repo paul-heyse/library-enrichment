@@ -18,6 +18,9 @@ enum ColumnWriter<'a>
 fn close(self) -> Result<ColumnCloseResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.writer.ColumnWriter.md).
+
+
 Column writer for a Parquet type.
 
 See [`get_column_writer`] to create instances of this type
@@ -32,6 +35,9 @@ See [`get_column_writer`] to create instances of this type
 fn get_column_writer<'a>(descr: schema::types::ColumnDescPtr, props: file::properties::WriterPropertiesPtr, page_writer: Box<dyn PageWriter + 'a>) -> ColumnWriter<'a>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.writer.get_column_writer.md).
+
+
 Create a specific column writer corresponding to column descriptor `descr`.
 
 ---
@@ -43,6 +49,9 @@ Create a specific column writer corresponding to column descriptor `descr`.
 ```rust
 fn get_typed_column_writer<T: DataType>(col_writer: ColumnWriter<'_>) -> ColumnWriterImpl<'_, T>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.writer.get_typed_column_writer.md).
+
 
 Gets a typed column writer for the specific type `T`, by "up-casting" `col_writer` of
 non-generic type to a generic column writer type `ColumnWriterImpl`.
@@ -59,6 +68,9 @@ Panics if actual enum value for `col_writer` does not match the type `T`.
 fn get_typed_column_writer_mut<'a, 'b: 'a, T: DataType>(col_writer: &'a mut ColumnWriter<'b>) -> &'a mut ColumnWriterImpl<'b, T>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.writer.get_typed_column_writer_mut.md).
+
+
 Similar to `get_typed_column_writer` but returns a reference.
 
 ---
@@ -70,6 +82,9 @@ Similar to `get_typed_column_writer` but returns a reference.
 ```rust
 fn get_typed_column_writer_ref<'a, 'b: 'a, T: DataType>(col_writer: &'b ColumnWriter<'a>) -> &'b ColumnWriterImpl<'a, T>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.writer.get_typed_column_writer_ref.md).
+
 
 Similar to `get_typed_column_writer` but returns a reference.
 
@@ -92,6 +107,9 @@ struct ColumnCloseResult
 ```rust
 fn update_dictionary_location(self, dictionary_len: usize) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.writer.ColumnCloseResult.md).
+
 
 Metadata for a column chunk of a Parquet file.
 
@@ -119,6 +137,9 @@ fn write_batch(&mut self, values: &E::Values, def_levels: Option<&[i16]>, rep_le
 fn write_batch_with_statistics(&mut self, values: &E::Values, def_levels: Option<&[i16]>, rep_levels: Option<&[i16]>, min: Option<&E::T>, max: Option<&E::T>, distinct_count: Option<u64>) -> Result<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.column.writer.GenericColumnWriter.md).
+
+
 Generic column writer for a primitive Parquet column
 
 ---
@@ -130,6 +151,9 @@ Generic column writer for a primitive Parquet column
 ```rust
 type ColumnWriterImpl<'a, T> = GenericColumnWriter<'a, column::writer::encoder::ColumnValueEncoderImpl<T>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.column.writer.ColumnWriterImpl.md).
+
 
 Typed column writer for a primitive column.
 

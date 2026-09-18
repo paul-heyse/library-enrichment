@@ -90,8 +90,23 @@ def main() -> int:
     envelope = json.loads((schemas / "research-envelope.schema.json").read_text())
     if "pagination" in envelope["properties"] or "delivery" not in envelope["required"]:
         errors.append("active research envelope exposes retired pagination or overflow")
-    if envelope["properties"]["schema_version"].get("enum") != ["3.0"]:
-        errors.append("active research envelope must emit only 3.0")
+    # The Rust declaration owns the epoch. This gate must not become a second version registry.
+    declaration = subprocess.run(
+        [
+            "ast-grep", "run", "--lang", "rust", "--pattern",
+            "pub const SCHEMA_VERSION: &str = wire::SchemaVersion::Current.as_str();",
+            "--json=compact",
+            "crates/enrichment-core/src/lib.rs",
+        ], cwd=ROOT, check=True, text=True, capture_output=True,
+    )
+    versions = json.loads(declaration.stdout)
+    if len(versions) != 1:
+        errors.append("core requires one native wire epoch declaration")
+    # Reproducible schema generation checks the vocabulary-derived value. This static
+    # gate checks the ownership edge, never a second copy of the epoch literal.
+    epochs = envelope["properties"]["schema_version"].get("enum")
+    if not isinstance(epochs, list) or len(epochs) != 1:
+        errors.append("generated research envelope requires one current wire epoch")
     request = json.loads((schemas / "request.schema.json").read_text())
     inspect = request["$defs"]["InspectRequest"]["properties"]
     if "depth" in inspect or "aspects" in inspect or "selection" not in inspect:

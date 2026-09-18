@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 20 public items · structured records in [`model/dat
 fn abs() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.abs.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of abs
 
 ---
@@ -21,6 +24,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of abs
 ```rust
 fn atan2() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.atan2.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of atan2
 
@@ -34,6 +40,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of atan2
 fn bin() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.bin.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of bin
 
 ---
@@ -45,6 +54,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of bin
 ```rust
 fn ceil() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.ceil.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of ceil
 
@@ -58,6 +70,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of ceil
 fn csc() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.csc.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of csc
 
 ---
@@ -69,6 +84,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of csc
 ```rust
 fn expm1() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.expm1.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of expm1
 
@@ -82,6 +100,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of expm1
 fn factorial() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.factorial.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of factorial
 
 ---
@@ -93,6 +114,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of factorial
 ```rust
 fn floor() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.floor.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of floor
 
@@ -106,6 +130,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of floor
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.functions.md).
+
+
 ---
 
 ## hex
@@ -115,6 +142,9 @@ fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```rust
 fn hex() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.hex.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of hex
 
@@ -128,6 +158,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of hex
 fn hypot() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.hypot.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of hypot
 
 ---
@@ -139,6 +172,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of hypot
 ```rust
 fn modulus() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.modulus.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of modulus
 
@@ -152,6 +188,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of modulus
 fn negative() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.negative.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of negative
 
 ---
@@ -163,6 +202,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of negative
 ```rust
 fn pmod() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.pmod.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of pmod
 
@@ -176,6 +218,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of pmod
 fn pow() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.pow.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of pow
 
 ---
@@ -187,6 +232,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of pow
 ```rust
 fn rint() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.rint.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of rint
 
@@ -200,6 +248,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of rint
 fn round() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.round.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of round
 
 ---
@@ -211,6 +262,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of round
 ```rust
 fn sec() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.sec.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of sec
 
@@ -224,6 +278,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of sec
 fn unhex() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.unhex.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of unhex
 
 ---
@@ -235,6 +292,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of unhex
 ```rust
 fn width_bucket() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.width_bucket.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of width_bucket
 

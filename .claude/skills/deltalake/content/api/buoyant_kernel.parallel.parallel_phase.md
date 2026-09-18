@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## ParallelPhase
 
 `struct` · `buoyant_kernel::parallel::parallel_phase::ParallelPhase`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.parallel.parallel_phase.ParallelPhase.md)
 
 Also reachable as `delta_kernel::parallel::parallel_phase::ParallelPhase`
 

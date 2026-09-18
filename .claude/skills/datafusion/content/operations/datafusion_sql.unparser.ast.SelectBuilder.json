@@ -1,0 +1,3781 @@
+[
+  {
+    "id": "c700cde82f70eb9033ef7aeb",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder",
+    "name": "SelectBuilder",
+    "owner": null,
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct SelectBuilder",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        139,
+        1
+      ],
+      "end": [
+        170,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          764,
+          765,
+          766,
+          767,
+          768,
+          769,
+          770,
+          771,
+          772,
+          773,
+          774,
+          775,
+          776,
+          777,
+          778,
+          779,
+          780,
+          781,
+          782,
+          783,
+          785,
+          787
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "726",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-c700cde82f70eb9033ef7aeb",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "998d71fb7aaab48becead3ed",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::add_flatten_table_alias",
+    "name": "add_flatten_table_alias",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn add_flatten_table_alias(&mut self, alias: String)",
+    "docs": "Register a table alias as pointing to a LATERAL FLATTEN relation.",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        184,
+        5
+      ],
+      "end": [
+        186,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "alias",
+              {
+                "resolved_path": {
+                  "path": "String",
+                  "id": 69,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "69": "alloc::string::String"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "728",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-998d71fb7aaab48becead3ed",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "18c15a7190621242166ed527",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::already_projected",
+    "name": "already_projected",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn already_projected(&self) -> bool",
+    "docs": "Returns true if a projection has been explicitly set via `projection()`.\n\nThis method is used to determine whether the SELECT clause has already been\ndefined, which helps avoid creating duplicate projection nodes during query\nunparsing. It returns `true` for both empty and non-empty projections.\n\n# Returns\n\n- `true` if `projection()` has been called (regardless of whether it was empty or not)\n- `false` if no projection has been set yet\n\n# Example\n\n```ignore\nlet mut builder = SelectBuilder::default();\nassert!(!builder.already_projected());\n\nbuilder.projection(vec![]);\nassert!(builder.already_projected()); // true even for empty projection\n\nbuilder.projection(vec![SelectItem::Wildcard(...)]);\nassert!(builder.already_projected()); // true for non-empty projection\n```",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        249,
+        5
+      ],
+      "end": [
+        251,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "739",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-18c15a7190621242166ed527",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2f7eb105023caab8a0b0a65a",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::build",
+    "name": "build",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn build(&self) -> Result<ast::Select, BuilderError>",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        362,
+        5
+      ],
+      "end": [
+        401,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 53,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ast::Select",
+                          "id": 763,
+                          "args": null
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "BuilderError",
+                          "id": 683,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "53": "core::result::Result",
+      "763": "sqlparser::ast::query::Select",
+      "683": "datafusion_sql::unparser::ast::BuilderError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "762",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-2f7eb105023caab8a0b0a65a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "acd60c4c5457adac0efa953d",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::clone",
+    "name": "clone",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> SelectBuilder",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        138,
+        10
+      ],
+      "end": [
+        138,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "SelectBuilder",
+              "id": 726,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "726": "datafusion_sql::unparser::ast::SelectBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          138,
+          10
+        ],
+        "end": [
+          138,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "784",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-acd60c4c5457adac0efa953d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "82c2df43316df97e5667103a",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::cluster_by",
+    "name": "cluster_by",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn cluster_by(&mut self, value: Vec<ast::Expr>) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        334,
+        5
+      ],
+      "end": [
+        337,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 113,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ast::Expr",
+                              "id": 607,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "113": "alloc::vec::Vec",
+      "607": "sqlparser::ast::Expr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "753",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-82c2df43316df97e5667103a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6af8d25473fd64cedd7db008",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::current_flatten_alias",
+    "name": "current_flatten_alias",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn current_flatten_alias(&self) -> Option<String>",
+    "docs": "Returns the most recently generated flatten alias, or `None` if\n`next_flatten_alias` has not been called yet.",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        200,
+        5
+      ],
+      "end": [
+        209,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 115,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "String",
+                          "id": 69,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "115": "core::option::Option",
+      "69": "alloc::string::String"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "731",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-6af8d25473fd64cedd7db008",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "539832daea29baed3badf723",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::default",
+    "name": "default",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn default() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        426,
+        5
+      ],
+      "end": [
+        428,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          425,
+          1
+        ],
+        "end": [
+          429,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "786",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-539832daea29baed3badf723",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "97b2280894cdee489d31df1b",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::distinct",
+    "name": "distinct",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn distinct(&mut self, value: Option<ast::Distinct>) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        211,
+        5
+      ],
+      "end": [
+        214,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 115,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ast::Distinct",
+                              "id": 733,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "115": "core::option::Option",
+      "733": "sqlparser::ast::query::Distinct"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "732",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-97b2280894cdee489d31df1b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6c11a299578c6712b9bfd38a",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::distribute_by",
+    "name": "distribute_by",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn distribute_by(&mut self, value: Vec<ast::Expr>) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        338,
+        5
+      ],
+      "end": [
+        341,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 113,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ast::Expr",
+                              "id": 607,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "113": "alloc::vec::Vec",
+      "607": "sqlparser::ast::Expr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "754",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-6c11a299578c6712b9bfd38a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9bf1d492d5a6f85942dae91b",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::flatten_table_aliases_empty",
+    "name": "flatten_table_aliases_empty",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn flatten_table_aliases_empty(&self) -> bool",
+    "docs": "Returns true if no FLATTEN table aliases have been registered.",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        189,
+        5
+      ],
+      "end": [
+        191,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "729",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-9bf1d492d5a6f85942dae91b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e40b2a67e10b3b3acb12f2c0",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::from",
+    "name": "from",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn from(&mut self, value: Vec<TableWithJoinsBuilder>) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        256,
+        5
+      ],
+      "end": [
+        259,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 113,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "TableWithJoinsBuilder",
+                              "id": 743,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "113": "alloc::vec::Vec",
+      "743": "datafusion_sql::unparser::ast::TableWithJoinsBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "742",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-e40b2a67e10b3b3acb12f2c0",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a9039e2fe93924cd63d15bb7",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::group_by",
+    "name": "group_by",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn group_by(&mut self, value: ast::GroupByExpr) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        330,
+        5
+      ],
+      "end": [
+        333,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "ast::GroupByExpr",
+                  "id": 752,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "752": "sqlparser::ast::query::GroupByExpr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "751",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-a9039e2fe93924cd63d15bb7",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "22264abafc317681894d2418",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::has_selection",
+    "name": "has_selection",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn has_selection(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        267,
+        5
+      ],
+      "end": [
+        269,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "746",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-22264abafc317681894d2418",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1a520731d10960a2accb427b",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::having",
+    "name": "having",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn having(&mut self, value: Option<ast::Expr>) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        346,
+        5
+      ],
+      "end": [
+        349,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 115,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ast::Expr",
+                              "id": 607,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "115": "core::option::Option",
+      "607": "sqlparser::ast::Expr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "756",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-1a520731d10960a2accb427b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "dcc9f8cc90367f1d27095a08",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::into",
+    "name": "into",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn into(&mut self, value: Option<ast::SelectInto>) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        252,
+        5
+      ],
+      "end": [
+        255,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 115,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ast::SelectInto",
+                              "id": 741,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "115": "core::option::Option",
+      "741": "sqlparser::ast::query::SelectInto"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "740",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-dcc9f8cc90367f1d27095a08",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4fe28c6469700be845af577a",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::is_flatten_table_alias",
+    "name": "is_flatten_table_alias",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn is_flatten_table_alias(&self, alias: &str) -> bool",
+    "docs": "Returns true if the given table alias refers to a FLATTEN relation.",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        194,
+        5
+      ],
+      "end": [
+        196,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "alias",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "primitive": "str"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "730",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-4fe28c6469700be845af577a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "806cd7f0c8ff18d9464d40f4",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::lateral_views",
+    "name": "lateral_views",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn lateral_views(&mut self, value: Vec<ast::LateralView>) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        270,
+        5
+      ],
+      "end": [
+        273,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 113,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ast::LateralView",
+                              "id": 748,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "113": "alloc::vec::Vec",
+      "748": "sqlparser::ast::query::LateralView"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "747",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-806cd7f0c8ff18d9464d40f4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "036c64aa2a4491f2c90c03a2",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::named_window",
+    "name": "named_window",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn named_window(&mut self, value: Vec<ast::NamedWindowDefinition>) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        350,
+        5
+      ],
+      "end": [
+        353,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 113,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ast::NamedWindowDefinition",
+                              "id": 758,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "113": "alloc::vec::Vec",
+      "758": "sqlparser::ast::query::NamedWindowDefinition"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "757",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-036c64aa2a4491f2c90c03a2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "59f9c889ecf9c008ba0c5a3f",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::next_flatten_alias",
+    "name": "next_flatten_alias",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn next_flatten_alias(&mut self) -> String",
+    "docs": "Generate a unique alias for a LATERAL FLATTEN relation\n(`_unnest_1`, `_unnest_2`, …). Each call returns a fresh name.",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        178,
+        5
+      ],
+      "end": [
+        181,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "String",
+              "id": 69,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "69": "alloc::string::String"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "727",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-59f9c889ecf9c008ba0c5a3f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "67d6c3018d2acaf2d0de2e5c",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::pop_from",
+    "name": "pop_from",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn pop_from(&mut self) -> Option<TableWithJoinsBuilder>",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        264,
+        5
+      ],
+      "end": [
+        266,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 115,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "TableWithJoinsBuilder",
+                          "id": 743,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "115": "core::option::Option",
+      "743": "datafusion_sql::unparser::ast::TableWithJoinsBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "745",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-67d6c3018d2acaf2d0de2e5c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "68793dd30f5de01c103c7006",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::pop_projections",
+    "name": "pop_projections",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn pop_projections(&mut self) -> Vec<ast::SelectItem>",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        223,
+        5
+      ],
+      "end": [
+        225,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 113,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ast::SelectItem",
+                          "id": 737,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "113": "alloc::vec::Vec",
+      "737": "sqlparser::ast::query::SelectItem"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "738",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-68793dd30f5de01c103c7006",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "32a01d9f3ff66c0303f19768",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::projection",
+    "name": "projection",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn projection(&mut self, value: Vec<ast::SelectItem>) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        219,
+        5
+      ],
+      "end": [
+        222,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 113,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ast::SelectItem",
+                              "id": 737,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "113": "alloc::vec::Vec",
+      "737": "sqlparser::ast::query::SelectItem"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "736",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-32a01d9f3ff66c0303f19768",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2fc02ea194ca4cb78249b2e4",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::push_from",
+    "name": "push_from",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn push_from(&mut self, value: TableWithJoinsBuilder) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        260,
+        5
+      ],
+      "end": [
+        263,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "TableWithJoinsBuilder",
+                  "id": 743,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "743": "datafusion_sql::unparser::ast::TableWithJoinsBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "744",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-2fc02ea194ca4cb78249b2e4",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "998b8d6c2f014d3a7cc91a0c",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::qualify",
+    "name": "qualify",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn qualify(&mut self, value: Option<ast::Expr>) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        354,
+        5
+      ],
+      "end": [
+        357,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 115,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ast::Expr",
+                              "id": 607,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "115": "core::option::Option",
+      "607": "sqlparser::ast::Expr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "759",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-998b8d6c2f014d3a7cc91a0c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ebe95e9980a061a2dc5df0fe",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::replace_mark",
+    "name": "replace_mark",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn replace_mark(&mut self, existing_expr: &ast::Expr, value: &ast::Expr) -> &mut Self",
+    "docs": "Replaces the selection with a new value.\n\nThis function is used to replace a specific expression within the selection.\nUnlike the `selection` method which combines existing and new selections with AND,\nthis method searches for and replaces occurrences of a specific expression.\n\nThis method is primarily used to modify LEFT MARK JOIN expressions.\nWhen processing a LEFT MARK JOIN, we need to replace the placeholder expression\nwith the actual join condition in the selection clause.\n\n# Arguments\n\n* `existing_expr` - The expression to replace\n* `value` - The new expression to set as the selection",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        289,
+        5
+      ],
+      "end": [
+        303,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "existing_expr",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ast::Expr",
+                      "id": 607,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ast::Expr",
+                      "id": 607,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "607": "sqlparser::ast::Expr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "749",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-ebe95e9980a061a2dc5df0fe",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "671faab62e44da5f55be970b",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::selection",
+    "name": "selection",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn selection(&mut self, value: Option<ast::Expr>) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        305,
+        5
+      ],
+      "end": [
+        329,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 115,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ast::Expr",
+                              "id": 607,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "115": "core::option::Option",
+      "607": "sqlparser::ast::Expr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "750",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-671faab62e44da5f55be970b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ad988c5c5bbfd10c1a1dcf40",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::sort_by",
+    "name": "sort_by",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn sort_by(&mut self, value: Vec<ast::OrderByExpr>) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        342,
+        5
+      ],
+      "end": [
+        345,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 113,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ast::OrderByExpr",
+                              "id": 200,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "113": "alloc::vec::Vec",
+      "200": "sqlparser::ast::query::OrderByExpr"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "755",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-ad988c5c5bbfd10c1a1dcf40",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b0ae7065e6d492377ded78f7",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::top",
+    "name": "top",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn top(&mut self, value: Option<ast::Top>) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        215,
+        5
+      ],
+      "end": [
+        218,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 115,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ast::Top",
+                              "id": 735,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "115": "core::option::Option",
+      "735": "sqlparser::ast::query::Top"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "734",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-b0ae7065e6d492377ded78f7",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "439e9276e286375c8bcaf462",
+    "path": "datafusion_sql::unparser::ast::SelectBuilder::value_table_mode",
+    "name": "value_table_mode",
+    "owner": "datafusion_sql::unparser::ast::SelectBuilder",
+    "crate": "datafusion-sql",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn value_table_mode(&mut self, value: Option<ast::ValueTableMode>) -> &mut Self",
+    "docs": "",
+    "span": {
+      "filename": "src/unparser/ast.rs",
+      "begin": [
+        358,
+        5
+      ],
+      "end": [
+        361,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 115,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ast::ValueTableMode",
+                              "id": 761,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "Self"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "115": "core::option::Option",
+      "761": "sqlparser::ast::query::ValueTableMode"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SelectBuilder",
+          "id": "datafusion_sql::unparser::ast::SelectBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/unparser/ast.rs",
+        "begin": [
+          175,
+          1
+        ],
+        "end": [
+          424,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "36b97b27c6ca9e782440f662cbc222b9b3eae26da0e248b3e8ebf8a8ed14be58",
+      "format_version": 61,
+      "item_id": "760",
+      "origin": "https://docs.rs/crate/datafusion-sql/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_sql.unparser.ast.SelectBuilder.md",
+    "record_file": "operations/datafusion_sql.unparser.ast.SelectBuilder.json",
+    "anchor": "op-439e9276e286375c8bcaf462",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

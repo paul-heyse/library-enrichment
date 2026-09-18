@@ -1,0 +1,2676 @@
+[
+  {
+    "id": "94894eaf9e5f6b785baca8ca",
+    "path": "object_store::ObjectStore",
+    "name": "ObjectStore",
+    "owner": null,
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "trait",
+    "signature": "trait ObjectStore: std::fmt::Display + Send + Sync + Debug + 'static",
+    "docs": "Universal API for object store services.\n\nSee the [module-level documentation](crate) for a high level overview and\nexamples. See [`ObjectStoreExt`] for additional convenience methods.\n\n# Contract\nThis trait is a contract between object store _implementations_\n(e.g. providers, wrappers) and the `object_store` crate itself. It is\nintended to be the minimum API required for an object store.\n\nThe [`ObjectStoreExt`] acts as an API/contract between `object_store` and\nthe store _users_ and provides additional methods that may be simpler to use\nbut overlap in functionality with [`ObjectStore`].\n\n# Clone\nIf a store implements [`Clone`], that will only clone the handle to the underlying data. It will NOT clone/fork the\nactual key-value data. Hence, the cloned instance and the original instance share the same state.\n\n# Minimal Default Implementations\nThere are only a few default implementations for methods in this trait by\ndesign. This was different from versions prior to `0.13.0`, which had many\nmore default implementations. Default implementations are convenient for\nusers, but error-prone for implementors as they require keeping the\nconvenience APIs correctly in sync.\n\nAs of version 0.13.0, most methods on [`ObjectStore`] must be implemented, and\nthe convenience methods have been moved to the [`ObjectStoreExt`] trait as\ndescribed above. See [#385] for more details.\n\n[#385]: https://github.com/apache/arrow-rs-object-store/issues/385\n\n# Wrappers\nIf you wrap an [`ObjectStore`] -- e.g. to add observability -- you SHOULD\nimplement all trait methods. This ensures that defaults implementations\nthat are overwritten by the wrapped store are also used by the wrapper.\nFor example:\n\n```ignore\nstruct MyStore {\n    ...\n}\n\n#[async_trait]\nimpl ObjectStore for MyStore {\n    // implement custom ranges handling\n    async fn get_ranges(\n        &self,\n        location: &Path,\n        ranges: &[Range<u64>],\n    ) -> Result<Vec<Bytes>> {\n        ...\n    }\n\n    ...\n}\n\nstruct Wrapper {\n    inner: Arc<dyn ObjectStore>,\n}\n\n#[async_trait]\n#[deny(clippy::missing_trait_methods)]\nimpl ObjectStore for Wrapper {\n    // If we would not implement this method,\n    // we would get the trait default and not\n    // use the actual implementation of `inner`.\n    async fn get_ranges(\n        &self,\n        location: &Path,\n        ranges: &[Range<u64>],\n    ) -> Result<Vec<Bytes>> {\n        ...\n    }\n\n    ...\n}\n```\n\nTo automatically detect this issue, use\n[`#[deny(clippy::missing_trait_methods)]`](https://rust-lang.github.io/rust-clippy/master/index.html#missing_trait_methods).\n\n# Upgrade Guide for 0.13.0\n\nUpgrading to object_store 0.13.0 from an earlier version typically involves:\n\n1. Add a `use` for [`ObjectStoreExt`] to solve the error\n\n```text\nerror[E0599]: no method named `put` found for reference `&dyn object_store::ObjectStore` in the current scope\n   --> datafusion/datasource/src/url.rs:993:14\n```\n\n2. Remove any (now) redundant implementations (such as `ObjectStore::put`) from any\n  `ObjectStore` implementations to resolve the error\n\n```text\nerror[E0407]: method `put` is not a member of trait `ObjectStore`\n    --> datafusion/datasource/src/url.rs:1103:9\n     |\n```\n\n3. Convert `ObjectStore::delete` to [`ObjectStore::delete_stream`] (see documentation\n   on that method for details and examples)\n\n4. Combine `ObjectStore::copy` and `ObjectStore::copy_if_not_exists` implementations into\n   [`ObjectStore::copy_opts`] (see documentation on that method for details and examples)\n\n5. Update `object_store::Error::NotImplemented` to include the name of the missing method\n\nFor example, change instances of\n```text\nobject_store::Error::NotImplemented\n```\nto\n```\nobject_store::Error::NotImplemented {\n   operation: \"put\".to_string(),\n   implementer: \"RequestCountingObjectStore\".to_string(),\n };\n```\n",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        746,
+        1
+      ],
+      "end": [
+        1134,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          74,
+          575,
+          927,
+          928,
+          3318,
+          2753,
+          3296,
+          3319,
+          3320,
+          3321
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "std::fmt::Display",
+                "id": 279,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 88,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 90,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Debug",
+                "id": 156,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "outlives": "'static"
+          }
+        ],
+        "implementations": [
+          560,
+          905,
+          1068,
+          1344,
+          1394,
+          1477,
+          1563,
+          1610,
+          1928,
+          2055,
+          3333,
+          3344
+        ]
+      }
+    },
+    "type_references": {
+      "279": "core::fmt::Display",
+      "88": "core::marker::Send",
+      "90": "core::marker::Sync",
+      "156": "core::fmt::Debug"
+    },
+    "impl_context": null,
+    "links": {
+      "`ObjectStore::copy_opts`": 3320,
+      "`ObjectStore::delete_stream`": 3318,
+      "`ObjectStoreExt`": 515,
+      "`ObjectStore`": 514,
+      "crate": 3322,
+      "`Clone`": 110
+    },
+    "link_paths": {
+      "`ObjectStore::copy_opts`": null,
+      "`ObjectStore::delete_stream`": null,
+      "`ObjectStoreExt`": "object_store::ObjectStoreExt",
+      "`ObjectStore`": "object_store::ObjectStore",
+      "crate": "object_store",
+      "`Clone`": "core::clone::Clone"
+    },
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "514",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.ObjectStore.md",
+    "record_file": "operations/object_store.ObjectStore.json",
+    "anchor": "op-94894eaf9e5f6b785baca8ca",
+    "aliases": [
+      "datafusion::object_store::ObjectStore"
+    ],
+    "resolved_doc_links": {
+      "`ObjectStore::copy_opts`": "../operations/object_store.ObjectStore.md#op-bf8918868a8df49bc2d03102",
+      "`ObjectStore::delete_stream`": "../operations/object_store.ObjectStore.md#op-f0edb1771fce4df7c490c451",
+      "`ObjectStoreExt`": "../operations/object_store.ObjectStoreExt.md#op-20c376c84f546ecb167a6a88",
+      "`ObjectStore`": "../operations/object_store.ObjectStore.md#op-94894eaf9e5f6b785baca8ca",
+      "crate": "../modules/object_store.md#op-61af97d6b5407781ed1810a8"
+    }
+  },
+  {
+    "id": "bf8918868a8df49bc2d03102",
+    "path": "object_store::ObjectStore::copy_opts",
+    "name": "copy_opts",
+    "owner": "object_store::ObjectStore",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()>",
+    "docs": "Copy an object from one path to another in the same object store.",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        1111,
+        5
+      ],
+      "end": [
+        1111,
+        91
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds)]"
+      },
+      {
+        "must_use": {
+          "reason": null
+        }
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "from",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "to",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life2",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "CopyOptions",
+                  "id": 559,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "tuple": []
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life2",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life2",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false
+      }
+    },
+    "type_references": {
+      "495": "object_store::path::Path",
+      "559": "object_store::CopyOptions",
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "88": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "3320",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.ObjectStore.md",
+    "record_file": "operations/object_store.ObjectStore.json",
+    "anchor": "op-bf8918868a8df49bc2d03102",
+    "aliases": [
+      "datafusion::object_store::ObjectStore::copy_opts"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f0edb1771fce4df7c490c451",
+    "path": "object_store::ObjectStore::delete_stream",
+    "name": "delete_stream",
+    "owner": "object_store::ObjectStore",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn delete_stream(&self, locations: BoxStream<'static, Result<Path>>) -> BoxStream<'static, Result<Path>>",
+    "docs": "Delete all the objects at the specified locations\n\nWhen supported, this method will use bulk operations that delete more\nthan one object per a request. Otherwise, the implementation may call\nthe single object delete method for each location.\n\n# Bulk Delete Support\n\nThe following backends support native bulk delete operations:\n\n- **AWS (S3)**: Uses the native [DeleteObjects] API with batches of up to 1000 objects\n- **Azure**: Uses the native [Blob Batch] API with batches of up to 256 objects\n\nThe following backends use concurrent individual delete operations:\n\n- **GCP**: Performs individual delete requests with up to 10 concurrent operations\n- **HTTP**: Performs individual delete requests with up to 10 concurrent operations\n- **Local**: Performs individual file deletions with up to 10 concurrent operations\n- **Memory**: Performs individual in-memory deletions sequentially\n\n[DeleteObjects]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html\n[Blob Batch]: https://learn.microsoft.com/en-us/rest/api/storageservices/blob-batch\n\nThe returned stream yields the results of the delete operations in the\nsame order as the input locations. However, some errors will be from\nan overall call to a bulk delete operation, and not from a specific\nlocation.\n\nIf the object did not exist, the result may be an error or a success,\ndepending on the behavior of the underlying store. For example, local\nfilesystems, GCP, and Azure return an error, while S3 and in-memory will\nreturn Ok. If it is an error, it will be [`Error::NotFound`].\n\n```ignore-wasm32\n# use futures_util::{StreamExt, TryStreamExt};\n# use object_store::local::LocalFileSystem;\n# async fn example() -> Result<(), Box<dyn std::error::Error>> {\n# let root = tempfile::TempDir::new().unwrap();\n# let store = LocalFileSystem::new_with_prefix(root.path()).unwrap();\n# use object_store::{ObjectStore, ObjectStoreExt, ObjectMeta};\n# use object_store::path::Path;\n# use futures_util::{StreamExt, TryStreamExt};\n#\n// Create two objects\nstore.put(&Path::from(\"foo\"), \"foo\".into()).await?;\nstore.put(&Path::from(\"bar\"), \"bar\".into()).await?;\n\n// List object\nlet locations = store.list(None).map_ok(|m| m.location).boxed();\n\n// Delete them\nstore.delete_stream(locations).try_collect::<Vec<Path>>().await?;\n# Ok(())\n# }\n# let rt = tokio::runtime::Builder::new_current_thread().build().unwrap();\n# rt.block_on(example()).unwrap();\n```\n\nNote: Before version 0.13, `delete_stream` has a default implementation\nthat deletes each object with up to 10 concurrent requests. This default\nbehavior has been removed, and each implementation must now provide its\nown `delete_stream` implementation explicitly. The following example\nshows how to implement `delete_stream` to get the previous default\nbehavior.\n\n```\n# use async_trait::async_trait;\n# use futures_util::stream::{BoxStream, StreamExt};\n# use object_store::path::Path;\n# use object_store::{\n#     CopyOptions, GetOptions, GetResult, ListResult, MultipartUpload, ObjectMeta, ObjectStore,\n#     PutMultipartOptions, PutOptions, PutPayload, PutResult, Result,\n# };\n# use std::fmt;\n# use std::fmt::Debug;\n# use std::sync::Arc;\n#\n# struct ExampleClient;\n#\n# impl ExampleClient {\n#     async fn delete(&self, _path: &Path) -> Result<()> {\n#         Ok(())\n#     }\n# }\n#\n# struct ExampleStore {\n#     client: Arc<ExampleClient>,\n# }\n#\n# impl Debug for ExampleStore {\n#     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {\n#         write!(f, \"ExampleStore\")\n#     }\n# }\n#\n# impl fmt::Display for ExampleStore {\n#     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {\n#         write!(f, \"ExampleStore\")\n#     }\n# }\n#\n# #[async_trait]\n# impl ObjectStore for ExampleStore {\n#     async fn put_opts(&self, _: &Path, _: PutPayload, _: PutOptions) -> Result<PutResult> {\n#         todo!()\n#     }\n#\n#     async fn put_multipart_opts(\n#         &self,\n#         _: &Path,\n#         _: PutMultipartOptions,\n#     ) -> Result<Box<dyn MultipartUpload>> {\n#         todo!()\n#     }\n#\n#     async fn get_opts(&self, _: &Path, _: GetOptions) -> Result<GetResult> {\n#         todo!()\n#     }\n#\nfn delete_stream(\n    &self,\n    locations: BoxStream<'static, Result<Path>>,\n) -> BoxStream<'static, Result<Path>> {\n    let client = Arc::clone(&self.client);\n    locations\n        .map(move |location| {\n            let client = Arc::clone(&client);\n            async move {\n                let location = location?;\n                client.delete(&location).await?;\n                Ok(location)\n            }\n        })\n        .buffered(10)\n        .boxed()\n}\n#\n#     fn list(&self, _: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>> {\n#         todo!()\n#     }\n#\n#     async fn list_with_delimiter(&self, _: Option<&Path>) -> Result<ListResult> {\n#         todo!()\n#     }\n#\n#     async fn copy_opts(&self, _: &Path, _: &Path, _: CopyOptions) -> Result<()> {\n#         todo!()\n#     }\n# }\n#\n# async fn example() {\n#     let store = ExampleStore { client: Arc::new(ExampleClient) };\n#     let paths = futures_util::stream::iter(vec![Ok(Path::from(\"foo\")), Ok(Path::from(\"bar\"))]).boxed();\n#     let results = store.delete_stream(paths).collect::<Vec<_>>().await;\n#     assert_eq!(results.len(), 2);\n#     assert_eq!(results[0].as_ref().unwrap(), &Path::from(\"foo\"));\n#     assert_eq!(results[1].as_ref().unwrap(), &Path::from(\"bar\"));\n# }\n#\n# let rt = tokio::runtime::Builder::new_current_thread().build().unwrap();\n# rt.block_on(example());\n```",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        1066,
+        5
+      ],
+      "end": [
+        1069,
+        43
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "locations",
+              {
+                "resolved_path": {
+                  "path": "BoxStream",
+                  "id": 553,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'static"
+                        },
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Result",
+                              "id": 85,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Path",
+                                          "id": 495,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BoxStream",
+              "id": 553,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'static"
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Result",
+                          "id": 85,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Path",
+                                      "id": 495,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false
+      }
+    },
+    "type_references": {
+      "553": "futures_core::stream::BoxStream",
+      "85": "object_store::Result",
+      "495": "object_store::path::Path"
+    },
+    "impl_context": null,
+    "links": {
+      "`Error::NotFound`": 3317
+    },
+    "link_paths": {
+      "`Error::NotFound`": "object_store::Error::NotFound"
+    },
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "3318",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.ObjectStore.md",
+    "record_file": "operations/object_store.ObjectStore.json",
+    "anchor": "op-f0edb1771fce4df7c490c451",
+    "aliases": [
+      "datafusion::object_store::ObjectStore::delete_stream"
+    ],
+    "resolved_doc_links": {
+      "`Error::NotFound`": "../operations/object_store.Error.md#op-05c916c94bd0100476adb324"
+    }
+  },
+  {
+    "id": "0eb8121eee6ac22c92ee9da0",
+    "path": "object_store::ObjectStore::get_opts",
+    "name": "get_opts",
+    "owner": "object_store::ObjectStore",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult>",
+    "docs": "Perform a get request with options\n\n## Example\n\nThis example uses a basic local filesystem object store to get an object with a specific etag.\nOn the local filesystem, supplying an invalid etag will error.\nVersioned object stores will return the specified object version, if it exists.\n\n```ignore-wasm32\n# use object_store::local::LocalFileSystem;\n# use tempfile::tempdir;\n# use object_store::{path::Path, ObjectStore, ObjectStoreExt, GetOptions};\nasync fn get_opts_example() {\n    let tmp = tempdir().unwrap();\n    let store = LocalFileSystem::new_with_prefix(tmp.path()).unwrap();\n    let location = Path::from(\"example.txt\");\n    let content = b\"Hello, Object Store!\";\n\n    // Put the object into the store\n    store\n        .put(&location, content.as_ref().into())\n        .await\n        .expect(\"Failed to put object\");\n\n    // Get the object from the store to figure out the right etag\n    let result: object_store::GetResult = store.get(&location).await.expect(\"Failed to get object\");\n\n    let etag = result.meta.e_tag.expect(\"ETag should be present\");\n\n    // Get the object from the store with range and etag\n    let bytes = store\n        .get_opts(\n            &location,\n            GetOptions::new()\n                .with_if_match(Some(etag.clone())),\n        )\n        .await\n        .expect(\"Failed to get object with range and etag\")\n        .bytes()\n        .await\n        .expect(\"Failed to read bytes\");\n\n    println!(\n        \"Retrieved with ETag {}: {}\",\n        etag,\n        String::from_utf8_lossy(&bytes)\n    );\n\n    // Show that if the etag does not match, we get an error\n    let wrong_etag = \"wrong-etag\".to_string();\n    match store\n        .get_opts(\n            &location,\n            GetOptions::new().with_if_match(Some(wrong_etag))\n        )\n        .await\n    {\n        Ok(_) => println!(\"Unexpectedly succeeded with wrong ETag\"),\n        Err(e) => println!(\"On a non-versioned object store, getting an invalid ETag ('wrong-etag') results in an error as expected: {}\", e),\n    }\n}\n```\n\nTo retrieve a range of bytes from a versioned object, specify the range in the [`GetOptions`] supplied to this method.\n\n```ignore-wasm32\n# use object_store::local::LocalFileSystem;\n# use tempfile::tempdir;\n# use object_store::{path::Path, ObjectStore, ObjectStoreExt, GetOptions};\nasync fn get_opts_range_example() {\n    let tmp = tempdir().unwrap();\n    let store = LocalFileSystem::new_with_prefix(tmp.path()).unwrap();\n    let location = Path::from(\"example.txt\");\n    let content = b\"Hello, Object Store!\";\n\n    // Put the object into the store\n    store\n        .put(&location, content.as_ref().into())\n        .await\n        .expect(\"Failed to put object\");\n\n    // Get the object from the store to figure out the right etag\n    let result: object_store::GetResult = store.get(&location).await.expect(\"Failed to get object\");\n\n    let etag = result.meta.e_tag.expect(\"ETag should be present\");\n\n    // Get the object from the store with range and etag\n    let bytes = store\n        .get_opts(\n            &location,\n            GetOptions::new()\n                .with_range(Some(0..5))\n                .with_if_match(Some(etag.clone())),\n        )\n        .await\n        .expect(\"Failed to get object with range and etag\")\n        .bytes()\n        .await\n        .expect(\"Failed to read bytes\");\n\n    println!(\n        \"Retrieved range [0-5] with ETag {}: {}\",\n        etag,\n        String::from_utf8_lossy(&bytes)\n    );\n\n    // Show that if the etag does not match, we get an error\n    let wrong_etag = \"wrong-etag\".to_string();\n    match store\n        .get_opts(\n            &location,\n            GetOptions::new().with_range(Some(0..5)).with_if_match(Some(wrong_etag))\n        )\n        .await\n    {\n        Ok(_) => println!(\"Unexpectedly succeeded with wrong ETag\"),\n        Err(e) => println!(\"On a non-versioned object store, getting an invalid ETag ('wrong-etag') results in an error as expected: {}\", e),\n    }\n}\n```",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        891,
+        5
+      ],
+      "end": [
+        891,
+        89
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds)]"
+      },
+      {
+        "must_use": {
+          "reason": null
+        }
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "location",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "GetOptions",
+                  "id": 551,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "GetResult",
+                                                                        "id": 502,
+                                                                        "args": null
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false
+      }
+    },
+    "type_references": {
+      "495": "object_store::path::Path",
+      "551": "object_store::GetOptions",
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "502": "object_store::GetResult",
+      "88": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {
+      "`GetOptions`": 551
+    },
+    "link_paths": {
+      "`GetOptions`": "object_store::GetOptions"
+    },
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "927",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.ObjectStore.md",
+    "record_file": "operations/object_store.ObjectStore.json",
+    "anchor": "op-0eb8121eee6ac22c92ee9da0",
+    "aliases": [
+      "datafusion::object_store::ObjectStore::get_opts"
+    ],
+    "resolved_doc_links": {
+      "`GetOptions`": "../operations/object_store.GetOptions.md#op-eb3de57203b85138a693ae44"
+    }
+  },
+  {
+    "id": "89edf38f0aecae998b9e9357",
+    "path": "object_store::ObjectStore::get_ranges",
+    "name": "get_ranges",
+    "owner": "object_store::ObjectStore",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn get_ranges(&self, location: &Path, ranges: &[Range<u64>]) -> Result<Vec<Bytes>>",
+    "docs": "Return the bytes that are stored at the specified location\nin the given byte ranges",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        895,
+        5
+      ],
+      "end": [
+        902,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      },
+      {
+        "must_use": {
+          "reason": null
+        }
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "location",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "ranges",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life2",
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Range",
+                        "id": 504,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "primitive": "u64"
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "Vec",
+                                                                        "id": 566,
+                                                                        "args": {
+                                                                          "angle_bracketed": {
+                                                                            "args": [
+                                                                              {
+                                                                                "type": {
+                                                                                  "resolved_path": {
+                                                                                    "path": "Bytes",
+                                                                                    "id": 505,
+                                                                                    "args": null
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            ],
+                                                                            "constraints": []
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life2",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life2",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "495": "object_store::path::Path",
+      "504": "core::ops::range::Range",
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "566": "alloc::vec::Vec",
+      "505": "bytes::bytes::Bytes",
+      "88": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "928",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.ObjectStore.md",
+    "record_file": "operations/object_store.ObjectStore.json",
+    "anchor": "op-89edf38f0aecae998b9e9357",
+    "aliases": [
+      "datafusion::object_store::ObjectStore::get_ranges"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "eaf50d65c0fa0bf3019d428b",
+    "path": "object_store::ObjectStore::list",
+    "name": "list",
+    "owner": "object_store::ObjectStore",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>>",
+    "docs": "List all the objects with the given prefix.\n\nPrefixes are evaluated on a path segment basis, i.e. `foo/bar` is a prefix of `foo/bar/x` but not of\n`foo/bar_baz/x`. List is recursive, i.e. `foo/bar/more/x` will be included.\n\nNote: the order of returned [`ObjectMeta`] is not guaranteed\n\nFor more advanced listing see [`PaginatedListStore`](list::PaginatedListStore)",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        1079,
+        5
+      ],
+      "end": [
+        1079,
+        85
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "prefix",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 44,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "Path",
+                                  "id": 495,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BoxStream",
+              "id": 553,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'static"
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Result",
+                          "id": 85,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "ObjectMeta",
+                                      "id": 507,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false
+      }
+    },
+    "type_references": {
+      "44": "core::option::Option",
+      "495": "object_store::path::Path",
+      "553": "futures_core::stream::BoxStream",
+      "85": "object_store::Result",
+      "507": "object_store::ObjectMeta"
+    },
+    "impl_context": null,
+    "links": {
+      "list::PaginatedListStore": 574,
+      "`ObjectMeta`": 507
+    },
+    "link_paths": {
+      "list::PaginatedListStore": "object_store::list::PaginatedListStore",
+      "`ObjectMeta`": "object_store::ObjectMeta"
+    },
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "2753",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.ObjectStore.md",
+    "record_file": "operations/object_store.ObjectStore.json",
+    "anchor": "op-eaf50d65c0fa0bf3019d428b",
+    "aliases": [
+      "datafusion::object_store::ObjectStore::list"
+    ],
+    "resolved_doc_links": {
+      "list::PaginatedListStore": "../operations/object_store.list.PaginatedListStore.md#op-d20f95ad769f16324ef55fa5",
+      "`ObjectMeta`": "../operations/object_store.ObjectMeta.md#op-84641755fb7ee613fe92d518"
+    }
+  },
+  {
+    "id": "5534cc89a3fb17e5a0e15d20",
+    "path": "object_store::ObjectStore::list_with_delimiter",
+    "name": "list_with_delimiter",
+    "owner": "object_store::ObjectStore",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult>",
+    "docs": "List objects with the given prefix and an implementation specific\ndelimiter. Returns common prefixes (directories) in addition to object\nmetadata.\n\nPrefixes are evaluated on a path segment basis, i.e. `foo/bar` is a prefix of `foo/bar/x` but not of\n`foo/bar_baz/x`. List is not recursive, i.e. `foo/bar/more/x` will not be included.",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        1108,
+        5
+      ],
+      "end": [
+        1108,
+        86
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds)]"
+      },
+      {
+        "must_use": {
+          "reason": null
+        }
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "prefix",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 44,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": "'life1",
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "Path",
+                                  "id": 495,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "ListResult",
+                                                                        "id": 557,
+                                                                        "args": null
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false
+      }
+    },
+    "type_references": {
+      "44": "core::option::Option",
+      "495": "object_store::path::Path",
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "557": "object_store::ListResult",
+      "88": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "3319",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.ObjectStore.md",
+    "record_file": "operations/object_store.ObjectStore.json",
+    "anchor": "op-5534cc89a3fb17e5a0e15d20",
+    "aliases": [
+      "datafusion::object_store::ObjectStore::list_with_delimiter"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6c9f6dac06dc9bcb986fc957",
+    "path": "object_store::ObjectStore::list_with_offset",
+    "name": "list_with_offset",
+    "owner": "object_store::ObjectStore",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>>",
+    "docs": "List all the objects with the given prefix and a location greater than `offset`\n\nSome stores, such as S3 and GCS, may be able to push `offset` down to reduce\nthe number of network requests required.\n\nThis returns an exclusive offset, i.e. objects at exactly `offset` will not be included.\n\nNote: the order of returned [`ObjectMeta`] is not guaranteed\n\nFor more advanced listing see [`PaginatedListStore`](list::PaginatedListStore)",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        1091,
+        5
+      ],
+      "end": [
+        1100,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "prefix",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 44,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "Path",
+                                  "id": 495,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "offset",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BoxStream",
+              "id": 553,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'static"
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Result",
+                          "id": 85,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "ObjectMeta",
+                                      "id": 507,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "44": "core::option::Option",
+      "495": "object_store::path::Path",
+      "553": "futures_core::stream::BoxStream",
+      "85": "object_store::Result",
+      "507": "object_store::ObjectMeta"
+    },
+    "impl_context": null,
+    "links": {
+      "list::PaginatedListStore": 574,
+      "`ObjectMeta`": 507
+    },
+    "link_paths": {
+      "list::PaginatedListStore": "object_store::list::PaginatedListStore",
+      "`ObjectMeta`": "object_store::ObjectMeta"
+    },
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "3296",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.ObjectStore.md",
+    "record_file": "operations/object_store.ObjectStore.json",
+    "anchor": "op-6c9f6dac06dc9bcb986fc957",
+    "aliases": [
+      "datafusion::object_store::ObjectStore::list_with_offset"
+    ],
+    "resolved_doc_links": {
+      "list::PaginatedListStore": "../operations/object_store.list.PaginatedListStore.md#op-d20f95ad769f16324ef55fa5",
+      "`ObjectMeta`": "../operations/object_store.ObjectMeta.md#op-84641755fb7ee613fe92d518"
+    }
+  },
+  {
+    "id": "27dfce2ef1fd51c4e2938336",
+    "path": "object_store::ObjectStore::put_multipart_opts",
+    "name": "put_multipart_opts",
+    "owner": "object_store::ObjectStore",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> Result<Box<dyn MultipartUpload>>",
+    "docs": "Perform a multipart upload with options\n\nClient should prefer [`ObjectStore::put_opts`] for small payloads, as streaming uploads\ntypically require multiple separate requests. See [`MultipartUpload`] for more information\n\nFor more advanced multipart uploads see [`MultipartStore`](multipart::MultipartStore)",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        765,
+        5
+      ],
+      "end": [
+        769,
+        43
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds)]"
+      },
+      {
+        "must_use": {
+          "reason": null
+        }
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "location",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "opts",
+              {
+                "resolved_path": {
+                  "path": "PutMultipartOptions",
+                  "id": 549,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "Box",
+                                                                        "id": 499,
+                                                                        "args": {
+                                                                          "angle_bracketed": {
+                                                                            "args": [
+                                                                              {
+                                                                                "type": {
+                                                                                  "dyn_trait": {
+                                                                                    "traits": [
+                                                                                      {
+                                                                                        "trait": {
+                                                                                          "path": "MultipartUpload",
+                                                                                          "id": 500,
+                                                                                          "args": null
+                                                                                        },
+                                                                                        "generic_params": []
+                                                                                      }
+                                                                                    ],
+                                                                                    "lifetime": null
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            ],
+                                                                            "constraints": []
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false
+      }
+    },
+    "type_references": {
+      "495": "object_store::path::Path",
+      "549": "object_store::PutMultipartOptions",
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "500": "object_store::upload::MultipartUpload",
+      "88": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {
+      "`ObjectStore::put_opts`": 74,
+      "multipart::MultipartStore": 569,
+      "`MultipartUpload`": 500
+    },
+    "link_paths": {
+      "`ObjectStore::put_opts`": null,
+      "multipart::MultipartStore": "object_store::multipart::MultipartStore",
+      "`MultipartUpload`": "object_store::upload::MultipartUpload"
+    },
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "575",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.ObjectStore.md",
+    "record_file": "operations/object_store.ObjectStore.json",
+    "anchor": "op-27dfce2ef1fd51c4e2938336",
+    "aliases": [
+      "datafusion::object_store::ObjectStore::put_multipart_opts"
+    ],
+    "resolved_doc_links": {
+      "`ObjectStore::put_opts`": "../operations/object_store.ObjectStore.md#op-4938238191db15fe350c71b9",
+      "multipart::MultipartStore": "../operations/object_store.multipart.MultipartStore.md#op-df886cc201d4dd79df33cad8",
+      "`MultipartUpload`": "../operations/object_store.upload.MultipartUpload.md#op-d1bf78ac32fe2ad950a9d5d0"
+    }
+  },
+  {
+    "id": "4938238191db15fe350c71b9",
+    "path": "object_store::ObjectStore::put_opts",
+    "name": "put_opts",
+    "owner": "object_store::ObjectStore",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult>",
+    "docs": "Save the provided `payload` to `location` with the given options\n\nThe operation is guaranteed to be atomic, it will either successfully\nwrite the entirety of `payload` to `location`, or fail. No clients\nshould be able to observe a partially written object",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        752,
+        5
+      ],
+      "end": [
+        757,
+        28
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds)]"
+      },
+      {
+        "must_use": {
+          "reason": null
+        }
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "location",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "payload",
+              {
+                "resolved_path": {
+                  "path": "PutPayload",
+                  "id": 496,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "opts",
+              {
+                "resolved_path": {
+                  "path": "PutOptions",
+                  "id": 547,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "PutResult",
+                                                                        "id": 497,
+                                                                        "args": null
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false
+      }
+    },
+    "type_references": {
+      "495": "object_store::path::Path",
+      "496": "object_store::payload::PutPayload",
+      "547": "object_store::PutOptions",
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "497": "object_store::PutResult",
+      "88": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "74",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.ObjectStore.md",
+    "record_file": "operations/object_store.ObjectStore.json",
+    "anchor": "op-4938238191db15fe350c71b9",
+    "aliases": [
+      "datafusion::object_store::ObjectStore::put_opts"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ed893287b7ec1c1637a55e09",
+    "path": "object_store::ObjectStore::rename_opts",
+    "name": "rename_opts",
+    "owner": "object_store::ObjectStore",
+    "crate": "object_store",
+    "version": "0.13.2",
+    "kind": "function",
+    "signature": "async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> Result<()>",
+    "docs": "Move an object from one path to another in the same object store.\n\nBy default, this is implemented as a copy and then delete source. It may not\ncheck when deleting source that it was the same object that was originally copied.",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        1117,
+        5
+      ],
+      "end": [
+        1133,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      },
+      {
+        "must_use": {
+          "reason": null
+        }
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "from",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "to",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life2",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 495,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "RenameOptions",
+                  "id": 1067,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 541,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 499,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 542,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 85,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "tuple": []
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 88,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life2",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life2",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true
+      }
+    },
+    "type_references": {
+      "495": "object_store::path::Path",
+      "1067": "object_store::RenameOptions",
+      "541": "core::pin::Pin",
+      "499": "alloc::boxed::Box",
+      "542": "core::future::future::Future",
+      "85": "object_store::Result",
+      "88": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "75c11b5df0ff67797f9a38b8047bb5a3705d57c38bf30c384200048b5c460a68",
+      "format_version": 57,
+      "item_id": "3321",
+      "origin": "https://docs.rs/crate/object_store/0.13.2/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/object_store.ObjectStore.md",
+    "record_file": "operations/object_store.ObjectStore.json",
+    "anchor": "op-ed893287b7ec1c1637a55e09",
+    "aliases": [
+      "datafusion::object_store::ObjectStore::rename_opts"
+    ],
+    "resolved_doc_links": {}
+  }
+]

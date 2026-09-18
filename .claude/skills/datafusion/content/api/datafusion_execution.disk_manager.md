@@ -10,6 +10,9 @@ Crate `datafusion-execution` · 8 public items · structured records in [`model/
 const DEFAULT_MAX_SPILL_MERGE_FAN_IN: usize = 0
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.disk_manager.DEFAULT_MAX_SPILL_MERGE_FAN_IN.md).
+
+
 ---
 
 ## DEFAULT_MAX_TEMP_DIRECTORY_SIZE
@@ -19,6 +22,9 @@ const DEFAULT_MAX_SPILL_MERGE_FAN_IN: usize = 0
 ```rust
 const DEFAULT_MAX_TEMP_DIRECTORY_SIZE: u64 = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.disk_manager.DEFAULT_MAX_TEMP_DIRECTORY_SIZE.md).
+
 
 ---
 
@@ -33,6 +39,9 @@ enum DiskManagerMode
 **Variants**: `OsTmpDirectory`, `Directories`, `Custom`, `Disabled`
 
 **Derives**: Clone, Debug, Default
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.disk_manager.DiskManagerMode.md).
+
 
 ---
 
@@ -65,6 +74,9 @@ fn used_disk_space(&self) -> u64
 fn with_max_temp_directory_size(self, max_temp_directory_size: u64) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.disk_manager.DiskManager.md).
+
+
 Manages files generated during query execution, e.g. spill files generated
 while processing dataset larger than available memory.
 
@@ -94,6 +106,9 @@ fn with_mode(self, mode: DiskManagerMode) -> Self
 fn with_temp_file_factory(self, temp_file_factory: Arc<dyn TempFileFactory>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.disk_manager.DiskManagerBuilder.md).
+
+
 Builder pattern for the [DiskManager] structure
 
 ---
@@ -120,6 +135,9 @@ fn write(&mut self, buf: &[u8]) -> std::io::Result<usize>
 ```rust
 fn finish(&mut self) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.disk_manager.FileSpillWriter.md).
+
 
 ---
 
@@ -157,6 +175,9 @@ fn read_stream(&self) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Res
 fn size(&self) -> Option<u64>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.disk_manager.RefCountedTempFile.md).
+
+
 A wrapper around a [`NamedTempFile`] that also contains
 a reference to its parent temporary directory.
 
@@ -182,6 +203,9 @@ struct SpillingProgress
 **Fields**: `current_bytes`, `active_files_count`
 
 **Derives**: Clone, Copy, Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.disk_manager.SpillingProgress.md).
+
 
 Information about the current disk usage for spilling
 

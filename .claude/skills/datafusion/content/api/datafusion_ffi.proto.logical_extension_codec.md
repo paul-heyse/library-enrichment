@@ -29,6 +29,9 @@ fn new_default(task_ctx_provider: &Arc<dyn TaskContextProvider>) -> Self
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.proto.logical_extension_codec.FFI_LogicalExtensionCodec.md).
+
+
 A stable struct for sharing [`LogicalExtensionCodec`] across FFI boundaries.
 
 ---
@@ -61,6 +64,9 @@ fn try_encode_udaf(&self, node: &AggregateUDF, buf: &mut Vec<u8>) -> Result<()>
 fn try_encode_udf(&self, node: &ScalarUDF, buf: &mut Vec<u8>) -> Result<()>
 fn try_encode_udwf(&self, node: &WindowUDF, buf: &mut Vec<u8>) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.proto.logical_extension_codec.ForeignLogicalExtensionCodec.md).
+
 
 This wrapper struct exists on the receiver side of the FFI interface, so it has
 no guarantees about being able to access the data in `private_data`. Any functions

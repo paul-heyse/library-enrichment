@@ -18,4 +18,7 @@ struct ArrowWriterOptions
 fn new() -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.file_options.arrow_writer.ArrowWriterOptions.md).
+
+
 ---

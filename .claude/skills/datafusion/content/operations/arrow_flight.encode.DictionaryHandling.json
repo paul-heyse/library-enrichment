@@ -1,0 +1,472 @@
+[
+  {
+    "id": "3909e2ed806a45e433fc92ad",
+    "path": "arrow_flight::encode::DictionaryHandling",
+    "name": "DictionaryHandling",
+    "owner": null,
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "enum",
+    "signature": "enum DictionaryHandling",
+    "docs": "Defines how a [`FlightDataEncoder`] encodes [`DictionaryArray`]s\n\n[`DictionaryArray`]: arrow_array::DictionaryArray\n\nIn the arrow flight protocol dictionary values and keys are sent as two separate messages.\nWhen a sender is encoding a [`RecordBatch`] containing ['DictionaryArray'] columns, it will\nfirst send a dictionary batch (a batch with header `MessageHeader::DictionaryBatch`) containing\nthe dictionary values. The receiver is responsible for reading this batch and maintaining state that associates\nthose dictionary values with the corresponding array using the `dict_id` as a key.\n\nAfter sending the dictionary batch the sender will send the array data in a batch with header `MessageHeader::RecordBatch`.\nFor any dictionary array batches in this message, the encoded flight message will only contain the dictionary keys. The receiver\nis then responsible for rebuilding the `DictionaryArray` on the client side using the dictionary values from the DictionaryBatch message\nand the keys from the RecordBatch message.\n\nFor example, if we have a batch with a `TypedDictionaryArray<'_, UInt32Type, Utf8Type>` (a dictionary array where they keys are `u32` and the\nvalues are `String`), then the DictionaryBatch will contain a `StringArray` and the RecordBatch will contain a `UInt32Array`.\n\nNote that since `dict_id` defined in the `Schema` is used as a key to associate dictionary values to their arrays it is required that each\n`DictionaryArray` in a `RecordBatch` have a unique `dict_id`.\n\nThe current implementation does not support \"delta\" dictionaries so a new dictionary batch will be sent each time the encoder sees a\ndictionary which is not pointer-equal to the previously observed dictionary for a given `dict_id`.\n\nFor clients which may not support `DictionaryEncoding`, the `DictionaryHandling::Hydrate` method will bypass the process defined above\nand \"hydrate\" any `DictionaryArray` in the batch to their underlying value type (e.g. `TypedDictionaryArray<'_, UInt32Type, Utf8Type>` will\nbe sent as a `StringArray`). With this method all data will be sent in ``MessageHeader::RecordBatch` messages and the batch schema\nwill be adjusted so that all dictionary encoded fields are changed to fields of the dictionary value type.",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        469,
+        1
+      ],
+      "end": [
+        488,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "enum": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "has_stripped_variants": false,
+        "variants": [
+          1499,
+          1501
+        ],
+        "impls": [
+          1573,
+          1574,
+          1575,
+          1576,
+          1577,
+          1578,
+          1579,
+          1580,
+          1581,
+          1582,
+          1583,
+          1584,
+          1585,
+          1586,
+          1587,
+          1588,
+          1589,
+          1590,
+          1591,
+          1593,
+          1594,
+          1596
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`RecordBatch`": 1131,
+      "arrow_array::DictionaryArray": 1500,
+      "`FlightDataEncoder`": 1315
+    },
+    "link_paths": {
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch",
+      "arrow_array::DictionaryArray": "arrow_array::array::dictionary_array::DictionaryArray",
+      "`FlightDataEncoder`": "arrow_flight::encode::FlightDataEncoder"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1498",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.DictionaryHandling.md",
+    "record_file": "operations/arrow_flight.encode.DictionaryHandling.json",
+    "anchor": "op-3909e2ed806a45e433fc92ad",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "arrow_array::DictionaryArray": "../operations/arrow_array.array.dictionary_array.DictionaryArray.md#op-761ab0c11d727f026bdc2e47",
+      "`FlightDataEncoder`": "../operations/arrow_flight.encode.FlightDataEncoder.md#op-e4d1d137c901fe86782ae657"
+    }
+  },
+  {
+    "id": "1274858835cec039b729e6f3",
+    "path": "arrow_flight::encode::DictionaryHandling::Hydrate",
+    "name": "Hydrate",
+    "owner": "arrow_flight::encode::DictionaryHandling",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "variant",
+    "signature": "Hydrate",
+    "docs": "Expands to the underlying type (default). This likely sends more data\nover the network but requires less memory (dictionaries are not tracked)\nand is more compatible with other arrow flight client implementations\nthat may not support `DictionaryEncoding`\n\nSee also:\n* <https://github.com/apache/arrow-rs/issues/1206>",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        477,
+        5
+      ],
+      "end": [
+        477,
+        12
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": "plain",
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1499",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.DictionaryHandling.md",
+    "record_file": "operations/arrow_flight.encode.DictionaryHandling.json",
+    "anchor": "op-1274858835cec039b729e6f3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4ca86ac204d7df4411001d3a",
+    "path": "arrow_flight::encode::DictionaryHandling::Resend",
+    "name": "Resend",
+    "owner": "arrow_flight::encode::DictionaryHandling",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "variant",
+    "signature": "Resend",
+    "docs": "Send dictionary FlightData with every RecordBatch that contains a\n[`DictionaryArray`]. See [`Self::Hydrate`] for more tradeoffs. No\nattempt is made to skip sending the same (logical) dictionary values\ntwice.\n\n[`DictionaryArray`]: arrow_array::DictionaryArray\n\nThis requires identifying the different dictionaries in use and assigning",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        487,
+        5
+      ],
+      "end": [
+        487,
+        11
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": "plain",
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "arrow_array::DictionaryArray": 1500,
+      "`Self::Hydrate`": 1499
+    },
+    "link_paths": {
+      "arrow_array::DictionaryArray": "arrow_array::array::dictionary_array::DictionaryArray",
+      "`Self::Hydrate`": "arrow_flight::encode::DictionaryHandling::Hydrate"
+    },
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1501",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.DictionaryHandling.md",
+    "record_file": "operations/arrow_flight.encode.DictionaryHandling.json",
+    "anchor": "op-4ca86ac204d7df4411001d3a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "arrow_array::DictionaryArray": "../operations/arrow_array.array.dictionary_array.DictionaryArray.md#op-761ab0c11d727f026bdc2e47",
+      "`Self::Hydrate`": "../operations/arrow_flight.encode.DictionaryHandling.md#op-1274858835cec039b729e6f3"
+    }
+  },
+  {
+    "id": "cbcbe2d1bf34fbff75a15572",
+    "path": "arrow_flight::encode::DictionaryHandling::eq",
+    "name": "eq",
+    "owner": "arrow_flight::encode::DictionaryHandling",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &DictionaryHandling) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        468,
+        17
+      ],
+      "end": [
+        468,
+        26
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DictionaryHandling",
+                      "id": 1498,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1498": "arrow_flight::encode::DictionaryHandling"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "DictionaryHandling",
+          "id": "arrow_flight::encode::DictionaryHandling",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/encode.rs",
+        "begin": [
+          468,
+          17
+        ],
+        "end": [
+          468,
+          26
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1595",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.DictionaryHandling.md",
+    "record_file": "operations/arrow_flight.encode.DictionaryHandling.json",
+    "anchor": "op-cbcbe2d1bf34fbff75a15572",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "764d17a263dacbc832f2912b",
+    "path": "arrow_flight::encode::DictionaryHandling::fmt",
+    "name": "fmt",
+    "owner": "arrow_flight::encode::DictionaryHandling",
+    "crate": "arrow-flight",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/encode.rs",
+      "begin": [
+        468,
+        10
+      ],
+      "end": [
+        468,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 95,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 96,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "95": "core::fmt::Formatter",
+      "96": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "DictionaryHandling",
+          "id": "arrow_flight::encode::DictionaryHandling",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/encode.rs",
+        "begin": [
+          468,
+          10
+        ],
+        "end": [
+          468,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7b00b8f3c124885d73a094819af9f7d63bb29ffafa084f822513bfc2c26db5be",
+      "format_version": 61,
+      "item_id": "1592",
+      "origin": "https://docs.rs/crate/arrow-flight/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_flight.encode.DictionaryHandling.md",
+    "record_file": "operations/arrow_flight.encode.DictionaryHandling.json",
+    "anchor": "op-764d17a263dacbc832f2912b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

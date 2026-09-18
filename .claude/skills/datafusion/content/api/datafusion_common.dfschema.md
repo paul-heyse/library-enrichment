@@ -12,6 +12,9 @@ Also reachable as `datafusion::common::qualified_name`, `datafusion_common::qual
 fn qualified_name(qualifier: Option<&TableReference>, name: &str) -> String
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.dfschema.qualified_name.md).
+
+
 Build a fully-qualified field name string. This is equivalent to
 `format!("{q}.{name}")` when `qualifier` is `Some`, or just `name` when
 `None`. We avoid going through the `fmt` machinery for performance reasons.
@@ -109,6 +112,9 @@ fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
 ```rust
 fn field_from_column(&self, col: &Column) -> Result<&FieldRef>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.dfschema.DFSchema.md).
+
 
  DFSchema wraps an Arrow schema and add a relation (table) name.
 
@@ -208,6 +214,9 @@ fn metadata(&self, col: &Column) -> Result<&HashMap<String, String>>
 fn nullable(&self, col: &Column) -> Result<bool>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.dfschema.ExprSchema.md).
+
+
 Provides schema information needed by certain methods of `Expr`
 (defined in the datafusion-common crate).
 
@@ -237,6 +246,9 @@ fn equivalent_names_and_types(&self, other: &Self) -> bool
 fn logically_equivalent_names_and_types(&self, other: &Self) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.dfschema.SchemaExt.md).
+
+
 DataFusion-specific extensions to [`Schema`].
 
 ---
@@ -264,6 +276,9 @@ fn to_dfschema(self) -> Result<DFSchema>
 fn to_dfschema_ref(self) -> Result<DFSchemaRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.dfschema.ToDFSchema.md).
+
+
 Convenience trait to convert Schema like things to DFSchema and DFSchemaRef with fewer keystrokes
 
 ---
@@ -279,6 +294,9 @@ type DFSchemaRef = std::sync::Arc<DFSchema>
 ```
 
 **Implements**: `core::convert::TryFrom`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.dfschema.DFSchemaRef.md).
+
 
 A reference-counted reference to a [DFSchema].
 

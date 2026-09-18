@@ -5,6 +5,7 @@ Crate `deltalake-core` · 9 public items · structured records in [`model/deltal
 ## OptimizeType
 
 `enum` · `deltalake_core::operations::optimize::OptimizeType`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.optimize.OptimizeType.md)
 
 Also reachable as `deltalake::operations::optimize::OptimizeType`
 
@@ -23,6 +24,7 @@ Type of optimization to perform.
 ## PlannerStrategy
 
 `enum` · `deltalake_core::operations::optimize::PlannerStrategy`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.optimize.PlannerStrategy.md)
 
 Also reachable as `deltalake::operations::optimize::PlannerStrategy`
 
@@ -55,6 +57,7 @@ Planner used by optimize.
 ## create_merge_plan
 
 `function` · `deltalake_core::operations::optimize::create_merge_plan`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.optimize.create_merge_plan.md)
 
 Also reachable as `deltalake::operations::optimize::create_merge_plan`
 
@@ -69,6 +72,7 @@ Build a Plan on which files to merge together. See [OptimizeBuilder]
 ## MergePlan
 
 `struct` · `deltalake_core::operations::optimize::MergePlan`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.optimize.MergePlan.md)
 
 Also reachable as `deltalake::operations::optimize::MergePlan`
 
@@ -91,6 +95,7 @@ Encapsulates the operations required to optimize a Delta Table
 ## MergeTaskParameters
 
 `struct` · `deltalake_core::operations::optimize::MergeTaskParameters`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.optimize.MergeTaskParameters.md)
 
 Also reachable as `deltalake::operations::optimize::MergeTaskParameters`
 
@@ -107,6 +112,7 @@ Parameters passed to individual merge tasks
 ## MetricDetails
 
 `struct` · `deltalake_core::operations::optimize::MetricDetails`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.optimize.MetricDetails.md)
 
 Also reachable as `deltalake::operations::optimize::MetricDetails`
 
@@ -152,6 +158,7 @@ Operation can be remove or add
 ## Metrics
 
 `struct` · `deltalake_core::operations::optimize::Metrics`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.optimize.Metrics.md)
 
 Also reachable as `deltalake::operations::optimize::Metrics`
 
@@ -196,6 +203,7 @@ Metrics from Optimize
 ## OptimizeBuilder
 
 `struct` · `deltalake_core::operations::optimize::OptimizeBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.optimize.OptimizeBuilder.md)
 
 Also reachable as `deltalake::operations::optimize::OptimizeBuilder`
 
@@ -227,13 +235,6 @@ fn with_writer_properties(self, writer_properties: WriterProperties) -> Self
 fn into_future(self) -> Self::IntoFuture
 ```
 
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
-```
-
 Optimize a Delta table with given options
 
 If a target file size is not provided then `delta.targetFileSize` from the
@@ -244,6 +245,7 @@ table's configuration is read. Otherwise a default value is used.
 ## PartialMetrics
 
 `struct` · `deltalake_core::operations::optimize::PartialMetrics`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.optimize.PartialMetrics.md)
 
 Also reachable as `deltalake::operations::optimize::PartialMetrics`
 

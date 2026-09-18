@@ -1,0 +1,67 @@
+   Compiling deltalake-skill-reference-probes v0.1.0 (/home/paul/library-enrichment/.claude/skills/deltalake/skill_improvement/evidence/implementation/probes)
+    Finished `test` profile [unoptimized] target(s) in 1.66s
+warning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running tests/behavior.rs (.claude/skills/deltalake/skill_improvement/evidence/.build-target/debug/deps/behavior-c958634056c9aa7e)
+
+running 12 tests
+test cdf_bounds_images_and_residual_filter ... FAILED
+test dml_noop_and_update_delete_metrics ... ok
+test logical_plan_write_and_staged_writer_visibility ... FAILED
+test merge_clause_order_null_keys_and_duplicate_updates ... ok
+test optimistic_conflict_and_retry_budget ... ok
+test optimize_compact_and_zorder_preserve_rows ... ok
+test restore_creates_new_version_and_checkpoint_preserves_rows ... ok
+test save_modes_replace_where_and_validation_before_commit ... FAILED
+test schema_merge_and_cast_error_policy ... ok
+test unloaded_handle_explicit_version_and_partition_reconstruction ... FAILED
+test vacuum_full_finds_orphan_lite_does_not ... ok
+test vacuum_preview_keep_versions_and_history_loss ... ok
+
+successes:
+
+successes:
+    dml_noop_and_update_delete_metrics
+    merge_clause_order_null_keys_and_duplicate_updates
+    optimistic_conflict_and_retry_budget
+    optimize_compact_and_zorder_preserve_rows
+    restore_creates_new_version_and_checkpoint_preserves_rows
+    schema_merge_and_cast_error_policy
+    vacuum_full_finds_orphan_lite_does_not
+    vacuum_preview_keep_versions_and_history_loss
+
+failures:
+
+---- cdf_bounds_images_and_residual_filter stdout ----
+
+thread 'cdf_bounds_images_and_residual_filter' (1072897) panicked at tests/behavior.rs:144:123:
+called `Result::unwrap()` on an `Err` value: Context("SanityCheckPlan", Plan("Plan: [\"SortExec: expr=[id@0 ASC NULLS LAST], preserve_partitioning=[false]\", \"  DataSourceExec: file_groups={0 groups: []}, projection=[id, _change_type, _commit_version], file_type=parquet, sort_order_for_reorder=[id@0 ASC NULLS LAST]\"] does not satisfy distribution requirements: SinglePartition. Child-0 output partitioning: UnknownPartitioning(0)"))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- logical_plan_write_and_staged_writer_visibility stdout ----
+
+thread 'logical_plan_write_and_staged_writer_visibility' (1072938) panicked at tests/behavior.rs:60:104:
+called `Result::unwrap()` on an `Err` value: Generic("Error during planning: No installed planner was able to convert the custom node to an execution plan: MetricObserver { id: \"write_source_count\", input: TableScan(TableScan { table_name: Bare { table: \"?table?\" }, source: \"...\", projection: Some([0]), projected_schema: DFSchema { inner: Schema { fields: [Field { name: \"id\", data_type: Int64, nullable: true }], metadata: {} }, field_qualifiers: [Some(Bare { table: \"?table?\" })], functional_dependencies: FunctionalDependencies { deps: [] } }, filters: [], fetch: None, .. }), enable_pushdown: false }")
+
+---- save_modes_replace_where_and_validation_before_commit stdout ----
+
+thread 'save_modes_replace_where_and_validation_before_commit' (1073053) panicked at tests/behavior.rs:41:5:
+assertion `left == right` failed
+  left: [Some(1), Some(2), Some(3), Some(4)]
+ right: [Some(1), Some(2), Some(3)]
+
+---- unloaded_handle_explicit_version_and_partition_reconstruction stdout ----
+
+thread 'unloaded_handle_explicit_version_and_partition_reconstruction' (1073088) panicked at tests/behavior.rs:244:47:
+called `Result::unwrap()` on an `Err` value: GenericError { source: Partitioning("Arrow interaction failed: Invalid argument error: must either specify a row count or at least one column") }
+
+
+failures:
+    cdf_bounds_images_and_residual_filter
+    logical_plan_write_and_staged_writer_visibility
+    save_modes_replace_where_and_validation_before_commit
+    unloaded_handle_explicit_version_and_partition_reconstruction
+
+test result: FAILED. 8 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.33s
+
+error: test failed, to rerun pass `--test behavior`

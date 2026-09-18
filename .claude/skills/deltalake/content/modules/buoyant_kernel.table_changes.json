@@ -1,0 +1,84 @@
+[
+  {
+    "id": "24388d36d2a9d44b7be7c70a",
+    "path": "buoyant_kernel::table_changes",
+    "name": "table_changes",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "module",
+    "signature": "mod table_changes",
+    "docs": "Provides an API to read the table's change data feed between two versions.\n\n# Example\n```rust\n# use std::sync::Arc;\n# use buoyant_kernel as delta_kernel;\n# use test_utils::delta_kernel_default_engine::{DefaultEngine, DefaultEngineBuilder};\n# use delta_kernel::expressions::{column_expr, Scalar};\n# use delta_kernel::{Predicate, Snapshot, SnapshotRef, Error, Engine};\n# use delta_kernel::table_changes::TableChanges;\n# let path = \"./tests/data/table-with-cdf\";\nlet url = delta_kernel::try_parse_uri(path)?;\n# use test_utils::delta_kernel_default_engine::storage::store_from_url;\n# let engine = std::sync::Arc::new(DefaultEngineBuilder::new(store_from_url(&url)?).build());\n// Get the table changes (change data feed) between version 0 and 1\nlet table_changes = TableChanges::try_new(url, engine.as_ref(), 0, Some(1))?;\n\n// Optionally specify a schema and predicate to apply to the table changes scan\nlet schema = table_changes\n    .schema()\n    .project(&[\"id\", \"_commit_version\"])?;\nlet predicate = Arc::new(Predicate::gt(column_expr!(\"id\"), Scalar::from(10)));\n\n// Construct the table changes scan\nlet table_changes_scan = table_changes\n    .into_scan_builder()\n    .with_schema(schema)\n    .with_predicate(predicate.clone())\n    .build()?;\n\n// Execute the table changes scan to get a fallible iterator of `Box<dyn EngineData>`s\nlet table_change_batches = table_changes_scan.execute(engine.clone())?;\n# Ok::<(), Error>(())\n```",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        1,
+        1
+      ],
+      "end": [
+        317,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          8115,
+          8041
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8160",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L1",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "11851",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "modules/buoyant_kernel.table_changes.md",
+    "record_file": "modules/buoyant_kernel.table_changes.json",
+    "anchor": "op-24388d36d2a9d44b7be7c70a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

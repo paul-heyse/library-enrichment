@@ -12,6 +12,9 @@ Crate `datafusion-physical-expr` · 2 public items · structured records in [`mo
 fn has_column_references(expr: &std::sync::Arc<dyn PhysicalExpr>) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.simplifier.const_evaluator.has_column_references.md).
+
+
 Check if this expression has any column references.
 
 ---
@@ -25,6 +28,9 @@ Check if this expression has any column references.
 ```rust
 fn simplify_const_expr(expr: std::sync::Arc<dyn PhysicalExpr>) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<std::sync::Arc<dyn PhysicalExpr>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.simplifier.const_evaluator.simplify_const_expr.md).
+
 
 Simplify expressions that consist only of literals by evaluating them.
 

@@ -1,0 +1,874 @@
+[
+  {
+    "id": "aabee555cff8f50e9279fede",
+    "path": "arrow_avro::writer::Encoder",
+    "name": "Encoder",
+    "owner": null,
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct Encoder",
+    "docs": "A row-by-row encoder for Avro *stream/message* formats (SOE / registry wire formats / raw binary).\n\nUnlike [`Writer`], which emits a single continuous byte stream to a [`std::io::Write`] sink,\n`Encoder` tracks row boundaries during encoding and returns an [`EncodedRows`] containing:\n- one backing buffer (`Bytes`)\n- row boundary offsets\n\nThis enables zero-copy per-row payloads (for instance, one Kafka message per Arrow row) without\nre-encoding or decoding the byte stream to recover record boundaries.\n\n### Example\n\n```\nuse std::sync::Arc;\nuse arrow_array::{ArrayRef, Int32Array, RecordBatch};\nuse arrow_schema::{DataType, Field, Schema};\nuse arrow_avro::writer::{WriterBuilder, format::AvroSoeFormat};\nuse arrow_avro::schema::FingerprintStrategy;\n\n# fn main() -> Result<(), Box<dyn std::error::Error>> {\nlet schema = Schema::new(vec![Field::new(\"value\", DataType::Int32, false)]);\nlet batch = RecordBatch::try_new(\n    Arc::new(schema.clone()),\n    vec![Arc::new(Int32Array::from(vec![1, 2, 3])) as ArrayRef],\n)?;\n\n// Configure the encoder (here: Confluent Wire Format with schema ID 100)\nlet mut encoder = WriterBuilder::new(schema)\n    .with_fingerprint_strategy(FingerprintStrategy::Id(100))\n    .build_encoder::<AvroSoeFormat>()?;\n\n// Encode the batch\nencoder.encode(&batch)?;\n\n// Get the encoded rows\nlet rows = encoder.flush();\n\n// Convert to owned Vec<u8> payloads (e.g., for a Kafka producer)\nlet payloads: Vec<Vec<u8>> = rows.iter().map(|row| row.to_vec()).collect();\n\nassert_eq!(payloads.len(), 3);\nassert_eq!(payloads[0][0], 0x00); // Magic byte\n# Ok(())\n# }\n```",
+    "span": {
+      "filename": "src/writer/mod.rs",
+      "begin": [
+        498,
+        1
+      ],
+      "end": [
+        504,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          574,
+          575,
+          576,
+          577,
+          578,
+          579,
+          580,
+          581,
+          582,
+          583,
+          584,
+          585,
+          586,
+          587,
+          588,
+          589,
+          590,
+          591,
+          593
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`std::io::Write`": 406,
+      "`EncodedRows`": 491,
+      "`Writer`": 539
+    },
+    "link_paths": {
+      "`std::io::Write`": "core::io::write::Write",
+      "`EncodedRows`": "arrow_avro::writer::EncodedRows",
+      "`Writer`": "arrow_avro::writer::Writer"
+    },
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "536",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.writer.Encoder.md",
+    "record_file": "operations/arrow_avro.writer.Encoder.json",
+    "anchor": "op-aabee555cff8f50e9279fede",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`EncodedRows`": "../operations/arrow_avro.writer.EncodedRows.md#op-a24bf6646de2b0d806b87c41",
+      "`Writer`": "../operations/arrow_avro.writer.Writer.md#op-2a9e145d555e09d95bf56622"
+    }
+  },
+  {
+    "id": "c2ed1fd30bb098640ee48966",
+    "path": "arrow_avro::writer::Encoder::buffered_len",
+    "name": "buffered_len",
+    "owner": "arrow_avro::writer::Encoder",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn buffered_len(&self) -> usize",
+    "docs": "Returns the number of encoded rows currently buffered.",
+    "span": {
+      "filename": "src/writer/mod.rs",
+      "begin": [
+        551,
+        5
+      ],
+      "end": [
+        553,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Encoder",
+          "id": "arrow_avro::writer::Encoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer/mod.rs",
+        "begin": [
+          506,
+          1
+        ],
+        "end": [
+          554,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "573",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.writer.Encoder.md",
+    "record_file": "operations/arrow_avro.writer.Encoder.json",
+    "anchor": "op-c2ed1fd30bb098640ee48966",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "41a176b09f70fafae481aae0",
+    "path": "arrow_avro::writer::Encoder::encode",
+    "name": "encode",
+    "owner": "arrow_avro::writer::Encoder",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn encode(&mut self, batch: &RecordBatch) -> Result<(), AvroError>",
+    "docs": "Serialize one [`RecordBatch`] into the internal buffer.",
+    "span": {
+      "filename": "src/writer/mod.rs",
+      "begin": [
+        508,
+        5
+      ],
+      "end": [
+        521,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "RecordBatch",
+                      "id": 262,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 9,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "AvroError",
+                          "id": 11,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "262": "arrow_array::record_batch::RecordBatch",
+      "9": "core::result::Result",
+      "11": "arrow_avro::errors::AvroError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Encoder",
+          "id": "arrow_avro::writer::Encoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer/mod.rs",
+        "begin": [
+          506,
+          1
+        ],
+        "end": [
+          554,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RecordBatch`": 262
+    },
+    "link_paths": {
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "570",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.writer.Encoder.md",
+    "record_file": "operations/arrow_avro.writer.Encoder.json",
+    "anchor": "op-41a176b09f70fafae481aae0",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "a86bf005c0cbb0980197d33c",
+    "path": "arrow_avro::writer::Encoder::encode_batches",
+    "name": "encode_batches",
+    "owner": "arrow_avro::writer::Encoder",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn encode_batches(&mut self, batches: &[RecordBatch]) -> Result<(), AvroError>",
+    "docs": "A convenience method to write a slice of [`RecordBatch`] values.",
+    "span": {
+      "filename": "src/writer/mod.rs",
+      "begin": [
+        524,
+        5
+      ],
+      "end": [
+        529,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batches",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "RecordBatch",
+                        "id": 262,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 9,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "AvroError",
+                          "id": 11,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "262": "arrow_array::record_batch::RecordBatch",
+      "9": "core::result::Result",
+      "11": "arrow_avro::errors::AvroError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Encoder",
+          "id": "arrow_avro::writer::Encoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer/mod.rs",
+        "begin": [
+          506,
+          1
+        ],
+        "end": [
+          554,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RecordBatch`": 262
+    },
+    "link_paths": {
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "571",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.writer.Encoder.md",
+    "record_file": "operations/arrow_avro.writer.Encoder.json",
+    "anchor": "op-a86bf005c0cbb0980197d33c",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "c7a2b62f16f52a249150b213",
+    "path": "arrow_avro::writer::Encoder::flush",
+    "name": "flush",
+    "owner": "arrow_avro::writer::Encoder",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn flush(&mut self) -> EncodedRows",
+    "docs": "Drain and return all currently buffered encoded rows.\n\nThe returned [`EncodedRows`] provides per-row payloads as `Bytes` slices.",
+    "span": {
+      "filename": "src/writer/mod.rs",
+      "begin": [
+        534,
+        5
+      ],
+      "end": [
+        540,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "EncodedRows",
+              "id": 491,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "491": "arrow_avro::writer::EncodedRows"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Encoder",
+          "id": "arrow_avro::writer::Encoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer/mod.rs",
+        "begin": [
+          506,
+          1
+        ],
+        "end": [
+          554,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`EncodedRows`": 491
+    },
+    "link_paths": {
+      "`EncodedRows`": "arrow_avro::writer::EncodedRows"
+    },
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "499",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.writer.Encoder.md",
+    "record_file": "operations/arrow_avro.writer.Encoder.json",
+    "anchor": "op-c7a2b62f16f52a249150b213",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`EncodedRows`": "../operations/arrow_avro.writer.EncodedRows.md#op-a24bf6646de2b0d806b87c41"
+    }
+  },
+  {
+    "id": "867da947c413cfcdfd272207",
+    "path": "arrow_avro::writer::Encoder::fmt",
+    "name": "fmt",
+    "owner": "arrow_avro::writer::Encoder",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/writer/mod.rs",
+      "begin": [
+        497,
+        10
+      ],
+      "end": [
+        497,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 177,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 178,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "177": "core::fmt::Formatter",
+      "178": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Encoder",
+          "id": "arrow_avro::writer::Encoder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer/mod.rs",
+        "begin": [
+          497,
+          10
+        ],
+        "end": [
+          497,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "592",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.writer.Encoder.md",
+    "record_file": "operations/arrow_avro.writer.Encoder.json",
+    "anchor": "op-867da947c413cfcdfd272207",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8323379effd1b808bdd21bd9",
+    "path": "arrow_avro::writer::Encoder::schema",
+    "name": "schema",
+    "owner": "arrow_avro::writer::Encoder",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn schema(&self) -> SchemaRef",
+    "docs": "Returns the Arrow schema used by this encoder.\n\nThe returned schema includes metadata with the Avro schema JSON under\nthe `avro.schema` key.",
+    "span": {
+      "filename": "src/writer/mod.rs",
+      "begin": [
+        546,
+        5
+      ],
+      "end": [
+        548,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "SchemaRef",
+              "id": 229,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "229": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Encoder",
+          "id": "arrow_avro::writer::Encoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer/mod.rs",
+        "begin": [
+          506,
+          1
+        ],
+        "end": [
+          554,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "572",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.writer.Encoder.md",
+    "record_file": "operations/arrow_avro.writer.Encoder.json",
+    "anchor": "op-8323379effd1b808bdd21bd9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

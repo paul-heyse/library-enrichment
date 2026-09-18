@@ -27,6 +27,9 @@ fn size(&self) -> usize
 fn try_new(mode: &InputOrderMode) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.order.GroupOrdering.md).
+
+
 Ordering information for each group in the hash table
 
 ---

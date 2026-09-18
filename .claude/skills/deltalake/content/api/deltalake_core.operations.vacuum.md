@@ -5,6 +5,7 @@ Crate `deltalake-core` · 6 public items · structured records in [`model/deltal
 ## VacuumMode
 
 `enum` · `deltalake_core::operations::vacuum::VacuumMode`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.vacuum.VacuumMode.md)
 
 Also reachable as `deltalake::operations::vacuum::VacuumMode`
 
@@ -23,6 +24,7 @@ Type of Vacuum operation to perform
 ## VacuumBuilder
 
 `struct` · `deltalake_core::operations::vacuum::VacuumBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.vacuum.VacuumBuilder.md)
 
 Also reachable as `deltalake::operations::vacuum::VacuumBuilder`
 
@@ -52,13 +54,6 @@ fn with_scan_concurrency(self, concurrency: usize) -> Self
 fn into_future(self) -> Self::IntoFuture
 ```
 
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
-```
-
 Vacuum a Delta table with the given options
 See this module's documentation for more information
 
@@ -67,6 +62,7 @@ See this module's documentation for more information
 ## VacuumEndOperationMetrics
 
 `struct` · `deltalake_core::operations::vacuum::VacuumEndOperationMetrics`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.vacuum.VacuumEndOperationMetrics.md)
 
 Also reachable as `deltalake::operations::vacuum::VacuumEndOperationMetrics`
 
@@ -91,6 +87,7 @@ Details for the Vacuum End operation for the transaction log
 ## VacuumMetrics
 
 `struct` · `deltalake_core::operations::vacuum::VacuumMetrics`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.vacuum.VacuumMetrics.md)
 
 Also reachable as `deltalake::operations::vacuum::VacuumMetrics`
 
@@ -109,6 +106,7 @@ Details for the Vacuum operation including which files were
 ## VacuumStartOperationMetrics
 
 `struct` · `deltalake_core::operations::vacuum::VacuumStartOperationMetrics`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.vacuum.VacuumStartOperationMetrics.md)
 
 Also reachable as `deltalake::operations::vacuum::VacuumStartOperationMetrics`
 
@@ -133,6 +131,7 @@ Details for the Vacuum start operation for the transaction log
 ## Clock
 
 `trait` · `deltalake_core::operations::vacuum::Clock`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.vacuum.Clock.md)
 
 Also reachable as `deltalake::operations::vacuum::Clock`
 

@@ -44,8 +44,8 @@ fn metadata() -> SnapshotMetadata {
 
 fn evidence(metadata: &SnapshotMetadata) -> EvidenceRows {
     support::rust_evidence_for(
-        metadata.release.release_id.as_str(),
-        metadata.environment.environment_id.as_str(),
+        metadata.release.release_id.clone(),
+        metadata.environment.environment_id.clone(),
     )
 }
 
@@ -144,8 +144,8 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
         .acquired;
     let mut result: Envelope =
         serde_json::from_str(include_str!("../../../tests/fixtures/wire/ok.fixture.json")).unwrap();
-    result.context_id = Some(after.context_id.to_string());
-    result.snapshot_id = Some(after.snapshot_id.to_string());
+    result.context_id = Some(after.context_id.clone());
+    result.snapshot_id = Some(after.snapshot_id.clone());
     result.data = serde_json::from_value(serde_json::json!({
         "before": {"context_id": before.context_id, "snapshot_id": before.snapshot_id},
         "after": {"context_id": after.context_id, "snapshot_id": after.snapshot_id},
@@ -164,7 +164,7 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
             .unwrap()
             .0;
     let publication = ComparisonPublication {
-        job_id: format!("job_{}", "c".repeat(32)),
+        job_id: format!("job_{}", "c".repeat(32)).try_into().unwrap(),
         request_digest: "d".repeat(64),
         before_context_id: before.context_id.clone(),
         before_snapshot_id: before.snapshot_id.clone(),
@@ -178,8 +178,8 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
         &publication.job_id,
         enrichment_store::control_jobs::Arguments::Compare {
             request: enrichment_core::request::CompareRequest {
-                before_snapshot_id: Some(before.snapshot_id.to_string()),
-                after_snapshot_id: Some(after.snapshot_id.to_string()),
+                before_snapshot_id: Some(before.snapshot_id.clone()),
+                after_snapshot_id: Some(after.snapshot_id.clone()),
                 ..Default::default()
             },
         },
@@ -227,7 +227,7 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
         [before.snapshot_id.clone(), after.snapshot_id.clone()].into()
     );
     let exported = dir.path().join("bundle");
-    enrichment_store::bundle::export(&paths, after.context_id.as_str(), &exported)
+    enrichment_store::bundle::export(&paths, after.context_id.to_string().as_str(), &exported)
         .await
         .unwrap();
     assert!(
@@ -238,12 +238,14 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
     );
     let runtime = repository.runtime.clone();
     let offline = BlobStore::read_only(&exported.join("data")).unwrap();
-    let native =
-        enrichment_store::control::ControlStore::read_only(&exported.join("data"), runtime.clone())
-            .unwrap()
-            .pin()
-            .await
-            .unwrap();
+    let native = enrichment_store::control::ControlStore::immutable(
+        enrichment_store::immutable_root::ImmutableRoot::open(&exported.join("data")).unwrap(),
+        runtime.clone(),
+    )
+    .unwrap()
+    .pin()
+    .await
+    .unwrap();
     assert!(
         native
             .snapshot(&runtime, &before.snapshot_id)
@@ -389,11 +391,14 @@ async fn native_navigation_and_text_projection_preserve_retained_identities() {
         .unwrap();
     assert!(!full.items.is_empty());
     assert_eq!(full.items.len(), preview.items.len());
-    for ((full, complete), (preview, preview_complete)) in full.items.iter().zip(&preview.items) {
-        assert!(*complete);
+    for (full, preview) in full.items.iter().zip(&preview.items) {
+        assert!(full.text_complete);
+        let preview_complete = preview.text_complete;
+        let full = &full.fragment;
+        let preview = &preview.fragment;
         assert_eq!(full.fragment_id, preview.fragment_id);
         assert_eq!(preview.text, full.text.chars().take(4).collect::<String>());
-        assert_eq!(*preview_complete, full.text.chars().count() <= 4);
+        assert_eq!(preview_complete, full.text.chars().count() <= 4);
         assert_eq!(preview.source.locator, full.source.locator);
         assert_eq!(preview.source.artifact_id, full.source.artifact_id);
     }
@@ -455,6 +460,8 @@ async fn large_alternative_sets_remain_reachable_for_inspection_and_comparison()
         &after,
         &BlobStore::open(&dir.path().join("data")).unwrap(),
         comparison::Selection {
+            incomplete_scopes: &[],
+            offset: 0,
             scopes: &[Scope::Api],
             after_key: None,
             limit: 10,
@@ -470,6 +477,8 @@ async fn large_alternative_sets_remain_reachable_for_inspection_and_comparison()
         &after,
         &BlobStore::open(&dir.path().join("data")).unwrap(),
         comparison::Selection {
+            incomplete_scopes: &[],
+            offset: 0,
             scopes: &[Scope::Api],
             after_key: None,
             limit: 10,
@@ -512,11 +521,10 @@ async fn large_alternative_sets_remain_reachable_for_inspection_and_comparison()
             .collect::<std::collections::BTreeSet<_>>(),
         expected
     );
-    let snapshots = format!(
-        "{}:{}",
-        before.manifest().snapshot_id,
-        after.manifest().snapshot_id
-    );
+    let snapshots = enrichment_core::compare::page::SnapshotPair {
+        before: before.manifest().snapshot_id.clone(),
+        after: after.manifest().snapshot_id.clone(),
+    };
     let id = change.change_id.clone();
     let mut result = change;
     let mut values = std::collections::BTreeSet::new();
@@ -527,9 +535,12 @@ async fn large_alternative_sets_remain_reachable_for_inspection_and_comparison()
             else {
                 panic!("native inline value")
             };
-            let signature = value["observation"]["signature"]
-                .as_str()
-                .map(str::to_owned);
+            let enrichment_core::compare::ComparisonValue::Api { observation, .. } = value else {
+                panic!("typed API alternative")
+            };
+            let signature = observation
+                .as_ref()
+                .and_then(|observation| observation.payload.signature.clone());
             assert!(
                 values.insert(signature),
                 "duplicate alternative across pages"
@@ -545,6 +556,8 @@ async fn large_alternative_sets_remain_reachable_for_inspection_and_comparison()
             &after,
             &BlobStore::open(&dir.path().join("data")).unwrap(),
             comparison::Selection {
+                incomplete_scopes: &[],
+                offset: 0,
                 scopes: &[Scope::Api],
                 after_key: None,
                 limit: 10,
@@ -589,7 +602,7 @@ async fn requested_coverage_distinguishes_unknown_missing_partial_and_recovered_
     let mut evidence = evidence(&metadata);
     let binding = evidence.coverage[0].producer_binding_id.clone();
     let library = SubjectRef::Library {
-        release_id: metadata.release.release_id.to_string(),
+        release_id: metadata.release.release_id.clone(),
     };
     let symbol = evidence.symbols[0].symbol_id.clone();
     for (kind, outcome, subject) in [
@@ -667,7 +680,11 @@ async fn requested_coverage_distinguishes_unknown_missing_partial_and_recovered_
     assert_eq!(states[&EvidenceKind::Examples], ScopeState::Partial);
     assert_eq!(states[&EvidenceKind::RuntimeApi], ScopeState::Unknown);
     assert_eq!(states[&EvidenceKind::UsageProbes], ScopeState::Unknown);
-    assert!(!coverage.complete());
+    assert!(
+        !enrichment_store::coverage::complete(reader.runtime(), &coverage)
+            .await
+            .unwrap()
+    );
     let symbol_scope = reader
         .assess(
             &[EvidenceKind::PublicApi, EvidenceKind::RuntimeApi],
@@ -676,7 +693,11 @@ async fn requested_coverage_distinguishes_unknown_missing_partial_and_recovered_
         )
         .await
         .expect("symbol assessment");
-    assert!(symbol_scope.complete());
+    assert!(
+        enrichment_store::coverage::complete(reader.runtime(), &symbol_scope)
+            .await
+            .unwrap()
+    );
     assert!(
         symbol_scope
             .assessments
@@ -692,7 +713,9 @@ async fn requested_coverage_distinguishes_unknown_missing_partial_and_recovered_
         .await
         .expect("documentation assessment");
     assert!(
-        docs_only.complete(),
+        enrichment_store::coverage::complete(reader.runtime(), &docs_only)
+            .await
+            .unwrap(),
         "unrequested gaps must not taint requested coverage"
     );
     assert!(docs_only.missing.is_empty());
@@ -920,7 +943,7 @@ async fn derived_environment_retains_static_sources_with_new_consumer_identity()
     assert!(
         observations
             .iter()
-            .all(|o| o.environment_id == environment.environment_id.as_str()
+            .all(|o| o.environment_id == environment.environment_id
                 && expected_sources.contains(&o.source))
     );
     let again = repository
@@ -985,6 +1008,8 @@ async fn native_comparison_preserves_nested_alternatives_and_pages_complete_keys
         &before,
         &BlobStore::open(&dir.path().join("data")).unwrap(),
         comparison::Selection {
+            incomplete_scopes: &[],
+            offset: 0,
             scopes: &scopes,
             after_key: None,
             limit: 10,
@@ -1001,6 +1026,8 @@ async fn native_comparison_preserves_nested_alternatives_and_pages_complete_keys
         &after,
         &BlobStore::open(&dir.path().join("data")).unwrap(),
         comparison::Selection {
+            incomplete_scopes: &[],
+            offset: 0,
             scopes: &scopes,
             after_key: None,
             limit: 100,
@@ -1033,6 +1060,8 @@ async fn native_comparison_preserves_nested_alternatives_and_pages_complete_keys
             &after,
             &BlobStore::open(&dir.path().join("data")).unwrap(),
             comparison::Selection {
+                incomplete_scopes: &[],
+                offset: seen.len() as u64,
                 scopes: &[Scope::Api],
                 after_key: cursor.as_ref(),
                 limit: 1,
@@ -1045,7 +1074,7 @@ async fn native_comparison_preserves_nested_alternatives_and_pages_complete_keys
         assert_eq!(page.total, all.total);
         cursor = page.changes.last().map(|(k, _)| k.clone());
         seen.extend(page.changes.into_iter().map(|(k, c)| (k, c.change_id)));
-        if !page.has_more {
+        if !page.boundary.has_more {
             break;
         }
     }
@@ -1147,6 +1176,8 @@ async fn relationship_comparison_distinguishes_same_path_qualified_endpoints() {
             &after,
             &BlobStore::open(&dir.path().join("data")).unwrap(),
             comparison::Selection {
+                incomplete_scopes: &[],
+                offset: 0,
                 scopes: &[Scope::Relationships],
                 after_key: None,
                 limit: 10,
@@ -1181,13 +1212,17 @@ async fn portable_bundle_admits_without_the_original_store_and_rejects_a_missing
     };
     let bundle_dir = tempfile::tempdir().expect("independent bundle root");
     let destination = bundle_dir.path().join("complete");
-    let exported = bundle::export(&paths, metadata.context.context_id.as_str(), &destination)
-        .await
-        .expect("export");
+    let exported = bundle::export(
+        &paths,
+        metadata.context.context_id.to_string().as_str(),
+        &destination,
+    )
+    .await
+    .expect("export");
     assert!(exported.artifacts > 0);
     assert_eq!(
         exported.snapshot_id.as_deref(),
-        Some(manifest.snapshot_id.as_str())
+        Some(manifest.snapshot_id.to_string().as_str())
     );
     assert!(
         bundle::verify(&destination)
@@ -1232,9 +1267,13 @@ async fn portable_bundle_admits_without_the_original_store_and_rejects_a_missing
     );
     let failed = bundle_dir.path().join("must-not-publish");
     assert!(
-        bundle::export(&paths, metadata.context.context_id.as_str(), &failed)
-            .await
-            .is_err()
+        bundle::export(
+            &paths,
+            metadata.context.context_id.to_string().as_str(),
+            &failed
+        )
+        .await
+        .is_err()
     );
     assert!(!failed.exists());
     let copied = destination
@@ -1264,7 +1303,7 @@ async fn actual_rustdoc_publishes_and_reopens_only_through_catalog_membership() 
     let manifest = native_ingest::publish_rows(&repository, metadata, evidence, None, None)
         .await
         .expect("publication");
-    assert_eq!(manifest.schema_version, "6.0");
+    assert_eq!(manifest.schema_version, "7.0");
     assert_eq!(manifest.tables.len(), 10);
     assert!(
         repository
@@ -1337,12 +1376,10 @@ async fn operational_logs_survive_export_without_changing_snapshot_identity() {
         .unwrap()
         .acquired;
     let run = &mut again.producer_runs[0];
-    run.attempt_id = "second-with-log".into();
+    run.attempt_id = enrichment_core::identity::AttemptId::new();
     run.log = Some(log.artifact_id.clone());
     artifacts.push(log.clone());
-    again
-        .attempt_artifacts
-        .insert(run.attempt_id.clone(), artifacts);
+    again.attempt_artifacts.insert(run.attempt_id, artifacts);
     let second = native_ingest::publish_rows(
         &repository,
         metadata.clone(),
@@ -1363,9 +1400,13 @@ async fn operational_logs_survive_export_without_changing_snapshot_identity() {
     assert_eq!(reader.attempt_logs().await.unwrap(), vec![log.clone()]);
     let destination = dir.path().join("bundle");
     let paths = StatePaths::explicit(dir.path().join("cache"), dir.path().join("data"));
-    bundle::export(&paths, metadata.context.context_id.as_str(), &destination)
-        .await
-        .unwrap();
+    bundle::export(
+        &paths,
+        metadata.context.context_id.to_string().as_str(),
+        &destination,
+    )
+    .await
+    .unwrap();
     let copied = destination
         .join("data/blobs/sha256")
         .join(&log.sha256[..2])
@@ -1400,21 +1441,25 @@ async fn reacquisition_preserves_snapshot_bytes_and_adds_attempt_attribution() {
     )
     .await
     .expect("first");
-    let path = dir
-        .path()
-        .join("data/snapshots")
-        .join(first.snapshot_id.as_str())
-        .join("manifest.json");
-    let before = std::fs::read(&path).expect("manifest");
+    let before = repository
+        .catalog
+        .pin()
+        .await
+        .unwrap()
+        .snapshot(&repository.runtime, &first.snapshot_id)
+        .await
+        .unwrap()
+        .unwrap()
+        .publication;
     let mut again = evidence(&metadata);
     let acquisitions = again
         .attempt_artifacts
         .remove(&again.producer_runs[0].attempt_id)
         .expect("acquisitions");
-    again.producer_runs[0].attempt_id = "another-real-attempt".into();
+    again.producer_runs[0].attempt_id = enrichment_core::identity::AttemptId::new();
     again
         .attempt_artifacts
-        .insert(again.producer_runs[0].attempt_id.clone(), acquisitions);
+        .insert(again.producer_runs[0].attempt_id, acquisitions);
     again.producer_runs[0].started_at = enrichment_core::native_time::ObservationTime::try_from(
         "2026-09-15T00:00:00.000000Z".to_owned(),
     )
@@ -1433,7 +1478,19 @@ async fn reacquisition_preserves_snapshot_bytes_and_adds_attempt_attribution() {
     .await
     .expect("second");
     assert_eq!(first.snapshot_id, second.snapshot_id);
-    assert_eq!(before, std::fs::read(path).expect("same manifest"));
+    assert_eq!(
+        before,
+        repository
+            .catalog
+            .pin()
+            .await
+            .unwrap()
+            .snapshot(&repository.runtime, &first.snapshot_id)
+            .await
+            .unwrap()
+            .unwrap()
+            .publication
+    );
     let catalog = repository.catalog.pin().await.expect("catalog");
     let session = catalog.session(&repository.runtime).await.expect("session");
     assert_eq!(
@@ -1466,10 +1523,10 @@ async fn concurrent_same_context_enrichments_rebase_disjoint_observations_withou
         .attempt_artifacts
         .remove(&right.producer_runs[0].attempt_id)
         .expect("acquisitions");
-    right.producer_runs[0].attempt_id = "independent-second-job".into();
+    right.producer_runs[0].attempt_id = enrichment_core::identity::AttemptId::new();
     right
         .attempt_artifacts
-        .insert(right.producer_runs[0].attempt_id.clone(), acquisitions);
+        .insert(right.producer_runs[0].attempt_id, acquisitions);
     let (a, b) = tokio::join!(
         native_ingest::publish_rows(&repository, metadata.clone(), left, None, None),
         native_ingest::publish_rows(&repository, metadata.clone(), right, None, None)
@@ -1596,7 +1653,10 @@ async fn overview_pages_conflicting_feature_definitions_without_overwriting_sour
         .await
         .unwrap();
     assert!(!second.has_more);
-    let rows = [first.items[0].0.clone(), second.items[0].0.clone()];
+    let rows = [
+        first.items[0].fragment.clone(),
+        second.items[0].fragment.clone(),
+    ];
     assert_ne!(rows[0].fragment_id, rows[1].fragment_id);
     assert_eq!(
         rows.iter()

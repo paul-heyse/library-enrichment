@@ -23,6 +23,9 @@ async fn infer(self, state: &dyn Session) -> datafusion_common::Result<ListingTa
 async fn infer_options(self, state: &dyn Session) -> datafusion_common::Result<ListingTableConfig>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.datasource.listing.table.ListingTableConfigExt.md).
+
+
 Extension trait for [`ListingTableConfig`] that supports inferring schemas
 
 This trait exists because the following inference methods only

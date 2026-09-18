@@ -18,6 +18,9 @@ fn encode_children_expressions<'b, I>(&self, exprs: I) -> Result<Vec<PhysicalExp
 fn new(encoder: &'a dyn PhysicalExprEncode) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.proto_encode.PhysicalExprEncodeCtx.md).
+
+
 Encoder context handed to [`super::PhysicalExpr::try_to_proto`].
 
 Wraps an internal [`PhysicalExprEncode`] trait object so callers see a
@@ -43,6 +46,9 @@ trait PhysicalExprEncode
 ```rust
 fn encode(&self, expr: &Arc<dyn PhysicalExpr>) -> Result<PhysicalExprNode>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.proto_encode.PhysicalExprEncode.md).
+
 
 Internal dispatch trait. Implementors live in `datafusion-proto` and
 wrap the existing `PhysicalExtensionCodec` +

@@ -1,0 +1,973 @@
+[
+  {
+    "id": "6177fe62e5dbb68d17d2e2f9",
+    "path": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+    "name": "GroupOrderingPartial",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct GroupOrderingPartial",
+    "docs": "Tracks grouping state when the data is ordered by some subset of\nthe group keys.\n\nOnce the next *sort key* value is seen, never see groups with that\nsort key again, so we can emit all groups with the previous sort\nkey and earlier.\n\nFor example, given `SUM(amt) GROUP BY id, state` if the input is\nsorted by `state`, when a new value of `state` is seen, all groups\nwith prior values of `state` can be emitted.\n\nThe state is tracked like this:\n\n```text\n                                           ┏━━━━━━━━━━━━━━━━━┓ ┏━━━━━━━┓\n    ┌─────┐    ┌───────────────────┐ ┌─────┃        9        ┃ ┃ \"MD\"  ┃\n    │┌───┐│    │ ┌──────────────┐  │ │     ┗━━━━━━━━━━━━━━━━━┛ ┗━━━━━━━┛\n    ││ 0 ││    │ │  123, \"MA\"   │  │ │        current_sort      sort_key\n    │└───┘│    │ └──────────────┘  │ │\n    │ ... │    │    ...            │ │      current_sort tracks the\n    │┌───┐│    │ ┌──────────────┐  │ │      smallest group index that had\n    ││ 8 ││    │ │  765, \"MA\"   │  │ │      the same sort_key as current\n    │├───┤│    │ ├──────────────┤  │ │\n    ││ 9 ││    │ │  923, \"MD\"   │◀─┼─┘\n    │├───┤│    │ ├──────────────┤  │        ┏━━━━━━━━━━━━━━┓\n    ││10 ││    │ │  345, \"MD\"   │  │  ┌─────┃      11      ┃\n    │├───┤│    │ ├──────────────┤  │  │     ┗━━━━━━━━━━━━━━┛\n    ││11 ││    │ │  124, \"MD\"   │◀─┼──┘         current\n    │└───┘│    │ └──────────────┘  │\n    └─────┘    └───────────────────┘\n\n group indices\n(in group value  group_values               current tracks the most\n     order)                                    recent group index\n```",
+    "span": {
+      "filename": "src/aggregates/order/partial.rs",
+      "begin": [
+        66,
+        1
+      ],
+      "end": [
+        74,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          420,
+          421,
+          422,
+          423,
+          424,
+          425,
+          426,
+          427,
+          428,
+          429,
+          430,
+          431,
+          432,
+          433,
+          434,
+          435,
+          436,
+          438
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "413",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.json",
+    "anchor": "op-6177fe62e5dbb68d17d2e2f9",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingPartial"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "62c851c3d95fc38a59624ad8",
+    "path": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial::emit_to",
+    "name": "emit_to",
+    "owner": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn emit_to(&self) -> Option<EmitTo>",
+    "docs": "How many groups be emitted, or None if no data can be emitted",
+    "span": {
+      "filename": "src/aggregates/order/partial.rs",
+      "begin": [
+        142,
+        5
+      ],
+      "end": [
+        158,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "EmitTo",
+                          "id": 315,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "315": "datafusion_expr_common::groups_accumulator::EmitTo"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingPartial",
+          "id": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/partial.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          274,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "415",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.json",
+    "anchor": "op-62c851c3d95fc38a59624ad8",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingPartial::emit_to"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6d1bff08e64abe8630f257a6",
+    "path": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/aggregates/order/partial.rs",
+      "begin": [
+        65,
+        10
+      ],
+      "end": [
+        65,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingPartial",
+          "id": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/partial.rs",
+        "begin": [
+          65,
+          10
+        ],
+        "end": [
+          65,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "437",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.json",
+    "anchor": "op-6d1bff08e64abe8630f257a6",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingPartial::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ff09456f0242599b24a1590b",
+    "path": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial::input_done",
+    "name": "input_done",
+    "owner": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn input_done(&mut self)",
+    "docs": "Note that the input is complete so any outstanding groups are done as well",
+    "span": {
+      "filename": "src/aggregates/order/partial.rs",
+      "begin": [
+        182,
+        5
+      ],
+      "end": [
+        187,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingPartial",
+          "id": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/partial.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          274,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "417",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.json",
+    "anchor": "op-ff09456f0242599b24a1590b",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingPartial::input_done"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5bb8a5e2a9c6ef9250e885e1",
+    "path": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial::new_groups",
+    "name": "new_groups",
+    "owner": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new_groups(&mut self, batch_group_values: &[ArrayRef], group_indices: &[usize], total_num_groups: usize) -> Result<()>",
+    "docs": "Called when new groups are added in a batch. See documentation\non [`super::GroupOrdering::new_groups`]",
+    "span": {
+      "filename": "src/aggregates/order/partial.rs",
+      "begin": [
+        214,
+        5
+      ],
+      "end": [
+        268,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch_group_values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 178,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "group_indices",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "usize"
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "total_num_groups",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "178": "arrow_array::array::ArrayRef",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingPartial",
+          "id": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/partial.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          274,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`super::GroupOrdering::new_groups`": 386
+    },
+    "link_paths": {
+      "`super::GroupOrdering::new_groups`": "datafusion_physical_plan::aggregates::order::GroupOrdering::new_groups"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "419",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.json",
+    "anchor": "op-5bb8a5e2a9c6ef9250e885e1",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingPartial::new_groups"
+    ],
+    "resolved_doc_links": {
+      "`super::GroupOrdering::new_groups`": "../operations/datafusion_physical_plan.aggregates.order.GroupOrdering.md#op-a4917d87812169d2f40a4322"
+    }
+  },
+  {
+    "id": "7a207d7e601e7202e0e0aaef",
+    "path": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial::remove_groups",
+    "name": "remove_groups",
+    "owner": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn remove_groups(&mut self, n: usize)",
+    "docs": "remove the first n groups from the internal state, shifting\nall existing indexes down by `n`",
+    "span": {
+      "filename": "src/aggregates/order/partial.rs",
+      "begin": [
+        162,
+        5
+      ],
+      "end": [
+        179,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingPartial",
+          "id": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/partial.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          274,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "416",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.json",
+    "anchor": "op-7a207d7e601e7202e0e0aaef",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingPartial::remove_groups"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a8e5015d8631bec2d3c7f61e",
+    "path": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial::reset",
+    "name": "reset",
+    "owner": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn reset(&mut self)",
+    "docs": "Starts tracking a new ordered input segment with the same sort-key\ncolumns.",
+    "span": {
+      "filename": "src/aggregates/order/partial.rs",
+      "begin": [
+        191,
+        5
+      ],
+      "end": [
+        193,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingPartial",
+          "id": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/partial.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          274,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "418",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.json",
+    "anchor": "op-a8e5015d8631bec2d3c7f61e",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingPartial::reset"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b4d1b0bc7a180dc0a2960fd2",
+    "path": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial::try_new",
+    "name": "try_new",
+    "owner": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_new(order_indices: Vec<usize>) -> Result<Self>",
+    "docs": "TODO: Remove unnecessary `input_schema` parameter.",
+    "span": {
+      "filename": "src/aggregates/order/partial.rs",
+      "begin": [
+        120,
+        5
+      ],
+      "end": [
+        126,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "order_indices",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "GroupOrderingPartial",
+          "id": "datafusion_physical_plan::aggregates::order::partial::GroupOrderingPartial",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/aggregates/order/partial.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          274,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "414",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.md",
+    "record_file": "operations/datafusion_physical_plan.aggregates.order.partial.GroupOrderingPartial.json",
+    "anchor": "op-b4d1b0bc7a180dc0a2960fd2",
+    "aliases": [
+      "datafusion_physical_plan::aggregates::order::GroupOrderingPartial::try_new"
+    ],
+    "resolved_doc_links": {}
+  }
+]

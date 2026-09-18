@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## FILE_NAME
 
 `constant` · `buoyant_kernel::reserved_field_ids::FILE_NAME`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.reserved_field_ids.FILE_NAME.md)
 
 Also reachable as `delta_kernel::reserved_field_ids::FILE_NAME`
 

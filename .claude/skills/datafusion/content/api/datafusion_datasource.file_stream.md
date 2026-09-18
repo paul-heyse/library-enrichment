@@ -16,6 +16,9 @@ enum OnError
 
 **Derives**: Default
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_stream.OnError.md).
+
+
 Describes the behavior of the `FileStream` if file opening or scanning fails
 
 ---
@@ -51,6 +54,9 @@ fn schema(&self) -> SchemaRef
 fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_stream.FileStream.md).
+
+
 A stream that iterates record batch by record batch, file over file.
 
 ---
@@ -78,6 +84,9 @@ trait FileOpener: Unpin + Send + Sync
 fn open(&self, partitioned_file: PartitionedFile) -> Result<FileOpenFuture>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_stream.FileOpener.md).
+
+
 Generic API for opening a file using an [`ObjectStore`] and resolving to a
 stream of [`RecordBatch`]
 
@@ -94,6 +103,9 @@ Also reachable as `datafusion::datasource::physical_plan::FileOpenFuture`
 ```rust
 type FileOpenFuture = futures::future::BoxFuture<'static, datafusion_common::Result<futures::stream::BoxStream<'static, datafusion_common::Result<arrow::record_batch::RecordBatch>>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_stream.FileOpenFuture.md).
+
 
 A fallible future that resolves to a stream of [`RecordBatch`]
 

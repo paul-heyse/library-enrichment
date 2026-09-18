@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::grouping`
 fn grouping(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.grouping.grouping.md).
+
+
 Returns 1 if the data is aggregated across the specified column or 0 for not aggregated in the result set.
 
 ---
@@ -23,6 +26,9 @@ Returns 1 if the data is aggregated across the specified column or 0 for not agg
 ```rust
 fn grouping_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.grouping.grouping_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`Grouping`]
 
@@ -56,5 +62,8 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.grouping.Grouping.md).
+
 
 ---

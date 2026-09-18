@@ -5,6 +5,7 @@ Crate `deltalake-lakefs` · 2 public items · structured records in [`model/delt
 ## LakeFSConfigError
 
 `enum` · `deltalake_lakefs::errors::LakeFSConfigError`
+[Full member contracts, output types and access classification](../operations/deltalake_lakefs.errors.LakeFSConfigError.md)
 
 ```rust
 enum LakeFSConfigError
@@ -27,6 +28,7 @@ fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Resu
 ## LakeFSOperationError
 
 `enum` · `deltalake_lakefs::errors::LakeFSOperationError`
+[Full member contracts, output types and access classification](../operations/deltalake_lakefs.errors.LakeFSOperationError.md)
 
 ```rust
 enum LakeFSOperationError

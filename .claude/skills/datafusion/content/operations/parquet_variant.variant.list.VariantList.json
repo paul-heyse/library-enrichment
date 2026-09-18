@@ -1,0 +1,2391 @@
+[
+  {
+    "id": "50198737fce518dd29afb54a",
+    "path": "parquet_variant::variant::list::VariantList",
+    "name": "VariantList",
+    "owner": null,
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct VariantList<'m, 'v>",
+    "docs": "[`Variant`] Array.\n\nSee the [Variant spec] for details.\n\nNOTE: The \"list\" naming differs from the variant spec -- which calls it \"array\" -- in order to be\nconsistent with Parquet and Arrow type naming. Otherwise, the name would conflict with the\n`VariantArray : Array` we must eventually define for variant-typed arrow arrays.\n\n# Validation\n\nEvery instance of variant list is either _valid_ or _invalid_. depending on whether the\nunderlying bytes are a valid encoding of a variant array (see below).\n\nInstances produced by [`Self::try_new`] or [`Self::with_full_validation`] are fully _validated_. They always\ncontain _valid_ data, and infallible accesses such as iteration and indexing are panic-free. The\nvalidation cost is linear in the number of underlying bytes.\n\nInstances produced by [`Self::new`] are _unvalidated_ and so they may contain either _valid_ or\n_invalid_ data. Infallible accesses such as iteration and indexing will panic if the underlying\nbytes are _invalid_, and fallible alternatives such as [`Self::iter_try`] and [`Self::get`] are\nprovided as panic-free alternatives. [`Self::with_full_validation`] can also be used to _validate_ an\n_unvalidated_ instance, if desired.\n\n_Unvalidated_ instances can be constructed in constant time. This can be useful if the caller\nknows the underlying bytes were already validated previously, or if the caller intends to\nperform a small number of (fallible) accesses to a large list.\n\nA _validated_ variant list instance guarantees that:\n\n- header byte is valid\n- num_elements is in bounds\n- offset array content is in-bounds\n- first offset is zero\n- last offset is in-bounds\n- all other offsets are in-bounds (*)\n- all offsets are monotonically increasing (*)\n- all values are (recursively) valid variant objects (*)\n- the associated variant metadata is [valid] (*)\n\nNOTE: [`Self::new`] only skips expensive (non-constant cost) validation checks (marked by `(*)`\nin the list above); it panics any of the other checks fails.\n\n# Safety\n\nEven an _invalid_ variant list instance is still _safe_ to use in the Rust sense. Accessing\nit with infallible methods may cause panics but will never lead to undefined behavior.\n\n[valid]: VariantMetadata#Validation\n[Variant spec]: https://github.com/apache/parquet-format/blob/master/VariantEncoding.md#value-data-for-array-basic_type3",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        121,
+        1
+      ],
+      "end": [
+        128,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [
+              678,
+              679
+            ],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'m",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'v",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          697,
+          698,
+          699,
+          700,
+          701,
+          702,
+          703,
+          704,
+          705,
+          706,
+          707,
+          708,
+          709,
+          710,
+          711,
+          712,
+          713,
+          714,
+          716,
+          718,
+          720
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Self::with_full_validation`": 685,
+      "`Self::new`": 686,
+      "`Self::try_new`": 684,
+      "`Self::get`": 688,
+      "`Variant`": 19,
+      "`Self::iter_try`": 687,
+      "VariantMetadata#Validation": 128
+    },
+    "link_paths": {
+      "`Self::with_full_validation`": "parquet_variant::variant::list::VariantList::with_full_validation",
+      "`Self::new`": "parquet_variant::variant::list::VariantList::new",
+      "`Self::try_new`": "parquet_variant::variant::list::VariantList::try_new",
+      "`Self::get`": "parquet_variant::variant::list::VariantList::get",
+      "`Variant`": "parquet_variant::variant::Variant",
+      "`Self::iter_try`": "parquet_variant::variant::list::VariantList::iter_try",
+      "VariantMetadata#Validation": "parquet_variant::variant::metadata::VariantMetadata"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "689",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-50198737fce518dd29afb54a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::with_full_validation`": "../operations/parquet_variant.variant.list.VariantList.md#op-082dc702afdf4a37d099dc8d",
+      "`Self::new`": "../operations/parquet_variant.variant.list.VariantList.md#op-bd462478ee50fb63f6eabc4e",
+      "`Self::try_new`": "../operations/parquet_variant.variant.list.VariantList.md#op-9e8a8c6f0072a34092aa9544",
+      "`Self::get`": "../operations/parquet_variant.variant.list.VariantList.md#op-25d78e3beb6960aa905df29d",
+      "`Variant`": "../operations/parquet_variant.variant.Variant.md#op-56d8e2cab45de055ef39f43d",
+      "`Self::iter_try`": "../operations/parquet_variant.variant.list.VariantList.md#op-57fc540e3f85a59691bd85d3",
+      "VariantMetadata#Validation": "../operations/parquet_variant.variant.metadata.VariantMetadata.md#op-6c1715f60a1297fbc36b12c8"
+    }
+  },
+  {
+    "id": "8a6b69fe0cbbf9809094a1eb",
+    "path": "parquet_variant::variant::list::VariantList::clone",
+    "name": "clone",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> VariantList<'m, 'v>",
+    "docs": "",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        120,
+        17
+      ],
+      "end": [
+        120,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "VariantList",
+              "id": 689,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'m"
+                    },
+                    {
+                      "lifetime": "'v"
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "689": "parquet_variant::variant::list::VariantList"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantList",
+          "id": "parquet_variant::variant::list::VariantList",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'m"
+                },
+                {
+                  "lifetime": "'v"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [
+          {
+            "name": "'m",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "'v",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant/list.rs",
+        "begin": [
+          120,
+          17
+        ],
+        "end": [
+          120,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "717",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-8a6b69fe0cbbf9809094a1eb",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "21038267540dc6ca50ad3c41",
+    "path": "parquet_variant::variant::list::VariantList::eq",
+    "name": "eq",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &Self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        314,
+        5
+      ],
+      "end": [
+        320,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantList",
+          "id": "parquet_variant::variant::list::VariantList",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'m"
+                },
+                {
+                  "lifetime": "'v"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [
+          {
+            "name": "'m",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "'v",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant/list.rs",
+        "begin": [
+          313,
+          1
+        ],
+        "end": [
+          321,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "719",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-21038267540dc6ca50ad3c41",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "810738a0012332bade5ae87c",
+    "path": "parquet_variant::variant::list::VariantList::fmt",
+    "name": "fmt",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        120,
+        10
+      ],
+      "end": [
+        120,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 65,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 66,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "65": "core::fmt::Formatter",
+      "66": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantList",
+          "id": "parquet_variant::variant::list::VariantList",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'m"
+                },
+                {
+                  "lifetime": "'v"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "'m",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "'v",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant/list.rs",
+        "begin": [
+          120,
+          10
+        ],
+        "end": [
+          120,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "715",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-810738a0012332bade5ae87c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "25d78e3beb6960aa905df29d",
+    "path": "parquet_variant::variant::list::VariantList::get",
+    "name": "get",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get(&self, index: usize) -> Option<Variant<'m, 'v>>",
+    "docs": "Returns element by index in `0..self.len()`, if any. May panic if this list is [invalid].\n\n[invalid]: Self#Validation",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        256,
+        5
+      ],
+      "end": [
+        261,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "index",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 693,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Variant",
+                          "id": 19,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "lifetime": "'m"
+                                },
+                                {
+                                  "lifetime": "'v"
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "693": "core::option::Option",
+      "19": "parquet_variant::variant::Variant"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantList",
+          "id": "parquet_variant::variant::list::VariantList",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'m"
+                },
+                {
+                  "lifetime": "'v"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'m",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "'v",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant/list.rs",
+        "begin": [
+          137,
+          1
+        ],
+        "end": [
+          307,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self#Validation": 689
+    },
+    "link_paths": {
+      "Self#Validation": "parquet_variant::variant::list::VariantList"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "688",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-25d78e3beb6960aa905df29d",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Self#Validation": "../operations/parquet_variant.variant.list.VariantList.md#op-50198737fce518dd29afb54a"
+    }
+  },
+  {
+    "id": "4ea3e9d1b457553f9a868370",
+    "path": "parquet_variant::variant::list::VariantList::is_empty",
+    "name": "is_empty",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "Is the array of zero length",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        249,
+        5
+      ],
+      "end": [
+        251,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantList",
+          "id": "parquet_variant::variant::list::VariantList",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'m"
+                },
+                {
+                  "lifetime": "'v"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'m",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "'v",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant/list.rs",
+        "begin": [
+          137,
+          1
+        ],
+        "end": [
+          307,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "692",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-4ea3e9d1b457553f9a868370",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "14b64c74e9343e3b69358c6e",
+    "path": "parquet_variant::variant::list::VariantList::is_fully_validated",
+    "name": "is_fully_validated",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_fully_validated(&self) -> bool",
+    "docs": "True if this instance is fully [validated] for panic-free infallible accesses.\n\n[validated]: Self#Validation",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        205,
+        5
+      ],
+      "end": [
+        207,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantList",
+          "id": "parquet_variant::variant::list::VariantList",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'m"
+                },
+                {
+                  "lifetime": "'v"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'m",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "'v",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant/list.rs",
+        "begin": [
+          137,
+          1
+        ],
+        "end": [
+          307,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self#Validation": 689
+    },
+    "link_paths": {
+      "Self#Validation": "parquet_variant::variant::list::VariantList"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "690",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-14b64c74e9343e3b69358c6e",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Self#Validation": "../operations/parquet_variant.variant.list.VariantList.md#op-50198737fce518dd29afb54a"
+    }
+  },
+  {
+    "id": "41f377fd0aff474dda28b4fd",
+    "path": "parquet_variant::variant::list::VariantList::iter",
+    "name": "iter",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn iter(&self) -> impl Iterator<Item = Variant<'m, 'v>> + '_",
+    "docs": "Iterates over the values of this list. When working with [unvalidated] input, consider\n[`Self::iter_try`] to avoid panics due to invalid data.\n\n[unvalidated]: Self#Validation",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        283,
+        5
+      ],
+      "end": [
+        286,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "impl_trait": [
+              {
+                "trait_bound": {
+                  "trait": {
+                    "path": "Iterator",
+                    "id": 696,
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [],
+                        "constraints": [
+                          {
+                            "name": "Item",
+                            "args": null,
+                            "binding": {
+                              "equality": {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Variant",
+                                    "id": 19,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "lifetime": "'m"
+                                          },
+                                          {
+                                            "lifetime": "'v"
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "generic_params": [],
+                  "modifier": "none"
+                }
+              },
+              {
+                "outlives": "'_"
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "696": "core::iter::traits::iterator::Iterator",
+      "19": "parquet_variant::variant::Variant"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantList",
+          "id": "parquet_variant::variant::list::VariantList",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'m"
+                },
+                {
+                  "lifetime": "'v"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'m",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "'v",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant/list.rs",
+        "begin": [
+          137,
+          1
+        ],
+        "end": [
+          307,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self#Validation": 689,
+      "`Self::iter_try`": 687
+    },
+    "link_paths": {
+      "Self#Validation": "parquet_variant::variant::list::VariantList",
+      "`Self::iter_try`": "parquet_variant::variant::list::VariantList::iter_try"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "695",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-41f377fd0aff474dda28b4fd",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Self#Validation": "../operations/parquet_variant.variant.list.VariantList.md#op-50198737fce518dd29afb54a",
+      "`Self::iter_try`": "../operations/parquet_variant.variant.list.VariantList.md#op-57fc540e3f85a59691bd85d3"
+    }
+  },
+  {
+    "id": "57fc540e3f85a59691bd85d3",
+    "path": "parquet_variant::variant::list::VariantList::iter_try",
+    "name": "iter_try",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn iter_try(&self) -> impl Iterator<Item = Result<Variant<'m, 'v>, ArrowError>> + '_",
+    "docs": "Fallible iteration over the elements of this list.",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        289,
+        5
+      ],
+      "end": [
+        292,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "impl_trait": [
+              {
+                "trait_bound": {
+                  "trait": {
+                    "path": "Iterator",
+                    "id": 696,
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [],
+                        "constraints": [
+                          {
+                            "name": "Item",
+                            "args": null,
+                            "binding": {
+                              "equality": {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Result",
+                                    "id": 20,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "Variant",
+                                                "id": 19,
+                                                "args": {
+                                                  "angle_bracketed": {
+                                                    "args": [
+                                                      {
+                                                        "lifetime": "'m"
+                                                      },
+                                                      {
+                                                        "lifetime": "'v"
+                                                      }
+                                                    ],
+                                                    "constraints": []
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "ArrowError",
+                                                "id": 21,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "generic_params": [],
+                  "modifier": "none"
+                }
+              },
+              {
+                "outlives": "'_"
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "696": "core::iter::traits::iterator::Iterator",
+      "20": "core::result::Result",
+      "19": "parquet_variant::variant::Variant",
+      "21": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantList",
+          "id": "parquet_variant::variant::list::VariantList",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'m"
+                },
+                {
+                  "lifetime": "'v"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'m",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "'v",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant/list.rs",
+        "begin": [
+          137,
+          1
+        ],
+        "end": [
+          307,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "687",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-57fc540e3f85a59691bd85d3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d6c219b14c6cf6275ce9ac87",
+    "path": "parquet_variant::variant::list::VariantList::len",
+    "name": "len",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Return the length of this array",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        244,
+        5
+      ],
+      "end": [
+        246,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantList",
+          "id": "parquet_variant::variant::list::VariantList",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'m"
+                },
+                {
+                  "lifetime": "'v"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'m",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "'v",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant/list.rs",
+        "begin": [
+          137,
+          1
+        ],
+        "end": [
+          307,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "691",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-d6c219b14c6cf6275ce9ac87",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "598a73e6bac33c7380ac2bb3",
+    "path": "parquet_variant::variant::list::VariantList::metadata",
+    "name": "metadata",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "struct_field",
+    "signature": "metadata: variant::VariantMetadata<'m>",
+    "docs": "",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        122,
+        5
+      ],
+      "end": [
+        122,
+        38
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "crate::variant::VariantMetadata",
+          "id": 128,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'m"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "128": "parquet_variant::variant::metadata::VariantMetadata"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "678",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-598a73e6bac33c7380ac2bb3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bd462478ee50fb63f6eabc4e",
+    "path": "parquet_variant::variant::list::VariantList::new",
+    "name": "new",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(metadata: VariantMetadata<'m>, value: &'v [u8]) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        148,
+        5
+      ],
+      "end": [
+        150,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "metadata",
+              {
+                "resolved_path": {
+                  "path": "VariantMetadata",
+                  "id": 128,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'m"
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'v",
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "u8"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "parquet_variant::variant::metadata::VariantMetadata"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantList",
+          "id": "parquet_variant::variant::list::VariantList",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'m"
+                },
+                {
+                  "lifetime": "'v"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'m",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "'v",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant/list.rs",
+        "begin": [
+          137,
+          1
+        ],
+        "end": [
+          307,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "686",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-bd462478ee50fb63f6eabc4e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b94419ec19a2d35da9a8db46",
+    "path": "parquet_variant::variant::list::VariantList::try_get",
+    "name": "try_get",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_get(&self, index: usize) -> Result<Variant<'m, 'v>, ArrowError>",
+    "docs": "Fallible version of `get`. Returns element by index, capturing validation errors",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        264,
+        5
+      ],
+      "end": [
+        267,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "index",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 20,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Variant",
+                          "id": 19,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "lifetime": "'m"
+                                },
+                                {
+                                  "lifetime": "'v"
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 21,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "core::result::Result",
+      "19": "parquet_variant::variant::Variant",
+      "21": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantList",
+          "id": "parquet_variant::variant::list::VariantList",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'m"
+                },
+                {
+                  "lifetime": "'v"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'m",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "'v",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant/list.rs",
+        "begin": [
+          137,
+          1
+        ],
+        "end": [
+          307,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "694",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-b94419ec19a2d35da9a8db46",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9e8a8c6f0072a34092aa9544",
+    "path": "parquet_variant::variant::list::VariantList::try_new",
+    "name": "try_new",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new(metadata: VariantMetadata<'m>, value: &'v [u8]) -> Result<Self, ArrowError>",
+    "docs": "Attempts to interpret `value` as a variant array value.\n\n# Validation\n\nThis constructor verifies that `value` points to a valid variant array value. In particular,\nthat all offsets are in-bounds and point to valid (recursively validated) objects.",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        144,
+        5
+      ],
+      "end": [
+        146,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "metadata",
+              {
+                "resolved_path": {
+                  "path": "VariantMetadata",
+                  "id": 128,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'m"
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'v",
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "u8"
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 20,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 21,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "parquet_variant::variant::metadata::VariantMetadata",
+      "20": "core::result::Result",
+      "21": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantList",
+          "id": "parquet_variant::variant::list::VariantList",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'m"
+                },
+                {
+                  "lifetime": "'v"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'m",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "'v",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant/list.rs",
+        "begin": [
+          137,
+          1
+        ],
+        "end": [
+          307,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "684",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-9e8a8c6f0072a34092aa9544",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "99684202e9b8f5340540ea56",
+    "path": "parquet_variant::variant::list::VariantList::value",
+    "name": "value",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "struct_field",
+    "signature": "value: &'v [u8]",
+    "docs": "",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        123,
+        5
+      ],
+      "end": [
+        123,
+        24
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "borrowed_ref": {
+          "lifetime": "'v",
+          "is_mutable": false,
+          "type": {
+            "slice": {
+              "primitive": "u8"
+            }
+          }
+        }
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "679",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-99684202e9b8f5340540ea56",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "082dc702afdf4a37d099dc8d",
+    "path": "parquet_variant::variant::list::VariantList::with_full_validation",
+    "name": "with_full_validation",
+    "owner": "parquet_variant::variant::list::VariantList",
+    "crate": "parquet-variant",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_full_validation(self) -> Result<Self, ArrowError>",
+    "docs": "Performs a full [validation] of this variant array and returns the result.\n\n[validation]: Self#Validation",
+    "span": {
+      "filename": "src/variant/list.rs",
+      "begin": [
+        212,
+        5
+      ],
+      "end": [
+        241,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 20,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 21,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "core::result::Result",
+      "21": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "VariantList",
+          "id": "parquet_variant::variant::list::VariantList",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'m"
+                },
+                {
+                  "lifetime": "'v"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'m",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          },
+          {
+            "name": "'v",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/variant/list.rs",
+        "begin": [
+          137,
+          1
+        ],
+        "end": [
+          307,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self#Validation": 689
+    },
+    "link_paths": {
+      "Self#Validation": "parquet_variant::variant::list::VariantList"
+    },
+    "artifact": {
+      "id": "6a68201be2e9aaa6918d2ae8642d65b08e16cd7b9fbbb8c3ad1d47e3d4869029",
+      "format_version": 61,
+      "item_id": "685",
+      "origin": "https://docs.rs/crate/parquet-variant/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet_variant.variant.list.VariantList.md",
+    "record_file": "operations/parquet_variant.variant.list.VariantList.json",
+    "anchor": "op-082dc702afdf4a37d099dc8d",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Self#Validation": "../operations/parquet_variant.variant.list.VariantList.md#op-50198737fce518dd29afb54a"
+    }
+  }
+]

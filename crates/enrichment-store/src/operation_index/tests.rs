@@ -128,7 +128,9 @@ async fn factory_refuses_unbound_volatile_mutable_and_wrong_family_inputs() {
         assert!(cache(&runtime, volatile, family()).await.is_err());
         let frame = input(&runtime).await;
         let batches = frame.collect().await.unwrap();
-        let mutable = runtime.session().read_batches(batches).unwrap();
+        let mutable = runtime.session().read_table(Arc::new(datafusion::datasource::MemTable::try_new(
+            batches[0].schema(), vec![batches],
+        ).unwrap())).unwrap();
         assert!(cache(&runtime, mutable.clone(), family()).await.is_err());
         crate::leases::initialize(root.path()).unwrap();
         let lease = crate::leases::shared(root.path()).unwrap();
@@ -155,8 +157,13 @@ async fn immutable_arrow_ingress_survives_constraint_and_lease_wrappers() {
             let source = input(&runtime).await.collect().await.unwrap();
             let schema = source[0].schema();
             let batch = arrow::compute::concat_batches(&schema, &source).unwrap();
-            let ingress =
-                Arc::new(crate::admitted_provider::AdmittedProvider::from_batch(batch).unwrap());
+            let ingress = Arc::new(
+                crate::admitted_provider::AdmittedProvider::from_batch(
+                    batch,
+                    &runtime.session().runtime_env().memory_pool,
+                )
+                .unwrap(),
+            );
             let constrained = Arc::new(crate::admitted_provider::AdmittedProvider::new(
                 ingress,
                 datafusion::common::Constraints::new_unverified(vec![]),
@@ -185,17 +192,21 @@ async fn operation_identity_and_rewrite_admission_are_exact() {
                 .unwrap();
             let value = binding(&cached);
             let node = Materialization {
-                input: value.input.clone(),
                 binding: value.clone(),
                 admitted: true,
             };
+            assert!(
+                UserDefinedLogicalNodeCore::with_exprs_and_inputs(&node, vec![], vec![]).is_ok()
+            );
+            assert!(UserDefinedLogicalNodeCore::inputs(&node).is_empty());
             assert!(
                 UserDefinedLogicalNodeCore::with_exprs_and_inputs(
                     &node,
                     vec![],
                     vec![value.input.clone()]
                 )
-                .is_ok()
+                .is_err(),
+                "even an equal base cannot become a rewritable consumer child"
             );
             let changed = DataFrame::new(runtime.session().state(), value.input.clone())
                 .limit(0, Some(1))
@@ -460,12 +471,21 @@ async fn native_reader_holds_spill_and_reservation_after_plan_drop() {
             let mut stream = physical.execute(0, runtime.session().task_ctx()).unwrap();
             let batch = stream.try_next().await.unwrap().unwrap();
             assert!(batch.num_rows() > 0);
-            drop((physical, frame, batch));
+            drop((physical, frame));
             let env = runtime.session().runtime_env();
             assert!(env.disk_manager.used_disk_space() > 0);
             assert!(env.memory_pool.reserved() >= 128 * 1024);
             drop(stream);
             assert_eq!(env.disk_manager.used_disk_space(), 0);
+            let held = batch.slice(0, 1);
+            drop(batch);
+            let with_output = env.memory_pool.reserved();
+            assert!(with_output > 0, "emitted Arrow buffers retain payment");
+            drop(held);
+            assert!(
+                env.memory_pool.reserved() < with_output,
+                "the final Arrow slice releases its own charge"
+            );
         })
         .await
         .unwrap();

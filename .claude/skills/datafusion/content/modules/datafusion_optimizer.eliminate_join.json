@@ -1,0 +1,59 @@
+[
+  {
+    "id": "f595155605406f819968ad42",
+    "path": "datafusion_optimizer::eliminate_join",
+    "name": "eliminate_join",
+    "owner": null,
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "module",
+    "signature": "mod eliminate_join",
+    "docs": "[`EliminateJoin`] rewrites joins to simpler forms to make them cheaper\nto evaluate. We implement three distinct rewrites:\n\n* An inner join can be rewritten to an empty relation if the join condition\n  is trivially false.\n\n* An inner join `L ⋈ R` can be rewritten to a left semi join `L ⋉ R`\n  (`LeftSemi`), which keeps the rows of L that have a match in R and outputs\n  only L's columns. The rewrite to `L ⋉ R` is valid when both of the\n  following are true:\n\n    1. None of R's columns are referenced above the join.\n    2. R does not observably multiply L's rows. This holds when either the\n       join's ancestors are duplicate-insensitive (e.g., DISTINCT) or we can use\n       functional dependencies to prove that each L row matches at most one R\n       row (R is provably unique on the join keys).\n\n* A left outer join `L ⟕ R` can be removed entirely, i.e. replaced by `L`,\n  under the same two conditions. Unlike an inner join, a left join\n  preserves every row of L whether or not it has a match in R, so when R's\n  columns are unused and R cannot multiply L's rows the join has no\n  observable effect at all. Such joins commonly appear in generated SQL\n  and in queries over views that join in lookup tables the query does not\n  read. A join filter does not prevent this rewrite: for a left join it\n  only decides whether a left row is matched or null-padded, and either\n  way the row is emitted. Symmetrically, a right outer join `L ⟖ R` can be\n  replaced by `R` when L's columns are unused and L cannot multiply R's\n  rows.\n\n# Overview\n\n`rewrite_subtree` walks the plan top-down, threading two pieces of context\ndown to each join:\n\n* `live` — which of the join's output columns are referenced above it. It is\n  propagated top-down: each node asks its children only for the columns it\n  needs from them, so a projection or aggregate asks for just the columns its\n  expressions reference, dropping the rest (the narrowing); a join splits the\n  set across its two inputs.\n* `duplicate_insensitive` — whether emitting each row once instead of many\n  times will not change the output. A duplicate-collapsing node (e.g.,\n  DISTINCT, GROUP BY with no aggregate functions, or the existence side of a\n  semi/anti/mark join) sets it `true` for its subtree, and it propagates\n  downward until a node that makes the row count observable again (a `LIMIT`,\n  a top-N sort, ...) clears it. It is therefore fixed by the nearest such\n  node, not by the whole ancestor chain: a collapsing node shields its subtree,\n  so a duplicate-sensitive node further above does not matter.\n\nAt each join, `rewritten_join_type` combines this context with the side's\nfunctional dependencies to choose `Inner`, `LeftSemi`, or `RightSemi`, or\nto eliminate the join entirely in favor of its preserved input. Most\nnode types just forward the context to their single child via\n`rewrite_single_input`; nodes that alter column requirements or\nduplicate-sensitivity (projection, aggregate, sort, ...) adjust it first.",
+    "span": {
+      "filename": "src/eliminate_join.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        1276,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          449
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`EliminateJoin`": 449
+    },
+    "link_paths": {
+      "`EliminateJoin`": "datafusion_optimizer::eliminate_join::EliminateJoin"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "475",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/datafusion_optimizer.eliminate_join.md",
+    "record_file": "modules/datafusion_optimizer.eliminate_join.json",
+    "anchor": "op-f595155605406f819968ad42",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`EliminateJoin`": "../operations/datafusion_optimizer.eliminate_join.EliminateJoin.md#op-0b7e6d6f9696103143bd302f"
+    }
+  }
+]

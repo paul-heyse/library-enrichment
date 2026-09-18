@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 20 public items · structured records in [`model/buoya
 ## transform_output_type
 
 `macro` · `buoyant_kernel::transform_output_type`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transform_output_type.md)
 
 Also reachable as `buoyant_kernel::transforms::transform_output_type`, `delta_kernel::transform_output_type`
 
@@ -56,6 +57,7 @@ impl<'a> ExpressionTransform<'a> for KeepSomeColumns {
 ## FileMeta
 
 `struct` · `buoyant_kernel::FileMeta`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.FileMeta.md)
 
 Also reachable as `delta_kernel::FileMeta`
 
@@ -94,6 +96,7 @@ The metadata that describes an object.
 ## ParquetFooter
 
 `struct` · `buoyant_kernel::ParquetFooter`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.ParquetFooter.md)
 
 Also reachable as `delta_kernel::ParquetFooter`
 
@@ -115,6 +118,7 @@ It is designed to be extensible for future additions such as row group statistic
 ## AsAny
 
 `trait` · `buoyant_kernel::AsAny`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.AsAny.md)
 
 Also reachable as `delta_kernel::AsAny`
 
@@ -188,6 +192,7 @@ NOTE: `AsAny` inherits the `Send + Sync` constraint from [`Arc::downcast`].
 ## DynPartialEq
 
 `trait` · `buoyant_kernel::DynPartialEq`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.DynPartialEq.md)
 
 Also reachable as `delta_kernel::DynPartialEq`
 
@@ -208,6 +213,7 @@ Extension trait that facilitates object-safe implementations of `PartialEq`.
 ## Engine
 
 `trait` · `buoyant_kernel::Engine`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.Engine.md)
 
 Also reachable as `delta_kernel::Engine`
 
@@ -241,6 +247,7 @@ table.
 ## EvaluationHandler
 
 `trait` · `buoyant_kernel::EvaluationHandler`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.EvaluationHandler.md)
 
 Also reachable as `delta_kernel::EvaluationHandler`
 
@@ -271,6 +278,7 @@ fill up partition column values, and any computation on data using Expressions.
 ## EvaluationHandlerExtension
 
 `trait` · `buoyant_kernel::EvaluationHandlerExtension`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.EvaluationHandlerExtension.md)
 
 Also reachable as `delta_kernel::EvaluationHandlerExtension`
 
@@ -292,6 +300,7 @@ EvaluationHandlers.
 ## ExpressionEvaluator
 
 `trait` · `buoyant_kernel::ExpressionEvaluator`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.ExpressionEvaluator.md)
 
 Also reachable as `delta_kernel::ExpressionEvaluator`
 
@@ -320,6 +329,7 @@ connector specific capabilities.
 ## IntoEngineData
 
 `trait` · `buoyant_kernel::IntoEngineData`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.IntoEngineData.md)
 
 Also reachable as `delta_kernel::IntoEngineData`
 
@@ -372,6 +382,7 @@ let engine_data = my_struct.into_engine_data(schema, engine);
 ## JsonHandler
 
 `trait` · `buoyant_kernel::JsonHandler`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.JsonHandler.md)
 
 Also reachable as `delta_kernel::JsonHandler`
 
@@ -404,6 +415,7 @@ parsing capability to Delta Kernel.
 ## ParquetHandler
 
 `trait` · `buoyant_kernel::ParquetHandler`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.ParquetHandler.md)
 
 Also reachable as `delta_kernel::ParquetHandler`
 
@@ -435,6 +447,7 @@ implementation of Parquet data file functionalities to Delta Kernel.
 ## PredicateEvaluator
 
 `trait` · `buoyant_kernel::PredicateEvaluator`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.PredicateEvaluator.md)
 
 Also reachable as `delta_kernel::PredicateEvaluator`
 
@@ -463,6 +476,7 @@ connector specific capabilities.
 ## StorageHandler
 
 `trait` · `buoyant_kernel::StorageHandler`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.StorageHandler.md)
 
 Also reachable as `delta_kernel::StorageHandler`
 
@@ -498,6 +512,7 @@ this trait can hide filesystem specific details from Delta Kernel.
 ## FileDataReadResult
 
 `type_alias` · `buoyant_kernel::FileDataReadResult`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.FileDataReadResult.md)
 
 Also reachable as `delta_kernel::FileDataReadResult`
 
@@ -512,6 +527,7 @@ Data read from a Delta table file and the corresponding scan file information.
 ## FileDataReadResultIterator
 
 `type_alias` · `buoyant_kernel::FileDataReadResultIterator`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.FileDataReadResultIterator.md)
 
 Also reachable as `delta_kernel::FileDataReadResultIterator`
 
@@ -526,6 +542,7 @@ An iterator of data read from specified files
 ## FileIndex
 
 `type_alias` · `buoyant_kernel::FileIndex`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.FileIndex.md)
 
 Also reachable as `delta_kernel::FileIndex`
 
@@ -538,6 +555,7 @@ type FileIndex = u64
 ## FileSize
 
 `type_alias` · `buoyant_kernel::FileSize`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.FileSize.md)
 
 Also reachable as `delta_kernel::FileSize`
 
@@ -550,6 +568,7 @@ type FileSize = u64
 ## FileSlice
 
 `type_alias` · `buoyant_kernel::FileSlice`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.FileSlice.md)
 
 Also reachable as `delta_kernel::FileSlice`
 
@@ -566,6 +585,7 @@ A specification for a range of bytes to read from a file location
 ## Version
 
 `type_alias` · `buoyant_kernel::Version`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.Version.md)
 
 Also reachable as `delta_kernel::Version`, `deltalake::kernel::Version`, `deltalake_core::kernel::Version`
 

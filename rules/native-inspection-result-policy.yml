@@ -1,0 +1,26 @@
+id: native-inspection-result-policy
+language: Rust
+severity: error
+message: Inspection handlers capture observations; native plans own aspect outcomes, completeness, ordering and recovery selection.
+files:
+  - crates/enrichment-daemon/src/ops/inspect.rs
+  - crates/enrichment-daemon/src/ops/inspect_execution.rs
+rule:
+  kind: function_item
+  has:
+    field: name
+    regex: '^(read|publish|render)$'
+  any:
+    - has:
+        kind: call_expression
+        has:
+          field: function
+          regex: '\.(sort|sort_by|sort_by_key|dedup|retain|truncate)$'
+        stopBy: end
+    - has:
+        kind: struct_expression
+        has:
+          field: name
+          regex: '(^|::)(AspectOutcome|Gap)$'
+        stopBy: end
+note: Finite driver dispatch, process mechanics and format encoding stay permitted. Pure fixtures outside these production entry points may build expected records.

@@ -29,6 +29,9 @@ fn new_with_ffi_codec(provider: Arc<dyn CatalogProviderList>, runtime: Option<Ha
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.catalog_provider_list.FFI_CatalogProviderList.md).
+
+
 A stable struct for sharing [`CatalogProviderList`] across FFI boundaries.
 
 ---
@@ -52,6 +55,9 @@ fn catalog(&self, name: &str) -> Option<Arc<dyn CatalogProvider>>
 fn catalog_names(&self) -> Vec<String>
 fn register_catalog(&self, name: String, catalog: Arc<dyn CatalogProvider>) -> Option<Arc<dyn CatalogProvider>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.catalog_provider_list.ForeignCatalogProviderList.md).
+
 
 This wrapper struct exists on the receiver side of the FFI interface, so it has
 no guarantees about being able to access the data in `private_data`. Any functions

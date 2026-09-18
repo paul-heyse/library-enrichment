@@ -1,0 +1,1214 @@
+[
+  {
+    "id": "670776ff9168d6afaa2dbf2b",
+    "path": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+    "name": "ExprSimplifier",
+    "owner": null,
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct ExprSimplifier",
+    "docs": "This structure handles API for expression simplification\n\nProvides simplification information based on DFSchema and\n[`ExecutionProps`]. This is the default implementation used by DataFusion\n\nFor example:\n```\nuse arrow::datatypes::{DataType, Field, Schema};\nuse datafusion_common::{DataFusionError, ToDFSchema};\nuse datafusion_expr::simplify::SimplifyContext;\nuse datafusion_expr::{col, lit};\nuse datafusion_optimizer::simplify_expressions::ExprSimplifier;\n\n// Create the schema\nlet schema = Schema::new(vec![Field::new(\"i\", DataType::Int64, false)])\n    .to_dfschema_ref()\n    .unwrap();\n\n// Create the simplifier\nlet context = SimplifyContext::builder().with_schema(schema).build();\nlet simplifier = ExprSimplifier::new(context);\n\n// Use the simplifier\n\n// b < 2 or (1 > 3)\nlet expr = col(\"b\").lt(lit(2)).or(lit(1).gt(lit(3)));\n\n// b < 2\nlet simplified = simplifier.simplify(expr).unwrap();\nassert_eq!(simplified, col(\"b\").lt(lit(2)));\n```",
+    "span": {
+      "filename": "src/simplify_expressions/expr_simplifier.rs",
+      "begin": [
+        105,
+        1
+      ],
+      "end": [
+        115,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          1044,
+          1045,
+          1046,
+          1047,
+          1048,
+          1049,
+          1050,
+          1051,
+          1052,
+          1053,
+          1054,
+          1055,
+          1056,
+          1057,
+          1058,
+          1059
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`ExecutionProps`": 1029
+    },
+    "link_paths": {
+      "`ExecutionProps`": "datafusion_expr::execution_props::ExecutionProps"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "1030",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md",
+    "record_file": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.json",
+    "anchor": "op-670776ff9168d6afaa2dbf2b",
+    "aliases": [
+      "datafusion_optimizer::simplify_expressions::ExprSimplifier"
+    ],
+    "resolved_doc_links": {
+      "`ExecutionProps`": "../operations/datafusion_expr.execution_props.ExecutionProps.md#op-52e4deb424494aeff92bf188"
+    }
+  },
+  {
+    "id": "ab6282f359cd840ffaae3af5",
+    "path": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::coerce",
+    "name": "coerce",
+    "owner": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn coerce(&self, expr: Expr, schema: &DFSchema) -> Result<Expr>",
+    "docs": "Apply type coercion to an [`Expr`] so that it can be\nevaluated as a [`PhysicalExpr`](datafusion_physical_expr::PhysicalExpr).\n\nSee the [type coercion module](datafusion_expr::type_coercion)\ndocumentation for more details on type coercion",
+    "span": {
+      "filename": "src/simplify_expressions/expr_simplifier.rs",
+      "begin": [
+        259,
+        5
+      ],
+      "end": [
+        262,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "expr",
+              {
+                "resolved_path": {
+                  "path": "Expr",
+                  "id": 146,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DFSchema",
+                      "id": 122,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Expr",
+                          "id": 146,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "146": "datafusion_expr::expr::Expr",
+      "122": "datafusion_common::dfschema::DFSchema",
+      "61": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ExprSimplifier",
+          "id": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/simplify_expressions/expr_simplifier.rs",
+        "begin": [
+          120,
+          1
+        ],
+        "end": [
+          428,
+          2
+        ]
+      }
+    },
+    "links": {
+      "datafusion_expr::type_coercion": 1038,
+      "`Expr`": 146,
+      "datafusion_physical_expr::PhysicalExpr": 1037
+    },
+    "link_paths": {
+      "datafusion_expr::type_coercion": "datafusion_expr::type_coercion",
+      "`Expr`": "datafusion_expr::expr::Expr",
+      "datafusion_physical_expr::PhysicalExpr": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "1034",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md",
+    "record_file": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.json",
+    "anchor": "op-ab6282f359cd840ffaae3af5",
+    "aliases": [
+      "datafusion_optimizer::simplify_expressions::ExprSimplifier::coerce"
+    ],
+    "resolved_doc_links": {
+      "datafusion_expr::type_coercion": "../modules/datafusion_expr.type_coercion.md#op-e9f5403bd846ccf38493f864",
+      "`Expr`": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc",
+      "datafusion_physical_expr::PhysicalExpr": "../operations/datafusion_physical_expr_common.physical_expr.PhysicalExpr.md#op-fe8284c43330456b0d4e6af7"
+    }
+  },
+  {
+    "id": "58233c3d5f6489bf78e430bd",
+    "path": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::new",
+    "name": "new",
+    "owner": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(info: SimplifyContext) -> Self",
+    "docs": "Create a new `ExprSimplifier` with the given [`SimplifyContext`].\nSee [`simplify`](Self::simplify) for an example.\n\n[`SimplifyContext`]: datafusion_expr::simplify::SimplifyContext",
+    "span": {
+      "filename": "src/simplify_expressions/expr_simplifier.rs",
+      "begin": [
+        125,
+        5
+      ],
+      "end": [
+        132,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "info",
+              {
+                "resolved_path": {
+                  "path": "SimplifyContext",
+                  "id": 1031,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1031": "datafusion_expr::simplify::SimplifyContext"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ExprSimplifier",
+          "id": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/simplify_expressions/expr_simplifier.rs",
+        "begin": [
+          120,
+          1
+        ],
+        "end": [
+          428,
+          2
+        ]
+      }
+    },
+    "links": {
+      "datafusion_expr::simplify::SimplifyContext": 1031,
+      "Self::simplify": 1032
+    },
+    "link_paths": {
+      "datafusion_expr::simplify::SimplifyContext": "datafusion_expr::simplify::SimplifyContext",
+      "Self::simplify": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::simplify"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "1033",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md",
+    "record_file": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.json",
+    "anchor": "op-58233c3d5f6489bf78e430bd",
+    "aliases": [
+      "datafusion_optimizer::simplify_expressions::ExprSimplifier::new"
+    ],
+    "resolved_doc_links": {
+      "datafusion_expr::simplify::SimplifyContext": "../operations/datafusion_expr.simplify.SimplifyContext.md#op-7b5998cee70553815ef2a10a",
+      "Self::simplify": "../operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md#op-24b1e713502751d6ff36f0a4"
+    }
+  },
+  {
+    "id": "24b1e713502751d6ff36f0a4",
+    "path": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::simplify",
+    "name": "simplify",
+    "owner": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn simplify(&self, expr: Expr) -> Result<Expr>",
+    "docs": "Simplifies this [`Expr`] as much as possible, evaluating\nconstants and applying algebraic simplifications.\n\nThe types of the expression must match what operators expect,\nor else an error may occur trying to evaluate. See\n[`coerce`](Self::coerce) for a function to help.\n\n# Example:\n\n`b > 2 AND b > 2`\n\ncan be written to\n\n`b > 2`\n\n```\nuse arrow::datatypes::{DataType, Field, Schema};\nuse datafusion_common::{DFSchema, ToDFSchema};\nuse datafusion_common::Result;\nuse datafusion_expr::simplify::SimplifyContext;\nuse datafusion_expr::{col, lit, Expr};\nuse datafusion_optimizer::simplify_expressions::ExprSimplifier;\nuse std::sync::Arc;\n\n// Create a schema and SimplifyContext\nlet schema = Schema::new(vec![Field::new(\"b\", DataType::Int32, true)])\n    .to_dfschema_ref()\n    .unwrap();\n// Create the simplifier\nlet context = SimplifyContext::builder().with_schema(schema).build();\nlet simplifier = ExprSimplifier::new(context);\n\n// b < 2\nlet b_lt_2 = col(\"b\").gt(lit(2));\n\n// (b < 2) OR (b < 2)\nlet expr = b_lt_2.clone().or(b_lt_2.clone());\n\n// (b < 2) OR (b < 2) --> (b < 2)\nlet expr = simplifier.simplify(expr).unwrap();\nassert_eq!(expr, b_lt_2);\n```",
+    "span": {
+      "filename": "src/simplify_expressions/expr_simplifier.rs",
+      "begin": [
+        176,
+        5
+      ],
+      "end": [
+        178,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "expr",
+              {
+                "resolved_path": {
+                  "path": "Expr",
+                  "id": 146,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Expr",
+                          "id": 146,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "146": "datafusion_expr::expr::Expr",
+      "61": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ExprSimplifier",
+          "id": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/simplify_expressions/expr_simplifier.rs",
+        "begin": [
+          120,
+          1
+        ],
+        "end": [
+          428,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self::coerce": 1034,
+      "`Expr`": 146
+    },
+    "link_paths": {
+      "Self::coerce": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::coerce",
+      "`Expr`": "datafusion_expr::expr::Expr"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "1032",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md",
+    "record_file": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.json",
+    "anchor": "op-24b1e713502751d6ff36f0a4",
+    "aliases": [
+      "datafusion_optimizer::simplify_expressions::ExprSimplifier::simplify"
+    ],
+    "resolved_doc_links": {
+      "Self::coerce": "../operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md#op-ab6282f359cd840ffaae3af5",
+      "`Expr`": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc"
+    }
+  },
+  {
+    "id": "bd6a2839af3bc69c7667430a",
+    "path": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::simplify_with_cycle_count",
+    "name": "simplify_with_cycle_count",
+    "owner": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn simplify_with_cycle_count(&self, expr: Expr) -> Result<(Expr, u32)>",
+    "docs": "Like [Self::simplify], simplifies this [`Expr`] as much as possible, evaluating\nconstants and applying algebraic simplifications. Additionally returns a `u32`\nrepresenting the number of simplification cycles performed, which can be useful for testing\noptimizations.\n\nSee [Self::simplify] for details and usage examples.",
+    "span": {
+      "filename": "src/simplify_expressions/expr_simplifier.rs",
+      "begin": [
+        191,
+        5
+      ],
+      "end": [
+        195,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[expect(unused_mut)]"
+      }
+    ],
+    "deprecation": {
+      "since": "48.0.0",
+      "note": "Use `simplify_with_cycle_count_transformed` instead"
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "expr",
+              {
+                "resolved_path": {
+                  "path": "Expr",
+                  "id": 146,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": [
+                          {
+                            "resolved_path": {
+                              "path": "Expr",
+                              "id": 146,
+                              "args": null
+                            }
+                          },
+                          {
+                            "primitive": "u32"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "146": "datafusion_expr::expr::Expr",
+      "61": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ExprSimplifier",
+          "id": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/simplify_expressions/expr_simplifier.rs",
+        "begin": [
+          120,
+          1
+        ],
+        "end": [
+          428,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self::simplify": 1032,
+      "`Expr`": 146
+    },
+    "link_paths": {
+      "Self::simplify": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::simplify",
+      "`Expr`": "datafusion_expr::expr::Expr"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "1035",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md",
+    "record_file": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.json",
+    "anchor": "op-bd6a2839af3bc69c7667430a",
+    "aliases": [
+      "datafusion_optimizer::simplify_expressions::ExprSimplifier::simplify_with_cycle_count"
+    ],
+    "resolved_doc_links": {
+      "Self::simplify": "../operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md#op-24b1e713502751d6ff36f0a4",
+      "`Expr`": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc"
+    }
+  },
+  {
+    "id": "043e18f52db5b5fa829d8a61",
+    "path": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::simplify_with_cycle_count_transformed",
+    "name": "simplify_with_cycle_count_transformed",
+    "owner": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn simplify_with_cycle_count_transformed(&self, expr: Expr) -> Result<(Transformed<Expr>, u32)>",
+    "docs": "Like [Self::simplify], simplifies this [`Expr`] as much as possible, evaluating\nconstants and applying algebraic simplifications. Additionally returns a `u32`\nrepresenting the number of simplification cycles performed, which can be useful for testing\noptimizations.\n\n# Returns\n\nA tuple containing:\n- The simplified expression wrapped in a `Transformed<Expr>` indicating if changes were made\n- The number of simplification cycles that were performed\n\nSee [Self::simplify] for details and usage examples.",
+    "span": {
+      "filename": "src/simplify_expressions/expr_simplifier.rs",
+      "begin": [
+        209,
+        5
+      ],
+      "end": [
+        252,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "expr",
+              {
+                "resolved_path": {
+                  "path": "Expr",
+                  "id": 146,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": [
+                          {
+                            "resolved_path": {
+                              "path": "Transformed",
+                              "id": 148,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Expr",
+                                          "id": 146,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "primitive": "u32"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "146": "datafusion_expr::expr::Expr",
+      "61": "datafusion_common::error::Result",
+      "148": "datafusion_common::tree_node::Transformed"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ExprSimplifier",
+          "id": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/simplify_expressions/expr_simplifier.rs",
+        "begin": [
+          120,
+          1
+        ],
+        "end": [
+          428,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self::simplify": 1032,
+      "`Expr`": 146
+    },
+    "link_paths": {
+      "Self::simplify": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::simplify",
+      "`Expr`": "datafusion_expr::expr::Expr"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "1036",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md",
+    "record_file": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.json",
+    "anchor": "op-043e18f52db5b5fa829d8a61",
+    "aliases": [
+      "datafusion_optimizer::simplify_expressions::ExprSimplifier::simplify_with_cycle_count_transformed"
+    ],
+    "resolved_doc_links": {
+      "Self::simplify": "../operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md#op-24b1e713502751d6ff36f0a4",
+      "`Expr`": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc"
+    }
+  },
+  {
+    "id": "455496995dfd4c662d4710d6",
+    "path": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::with_canonicalize",
+    "name": "with_canonicalize",
+    "owner": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_canonicalize(self, canonicalize: bool) -> Self",
+    "docs": "Should `Canonicalizer` be applied before simplification?\n\nIf true (the default), the expression will be rewritten to canonical\nform before simplification. This is useful to ensure that the simplifier\ncan apply all possible simplifications.\n\nSome expressions, such as those in some Joins, can not be canonicalized\nwithout changing their meaning. In these cases, canonicalization should\nbe disabled.\n\n```rust\nuse arrow::datatypes::{DataType, Field, Schema};\nuse datafusion_common::{Result, ScalarValue, ToDFSchema};\nuse datafusion_expr::interval_arithmetic::{Interval, NullableInterval};\nuse datafusion_expr::simplify::SimplifyContext;\nuse datafusion_expr::{col, lit, Expr};\nuse datafusion_optimizer::simplify_expressions::ExprSimplifier;\n\nlet schema = Schema::new(vec![\n    Field::new(\"a\", DataType::Int64, false),\n    Field::new(\"b\", DataType::Int64, false),\n    Field::new(\"c\", DataType::Int64, false),\n])\n.to_dfschema_ref()\n.unwrap();\n\n// Create the simplifier\nlet context = SimplifyContext::builder().with_schema(schema).build();\nlet simplifier = ExprSimplifier::new(context);\n\n// Expression: a = c AND 1 = b\nlet expr = col(\"a\").eq(col(\"c\")).and(lit(1).eq(col(\"b\")));\n\n// With canonicalization, the expression is rewritten to canonical form\n// (though it is no simpler in this case):\nlet canonical = simplifier.simplify(expr.clone()).unwrap();\n// Expression has been rewritten to: (c = a AND b = 1)\nassert_eq!(canonical, col(\"c\").eq(col(\"a\")).and(col(\"b\").eq(lit(1))));\n\n// If canonicalization is disabled, the expression is not changed\nlet non_canonicalized = simplifier\n    .with_canonicalize(false)\n    .simplify(expr.clone())\n    .unwrap();\n\nassert_eq!(non_canonicalized, expr);\n```",
+    "span": {
+      "filename": "src/simplify_expressions/expr_simplifier.rs",
+      "begin": [
+        371,
+        5
+      ],
+      "end": [
+        374,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "canonicalize",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ExprSimplifier",
+          "id": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/simplify_expressions/expr_simplifier.rs",
+        "begin": [
+          120,
+          1
+        ],
+        "end": [
+          428,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "1041",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md",
+    "record_file": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.json",
+    "anchor": "op-455496995dfd4c662d4710d6",
+    "aliases": [
+      "datafusion_optimizer::simplify_expressions::ExprSimplifier::with_canonicalize"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "06509272ae4ef694a1886eab",
+    "path": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::with_guarantees",
+    "name": "with_guarantees",
+    "owner": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_guarantees(self, guarantees: Vec<(Expr, NullableInterval)>) -> Self",
+    "docs": "Input guarantees about the values of columns.\n\nThe guarantees can simplify expressions. For example, if a column `x` is\nguaranteed to be `3`, then the expression `x > 1` can be replaced by the\nliteral `true`.\n\nThe guarantees are provided as a `Vec<(Expr, NullableInterval)>`,\nwhere the [Expr] is a column reference and the [NullableInterval]\nis an interval representing the known possible values of that column.\n\n```rust\nuse arrow::datatypes::{DataType, Field, Schema};\nuse datafusion_common::{Result, ScalarValue, ToDFSchema};\nuse datafusion_expr::interval_arithmetic::{Interval, NullableInterval};\nuse datafusion_expr::simplify::SimplifyContext;\nuse datafusion_expr::{col, lit, Expr};\nuse datafusion_optimizer::simplify_expressions::ExprSimplifier;\n\nlet schema = Schema::new(vec![\n    Field::new(\"x\", DataType::Int64, false),\n    Field::new(\"y\", DataType::UInt32, false),\n    Field::new(\"z\", DataType::Int64, false),\n])\n.to_dfschema_ref()\n.unwrap();\n\n// Create the simplifier\nlet context = SimplifyContext::builder().with_schema(schema).build();\n\n// Expression: (x >= 3) AND (y + 2 < 10) AND (z > 5)\nlet expr_x = col(\"x\").gt_eq(lit(3_i64));\nlet expr_y = (col(\"y\") + lit(2_u32)).lt(lit(10_u32));\nlet expr_z = col(\"z\").gt(lit(5_i64));\nlet expr = expr_x.and(expr_y).and(expr_z.clone());\n\nlet guarantees = vec![\n    // x ∈ [3, 5]\n    (\n        col(\"x\"),\n        NullableInterval::NotNull {\n            values: Interval::make(Some(3_i64), Some(5_i64)).unwrap(),\n        },\n    ),\n    // y = 3\n    (\n        col(\"y\"),\n        NullableInterval::from(ScalarValue::UInt32(Some(3))),\n    ),\n];\nlet simplifier = ExprSimplifier::new(context).with_guarantees(guarantees);\nlet output = simplifier.simplify(expr).unwrap();\n// Expression becomes: true AND true AND (z > 5), which simplifies to\n// z > 5.\nassert_eq!(output, expr_z);\n```",
+    "span": {
+      "filename": "src/simplify_expressions/expr_simplifier.rs",
+      "begin": [
+        319,
+        5
+      ],
+      "end": [
+        322,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "guarantees",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 4,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "tuple": [
+                              {
+                                "resolved_path": {
+                                  "path": "Expr",
+                                  "id": 146,
+                                  "args": null
+                                }
+                              },
+                              {
+                                "resolved_path": {
+                                  "path": "NullableInterval",
+                                  "id": 1039,
+                                  "args": null
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4": "alloc::vec::Vec",
+      "146": "datafusion_expr::expr::Expr",
+      "1039": "datafusion_expr_common::interval_arithmetic::NullableInterval"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ExprSimplifier",
+          "id": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/simplify_expressions/expr_simplifier.rs",
+        "begin": [
+          120,
+          1
+        ],
+        "end": [
+          428,
+          2
+        ]
+      }
+    },
+    "links": {
+      "NullableInterval": 1039,
+      "Expr": 146
+    },
+    "link_paths": {
+      "NullableInterval": "datafusion_expr_common::interval_arithmetic::NullableInterval",
+      "Expr": "datafusion_expr::expr::Expr"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "1040",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md",
+    "record_file": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.json",
+    "anchor": "op-06509272ae4ef694a1886eab",
+    "aliases": [
+      "datafusion_optimizer::simplify_expressions::ExprSimplifier::with_guarantees"
+    ],
+    "resolved_doc_links": {
+      "NullableInterval": "../operations/datafusion_expr_common.interval_arithmetic.NullableInterval.md#op-09810b7c2ae237278cd95e21",
+      "Expr": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc"
+    }
+  },
+  {
+    "id": "d361401d7cb602289b7ee800",
+    "path": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::with_max_cycles",
+    "name": "with_max_cycles",
+    "owner": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_max_cycles(self, max_simplifier_cycles: u32) -> Self",
+    "docs": "Specifies the maximum number of simplification cycles to run.\n\nThe simplifier can perform multiple passes of simplification. This is\nbecause the output of one simplification step can allow more optimizations\nin another simplification step. For example, constant evaluation can allow more\nexpression simplifications, and expression simplifications can allow more constant\nevaluations.\n\nThis method specifies the maximum number of allowed iteration cycles before the simplifier\nreturns an [Expr] output. However, it does not always perform the maximum number of cycles.\nThe simplifier will attempt to detect when an [Expr] is unchanged by all the simplification\npasses, and return early. This avoids wasting time on unnecessary [Expr] tree traversals.\n\nIf no maximum is specified, the value of [DEFAULT_MAX_SIMPLIFIER_CYCLES] is used\ninstead.\n\n```rust\nuse arrow::datatypes::{DataType, Field, Schema};\nuse datafusion_expr::{col, lit, Expr};\nuse datafusion_common::{Result, ScalarValue, ToDFSchema};\nuse datafusion_expr::simplify::SimplifyContext;\nuse datafusion_optimizer::simplify_expressions::ExprSimplifier;\n\nlet schema = Schema::new(vec![\n  Field::new(\"a\", DataType::Int64, false),\n  ])\n  .to_dfschema_ref().unwrap();\n\n// Create the simplifier\nlet context = SimplifyContext::builder().with_schema(schema).build();\nlet simplifier = ExprSimplifier::new(context);\n\n// Expression: a IS NOT NULL\nlet expr = col(\"a\").is_not_null();\n\n// When using default maximum cycles, 2 cycles will be performed.\nlet (simplified_expr, count) = simplifier.simplify_with_cycle_count_transformed(expr.clone()).unwrap();\nassert_eq!(simplified_expr.data, lit(true));\n// 2 cycles were executed, but only 1 was needed\nassert_eq!(count, 2);\n\n// Only 1 simplification pass is necessary here, so we can set the maximum cycles to 1.\nlet (simplified_expr, count) = simplifier.with_max_cycles(1).simplify_with_cycle_count_transformed(expr.clone()).unwrap();\n// Expression has been rewritten to: (c = a AND b = 1)\nassert_eq!(simplified_expr.data, lit(true));\n// Only 1 cycle was executed\nassert_eq!(count, 1);\n```",
+    "span": {
+      "filename": "src/simplify_expressions/expr_simplifier.rs",
+      "begin": [
+        424,
+        5
+      ],
+      "end": [
+        427,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "max_simplifier_cycles",
+              {
+                "primitive": "u32"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ExprSimplifier",
+          "id": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/simplify_expressions/expr_simplifier.rs",
+        "begin": [
+          120,
+          1
+        ],
+        "end": [
+          428,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Expr": 146,
+      "DEFAULT_MAX_SIMPLIFIER_CYCLES": 1042
+    },
+    "link_paths": {
+      "Expr": "datafusion_expr::expr::Expr",
+      "DEFAULT_MAX_SIMPLIFIER_CYCLES": "datafusion_optimizer::simplify_expressions::expr_simplifier::DEFAULT_MAX_SIMPLIFIER_CYCLES"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "1043",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md",
+    "record_file": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.json",
+    "anchor": "op-d361401d7cb602289b7ee800",
+    "aliases": [
+      "datafusion_optimizer::simplify_expressions::ExprSimplifier::with_max_cycles"
+    ],
+    "resolved_doc_links": {
+      "Expr": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc",
+      "DEFAULT_MAX_SIMPLIFIER_CYCLES": "../operations/datafusion_optimizer.simplify_expressions.expr_simplifier.DEFAULT_MAX_SIMPLIFIER_CYCLES.md#op-ced3386e858f433c2f3aac0e"
+    }
+  }
+]

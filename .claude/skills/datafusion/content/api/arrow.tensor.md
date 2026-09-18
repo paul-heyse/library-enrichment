@@ -31,6 +31,9 @@ fn strides(&self) -> Option<&Vec<usize>>
 fn try_new(buffer: Buffer, shape: Option<Vec<usize>>, strides: Option<Vec<usize>>, names: Option<Vec<&'a str>>) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Tensor.md).
+
+
 Tensor of primitive types
 
 ---
@@ -42,6 +45,9 @@ Tensor of primitive types
 ```rust
 type BooleanTensor<'a> = Tensor<'a, BooleanType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.BooleanTensor.md).
+
 
 [Tensor] of type [BooleanType]
 
@@ -55,6 +61,9 @@ type BooleanTensor<'a> = Tensor<'a, BooleanType>
 type Date32Tensor<'a> = Tensor<'a, Date32Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Date32Tensor.md).
+
+
 [Tensor] of type [Int8Type]
 
 ---
@@ -66,6 +75,9 @@ type Date32Tensor<'a> = Tensor<'a, Date32Type>
 ```rust
 type Date64Tensor<'a> = Tensor<'a, Date64Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Date64Tensor.md).
+
 
 [Tensor] of type [Int16Type]
 
@@ -79,6 +91,9 @@ type Date64Tensor<'a> = Tensor<'a, Date64Type>
 type Decimal128Tensor<'a> = Tensor<'a, Decimal128Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Decimal128Tensor.md).
+
+
 [Tensor] of type [Decimal128Type]
 
 ---
@@ -90,6 +105,9 @@ type Decimal128Tensor<'a> = Tensor<'a, Decimal128Type>
 ```rust
 type Decimal256Tensor<'a> = Tensor<'a, Decimal256Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Decimal256Tensor.md).
+
 
 [Tensor] of type [Decimal256Type]
 
@@ -103,6 +121,9 @@ type Decimal256Tensor<'a> = Tensor<'a, Decimal256Type>
 type Decimal32Tensor<'a> = Tensor<'a, Decimal32Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Decimal32Tensor.md).
+
+
 [Tensor] of type [Decimal32Type]
 
 ---
@@ -114,6 +135,9 @@ type Decimal32Tensor<'a> = Tensor<'a, Decimal32Type>
 ```rust
 type Decimal64Tensor<'a> = Tensor<'a, Decimal64Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Decimal64Tensor.md).
+
 
 [Tensor] of type [Decimal64Type]
 
@@ -127,6 +151,9 @@ type Decimal64Tensor<'a> = Tensor<'a, Decimal64Type>
 type DurationMicrosecondTensor<'a> = Tensor<'a, DurationMicrosecondType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.DurationMicrosecondTensor.md).
+
+
 [Tensor] of type [DurationMicrosecondType]
 
 ---
@@ -138,6 +165,9 @@ type DurationMicrosecondTensor<'a> = Tensor<'a, DurationMicrosecondType>
 ```rust
 type DurationMillisecondTensor<'a> = Tensor<'a, DurationMillisecondType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.DurationMillisecondTensor.md).
+
 
 [Tensor] of type [DurationMillisecondType]
 
@@ -151,6 +181,9 @@ type DurationMillisecondTensor<'a> = Tensor<'a, DurationMillisecondType>
 type DurationNanosecondTensor<'a> = Tensor<'a, DurationNanosecondType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.DurationNanosecondTensor.md).
+
+
 [Tensor] of type [DurationNanosecondType]
 
 ---
@@ -162,6 +195,9 @@ type DurationNanosecondTensor<'a> = Tensor<'a, DurationNanosecondType>
 ```rust
 type DurationSecondTensor<'a> = Tensor<'a, DurationSecondType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.DurationSecondTensor.md).
+
 
 [Tensor] of type [DurationSecondType]
 
@@ -175,6 +211,9 @@ type DurationSecondTensor<'a> = Tensor<'a, DurationSecondType>
 type Float16Tensor<'a> = Tensor<'a, Float16Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Float16Tensor.md).
+
+
 [Tensor] of type [Float16Type]
 
 ---
@@ -186,6 +225,9 @@ type Float16Tensor<'a> = Tensor<'a, Float16Type>
 ```rust
 type Float32Tensor<'a> = Tensor<'a, Float32Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Float32Tensor.md).
+
 
 [Tensor] of type [Float32Type]
 
@@ -199,6 +241,9 @@ type Float32Tensor<'a> = Tensor<'a, Float32Type>
 type Float64Tensor<'a> = Tensor<'a, Float64Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Float64Tensor.md).
+
+
 [Tensor] of type [Float64Type]
 
 ---
@@ -210,6 +255,9 @@ type Float64Tensor<'a> = Tensor<'a, Float64Type>
 ```rust
 type Int16Tensor<'a> = Tensor<'a, Int16Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Int16Tensor.md).
+
 
 [Tensor] of type [Int16Type]
 
@@ -223,6 +271,9 @@ type Int16Tensor<'a> = Tensor<'a, Int16Type>
 type Int32Tensor<'a> = Tensor<'a, Int32Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Int32Tensor.md).
+
+
 [Tensor] of type [Int32Type]
 
 ---
@@ -234,6 +285,9 @@ type Int32Tensor<'a> = Tensor<'a, Int32Type>
 ```rust
 type Int64Tensor<'a> = Tensor<'a, Int64Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Int64Tensor.md).
+
 
 [Tensor] of type [Int64Type]
 
@@ -247,6 +301,9 @@ type Int64Tensor<'a> = Tensor<'a, Int64Type>
 type Int8Tensor<'a> = Tensor<'a, Int8Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Int8Tensor.md).
+
+
 [Tensor] of type [Int8Type]
 
 ---
@@ -258,6 +315,9 @@ type Int8Tensor<'a> = Tensor<'a, Int8Type>
 ```rust
 type IntervalDayTimeTensor<'a> = Tensor<'a, IntervalDayTimeType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.IntervalDayTimeTensor.md).
+
 
 [Tensor] of type [IntervalDayTimeType]
 
@@ -271,6 +331,9 @@ type IntervalDayTimeTensor<'a> = Tensor<'a, IntervalDayTimeType>
 type IntervalMonthDayNanoTensor<'a> = Tensor<'a, IntervalMonthDayNanoType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.IntervalMonthDayNanoTensor.md).
+
+
 [Tensor] of type [IntervalMonthDayNanoType]
 
 ---
@@ -282,6 +345,9 @@ type IntervalMonthDayNanoTensor<'a> = Tensor<'a, IntervalMonthDayNanoType>
 ```rust
 type IntervalYearMonthTensor<'a> = Tensor<'a, IntervalYearMonthType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.IntervalYearMonthTensor.md).
+
 
 [Tensor] of type [IntervalYearMonthType]
 
@@ -295,6 +361,9 @@ type IntervalYearMonthTensor<'a> = Tensor<'a, IntervalYearMonthType>
 type Time32MillisecondTensor<'a> = Tensor<'a, Time32MillisecondType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Time32MillisecondTensor.md).
+
+
 [Tensor] of type [Time32MillisecondType]
 
 ---
@@ -306,6 +375,9 @@ type Time32MillisecondTensor<'a> = Tensor<'a, Time32MillisecondType>
 ```rust
 type Time32SecondTensor<'a> = Tensor<'a, Time32SecondType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Time32SecondTensor.md).
+
 
 [Tensor] of type [Time32SecondType]
 
@@ -319,6 +391,9 @@ type Time32SecondTensor<'a> = Tensor<'a, Time32SecondType>
 type Time64MicrosecondTensor<'a> = Tensor<'a, Time64MicrosecondType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Time64MicrosecondTensor.md).
+
+
 [Tensor] of type [Time64MicrosecondType]
 
 ---
@@ -330,6 +405,9 @@ type Time64MicrosecondTensor<'a> = Tensor<'a, Time64MicrosecondType>
 ```rust
 type Time64NanosecondTensor<'a> = Tensor<'a, Time64NanosecondType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.Time64NanosecondTensor.md).
+
 
 [Tensor] of type [Time64NanosecondType]
 
@@ -343,6 +421,9 @@ type Time64NanosecondTensor<'a> = Tensor<'a, Time64NanosecondType>
 type TimestampMicrosecondTensor<'a> = Tensor<'a, TimestampMicrosecondType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.TimestampMicrosecondTensor.md).
+
+
 [Tensor] of type [TimestampMicrosecondType]
 
 ---
@@ -354,6 +435,9 @@ type TimestampMicrosecondTensor<'a> = Tensor<'a, TimestampMicrosecondType>
 ```rust
 type TimestampMillisecondTensor<'a> = Tensor<'a, TimestampMillisecondType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.TimestampMillisecondTensor.md).
+
 
 [Tensor] of type [TimestampMillisecondType]
 
@@ -367,6 +451,9 @@ type TimestampMillisecondTensor<'a> = Tensor<'a, TimestampMillisecondType>
 type TimestampNanosecondTensor<'a> = Tensor<'a, TimestampNanosecondType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.TimestampNanosecondTensor.md).
+
+
 [Tensor] of type [TimestampNanosecondType]
 
 ---
@@ -378,6 +465,9 @@ type TimestampNanosecondTensor<'a> = Tensor<'a, TimestampNanosecondType>
 ```rust
 type TimestampSecondTensor<'a> = Tensor<'a, TimestampSecondType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.TimestampSecondTensor.md).
+
 
 [Tensor] of type [TimestampSecondType]
 
@@ -391,6 +481,9 @@ type TimestampSecondTensor<'a> = Tensor<'a, TimestampSecondType>
 type UInt16Tensor<'a> = Tensor<'a, UInt16Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.UInt16Tensor.md).
+
+
 [Tensor] of type [UInt16Type]
 
 ---
@@ -402,6 +495,9 @@ type UInt16Tensor<'a> = Tensor<'a, UInt16Type>
 ```rust
 type UInt32Tensor<'a> = Tensor<'a, UInt32Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.UInt32Tensor.md).
+
 
 [Tensor] of type [UInt32Type]
 
@@ -415,6 +511,9 @@ type UInt32Tensor<'a> = Tensor<'a, UInt32Type>
 type UInt64Tensor<'a> = Tensor<'a, UInt64Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.UInt64Tensor.md).
+
+
 [Tensor] of type [UInt64Type]
 
 ---
@@ -426,6 +525,9 @@ type UInt64Tensor<'a> = Tensor<'a, UInt64Type>
 ```rust
 type UInt8Tensor<'a> = Tensor<'a, UInt8Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.tensor.UInt8Tensor.md).
+
 
 [Tensor] of type [UInt8Type]
 

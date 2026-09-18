@@ -19,6 +19,7 @@ impl NativePolicy {
         parquet.global.skip_metadata = false;
         parquet.global.pushdown_filters = limits.native.decoder_filter;
         parquet.global.reorder_filters = limits.native.reorder_filters;
+        parquet.global.max_predicate_cache_size = Some(limits.caches.predicate_bytes);
         Self { limits, parquet }
     }
     pub(crate) fn table_options(&self) -> TableParquetOptions {
@@ -60,6 +61,11 @@ impl ExtensionOptions for NativePolicy {
                 "native_worker_stack_bytes",
                 self.limits.native.worker_stack_bytes.to_string(),
                 "Stack capacity of each native worker",
+            ),
+            (
+                "parser_concurrency",
+                self.limits.native.parser_concurrency.to_string(),
+                "Shared Rust/Python parser admission held through physical child reaping",
             ),
             (
                 "native_stack_capacity_bytes",
@@ -117,6 +123,46 @@ impl ExtensionOptions for NativePolicy {
                 "normalization_depth",
                 self.limits.native.normalization_depth.to_string(),
                 "Captured native closure depth; exhaustion produces partial evidence",
+            ),
+            (
+                "metadata_cache_bytes",
+                self.limits.caches.metadata_bytes.to_string(),
+                "Shared native Parquet metadata capacity",
+            ),
+            (
+                "snapshot_cache_bytes",
+                self.limits.caches.snapshots_bytes.to_string(),
+                "Shared exact Delta snapshot capacity",
+            ),
+            (
+                "snapshot_entry_bytes",
+                self.limits.caches.snapshot_entry_bytes.to_string(),
+                "Per-snapshot replay admission and resident bound",
+            ),
+            (
+                "provider_cache_bytes",
+                self.limits.caches.providers_bytes.to_string(),
+                "Typed immutable provider ingredient capacity",
+            ),
+            (
+                "contract_cache_bytes",
+                self.limits.caches.contracts_bytes.to_string(),
+                "Positive semantic contract proof capacity",
+            ),
+            (
+                "predicate_cache_bytes",
+                self.limits.caches.predicate_bytes.to_string(),
+                "Native Parquet predicate cache limit per row group",
+            ),
+            (
+                "control_checkpoint_interval",
+                self.limits.caches.control_checkpoint_interval.to_string(),
+                "Native control commit checkpoint cadence",
+            ),
+            (
+                "checkpoint_interval",
+                self.limits.caches.checkpoint_interval.to_string(),
+                "Native non-control commit checkpoint cadence",
             ),
             (
                 "memory_bytes",

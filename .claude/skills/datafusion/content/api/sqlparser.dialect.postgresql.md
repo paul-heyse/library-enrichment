@@ -71,6 +71,9 @@ fn supports_unicode_string_literal(&self) -> bool
 fn supports_xml_expressions(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.postgresql.PostgreSqlDialect.md).
+
+
 A [`Dialect`] for [PostgreSQL](https://www.postgresql.org/)
 
 ---

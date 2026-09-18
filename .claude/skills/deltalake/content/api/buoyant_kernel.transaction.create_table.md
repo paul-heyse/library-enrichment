@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## create_table
 
 `function` · `buoyant_kernel::transaction::create_table::create_table`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.create_table.create_table.md)
 
 Also reachable as `delta_kernel::transaction::create_table::create_table`
 
@@ -57,6 +58,7 @@ transaction.commit(&engine)?;
 ## CreateTableTransaction
 
 `type_alias` · `buoyant_kernel::transaction::create_table::CreateTableTransaction`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.create_table.CreateTableTransaction.md)
 
 Also reachable as `delta_kernel::transaction::create_table::CreateTableTransaction`
 

@@ -43,6 +43,9 @@ fn into_box_any(Box<self>) -> Box<dyn Any>
 fn len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.map_builder.MapBuilder.md).
+
+
 Builder for [`MapArray`]
 
 ```
@@ -87,6 +90,9 @@ struct MapFieldNames
 **Fields**: `entry`, `key`, `value`
 
 **Derives**: Clone, Debug, Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.map_builder.MapFieldNames.md).
+
 
 The [`Field`] names for a [`MapArray`]
 

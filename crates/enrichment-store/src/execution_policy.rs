@@ -9,16 +9,20 @@ use datafusion::{
     error::{DataFusionError, Result},
     prelude::{SessionContext, col, lit},
 };
-use enrichment_core::native_union::{NativeStruct, Rule};
+use enrichment_core::native_union::{Cell, NativeStruct, Rule};
 use enrichment_core::{
     config::{Config, ExecutionResources},
+    evidence::arrow_model::expressions::{parameter, variant},
     execution::{
         ProcessObservation,
         facts::{RESOURCE_PROBE, Receipt, ResourceProbe, resource_fields},
     },
     identity::Ecosystem,
     policy::ExecutionProfile,
-    wire::status::ExecutionReadiness,
+    wire::{
+        research::RecoveryAction,
+        status::{ExecutionPrerequisite, ExecutionReadiness},
+    },
 };
 use std::{collections::BTreeMap, sync::Arc};
 
@@ -35,7 +39,7 @@ pub struct Capture {
 pub struct Policy {
     runtime: QueryRuntime,
     session: SessionContext,
-    policy_id: String,
+    policy_id: enrichment_core::identity::OperationPolicyId,
 }
 
 enrichment_core::native_struct! {
@@ -50,7 +54,11 @@ fn text(name: &str, nullable: bool) -> Field {
 }
 
 fn register(session: &SessionContext, name: &str, batch: RecordBatch) -> Result<()> {
-    session.register_table(name, session.read_batch(batch)?.into_view())?;
+    crate::native_catalog::work(
+        session,
+        name,
+        crate::native_catalog::batch(session, "execution_policy", batch)?.into_view(),
+    )?;
     Ok(())
 }
 
@@ -85,8 +93,8 @@ fn resource_input<'a>(
             end: Option<enrichment_core::execution::ProcessEnd> => Rule::Text,
             exit_code: Option<i32> => Rule::Text,
             cleanup_confirmed: Option<bool> => Rule::Text,
-            operation_id: Option<String> => Rule::Text,
-            qualification_id: Option<String> => Rule::Text,
+            operation_id: Option<enrichment_core::identity::ProcessOperationId> => Rule::Text,
+            qualification_id: Option<enrichment_core::identity::ProcessOperationId> => Rule::Text,
         }
     }
     let input: Vec<_> = entries
@@ -122,7 +130,7 @@ impl Policy {
                 containment_error: Option<String> => Rule::Text,
                 receipt_root: Option<String> => Rule::Text,
                 receipt_identity: Option<String> => Rule::Text,
-                qualified_at: Option<String> => Rule::Text,
+                qualified_at: Option<enrichment_core::native_time::ObservationTime> => Rule::Text,
                 receipt_error: Option<String> => Rule::Text,
                 cleanup_error: Option<String> => Rule::Text,
                 requested: ExecutionResources => Rule::Text,
@@ -138,7 +146,7 @@ impl Policy {
                 containment_error: captured.containment_error.clone(),
                 receipt_root: receipt.map(|r| r.execution_root.clone()),
                 receipt_identity: receipt.map(|r| r.containment_identity.clone()),
-                qualified_at: receipt.map(|r| r.qualified_at.clone()),
+                qualified_at: receipt.map(|r| r.qualified_at),
                 receipt_error: captured.receipt_error.clone(),
                 cleanup_error: captured.cleanup_error.clone(),
                 requested: requested.clone(),
@@ -185,7 +193,11 @@ impl Policy {
                 )
             }))?,
         )?;
-        session.register_table("kernel_resources", session.sql(PARSE).await?.into_view())?;
+        crate::native_catalog::work(
+            &session,
+            "kernel_resources",
+            session.sql(PARSE).await?.into_view(),
+        )?;
         let profiles = RecordBatch::try_new(
             Arc::new(Schema::new(vec![text("profile", false)])),
             vec![Arc::new(arrow::array::StringArray::from(
@@ -209,7 +221,7 @@ impl Policy {
             WHEN s.receipt_root IS DISTINCT FROM s.execution_root THEN concat('The qualification receipt names another execution root: ', s.receipt_root)
             WHEN s.containment_error IS NOT NULL THEN s.containment_error
             WHEN s.receipt_identity IS DISTINCT FROM s.containment_identity THEN 'The helper, broker, execution contract or effective limits changed; run just execution-qualify --apply.'
-            WHEN TRY_CAST(s.qualified_at AS TIMESTAMP) IS NULL THEN 'Qualification receipt has no valid observation time.'
+            WHEN s.qualified_at IS NULL THEN 'Qualification receipt has no observation time.'
             WHEN i.receipt_image IS DISTINCT FROM i.configured_image THEN concat('The qualification receipt covers ', coalesce(i.receipt_image, 'no image'), ' for ', i.ecosystem, '; configured image is ', i.configured_image, '.')
             WHEN NOT coalesce(k.end = 'exited' AND k.exit_code = 0 AND k.cleanup_confirmed AND k.operation_id=k.qualification_id
                  AND k.command = make_array('/bin/sh', '-c', $1)
@@ -219,15 +231,28 @@ impl Policy {
           END AS reason
         FROM image_input i CROSS JOIN policy_state s LEFT JOIN kernel_resources k ON i.ecosystem = k.ecosystem
         "#)).await?.with_param_values(vec![datafusion::common::ScalarValue::Utf8(Some(RESOURCE_PROBE.into()))])?;
-        session.register_table("qualified_images", image_plan.into_view())?;
+        crate::native_catalog::work(&session, "qualified_images", image_plan.into_view())?;
+        let failures = session.sql(r#"
+        WITH routes AS (
+          SELECT i.*, p.profile FROM qualified_images i CROSS JOIN (VALUES ('build'), ('runtime')) p(profile)
+        ), unmet AS (
+          SELECT r.ecosystem, r.profile, 1 AS ordinal, 'enabled_profile' AS prerequisite,
+             concat('Enable the ', r.profile, ' execution profile in operator configuration.') AS reason
+          FROM routes r LEFT ANTI JOIN enabled_profiles p ON p.profile = r.profile
+          UNION ALL SELECT ecosystem, profile, 2, 'immutable_image', 'Configure an immutable producer image with just execution-images --apply.' FROM routes WHERE image_id IS NULL
+          UNION ALL SELECT ecosystem, profile, 3, 'qualification', reason FROM routes WHERE reason IS NOT NULL
+          UNION ALL SELECT ecosystem, profile, 4, 'cleanup', cleanup_error FROM routes CROSS JOIN policy_state WHERE cleanup_error IS NOT NULL
+        ) SELECT * FROM unmet
+        "#).await?.with_column("action", variant(&RecoveryAction::data_type(), "operator_setup", &[("reason", col("reason"))])?)?;
+        crate::native_catalog::work(&session, "route_failures", failures.into_view())?;
         Ok(Self {
             runtime: runtime.clone(),
             session,
-            policy_id: enrichment_core::native_key::Key::OperationPolicy.record(config)?,
+            policy_id: enrichment_core::identity::OperationPolicyId::try_from_record(config)?,
         })
     }
 
-    pub fn identity(&self) -> &str {
+    pub fn identity(&self) -> &enrichment_core::identity::OperationPolicyId {
         &self.policy_id
     }
 
@@ -243,23 +268,19 @@ impl Policy {
         self.session.sql(r#"
         WITH routes AS (
           SELECT i.*, p.profile FROM qualified_images i CROSS JOIN (VALUES ('build'), ('runtime')) p(profile)
-        ), unmet AS (
-          SELECT r.ecosystem, r.profile, 1 AS ordinal, 'enabled_profile' AS prerequisite,
-             concat('Enable the ', r.profile, ' execution profile in operator configuration.') AS reason
-          FROM routes r LEFT ANTI JOIN enabled_profiles p ON p.profile = r.profile
-          UNION ALL SELECT ecosystem, profile, 2, 'immutable_image', 'Configure an immutable producer image with just execution-images --apply.' FROM routes WHERE image_id IS NULL
-          UNION ALL SELECT ecosystem, profile, 3, 'qualification', reason FROM routes WHERE reason IS NOT NULL
-          UNION ALL SELECT ecosystem, profile, 4, 'cleanup', cleanup_error FROM routes CROSS JOIN policy_state WHERE cleanup_error IS NOT NULL
         ), grouped AS (
           SELECT ecosystem, profile, array_agg(prerequisite ORDER BY ordinal) AS prerequisites,
-             array_agg(named_struct('kind', 'operator_setup', 'reason', reason) ORDER BY ordinal) AS actions
-          FROM unmet GROUP BY ecosystem, profile
+             array_agg(action ORDER BY ordinal) AS actions
+          FROM route_failures GROUP BY ecosystem, profile
         )
         SELECT r.ecosystem, r.profile, g.ecosystem IS NULL AS available, r.image_id,
-           coalesce(g.prerequisites, []) AS prerequisites, coalesce(g.actions, []) AS actions
+           coalesce(g.prerequisites, $1) AS prerequisites, coalesce(g.actions, $2) AS actions
         FROM routes r LEFT JOIN grouped g ON r.ecosystem = g.ecosystem AND r.profile = g.profile
         ORDER BY r.ecosystem, r.profile
-        "#).await
+        "#).await?.with_param_values(datafusion::common::ParamValues::List(vec![
+            parameter(&Vec::<ExecutionPrerequisite>::new())?,
+            parameter(&Vec::<RecoveryAction>::new())?,
+        ]))
     }
 
     pub async fn routes(&self) -> Result<Vec<ExecutionReadiness>> {
@@ -293,7 +314,7 @@ impl Policy {
               coalesce(string_agg(reason, ' ' ORDER BY ecosystem) FILTER (WHERE configured_image IS NOT NULL),
                 CASE WHEN count(*) FILTER (WHERE configured_image IS NOT NULL) = 0
                 THEN 'No producer image is configured; run just execution-images --apply.'
-                ELSE concat('Qualified ', max(qualified_at), ' by an actual containment run.') END) AS detail
+                ELSE concat('Qualified ', to_char(max(clock_instant(qualified_at)), '%Y-%m-%dT%H:%M:%S%.6fZ'), ' by an actual containment run.') END) AS detail
             FROM qualified_images
         "#).await?, 1).await?.pop().ok_or_else(|| DataFusionError::Internal("qualification aggregate has no row".into()))
     }
@@ -325,7 +346,11 @@ pub async fn resource_probe(
         "resource_input",
         resource_input([("probe", Some(&process))])?,
     )?;
-    session.register_table("kernel_resources", session.sql(PARSE).await?.into_view())?;
+    crate::native_catalog::work(
+        &session,
+        "kernel_resources",
+        session.sql(PARSE).await?.into_view(),
+    )?;
     register(
         &session,
         "requested",
@@ -352,13 +377,13 @@ pub async fn resource_probe(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use enrichment_core::{execution::ProcessEnd, wire::status::ExecutionPrerequisite};
+    use enrichment_core::execution::ProcessEnd;
 
     fn process() -> ProcessObservation {
         ProcessObservation {
-            operation_id: "fixture-resource-operation".into(),
+            operation_id: format!("process_{}", "1".repeat(64)).try_into().unwrap(),
             authority: enrichment_core::execution::ProcessAuthority::Qualification {
-                definition_id: "fixture-resource-operation".into(),
+                definition_id: format!("process_{}", "1".repeat(64)).try_into().unwrap(),
             },
             image_id: format!("sha256:{}", "a".repeat(64)),
             command: vec!["/bin/sh".into(), "-c".into(), RESOURCE_PROBE.into()],
@@ -396,7 +421,7 @@ mod tests {
             cleanup_error: None,
             receipt: Some(Receipt {
                 containment_identity: "qualified-physical-helper".into(),
-                qualified_at: "2026-09-16T00:00:01Z".into(),
+                qualified_at: "2026-09-16T00:00:01.000000Z".to_owned().try_into().unwrap(),
                 execution_root: "/owned/engine".into(),
                 images: [("rust".into(), process().image_id)].into(),
                 tools: BTreeMap::new(),
@@ -427,6 +452,7 @@ mod tests {
             .await
             .unwrap();
         assert!(rust.available, "{rust:?}");
+        assert!(rust.actions.is_empty());
         assert!(
             !policy
                 .assess(Ecosystem::Python, ExecutionProfile::Build)
@@ -443,6 +469,12 @@ mod tests {
             [ExecutionPrerequisite::EnabledProfile]
         );
         assert_eq!(
+            runtime_route.actions,
+            [RecoveryAction::OperatorSetup {
+                reason: "Enable the runtime execution profile in operator configuration.".into(),
+            }]
+        );
+        assert_eq!(
             policy
                 .admitted_images()
                 .await
@@ -452,6 +484,19 @@ mod tests {
             [&"rust"]
         );
         assert!(!policy.qualification().await.unwrap().qualified);
+        let mut one_image = config.clone();
+        one_image.execution.python_image = None;
+        let qualified = Policy::bind(&runtime, &one_image, capture(&one_image))
+            .await
+            .unwrap()
+            .qualification()
+            .await
+            .unwrap();
+        assert!(qualified.qualified);
+        assert_eq!(
+            qualified.detail,
+            "Qualified 2026-09-16T00:00:01.000000Z by an actual containment run."
+        );
         let mut captured = capture(&config);
         captured.cleanup_error = Some("owned container absence remains unresolved".into());
         let quarantined = Policy::bind(&runtime, &config, captured)
@@ -555,8 +600,14 @@ mod tests {
             .unwrap();
         let operation = Operation {
             version: VERSION,
+            invocation: Some(enrichment_core::execution::producer::Invocation::RustdocIdentity),
+            prepared: None,
             mode: Mode::Command,
-            argv: vec!["/bin/tool".into()],
+            argv: vec![
+                "/usr/local/cargo/bin/rustc".into(),
+                "+nightly-2026-09-13".into(),
+                "-vV".into(),
+            ],
             inputs: [(
                 "source".into(),
                 enrichment_core::capsule_protocol::inventory::Entry::File {
@@ -567,21 +618,20 @@ mod tests {
             )]
             .into(),
             outputs: Default::default(),
-            data_bytes: 1024,
-            output_bytes: 1024,
-            deadline_millis: 1000,
-            binding: Operation::binding(
+            launch: enrichment_core::capsule_protocol::Launch::for_execution(
+                &config.execution,
                 config.execution.rust_image.as_ref().unwrap(),
                 "qualified-physical-helper",
+                false,
             )
             .unwrap(),
         };
         let image = config.execution.rust_image.as_ref().unwrap();
         for enabled in [false, true] {
-            let id = format!("process_fixture_{enabled}");
+            let id = enrichment_core::identity::JobId::new();
             let command = jobs
                 .command_with_id(
-                    id.clone(),
+                    id,
                     Arguments::Resolve {
                         request: ResolveRequest {
                             name: "fixture".into(),
@@ -592,11 +642,11 @@ mod tests {
                 )
                 .await
                 .unwrap();
-            jobs.submit(command, format!("interest_{id}"))
+            jobs.submit(command, enrichment_core::identity::InterestId::new())
                 .await
                 .unwrap();
             assert!(
-                jobs.start(&id, "process_fixture_attempt", &policy)
+                jobs.start(&id, &enrichment_core::identity::AttemptId::new(), &policy)
                     .await
                     .unwrap()
             );
@@ -622,7 +672,7 @@ mod tests {
             } else {
                 let process = result.unwrap();
                 assert_eq!(process.witness().operation_id, operation.id());
-                assert_eq!(process.witness().grant_id, grant.id());
+                assert_eq!(&process.witness().grant_id, grant.id());
                 let mut changed = config.execution.clone();
                 changed.deadline_seconds += 1;
                 assert!(
@@ -654,7 +704,9 @@ mod tests {
                         .to_string()
                         .contains("contained_image_mismatch")
                 );
-                jobs.cancel(&id, &format!("interest_{id}")).await.unwrap();
+                jobs.cancel(&id, &enrichment_core::identity::InterestId::new())
+                    .await
+                    .unwrap();
                 assert!(
                     process.check().await.is_err(),
                     "durable definitions never bypass revocation"

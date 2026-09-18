@@ -60,8 +60,20 @@ printf '\n'
 [ $((bad+missing+unmapped)) -eq 0 ]
 }
 
-CURRENT="$ROOT/docs/provenance/bundle-2026-09-17-native-delivery"
+CURRENT="$ROOT/docs/provenance/bundle-2026-09-18-typed-delta-references"
+OWNERSHIP="$ROOT/docs/provenance/bundle-2026-09-18-typed-ownership"
+DEFINITIONS="$ROOT/docs/provenance/bundle-2026-09-18-typed-definitions"
+GRANTS="$ROOT/docs/provenance/bundle-2026-09-18-native-grants-resources"
+IDENTITIES="$ROOT/docs/provenance/bundle-2026-09-18-native-identities"
+COMPARISON="$ROOT/docs/provenance/bundle-2026-09-17-typed-comparison"
+NATIVE_DELIVERY="$ROOT/docs/provenance/bundle-2026-09-17-native-delivery"
 PREVIOUS="$ROOT/docs/provenance/bundle-2026-09-15-research-v2"
 verify_bundle "$CURRENT/MANIFEST.sha256" "$CURRENT/PATHMAP.tsv"
-verify_bundle "$PREVIOUS/MANIFEST.sha256" "$CURRENT/RESEARCH_V2_PATHMAP.tsv"
+verify_bundle "$OWNERSHIP/MANIFEST.sha256" "$CURRENT/TYPED_OWNERSHIP_PATHMAP.tsv"
+verify_bundle "$DEFINITIONS/MANIFEST.sha256" "$OWNERSHIP/TYPED_DEFINITIONS_PATHMAP.tsv"
+verify_bundle "$GRANTS/MANIFEST.sha256" "$DEFINITIONS/NATIVE_GRANTS_PATHMAP.tsv"
+verify_bundle "$IDENTITIES/MANIFEST.sha256" "$GRANTS/NATIVE_IDENTITIES_PATHMAP.tsv"
+verify_bundle "$COMPARISON/MANIFEST.sha256" "$IDENTITIES/TYPED_COMPARISON_PATHMAP.tsv"
+verify_bundle "$NATIVE_DELIVERY/MANIFEST.sha256" "$COMPARISON/NATIVE_DELIVERY_PATHMAP.tsv"
+verify_bundle "$PREVIOUS/MANIFEST.sha256" "$NATIVE_DELIVERY/RESEARCH_V2_PATHMAP.tsv"
 verify_bundle "$ROOT/docs/provenance/bundle-2026-09-13/MANIFEST.sha256" "$PREVIOUS/PREDECESSOR_PATHMAP.tsv"

@@ -34,7 +34,7 @@ async fn frame(source: &mut (impl AsyncRead + Unpin)) -> io::Result<Frame> {
     serde_json::from_slice(&bytes).map_err(io::Error::other)
 }
 
-/// Caller reserves `operation.data_bytes` before creating this unmounted private quarantine.
+/// Caller reserves `operation.launch.resources.scratch_bytes` before creating this unmounted private quarantine.
 /// The returned content is still unadmitted until whole-container absence is confirmed.
 pub async fn receive(
     source: &mut (impl AsyncRead + Unpin),
@@ -93,7 +93,7 @@ pub async fn receive(
                 total = total
                     .checked_add(entry.bytes())
                     .ok_or_else(|| io::Error::other("output size overflow"))?;
-                if total > operation.data_bytes {
+                if total > operation.launch.resources.scratch_bytes {
                     return Err(io::Error::other("output exceeds reserved byte bound"));
                 }
                 let destination = quarantine.join(&path);
@@ -150,8 +150,8 @@ pub async fn receive(
                 if operation_id != operation.id()
                     || inventory_digest
                         != enrichment_core::capsule_protocol::inventory::digest(&entries)?
-                    || stdout.len() > operation.output_bytes
-                    || stderr.len() > operation.output_bytes
+                    || stdout.len() > operation.launch.output_bytes
+                    || stderr.len() > operation.launch.output_bytes
                     || end == ProcessEnd::Cancelled
                     || (end != ProcessEnd::Exited && exit_code.is_some())
                 {
@@ -196,14 +196,19 @@ mod tests {
     fn operation() -> Operation {
         Operation {
             version: protocol::VERSION,
+            invocation: None,
+            prepared: None,
             mode: Mode::Command,
             argv: vec!["/bin/true".into()],
             inputs: Inventory::new(),
             outputs: [("result".into(), OutputKind::File)].into(),
-            data_bytes: 4096,
-            output_bytes: 1024,
-            deadline_millis: 1000,
-            binding: "test-request".into(),
+            launch: enrichment_core::capsule_protocol::Launch::for_execution(
+                &enrichment_core::config::Execution::default(),
+                &format!("sha256:{}", "a".repeat(64)),
+                "test-request",
+                false,
+            )
+            .unwrap(),
         }
     }
     fn start(operation: &Operation) -> Vec<u8> {
@@ -240,7 +245,7 @@ mod tests {
             stream,
             &Frame::Complete {
                 operation_id: operation.id(),
-                inventory_digest: enrichment_core::capsule_protocol::inventory::digest(&entries)
+                inventory_digest: enrichment_core::capsule_protocol::inventory::digest(entries)
                     .unwrap(),
                 exit_code: Some(0),
                 end: ProcessEnd::Exited,

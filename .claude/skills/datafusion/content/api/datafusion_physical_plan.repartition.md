@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 4 public items · structured records in [`mo
 const REPARTITION_RANDOM_STATE: joins::SeededRandomState = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.repartition.REPARTITION_RANDOM_STATE.md).
+
+
 Fixed RandomState used for hash repartitioning to ensure consistent behavior across
 executions and runs.
 
@@ -33,6 +36,9 @@ fn partition<F>(&mut self, batch: RecordBatch, f: F) -> Result<()> where F: FnMu
 fn partition_iter(&mut self, batch: RecordBatch) -> Result<impl Iterator<Item = Result<(usize, RecordBatch)>> + Send + '_>
 fn try_new(partitioning: Partitioning, timer: metrics::Time, input_partition: usize, num_input_partitions: usize) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.repartition.BatchPartitioner.md).
+
 
 A utility that can be used to partition batches based on [`Partitioning`]
 
@@ -77,6 +83,9 @@ fn nullable(&self, _input_schema: &Schema) -> Result<bool>
 fn try_to_proto(&self, ctx: &datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> Result<Option<protobuf::PhysicalExprNode>>
 fn with_new_children(Arc<self>, children: Vec<PhysicalExprRef>) -> Result<PhysicalExprRef>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.repartition.RangeExpr.md).
+
 
 Physical expression that returns the Range partition for each input row.
 
@@ -139,6 +148,9 @@ fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.repartition.RepartitionExec.md).
+
 
 Maps `N` input partitions to `M` output partitions based on a
 [`Partitioning`] scheme.

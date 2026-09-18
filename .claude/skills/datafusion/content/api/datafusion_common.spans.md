@@ -24,6 +24,9 @@ struct Location
 fn from(value: sqlparser::tokenizer::Location) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.spans.Location.md).
+
+
 Represents a location, determined by a line and a column number, in the
 original SQL query.
 
@@ -53,6 +56,9 @@ fn union_iter<I: IntoIterator<Item = Span>>(iter: I) -> Option<Span>
 fn union_opt(&self, other: &Option<Span>) -> Span
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.spans.Span.md).
+
+
 Represents an interval of characters in the original SQL query.
 
 ---
@@ -78,6 +84,9 @@ fn get_spans(&self) -> &[Span]
 fn iter(&self) -> impl Iterator<Item = &Span>
 fn new() -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.spans.Spans.md).
+
 
 A collection of [`Span`], meant to be used as a field of entities whose
 location in the original SQL query is desired to be tracked. Sometimes an

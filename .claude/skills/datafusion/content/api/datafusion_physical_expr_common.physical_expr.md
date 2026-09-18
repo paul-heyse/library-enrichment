@@ -10,6 +10,9 @@ Crate `datafusion-physical-expr-common` · 10 public items · structured records
 fn fmt_sql(expr: &dyn PhysicalExpr) -> impl Display + '_
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.fmt_sql.md).
+
+
 Prints a [`PhysicalExpr`] in a SQL-like format
 
 # Example
@@ -56,6 +59,9 @@ assert_eq!(
 fn format_physical_expr_list<T>(exprs: T) -> impl Display where T: IntoIterator, T::Item: Display, T::IntoIter: Clone
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.format_physical_expr_list.md).
+
+
 Returns [`Display`] able a list of [`PhysicalExpr`]
 
 Example output: `[a + 1, b]`
@@ -72,6 +78,9 @@ Example output: `[a + 1, b]`
 fn is_dynamic_physical_expr(expr: &std::sync::Arc<dyn PhysicalExpr>) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.is_dynamic_physical_expr.md).
+
+
 Check if the given `PhysicalExpr` is dynamic.
 Internally this calls [`snapshot_generation`] to check if the generation is non-zero,
 any dynamic `PhysicalExpr` should have a non-zero generation.
@@ -85,6 +94,9 @@ any dynamic `PhysicalExpr` should have a non-zero generation.
 ```rust
 fn is_volatile(expr: &std::sync::Arc<dyn PhysicalExpr>) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.is_volatile.md).
+
 
 Returns true if the expression is volatile, i.e. whether it can return different
 results when evaluated multiple times with the same input.
@@ -105,6 +117,9 @@ This method recursively checks if any sub-expression is volatile, for example
 fn snapshot_generation(expr: &std::sync::Arc<dyn PhysicalExpr>) -> u64
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.snapshot_generation.md).
+
+
 Check the generation of this `PhysicalExpr`.
 Dynamic `PhysicalExpr`s may have a generation that is incremented
 every time the state of the `PhysicalExpr` changes.
@@ -123,6 +138,9 @@ This algorithm will not produce collisions as long as the structure of the
 ```rust
 fn snapshot_physical_expr(expr: std::sync::Arc<dyn PhysicalExpr>) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.snapshot_physical_expr.md).
+
 
 Take a snapshot of the given `PhysicalExpr` if it is dynamic.
 
@@ -148,6 +166,9 @@ returns itself.
 fn snapshot_physical_expr_opt(expr: std::sync::Arc<dyn PhysicalExpr>) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<std::sync::Arc<dyn PhysicalExpr>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.snapshot_physical_expr_opt.md).
+
+
 Take a snapshot of the given `PhysicalExpr` if it is dynamic.
 
 Take a snapshot of this `PhysicalExpr` if it is dynamic.
@@ -171,6 +192,9 @@ along with the resulting `PhysicalExpr`.
 ```rust
 fn with_new_children_if_necessary(expr: std::sync::Arc<dyn PhysicalExpr>, children: Vec<std::sync::Arc<dyn PhysicalExpr>>) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.with_new_children_if_necessary.md).
+
 
 Returns a copy of this expr if we change any child according to the pointer comparison.
 The size of `children` must be equal to the size of `PhysicalExpr::children()`.
@@ -239,6 +263,9 @@ fn try_to_proto(&self, _ctx: &proto_encode::PhysicalExprEncodeCtx<'_>) -> Result
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.PhysicalExpr.md).
+
+
 [`PhysicalExpr`]s represent expressions such as `A + 1` or `CAST(c1 AS int)`.
 
 `PhysicalExpr` knows its type, nullability and can be evaluated directly on
@@ -278,6 +305,9 @@ Also reachable as `datafusion::physical_expr::PhysicalExprRef`, `datafusion_phys
 ```rust
 type PhysicalExprRef = std::sync::Arc<dyn PhysicalExpr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.physical_expr.PhysicalExprRef.md).
+
 
 Shared [`PhysicalExpr`].
 

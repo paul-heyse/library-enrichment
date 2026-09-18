@@ -1,0 +1,16 @@
+id: native-field-reference-owner
+language: Rust
+severity: error
+message: Field declarations own references; the shared native compiler and catalog consume them.
+files:
+  - crates/enrichment-store/src/native_catalog.rs
+  - crates/enrichment-store/src/admission.rs
+  - crates/enrichment-store/src/control.rs
+rule:
+  any:
+    - pattern: $RELATION.references()
+    - kind: struct_item
+      has:
+        field: name
+        regex: '^ReferenceRule$'
+note: Prevent reintroducing the parallel catalog reference registry. This guard does not prove reference completeness or native join correctness.

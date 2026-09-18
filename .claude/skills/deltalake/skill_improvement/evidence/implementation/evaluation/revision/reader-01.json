@@ -1,0 +1,148 @@
+{
+  "query": "low-level RecordBatchWriter write roll background upload flush commit reset file staging transaction visibility",
+  "capabilities": [
+    {
+      "id": "delta.write",
+      "title": "Write batches or a logical plan; distinguish staging from publication",
+      "brief": "Prefer WriteBuilder for a complete append/replacement operation. RecordBatchWriter provides staged file production with an explicit commit boundary. At this commit, Ignore on an existing WriteBuilder path appended rows in the retained probe.",
+      "why": {
+        "matched_terms": [
+          "background",
+          "commit",
+          "file",
+          "flush",
+          "level",
+          "low",
+          "recordbatchwriter",
+          "reset",
+          "staging",
+          "upload",
+          "visibility",
+          "write"
+        ],
+        "facets": {}
+      },
+      "choices": [
+        {
+          "candidate": "DeltaTable::write(batches)",
+          "choose_when": "An operation should write data and publish a Delta commit",
+          "tradeoff": "Builder consumes the table value and returns an updated DeltaTable"
+        },
+        {
+          "candidate": "with_input_plan(LogicalPlan)",
+          "choose_when": "DataFusion produces the source relation",
+          "tradeoff": "The supplied operation session must support Delta's custom planning nodes"
+        },
+        {
+          "candidate": "RecordBatchWriter",
+          "choose_when": "You need incremental batch ingestion and explicit flush/publication control",
+          "tradeoff": "flush creates actions/files; flush_and_commit publishes them"
+        }
+      ],
+      "unknowns": [
+        "Exact file-size targets, throughput and memory/spill behavior require workload-specific measurement."
+      ],
+      "contract": "content/capabilities/delta.write.json"
+    },
+    {
+      "id": "delta.commit",
+      "title": "Reason about optimistic commits and errors after publication",
+      "brief": "Separate data preparation, optimistic log publication and post-commit work. An operation error does not establish that the table is unchanged.",
+      "why": {
+        "matched_terms": [
+          "commit",
+          "file",
+          "level",
+          "transaction",
+          "visibility",
+          "write"
+        ],
+        "facets": {}
+      },
+      "choices": [
+        {
+          "candidate": "High-level operation with CommitProperties",
+          "choose_when": "Built-in operation already captures the needed read/write semantics",
+          "tradeoff": "Customize metadata and retry policy without reproducing actions"
+        },
+        {
+          "candidate": "CommitBuilder",
+          "choose_when": "You own valid protocol actions and their transactional meaning",
+          "tradeoff": "You must supply correct operation/read-set semantics and recovery"
+        },
+        {
+          "candidate": "Reload/reconcile after ambiguous error",
+          "choose_when": "The failure may have occurred after log publication",
+          "tradeoff": "Observe table state before retrying data production"
+        }
+      ],
+      "unknowns": [
+        "Crash recovery, remote backend atomicity and distributed scheduling are not inferred from local-memory publication."
+      ],
+      "contract": "content/capabilities/delta.commit.json"
+    },
+    {
+      "id": "delta.kernel",
+      "title": "Use kernel snapshots, scans and engine interfaces at the correct layer",
+      "brief": "Use high-level DeltaTable operations for normal table work. Use the kernel and engine interfaces when implementing a scan/engine boundary and when prepared to honor its selection, schema and protocol contracts.",
+      "why": {
+        "matched_terms": [
+          "commit",
+          "file",
+          "level",
+          "low",
+          "transaction",
+          "visibility"
+        ],
+        "facets": {}
+      },
+      "choices": [
+        {
+          "candidate": "DeltaTable/provider",
+          "choose_when": "The task is querying or mutating a Delta table",
+          "tradeoff": "Already integrates protocol, storage and DataFusion semantics"
+        },
+        {
+          "candidate": "Kernel Engine/EngineData",
+          "choose_when": "You are implementing engine evaluation/I/O or consuming kernel scan primitives",
+          "tradeoff": "Own the engine contract and apply selection/deletion semantics correctly"
+        },
+        {
+          "candidate": "buoyant_kernel_engine",
+          "choose_when": "The supplied engine implementation fits the integration",
+          "tradeoff": "Keep its fork/feature/version identity aligned with delta-rs"
+        }
+      ],
+      "unknowns": [
+        "Custom engine correctness and every internal-api surface are unreviewed beyond the selected contracts; no complete custom engine implementation is certified."
+      ],
+      "contract": "content/capabilities/delta.kernel.json"
+    }
+  ],
+  "matching_capabilities": 18,
+  "operations": [],
+  "matching_operation_paths": 0,
+  "crate_routes": [
+    {
+      "crate": "buoyant_kernel",
+      "role": "Protocol, schema, snapshot/scan and engine interfaces",
+      "representations": "Cargo alias delta_kernel; fork commit and internal-api feature must remain explicit",
+      "tasks": "delta.kernel"
+    },
+    {
+      "crate": "buoyant_kernel_engine",
+      "role": "Default kernel execution and I/O support",
+      "representations": "Cargo alias delta_kernel_default_engine; distinguish engine primitives from high-level Delta operations",
+      "tasks": "delta.kernel"
+    },
+    {
+      "crate": "deltalake-core",
+      "role": "Table state, high-level operations, commits, Delta-aware DataFusion integration",
+      "representations": "Prefer public operation before custom log actions or internal plans",
+      "tasks": "delta.read"
+    }
+  ],
+  "profile": "content/profile.json",
+  "scope": "Ranked lexical/task/facet discovery, not a semantic completeness claim. Empty results do not prove absence.",
+  "more": "Use show <id or canonical/facade path>; full indexes and crate routes remain available."
+}

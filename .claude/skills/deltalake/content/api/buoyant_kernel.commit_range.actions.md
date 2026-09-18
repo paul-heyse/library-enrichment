@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## DeltaAction
 
 `enum` · `buoyant_kernel::commit_range::actions::DeltaAction`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.commit_range.actions.DeltaAction.md)
 
 Also reachable as `buoyant_kernel::commit_range::DeltaAction`, `delta_kernel::commit_range::actions::DeltaAction`
 
@@ -26,6 +27,7 @@ Callers that need to read multiple action types pass a slice
 ## CommitAction
 
 `struct` · `buoyant_kernel::commit_range::actions::CommitAction`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.commit_range.actions.CommitAction.md)
 
 Also reachable as `buoyant_kernel::commit_range::CommitAction`, `delta_kernel::commit_range::actions::CommitAction`
 

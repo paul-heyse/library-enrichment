@@ -299,7 +299,7 @@ mod tests {
                     let contract = StorageContract::new(schema.clone())?;
                     let table = store.create("measured", &contract, false).await?;
                     let input = RecordBatch::try_new(schema, vec![Arc::new(Int64Array::from(vec![7_i64]))])?;
-                    let table = store.append(table, &contract, store.session().read_batch(input)?, vec![]).await?;
+                    let table = store.append(table, &contract, crate::native_catalog::batch(&store.session(), "kernel_metrics", input)?, vec![]).await?;
                     let result = work.execute(store.session().read_table(store.provider(&table, &contract).await?)?).await?;
                     assert_eq!(result.rows, 1);
                     Ok::<_, datafusion::error::DataFusionError>(())

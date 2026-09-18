@@ -51,6 +51,9 @@ fn len(&self) -> usize
 fn extend<T: IntoIterator<Item = Option<bool>>>(&mut self, iter: T)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.boolean_builder.BooleanBuilder.md).
+
+
 Builder for [`BooleanArray`]
 
 # Example

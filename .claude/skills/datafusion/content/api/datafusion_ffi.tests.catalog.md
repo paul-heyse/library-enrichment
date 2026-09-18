@@ -10,6 +10,9 @@ Crate `datafusion-ffi` · 4 public items · structured records in [`model/datafu
 fn fruit_table() -> std::sync::Arc<dyn TableProvider + 'static>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.tests.catalog.fruit_table.md).
+
+
 ---
 
 ## FixedCatalogProvider
@@ -32,6 +35,9 @@ fn register_schema(&self, name: &str, schema: Arc<dyn SchemaProvider>) -> Result
 fn schema(&self, name: &str) -> Option<Arc<dyn SchemaProvider>>
 fn schema_names(&self) -> Vec<String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.tests.catalog.FixedCatalogProvider.md).
+
 
 This catalog provider is intended only for unit tests. It prepopulates with one
 schema and only allows for schemas named after four types of fruit.
@@ -57,6 +63,9 @@ fn catalog(&self, name: &str) -> Option<Arc<dyn CatalogProvider>>
 fn catalog_names(&self) -> Vec<String>
 fn register_catalog(&self, name: String, catalog: Arc<dyn CatalogProvider>) -> Option<Arc<dyn CatalogProvider>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.tests.catalog.FixedCatalogProviderList.md).
+
 
 This catalog provider list is intended only for unit tests. It prepopulates with one
 catalog and only allows for catalogs named after four colors.
@@ -84,6 +93,9 @@ async fn table(&self, name: &str) -> Result<Option<Arc<dyn TableProvider>>>
 fn table_exist(&self, name: &str) -> bool
 fn table_names(&self) -> Vec<String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.tests.catalog.FixedSchemaProvider.md).
+
 
 This schema provider is intended only for unit tests. It prepopulates with one
 table and only allows for tables named sales and purchases.

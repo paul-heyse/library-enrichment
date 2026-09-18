@@ -14,6 +14,9 @@ enum Attribute
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/object_store.attributes.Attribute.md).
+
+
 Additional object attribute types
 
 ---
@@ -48,6 +51,9 @@ fn from(value: &'static str) -> Self
 ```rust
 fn deref(&self) -> &Self::Target
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.attributes.AttributeValue.md).
+
 
 The value of an [`Attribute`]
 
@@ -94,6 +100,9 @@ fn with_capacity(capacity: usize) -> Self
 fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.attributes.Attributes.md).
+
+
 Additional attributes of an object
 
 Attributes can be specified in [PutOptions](crate::PutOptions) and retrieved
@@ -122,6 +131,9 @@ struct AttributesIter<'a>
 fn next(&mut self) -> Option<Self::Item>
 fn size_hint(&self) -> (usize, Option<usize>)
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.attributes.AttributesIter.md).
+
 
 Iterator over [`Attributes`]
 

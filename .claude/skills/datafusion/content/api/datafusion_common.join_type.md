@@ -18,6 +18,9 @@ enum JoinConstraint
 
 **Derives**: Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.join_type.JoinConstraint.md).
+
+
 Join constraint
 
 ---
@@ -49,6 +52,9 @@ fn negate(&self) -> Self
 ```rust
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.join_type.JoinSide.md).
+
 
 Join side.
 Stores the referred table side during calculations
@@ -93,6 +99,9 @@ fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```rust
 fn from_str(s: &str) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.join_type.JoinType.md).
+
 
 Join type
 

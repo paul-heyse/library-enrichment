@@ -5,6 +5,7 @@ Crate `deltalake-lakefs` · 1 public items · structured records in [`model/delt
 ## LakeFSCustomExecuteHandler
 
 `struct` · `deltalake_lakefs::execute::LakeFSCustomExecuteHandler`
+[Full member contracts, output types and access classification](../operations/deltalake_lakefs.execute.LakeFSCustomExecuteHandler.md)
 
 Also reachable as `deltalake::lakefs::LakeFSCustomExecuteHandler`, `deltalake_lakefs::LakeFSCustomExecuteHandler`
 

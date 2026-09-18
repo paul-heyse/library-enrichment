@@ -1,0 +1,12 @@
+id: native-source-directory-owner
+valid:
+  - 'async fn read() { runtime.blocking(move || source::read_file(&tree.join(file))).await?; }'
+  - 'async fn prepare() { repository.source_directory().await?; repository.worker_directory().await?; }'
+  - 'fn capture(root: &Path) { tempfile::tempfile_in(root)?; }'
+  - 'mod tests { fn fixture() { tempfile::tempdir().unwrap(); } }'
+  - 'mod provenance_tests { fn fixture() { tempfile::Builder::new().tempdir_in(root).unwrap(); } }'
+invalid:
+  - 'async fn read() { tokio::task::spawn_blocking(move || source::read_file(&path)).await?; }'
+  - 'fn discard(path: &Path) { std::fs::remove_dir_all(path)?; }'
+  - 'fn prepare(root: &Path) { tempfile::Builder::new().tempdir_in(root)?; }'
+  - 'fn prepare() { tempfile::tempdir()?; }'

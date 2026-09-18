@@ -1,0 +1,608 @@
+[
+  {
+    "id": "32f11d6fd06afd07c4c2a455",
+    "path": "buoyant_kernel::committer::Committer",
+    "name": "Committer",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "trait",
+    "signature": "trait Committer: Send",
+    "docs": "A Committer is the system by which transactions are committed to a table. Transactions are\neffectively a collection of actions performed on the table at a specific version. The kernel\nexposes this trait so different catalogs can build their own commit implementations. For\nexample, different catalogs may: commit directly to a database, commit to an object store, or\nuse another system entirely.\n\nCritically, a Committer must implement [`commit`] which takes an engine and an iterator of\nactions (as [`EngineData`] batches) to commit to the table at the given version\n([`CommitMetadata::version`]).\n\n[`commit`]: Committer::commit\n[`EngineData`]: crate::EngineData",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/committer/mod.rs",
+      "begin": [
+        56,
+        1
+      ],
+      "end": [
+        108,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          1873,
+          2083,
+          2002
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 9,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": [
+          1997
+        ]
+      }
+    },
+    "type_references": {
+      "9": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::EngineData": 758,
+      "`CommitMetadata::version`": 1878,
+      "Committer::commit": 1873
+    },
+    "link_paths": {
+      "crate::EngineData": "buoyant_kernel::engine_data::EngineData",
+      "`CommitMetadata::version`": "buoyant_kernel::committer::commit_types::CommitMetadata::version",
+      "Committer::commit": "buoyant_kernel::committer::Committer::commit"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "1872",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/committer/mod.rs#L56",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "2683",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.committer.Committer.md",
+    "record_file": "operations/buoyant_kernel.committer.Committer.json",
+    "anchor": "op-32f11d6fd06afd07c4c2a455",
+    "aliases": [
+      "delta_kernel::committer::Committer"
+    ],
+    "resolved_doc_links": {
+      "crate::EngineData": "../operations/buoyant_kernel.engine_data.EngineData.md#op-f9036ab52623c01f96e1f809",
+      "`CommitMetadata::version`": "../operations/buoyant_kernel.committer.commit_types.CommitMetadata.md#op-ffc5fefc6f9d1e05155c596f",
+      "Committer::commit": "../operations/buoyant_kernel.committer.Committer.md#op-57d060399213d1e1597973da"
+    }
+  },
+  {
+    "id": "57d060399213d1e1597973da",
+    "path": "buoyant_kernel::committer::Committer::commit",
+    "name": "commit",
+    "owner": "buoyant_kernel::committer::Committer",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn commit(&self, engine: &dyn Engine, actions: DeltaResultIterator<'_, FilteredEngineData>, commit_metadata: CommitMetadata) -> DeltaResult<CommitResponse>",
+    "docs": "Commits actions to the table at the version specified in [`CommitMetadata`].\n\nImplementations must ensure that actions are committed atomically and either:\n1. Persisted directly to object storage as published deltas (for filesystem-based tables),\n   or\n2. Persisted as per the managing catalog's semantics (for catalog-managed tables)",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/committer/mod.rs",
+      "begin": [
+        63,
+        5
+      ],
+      "end": [
+        68,
+        38
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "engine",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Engine",
+                            "id": 926,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "actions",
+              {
+                "resolved_path": {
+                  "path": "DeltaResultIterator",
+                  "id": 1993,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "lifetime": "'_"
+                        },
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "FilteredEngineData",
+                              "id": 111,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "commit_metadata",
+              {
+                "resolved_path": {
+                  "path": "CommitMetadata",
+                  "id": 1875,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "CommitResponse",
+                          "id": 1925,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "926": "buoyant_kernel::Engine",
+      "1993": "buoyant_kernel::error::DeltaResultIterator",
+      "111": "buoyant_kernel::engine_data::FilteredEngineData",
+      "1875": "buoyant_kernel::committer::commit_types::CommitMetadata",
+      "239": "buoyant_kernel::error::DeltaResult",
+      "1925": "buoyant_kernel::committer::commit_types::CommitResponse"
+    },
+    "impl_context": null,
+    "links": {
+      "`CommitMetadata`": 1875
+    },
+    "link_paths": {
+      "`CommitMetadata`": "buoyant_kernel::committer::commit_types::CommitMetadata"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "1873",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/committer/mod.rs#L63",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "2684",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.committer.Committer.md",
+    "record_file": "operations/buoyant_kernel.committer.Committer.json",
+    "anchor": "op-57d060399213d1e1597973da",
+    "aliases": [
+      "delta_kernel::committer::Committer::commit"
+    ],
+    "resolved_doc_links": {
+      "`CommitMetadata`": "../operations/buoyant_kernel.committer.commit_types.CommitMetadata.md#op-f0a4d85b92f1e66219725449"
+    }
+  },
+  {
+    "id": "a8bf5e5f970affff246f4684",
+    "path": "buoyant_kernel::committer::Committer::is_catalog_committer",
+    "name": "is_catalog_committer",
+    "owner": "buoyant_kernel::committer::Committer",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn is_catalog_committer(&self) -> bool",
+    "docs": "Returns `true` if this committer is for a catalog-managed table, else `false`.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/committer/mod.rs",
+      "begin": [
+        71,
+        5
+      ],
+      "end": [
+        71,
+        44
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "2083",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/committer/mod.rs#L71",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "2899",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.committer.Committer.md",
+    "record_file": "operations/buoyant_kernel.committer.Committer.json",
+    "anchor": "op-a8bf5e5f970affff246f4684",
+    "aliases": [
+      "delta_kernel::committer::Committer::is_catalog_committer"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "280409d4aa4ba60251bd8819",
+    "path": "buoyant_kernel::committer::Committer::publish",
+    "name": "publish",
+    "owner": "buoyant_kernel::committer::Committer",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn publish(&self, engine: &dyn Engine, publish_metadata: PublishMetadata) -> DeltaResult<()>",
+    "docs": "Publishes catalog commits to the Delta log. Applicable only to catalog-managed tables.\n\nPublishing is the act of copying ratified catalog commits to the Delta log as published\nDelta files (e.g., `_delta_log/00000000000000000001.json`).\n\n# When to call\n\nThis method should only be called on catalog committers (i.e., when [`is_catalog_committer`]\nreturns `true`). Filesystem committers will error if called with catalog commits to publish.\n\n# Benefits\n\n- Reduces the number of commits the catalog needs to store internally and serve to readers\n- Enables table maintenance operations that must operate on published versions only, such as\n  checkpointing and log compaction\n\n# Requirements\n\n- This method must ensure that all catalog commits are published to the Delta log up to and\n  including the snapshot version specified in [`PublishMetadata`]\n- Commits must be published in order: version V-1 must be published before version V\n\n# Catalog-specific semantics\n\nEach catalog implementation may specify its own rules and semantics for publishing,\nincluding whether it expects to be notified immediately upon publishing success, whether\npublished commits must appear with PUT-if-absent semantics in the Delta log, and whether\npublishing happens in the client-side or server-side catalog component.\n\n# Errors\n\nReturns an error if the publish operation fails.\n\n[`is_catalog_committer`]: Committer::is_catalog_committer",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/committer/mod.rs",
+      "begin": [
+        107,
+        5
+      ],
+      "end": [
+        107,
+        98
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "engine",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Engine",
+                            "id": 926,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "publish_metadata",
+              {
+                "resolved_path": {
+                  "path": "PublishMetadata",
+                  "id": 1996,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "926": "buoyant_kernel::Engine",
+      "1996": "buoyant_kernel::committer::publish_types::PublishMetadata",
+      "239": "buoyant_kernel::error::DeltaResult"
+    },
+    "impl_context": null,
+    "links": {
+      "Committer::is_catalog_committer": 2083,
+      "`PublishMetadata`": 1996
+    },
+    "link_paths": {
+      "Committer::is_catalog_committer": "buoyant_kernel::committer::Committer::is_catalog_committer",
+      "`PublishMetadata`": "buoyant_kernel::committer::publish_types::PublishMetadata"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "2002",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/committer/mod.rs#L107",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "2816",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.committer.Committer.md",
+    "record_file": "operations/buoyant_kernel.committer.Committer.json",
+    "anchor": "op-280409d4aa4ba60251bd8819",
+    "aliases": [
+      "delta_kernel::committer::Committer::publish"
+    ],
+    "resolved_doc_links": {
+      "Committer::is_catalog_committer": "../operations/buoyant_kernel.committer.Committer.md#op-a8bf5e5f970affff246f4684",
+      "`PublishMetadata`": "../operations/buoyant_kernel.committer.publish_types.PublishMetadata.md#op-c9fe0cbc7fc4e65976b1d6ab"
+    }
+  }
+]

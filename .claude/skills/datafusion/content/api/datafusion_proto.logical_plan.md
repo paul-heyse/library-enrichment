@@ -25,6 +25,9 @@ fn try_encode_file_format(&self, buf: &mut Vec<u8>, node: Arc<dyn FileFormatFact
 fn try_encode_table_provider(&self, _table_ref: &TableReference, _node: Arc<dyn TableProvider>, _buf: &mut Vec<u8>) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.DefaultLogicalExtensionCodec.md).
+
+
 ---
 
 ## AsLogicalPlan
@@ -47,6 +50,9 @@ fn try_encode<B>(&self, buf: &mut B) -> Result<()> where B: BufMut, Self: Sized
 fn try_from_logical_plan(plan: &LogicalPlan, extension_codec: &dyn LogicalExtensionCodec) -> Result<Self> where Self: Sized
 fn try_into_logical_plan(&self, ctx: &TaskContext, extension_codec: &dyn LogicalExtensionCodec) -> Result<LogicalPlan>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.AsLogicalPlan.md).
+
 
 ---
 
@@ -86,5 +92,8 @@ fn try_encode_udaf(&self, _node: &AggregateUDF, _buf: &mut Vec<u8>) -> Result<()
 fn try_encode_udf(&self, _node: &ScalarUDF, _buf: &mut Vec<u8>) -> Result<()>
 fn try_encode_udwf(&self, _node: &WindowUDF, _buf: &mut Vec<u8>) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.LogicalExtensionCodec.md).
+
 
 ---

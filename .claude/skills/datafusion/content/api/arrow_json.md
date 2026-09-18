@@ -16,6 +16,9 @@ enum StructMode
 
 **Derives**: Clone, Copy, Debug, Default, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/arrow_json.StructMode.md).
+
+
 Specifies what is considered valid JSON when reading or writing
 RecordBatches or StructArrays.
 
@@ -58,6 +61,9 @@ trait JsonSerializable: 'static
 ```rust
 fn into_json_value(self) -> Option<Value>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_json.JsonSerializable.md).
+
 
 Trait declaring any type that is serializable to JSON. This includes all primitive types (bool, i32, etc.).
 

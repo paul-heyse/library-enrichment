@@ -22,6 +22,7 @@ pub enum Key {
     RegistryCapture,
     RevisionCapture,
     ContractField,
+    ContractChange,
     Release,
     Environment,
     Context,
@@ -48,11 +49,14 @@ pub enum Key {
     EffectGrant,
     ExecutionConfiguration,
     ProcessOperation,
+    SemanticConversation,
     ProcessEffect,
-    ProcessBinding,
+    StaticWorkerEffect,
+    RustdocDecoderEffect,
     RowCursor,
     SearchCursor,
     SearchSelection,
+    RuntimeWitness,
     ComparisonCursor,
     AlternativeCursor,
     ArtifactCursor,
@@ -61,6 +65,7 @@ pub enum Key {
     AcquisitionConfiguration,
     NormalizationConfiguration,
     InspectionConfiguration,
+    RustdocBuildConfiguration,
     CapsuleIdentity,
     ProducerImplementation,
     VerificationConfiguration,
@@ -81,6 +86,7 @@ impl Key {
             Self::RegistryCapture => "registry_capture",
             Self::RevisionCapture => "revision_capture",
             Self::ContractField => "contract_field",
+            Self::ContractChange => "contract_change",
             Self::Release => "rel",
             Self::Environment => "env",
             Self::Context => "ctx",
@@ -107,11 +113,14 @@ impl Key {
             Self::EffectGrant => "grant",
             Self::ExecutionConfiguration => "execution_config",
             Self::ProcessOperation => "process",
+            Self::SemanticConversation => "conversation",
             Self::ProcessEffect => "process_effect",
-            Self::ProcessBinding => "process_binding",
+            Self::StaticWorkerEffect => "static_worker_effect",
+            Self::RustdocDecoderEffect => "rustdoc_decoder_effect",
             Self::RowCursor => "row_cursor",
             Self::SearchCursor => "search_cursor",
             Self::SearchSelection => "search_selection",
+            Self::RuntimeWitness => "runtime_witness",
             Self::ComparisonCursor => "comparison_cursor",
             Self::AlternativeCursor => "alternative_cursor",
             Self::ArtifactCursor => "artifact_cursor",
@@ -120,6 +129,7 @@ impl Key {
             Self::AcquisitionConfiguration => "acquisition_configuration",
             Self::NormalizationConfiguration => "normalization_configuration",
             Self::InspectionConfiguration => "inspection_configuration",
+            Self::RustdocBuildConfiguration => "rustdoc_build_configuration",
             Self::CapsuleIdentity => "capsule",
             Self::ProducerImplementation => "producer_implementation",
             Self::VerificationConfiguration => "verification_configuration",
@@ -137,11 +147,13 @@ impl Key {
             Self::SchemaContract => return native_fields::<crate::native_contract::Manifest>(),
             Self::OperationContract => return native_fields::<crate::operation::Contract>(),
             Self::RetentionPolicy => return native_fields::<crate::operation::retention::RetentionPolicy>(),
-            Self::RegistryCapture => return native_fields::<crate::operation::sources::RegistryCapture>(),
-            Self::RevisionCapture => return native_fields::<crate::operation::sources::RevisionCapture>(),
+            Self::RegistryCapture => return native_fields::<<crate::identity::RegistryCaptureId as crate::identity::DefinitionId>::Record>(),
+            Self::RevisionCapture => return native_fields::<<crate::identity::RevisionCaptureId as crate::identity::DefinitionId>::Record>(),
             Self::ContractField => return native_fields::<crate::native_contract::ContractField>(),
+            Self::ContractChange => return native_fields::<crate::native_contract::Change>(),
             Self::ProducerImplementation => return native_fields::<crate::operation::identities::ProducerImplementation>(),
             Self::VerificationConfiguration => return native_fields::<crate::operation::identities::VerificationConfiguration>(),
+            Self::RustdocBuildConfiguration => return native_fields::<crate::operation::identities::RustdocBuildConfiguration>(),
             Self::ContainmentIdentity => return native_fields::<crate::operation::identities::ContainmentIdentity>(),
             Self::ProcessInventory => return native_fields::<crate::operation::identities::ProcessInventory>(),
             Self::PhysicalInventory => return native_fields::<crate::operation::identities::PhysicalInventory>(),
@@ -154,6 +166,7 @@ impl Key {
             Self::AlternativeCursor => return without_check::<crate::compare::page::AlternativeCursor>(),
             Self::ArtifactCursor => return without_check::<crate::search::Cursor>(),
             Self::ArtifactSelection => return Arc::new(Schema::new(<crate::operation::selections::ArtifactSelection as crate::native_union::NativeStruct>::fields())),
+            Self::RuntimeWitness => return native_fields::<crate::operation::selections::RuntimeWitness>(),
             Self::SearchSelection => return Arc::new(Schema::new(<crate::operation::selections::SearchSelection as crate::native_union::NativeStruct>::fields())),
             Self::InspectionSelection => return Arc::new(Schema::new(<crate::operation::selections::InspectionSelection as crate::native_union::NativeStruct>::fields())),
             Self::DiscoverySelection => return Arc::new(Schema::new(<crate::operation::selections::DiscoverySelection as crate::native_union::NativeStruct>::fields())),
@@ -171,12 +184,15 @@ impl Key {
             Self::Citation => return Arc::new(Schema::new(<crate::wire::evidence::CitationIdentity as crate::native_union::NativeStruct>::fields())),
             Self::Projection => return Arc::new(Schema::new(<crate::operation::projections::ProjectionIdentity as crate::native_union::NativeStruct>::fields())),
             Self::SnapshotDescriptor => return Arc::new(Schema::new(<crate::evidence::snapshot::SnapshotDescriptor as crate::native_union::NativeStruct>::fields())),
-            Self::OperationPolicy => return crate::operation::policy_schema(),
+            Self::OperationPolicy => return native_fields::<<crate::identity::OperationPolicyId as crate::identity::DefinitionId>::Record>(),
             Self::OperationCommand => return crate::operation::command_key_schema(),
             Self::EffectGrant => return crate::operation::grant_key_schema(),
             Self::ExecutionConfiguration => return crate::operation::execution_schema(),
-            Self::ProcessOperation => return crate::operation::process_schema(),
-            Self::ProcessEffect => return crate::operation::process_effect_schema(),
+            Self::ProcessOperation => return native_fields::<<crate::identity::ProcessOperationId as crate::identity::DefinitionId>::Record>(),
+            Self::SemanticConversation => return native_fields::<<crate::identity::SemanticConversationId as crate::identity::DefinitionId>::Record>(),
+            Self::ProcessEffect => return native_fields::<<crate::identity::ProcessEffectId as crate::identity::DefinitionId>::Record>(),
+            Self::StaticWorkerEffect => return native_fields::<<crate::identity::StaticWorkerEffectId as crate::identity::DefinitionId>::Record>(),
+            Self::RustdocDecoderEffect => return native_fields::<<crate::identity::RustdocDecoderEffectId as crate::identity::DefinitionId>::Record>(),
             _ => {}
         }
         if matches!(self, Self::ArtifactReceipt) {
@@ -234,12 +250,7 @@ impl Key {
                     .collect::<Vec<_>>(),
             ));
         }
-        let fields: Vec<Field> = match self {
-            Self::ProcessBinding => <crate::operation::jobs::ProcessBinding as crate::native_union::NativeStruct>::fields().iter().map(|field| field.as_ref().clone()).collect(),
-
-            _ => unreachable!("native evidence schema returned above"),
-        };
-        Arc::new(Schema::new(fields))
+        unreachable!("native evidence schema returned above")
     }
     /// Build a native identity expression over the named contract fields.
     pub fn expression(self) -> Expr {
@@ -252,6 +263,17 @@ impl Key {
         )
     }
     /// The same defining-field graph used by constructors, with a checked binary domain.
+    pub fn identity(self) -> Result<Expr> {
+        self.identity_expression(
+            self.schema()
+                .fields()
+                .iter()
+                .map(|field| col(field.name()))
+                .collect(),
+        )
+    }
+
+    /// Bind the canonical defining fields to a domain-preserving native hash.
     pub fn identity_expression(self, inputs: Vec<Expr>) -> Result<Expr> {
         use crate::native_union::Domain;
         let domain = match self {
@@ -259,6 +281,17 @@ impl Key {
             Self::Environment => Domain::Environment,
             Self::Context => Domain::Context,
             Self::Snapshot => Domain::Snapshot,
+            Self::EffectGrant => Domain::EffectGrant,
+            Self::RetentionPolicy => Domain::RetentionPolicy,
+            Self::OperationPolicy => Domain::OperationPolicy,
+            Self::ProcessOperation => Domain::ProcessOperation,
+            Self::ProcessEffect => Domain::ProcessEffect,
+            Self::StaticWorkerEffect => Domain::StaticWorkerEffect,
+            Self::RustdocDecoderEffect => Domain::RustdocDecoderEffect,
+            Self::SemanticConversation => Domain::SemanticConversation,
+            Self::RegistryCapture => Domain::RegistryCapture,
+            Self::RevisionCapture => Domain::RevisionCapture,
+
             _ => {
                 return datafusion::common::plan_err!("key has no deployed binary identity domain");
             }

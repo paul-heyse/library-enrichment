@@ -1,0 +1,25 @@
+id: native-source-directory-owner
+language: Rust
+severity: error
+message: Source extraction and worker outputs use durable private directories and the shared native blocking lane.
+files:
+  - crates/enrichment-daemon/src/ops/inspect.rs
+  - crates/enrichment-daemon/src/ops/resolve.rs
+  - crates/enrichment-daemon/src/ops/revision.rs
+  - crates/enrichment-daemon/src/ops/python.rs
+  - crates/enrichment-daemon/src/ops/source_tree.rs
+  - crates/enrichment-store/src/native_rustdoc.rs
+  - crates/enrichment-store/src/native_worker.rs
+rule:
+  kind: call_expression
+  has:
+    field: function
+    regex: '(^|::)(spawn_blocking|remove_dir_all|tempdir|tempdir_in)$|\.tempdir(_in)?$'
+  not:
+    inside:
+      kind: mod_item
+      has:
+        field: name
+        regex: '(^tests$|_tests$)'
+      stopBy: end
+note: This is a scoped guard for replaced source owners, not a ban on native I/O drivers or isolated fixture directories. It does not resolve aliases.

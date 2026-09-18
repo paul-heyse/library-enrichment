@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 9 public items · structured records in [`model/buoyan
 ## visit_metadata_at
 
 `function` · `buoyant_kernel::actions::visitors::visit_metadata_at`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.visitors.visit_metadata_at.md)
 
 Also reachable as `delta_kernel::actions::visitors::visit_metadata_at`
 
@@ -21,6 +22,7 @@ contains the `id` element of the metadata.
 ## visit_protocol_at
 
 `function` · `buoyant_kernel::actions::visitors::visit_protocol_at`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.visitors.visit_protocol_at.md)
 
 Also reachable as `delta_kernel::actions::visitors::visit_protocol_at`
 
@@ -37,6 +39,7 @@ contains the `min_reader_version` element of the protocol.
 ## AddVisitor
 
 `struct` · `buoyant_kernel::actions::visitors::AddVisitor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.visitors.AddVisitor.md)
 
 Also reachable as `delta_kernel::actions::visitors::AddVisitor`
 
@@ -66,6 +69,7 @@ fn visit<'a>(&mut self, row_count: usize, getters: &[&'a dyn GetData<'a>]) -> De
 ## CdcVisitor
 
 `struct` · `buoyant_kernel::actions::visitors::CdcVisitor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.visitors.CdcVisitor.md)
 
 Also reachable as `delta_kernel::actions::visitors::CdcVisitor`
 
@@ -95,6 +99,7 @@ fn visit<'a>(&mut self, row_count: usize, getters: &[&'a dyn GetData<'a>]) -> De
 ## MetadataVisitor
 
 `struct` · `buoyant_kernel::actions::visitors::MetadataVisitor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.visitors.MetadataVisitor.md)
 
 Also reachable as `delta_kernel::actions::visitors::MetadataVisitor`
 
@@ -118,6 +123,7 @@ fn visit<'a>(&mut self, row_count: usize, getters: &[&'a dyn GetData<'a>]) -> De
 ## ProtocolVisitor
 
 `struct` · `buoyant_kernel::actions::visitors::ProtocolVisitor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.visitors.ProtocolVisitor.md)
 
 Also reachable as `delta_kernel::actions::visitors::ProtocolVisitor`
 
@@ -141,6 +147,7 @@ fn visit<'a>(&mut self, row_count: usize, getters: &[&'a dyn GetData<'a>]) -> De
 ## RemoveVisitor
 
 `struct` · `buoyant_kernel::actions::visitors::RemoveVisitor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.visitors.RemoveVisitor.md)
 
 Also reachable as `delta_kernel::actions::visitors::RemoveVisitor`
 
@@ -170,6 +177,7 @@ fn visit<'a>(&mut self, row_count: usize, getters: &[&'a dyn GetData<'a>]) -> De
 ## SetTransactionVisitor
 
 `struct` · `buoyant_kernel::actions::visitors::SetTransactionVisitor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.visitors.SetTransactionVisitor.md)
 
 Also reachable as `delta_kernel::actions::visitors::SetTransactionVisitor`
 
@@ -207,6 +215,7 @@ required.
 ## SidecarVisitor
 
 `struct` · `buoyant_kernel::actions::visitors::SidecarVisitor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.actions.visitors.SidecarVisitor.md)
 
 Also reachable as `delta_kernel::actions::visitors::SidecarVisitor`
 

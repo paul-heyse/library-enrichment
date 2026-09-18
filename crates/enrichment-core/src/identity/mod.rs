@@ -20,6 +20,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::native_key::Key;
 
+mod uuid;
+pub use uuid::*;
+
 /// A string that is not a well-formed identity of the expected kind.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IdentityError {
@@ -68,8 +71,12 @@ macro_rules! content_identity {
             /// The prefix every identity of this kind carries.
             pub const PREFIX: &'static str = $prefix;
 
-            fn from_record<T: crate::native_union::NativeStruct>(value: &T) -> Self {
-                Self(Key::$key.record_digest(value).expect("declared native identity contract"))
+            pub fn from_record<T: crate::native_union::NativeStruct>(value: &T) -> Self {
+                Self::try_from_record(value).expect("declared native identity contract")
+            }
+
+            pub fn try_from_record<T: crate::native_union::NativeStruct>(value: &T) -> datafusion::common::Result<Self> {
+                Ok(Self(Key::$key.record_digest(value)?))
             }
 
             /// Native identity bytes. Text is produced only at protocol/path boundaries.
@@ -86,11 +93,8 @@ macro_rules! content_identity {
 
             /// DataFusion's parameter contract carries the same semantic field as literals.
             pub fn parameter(&self) -> datafusion::common::metadata::ScalarAndMetadata {
-                let field = crate::native_union::field::<Self>("identity", crate::native_union::Rule::Text);
-                datafusion::common::metadata::ScalarAndMetadata::new(
-                    datafusion::common::ScalarValue::FixedSizeBinary(32, Some(self.0.to_vec())),
-                    Some(datafusion::common::metadata::FieldMetadata::from(&field)),
-                )
+                crate::evidence::arrow_model::expressions::parameter(self)
+                    .expect("declared content identity parameter")
             }
         }
 
@@ -160,6 +164,23 @@ macro_rules! content_identity {
 }
 
 content_identity!(
+    RetentionPolicyId,
+    RetentionPolicy,
+    "retention_policy",
+    "^retention_policy_[0-9a-f]{64}$"
+);
+
+mod definitions;
+pub use definitions::*;
+
+content_identity!(
+    SchemaContractId,
+    SchemaContract,
+    "schema_contract",
+    "^schema_contract_[0-9a-f]{64}$"
+);
+
+content_identity!(
     /// Identifies the actual library release: ecosystem, registry, package, exact version and
     /// the selected artifact digest.
     ReleaseId,
@@ -191,6 +212,20 @@ content_identity!(
     "snap",
     "^snap_[0-9a-f]{64}$"
 );
+
+content_identity!(
+    /// Exact command authority, derived from the admitted owner and claim fence.
+    GrantId,
+    EffectGrant,
+    "grant",
+    "^grant_[0-9a-f]{64}$"
+);
+
+impl GrantId {
+    pub fn from_claim(claim: &crate::operation::jobs::Claim) -> datafusion::error::Result<Self> {
+        Ok(Self(Key::EffectGrant.record_digest(claim)?))
+    }
+}
 
 crate::native_vocabulary! {
 /// Which package ecosystem a release belongs to.
@@ -455,13 +490,13 @@ pub struct Context {
     /// Derived from release, environment and mode.
     context_id: ContextId => crate::native_union::Rule::Text,
     /// The release under study.
-    release_id: ReleaseId => crate::native_union::Rule::Text,
+    release_id: ReleaseId => crate::native_union::Rule::foreign_key("releases", "release_id"),
     /// The environment it is studied in.
-    environment_id: EnvironmentId => crate::native_union::Rule::Text,
+    environment_id: EnvironmentId => crate::native_union::Rule::foreign_key("environments", "environment_id"),
     /// The research mode.
     mode: ResearchMode => crate::native_union::Rule::Text,
     /// The context this one was derived from, if any.
-    parent_context_id: Option<ContextId> => crate::native_union::Rule::Text,
+    parent_context_id: Option<ContextId> => crate::native_union::Rule::foreign_key("contexts", "context_id"),
 }
 }
 
@@ -550,6 +585,35 @@ impl SnapshotId {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn grant_identity_keeps_binary_domain_and_strict_wire_width() {
+        use crate::native_union::{Cell, Rule};
+        let text = format!("grant_{}", "ab".repeat(32));
+        let grant = GrantId::try_from(text.clone()).unwrap();
+        assert_eq!(grant.as_bytes(), &[0xab; 32]);
+        assert_eq!(grant.to_string(), text);
+        assert_eq!(
+            GrantId::data_type(),
+            arrow::datatypes::DataType::FixedSizeBinary(32)
+        );
+        let grant_field = crate::native_union::field::<GrantId>("id", Rule::Text);
+        let snapshot_field = crate::native_union::field::<SnapshotId>("id", Rule::Text);
+        assert!(
+            crate::native_schema::function_arguments(
+                &[std::sync::Arc::new(grant_field)],
+                &[std::sync::Arc::new(snapshot_field)]
+            )
+            .is_err()
+        );
+        for invalid in [
+            format!("grant_{}", "ab".repeat(16)),
+            format!("grant_{}", "AB".repeat(32)),
+            format!("snap_{}", "ab".repeat(32)),
+        ] {
+            assert!(GrantId::try_from(invalid).is_err());
+        }
+    }
 
     #[test]
     fn target_identity_vectors_preserve_environment_knowledge_and_separate_scopes() {

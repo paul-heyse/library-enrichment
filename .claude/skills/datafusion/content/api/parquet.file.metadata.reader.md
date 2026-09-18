@@ -24,6 +24,9 @@ enum PageIndexPolicy
 fn from(value: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.reader.PageIndexPolicy.md).
+
+
 Describes the policy for reading page indexes
 
 ---
@@ -69,6 +72,9 @@ fn with_offset_index_policy(self, policy: PageIndexPolicy) -> Self
 fn with_page_index_policy(self, policy: PageIndexPolicy) -> Self
 fn with_prefetch_hint(self, prefetch: Option<usize>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md).
+
 
 Reads [`ParquetMetaData`] from a byte stream, with either synchronous or
 asynchronous I/O.

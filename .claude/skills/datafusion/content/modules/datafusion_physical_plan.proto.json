@@ -1,0 +1,80 @@
+[
+  {
+    "id": "003f7212d73dcf1424b8f88e",
+    "path": "datafusion_physical_plan::proto",
+    "name": "proto",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "module",
+    "signature": "mod proto",
+    "docs": "Serialization hooks for [`ExecutionPlan`], mirroring the\n`try_to_proto`/`try_from_proto` pattern used for `PhysicalExpr`.\n\n# Why the indirection\n\nAn `ExecutionPlan` must be able to (de)serialize its child plans and its\nchild physical expressions recursively. The concrete recursion lives in\n`datafusion-proto` (it owns the extension codec, the session context and the\ncentral converter), but `datafusion-proto` sits *above* `datafusion-physical-plan`\nin the crate graph. To let a plan drive that recursion without a dependency\ncycle, this module defines:\n\n* [`ExecutionPlanEncodeCtx`] / [`ExecutionPlanDecodeCtx`] — the stable,\n  concrete context types a plan author interacts with. New capabilities can\n  be added here without changing every plan's hook signature.\n* [`ExecutionPlanEncode`] / [`ExecutionPlanDecode`] — internal dispatch\n  traits, *defined* here but *implemented* in `datafusion-proto`, that the\n  context types delegate to. This is the dependency inversion that keeps the\n  proto types flowing in one direction only. They are `#[doc(hidden)]`: not\n  public API, `pub` only because their implementors live in another crate.\n\n`datafusion-physical-plan` depends on the pure prost types in\n`datafusion-proto-models` (feature `proto`), never on `datafusion-proto`.\n\n# Function-carrying plans\n\nPlans that reference UD(A/W)Fs (`AggregateExec`, the window execs, …) also\nride the hook: the context exposes typed, *bytes-only* function serde —\n[`encode_udaf`](ExecutionPlanEncodeCtx::encode_udaf) /\n[`decode_udaf`](ExecutionPlanDecodeCtx::decode_udaf) and the udf/udwf\nsiblings. These take/return `datafusion-expr` types plus `Vec<u8>` and never\nname a proto type, so the `PhysicalExtensionCodec` (which only\n`datafusion-proto` can name) stays fully encapsulated behind the adapter that\nbacks these traits. The lookup-order policy (payload → codec; else registry →\ncodec fallback) lives once, in that adapter, rather than in every plan.\n\nThis is possible because `datafusion-physical-plan` sits *above*\n`datafusion-expr` in the crate graph; the expression-side ctx (in\n`physical-expr-common`, *below* `datafusion-expr`) cannot do this, which is\nwhy `ScalarFunctionExpr` remains special-cased there.\n\n[`ExecutionPlan`]: crate::ExecutionPlan",
+    "span": {
+      "filename": "src/proto.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        386,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"proto\"), span: src/lib.rs:94:7: 94:24 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          818,
+          753
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`ExecutionPlanDecode`": 4626,
+      "`ExecutionPlanDecodeCtx`": 753,
+      "ExecutionPlanEncodeCtx::encode_udaf": 4598,
+      "`ExecutionPlanEncodeCtx`": 818,
+      "ExecutionPlanDecodeCtx::decode_udaf": 4636,
+      "crate::ExecutionPlan": 126,
+      "`ExecutionPlanEncode`": 4590
+    },
+    "link_paths": {
+      "`ExecutionPlanDecode`": null,
+      "`ExecutionPlanDecodeCtx`": "datafusion_physical_plan::proto::ExecutionPlanDecodeCtx",
+      "ExecutionPlanEncodeCtx::encode_udaf": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx::encode_udaf",
+      "`ExecutionPlanEncodeCtx`": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx",
+      "ExecutionPlanDecodeCtx::decode_udaf": "datafusion_physical_plan::proto::ExecutionPlanDecodeCtx::decode_udaf",
+      "crate::ExecutionPlan": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "`ExecutionPlanEncode`": null
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1904",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/datafusion_physical_plan.proto.md",
+    "record_file": "modules/datafusion_physical_plan.proto.json",
+    "anchor": "op-003f7212d73dcf1424b8f88e",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ExecutionPlanDecodeCtx`": "../operations/datafusion_physical_plan.proto.ExecutionPlanDecodeCtx.md#op-0b19f98851d9520d41eceb2c",
+      "ExecutionPlanEncodeCtx::encode_udaf": "../operations/datafusion_physical_plan.proto.ExecutionPlanEncodeCtx.md#op-ab92ce06505339ee9d04e805",
+      "`ExecutionPlanEncodeCtx`": "../operations/datafusion_physical_plan.proto.ExecutionPlanEncodeCtx.md#op-ea54982e4141e05ebe735b2b",
+      "ExecutionPlanDecodeCtx::decode_udaf": "../operations/datafusion_physical_plan.proto.ExecutionPlanDecodeCtx.md#op-153524b89077aba984f7742f",
+      "crate::ExecutionPlan": "../operations/datafusion_physical_plan.execution_plan.ExecutionPlan.md#op-ac09436cd73f869917923673"
+    }
+  }
+]

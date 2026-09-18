@@ -33,6 +33,9 @@ fn register_default_schema(config: &SessionConfig, table_factories: &HashMap<Str
 fn register_scalar_functions(state: &mut SessionState)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.execution.session_state_defaults.SessionStateDefaults.md).
+
+
 Defaults that are used as part of creating a SessionState such as table providers,
 file formats, registering of builtin functions, etc.
 

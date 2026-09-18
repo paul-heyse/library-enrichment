@@ -31,6 +31,9 @@ fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.aggregate.collect.SparkCollectList.md).
+
+
 ---
 
 ## SparkCollectSet
@@ -61,5 +64,8 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.aggregate.collect.SparkCollectSet.md).
+
 
 ---

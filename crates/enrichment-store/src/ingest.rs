@@ -18,6 +18,7 @@ use datafusion::{
     logical_expr::when,
     prelude::{SessionContext, col, lit},
 };
+use enrichment_core::native_union::NativeStruct;
 use enrichment_core::{
     evidence::{
         Artifact,
@@ -31,7 +32,7 @@ use enrichment_core::{
     },
     native_key::Key,
 };
-use std::{path::Path, sync::Arc};
+use std::sync::Arc;
 
 fn invalid(message: impl Into<String>) -> DataFusionError {
     DataFusionError::Execution(message.into())
@@ -43,8 +44,14 @@ fn keyed(frame: DataFrame, key: Key, id: &str, relation: Relation) -> Result<Dat
         relation.schema()?.as_ref(),
     )
 }
+
+/// Acquisition clocks are attempt provenance. Keep every qualified source URI while
+/// projecting one semantic input for repeated acquisitions with identical meaning.
+async fn bound_input_plan(session: &SessionContext) -> Result<DataFrame> {
+    keyed(session.sql("SELECT DISTINCT producer_binding_id,role,artifact.artifact_id AS artifact_id,artifact.sha256 AS sha256,artifact.media_type AS media_type,artifact.kind AS kind,artifact.size_bytes AS size_bytes,artifact.source_uri AS source_uri FROM bound_inputs").await?, Key::InputArtifact, "input_id", Relation::InputArtifacts)
+}
 async fn view(session: &SessionContext, name: &str, sql: &str) -> Result<()> {
-    session.register_table(name, session.sql(sql).await?.into_view())?;
+    crate::native_catalog::work(session, name, session.sql(sql).await?.into_view())?;
     Ok(())
 }
 fn field(relation: Relation, name: &str) -> Result<arrow::datatypes::DataType> {
@@ -61,7 +68,7 @@ pub async fn prepare(
     context: IngestContext,
     input: impl DocumentSource + 'static,
     metadata: Option<ReleaseMetadata>,
-    root: &Path,
+    retention: &crate::retention::RetentionStore,
     runtime: &QueryRuntime,
     limits: &WriteLimits,
 ) -> Result<(EvidencePlans, Attempts)> {
@@ -70,14 +77,15 @@ pub async fn prepare(
     }
     enrichment_core::canonical::serialized_size(&context.producer_runs, 16 * 1024 * 1024)?;
     enrichment_core::canonical::serialized_size(&context.artifacts, 64 * 1024 * 1024)?;
-    std::fs::create_dir_all(root)?;
-    let directory = tempfile::Builder::new()
-        .prefix("document-facts-")
-        .tempdir_in(root)?;
+    let directory = crate::private_directory::PrivateDirectory::create(
+        retention,
+        runtime,
+        crate::private_directory::Kind::Documents,
+    )
+    .await?;
     let limits_owned = limits.clone();
-    let operation = crate::runtime::capture_operation();
-    let (directory, path) = tokio::task::spawn_blocking(move || {
-        operation.run(|| {
+    let (directory, path) = runtime
+        .blocking(move || {
             let mut buffer = RelationBuffer::staging(
                 directory.path(),
                 "documents",
@@ -98,33 +106,34 @@ pub async fn prepare(
                 .map_err(invalid)?;
             let (path, _, _, _) = buffer.finish_staging()?;
             std::fs::File::open(directory.path())?.sync_all()?;
-            Ok::<_, DataFusionError>((Arc::new(directory), path))
+            Ok::<_, DataFusionError>((directory, path))
         })
-    })
-    .await
-    .map_err(|e| DataFusionError::External(Box::new(e)))??;
+        .await??;
     let session = runtime.session();
     let provider =
         crate::arrow_input::provider(runtime, &path, document::encode(&[])?.schema()).await?;
     let provider = session.read_table(provider)?.into_view();
-    session.register_table(
+    crate::native_catalog::work(
+        &session,
         "documents",
-        crate::leases::staged_view(&provider, &session, directory)?,
+        crate::leases::input_view(&provider, &session, directory)?,
     )?;
-    let producers = session
-        .read_batch(projection::provenance::producer_fields(
-            &context.producer_runs,
-        )?)?
-        .with_column("producer_binding_id", Key::ProducerBinding.expression())?;
+    let producers = crate::native_catalog::batch(
+        &session,
+        "ingest",
+        projection::provenance::producer_fields(&context.producer_runs)?,
+    )?
+    .with_column("producer_binding_id", Key::ProducerBinding.expression())?;
     let producers =
         crate::native_delta::project(producers, Relation::ProducerRuns.schema()?.as_ref())?;
-    session.register_table("producers", producers.clone().into_view())?;
-    runtime.require_empty(session.sql("SELECT attempt_id AS witness_id FROM producers GROUP BY attempt_id HAVING count(*)<>1").await?, "producer_attempt_key", "document_ingress").await?;
-    session.register_table(
+    crate::native_catalog::work(&session, "producers", producers.clone().into_view())?;
+    crate::producer_run_plan::admit(runtime, &producers).await?;
+    crate::native_catalog::work(
+        &session,
         "producing",
         producers
             .clone()
-            .filter(col("attempt_id").eq(lit(&context.producing_attempt)))?
+            .filter(col("attempt_id").eq(lit(context.producing_attempt)))?
             .into_view(),
     )?;
     runtime
@@ -136,12 +145,16 @@ pub async fn prepare(
             "document_ingress",
         )
         .await?;
-    session.register_table(
+    crate::native_catalog::work(
+        &session,
         "acquisitions",
-        session
-            .read_batch(projection::staging::artifacts(&context.artifacts)?)?
-            .distinct()?
-            .into_view(),
+        crate::native_catalog::batch(
+            &session,
+            "ingest",
+            projection::staging::artifacts(&context.artifacts)?,
+        )?
+        .distinct()?
+        .into_view(),
     )?;
     view(
         &session,
@@ -151,7 +164,7 @@ pub async fn prepare(
     .await?;
     runtime.require_empty(session.sql("SELECT d.attempt_id AS witness_id FROM declarations d LEFT ANTI JOIN acquisitions a ON d.input.value=a.artifact.sha256").await?, "declared_input_acquisition", "document_ingress").await?;
     view(&session, "bound_inputs", "SELECT DISTINCT d.attempt_id,d.producer_binding_id,d.input.key AS role,a.artifact FROM declarations d JOIN acquisitions a ON d.input.value=a.artifact.sha256").await?;
-    let inputs = keyed(session.sql("SELECT producer_binding_id,role,artifact.artifact_id AS artifact_id,artifact.sha256 AS sha256,artifact.media_type AS media_type,artifact.kind AS kind,artifact.size_bytes AS size_bytes,artifact.source_uri AS source_uri FROM bound_inputs").await?, Key::InputArtifact, "input_id", Relation::InputArtifacts)?;
+    let inputs = bound_input_plan(&session).await?;
     view(&session, "document_candidates", r#"SELECT d.*, i.producer_binding_id, i.artifact.sha256 AS digest, i.artifact.source_uri AS qualified_uri,
         CASE WHEN d.source_uri IS NULL AND coalesce(d.locator.lines.file, d.locator.archive_member.path, d.locator.python_declaration.file, d.locator.manifest_key.file, d.locator.markdown_section.file, d.locator.source_start.file) IS NOT NULL AND ends_with(i.artifact.source_uri, concat('#', coalesce(d.locator.lines.file, d.locator.archive_member.path, d.locator.python_declaration.file, d.locator.manifest_key.file, d.locator.markdown_section.file, d.locator.source_start.file))) THEN 1 ELSE 0 END AS member_match
         FROM documents d JOIN bound_inputs i ON d.artifact_id=i.artifact.artifact_id
@@ -231,7 +244,11 @@ pub async fn prepare(
     for relation in Relation::ALL {
         plans.insert(
             relation,
-            session.read_batch(RecordBatch::new_empty(relation.schema()?))?,
+            crate::native_catalog::batch(
+                &session,
+                "ingest",
+                RecordBatch::new_empty(relation.schema()?),
+            )?,
         );
     }
     plans.insert(Relation::Fragments, fragments);
@@ -239,7 +256,11 @@ pub async fn prepare(
     plans.insert(Relation::ProducerRuns, producers);
     plans.insert(Relation::Coverage, coverage);
     if let Some(metadata) = metadata {
-        let frame = session.read_batch(projection::metadata::fields(&[metadata])?)?;
+        let frame = crate::native_catalog::batch(
+            &session,
+            "ingest",
+            projection::metadata::fields(&[metadata])?,
+        )?;
         plans.insert(
             Relation::ReleaseMetadata,
             keyed(
@@ -302,7 +323,7 @@ pub async fn execution(
         release_id: metadata.release.release_id.clone(),
         environment_id: metadata.environment.environment_id.clone(),
         source_version_match: enrichment_core::wire::SourceVersionMatch::Exact,
-        producing_attempt: run.attempt_id.clone(),
+        producing_attempt: run.attempt_id,
         producer_runs: vec![run],
         artifacts: artifacts.clone(),
         indexed: vec![],
@@ -318,20 +339,25 @@ pub async fn execution(
         ("producers", Relation::ProducerRuns),
         ("inputs", Relation::InputArtifacts),
     ] {
-        session.register_table(name, plans[&relation].clone().into_view())?;
+        crate::native_catalog::work(&session, name, plans[&relation].clone().into_view())?;
     }
-    session.register_table(
-        "observations",
-        session
-            .read_batch(projection::execution::encode(&observations)?)?
-            .into_view(),
+    let observations = crate::native_catalog::batch(
+        &session,
+        "ingest",
+        enrichment_core::evidence::execution::ExecutionObservation::batch(&observations)?,
     )?;
-    session.register_table(
+    crate::execution_fact_plan::admit(runtime, &observations).await?;
+    crate::native_catalog::work(&session, "observations", observations.into_view())?;
+    crate::native_catalog::work(
+        &session,
         "acquisitions",
-        session
-            .read_batch(projection::staging::artifacts(&artifacts)?)?
-            .distinct()?
-            .into_view(),
+        crate::native_catalog::batch(
+            &session,
+            "ingest",
+            projection::staging::artifacts(&artifacts)?,
+        )?
+        .distinct()?
+        .into_view(),
     )?;
     for (rule, sql) in [
         (
@@ -344,11 +370,11 @@ pub async fn execution(
         ),
         (
             "execution_input_acquisition",
-            "SELECT sha256 AS witness_id FROM inputs GROUP BY role,sha256 HAVING count(*)<>1",
+            "SELECT sha256 AS witness_id FROM inputs GROUP BY producer_binding_id,role,sha256,source_uri HAVING count(*)<>1",
         ),
         (
             "execution_exact_log",
-            "SELECT p.attempt_id AS witness_id FROM producers p LEFT JOIN acquisitions a ON p.log=a.artifact.artifact_id GROUP BY p.attempt_id HAVING count(a.artifact)<>1",
+            "SELECT p.attempt_id AS witness_id FROM producers p LEFT ANTI JOIN acquisitions a ON p.log=a.artifact.artifact_id",
         ),
         (
             "execution_acquisition_closure",
@@ -426,7 +452,8 @@ pub(crate) async fn completion(
         ("producers", Relation::ProducerRuns),
         ("observations", Relation::ExecutionObservations),
     ] {
-        session.register_table(
+        crate::native_catalog::work(
+            &session,
             name,
             plans
                 .get(&relation)
@@ -435,10 +462,13 @@ pub(crate) async fn completion(
                 .into_view(),
         )?;
     }
-    session.register_table(
+    crate::native_catalog::work(
+        &session,
         "results",
-        session
-            .read_batch(cells::batch(
+        crate::native_catalog::batch(
+            &session,
+            "ingest",
+            cells::batch(
                 "terminal_results",
                 vec![cells::column(
                     "artifact_id",
@@ -446,15 +476,17 @@ pub(crate) async fn completion(
                     false,
                     "artifact-id",
                 )],
-            )?)?
-            .into_view(),
+            )?,
+        )?
+        .into_view(),
     )?;
-    session.register_table(
+    crate::native_catalog::work(
+        &session,
         "producing",
         session
             .table("producers")
             .await?
-            .filter(col("attempt_id").eq(lit(&completion.attempt_id)))?
+            .filter(col("attempt_id").eq(lit(completion.attempt_id)))?
             .into_view(),
     )?;
     runtime.require_empty(session.sql("SELECT artifact_id AS witness_id FROM results GROUP BY artifact_id HAVING count(*)<>1").await?, "terminal_result_key", "publication").await?;
@@ -481,18 +513,23 @@ async fn coverage(
         .map(|k| (k, true))
         .chain(context.missing.iter().map(|k| (k, false)))
         .collect::<Vec<_>>();
-    session.register_table(
+    crate::native_catalog::work(
+        session,
         "coverage_declared",
-        session
-            .read_batch(cells::batch(
+        crate::native_catalog::batch(
+            session,
+            "ingest",
+            cells::batch(
                 "coverage_declared",
                 vec![
-                    cells::column(
+                    cells::native_column(
                         "kind",
-                        cells::text(kinds.iter().map(|(k, _)| k.as_str())),
-                        false,
-                        "vocabulary:evidence-kind/1",
-                    ),
+                        &kinds
+                            .iter()
+                            .map(|(kind, _)| Some(*kind))
+                            .collect::<Vec<_>>(),
+                        enrichment_core::native_union::Rule::Text,
+                    )?,
                     cells::column(
                         "available",
                         Arc::new(BooleanArray::from_iter(kinds.iter().map(|(_, v)| Some(*v))))
@@ -501,20 +538,25 @@ async fn coverage(
                         "producer-declaration",
                     ),
                 ],
-            )?)?
-            .distinct()?
-            .into_view(),
+            )?,
+        )?
+        .distinct()?
+        .into_view(),
     )?;
     runtime.require_empty(session.sql("SELECT kind AS witness_id FROM coverage_declared GROUP BY kind HAVING count(*)<>1").await?,"coverage_declaration_conflict","document_ingress").await?;
     let gaps =
         <Vec<enrichment_core::evidence::Gap> as enrichment_core::native_union::Cell>::encode(&[
             Some(&context.gaps),
         ])?;
-    session.register_table(
+    crate::native_catalog::work(
+        session,
         "coverage_gap_lists",
-        session
-            .read_batch(RecordBatch::try_from_iter([("gap", gaps)])?)?
-            .into_view(),
+        crate::native_catalog::batch(
+            session,
+            "ingest",
+            RecordBatch::try_from_iter([("gap", gaps)])?,
+        )?
+        .into_view(),
     )?;
     view(
         session,
@@ -586,6 +628,60 @@ mod tests {
         producer::{ProducerRun, RunOutcome},
         wire::{EvidenceClass, SourceVersionMatch},
     };
+
+    #[tokio::test]
+    async fn native_acquisitions_keep_origins_without_repeating_attempt_clocks() -> Result<()> {
+        use enrichment_core::{native_time::AcquisitionTime, native_union::Rule};
+        enrichment_core::native_struct! { struct BoundInput {
+            producer_binding_id:String => Rule::Reference(enrichment_core::native_union::Domain::ProducerBinding),
+            role:String => Rule::NonEmpty,
+            artifact:Artifact => Rule::Text,
+        } }
+        let root = tempfile::tempdir()?;
+        let runtime = QueryRuntime::new(root.path(), Default::default())?;
+        let session = runtime.session();
+        let receipt = |uri, at| {
+            Artifact::describe(
+                b"same bytes",
+                ArtifactKind::Other,
+                "application/octet-stream",
+                uri,
+                AcquisitionTime::from_micros(at).unwrap(),
+            )
+        };
+        let artifacts = [
+            receipt("source://original", 1),
+            receipt("source://original", 2),
+            receipt("consumer://captured", 3),
+        ];
+        let inputs = artifacts
+            .into_iter()
+            .map(|artifact| BoundInput {
+                producer_binding_id: format!("producer_{}", "1".repeat(64)),
+                role: "dependency".into(),
+                artifact,
+            })
+            .collect::<Vec<_>>();
+        crate::native_catalog::input(&session, "bound_inputs", BoundInput::batch(&inputs)?)?;
+        let rows = runtime
+            .records::<enrichment_core::evidence::relational::InputArtifact>(
+                bound_input_plan(&session)
+                    .await?
+                    .sort(vec![col("source_uri").sort(true, false)])?,
+                3,
+            )
+            .await?;
+        assert_eq!(rows.len(), 2);
+        assert_eq!(
+            rows.iter()
+                .map(|r| r.source_uri.as_str())
+                .collect::<Vec<_>>(),
+            ["consumer://captured", "source://original"]
+        );
+        assert_eq!(rows[0].artifact_id, rows[1].artifact_id);
+        assert_ne!(rows[0].input_id, rows[1].input_id);
+        runtime.close_diagnostics().await
+    }
     fn context(artifact: Artifact) -> IngestContext {
         IngestContext {
             ecosystem: Ecosystem::Rust,
@@ -593,9 +689,15 @@ mod tests {
             release_id: format!("rel_{}", "1".repeat(64)).try_into().unwrap(),
             environment_id: format!("env_{}", "1".repeat(64)).try_into().unwrap(),
             source_version_match: SourceVersionMatch::Exact,
-            producing_attempt: "attempt_documents".into(),
+            producing_attempt: "attempt_00112233445566778899aabbccddeeff"
+                .to_owned()
+                .try_into()
+                .unwrap(),
             producer_runs: vec![ProducerRun {
-                attempt_id: "attempt_documents".into(),
+                attempt_id: "attempt_00112233445566778899aabbccddeeff"
+                    .to_owned()
+                    .try_into()
+                    .unwrap(),
                 producer: "documents".into(),
                 producer_version: "3".into(),
                 config_digest: "a".repeat(64),
@@ -657,7 +759,10 @@ mod tests {
             context(artifact.clone()),
             input,
             None,
-            root.path(),
+            &crate::retention::RetentionStore::new(
+                crate::control::ControlStore::open(root.path(), runtime.clone()).unwrap(),
+                runtime.clone(),
+            ),
             &runtime,
             &WriteLimits::default(),
         )
@@ -757,7 +862,10 @@ mod tests {
                 conflicting,
                 DocumentBatch::default(),
                 None,
-                root.path(),
+                &crate::retention::RetentionStore::new(
+                    crate::control::ControlStore::open(root.path(), runtime.clone()).unwrap(),
+                    runtime.clone()
+                ),
                 &runtime,
                 &WriteLimits::default()
             )
@@ -777,7 +885,10 @@ mod tests {
                     fragments: vec![fact]
                 },
                 None,
-                root.path(),
+                &crate::retention::RetentionStore::new(
+                    crate::control::ControlStore::open(root.path(), runtime.clone()).unwrap(),
+                    runtime.clone()
+                ),
                 &runtime,
                 &WriteLimits::default()
             )

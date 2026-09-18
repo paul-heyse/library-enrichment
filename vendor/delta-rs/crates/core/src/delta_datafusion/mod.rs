@@ -493,6 +493,8 @@ impl PhysicalExtensionCodec for DeltaPhysicalCodec {
 #[derive(Debug)]
 pub struct DeltaLogicalCodec {}
 
+mod immutable_codec;
+
 impl DeltaLogicalCodec {
     /// Encode only an immutable native provider to a caller-bounded writer. Logical
     /// extensions and physical plans are intentionally outside this method's contract.
@@ -505,8 +507,7 @@ impl DeltaLogicalCodec {
             DataFusionError::Plan("immutable codec requires a native Delta scan".into())
         })?;
         scan.validate_immutable_codec()?;
-        serde_json::to_writer(writer, scan)
-            .map_err(|error| DataFusionError::External(Box::new(error)))
+        immutable_codec::encode(scan, writer)
     }
 }
 
@@ -517,22 +518,30 @@ impl LogicalExtensionCodec for DeltaLogicalCodec {
         _inputs: &[LogicalPlan],
         _ctx: &TaskContext,
     ) -> Result<Extension, DataFusionError> {
-        todo!("DeltaLogicalCodec")
+        Err(DataFusionError::NotImplemented(
+            "generic Delta logical extension decoding is not supported".into(),
+        ))
     }
 
     fn try_encode(&self, _node: &Extension, _buf: &mut Vec<u8>) -> Result<(), DataFusionError> {
-        todo!("DeltaLogicalCodec")
+        Err(DataFusionError::NotImplemented(
+            "generic Delta logical extension encoding is not supported".into(),
+        ))
     }
 
     fn try_decode_table_provider(
         &self,
         buf: &[u8],
         _table_ref: &TableReference,
-        _schema: SchemaRef,
+        schema: SchemaRef,
         _ctx: &TaskContext,
     ) -> Result<Arc<dyn TableProvider>, DataFusionError> {
-        let provider: DeltaScanNext = serde_json::from_slice(buf)
-            .map_err(|_| DataFusionError::Internal("Error encoding delta table".to_string()))?;
+        let provider = immutable_codec::decode(buf)?;
+        if provider.schema() != schema {
+            return Err(DataFusionError::Plan(
+                "immutable provider schema mismatch".into(),
+            ));
+        }
         Ok(Arc::new(provider))
     }
 

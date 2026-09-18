@@ -1,0 +1,113 @@
+[
+  {
+    "id": "69b504c43c61cb3d2ca60e68",
+    "path": "buoyant_kernel::committer",
+    "name": "committer",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "module",
+    "signature": "mod committer",
+    "docs": "The `committer` module provides a [`Committer`] trait which allows different implementations to\ndefine how to commit transactions to a catalog or filesystem. For catalog-managed tables, a\n[`Committer`] specific to the managing catalog should be provided. For non-catalog-managed\ntables, the [`FileSystemCommitter`] should be used to commit directly to the object store (via\nput-if-absent call to storage to atomically write new commit files).\n\nBy implementing the [`Committer`] trait, different catalogs can define what happens when the\nkernel needs to commit a transaction to a table. The goal terminal state of every\n[`Transaction`] is to be committed to the table. This means writing the changes (we call these\nactions) in the transaction as a new version of the table. The [`Committer`] trait exposes a\nsingle method, [`commit`] which takes an engine, an iterator of actions (as [`EngineData`]\nbatches), and [`CommitMetadata`] (which includes critical commit metadata like the version to\ncommit) to allow different catalogs to define what it means to 'commit' the actions to a table.\nFor some, this may mean writing staged commits to object storage and retaining an in-memory list\n(server side) of commits. For others, this may mean writing new (version, actions) tuples to a\ndatabase.\n\nThe implementation of [`commit`] must ensure that the actions are committed atomically to the\ntable at the given version and either (1) persisted directly to object storage as published\ndeltas as in non-catalog-managed tables or (2) persisted within the catalog and made available\nto readers during snapshot contstruction via the [`log_tail`] API.\n\n[`Transaction`]: crate::transaction::Transaction\n[`commit`]: crate::committer::Committer::commit\n[`log_tail`]: crate::snapshot::SnapshotBuilder::with_log_tail\n[`EngineData`]: crate::EngineData",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/committer/mod.rs",
+      "begin": [
+        1,
+        1
+      ],
+      "end": [
+        108,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          2077,
+          2078,
+          2079,
+          2080,
+          2081,
+          2082,
+          1872
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Committer`": 1872,
+      "`CommitMetadata`": 1875,
+      "crate::snapshot::SnapshotBuilder::with_log_tail": 2084,
+      "`FileSystemCommitter`": 1957,
+      "crate::EngineData": 758,
+      "crate::committer::Committer::commit": 1873,
+      "crate::transaction::Transaction": 1924
+    },
+    "link_paths": {
+      "`Committer`": "buoyant_kernel::committer::Committer",
+      "`CommitMetadata`": "buoyant_kernel::committer::commit_types::CommitMetadata",
+      "crate::snapshot::SnapshotBuilder::with_log_tail": "buoyant_kernel::snapshot::builder::SnapshotBuilder::with_log_tail",
+      "`FileSystemCommitter`": "buoyant_kernel::committer::filesystem::FileSystemCommitter",
+      "crate::EngineData": "buoyant_kernel::engine_data::EngineData",
+      "crate::committer::Committer::commit": "buoyant_kernel::committer::Committer::commit",
+      "crate::transaction::Transaction": "buoyant_kernel::transaction::Transaction"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "1874",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/committer/mod.rs#L1",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "2685",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "modules/buoyant_kernel.committer.md",
+    "record_file": "modules/buoyant_kernel.committer.json",
+    "anchor": "op-69b504c43c61cb3d2ca60e68",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Committer`": "../operations/buoyant_kernel.committer.Committer.md#op-32f11d6fd06afd07c4c2a455",
+      "`CommitMetadata`": "../operations/buoyant_kernel.committer.commit_types.CommitMetadata.md#op-f0a4d85b92f1e66219725449",
+      "crate::snapshot::SnapshotBuilder::with_log_tail": "../operations/buoyant_kernel.snapshot.builder.SnapshotBuilder.md#op-1e6299a48d1cc2f2ad5e4e8f",
+      "`FileSystemCommitter`": "../operations/buoyant_kernel.committer.filesystem.FileSystemCommitter.md#op-c9d7ce0544dbb4d345b6296d",
+      "crate::EngineData": "../operations/buoyant_kernel.engine_data.EngineData.md#op-f9036ab52623c01f96e1f809",
+      "crate::committer::Committer::commit": "../operations/buoyant_kernel.committer.Committer.md#op-57d060399213d1e1597973da",
+      "crate::transaction::Transaction": "../operations/buoyant_kernel.transaction.Transaction.md#op-fde417829ac3f4c320319f35"
+    }
+  }
+]

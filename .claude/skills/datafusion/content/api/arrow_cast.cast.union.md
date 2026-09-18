@@ -10,6 +10,9 @@ Crate `arrow-cast` · 1 public items · structured records in [`model/arrow_cast
 fn union_extract_by_type(union_array: &arrow_array::UnionArray, target_type: &arrow_schema::DataType, cast_options: &super::CastOptions<'_>) -> Result<arrow_array::ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.cast.union.union_extract_by_type.md).
+
+
 Extracts the best-matching child array from a [`UnionArray`] for a given target type,
 and casts it to that type.
 

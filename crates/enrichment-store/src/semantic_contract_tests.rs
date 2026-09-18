@@ -33,7 +33,8 @@ fn session(runtime: &QueryRuntime) -> Result<SessionContext> {
         domain("a", "symbol"),
         domain("b", "definition"),
     ]));
-    context.register_batch(
+    crate::native_catalog::input(
+        &context,
         "domains",
         RecordBatch::try_new(
             schema,
@@ -93,7 +94,7 @@ async fn map_entries_preserves_child_contracts_slices_and_nulls() -> Result<()> 
         )])),
         vec![Arc::new(map.slice(1, 3))],
     )?;
-    context.register_batch("maps", batch)?;
+    crate::native_catalog::input(&context, "maps", batch)?;
     let output = runtime
         .execute(
             context
@@ -123,6 +124,75 @@ async fn map_entries_preserves_child_contracts_slices_and_nulls() -> Result<()> 
 }
 
 #[tokio::test]
+async fn native_collection_predicates_validate_lambda_domains() -> Result<()> {
+    use arrow::{
+        array::{Array, BooleanArray, ListArray, StructArray},
+        buffer::{NullBuffer, OffsetBuffer},
+    };
+    let root = tempfile::tempdir()?;
+    let runtime = QueryRuntime::new(root.path(), Default::default())?;
+    let context = session(&runtime)?;
+    let input = runtime.execute(context.table("domains").await?).await?;
+    let values = StructArray::from(input.batches[0].clone());
+    let item = Arc::new(Field::new("item", values.data_type().clone(), false));
+    let lists = ListArray::try_new(
+        item,
+        OffsetBuffer::new(vec![0, 2, 2, 2].into()),
+        Arc::new(values),
+        Some(NullBuffer::from(vec![true, true, false])),
+    )?;
+    let list_field = Field::new("items", lists.data_type().clone(), true);
+    crate::native_catalog::input(
+        &context,
+        "collections",
+        RecordBatch::try_new(
+            Arc::new(Schema::new(vec![list_field.clone()])),
+            vec![Arc::new(lists)],
+        )?,
+    )?;
+    for sql in [
+        "SELECT array_any_match(items, x -> x['a'] = x['b']) FROM collections",
+        "SELECT array_filter(items, x -> x['a'] = x['b']) FROM collections",
+    ] {
+        let result = match context.sql(sql).await {
+            Ok(frame) => runtime.execute(frame).await.map(|_| ()),
+            Err(error) => Err(error),
+        };
+        let error = result.expect_err(sql);
+        assert!(
+            error.to_string().contains("semantic field contract"),
+            "{sql}: {error}"
+        );
+    }
+    let output = runtime
+        .execute(
+            context
+                .sql(
+                    "SELECT array_any_match(items, x -> x['a'] = x['a']) AS any_value, \
+         array_filter(items, x -> x['a'] = x['a']) AS retained FROM collections",
+                )
+                .await?,
+        )
+        .await?;
+    let any = output.batches[0]
+        .column(0)
+        .as_any()
+        .downcast_ref::<BooleanArray>()
+        .unwrap();
+    assert_eq!(
+        any.iter().collect::<Vec<_>>(),
+        vec![Some(true), Some(false), None]
+    );
+    enrichment_core::native_analysis::compatible(
+        &list_field,
+        output.batches[0].schema().field(1),
+        "filtered collection",
+    )?;
+    runtime.close_diagnostics().await?;
+    Ok(())
+}
+
+#[tokio::test]
 async fn registered_analyzer_refuses_erasure_and_cross_domain_operations() -> Result<()> {
     let root = tempfile::tempdir()?;
     let runtime = QueryRuntime::new(root.path(), Default::default())?;
@@ -137,6 +207,9 @@ async fn registered_analyzer_refuses_erasure_and_cross_domain_operations() -> Re
         "SELECT CASE WHEN a = a THEN a ELSE b END AS invalid FROM domains",
         "SELECT a FROM domains UNION ALL SELECT b FROM domains",
         "SELECT min(a) AS invalid FROM domains",
+        "SELECT make_array(a) AS invalid FROM domains",
+        "SELECT make_array(a,b) AS invalid FROM domains",
+        "SELECT array_agg(a) AS invalid FROM domains",
         "SELECT x.a FROM domains x JOIN domains y ON x.a = y.b",
         "SELECT a IN (SELECT b FROM domains) AS invalid FROM domains",
     ] {
@@ -168,6 +241,120 @@ async fn registered_analyzer_refuses_erasure_and_cross_domain_operations() -> Re
             .metadata()
             .get("ARROW:extension:metadata")
     );
+    Ok(())
+}
+
+#[derive(Debug)]
+struct CrossDomainRewrite;
+impl CrossDomainRewrite {
+    fn inject(
+        plan: datafusion::logical_expr::LogicalPlan,
+    ) -> Result<datafusion::logical_expr::LogicalPlan> {
+        use datafusion::logical_expr::{Filter, LogicalPlan};
+        if let LogicalPlan::Projection(mut projection) = plan {
+            if !matches!(projection.input.as_ref(), LogicalPlan::Filter(_)) {
+                projection.input = Arc::new(LogicalPlan::Filter(Filter::try_new(
+                    col("a").eq(col("b")),
+                    projection.input,
+                )?));
+            }
+            Ok(LogicalPlan::Projection(projection))
+        } else {
+            Ok(plan)
+        }
+    }
+}
+impl datafusion::optimizer::AnalyzerRule for CrossDomainRewrite {
+    fn name(&self) -> &str {
+        "fixture_cross_domain_analysis"
+    }
+    fn analyze(
+        &self,
+        plan: datafusion::logical_expr::LogicalPlan,
+        _: &datafusion::common::config::ConfigOptions,
+    ) -> Result<datafusion::logical_expr::LogicalPlan> {
+        Self::inject(plan)
+    }
+}
+impl datafusion::optimizer::OptimizerRule for CrossDomainRewrite {
+    fn name(&self) -> &str {
+        "fixture_cross_domain_optimization"
+    }
+    fn supports_rewrite(&self) -> bool {
+        true
+    }
+    fn rewrite(
+        &self,
+        plan: datafusion::logical_expr::LogicalPlan,
+        _: &dyn datafusion::optimizer::OptimizerConfig,
+    ) -> Result<datafusion::common::tree_node::Transformed<datafusion::logical_expr::LogicalPlan>>
+    {
+        use datafusion::{common::tree_node::Transformed, logical_expr::LogicalPlan};
+        if matches!(&plan,LogicalPlan::Projection(p) if !matches!(p.input.as_ref(),LogicalPlan::Filter(_)))
+        {
+            Ok(Transformed::yes(Self::inject(plan)?))
+        } else {
+            Ok(Transformed::no(plan))
+        }
+    }
+}
+
+#[tokio::test]
+async fn native_planning_refuses_late_semantic_mutation_with_unchanged_output() -> Result<()> {
+    use datafusion::{dataframe::DataFrame, execution::SessionStateBuilder};
+    let root = tempfile::tempdir()?;
+    let runtime = QueryRuntime::new(root.path(), Default::default())?;
+    let context = session(&runtime)?;
+    for analysis in [true, false] {
+        let (state, plan) = context.sql("SELECT a FROM domains").await?.into_parts();
+        let builder = SessionStateBuilder::new_from_existing(state);
+        let state = if analysis {
+            builder
+                .with_analyzer_rule(Arc::new(CrossDomainRewrite))
+                .build()
+        } else {
+            builder
+                .with_optimizer_rules(vec![Arc::new(CrossDomainRewrite)])
+                .build()
+        };
+        let frame = DataFrame::new(state, plan);
+        let direct = frame
+            .clone()
+            .create_physical_plan()
+            .await
+            .expect_err("builder planning must use native admission");
+        assert!(
+            direct.to_string().contains("semantic field contract"),
+            "direct analysis={analysis}: {direct}"
+        );
+        let error = runtime
+            .execute(frame)
+            .await
+            .expect_err("same output schema cannot authorize cross-domain filter");
+        assert!(
+            error.to_string().contains("semantic field contract"),
+            "analysis={analysis}: {error}"
+        );
+    }
+    runtime.close_diagnostics().await
+}
+
+#[test]
+fn physical_child_annotations_are_checked_even_when_projection_hides_them() -> Result<()> {
+    use datafusion::{
+        common::ScalarValue,
+        physical_expr::expressions::lit,
+        physical_plan::{ExecutionPlan, empty::EmptyExec, projection::ProjectionExec},
+    };
+    let unknown = Field::new("bad", DataType::FixedSizeBinary(32), true)
+        .with_metadata([("ARROW:extension:name".into(), "unknown.identity".into())].into());
+    let child = Arc::new(EmptyExec::new(Arc::new(Schema::new(vec![unknown]))));
+    let root = Arc::new(ProjectionExec::try_new(
+        vec![(lit(ScalarValue::Int64(Some(1))), "safe_output".into())],
+        child,
+    )?) as Arc<dyn ExecutionPlan>;
+    enrichment_core::native_analysis::validate_derived_fields(root.schema().fields())?;
+    assert!(crate::preparation::admit_physical(&root).is_err());
     Ok(())
 }
 
@@ -223,7 +410,8 @@ async fn native_case_allows_absence_without_erasing_nested_domains() -> Result<(
     let session = runtime.session();
     let locators = Locator::encode(&[&Locator::RegistryLine { line: 7 }, &Locator::Artifact])?;
     let field = Field::new("locator", locators.data_type().clone(), false);
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "qualified",
         RecordBatch::try_new(
             Arc::new(Schema::new(vec![
@@ -307,7 +495,8 @@ async fn native_aggregate_preserves_annotated_empty_lists() -> Result<()> {
             "array row {row}"
         );
     }
-    context.register_batch(
+    crate::native_catalog::input(
+        &context,
         "hints",
         RecordBatch::try_new(Arc::new(Schema::new(vec![field.clone()])), vec![values])?,
     )?;
@@ -381,7 +570,11 @@ async fn generated_artifact_fields_survive_sql_unnest_and_window_selection() -> 
     let root = tempfile::tempdir()?;
     let runtime = QueryRuntime::new(root.path(), Default::default())?;
     let context = runtime.session();
-    context.register_batch("attempts", crate::projection::catalog::attempts(&[])?)?;
+    crate::native_catalog::input(
+        &context,
+        "attempts",
+        crate::projection::catalog::attempts(&[])?,
+    )?;
     for sql in [
         "SELECT unnest(acquisitions) AS artifact FROM attempts",
         "WITH raw AS (SELECT unnest(acquisitions) AS artifact, started_at, attempt_id FROM attempts), ranked AS (SELECT artifact, row_number() OVER (PARTITION BY artifact.artifact_id ORDER BY started_at,attempt_id) AS position FROM raw) SELECT artifact FROM ranked WHERE position=1",

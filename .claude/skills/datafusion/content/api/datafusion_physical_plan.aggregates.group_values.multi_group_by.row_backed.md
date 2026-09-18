@@ -32,6 +32,9 @@ fn vectorized_append(&mut self, array: &ArrayRef, rows: &[usize]) -> Result<()>
 fn vectorized_equal_to(&self, lhs_rows: &[usize], array: &ArrayRef, rhs_rows: &[usize], equal_to_results: &mut BooleanBufferBuilder)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.md).
+
+
 A [`GroupColumn`] that stores group values for a single column in the arrow
 [row format], backed by a single-field [`RowConverter`].
 

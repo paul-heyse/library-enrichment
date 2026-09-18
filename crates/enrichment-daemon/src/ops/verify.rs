@@ -10,7 +10,8 @@ use enrichment_core::{
     canonical,
     evidence::ArtifactKind,
     execution::{
-        JobAction, JobData, JobRequest, ProbeMode, ProcessEnd, VerificationData, VerifyRequest,
+        JobAction, JobData, JobRequest, ProbeMode, ProcessEnd, VerificationCapture,
+        VerificationData, VerifyRequest,
     },
     identity::Ecosystem,
     wire::{Coverage, Envelope, ErrorCode, JobHandle, JobState, Outcome},
@@ -91,16 +92,16 @@ pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
     };
     if new {
         let owned = service.clone();
-        let id = record.job_id.clone();
+        let id = record.job_id;
         let image = image.clone();
         let jobs = std::sync::Arc::clone(&owned.jobs);
         let runtime = owned.repository.runtime.clone();
-        if let Err(error) = jobs.spawn(&runtime, id.clone(), async move {
+        if let Err(error) = jobs.spawn(&runtime, id, async move {
             owned
                 .repository
                 .runtime
                 .job_operation(
-                    id.clone(),
+                    id.to_string(),
                     owned.operation_descriptor(&request.clone().into()),
                     Duration::from_secs(owned.config.execution.deadline_seconds),
                     async {
@@ -195,7 +196,7 @@ pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
 
 async fn execute(
     service: &Service,
-    job: &str,
+    job: &enrichment_core::identity::JobId,
     image: &str,
     request: &VerifyRequest,
     opened: &common::Opened,
@@ -216,9 +217,9 @@ async fn execute(
             false,
         );
         match result {
-            Ok((_, evidence)) => {
-                failed.data = evidence.data;
-                failed.artifacts = evidence.artifacts;
+            Ok(produced) => {
+                failed.data = produced.result.data;
+                failed.artifacts = produced.result.artifacts;
             }
             Err(capsule::PreparationError::Process(observation, stage)) => {
                 failed
@@ -264,9 +265,9 @@ async fn execute(
     // unqualified image, a denied profile, an unresolvable environment -- is an observation
     // about the service. Merging them would attribute our limitations to their library.
     match result {
-        Ok(mut v) => {
-            match publish_completed(service, job, image, request, opened, v.0, v.1.clone()).await {
-                Ok(published) => v = published,
+        Ok(produced) => {
+            let v = match publish_completed(service, image, opened, &produced).await {
+                Ok(published) => published,
                 Err(error) => {
                     let mut failed = envelope::error(
                         ErrorCode::VerificationFailed,
@@ -274,14 +275,11 @@ async fn execute(
                         "Inspect the durable job and retained attempt artifacts before explicitly retrying.",
                         false,
                     );
-                    failed.data = v.1.data;
-                    failed.artifacts = v.1.artifacts;
+                    failed.data = produced.result.data;
+                    failed.artifacts = produced.result.artifacts;
                     return (JobState::Failed, failed);
                 }
-            }
-            v.1.coverage.limitations.push(
-                "Owned container absence was confirmed before the job became terminal; process observations retain the result of each initial cleanup attempt.".into(),
-            );
+            };
             service.metrics.record_probe(match v.0 {
                 JobState::Succeeded | JobState::Partial => metrics::ProbeOutcome::Succeeded,
                 JobState::Failed => metrics::ProbeOutcome::Failed,
@@ -380,15 +378,20 @@ async fn execute(
         }
     }
 }
+struct ProducedProbe {
+    result: Envelope,
+    capture: VerificationCapture,
+}
+
 async fn execute_inner(
     service: &Service,
-    job: &str,
+    job: &enrichment_core::identity::JobId,
     image: &str,
     request: &VerifyRequest,
     opened: &common::Opened,
     cancel: Arc<std::sync::atomic::AtomicBool>,
     lease: Arc<crate::execution::cleanup::Lease>,
-) -> Result<(JobState, Envelope), capsule::PreparationError> {
+) -> Result<ProducedProbe, capsule::PreparationError> {
     let runner = Runner::new(
         &service.config.execution,
         &service.paths.cache_root,
@@ -407,115 +410,75 @@ async fn execute_inner(
         ),
         "text/plain",
     )?;
-    let mut capsule =
-        capsule::prepare(service, opened, &runner, image, job, cancel.clone()).await?;
+    let mut capsule = capsule::prepare(
+        service,
+        opened,
+        &runner,
+        image,
+        &job.to_string(),
+        cancel.clone(),
+    )
+    .await?;
     let input_artifacts = super::inspect_execution::capsule_inputs(service, opened, &capsule)
         .await
         .map_err(|e| e.to_string())?;
     let lock = store(
         service,
-        &capsule.lock,
-        &format!("consumer://lock/{}", canonical::sha256_hex(&capsule.lock)),
+        capsule.prepared.lock.as_bytes(),
+        &format!(
+            "consumer://lock/{}",
+            canonical::sha256_hex(capsule.prepared.lock.as_bytes())
+        ),
         "text/plain",
     )?;
     let derived_context = opened
         .context
-        .derived_with(capsule.environment.environment_id.clone());
-    let args = match opened.release.key.ecosystem {
-        Ecosystem::Python => {
-            capsule
-                .write_input("consumer.py", &request.snippet)
-                .map_err(|e| e.to_string())?;
-            if request.mode == ProbeMode::Typecheck {
-                capsule::strings(&[
-                    "/opt/producers/bin/ty",
-                    "check",
-                    "--project=/capsule",
-                    "--python=/usr/local/bin/python3",
-                    "--extra-search-path=/capsule/python",
-                    "--python-version=3.14",
-                    "--python-platform=linux",
-                    "--output-format=concise",
-                    "--color=never",
-                    "--no-progress",
-                    "--config-file=/capsule/probe-config/ty.toml",
-                    "/capsule/consumer.py",
-                ])
-            } else {
-                // Fixed bootstrap sets only the isolated dependency path, then executes the stored caller snippet.
-                capsule::strings(&[
-                    "/usr/local/bin/python3",
-                    "-I",
-                    "-S",
-                    "-c",
-                    "import sys,runpy; sys.path.insert(0,'/capsule/python'); runpy.run_path('/capsule/consumer.py',run_name='__main__')",
-                ])
-            }
-        }
-        Ecosystem::Rust => {
-            capsule
-                .write_input("src/main.rs", &request.snippet)
-                .map_err(|e| e.to_string())?;
-            capsule::strings(&[
-                "/usr/local/cargo/bin/cargo",
-                "+1.98.1",
-                if request.mode == ProbeMode::Runtime {
-                    "run"
-                } else {
-                    "check"
-                },
-                "--frozen",
-                "--manifest-path=/capsule/Cargo.toml",
-                "--target=x86_64-unknown-linux-gnu",
-            ])
-        }
+        .derived_with(capsule.prepared.environment.environment_id.clone());
+    let consumer_path = match opened.release.key.ecosystem {
+        Ecosystem::Python => "consumer.py",
+        Ecosystem::Rust => "src/main.rs",
+    };
+    capsule
+        .write_input(consumer_path, &request.snippet)
+        .map_err(|error| error.to_string())?;
+    let invocation = enrichment_core::execution::producer::Invocation::Probe {
+        ecosystem: opened.release.key.ecosystem,
+        mode: request.mode,
     };
     let observation = runner
-        .run(image, &capsule.root, &args, cancel)
+        .for_capsule(&capsule)
+        .run(image, &capsule.root, &invocation, cancel)
         .await
         .map_err(|e| capsule::PreparationError::from_runner(&e))?;
-    let success = observation.end == ProcessEnd::Exited && observation.exit_code == Some(0);
-    // An unconfirmed removal is a boundary fact, not a probe fact. The probe evidence stays
-    // whole; the result stops short of `ok` and says which assurance is missing.
-    let cleanup_confirmed = observation.cleanup_confirmed;
-    let state = if observation.end == ProcessEnd::Cancelled {
-        JobState::Cancelled
-    } else if !cleanup_confirmed && success {
-        JobState::Partial
-    } else if success {
-        JobState::Succeeded
-    } else {
-        JobState::Failed
-    };
     capsule.observations.push(observation);
-    let mut limitations = vec!["Only this agent-supplied snippet was checked; no complete compatibility or assertion-coverage claim.".into(), "Synthetic consumer: project files, project lock, private configuration and native system dependencies were not imported.".into()];
-    if !cleanup_confirmed {
-        limitations.push(
-            "Removal of the owned execution container was not confirmed; the cleanup supervisor \
-             is still retrying and new execution admission may be quarantined."
-                .into(),
-        );
-    }
-    let raw = serde_json::to_vec(&serde_json::json!({"job_id":job,"request":request,"source_release":opened.release,"source_snapshot":opened.snapshot_id,"environment":capsule.environment,"containment_identity":containment_identity,"observations":capsule.observations,"limitations":limitations,"input_artifacts":input_artifacts})).map_err(|e| e.to_string())?;
+    let capture = VerificationCapture {
+        job_id: *job,
+        request: request.clone(),
+        source_release: opened.release.clone(),
+        source_snapshot: opened.snapshot_id.clone(),
+        environment: capsule.prepared.environment.clone(),
+        containment_identity,
+        observations: capsule.observations.clone(),
+        input_artifacts,
+    };
+    let lowered = enrichment_store::probe_plan::lower(&service.repository.runtime, &capture)
+        .await
+        .map_err(|error| error.to_string())?;
+    let raw = serde_json::to_vec(&capture).map_err(|e| e.to_string())?;
     let result_artifact = store(
         service,
         &raw,
         &format!("service://jobs/{job}/verification-result"),
         "application/json",
     )?;
-    let evidence_class = match request.mode {
-        ProbeMode::Compile => enrichment_core::wire::EvidenceClass::CompilerDerived,
-        ProbeMode::Typecheck => enrichment_core::wire::EvidenceClass::TypecheckerObserved,
-        ProbeMode::Runtime => enrichment_core::wire::EvidenceClass::RuntimeObserved,
-    };
     let data = VerificationData {
-        evidence_class,
+        evidence_class: lowered.evidence_class,
         producer_runs: Vec::new(),
         source_context_id: opened.context.context_id.clone(),
         source_snapshot_id: opened.snapshot_id.clone(),
         derived_context: Some(derived_context),
         derived_snapshot_id: None,
-        environment: Some(capsule.environment.clone()),
+        environment: Some(capsule.prepared.environment.clone()),
         mode: request.mode,
         profile: request.profile,
         snippet_origin: "agent".into(),
@@ -524,47 +487,9 @@ async fn execute_inner(
         lock_artifact_id: Some(lock.artifact_id.clone()),
         result_artifact_id: result_artifact.artifact_id.clone(),
         observations: capsule.observations.clone(),
-        limitations: limitations.clone(),
+        limitations: lowered.limitations.clone(),
     };
-    let payload = data.into();
-    let mut result = if success && cleanup_confirmed {
-        envelope::ok(
-            "The requested isolated consumer probe completed successfully within its recorded scope.",
-            payload,
-            Coverage {
-                details: None,
-                assessments: Vec::new(),
-                scope: format!("{:?} of one supplied consumer snippet", request.mode),
-                indexed: Default::default(),
-                missing: Default::default(),
-                limitations,
-            },
-        )
-    } else if success {
-        envelope::partial(
-            "The probe completed, but removal of its execution container was not confirmed.",
-            payload,
-            Coverage {
-                details: None,
-                assessments: Vec::new(),
-                scope: format!("{:?} of one supplied consumer snippet", request.mode),
-                indexed: Default::default(),
-                missing: ["confirmed execution container removal".to_owned()]
-                    .into_iter()
-                    .collect(),
-                limitations,
-            },
-        )
-    } else {
-        let mut result = envelope::error(
-            ErrorCode::VerificationFailed,
-            "The isolated consumer probe did not succeed; read the recorded process outcome and logs.",
-            "Correct the snippet or environment using the retained diagnostics, then submit a new probe.",
-            false,
-        );
-        result.data = payload;
-        result
-    };
+    let mut result = probe_envelope(&lowered, data);
     result.context_id = Some(opened.context.context_id.clone());
     result.snapshot_id = Some(opened.snapshot_id.clone());
     result.artifacts = [&snippet, &lock, &result_artifact]
@@ -573,27 +498,44 @@ async fn execute_inner(
             common::handle_for(artifact, "Verification input or process evidence".into())
         })
         .collect();
-    Ok((state, result))
+    Ok(ProducedProbe { result, capture })
 }
+fn probe_envelope(
+    selected: &enrichment_store::probe_plan::LoweredProbe,
+    data: VerificationData,
+) -> Envelope {
+    Envelope::new(
+        enrichment_core::wire::EnvelopeBody {
+            request_id: envelope::new_request_id(),
+            summary: selected.summary.clone(),
+            context_id: None,
+            snapshot_id: None,
+            data: data.into(),
+            coverage: selected.coverage.clone(),
+            freshness: envelope::unverified_freshness(),
+            evidence: Vec::new(),
+            artifacts: Vec::new(),
+            delivery: Default::default(),
+        },
+        selected.outcome.clone(),
+    )
+}
+
 /// Called only after the supervisor confirms all one-shot execution has settled.
 async fn publish_completed(
     service: &Service,
-    job: &str,
     image: &str,
-    request: &VerifyRequest,
     opened: &common::Opened,
-    state: JobState,
-    mut result: Envelope,
+    produced: &ProducedProbe,
 ) -> Result<(JobState, Envelope), String> {
-    use enrichment_core::{
-        evidence::{
-            execution::{ExecutionObservation, ExecutionPayload, UsageProbe},
-            relational::{FactSource, Locator, SubjectRef},
-            snapshot::SnapshotMetadata,
-        },
-        producer::{ProducerRun, RunOutcome},
-        wire::SourceVersionMatch,
-    };
+    let capture = &produced.capture;
+    let job = &capture.job_id;
+    let request = &capture.request;
+    let lowered = enrichment_store::probe_plan::settled(&service.repository.runtime, capture)
+        .await
+        .map_err(|error| error.to_string())?;
+    let mut result = produced.result.clone();
+    use enrichment_core::evidence::{relational::SubjectRef, snapshot::SnapshotMetadata};
     let enrichment_core::wire::data::ToolData::VerifyUsage(data) = result.data.clone() else {
         return Err("verification publication requires its native payload".into());
     };
@@ -631,39 +573,13 @@ async fn publish_completed(
     )
     .await?;
     let receipt = find(&data.result_artifact_id).await?;
-    let raw: serde_json::Value = serde_json::from_slice(
-        &service
-            .blobs
-            .read(&receipt.sha256)
-            .map_err(|e| e.to_string())?,
-    )
-    .map_err(|e| e.to_string())?;
-    let containment = raw["containment_identity"]
-        .as_str()
-        .ok_or("attempt lacks containment identity")?;
-    if crate::execution::description::containment_identity(&service.config.execution)
-        .map_err(|e| e.to_string())?
-        != containment
-    {
-        return Err("containment identity changed while the producer was running".into());
-    }
-    let input_artifacts: Vec<enrichment_core::evidence::Artifact> =
-        serde_json::from_value(raw["input_artifacts"].clone()).map_err(|e| e.to_string())?;
-    if input_artifacts.len() > 4098 {
-        return Err("probe dependency input count exceeds its bound".into());
-    }
+    let containment = capture.containment_identity.as_str();
+    let input_artifacts = capture.input_artifacts.clone();
     let last = data
         .observations
         .last()
         .ok_or("probe has no process observation")?;
-    let payload = ExecutionPayload::UsageProbe(UsageProbe {
-        mode: request.mode,
-        snippet_artifact_id: snippet.artifact_id.clone(),
-        end: last.end,
-        exit_code: last.exit_code,
-        stdout: last.stdout.clone(),
-        stderr: last.stderr.clone(),
-    });
+    let payload = lowered.payload.clone();
     let bytes = payload.canonical_bytes()?;
     let canonical_result = store(
         service,
@@ -675,77 +591,85 @@ async fn publish_completed(
         .environment
         .clone()
         .ok_or("probe lacks resolved environment")?;
-    let mut run = ProducerRun {
-        attempt_id: job.into(),
-        producer: "consumer-probe".into(),
-        producer_version: "2".into(),
-        config_digest: enrichment_core::native_key::Key::VerificationConfiguration
-            .hex_digest(
-                &enrichment_core::operation::identities::VerificationConfiguration {
-                    release_id: opened.release.release_id.clone(),
-                    environment: environment.clone(),
-                    mode: request.mode,
-                    image: image.into(),
-                    containment: containment.into(),
-                },
-            )
-            .map_err(|e| e.to_string())?,
-        inputs: [
-            ("snippet".into(), snippet.sha256.clone()),
-            ("dependency-lock".into(), lock.sha256.clone()),
-            ("result".into(), canonical_result.sha256.clone()),
-        ]
-        .into(),
-        profile: request.profile,
-        started_at: last.started_at,
-        finished_at: last.finished_at,
-        outcome: if last.end == ProcessEnd::Exited && last.exit_code == Some(0) {
-            RunOutcome::Succeeded
-        } else {
-            RunOutcome::Failed
-        },
-        gaps: vec![],
-        log: Some(receipt.artifact_id.clone()),
-    };
-    for artifact in &input_artifacts {
-        run.inputs.insert(
-            format!("dependency:{}", artifact.sha256),
-            artifact.sha256.clone(),
-        );
-    }
-    let fact = ExecutionObservation::new(
-        SubjectRef::Document {
-            artifact_id: snippet.artifact_id.clone(),
-            heading: "agent consumer snippet".into(),
-        },
-        environment.environment_id.clone(),
-        image.into(),
-        containment.into(),
-        payload,
-        FactSource {
-            producer_binding_id: run.semantic_binding_id(),
-            extractor: "consumer-probe".into(),
-            extractor_version: "2".into(),
-            artifact_id: canonical_result.artifact_id.clone(),
-            source_uri: Some(canonical_result.source_uri.clone()),
-            source_version_match: SourceVersionMatch::Exact,
-            locator: Locator::Artifact,
-            evidence_class: data.evidence_class,
-        },
-    )?;
-    let mut acquisitions: std::collections::BTreeMap<_, _> = input_artifacts
-        .into_iter()
-        .map(|a| (a.sha256.clone(), a))
+    use enrichment_store::producer_run_plan::{Attempt, ReceiptInput, Role};
+    let mut inputs: Vec<_> = input_artifacts
+        .iter()
+        .cloned()
+        .map(|artifact| ReceiptInput {
+            role: Role::Dependency,
+            artifact,
+        })
         .collect();
-    for artifact in [
+    inputs.extend(
+        [
+            ("snippet", snippet.clone()),
+            ("dependency-lock", lock.clone()),
+            ("result", canonical_result.clone()),
+        ]
+        .map(|(name, artifact)| ReceiptInput {
+            role: Role::Named { name: name.into() },
+            artifact,
+        }),
+    );
+    let inputs =
+        enrichment_store::producer_run_plan::receipt_inputs(&service.repository.runtime, &inputs)
+            .await
+            .map_err(|error| error.to_string())?;
+    let run = enrichment_store::producer_run_plan::compose(
+        &service.repository.runtime,
+        Attempt {
+            attempt_id: enrichment_core::identity::AttemptId::new(),
+            producer: "consumer-probe".into(),
+            producer_version: "2".into(),
+            config_digest: enrichment_core::native_key::Key::VerificationConfiguration
+                .hex_digest(
+                    &enrichment_core::operation::identities::VerificationConfiguration {
+                        release_id: opened.release.release_id.clone(),
+                        environment: environment.clone(),
+                        mode: request.mode,
+                        image: image.into(),
+                        containment: containment.into(),
+                    },
+                )
+                .map_err(|e| e.to_string())?,
+            profile: request.profile,
+            started_at: last.started_at,
+            finished_at: last.finished_at,
+            outcome: lowered.run_outcome,
+            gaps: vec![],
+            log: Some(receipt.artifact_id.clone()),
+        },
+        &inputs,
+    )
+    .await
+    .map_err(|error| error.to_string())?;
+    let facts = enrichment_store::execution_fact_plan::lower(
+        &service.repository.runtime,
+        &enrichment_store::execution_fact_plan::Producer {
+            environment_id: environment.environment_id.clone(),
+            image_id: image.into(),
+            containment_identity: containment.into(),
+            run: run.clone(),
+        },
+        &[enrichment_store::execution_fact_plan::Observed {
+            subject: SubjectRef::Document {
+                artifact_id: snippet.artifact_id.clone(),
+                heading: "agent consumer snippet".into(),
+            },
+            payload,
+            evidence_class: data.evidence_class,
+            artifact: canonical_result.clone(),
+        }],
+    )
+    .await
+    .map_err(|error| error.to_string())?;
+    let mut publication_artifacts = input_artifacts;
+    publication_artifacts.extend([
         snippet.clone(),
         lock.clone(),
         canonical_result.clone(),
         receipt.clone(),
-    ] {
-        acquisitions.insert(artifact.sha256.clone(), artifact);
-    }
-    let publication_artifacts = acquisitions.into_values().collect();
+    ]);
     let context = if environment.environment_id == opened.environment.environment_id {
         opened.context.clone()
     } else {
@@ -771,21 +695,11 @@ async fn publish_completed(
         observed_configuration: parent.observed_configuration.clone(),
         producer_items: parent.producer_items,
     };
-    // Eventual cleanup is now certain; a partial state caused solely by initial removal delay
-    // can become successful. The actual initial ProcessObservation remains unchanged.
-    let state = if state == JobState::Partial && run.outcome == RunOutcome::Succeeded {
-        JobState::Succeeded
-    } else {
-        state
-    };
     data.producer_runs = vec![run.clone()];
     data.derived_context = Some(context.clone());
     data.derived_snapshot_id = None;
     data.result_artifact_id = canonical_result.artifact_id.clone();
-    data.limitations
-        .retain(|s| !s.starts_with("Removal of the owned execution container"));
-    data.limitations
-        .push("All owned execution cleanup settled before this result was published.".into());
+    data.limitations = lowered.limitations.clone();
     let handles: Vec<_> = [&snippet, &lock, &canonical_result, &receipt]
         .into_iter()
         .filter_map(|a| {
@@ -796,23 +710,18 @@ async fn publish_completed(
         })
         .collect();
     crate::delivery::size(&data, crate::delivery::MAX_RESULT_BYTES).map_err(|e| e.to_string())?;
-    if state == JobState::Succeeded {
-        result = envelope::ok(
-            "The isolated consumer probe succeeded; its scoped result is retained in the published snapshot.",
-            data.clone().into(),
-            result.coverage.clone(),
-        );
-    } else {
-        result.data = data.clone().into();
-    }
-    result.coverage.limitations = data.limitations;
+    let context_id = result.context_id.clone();
+    let snapshot_id = result.snapshot_id.clone();
+    result = probe_envelope(&lowered, data);
+    result.context_id = context_id;
+    result.snapshot_id = snapshot_id;
     result.artifacts = handles;
     let result = enrichment_core::operation::results::ResultRecord::from_envelope(&result)?;
     let manifest = service
         .repository
         .publish_execution(
             metadata,
-            vec![fact],
+            facts,
             run.clone(),
             publication_artifacts,
             enrichment_store::repository::JobCompletion {
@@ -820,10 +729,10 @@ async fn publish_completed(
                     .jobs
                     .publication_fence(job)
                     .map_err(|error| error.to_string())?,
-                job_id: job.into(),
+                job_id: *job,
                 kind: enrichment_core::evidence::catalog::PublishedJobKind::Verify,
 
-                attempt_id: run.attempt_id.clone(),
+                attempt_id: run.attempt_id,
                 result_artifact_ids: vec![canonical_result.artifact_id.clone()],
                 result,
             },
@@ -876,136 +785,26 @@ pub async fn recover(
     if matches!(record.specification, jobs::Arguments::Compare { .. }) {
         return super::compare_job::recover(repository, blobs, record).await;
     }
-    if matches!(record.specification, jobs::Arguments::Resolve { .. }) {
-        return super::resolve_job::recover(repository, blobs, record).await;
-    }
-    if matches!(record.specification, jobs::Arguments::Inspect { .. }) {
-        return super::inspect_execution::recover(repository, blobs, record).await;
-    }
-    let fail = |e: String| std::io::Error::other(e);
-    let catalog = repository
-        .catalog
-        .pin()
-        .await
-        .map_err(|e| fail(e.to_string()))?;
-    let Some(publication) = catalog
-        .job_publication(&repository.runtime, &record.job_id)
-        .await
-        .map_err(|e| fail(e.to_string()))?
+    let Some(recovered) =
+        enrichment_store::job_recovery::recover(repository, blobs, &record.snapshot)
+            .await
+            .map_err(std::io::Error::other)?
     else {
         return Ok(None);
     };
-    let jobs::Arguments::Verify { request } = &record.specification else {
-        return Err(fail("unsupported committed job recovery variant".into()));
-    };
-    if publication.kind != enrichment_core::evidence::catalog::PublishedJobKind::Verify {
-        return Err(fail("published job kind differs from its journal".into()));
-    }
-    let (_context, environment) = catalog
-        .context(&repository.runtime, &publication.context_id)
-        .await
-        .map_err(|e| fail(e.to_string()))?
-        .ok_or_else(|| fail("published context missing".into()))?;
-    let reader =
-        enrichment_store::SnapshotReader::open(repository, catalog, &publication.snapshot_id)
-            .await
-            .map_err(|e| fail(e.to_string()))?;
-    let attempt = reader
-        .attempt(&publication.attempt_id)
-        .await
-        .map_err(|e| fail(e.to_string()))?;
-    let log = attempt
-        .artifacts
-        .iter()
-        .find(|a| Some(&a.artifact_id) == attempt.run.log.as_ref())
-        .ok_or_else(|| fail("published probe lacks its actual log".into()))?;
-    if log.size_bytes > 2 * 1024 * 1024 {
-        return Err(fail(
-            "probe receipt exceeds journal reconstruction budget".into(),
-        ));
-    }
-    #[derive(serde::Deserialize)]
-    struct Receipt {
-        job_id: String,
-        request: VerifyRequest,
-        source_snapshot: enrichment_core::identity::SnapshotId,
-        environment: enrichment_core::identity::Environment,
-        observations: Vec<enrichment_core::execution::ProcessObservation>,
-    }
-    let receipt: Receipt = blobs.read_json(log, 2 * 1024 * 1024)?;
-    if receipt.job_id != record.job_id
-        || receipt.request != *request
-        || receipt.environment != environment
-        || request.snapshot_id.as_ref() != Some(&receipt.source_snapshot)
-    {
-        return Err(fail(
-            "published receipt disagrees with exact durable inputs".into(),
-        ));
-    }
-    let input = |role: &str| -> std::io::Result<&enrichment_core::evidence::Artifact> {
-        let digest = attempt
-            .run
-            .inputs
-            .get(role)
-            .ok_or_else(|| fail(format!("missing {role} input")))?;
-        let mut found = attempt.artifacts.iter().filter(|a| &a.sha256 == digest);
-        let artifact = found
-            .next()
-            .ok_or_else(|| fail(format!("missing {role} acquisition")))?;
-        if found.next().is_some() {
-            return Err(fail(format!("ambiguous {role} acquisition")));
-        }
-        Ok(artifact)
-    };
-    let snippet = input("snippet")?;
-    input("dependency-lock")?;
-    let result_artifact = input("result")?;
-    if publication.result_artifact_ids != [result_artifact.artifact_id.clone()] {
-        return Err(fail("publication result closure differs from probe".into()));
-    }
-    let last = receipt
-        .observations
-        .last()
-        .ok_or_else(|| fail("probe receipt has no completed observation".into()))?;
-    let observed = enrichment_core::evidence::execution::ExecutionPayload::UsageProbe(
-        enrichment_core::evidence::execution::UsageProbe {
-            mode: request.mode,
-            snippet_artifact_id: snippet.artifact_id.clone(),
-            end: last.end,
-            exit_code: last.exit_code,
-            stdout: last.stdout.clone(),
-            stderr: last.stderr.clone(),
-        },
-    );
-    if canonical::sha256_hex(&observed.canonical_bytes().map_err(fail)?) != result_artifact.sha256 {
-        return Err(fail(
-            "normalized probe differs from its retained raw observation".into(),
-        ));
-    }
-    repository
-        .validate_delivery(&publication)
-        .await
-        .map_err(|e| fail(e.to_string()))?;
-    Ok(Some((
-        publication.state,
-        crate::delivery::recover_job(
-            blobs,
-            &repository.runtime,
-            repository
-                .catalog
-                .pin()
-                .await
-                .map_err(std::io::Error::other)?
-                .as_ref(),
-            &publication,
-        )
-        .await?,
-    )))
+    let result = crate::delivery::recover_job(
+        blobs,
+        &repository.runtime,
+        &recovered.catalog,
+        &recovered.publication,
+    )
+    .await?;
+    Ok(Some((recovered.publication.state, result)))
 }
 
 pub async fn control(service: &Service, request: JobRequest) -> Envelope {
     let result = match request.action {
-        JobAction::Cancel => match request.interest_token.as_deref() {
+        JobAction::Cancel => match request.interest_token.as_ref() {
             Some(token) => service.jobs.cancel(&request.job_id, token).await,
             None => {
                 return envelope::error(
@@ -1050,7 +849,7 @@ pub async fn control(service: &Service, request: JobRequest) -> Envelope {
 }
 pub(super) async fn wait(
     service: &Service,
-    id: &str,
+    id: &enrichment_core::identity::JobId,
     seconds: u64,
 ) -> std::io::Result<jobs::JobRecord> {
     let deadline = tokio::time::Instant::now() + Duration::from_secs(seconds);
@@ -1064,7 +863,7 @@ pub(super) async fn wait(
 }
 pub(super) fn pending(data: JobData) -> Envelope {
     let job = JobHandle {
-        job_id: data.job_id.clone(),
+        job_id: data.job_id,
         state: data.state,
         stage: data.stage.clone(),
         poll_after_ms: 250,

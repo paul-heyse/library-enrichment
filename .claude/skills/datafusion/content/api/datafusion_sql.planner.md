@@ -34,6 +34,9 @@ fn from(s: &str) -> Self
 fn from_str(s: &str) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.planner.NullOrdering.md).
+
+
 Represents the null ordering for sorting expressions.
 
 ---
@@ -45,6 +48,9 @@ Represents the null ordering for sorting expressions.
 ```rust
 fn object_name_to_qualifier(sql_table_name: &sqlparser::ast::ObjectName, enable_normalization: bool) -> datafusion_common::Result<String>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.planner.object_name_to_qualifier.md).
+
 
 Construct a WHERE qualifier suitable for e.g. information_schema filtering
 from the provided object identifiers (catalog, schema and table names).
@@ -58,6 +64,9 @@ from the provided object identifiers (catalog, schema and table names).
 ```rust
 fn object_name_to_table_reference(object_name: sqlparser::ast::ObjectName, enable_normalization: bool) -> datafusion_common::Result<datafusion_common::TableReference>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.planner.object_name_to_table_reference.md).
+
 
 Create a [`TableReference`] after normalizing the specified ObjectName
 
@@ -88,6 +97,9 @@ struct IdentNormalizer
 fn new(normalize: bool) -> Self
 fn normalize(&self, ident: Ident) -> String
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.planner.IdentNormalizer.md).
+
 
 Ident Normalizer
 
@@ -126,6 +138,9 @@ fn with_support_varchar_with_length(self, value: bool) -> Self
 fn from(options: &SqlParserOptions) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.planner.ParserOptions.md).
+
+
 SQL parser options
 
 ---
@@ -162,6 +177,9 @@ fn table_schema(&self) -> Option<DFSchemaRef>
 fn with_lambda_parameters(self, parameters: impl IntoIterator<Item = FieldRef>) -> Self
 fn with_prepare_param_data_types(self, prepare_param_data_types: Vec<Option<FieldRef>>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.planner.PlannerContext.md).
+
 
 Struct to store the states used by the Planner. The Planner will leverage the states
 to resolve CTEs, Views, subqueries and PREPARE statements. The states include
@@ -200,6 +218,9 @@ fn sql_to_expr_with_alias(&self, sql: SQLExprWithAlias, schema: &DFSchema, plann
 fn statement_to_plan(&self, statement: DFStatement) -> Result<LogicalPlan>
 fn take_warnings(&self) -> Vec<Diagnostic>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.planner.SqlToRel.md).
+
 
 SQL query planner and binder
 

@@ -42,6 +42,9 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private228::Result<Self, _
 fn serialize<__S>(&self, __serializer: __S) -> _serde::__private228::Result<__S::Ok, __S::Error> where __S: _serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.azure.builder.AzureConfigKey.md).
+
+
 Configuration keys for [`MicrosoftAzureBuilder`]
 
 Configuration via keys can be done via [`MicrosoftAzureBuilder::with_config`]
@@ -104,6 +107,9 @@ fn with_use_azure_cli(self, use_azure_cli: bool) -> Self
 fn with_use_emulator(self, use_emulator: bool) -> Self
 fn with_use_fabric_endpoint(self, use_fabric_endpoint: bool) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.azure.builder.MicrosoftAzureBuilder.md).
+
 
 Configure a connection to Microsoft Azure Blob Storage container using
 the specified credentials.

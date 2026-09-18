@@ -1,0 +1,125 @@
+[
+  {
+    "id": "c6b1c10b82cb22b99aef7829",
+    "path": "datafusion_optimizer::analyzer::type_coercion::coerce_union_schema",
+    "name": "coerce_union_schema",
+    "owner": null,
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn coerce_union_schema(inputs: &[std::sync::Arc<datafusion_expr::LogicalPlan>]) -> datafusion_common::Result<datafusion_common::DFSchema>",
+    "docs": "Get a common schema that is compatible with all inputs of UNION.\n\nThis method presumes that the wildcard expansion is unneeded, or has already\nbeen applied.\n\n## Schema and Field Handling in Union Coercion\n\n**Processing order**: The function starts with the base schema (first input) and then\nprocesses remaining inputs sequentially, with later inputs taking precedence in merging.\n\n**Schema-level metadata merging**: Later schemas take precedence for duplicate keys.\n\n**Field-level metadata merging**: Later fields take precedence for duplicate metadata keys.\n\n**Type coercion precedence**: The coerced type is determined by iteratively applying\n`type_union_coercion()` between the accumulated type and each new input's type. The\nresult depends on type coercion rules, not input order.\n\n**Nullability merging**: Nullability is accumulated using logical OR (`||`).\nOnce any input field is nullable, the result field becomes nullable permanently.\nLater inputs can make a field nullable but cannot make it non-nullable.\n\n**Field precedence**: Field names come from the first (base) schema, but the field properties\n(nullability and field-level metadata) have later schemas taking precedence.\n\n**Example**:\n```sql\nSELECT a, b FROM table1  -- a: Int32, metadata {\"source\": \"t1\"}, nullable=false\nUNION\nSELECT a, b FROM table2  -- a: Int64, metadata {\"source\": \"t2\"}, nullable=true\nUNION\nSELECT a, b FROM table3  -- a: Int32, metadata {\"encoding\": \"utf8\"}, nullable=false\n-- Result:\n-- a: Int64 (from type coercion), nullable=true (from table2),\n-- metadata: {\"source\": \"t2\", \"encoding\": \"utf8\"} (later inputs take precedence)\n```\n\n**Precedence Summary**:\n- **Datatypes**: Determined by `type_union_coercion()` rules, not input order\n- **Nullability**: Later inputs can add nullability but cannot remove it (logical OR)\n- **Metadata**: Later inputs take precedence for same keys (HashMap::extend semantics)",
+    "span": {
+      "filename": "src/analyzer/type_coercion.rs",
+      "begin": [
+        1314,
+        1
+      ],
+      "end": [
+        1316,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "inputs",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "std::sync::Arc",
+                        "id": 5,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "datafusion_expr::LogicalPlan",
+                                    "id": 59,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "datafusion_common::Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "datafusion_common::DFSchema",
+                          "id": 122,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "5": "alloc::sync::Arc",
+      "59": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "61": "datafusion_common::error::Result",
+      "122": "datafusion_common::dfschema::DFSchema"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "151",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.analyzer.type_coercion.coerce_union_schema.md",
+    "record_file": "operations/datafusion_optimizer.analyzer.type_coercion.coerce_union_schema.json",
+    "anchor": "op-c6b1c10b82cb22b99aef7829",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

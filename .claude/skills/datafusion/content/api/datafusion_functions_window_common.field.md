@@ -21,6 +21,9 @@ fn name(&self) -> &str
 fn new(input_fields: &'a [FieldRef], display_name: &'a str) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window_common.field.WindowUDFFieldArgs.md).
+
+
 Metadata for defining the result field from evaluating a
 user-defined window function.
 

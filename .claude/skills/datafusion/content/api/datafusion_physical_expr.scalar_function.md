@@ -54,6 +54,9 @@ fn return_field(&self, _input_schema: &Schema) -> Result<FieldRef>
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.scalar_function.ScalarFunctionExpr.md).
+
+
 Physical expression of a scalar function
 
 ---

@@ -1,0 +1,3675 @@
+[
+  {
+    "id": "c92c3d84b1d23dd06da0f81a",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "name": "PrimitiveRunBuilder",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct PrimitiveRunBuilder<R, V> where R: RunEndIndexType, V: ArrowPrimitiveType",
+    "docs": "Builder for [`RunArray`] of [`PrimitiveArray`](crate::array::PrimitiveArray)\n\n# Example:\n\n```\n\n# use arrow_array::builder::PrimitiveRunBuilder;\n# use arrow_array::cast::AsArray;\n# use arrow_array::types::{UInt32Type, Int16Type};\n# use arrow_array::{Array, UInt32Array, Int16Array};\n\nlet mut builder =\nPrimitiveRunBuilder::<Int16Type, UInt32Type>::new();\nbuilder.append_value(1234);\nbuilder.append_value(1234);\nbuilder.append_value(1234);\nbuilder.append_null();\nbuilder.append_value(5678);\nbuilder.append_value(5678);\nlet array = builder.finish();\n\nassert_eq!(array.run_ends().values(), &[3, 4, 6]);\n\nlet av = array.values();\n\nassert!(!av.is_null(0));\nassert!(av.is_null(1));\nassert!(!av.is_null(2));\n\n// Values are polymorphic and so require a downcast.\nlet ava: &UInt32Array = av.as_primitive::<UInt32Type>();\n\nassert_eq!(ava, &UInt32Array::from(vec![Some(1234), None, Some(5678)]));\n```",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        61,
+        1
+      ],
+      "end": [
+        71,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "R",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "V",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "R"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "RunEndIndexType",
+                        "id": 1376,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "V"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "ArrowPrimitiveType",
+                        "id": 307,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "impls": [
+          2929,
+          2935,
+          2936,
+          2937,
+          2938,
+          2939,
+          2940,
+          2941,
+          2942,
+          2943,
+          2944,
+          2945,
+          2946,
+          2947,
+          2948,
+          2949,
+          2950,
+          2952,
+          2954,
+          2961,
+          2963
+        ]
+      }
+    },
+    "type_references": {
+      "1376": "arrow_array::types::RunEndIndexType",
+      "307": "arrow_array::types::ArrowPrimitiveType"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::array::PrimitiveArray": 301,
+      "`RunArray`": 1375
+    },
+    "link_paths": {
+      "crate::array::PrimitiveArray": "arrow_array::array::primitive_array::PrimitiveArray",
+      "`RunArray`": "arrow_array::array::run_array::RunArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2925",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-c92c3d84b1d23dd06da0f81a",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::array::PrimitiveArray": "../operations/arrow_array.array.primitive_array.PrimitiveArray.md#op-bc88178d283a743ead5dd814",
+      "`RunArray`": "../operations/arrow_array.array.run_array.RunArray.md#op-f0742b2d9e045922a076478f"
+    }
+  },
+  {
+    "id": "3e83dbd4b972425c6d212e47",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::append_null",
+    "name": "append_null",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_null(&mut self)",
+    "docs": "Appends null to the logical array encoded by the run-ends array.",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        190,
+        5
+      ],
+      "end": [
+        192,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          164,
+          1
+        ],
+        "end": [
+          260,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2932",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-3e83dbd4b972425c6d212e47",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "877f019880848dd9d09f8df8",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::append_option",
+    "name": "append_option",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_option(&mut self, value: Option<V::Native>)",
+    "docs": "Appends optional value to the logical array encoded by the RunArray.",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        170,
+        5
+      ],
+      "end": [
+        182,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "qualified_path": {
+                              "name": "Native",
+                              "args": null,
+                              "self_type": {
+                                "generic": "V"
+                              },
+                              "trait": {
+                                "path": "",
+                                "id": 307,
+                                "args": null
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "307": "arrow_array::types::ArrowPrimitiveType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          164,
+          1
+        ],
+        "end": [
+          260,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2930",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-877f019880848dd9d09f8df8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "563dfaeb84cb8b72ddcb2cab",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::append_value",
+    "name": "append_value",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_value(&mut self, value: V::Native)",
+    "docs": "Appends value to the logical array encoded by the run-ends array.",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        185,
+        5
+      ],
+      "end": [
+        187,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "value",
+              {
+                "qualified_path": {
+                  "name": "Native",
+                  "args": null,
+                  "self_type": {
+                    "generic": "V"
+                  },
+                  "trait": {
+                    "path": "",
+                    "id": 307,
+                    "args": null
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "307": "arrow_array::types::ArrowPrimitiveType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          164,
+          1
+        ],
+        "end": [
+          260,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2931",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-563dfaeb84cb8b72ddcb2cab",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d0b14daf5604f9bc0120c859",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::as_any",
+    "name": "as_any",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any(&self) -> &dyn Any",
+    "docs": "Returns the builder as a non-mutable `Any` reference.",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        133,
+        5
+      ],
+      "end": [
+        135,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          162,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2955",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-d0b14daf5604f9bc0120c859",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "af2a925f3db3e2fcbefe647f",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::as_any_mut",
+    "name": "as_any_mut",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any_mut(&mut self) -> &mut dyn Any",
+    "docs": "Returns the builder as a mutable `Any` reference.",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        138,
+        5
+      ],
+      "end": [
+        140,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          162,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2956",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-af2a925f3db3e2fcbefe647f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f3cc5d5c186208850aedbd68",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::default",
+    "name": "default",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn default() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        78,
+        5
+      ],
+      "end": [
+        80,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          73,
+          1
+        ],
+        "end": [
+          81,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2953",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-f3cc5d5c186208850aedbd68",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e0b92c02bce18c32815dc375",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::extend",
+    "name": "extend",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn extend<T: IntoIterator<Item = Option<V::Native>>>(&mut self, iter: T)",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        267,
+        5
+      ],
+      "end": [
+        271,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "iter",
+              {
+                "generic": "T"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "IntoIterator",
+                          "id": 157,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [],
+                              "constraints": [
+                                {
+                                  "name": "Item",
+                                  "args": null,
+                                  "binding": {
+                                    "equality": {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Option",
+                                          "id": 12,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "qualified_path": {
+                                                      "name": "Native",
+                                                      "args": null,
+                                                      "self_type": {
+                                                        "generic": "V"
+                                                      },
+                                                      "trait": {
+                                                        "path": "",
+                                                        "id": 307,
+                                                        "args": null
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "157": "core::iter::traits::collect::IntoIterator",
+      "12": "core::option::Option",
+      "307": "arrow_array::types::ArrowPrimitiveType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Extend",
+        "id": "core::iter::traits::collect::Extend",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "Option",
+                    "id": "core::option::Option",
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "qualified_path": {
+                                "name": "Native",
+                                "args": null,
+                                "self_type": {
+                                  "generic": "V"
+                                },
+                                "trait": {
+                                  "path": "ArrowPrimitiveType",
+                                  "id": "arrow_array::types::ArrowPrimitiveType",
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::iter::traits::collect::Extend",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          262,
+          1
+        ],
+        "end": [
+          272,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2962",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-e0b92c02bce18c32815dc375",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "060a0a59d09ccab0568fd10a",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> RunArray<R>",
+    "docs": "Creates the RunArray and resets the builder.\nPanics if RunArray cannot be built.",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        196,
+        5
+      ],
+      "end": [
+        208,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "RunArray",
+              "id": 1375,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "R"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1375": "arrow_array::array::run_array::RunArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          164,
+          1
+        ],
+        "end": [
+          260,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2933",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-060a0a59d09ccab0568fd10a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ad51e05ed2d7c473fdaa9297",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> ArrayRef",
+    "docs": "Builds the array and reset this builder.",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        154,
+        5
+      ],
+      "end": [
+        156,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          162,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2959",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-ad51e05ed2d7c473fdaa9297",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3917e55f7877c3fc3d635f0d",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> RunArray<R>",
+    "docs": "Creates the RunArray and without resetting the builder.\nPanics if RunArray cannot be built.",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        212,
+        5
+      ],
+      "end": [
+        226,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "RunArray",
+              "id": 1375,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "R"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1375": "arrow_array::array::run_array::RunArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          164,
+          1
+        ],
+        "end": [
+          260,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2934",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-3917e55f7877c3fc3d635f0d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a0ca519f4ca68b4eb99c307a",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> ArrayRef",
+    "docs": "Builds the array without resetting the builder.",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        159,
+        5
+      ],
+      "end": [
+        161,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          162,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2960",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-a0ca519f4ca68b4eb99c307a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c21d64bbf31a0faf3fd7b7e6",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::fmt",
+    "name": "fmt",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        60,
+        10
+      ],
+      "end": [
+        60,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 117,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 118,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "117": "core::fmt::Formatter",
+      "118": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "$crate::fmt::Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                },
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "$crate::fmt::Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "qualified_path": {
+                  "name": "Native",
+                  "args": null,
+                  "self_type": {
+                    "generic": "V"
+                  },
+                  "trait": {
+                    "path": "",
+                    "id": "arrow_array::types::ArrowPrimitiveType",
+                    "args": null
+                  }
+                }
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "$crate::fmt::Debug",
+                      "id": "core::fmt::Debug",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          60,
+          10
+        ],
+        "end": [
+          60,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2951",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-c21d64bbf31a0faf3fd7b7e6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "221197f2312068f9dc475c2f",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::into_box_any",
+    "name": "into_box_any",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_box_any(Box<self>) -> Box<dyn Any>",
+    "docs": "Returns the boxed builder as a box of `Any`.",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        143,
+        5
+      ],
+      "end": [
+        145,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Box",
+                  "id": 1788,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Box",
+              "id": 1788,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "Any",
+                                "id": 106,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1788": "alloc::boxed::Box",
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          162,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2957",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-221197f2312068f9dc475c2f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f291aa68af202a9ba2254661",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::len",
+    "name": "len",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Returns the length of logical array encoded by\nthe eventual runs array.",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        149,
+        5
+      ],
+      "end": [
+        151,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          127,
+          1
+        ],
+        "end": [
+          162,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2958",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-f291aa68af202a9ba2254661",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f138d528b22931f9f9a21b27",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::new",
+    "name": "new",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "Creates a new `PrimitiveRunBuilder`",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        89,
+        5
+      ],
+      "end": [
+        97,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          83,
+          1
+        ],
+        "end": [
+          125,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2926",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-f138d528b22931f9f9a21b27",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5d80e0b9a3c1ab0ebd94884b",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::with_capacity",
+    "name": "with_capacity",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_capacity(capacity: usize) -> Self",
+    "docs": "Creates a new `PrimitiveRunBuilder` with the provided capacity\n\n`capacity`: the expected number of run-end encoded values.",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        102,
+        5
+      ],
+      "end": [
+        110,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "capacity",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          83,
+          1
+        ],
+        "end": [
+          125,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2927",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-5d80e0b9a3c1ab0ebd94884b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8635393acea28ceabd0f000e",
+    "path": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder::with_data_type",
+    "name": "with_data_type",
+    "owner": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_data_type(self, data_type: arrow_schema::DataType) -> Self",
+    "docs": "Overrides the data type of the values child array.\n\nBy default, `V::DATA_TYPE` is used (via [`PrimitiveBuilder`]). This\nallows setting the timezone of a Timestamp, the precision & scale of a\nDecimal, etc.\n\n# Panics\n\nThis method panics if `values_builder` rejects `data_type`.",
+    "span": {
+      "filename": "src/builder/primitive_run_builder.rs",
+      "begin": [
+        121,
+        5
+      ],
+      "end": [
+        124,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "data_type",
+              {
+                "resolved_path": {
+                  "path": "arrow_schema::DataType",
+                  "id": 126,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "126": "arrow_schema::datatype::DataType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PrimitiveRunBuilder",
+          "id": "arrow_array::builder::primitive_run_builder::PrimitiveRunBuilder",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                },
+                {
+                  "type": {
+                    "generic": "V"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          },
+          {
+            "name": "V",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": [
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "R"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "RunEndIndexType",
+                      "id": "arrow_array::types::RunEndIndexType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          },
+          {
+            "bound_predicate": {
+              "type": {
+                "generic": "V"
+              },
+              "bounds": [
+                {
+                  "trait_bound": {
+                    "trait": {
+                      "path": "ArrowPrimitiveType",
+                      "id": "arrow_array::types::ArrowPrimitiveType",
+                      "args": null
+                    },
+                    "generic_params": [],
+                    "modifier": "none"
+                  }
+                }
+              ],
+              "generic_params": []
+            }
+          }
+        ]
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/primitive_run_builder.rs",
+        "begin": [
+          83,
+          1
+        ],
+        "end": [
+          125,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`PrimitiveBuilder`": 937
+    },
+    "link_paths": {
+      "`PrimitiveBuilder`": "arrow_array::builder::primitive_builder::PrimitiveBuilder"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2928",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.md",
+    "record_file": "operations/arrow_array.builder.primitive_run_builder.PrimitiveRunBuilder.json",
+    "anchor": "op-8635393acea28ceabd0f000e",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`PrimitiveBuilder`": "../operations/arrow_array.builder.primitive_builder.PrimitiveBuilder.md#op-ad7b023d1f59a6bba4232467"
+    }
+  }
+]

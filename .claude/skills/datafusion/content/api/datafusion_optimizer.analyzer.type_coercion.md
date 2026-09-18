@@ -10,6 +10,9 @@ Crate `datafusion-optimizer` · 3 public items · structured records in [`model/
 fn coerce_union_schema(inputs: &[std::sync::Arc<datafusion_expr::LogicalPlan>]) -> datafusion_common::Result<datafusion_common::DFSchema>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.analyzer.type_coercion.coerce_union_schema.md).
+
+
 Get a common schema that is compatible with all inputs of UNION.
 
 This method presumes that the wildcard expansion is unneeded, or has already
@@ -79,6 +82,9 @@ fn analyze(&self, plan: LogicalPlan, config: &ConfigOptions) -> Result<LogicalPl
 fn name(&self) -> &str
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercion.md).
+
+
 Performs type coercion by determining the schema
 and performing the expression rewrites.
 
@@ -108,6 +114,9 @@ fn new(schema: &'a DFSchema) -> Self
 ```rust
 fn f_up(&mut self, expr: Expr) -> Result<Transformed<Expr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.analyzer.type_coercion.TypeCoercionRewriter.md).
+
 
 Rewrite expressions to apply type coercion.
 

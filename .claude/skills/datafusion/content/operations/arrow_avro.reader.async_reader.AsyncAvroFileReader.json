@@ -1,0 +1,803 @@
+[
+  {
+    "id": "1556b0e38a5fc44a0cc6248c",
+    "path": "arrow_avro::reader::async_reader::AsyncAvroFileReader",
+    "name": "AsyncAvroFileReader",
+    "owner": null,
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct AsyncAvroFileReader<R>",
+    "docs": "An asynchronous Avro file reader that implements `Stream<Item = Result<RecordBatch, ArrowError>>`.\nThis uses an [`AsyncFileReader`] to fetch data ranges as needed, starting with fetching the header,\nthen reading all the blocks in the provided range where:\n1. Reads and decodes data until the header is fully decoded.\n2. Searching from `range.start` for the first sync marker, and starting with the following block.\n   (If `range.start` is less than the header length, we start at the header length minus the sync marker bytes)\n3. Reading blocks sequentially, decoding them into RecordBatches.\n4. If a block is incomplete (due to range ending mid-block), fetching the remaining bytes from the [`AsyncFileReader`].\n5. If no range was originally provided, reads the full file.\n6. If the range is 0, file_size is 0, or `range.end` is less than the header length, finish immediately.\n\n# Example\n\n```\n#[tokio::main(flavor = \"current_thread\")]\nasync fn main() -> Result<(), Box<dyn std::error::Error>> {\nuse std::io::Cursor;\nuse std::sync::Arc;\nuse arrow_array::{ArrayRef, Int32Array, RecordBatch};\nuse arrow_schema::{DataType, Field, Schema};\nuse arrow_avro::reader::AsyncAvroFileReader;\nuse arrow_avro::writer::AvroWriter;\nuse futures::TryStreamExt;\n\n// Build a minimal Arrow schema and batch\nlet schema = Schema::new(vec![Field::new(\"id\", DataType::Int32, false)]);\nlet batch = RecordBatch::try_new(\n    Arc::new(schema.clone()),\n    vec![Arc::new(Int32Array::from(vec![1, 2, 3])) as ArrayRef],\n)?;\n\n// Write an Avro OCF to memory\nlet buffer: Vec<u8> = Vec::new();\nlet mut writer = AvroWriter::new(buffer, schema)?;\nwriter.write(&batch)?;\nwriter.finish()?;\nlet bytes = writer.into_inner();\n\n// Create an async reader from the in-memory bytes\n// `tokio::fs::File` also implements `AsyncFileReader` for reading from disk\nlet file_size = bytes.len();\nlet cursor = Cursor::new(bytes);\nlet reader = AsyncAvroFileReader::builder(cursor, file_size as u64, 1024)\n    .try_build()\n    .await?;\n\n// Consume the stream of RecordBatches\nlet batches: Vec<RecordBatch> = reader.try_collect().await?;\nassert_eq!(batches.len(), 1);\nassert_eq!(batches[0].num_rows(), 3);\nOk(())\n}\n```",
+    "span": {
+      "filename": "src/reader/async_reader/mod.rs",
+      "begin": [
+        140,
+        1
+      ],
+      "end": [
+        154,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "R",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          230,
+          231,
+          233,
+          234,
+          235,
+          236,
+          237,
+          238,
+          239,
+          240,
+          241,
+          242,
+          243,
+          244,
+          245,
+          253,
+          255,
+          257,
+          259,
+          260,
+          265
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`AsyncFileReader`": 92
+    },
+    "link_paths": {
+      "`AsyncFileReader`": "arrow_avro::reader::async_reader::async_file_reader::AsyncFileReader"
+    },
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "88",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.async_reader.AsyncAvroFileReader.md",
+    "record_file": "operations/arrow_avro.reader.async_reader.AsyncAvroFileReader.json",
+    "anchor": "op-1556b0e38a5fc44a0cc6248c",
+    "aliases": [
+      "arrow_avro::reader::AsyncAvroFileReader"
+    ],
+    "resolved_doc_links": {
+      "`AsyncFileReader`": "../operations/arrow_avro.reader.async_reader.async_file_reader.AsyncFileReader.md#op-b37e46224b914587014a7456"
+    }
+  },
+  {
+    "id": "7bd6008150691a3ab1dc6f97",
+    "path": "arrow_avro::reader::async_reader::AsyncAvroFileReader::Item",
+    "name": "Item",
+    "owner": "arrow_avro::reader::async_reader::AsyncAvroFileReader",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "assoc_type",
+    "signature": "Item",
+    "docs": "",
+    "span": {
+      "filename": "src/reader/async_reader/mod.rs",
+      "begin": [
+        542,
+        5
+      ],
+      "end": [
+        542,
+        49
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_type": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [],
+        "type": {
+          "resolved_path": {
+            "path": "Result",
+            "id": 9,
+            "args": {
+              "angle_bracketed": {
+                "args": [
+                  {
+                    "type": {
+                      "resolved_path": {
+                        "path": "RecordBatch",
+                        "id": 262,
+                        "args": null
+                      }
+                    }
+                  },
+                  {
+                    "type": {
+                      "resolved_path": {
+                        "path": "ArrowError",
+                        "id": 263,
+                        "args": null
+                      }
+                    }
+                  }
+                ],
+                "constraints": []
+              }
+            }
+          }
+        },
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "9": "core::result::Result",
+      "262": "arrow_array::record_batch::RecordBatch",
+      "263": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncAvroFileReader",
+          "id": "arrow_avro::reader::async_reader::AsyncAvroFileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Stream",
+        "id": "futures_core::stream::Stream",
+        "args": null
+      },
+      "trait_path": "futures_core::stream::Stream",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileReader",
+                        "id": "arrow_avro::reader::async_reader::async_file_reader::AsyncFileReader",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Unpin",
+                        "id": "core::marker::Unpin",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/async_reader/mod.rs",
+        "begin": [
+          541,
+          1
+        ],
+        "end": [
+          547,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "261",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.async_reader.AsyncAvroFileReader.md",
+    "record_file": "operations/arrow_avro.reader.async_reader.AsyncAvroFileReader.json",
+    "anchor": "op-7bd6008150691a3ab1dc6f97",
+    "aliases": [
+      "arrow_avro::reader::AsyncAvroFileReader::Item"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4daf468b7ade50d5bcf93eba",
+    "path": "arrow_avro::reader::async_reader::AsyncAvroFileReader::builder",
+    "name": "builder",
+    "owner": "arrow_avro::reader::async_reader::AsyncAvroFileReader",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn builder(reader: R, file_size: u64, batch_size: usize) -> ReaderBuilder<R>",
+    "docs": "Returns a builder for a new [`Self`], allowing some optional parameters.",
+    "span": {
+      "filename": "src/reader/async_reader/mod.rs",
+      "begin": [
+        158,
+        5
+      ],
+      "end": [
+        160,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "reader",
+              {
+                "generic": "R"
+              }
+            ],
+            [
+              "file_size",
+              {
+                "primitive": "u64"
+              }
+            ],
+            [
+              "batch_size",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ReaderBuilder",
+              "id": 117,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "R"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "117": "arrow_avro::reader::async_reader::builder::ReaderBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncAvroFileReader",
+          "id": "arrow_avro::reader::async_reader::AsyncAvroFileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/async_reader/mod.rs",
+        "begin": [
+          156,
+          1
+        ],
+        "end": [
+          246,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self`": 88
+    },
+    "link_paths": {
+      "`Self`": "arrow_avro::reader::async_reader::AsyncAvroFileReader"
+    },
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "227",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.async_reader.AsyncAvroFileReader.md",
+    "record_file": "operations/arrow_avro.reader.async_reader.AsyncAvroFileReader.json",
+    "anchor": "op-4daf468b7ade50d5bcf93eba",
+    "aliases": [
+      "arrow_avro::reader::AsyncAvroFileReader::builder"
+    ],
+    "resolved_doc_links": {
+      "`Self`": "../operations/arrow_avro.reader.async_reader.AsyncAvroFileReader.md#op-1556b0e38a5fc44a0cc6248c"
+    }
+  },
+  {
+    "id": "6b77510f3c39f30727f9e12c",
+    "path": "arrow_avro::reader::async_reader::AsyncAvroFileReader::poll_next",
+    "name": "poll_next",
+    "owner": "arrow_avro::reader::async_reader::AsyncAvroFileReader",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>",
+    "docs": "",
+    "span": {
+      "filename": "src/reader/async_reader/mod.rs",
+      "begin": [
+        544,
+        5
+      ],
+      "end": [
+        546,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Pin",
+                  "id": 249,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": true,
+                              "type": {
+                                "generic": "Self"
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "cx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Context",
+                      "id": 250,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Poll",
+              "id": 251,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 14,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "qualified_path": {
+                                      "name": "Item",
+                                      "args": null,
+                                      "self_type": {
+                                        "generic": "Self"
+                                      },
+                                      "trait": {
+                                        "path": "",
+                                        "id": 254,
+                                        "args": null
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "249": "core::pin::Pin",
+      "250": "core::task::wake::Context",
+      "251": "core::task::poll::Poll",
+      "14": "core::option::Option",
+      "254": "futures_core::stream::Stream"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncAvroFileReader",
+          "id": "arrow_avro::reader::async_reader::AsyncAvroFileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "Stream",
+        "id": "futures_core::stream::Stream",
+        "args": null
+      },
+      "trait_path": "futures_core::stream::Stream",
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsyncFileReader",
+                        "id": "arrow_avro::reader::async_reader::async_file_reader::AsyncFileReader",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Unpin",
+                        "id": "core::marker::Unpin",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  },
+                  {
+                    "outlives": "'static"
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/async_reader/mod.rs",
+        "begin": [
+          541,
+          1
+        ],
+        "end": [
+          547,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "264",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.async_reader.AsyncAvroFileReader.md",
+    "record_file": "operations/arrow_avro.reader.async_reader.AsyncAvroFileReader.json",
+    "anchor": "op-6b77510f3c39f30727f9e12c",
+    "aliases": [
+      "arrow_avro::reader::AsyncAvroFileReader::poll_next"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3d074994c8732f84d6e4e44f",
+    "path": "arrow_avro::reader::async_reader::AsyncAvroFileReader::schema",
+    "name": "schema",
+    "owner": "arrow_avro::reader::async_reader::AsyncAvroFileReader",
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn schema(&self) -> SchemaRef",
+    "docs": "Returns the Arrow schema for batches produced by this reader.\n\nThe schema is determined by the writer schema in the file and the reader schema provided to the builder.",
+    "span": {
+      "filename": "src/reader/async_reader/mod.rs",
+      "begin": [
+        187,
+        5
+      ],
+      "end": [
+        189,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "SchemaRef",
+              "id": 229,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "229": "arrow_schema::schema::SchemaRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "AsyncAvroFileReader",
+          "id": "arrow_avro::reader::async_reader::AsyncAvroFileReader",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "R"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "R",
+            "kind": {
+              "type": {
+                "bounds": [],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/reader/async_reader/mod.rs",
+        "begin": [
+          156,
+          1
+        ],
+        "end": [
+          246,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "228",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_avro.reader.async_reader.AsyncAvroFileReader.md",
+    "record_file": "operations/arrow_avro.reader.async_reader.AsyncAvroFileReader.json",
+    "anchor": "op-3d074994c8732f84d6e4e44f",
+    "aliases": [
+      "arrow_avro::reader::AsyncAvroFileReader::schema"
+    ],
+    "resolved_doc_links": {}
+  }
+]

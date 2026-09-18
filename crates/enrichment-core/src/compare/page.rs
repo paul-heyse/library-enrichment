@@ -46,10 +46,7 @@ impl AlternativeCursor {
             check: String::new(),
         };
         cursor.check = cursor.checksum();
-        Ok(format!(
-            "alternatives10_{}",
-            crate::search::hex(&serde_json::to_vec(&cursor)?)
-        ))
+        crate::native_cursor::Kind::Alternatives.encode(&cursor)
     }
     fn checksum(&self) -> String {
         Key::AlternativeCursor
@@ -61,14 +58,7 @@ impl AlternativeCursor {
         snapshots: &SnapshotPair,
         selection: &str,
     ) -> Result<Self, CursorError> {
-        if text.len() > 32768 {
-            return Err(CursorError::Malformed);
-        }
-        let bytes = text
-            .strip_prefix("alternatives10_")
-            .and_then(crate::search::unhex)
-            .ok_or(CursorError::Malformed)?;
-        let cursor: Self = serde_json::from_slice(&bytes).map_err(|_| CursorError::Malformed)?;
+        let cursor: Self = crate::native_cursor::Kind::Alternatives.decode(text)?;
         // Offset zero is a valid first-page route for a side deferred by the byte budget.
         if cursor.contract != crate::request::Operation::Compare.contract_id()
             || cursor.check != cursor.checksum()
@@ -129,23 +119,12 @@ impl ComparisonCursor {
     /// # Errors
     /// Serialization failures remain explicit.
     pub fn encode(&self) -> Result<String, serde_json::Error> {
-        Ok(format!(
-            "comparison10_{}",
-            crate::search::hex(&serde_json::to_vec(self)?)
-        ))
+        crate::native_cursor::Kind::Comparison.encode(self)
     }
     /// # Errors
     /// Reject corrupted, malformed, cross-snapshot and cross-query cursors.
     pub fn decode(text: &str, snapshots: &SnapshotPair, digest: &str) -> Result<Self, CursorError> {
-        if text.len() > 32768 {
-            return Err(CursorError::Malformed);
-        }
-        let bytes = crate::search::unhex(
-            text.strip_prefix("comparison10_")
-                .ok_or(CursorError::Malformed)?,
-        )
-        .ok_or(CursorError::Malformed)?;
-        let cursor: Self = serde_json::from_slice(&bytes).map_err(|_| CursorError::Malformed)?;
+        let cursor: Self = crate::native_cursor::Kind::Comparison.decode(text)?;
         if cursor.contract != crate::request::Operation::Compare.contract_id()
             || cursor.check != cursor.checksum()
             || cursor.after.key.is_empty()

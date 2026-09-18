@@ -1,0 +1,3350 @@
+[
+  {
+    "schema_version": 1,
+    "id": "arrow.cast",
+    "title": "Choose conversion failure and output-schema policies explicitly",
+    "task_aliases": [
+      "parse numeric strings",
+      "cast bad values to null",
+      "reject invalid cast",
+      "strict conversion",
+      "safe cast"
+    ],
+    "crates": [
+      "arrow-cast",
+      "arrow-schema"
+    ],
+    "input": [
+      "Array",
+      "DataType",
+      "CastOptions"
+    ],
+    "output": [
+      "ArrayRef",
+      "ArrowError"
+    ],
+    "properties": [
+      "nulls",
+      "errors",
+      "coercion",
+      "metadata"
+    ],
+    "operations": [
+      "arrow_cast::cast::cast_with_options",
+      "arrow_cast::cast::CastOptions::safe",
+      "arrow_cast::cast::can_cast_types"
+    ],
+    "brief": "In Arrow CastOptions, safe=true means null on supported value-conversion failures; safe=false requests an error. Check the specific type pair and output field nullability.",
+    "choices": [
+      {
+        "candidate": "cast_with_options safe=true",
+        "choose_when": "Continue processing malformed supported values",
+        "tradeoff": "Input nulls and failed conversions can become indistinguishable.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "cast_with_options safe=false",
+        "choose_when": "Reject conversion failures",
+        "tradeoff": "Still inspect type-specific precision, overflow and formatting rules.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "DataFusion CAST / TRY_CAST",
+        "choose_when": "Conversion belongs inside a query",
+        "tradeoff": "Use their own documented SQL semantics; do not transfer the Arrow option name blindly.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "arrow.cast.shape",
+        "aspect": "shape",
+        "statement": "&dyn Array + &DataType + &CastOptions -> Result<ArrayRef, ArrowError>. can_cast_types is a type-pair check, not proof that all values are representable.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "arrow.cast.failure",
+        "aspect": "failure",
+        "statement": "Default CastOptions.safe is true. Unsupported casts can still error. A null-on-failure array may require nullable output fields.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "arrow.cast.schema",
+        "aspect": "schema",
+        "statement": "An ArrayRef carries its datatype, not Field/Schema metadata or application validity. Preserve source validity/error distinctions separately if needed.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      }
+    ],
+    "implementation": [
+      "Specify failure policy before choosing the output field.",
+      "Check conversion-specific decimal/timezone/nested rules and test malformed, valid and input-null controls."
+    ],
+    "unknowns": [
+      "Runtime coverage here is Utf8 to Int32; decimal, timestamp, overflow and nested conversion behavior requires its own probe."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "arrow_cast::cast::cast_with_options",
+          "arrow_cast::cast::CastOptions::safe",
+          "arrow_cast::cast::can_cast_types"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      },
+      {
+        "id": "probe",
+        "kind": "runtime_observation",
+        "tests": [
+          "cast_safe_true_nulls_failed_parses_but_false_errors"
+        ],
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Only the named assertions in the recorded Cargo profile."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "arrow_cast::cast::cast_with_options",
+        "arrow_cast::cast::CastOptions::safe",
+        "arrow_cast::cast::can_cast_types"
+      ],
+      "candidate_set": [
+        "cast_with_options safe=true",
+        "cast_with_options safe=false",
+        "DataFusion CAST / TRY_CAST"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "arrow_cast::cast::cast_with_options",
+        "id": "3809055ee1c85876012267ab",
+        "kind": "function",
+        "crate": "arrow-cast",
+        "record": "operations/arrow_cast.cast.cast_with_options.json",
+        "page": "operations/arrow_cast.cast.cast_with_options.md#op-3809055ee1c85876012267ab",
+        "signature": "fn cast_with_options(array: &dyn Array, to_type: &DataType, cast_options: &CastOptions<'_>) -> Result<ArrayRef, ArrowError>"
+      },
+      {
+        "path": "arrow_cast::cast::CastOptions::safe",
+        "id": "e866b77c8af6ede1f3f743eb",
+        "kind": "struct_field",
+        "crate": "arrow-cast",
+        "record": "operations/arrow_cast.cast.CastOptions.json",
+        "page": "operations/arrow_cast.cast.CastOptions.md#op-e866b77c8af6ede1f3f743eb",
+        "signature": "safe: bool"
+      },
+      {
+        "path": "arrow_cast::cast::can_cast_types",
+        "id": "13b2ca9fae0da4f7ebf10839",
+        "kind": "function",
+        "crate": "arrow-cast",
+        "record": "operations/arrow_cast.cast.can_cast_types.json",
+        "page": "operations/arrow_cast.cast.can_cast_types.md#op-13b2ca9fae0da4f7ebf10839",
+        "signature": "fn can_cast_types(from_type: &DataType, to_type: &DataType) -> bool"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/arrow.cast.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "arrow.filter-reuse",
+    "title": "Reuse selection preparation when the workload warrants it",
+    "task_aliases": [
+      "same mask many arrays",
+      "filter predicate reuse",
+      "filter once",
+      "selection bitmap setup"
+    ],
+    "crates": [
+      "arrow-select"
+    ],
+    "input": [
+      "BooleanArray",
+      "Array",
+      "RecordBatch"
+    ],
+    "output": [
+      "FilterPredicate",
+      "ArrayRef",
+      "RecordBatch"
+    ],
+    "properties": [
+      "reuse",
+      "nulls",
+      "setup-cost"
+    ],
+    "operations": [
+      "arrow_select::filter::FilterBuilder",
+      "arrow_select::filter::FilterBuilder::optimize",
+      "arrow_select::filter::FilterPredicate::filter",
+      "arrow_select::filter::filter"
+    ],
+    "brief": "FilterBuilder separates mask preparation from applying it. Consider reusable preparation for many arrays sharing one mask; direct filter remains a simple one-shot choice.",
+    "choices": [
+      {
+        "candidate": "filter",
+        "choose_when": "One array or occasional selection",
+        "tradeoff": "Minimal orchestration; do not assume reusing a builder is faster for this workload.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "FilterBuilder / FilterPredicate",
+        "choose_when": "Repeated application of the same mask",
+        "tradeoff": "Preparation and optimize have costs; measure mask density, sizes and reuse count.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "arrow.filter-reuse.shape",
+        "aspect": "shape",
+        "statement": "Build from &BooleanArray, optionally optimize, then apply the predicate to arrays/batches with the corresponding row domain.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "arrow.filter-reuse.semantics",
+        "aspect": "semantics",
+        "statement": "Reuse changes preparation, not the expected selected values. False and null mask entries are excluded; selected order remains source order.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "arrow.filter-reuse.performance",
+        "aspect": "performance",
+        "statement": "The optimize documentation describes a tradeoff for repeated use; it is not a universal performance guarantee. Benchmark total setup plus application and keep a direct-filter control.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      }
+    ],
+    "implementation": [
+      "Reuse one built predicate only for arrays with the intended shared row domain.",
+      "Measure one-shot and repeated cases separately; compare exact outputs before timing."
+    ],
+    "unknowns": [
+      "No production throughput claim is established by the equality probe; target-dependent timing is separate."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "arrow_select::filter::FilterBuilder",
+          "arrow_select::filter::FilterBuilder::optimize",
+          "arrow_select::filter::FilterPredicate::filter",
+          "arrow_select::filter::filter"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      },
+      {
+        "id": "probe",
+        "kind": "runtime_observation",
+        "tests": [
+          "filter_null_is_not_selected_and_metadata_is_retained"
+        ],
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Only the named assertions in the recorded Cargo profile."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "arrow_select::filter::FilterBuilder",
+        "arrow_select::filter::FilterBuilder::optimize",
+        "arrow_select::filter::FilterPredicate::filter",
+        "arrow_select::filter::filter"
+      ],
+      "candidate_set": [
+        "filter",
+        "FilterBuilder / FilterPredicate"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "arrow_select::filter::FilterBuilder",
+        "id": "cffeb561fc559f04206cfdc3",
+        "kind": "struct",
+        "crate": "arrow-select",
+        "record": "operations/arrow_select.filter.FilterBuilder.json",
+        "page": "operations/arrow_select.filter.FilterBuilder.md#op-cffeb561fc559f04206cfdc3",
+        "signature": "struct FilterBuilder"
+      },
+      {
+        "path": "arrow_select::filter::FilterBuilder::optimize",
+        "id": "58a30c42976fa26d4bc93e1e",
+        "kind": "function",
+        "crate": "arrow-select",
+        "record": "operations/arrow_select.filter.FilterBuilder.json",
+        "page": "operations/arrow_select.filter.FilterBuilder.md#op-58a30c42976fa26d4bc93e1e",
+        "signature": "fn optimize(self) -> Self"
+      },
+      {
+        "path": "arrow_select::filter::FilterPredicate::filter",
+        "id": "5fe81cc083d413b3f0be1467",
+        "kind": "function",
+        "crate": "arrow-select",
+        "record": "operations/arrow_select.filter.FilterPredicate.json",
+        "page": "operations/arrow_select.filter.FilterPredicate.md#op-5fe81cc083d413b3f0be1467",
+        "signature": "fn filter(&self, values: &dyn Array) -> Result<ArrayRef, ArrowError>"
+      },
+      {
+        "path": "arrow_select::filter::filter",
+        "id": "81498df4434a7e4fa4ec4f9e",
+        "kind": "function",
+        "crate": "arrow-select",
+        "record": "operations/arrow_select.filter.filter.json",
+        "page": "operations/arrow_select.filter.filter.md#op-81498df4434a7e4fa4ec4f9e",
+        "signature": "fn filter(values: &dyn Array, predicate: &BooleanArray) -> Result<ArrayRef, ArrowError>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/arrow.filter-reuse.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "arrow.row-keys",
+    "title": "Encode composite keys for local comparisons",
+    "task_aliases": [
+      "compare composite keys",
+      "multi column sorting",
+      "dictionary row encoding",
+      "durable key bytes",
+      "row decode"
+    ],
+    "crates": [
+      "arrow-row",
+      "arrow-ord",
+      "arrow-ipc"
+    ],
+    "input": [
+      "ArrayRef",
+      "SortField",
+      "SortOptions"
+    ],
+    "output": [
+      "Rows",
+      "OwnedRow",
+      "ArrayRef"
+    ],
+    "properties": [
+      "order",
+      "nulls",
+      "dictionary",
+      "lifecycle",
+      "interchange"
+    ],
+    "operations": [
+      "arrow_row::RowConverter",
+      "arrow_row::RowConverter::convert_columns",
+      "arrow_row::RowConverter::convert_rows",
+      "arrow_row::SortField",
+      "arrow_ord::sort::lexsort_to_indices"
+    ],
+    "brief": "RowConverter is a comparison representation with converter-specific ordering, not a durable wire format. Decoding preserves values but hydrates dictionaries.",
+    "choices": [
+      {
+        "candidate": "RowConverter",
+        "choose_when": "Repeated local composite comparisons",
+        "tradeoff": "Associate rows with the same converter; configure descending/null placement per field.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "lexsort_to_indices",
+        "choose_when": "Only sorted row positions are needed",
+        "tradeoff": "Avoid managing your own encoded-row lifecycle.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "DataFrame sort/group/distinct",
+        "choose_when": "The operation is relational",
+        "tradeoff": "Keep execution and optimization in the engine.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "IPC / Parquet / specified application encoding",
+        "choose_when": "Persistence or cross-process compatibility is required",
+        "tradeoff": "Define a format/schema compatibility policy; bytes alone do not define durable identity.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "arrow.row-keys.shape",
+        "aspect": "shape",
+        "statement": "RowConverter::new takes ordered SortFields. convert_columns takes &[ArrayRef] and returns Rows; convert_rows returns Vec<ArrayRef>, not a reconstructed schema.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "arrow.row-keys.lifecycle",
+        "aspect": "lifecycle",
+        "statement": "Upstream requires compared rows to come from the same converter. Rows exposes borrowed Row views; OwnedRow owns row bytes. Row encoding may change across releases.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream",
+          "source"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "arrow.row-keys.dictionary",
+        "aspect": "dictionary",
+        "statement": "Dictionary inputs are hydrated for row encoding. The Int8/Utf8 probe decodes to Utf8, not Dictionary<Int8,Utf8>; exact dictionary assignments require preserving separate representation information or choosing another format.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream",
+          "source"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "arrow.row-keys.semantics",
+        "aspect": "semantics",
+        "statement": "SortOptions controls null placement and direction. Do not infer application collation, canonical equality or stable float encoding from lexicographic byte comparison.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      }
+    ],
+    "implementation": [
+      "Keep converter configuration associated with rows.",
+      "Validate decoded physical types and schema separately from value equality.",
+      "Use a specified interchange format when output must outlive the local comparison contract."
+    ],
+    "unknowns": [
+      "Float/nested/extension domain equivalence and cross-release serialization are not qualified.",
+      "The IPC round trip preserves dictionary type, keys and values in one pinned process/profile; it does not certify arbitrary reader/writer version pairs."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "arrow_row::RowConverter",
+          "arrow_row::RowConverter::convert_columns",
+          "arrow_row::RowConverter::convert_rows",
+          "arrow_row::SortField",
+          "arrow_ord::sort::lexsort_to_indices"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      },
+      {
+        "id": "probe",
+        "kind": "runtime_observation",
+        "tests": [
+          "row_order_changes_with_null_placement",
+          "row_decode_hydrates_dictionary_and_preserves_values",
+          "ipc_dictionary_roundtrip_keeps_representation"
+        ],
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Only the named assertions in the recorded Cargo profile."
+      },
+      {
+        "id": "source",
+        "kind": "upstream_source",
+        "path": "skill_improvement/evidence/sources/arrow-row-59.3.0/src/lib.rs",
+        "scope": "Selected exact published source; source-manifest.json retains provenance."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "arrow_row::RowConverter",
+        "arrow_row::RowConverter::convert_columns",
+        "arrow_row::RowConverter::convert_rows",
+        "arrow_row::SortField",
+        "arrow_ord::sort::lexsort_to_indices"
+      ],
+      "candidate_set": [
+        "RowConverter",
+        "lexsort_to_indices",
+        "DataFrame sort/group/distinct",
+        "IPC / Parquet / specified application encoding"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "arrow_row::RowConverter",
+        "id": "3289371bf6ccaf9946ba91e3",
+        "kind": "struct",
+        "crate": "arrow-row",
+        "record": "operations/arrow_row.RowConverter.json",
+        "page": "operations/arrow_row.RowConverter.md#op-3289371bf6ccaf9946ba91e3",
+        "signature": "struct RowConverter"
+      },
+      {
+        "path": "arrow_row::RowConverter::convert_columns",
+        "id": "610a34b7b5b57c4d480dfde7",
+        "kind": "function",
+        "crate": "arrow-row",
+        "record": "operations/arrow_row.RowConverter.json",
+        "page": "operations/arrow_row.RowConverter.md#op-610a34b7b5b57c4d480dfde7",
+        "signature": "fn convert_columns(&self, columns: &[ArrayRef]) -> Result<Rows, ArrowError>"
+      },
+      {
+        "path": "arrow_row::RowConverter::convert_rows",
+        "id": "772d3ca81b1fb03bb6f2e3a4",
+        "kind": "function",
+        "crate": "arrow-row",
+        "record": "operations/arrow_row.RowConverter.json",
+        "page": "operations/arrow_row.RowConverter.md#op-772d3ca81b1fb03bb6f2e3a4",
+        "signature": "fn convert_rows<'a, I>(&self, rows: I) -> Result<Vec<ArrayRef>, ArrowError> where I: IntoIterator<Item = Row<'a>>"
+      },
+      {
+        "path": "arrow_row::SortField",
+        "id": "e58d2d9b989df785f7f8db59",
+        "kind": "struct",
+        "crate": "arrow-row",
+        "record": "operations/arrow_row.SortField.json",
+        "page": "operations/arrow_row.SortField.md#op-e58d2d9b989df785f7f8db59",
+        "signature": "struct SortField"
+      },
+      {
+        "path": "arrow_ord::sort::lexsort_to_indices",
+        "id": "c91c43c26e3b78b4327d4c24",
+        "kind": "function",
+        "crate": "arrow-ord",
+        "record": "operations/arrow_ord.sort.lexsort_to_indices.json",
+        "page": "operations/arrow_ord.sort.lexsort_to_indices.md#op-c91c43c26e3b78b4327d4c24",
+        "signature": "fn lexsort_to_indices(columns: &[SortColumn], limit: Option<usize>) -> Result<UInt32Array, arrow_schema::ArrowError>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/arrow.row-keys.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "arrow.schema",
+    "title": "Distinguish batch validity, relational schema and metadata propagation",
+    "task_aliases": [
+      "align schema",
+      "extension metadata",
+      "non nullable field",
+      "zero column row count",
+      "physical expression adapter",
+      "schema evolution"
+    ],
+    "crates": [
+      "arrow-schema",
+      "arrow-array",
+      "datafusion-common",
+      "datafusion-physical-expr-adapter"
+    ],
+    "input": [
+      "Schema",
+      "Field",
+      "ArrayRef",
+      "DFSchema"
+    ],
+    "output": [
+      "RecordBatch",
+      "DFSchema",
+      "PhysicalExpr"
+    ],
+    "properties": [
+      "schema",
+      "metadata",
+      "nulls",
+      "validation",
+      "projection"
+    ],
+    "operations": [
+      "arrow_array::record_batch::RecordBatch::try_new",
+      "arrow_array::record_batch::RecordBatch::try_new_with_options",
+      "arrow_schema::field::Field",
+      "datafusion_common::dfschema::DFSchema",
+      "datafusion_physical_expr_adapter::schema_rewriter::DefaultPhysicalExprAdapter"
+    ],
+    "brief": "Arrow Schema/Field describe physical arrays and metadata; DFSchema adds relational qualifiers. Batch construction validates structural contracts, not application meaning. Test metadata through the exact operator path.",
+    "choices": [
+      {
+        "candidate": "RecordBatch constructors",
+        "choose_when": "Assemble arrays with explicit shape/nullability",
+        "tradeoff": "Zero-column rows need explicit row count; domain validation is separate.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "DFSchema",
+        "choose_when": "Resolve qualified relational columns",
+        "tradeoff": "Do not discard qualifiers before resolution when names collide.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "DefaultPhysicalExprAdapter",
+        "choose_when": "Adapt physical expressions to table/file schema differences",
+        "tradeoff": "Inspect missing-column, casting and nested-field policy; not arbitrary domain schema migration.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "arrow.schema.validation",
+        "aspect": "validation",
+        "statement": "RecordBatch::try_new checks field/column count, datatypes and row lengths, including top-level non-nullable fields. It does not validate domain units, keys or every semantic invariant.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "arrow.schema.metadata",
+        "aspect": "metadata",
+        "statement": "Extension annotations reside in field metadata. Direct filter preserves the tested field/schema metadata; that does not prove UNION, projection, cast or custom UDF paths preserve it.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "arrow.schema.shape",
+        "aspect": "shape",
+        "statement": "Schema alignment must account for field order, type, nullability and nested structure, not only names. DFSchema qualifiers and physical Schema are different representations.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      }
+    ],
+    "implementation": [
+      "Specify which metadata is contractual versus advisory.",
+      "Carry or reconstruct fields explicitly when kernels return only arrays.",
+      "Probe each consequential logical-to-physical operator boundary, including schema plus values."
+    ],
+    "unknowns": [
+      "Nested metadata propagation and every adapter conversion remain contract-backed discovery, not an exhaustive runtime matrix."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "arrow_array::record_batch::RecordBatch::try_new",
+          "arrow_array::record_batch::RecordBatch::try_new_with_options",
+          "arrow_schema::field::Field",
+          "datafusion_common::dfschema::DFSchema",
+          "datafusion_physical_expr_adapter::schema_rewriter::DefaultPhysicalExprAdapter"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      },
+      {
+        "id": "probe",
+        "kind": "runtime_observation",
+        "tests": [
+          "batch_construction_checks_top_level_nullability",
+          "filter_null_is_not_selected_and_metadata_is_retained"
+        ],
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Only the named assertions in the recorded Cargo profile."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "arrow_array::record_batch::RecordBatch::try_new",
+        "arrow_array::record_batch::RecordBatch::try_new_with_options",
+        "arrow_schema::field::Field",
+        "datafusion_common::dfschema::DFSchema",
+        "datafusion_physical_expr_adapter::schema_rewriter::DefaultPhysicalExprAdapter"
+      ],
+      "candidate_set": [
+        "RecordBatch constructors",
+        "DFSchema",
+        "DefaultPhysicalExprAdapter"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "arrow_array::record_batch::RecordBatch::try_new",
+        "id": "dd87dabf7102df1ff3d8ea95",
+        "kind": "function",
+        "crate": "arrow-array",
+        "record": "operations/arrow_array.record_batch.RecordBatch.json",
+        "page": "operations/arrow_array.record_batch.RecordBatch.md#op-dd87dabf7102df1ff3d8ea95",
+        "signature": "fn try_new(schema: SchemaRef, columns: Vec<ArrayRef>) -> Result<Self, ArrowError>"
+      },
+      {
+        "path": "arrow_array::record_batch::RecordBatch::try_new_with_options",
+        "id": "b3154cbd0c6729748077fc9a",
+        "kind": "function",
+        "crate": "arrow-array",
+        "record": "operations/arrow_array.record_batch.RecordBatch.json",
+        "page": "operations/arrow_array.record_batch.RecordBatch.md#op-b3154cbd0c6729748077fc9a",
+        "signature": "fn try_new_with_options(schema: SchemaRef, columns: Vec<ArrayRef>, options: &RecordBatchOptions) -> Result<Self, ArrowError>"
+      },
+      {
+        "path": "arrow_schema::field::Field",
+        "id": "66eb7ef45bcc129b0a0189cf",
+        "kind": "struct",
+        "crate": "arrow-schema",
+        "record": "operations/arrow_schema.field.Field.json",
+        "page": "operations/arrow_schema.field.Field.md#op-66eb7ef45bcc129b0a0189cf",
+        "signature": "struct Field"
+      },
+      {
+        "path": "datafusion_common::dfschema::DFSchema",
+        "id": "8af5adf56b372aa63b81eb98",
+        "kind": "struct",
+        "crate": "datafusion-common",
+        "record": "operations/datafusion_common.dfschema.DFSchema.json",
+        "page": "operations/datafusion_common.dfschema.DFSchema.md#op-8af5adf56b372aa63b81eb98",
+        "signature": "struct DFSchema"
+      },
+      {
+        "path": "datafusion_physical_expr_adapter::schema_rewriter::DefaultPhysicalExprAdapter",
+        "id": "0786dd5cec45ace7db749372",
+        "kind": "struct",
+        "crate": "datafusion-physical-expr-adapter",
+        "record": "operations/datafusion_physical_expr_adapter.schema_rewriter.DefaultPhysicalExprAdapter.json",
+        "page": "operations/datafusion_physical_expr_adapter.schema_rewriter.DefaultPhysicalExprAdapter.md#op-0786dd5cec45ace7db749372",
+        "signature": "struct DefaultPhysicalExprAdapter"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/arrow.schema.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "arrow.select",
+    "title": "Choose a row or column selection representation",
+    "task_aliases": [
+      "filter rows",
+      "Boolean mask",
+      "gather indices",
+      "reorder duplicate positions",
+      "slice contiguous range",
+      "project columns",
+      "zero columns"
+    ],
+    "crates": [
+      "arrow-select",
+      "arrow-array"
+    ],
+    "input": [
+      "RecordBatch",
+      "Array",
+      "BooleanArray",
+      "integer indices"
+    ],
+    "output": [
+      "RecordBatch",
+      "ArrayRef"
+    ],
+    "properties": [
+      "nulls",
+      "order",
+      "duplicates",
+      "bounds",
+      "metadata",
+      "zero-column"
+    ],
+    "operations": [
+      "arrow_select::filter::filter_record_batch",
+      "arrow_select::take::take",
+      "arrow_select::take::take_record_batch",
+      "arrow_array::record_batch::RecordBatch::slice",
+      "arrow_array::record_batch::RecordBatch::project",
+      "arrow_array::record_batch::RecordBatch::try_new_with_options",
+      "arrow_select::take::take_arrays"
+    ],
+    "brief": "Select by the representation you have: mask, indices, contiguous range, or column positions. Nullable indices, non-nullable fields and zero-column batches change the valid composition.",
+    "choices": [
+      {
+        "candidate": "filter_record_batch",
+        "choose_when": "Keep true mask positions in source order",
+        "tradeoff": "False and null mask positions are excluded.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "take / take_arrays / take_record_batch",
+        "choose_when": "Gather in requested order, including repeated indices",
+        "tradeoff": "Array take and multi-array take_arrays expose checked bounds; the batch helper does not expose options.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "RecordBatch::slice / project",
+        "choose_when": "Contiguous rows / selected columns",
+        "tradeoff": "Slice may retain shared source allocations; projection does not select rows.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "DataFrame filter/select",
+        "choose_when": "Selection belongs within an optimizable relation",
+        "tradeoff": "Avoid hiding pushdown opportunities by selecting only after collection.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "arrow.select.shape",
+        "aspect": "shape",
+        "statement": "filter_record_batch takes a batch and BooleanArray and returns Result<RecordBatch>. Array take takes values, integer indices and optional TakeOptions and returns Result<ArrayRef>. Mask length must fit the source selection domain.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "arrow.select.null-order",
+        "aspect": "null-order",
+        "statement": "Filter keeps source order and excludes false/null mask entries. Take preserves index order and multiplicity; null indices introduce null values.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "arrow.select.bounds",
+        "aspect": "bounds",
+        "statement": "TakeOptions.check_bounds=true requests checked errors. With unchecked indices, out-of-bounds access can panic despite Result. take_record_batch calls array take with None in this pin.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream",
+          "source"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "arrow.select.schema",
+        "aspect": "schema",
+        "statement": "Gathering null indices may violate a non-nullable output field. RecordBatch construction checks top-level nullability. Choose compatible output fields; an array result alone does not carry schema metadata.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "arrow.select.empty-shape",
+        "aspect": "empty-shape",
+        "statement": "A zero-column batch can have rows via RecordBatchOptions.row_count. filter_record_batch retains the selected count; take_record_batch in 59.3.0 reconstructs with try_new and errors. For zero columns, validate non-null indices against input row count and build the output with explicit indices.len() row count.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream",
+          "source"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "arrow.select.ownership",
+        "aspect": "ownership",
+        "statement": "Slices and some selection paths share buffers. Logical output size does not bound retained allocation size.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      }
+    ],
+    "implementation": [
+      "Choose mask/index/range/column semantics before the API.",
+      "Check indices and output nullability, preserving field/schema metadata deliberately.",
+      "For zero columns, use explicit row-count construction and retain the same index-domain validation.",
+      "Use take_arrays for a shared gather across columns before constructing a batch with the desired output fields/options."
+    ],
+    "unknowns": [
+      "Tests cover Int32/UInt32 and tested metadata; nested/view layouts and every datatype are not qualified."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "arrow_select::filter::filter_record_batch",
+          "arrow_select::take::take",
+          "arrow_select::take::take_record_batch",
+          "arrow_array::record_batch::RecordBatch::slice",
+          "arrow_array::record_batch::RecordBatch::project",
+          "arrow_array::record_batch::RecordBatch::try_new_with_options"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      },
+      {
+        "id": "probe",
+        "kind": "runtime_observation",
+        "tests": [
+          "filter_null_is_not_selected_and_metadata_is_retained",
+          "take_preserves_requested_order_duplicates_and_null_indices",
+          "empty_schema_exposes_different_batch_selection_contracts",
+          "batch_construction_checks_top_level_nullability"
+        ],
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Only the named assertions in the recorded Cargo profile."
+      },
+      {
+        "id": "source",
+        "kind": "upstream_source",
+        "path": "skill_improvement/evidence/sources/arrow-select-59.3.0/src/take.rs",
+        "scope": "Selected exact published source; source-manifest.json retains provenance."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "arrow_select::filter::filter_record_batch",
+        "arrow_select::take::take",
+        "arrow_select::take::take_record_batch",
+        "arrow_array::record_batch::RecordBatch::slice",
+        "arrow_array::record_batch::RecordBatch::project",
+        "arrow_array::record_batch::RecordBatch::try_new_with_options"
+      ],
+      "candidate_set": [
+        "filter_record_batch",
+        "take / take_record_batch",
+        "RecordBatch::slice / project",
+        "DataFrame filter/select"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "arrow_select::filter::filter_record_batch",
+        "id": "50a068de42a854681b747251",
+        "kind": "function",
+        "crate": "arrow-select",
+        "record": "operations/arrow_select.filter.filter_record_batch.json",
+        "page": "operations/arrow_select.filter.filter_record_batch.md#op-50a068de42a854681b747251",
+        "signature": "fn filter_record_batch(record_batch: &RecordBatch, predicate: &BooleanArray) -> Result<RecordBatch, ArrowError>"
+      },
+      {
+        "path": "arrow_select::take::take",
+        "id": "4197d454d308f4ceadb20600",
+        "kind": "function",
+        "crate": "arrow-select",
+        "record": "operations/arrow_select.take.take.json",
+        "page": "operations/arrow_select.take.take.md#op-4197d454d308f4ceadb20600",
+        "signature": "fn take(values: &dyn Array, indices: &dyn Array, options: Option<TakeOptions>) -> Result<ArrayRef, arrow_schema::ArrowError>"
+      },
+      {
+        "path": "arrow_select::take::take_record_batch",
+        "id": "929c00ffe22d86d208c23db7",
+        "kind": "function",
+        "crate": "arrow-select",
+        "record": "operations/arrow_select.take.take_record_batch.json",
+        "page": "operations/arrow_select.take.take_record_batch.md#op-929c00ffe22d86d208c23db7",
+        "signature": "fn take_record_batch(record_batch: &RecordBatch, indices: &dyn Array) -> Result<RecordBatch, arrow_schema::ArrowError>"
+      },
+      {
+        "path": "arrow_array::record_batch::RecordBatch::slice",
+        "id": "a79af188f3899a383689384f",
+        "kind": "function",
+        "crate": "arrow-array",
+        "record": "operations/arrow_array.record_batch.RecordBatch.json",
+        "page": "operations/arrow_array.record_batch.RecordBatch.md#op-a79af188f3899a383689384f",
+        "signature": "fn slice(&self, offset: usize, length: usize) -> RecordBatch"
+      },
+      {
+        "path": "arrow_array::record_batch::RecordBatch::project",
+        "id": "124dc8bac9a1c739ad939083",
+        "kind": "function",
+        "crate": "arrow-array",
+        "record": "operations/arrow_array.record_batch.RecordBatch.json",
+        "page": "operations/arrow_array.record_batch.RecordBatch.md#op-124dc8bac9a1c739ad939083",
+        "signature": "fn project(&self, indices: &[usize]) -> Result<RecordBatch, ArrowError>"
+      },
+      {
+        "path": "arrow_array::record_batch::RecordBatch::try_new_with_options",
+        "id": "b3154cbd0c6729748077fc9a",
+        "kind": "function",
+        "crate": "arrow-array",
+        "record": "operations/arrow_array.record_batch.RecordBatch.json",
+        "page": "operations/arrow_array.record_batch.RecordBatch.md#op-b3154cbd0c6729748077fc9a",
+        "signature": "fn try_new_with_options(schema: SchemaRef, columns: Vec<ArrayRef>, options: &RecordBatchOptions) -> Result<Self, ArrowError>"
+      },
+      {
+        "path": "arrow_select::take::take_arrays",
+        "id": "b8024b1f5c1204e51b646dba",
+        "kind": "function",
+        "crate": "arrow-select",
+        "record": "operations/arrow_select.take.take_arrays.json",
+        "page": "operations/arrow_select.take.take_arrays.md#op-b8024b1f5c1204e51b646dba",
+        "signature": "fn take_arrays(arrays: &[ArrayRef], indices: &dyn Array, options: Option<TakeOptions>) -> Result<Vec<ArrayRef>, arrow_schema::ArrowError>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/arrow.select.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "df.aggregate-window",
+    "title": "Reuse aggregate/window functions and characterize state before extensions",
+    "task_aliases": [
+      "aggregate merge state",
+      "groups accumulator",
+      "sliding window retract",
+      "window frame peers",
+      "partial aggregation",
+      "count distinct"
+    ],
+    "crates": [
+      "datafusion-functions-aggregate",
+      "datafusion-functions-aggregate-common",
+      "datafusion-functions-window",
+      "datafusion-expr",
+      "datafusion-expr-common"
+    ],
+    "input": [
+      "ArrayRef",
+      "group indices",
+      "window partition",
+      "state arrays"
+    ],
+    "output": [
+      "ScalarValue",
+      "state arrays",
+      "ArrayRef"
+    ],
+    "properties": [
+      "state",
+      "merge",
+      "retract",
+      "order",
+      "nulls",
+      "frames"
+    ],
+    "operations": [
+      "datafusion_expr::udaf::AggregateUDFImpl",
+      "datafusion_expr_common::accumulator::Accumulator",
+      "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+      "datafusion_expr::partition_evaluator::PartitionEvaluator",
+      "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter"
+    ],
+    "brief": "Choose built-in aggregates/windows first. For extensions, partial state, merge, grouped layout and window retraction are distinct contracts; an accumulator is not merely a final reduction function.",
+    "choices": [
+      {
+        "candidate": "built-in aggregate/window",
+        "choose_when": "Existing semantics and frames fit",
+        "tradeoff": "Check empty/null/order/distinct behavior and registration.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "Accumulator",
+        "choose_when": "Custom stateful aggregate",
+        "tradeoff": "Consumes batches; state output must compose correctly with merge_batch and declared state fields.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "GroupsAccumulator / adapter",
+        "choose_when": "Many groups need shared state layout",
+        "tradeoff": "Specialization can reduce overhead but must preserve groups/null/emit semantics; benchmark rather than assuming.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "PartitionEvaluator / retract-capable aggregate",
+        "choose_when": "Window-specific or moving-frame evaluation",
+        "tradeoff": "Capability hooks determine available evaluation paths; returning unsupported/default may be correct.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "df.aggregate-window.state",
+        "aspect": "state",
+        "statement": "Accumulator update_batch receives arrays, state returns partial ScalarValues, merge_batch consumes state arrays, and evaluate produces a final ScalarValue. Declared state fields must agree with both serialization and merge.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.aggregate-window.frames",
+        "aspect": "frames",
+        "statement": "Window partitioning, ORDER BY, peer groups and frame bounds determine rows contributing to output. Default ordered RANGE and explicit ROWS can differ on duplicate ordering keys.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.aggregate-window.retraction",
+        "aspect": "retraction",
+        "statement": "Sliding windows may require retract_batch or specialized partition evaluation. Advertise support only when removal/order/empty-state semantics are correct.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.aggregate-window.memory",
+        "aspect": "memory",
+        "statement": "Accumulator size reporting and groups state influence resource accounting. A groups implementation is not an automatic throughput or memory improvement.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      }
+    ],
+    "implementation": [
+      "Look up the built-in function and its signature/null/frame behavior.",
+      "For custom aggregates test partitioned partial->merge against single-pass output.",
+      "For moving windows test duplicate keys, empty frames and retractions; inspect state schema and memory reporting."
+    ],
+    "unknowns": [
+      "Runtime coverage compares ordered RANGE/ROWS counts. Custom merge/retract implementations and groups performance require additional probes."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "datafusion_expr::udaf::AggregateUDFImpl",
+          "datafusion_expr_common::accumulator::Accumulator",
+          "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+          "datafusion_expr::partition_evaluator::PartitionEvaluator",
+          "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      },
+      {
+        "id": "probe",
+        "kind": "runtime_observation",
+        "tests": [
+          "joins_sets_and_window_frames_have_distinct_cardinality"
+        ],
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Only the named assertions in the recorded Cargo profile."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "datafusion_expr::udaf::AggregateUDFImpl",
+        "datafusion_expr_common::accumulator::Accumulator",
+        "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+        "datafusion_expr::partition_evaluator::PartitionEvaluator",
+        "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter"
+      ],
+      "candidate_set": [
+        "built-in aggregate/window",
+        "Accumulator",
+        "GroupsAccumulator / adapter",
+        "PartitionEvaluator / retract-capable aggregate"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "datafusion_expr::udaf::AggregateUDFImpl",
+        "id": "9f175a3c2e0fb1ef9e53572c",
+        "kind": "trait",
+        "crate": "datafusion-expr",
+        "record": "operations/datafusion_expr.udaf.AggregateUDFImpl.json",
+        "page": "operations/datafusion_expr.udaf.AggregateUDFImpl.md#op-9f175a3c2e0fb1ef9e53572c",
+        "signature": "trait AggregateUDFImpl: Debug + DynEq + DynHash + Send + Sync + Any"
+      },
+      {
+        "path": "datafusion_expr_common::accumulator::Accumulator",
+        "id": "2911d7ffb2098886b7dd6ba8",
+        "kind": "trait",
+        "crate": "datafusion-expr-common",
+        "record": "operations/datafusion_expr_common.accumulator.Accumulator.json",
+        "page": "operations/datafusion_expr_common.accumulator.Accumulator.md#op-2911d7ffb2098886b7dd6ba8",
+        "signature": "trait Accumulator: Send + Sync + Debug + std::any::Any"
+      },
+      {
+        "path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+        "id": "9c9c43a7d8bf357eb3adcb6e",
+        "kind": "trait",
+        "crate": "datafusion-expr-common",
+        "record": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.json",
+        "page": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md#op-9c9c43a7d8bf357eb3adcb6e",
+        "signature": "trait GroupsAccumulator: Send + std::any::Any"
+      },
+      {
+        "path": "datafusion_expr::partition_evaluator::PartitionEvaluator",
+        "id": "28021de2fba820ec392e9ef2",
+        "kind": "trait",
+        "crate": "datafusion-expr",
+        "record": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.json",
+        "page": "operations/datafusion_expr.partition_evaluator.PartitionEvaluator.md#op-28021de2fba820ec392e9ef2",
+        "signature": "trait PartitionEvaluator: Debug + Send + std::any::Any"
+      },
+      {
+        "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+        "id": "d2e10609875cb34a913017d4",
+        "kind": "struct",
+        "crate": "datafusion-functions-aggregate-common",
+        "record": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.json",
+        "page": "operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.md#op-d2e10609875cb34a913017d4",
+        "signature": "struct GroupsAccumulatorAdapter"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/df.aggregate-window.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "df.coalesce",
+    "title": "Use coalesce through its planning contract",
+    "task_aliases": [
+      "first non null value",
+      "coalesce fallback",
+      "nullable default",
+      "coalesce direct invoke"
+    ],
+    "crates": [
+      "datafusion-functions",
+      "datafusion-expr",
+      "datafusion-optimizer"
+    ],
+    "input": [
+      "Expr",
+      "Field",
+      "DataType"
+    ],
+    "output": [
+      "Expr",
+      "ColumnarValue"
+    ],
+    "properties": [
+      "nulls",
+      "coercion",
+      "short-circuit",
+      "planning",
+      "metadata"
+    ],
+    "operations": [
+      "datafusion_functions::core::coalesce::CoalesceFunc",
+      "datafusion_functions::core::coalesce",
+      "datafusion_functions::core::expr_fn::coalesce"
+    ],
+    "brief": "In DataFusion 55.1.0 coalesce is simplified to CASE; its invocation hook returns an internal error if called directly. Use the analyzer/simplifier/planner path, including custom coercion and return-field logic.",
+    "choices": [
+      {
+        "candidate": "SQL coalesce / expr_fn::coalesce",
+        "choose_when": "Return the first non-null compatible expression for each row",
+        "tradeoff": "Enter normal planning so the built-in can coerce and rewrite to CASE.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "Arrow array selection / explicit CASE",
+        "choose_when": "Work directly with arrays or need a different conditional policy",
+        "tradeoff": "Match null, type, scalar/array and short-circuit semantics explicitly.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "df.coalesce.inputs",
+        "aspect": "inputs",
+        "statement": "At least one argument is required. CoalesceFunc declares Signature::user_defined with Immutable volatility and coerce_types uses try_type_union_resolution. A generic constructor alone does not establish argument compatibility.",
+        "kind": "upstream_source",
+        "evidence": [
+          "source"
+        ],
+        "conditions": [
+          "DataFusion functions 55.1.0; arguments must pass the normal coercion and simplification pipeline"
+        ]
+      },
+      {
+        "id": "df.coalesce.output-field",
+        "aspect": "output-field",
+        "statement": "return_field_from_args returns the first non-Null datatype after argument coercion (or the first datatype when all are Null). Output is nullable only when all argument fields are nullable. It constructs a new Field named coalesce; do not infer input metadata propagation.",
+        "kind": "upstream_source",
+        "evidence": [
+          "source"
+        ],
+        "conditions": [
+          "DataFusion functions 55.1.0; arguments must pass the normal coercion and simplification pipeline"
+        ]
+      },
+      {
+        "id": "df.coalesce.rewrite",
+        "aspect": "rewrite",
+        "statement": "simplify rejects zero arguments, returns the sole argument unchanged, or builds CASE WHEN arg IS NOT NULL THEN arg ... ELSE last_arg. invoke_with_args returns an internal error stating coalesce should have been simplified to case.",
+        "kind": "upstream_source",
+        "evidence": [
+          "source"
+        ],
+        "conditions": [
+          "DataFusion functions 55.1.0; arguments must pass the normal coercion and simplification pipeline"
+        ]
+      },
+      {
+        "id": "df.coalesce.conditional",
+        "aspect": "conditional",
+        "statement": "short_circuits is true. conditional_arguments identifies the first argument as eager and later arguments as lazy. Do not equate these hooks with arbitrary user-code side-effect guarantees.",
+        "kind": "upstream_source",
+        "evidence": [
+          "source"
+        ],
+        "conditions": [
+          "DataFusion functions 55.1.0; arguments must pass the normal coercion and simplification pipeline"
+        ]
+      }
+    ],
+    "implementation": [
+      "Resolve the function in the intended session registry and feature profile.",
+      "Construct expressions, then use normal analysis/simplification/physical planning; do not invoke CoalesceFunc as a standalone Arrow kernel.",
+      "Assert both output field and values, including all-null, non-null fallback, mixed types and no-argument controls."
+    ],
+    "unknowns": [
+      "The probe covers Int32 nullable/non-null fallback and Int32/Int64 coercion. Nested/extension metadata and arbitrary side effects are not tested."
+    ],
+    "evidence": [
+      {
+        "id": "source",
+        "kind": "upstream_source",
+        "path": "skill_improvement/evidence/implementation/source-exports/datafusion-functions-55.1.0/src/core/coalesce.rs",
+        "scope": "Published crate source; source-exports sibling SOURCE_MANIFEST.json records archive and file digests."
+      },
+      {
+        "id": "probe",
+        "kind": "runtime_observation",
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "tests": [
+          "coalesce_uses_planning_and_preserves_nonnull_fallback"
+        ],
+        "scope": "Named test assertions only, recorded feature profile."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "datafusion_functions::core::coalesce::CoalesceFunc",
+        "datafusion_functions::core::coalesce",
+        "datafusion_functions::core::expr_fn::coalesce"
+      ],
+      "candidate_set": [
+        "SQL coalesce / expr_fn::coalesce",
+        "Arrow array selection / explicit CASE"
+      ],
+      "reason": "Review changed coercion, simplification, invocation and field behavior."
+    },
+    "resolved_operations": [
+      {
+        "path": "datafusion_functions::core::coalesce::CoalesceFunc",
+        "id": "d9d68100dd13733fb4da39cc",
+        "kind": "struct",
+        "crate": "datafusion-functions",
+        "record": "operations/datafusion_functions.core.coalesce.CoalesceFunc.json",
+        "page": "operations/datafusion_functions.core.coalesce.CoalesceFunc.md#op-d9d68100dd13733fb4da39cc",
+        "signature": "struct CoalesceFunc"
+      },
+      {
+        "path": "datafusion_functions::core::coalesce",
+        "id": "0f933f3a0204e95d603daacd",
+        "kind": "module",
+        "crate": "datafusion-functions",
+        "record": "modules/datafusion_functions.core.coalesce.json",
+        "page": "modules/datafusion_functions.core.coalesce.md#op-0f933f3a0204e95d603daacd",
+        "signature": "mod coalesce"
+      },
+      {
+        "path": "datafusion_functions::core::coalesce",
+        "id": "fa1b2bd53aae2f1f6f4000ff",
+        "kind": "function",
+        "crate": "datafusion-functions",
+        "record": "operations/datafusion_functions.core.coalesce.json",
+        "page": "operations/datafusion_functions.core.coalesce.md#op-fa1b2bd53aae2f1f6f4000ff",
+        "signature": "fn coalesce() -> std::sync::Arc<datafusion_expr::ScalarUDF>"
+      },
+      {
+        "path": "datafusion_functions::core::expr_fn::coalesce",
+        "id": "939549e8bea4a39d41107f07",
+        "kind": "function",
+        "crate": "datafusion-functions",
+        "record": "operations/datafusion_functions.core.expr_fn.coalesce.json",
+        "page": "operations/datafusion_functions.core.expr_fn.coalesce.md#op-939549e8bea4a39d41107f07",
+        "signature": "fn coalesce(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/df.coalesce.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "df.consume",
+    "title": "Choose stream, materialization, cache and resource boundaries",
+    "task_aliases": [
+      "consume incrementally",
+      "large query result",
+      "stream memory budget",
+      "blocking sort",
+      "cache repeat execution",
+      "cancel stream"
+    ],
+    "crates": [
+      "datafusion",
+      "datafusion-execution",
+      "datafusion-physical-plan"
+    ],
+    "input": [
+      "DataFrame",
+      "RuntimeEnv"
+    ],
+    "output": [
+      "SendableRecordBatchStream",
+      "RecordBatch",
+      "DataFrame"
+    ],
+    "properties": [
+      "streaming",
+      "memory",
+      "spill",
+      "order",
+      "errors",
+      "lifecycle",
+      "reuse"
+    ],
+    "operations": [
+      "datafusion::dataframe::DataFrame::collect",
+      "datafusion::dataframe::DataFrame::execute_stream",
+      "datafusion::dataframe::DataFrame::execute_stream_partitioned",
+      "datafusion::dataframe::DataFrame::cache",
+      "datafusion_execution::runtime_env::RuntimeEnvBuilder::with_memory_limit",
+      "datafusion_execution::disk_manager::DiskManagerBuilder"
+    ],
+    "brief": "Streaming avoids retaining every output batch in the terminal API; it does not bound the query working set. A blocking sort can still fail for memory even when output is streamed.",
+    "choices": [
+      {
+        "candidate": "collect",
+        "choose_when": "All output is intentionally retained",
+        "tradeoff": "Returns Vec<RecordBatch>; memory includes result retention.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "execute_stream",
+        "choose_when": "Incremental single-stream consumer",
+        "tradeoff": "Planning and stream polling can fail separately; consumer retention still matters.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "execute_stream_partitioned",
+        "choose_when": "Caller can manage output partition concurrency",
+        "tradeoff": "Partition streams do not imply global ordering.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "cache",
+        "choose_when": "Reuse materialized results",
+        "tradeoff": "Executes and stores results in memory; a cloned plan/view is not the same guarantee.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "df.consume.shape",
+        "aspect": "shape",
+        "statement": "Terminal methods consume DataFrame. execute_stream asynchronously creates a physical plan and returns a fallible RecordBatch stream; collect returns a batch vector. Single-stream output is not an implicit sort.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.consume.memory",
+        "aspect": "memory",
+        "statement": "Operator state, prefetch, caches and consumer batches contribute memory. Default pool is unbounded; disk manager defaults to OS temporary storage. with_memory_limit explicitly does not account for every allocation.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream",
+          "source"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.consume.spill",
+        "aspect": "spill",
+        "statement": "Configure a participating pool and operator-specific spill behavior, directory/capacity and concurrency. A pool budget is not an RSS bound. Inspect EXPLAIN/metrics and execute the workload.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.consume.lifecycle",
+        "aspect": "lifecycle",
+        "statement": "Upstream documents dropping the output stream aborts its execution and frees associated resources. This is not a guarantee for unrelated application background tasks or retained batch buffers.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      }
+    ],
+    "implementation": [
+      "Choose terminal API from ownership and consumption requirements.",
+      "Inspect blocking operators and configure their resource policy before execution.",
+      "Handle failures both creating and polling streams; test cancellation if operational correctness depends on it."
+    ],
+    "unknowns": [
+      "The probe proves a 1-byte pool sort fails and stream/collect values agree. It does not measure RSS, spill throughput, cancellation latency or all operator accounting."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "datafusion::dataframe::DataFrame::collect",
+          "datafusion::dataframe::DataFrame::execute_stream",
+          "datafusion::dataframe::DataFrame::execute_stream_partitioned",
+          "datafusion::dataframe::DataFrame::cache",
+          "datafusion_execution::runtime_env::RuntimeEnvBuilder::with_memory_limit",
+          "datafusion_execution::disk_manager::DiskManagerBuilder"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      },
+      {
+        "id": "probe",
+        "kind": "runtime_observation",
+        "tests": [
+          "stream_collect_cache_and_sort_resource_error"
+        ],
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Only the named assertions in the recorded Cargo profile."
+      },
+      {
+        "id": "source",
+        "kind": "upstream_source",
+        "path": "skill_improvement/evidence/sources/datafusion-execution-55.1.0/src/disk_manager.rs",
+        "scope": "Selected exact published source; source-manifest.json retains provenance."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "datafusion::dataframe::DataFrame::collect",
+        "datafusion::dataframe::DataFrame::execute_stream",
+        "datafusion::dataframe::DataFrame::execute_stream_partitioned",
+        "datafusion::dataframe::DataFrame::cache",
+        "datafusion_execution::runtime_env::RuntimeEnvBuilder::with_memory_limit",
+        "datafusion_execution::disk_manager::DiskManagerBuilder"
+      ],
+      "candidate_set": [
+        "collect",
+        "execute_stream",
+        "execute_stream_partitioned",
+        "cache"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "datafusion::dataframe::DataFrame::collect",
+        "id": "c2a2c9a0147637ad4b86374e",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-c2a2c9a0147637ad4b86374e",
+        "signature": "async fn collect(self) -> Result<Vec<RecordBatch>>"
+      },
+      {
+        "path": "datafusion::dataframe::DataFrame::execute_stream",
+        "id": "acdcda8e3349a26da03fd615",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-acdcda8e3349a26da03fd615",
+        "signature": "async fn execute_stream(self) -> Result<SendableRecordBatchStream>"
+      },
+      {
+        "path": "datafusion::dataframe::DataFrame::execute_stream_partitioned",
+        "id": "73ff2f187bcd18e356825de9",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-73ff2f187bcd18e356825de9",
+        "signature": "async fn execute_stream_partitioned(self) -> Result<Vec<SendableRecordBatchStream>>"
+      },
+      {
+        "path": "datafusion::dataframe::DataFrame::cache",
+        "id": "46de08d8309fcb4f0782d08e",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-46de08d8309fcb4f0782d08e",
+        "signature": "async fn cache(self) -> Result<DataFrame>"
+      },
+      {
+        "path": "datafusion_execution::runtime_env::RuntimeEnvBuilder::with_memory_limit",
+        "id": "67b941dfc4573dd8aea8cf06",
+        "kind": "function",
+        "crate": "datafusion-execution",
+        "record": "operations/datafusion_execution.runtime_env.RuntimeEnvBuilder.json",
+        "page": "operations/datafusion_execution.runtime_env.RuntimeEnvBuilder.md#op-67b941dfc4573dd8aea8cf06",
+        "signature": "fn with_memory_limit(self, max_memory: usize, memory_fraction: f64) -> Self"
+      },
+      {
+        "path": "datafusion_execution::disk_manager::DiskManagerBuilder",
+        "id": "3c6231e792a03a3bc83aef37",
+        "kind": "struct",
+        "crate": "datafusion-execution",
+        "record": "operations/datafusion_execution.disk_manager.DiskManagerBuilder.json",
+        "page": "operations/datafusion_execution.disk_manager.DiskManagerBuilder.md#op-3c6231e792a03a3bc83aef37",
+        "signature": "struct DiskManagerBuilder"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/df.consume.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "df.expressions",
+    "title": "Separate expression construction, coercion and evaluation",
+    "task_aliases": [
+      "build expression",
+      "incompatible types",
+      "simplify direct expression",
+      "coalesce constructor",
+      "type coercion"
+    ],
+    "crates": [
+      "datafusion-expr",
+      "datafusion-optimizer",
+      "datafusion-physical-expr",
+      "datafusion-functions"
+    ],
+    "input": [
+      "Expr",
+      "DFSchema",
+      "ScalarUDF"
+    ],
+    "output": [
+      "Expr",
+      "PhysicalExpr",
+      "ColumnarValue"
+    ],
+    "properties": [
+      "coercion",
+      "nulls",
+      "errors",
+      "planning"
+    ],
+    "operations": [
+      "datafusion_expr::udf::ScalarUDF::call",
+      "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::coerce",
+      "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::simplify",
+      "datafusion::execution::context::SessionContext::create_physical_expr"
+    ],
+    "brief": "expr_fn helpers and ScalarUDF::call construct expressions. Ordinary analysis supplies type coercion; a direct simplifier call has type preconditions and may leave an incompatible expression unsimplified or fail.",
+    "choices": [
+      {
+        "candidate": "SQL / DataFrame analysis",
+        "choose_when": "Ordinary query construction",
+        "tradeoff": "Uses the session analyzer/planner pipeline; still inspect inferred output fields.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "ExprSimplifier::coerce then simplify",
+        "choose_when": "Direct expression processing outside analysis",
+        "tradeoff": "Provide the correct DFSchema and SimplifyContext; not every incompatible pair has a coercion.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "physical expression evaluation",
+        "choose_when": "Typed expression applied to batches",
+        "tradeoff": "ColumnarValue may be scalar or array; field/type/length context matters.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "df.expressions.construction",
+        "aspect": "construction",
+        "statement": "ScalarUDF::call(Vec<Expr>) -> Expr does not promise validation or casts. ExprSchemable can infer type/nullability against a schema; it is not execution.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.expressions.simplification",
+        "aspect": "simplification",
+        "statement": "simplify expects types compatible with operator requirements. coerce(expr, schema) -> Result<Expr> is separate. An uncoerced call need not always error; it may remain unsimplified.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.expressions.evaluation",
+        "aspect": "evaluation",
+        "statement": "Use planning context and registry appropriate to the query. Failures can occur during coercion, physical planning or evaluation; test all relevant boundaries.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      }
+    ],
+    "implementation": [
+      "Identify whether the caller enters normal analysis or bypasses it.",
+      "For direct processing, coerce with the intended schema, then simplify and plan.",
+      "Check both output datatype and value; include an unsupported pair control."
+    ],
+    "unknowns": [
+      "Mixed integer addition is the runtime example; it is not a complete coercion matrix."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "datafusion_expr::udf::ScalarUDF::call",
+          "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::coerce",
+          "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::simplify",
+          "datafusion::execution::context::SessionContext::create_physical_expr"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      },
+      {
+        "id": "probe",
+        "kind": "runtime_observation",
+        "tests": [
+          "expressions_require_coercion_before_direct_simplification"
+        ],
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Only the named assertions in the recorded Cargo profile."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "datafusion_expr::udf::ScalarUDF::call",
+        "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::coerce",
+        "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::simplify",
+        "datafusion::execution::context::SessionContext::create_physical_expr"
+      ],
+      "candidate_set": [
+        "SQL / DataFrame analysis",
+        "ExprSimplifier::coerce then simplify",
+        "physical expression evaluation"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "datafusion_expr::udf::ScalarUDF::call",
+        "id": "5bee7387f4bfbc22e08e3489",
+        "kind": "function",
+        "crate": "datafusion-expr",
+        "record": "operations/datafusion_expr.udf.ScalarUDF.json",
+        "page": "operations/datafusion_expr.udf.ScalarUDF.md#op-5bee7387f4bfbc22e08e3489",
+        "signature": "fn call(&self, args: Vec<Expr>) -> Expr"
+      },
+      {
+        "path": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::coerce",
+        "id": "ab6282f359cd840ffaae3af5",
+        "kind": "function",
+        "crate": "datafusion-optimizer",
+        "record": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.json",
+        "page": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md#op-ab6282f359cd840ffaae3af5",
+        "signature": "fn coerce(&self, expr: Expr, schema: &DFSchema) -> Result<Expr>"
+      },
+      {
+        "path": "datafusion_optimizer::simplify_expressions::expr_simplifier::ExprSimplifier::simplify",
+        "id": "24b1e713502751d6ff36f0a4",
+        "kind": "function",
+        "crate": "datafusion-optimizer",
+        "record": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.json",
+        "page": "operations/datafusion_optimizer.simplify_expressions.expr_simplifier.ExprSimplifier.md#op-24b1e713502751d6ff36f0a4",
+        "signature": "fn simplify(&self, expr: Expr) -> Result<Expr>"
+      },
+      {
+        "path": "datafusion::execution::context::SessionContext::create_physical_expr",
+        "id": "11fb97c3cf205078f236f9c2",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.execution.context.SessionContext.json",
+        "page": "operations/datafusion.execution.context.SessionContext.md#op-11fb97c3cf205078f236f9c2",
+        "signature": "fn create_physical_expr(&self, expr: Expr, df_schema: &DFSchema) -> Result<Arc<dyn PhysicalExpr>>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/df.expressions.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "df.functions",
+    "title": "Discover built-ins in the actual session before writing a UDF",
+    "task_aliases": [
+      "built in scalar functions",
+      "nested list array map",
+      "SQL aliases",
+      "table function",
+      "return field volatility",
+      "custom UDF alternative"
+    ],
+    "crates": [
+      "datafusion-functions",
+      "datafusion-functions-nested",
+      "datafusion-functions-aggregate",
+      "datafusion-functions-window",
+      "datafusion-functions-table",
+      "datafusion-expr"
+    ],
+    "input": [
+      "Expr",
+      "ColumnarValue",
+      "SessionState"
+    ],
+    "output": [
+      "Expr",
+      "ColumnarValue",
+      "TableProvider"
+    ],
+    "properties": [
+      "registry",
+      "features",
+      "coercion",
+      "volatility",
+      "nulls",
+      "metadata"
+    ],
+    "operations": [
+      "datafusion::execution::session_state::SessionState::scalar_functions",
+      "datafusion::execution::session_state::SessionState::aggregate_functions",
+      "datafusion::execution::session_state::SessionState::window_functions",
+      "datafusion::execution::session_state::SessionState::table_functions",
+      "datafusion_expr::udf::ScalarUDFImpl"
+    ],
+    "brief": "Search the SQL catalog, runtime registry and defining function crate. An indexed constructor is not proof of registration under a consumer's feature profile; names/aliases, signature and return-field logic are separate facts.",
+    "choices": [
+      {
+        "candidate": "built-in expr_fn / SQL function",
+        "choose_when": "Existing semantics fit the query",
+        "tradeoff": "Keep optimizer visibility; inspect null/coercion/volatility contracts.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "Arrow kernel",
+        "choose_when": "Already operating on arrays inside an execution boundary",
+        "tradeoff": "Avoid unnecessary SQL/UDF registration but manage schema and scalar broadcasting.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "custom ScalarUDFImpl",
+        "choose_when": "Semantics genuinely differ",
+        "tradeoff": "Declare signature, volatility, invocation and output-field behavior; prove any optimizer hooks.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "table function",
+        "choose_when": "Arguments produce a relation rather than a scalar column",
+        "tradeoff": "Registration and output TableProvider differ from scalar functions.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "df.functions.discovery",
+        "aspect": "discovery",
+        "statement": "SessionState exposes scalar/aggregate/window/table function maps. The captured registry records registered names, canonical names, aliases and signature Debug text for one explicit profile.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.functions.shape",
+        "aspect": "shape",
+        "statement": "ScalarUDFImpl receives invocation arguments including ColumnarValue inputs and row-count/field context. Inspect invoke_with_args and return_field_from_args; scalar versus array and nullable output cannot be inferred from the SQL name.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.functions.optimizer",
+        "aspect": "optimizer",
+        "statement": "Volatility, simplification, ordering/bounds and short-circuit hooks affect planning. Defaults may be appropriate; incorrect advertised properties can change results.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.functions.availability",
+        "aspect": "availability",
+        "statement": "Cargo features, default function installation and session registrations all matter. Runtime registry capture is not a list of every function constructible from the 60 indexed crates.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      }
+    ],
+    "implementation": [
+      "Find a SQL name or task synonym, resolve its defining implementation and expr_fn helper.",
+      "Check actual registry membership and Cargo features.",
+      "Read the specific function's signature, coercion and return-field/null contract before composing."
+    ],
+    "unknowns": [
+      "The registry signature is Debug output, not a stable signature serialization. Return-field behavior still requires per-function reading/probing."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "datafusion::execution::session_state::SessionState::scalar_functions",
+          "datafusion::execution::session_state::SessionState::aggregate_functions",
+          "datafusion::execution::session_state::SessionState::window_functions",
+          "datafusion::execution::session_state::SessionState::table_functions",
+          "datafusion_expr::udf::ScalarUDFImpl"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "datafusion::execution::session_state::SessionState::scalar_functions",
+        "datafusion::execution::session_state::SessionState::aggregate_functions",
+        "datafusion::execution::session_state::SessionState::window_functions",
+        "datafusion::execution::session_state::SessionState::table_functions",
+        "datafusion_expr::udf::ScalarUDFImpl"
+      ],
+      "candidate_set": [
+        "built-in expr_fn / SQL function",
+        "Arrow kernel",
+        "custom ScalarUDFImpl",
+        "table function"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "datafusion::execution::session_state::SessionState::scalar_functions",
+        "id": "25a7ddf8e699878347177717",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.execution.session_state.SessionState.json",
+        "page": "operations/datafusion.execution.session_state.SessionState.md#op-25a7ddf8e699878347177717",
+        "signature": "fn scalar_functions(&self) -> &HashMap<String, Arc<ScalarUDF>>"
+      },
+      {
+        "path": "datafusion::execution::session_state::SessionState::scalar_functions",
+        "id": "7217e9deef5ad1504d02344c",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.execution.session_state.SessionState.json",
+        "page": "operations/datafusion.execution.session_state.SessionState.md#op-7217e9deef5ad1504d02344c",
+        "signature": "fn scalar_functions(&self) -> &HashMap<String, Arc<ScalarUDF>>"
+      },
+      {
+        "path": "datafusion::execution::session_state::SessionState::aggregate_functions",
+        "id": "4124c4769553c5205807a198",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.execution.session_state.SessionState.json",
+        "page": "operations/datafusion.execution.session_state.SessionState.md#op-4124c4769553c5205807a198",
+        "signature": "fn aggregate_functions(&self) -> &HashMap<String, Arc<AggregateUDF>>"
+      },
+      {
+        "path": "datafusion::execution::session_state::SessionState::aggregate_functions",
+        "id": "9fdfaa976ad7dd6e78a31ea2",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.execution.session_state.SessionState.json",
+        "page": "operations/datafusion.execution.session_state.SessionState.md#op-9fdfaa976ad7dd6e78a31ea2",
+        "signature": "fn aggregate_functions(&self) -> &HashMap<String, Arc<AggregateUDF>>"
+      },
+      {
+        "path": "datafusion::execution::session_state::SessionState::window_functions",
+        "id": "6a9570c68f50f57459d0efea",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.execution.session_state.SessionState.json",
+        "page": "operations/datafusion.execution.session_state.SessionState.md#op-6a9570c68f50f57459d0efea",
+        "signature": "fn window_functions(&self) -> &HashMap<String, Arc<WindowUDF>>"
+      },
+      {
+        "path": "datafusion::execution::session_state::SessionState::window_functions",
+        "id": "bb943909cf0840cc57392a9a",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.execution.session_state.SessionState.json",
+        "page": "operations/datafusion.execution.session_state.SessionState.md#op-bb943909cf0840cc57392a9a",
+        "signature": "fn window_functions(&self) -> &HashMap<String, Arc<WindowUDF>>"
+      },
+      {
+        "path": "datafusion::execution::session_state::SessionState::table_functions",
+        "id": "fd1ec9d036c9069c93dd438f",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.execution.session_state.SessionState.json",
+        "page": "operations/datafusion.execution.session_state.SessionState.md#op-fd1ec9d036c9069c93dd438f",
+        "signature": "fn table_functions(&self) -> &HashMap<String, Arc<TableFunction>>"
+      },
+      {
+        "path": "datafusion_expr::udf::ScalarUDFImpl",
+        "id": "7caee2ff206563b536e983e0",
+        "kind": "trait",
+        "crate": "datafusion-expr",
+        "record": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+        "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md#op-7caee2ff206563b536e983e0",
+        "signature": "trait ScalarUDFImpl: Debug + DynEq + DynHash + Send + Sync + Any"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/df.functions.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "df.interchange",
+    "title": "Match the boundary to data, plan or ABI interchange",
+    "task_aliases": [
+      "serialize plan",
+      "Substrait",
+      "protobuf custom codec",
+      "Arrow IPC Flight",
+      "FFI ownership"
+    ],
+    "crates": [
+      "datafusion-proto",
+      "datafusion-substrait",
+      "datafusion-ffi",
+      "arrow-ipc",
+      "arrow-flight"
+    ],
+    "input": [
+      "LogicalPlan",
+      "ExecutionPlan",
+      "RecordBatch",
+      "FFI provider"
+    ],
+    "output": [
+      "bytes",
+      "plan",
+      "stream",
+      "FFI handles"
+    ],
+    "properties": [
+      "interchange",
+      "registry",
+      "ownership",
+      "compatibility"
+    ],
+    "operations": [
+      "datafusion_proto::logical_plan::LogicalExtensionCodec",
+      "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+    ],
+    "brief": "IPC/Flight move data, proto/Substrait encode plans, and FFI crosses an ABI boundary. Each needs its own compatibility, registry and ownership contract.",
+    "choices": [
+      {
+        "candidate": "Arrow IPC / Flight",
+        "choose_when": "Move batches/schema",
+        "tradeoff": "No query-plan semantics follow from serializing data.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "DataFusion proto",
+        "choose_when": "Serialize supported DataFusion plans",
+        "tradeoff": "Logical and physical extensions have different codecs; restore required registries/providers.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "Substrait",
+        "choose_when": "Exchange supported relational plans across engines",
+        "tradeoff": "Extension coverage and function mappings determine interoperability.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "datafusion-ffi",
+        "choose_when": "Separately compiled in-process providers/functions",
+        "tradeoff": "Follow explicit ABI/version and release-callback ownership rules.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "df.interchange.codecs",
+        "aspect": "codecs",
+        "statement": "LogicalExtensionCodec and PhysicalExtensionCodec serve different plan layers. Custom nodes and functions may need codec/registry support; successful encoding does not prove equivalent execution elsewhere.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.interchange.ownership",
+        "aspect": "ownership",
+        "statement": "FFI and stream boundaries need resource/release lifetime review. Stable ABI does not imply arbitrary DataFusion-version compatibility or durable serialization.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.interchange.validation",
+        "aspect": "validation",
+        "statement": "Verify a round trip including schema, required registration, custom nodes and execution results under the exact sender/receiver profiles.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      }
+    ],
+    "implementation": [
+      "Identify whether the payload is data, a plan, or in-process handles.",
+      "List extension codecs and registry/store dependencies.",
+      "Test restoration and execution in the receiver environment."
+    ],
+    "unknowns": [
+      "This card is source-backed routing. Cross-engine round trips and FFI lifetimes are not executed in this probe suite."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "datafusion_proto::logical_plan::LogicalExtensionCodec",
+          "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "datafusion_proto::logical_plan::LogicalExtensionCodec",
+        "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+      ],
+      "candidate_set": [
+        "Arrow IPC / Flight",
+        "DataFusion proto",
+        "Substrait",
+        "datafusion-ffi"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "datafusion_proto::logical_plan::LogicalExtensionCodec",
+        "id": "4284dcb76d9545ce9708c7f6",
+        "kind": "trait",
+        "crate": "datafusion-proto",
+        "record": "operations/datafusion_proto.logical_plan.LogicalExtensionCodec.json",
+        "page": "operations/datafusion_proto.logical_plan.LogicalExtensionCodec.md#op-4284dcb76d9545ce9708c7f6",
+        "signature": "trait LogicalExtensionCodec: Debug + Send + Sync + std::any::Any"
+      },
+      {
+        "path": "datafusion_proto::physical_plan::PhysicalExtensionCodec",
+        "id": "850a12f382d8c2d858dedae2",
+        "kind": "trait",
+        "crate": "datafusion-proto",
+        "record": "operations/datafusion_proto.physical_plan.PhysicalExtensionCodec.json",
+        "page": "operations/datafusion_proto.physical_plan.PhysicalExtensionCodec.md#op-850a12f382d8c2d858dedae2",
+        "signature": "trait PhysicalExtensionCodec: Debug + Send + Sync + Any"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/df.interchange.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "df.pushdown",
+    "title": "Advertise only sound filter, projection and limit pushdown",
+    "task_aliases": [
+      "custom provider scan",
+      "exact inexact predicate",
+      "min max pruning",
+      "limit projection filter column",
+      "false negatives"
+    ],
+    "crates": [
+      "datafusion-session",
+      "datafusion-expr",
+      "datafusion-physical-plan"
+    ],
+    "input": [
+      "Expr",
+      "projection indices",
+      "limit",
+      "Session"
+    ],
+    "output": [
+      "ExecutionPlan",
+      "ScanResult"
+    ],
+    "properties": [
+      "nulls",
+      "duplicates",
+      "exactness",
+      "projection",
+      "limit",
+      "pruning"
+    ],
+    "operations": [
+      "datafusion_session::table::TableProvider::scan",
+      "datafusion_session::table::TableProvider::supports_filters_pushdown",
+      "datafusion_session::table::TableProvider::scan_with_args",
+      "datafusion_expr::table_source::TableProviderFilterPushDown",
+      "datafusion_expr::table_source::TableProviderFilterPushDown::Exact"
+    ],
+    "brief": "Exact fully enforces SQL predicates; Inexact retains a conservative superset; Unsupported delegates evaluation. The logical scan order is filter, limit, then projection.",
+    "choices": [
+      {
+        "candidate": "Exact",
+        "choose_when": "All accepted predicates are fully enforced",
+        "tradeoff": "Planner can remove residual filters; incorrect claims silently change results.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "Inexact",
+        "choose_when": "Sound candidate pruning retains every match",
+        "tradeoff": "Residual evaluation removes false positives; limit cannot be pushed past inexact filtering.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "Unsupported",
+        "choose_when": "No sound/useful pruning implementation",
+        "tradeoff": "Correct general choice; do not invent approximate filtering merely to override a hook.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "df.pushdown.inputs",
+        "aspect": "inputs",
+        "statement": "scan receives Session, optional ordered projection indices, a conjunction of filters, and optional limit. Filter inputs can be omitted from output projection; retain them internally until evaluation.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.pushdown.outputs",
+        "aspect": "outputs",
+        "statement": "Return a physical scan plan with the requested output schema/order. supports_filters_pushdown returns one classification for each input filter in matching order.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.pushdown.exactness",
+        "aspect": "exactness",
+        "statement": "Inexact may keep false positives but must not lose matches. Residual filtering cannot recover false negatives; SQL null/type semantics and duplicates must be retained.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.pushdown.limit",
+        "aspect": "limit",
+        "statement": "The documented order is filters -> limit -> projection. A pushed limit requests at least that many qualifying rows when available; the scan may return more. Applying it to raw candidates can underproduce.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.pushdown.new-entry",
+        "aspect": "new-entry",
+        "statement": "scan_with_args takes ScanArgs and returns ScanResult, allowing additional requests. Inspect this pin's full member contract instead of transferring older signatures.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.pushdown.upstream-wording-conflict",
+        "aspect": "upstream-wording-conflict",
+        "statement": "The Exact enum variant documentation at this pin says a source can omit tuples which pass the predicate. That wording conflicts with TableProvider::scan and the observed removal of residual filtering. Follow the scan contract: keep qualifying rows and fully enforce the predicate. The variant sentence is treated as a documentation defect, not an alternative semantic contract.",
+        "kind": "source_runtime_reconciliation",
+        "evidence": [
+          "upstream",
+          "probe"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0; predicate b > 5 in the recorded Exact/Inexact control"
+        ]
+      }
+    ],
+    "implementation": [
+      "Evaluate support per expression, not just by predicate column name.",
+      "Keep predicate inputs available through filtering, then apply safe limit and output projection.",
+      "Differentially compare Unsupported/reference execution with Exact/Inexact; inspect residual plans and scan arguments.",
+      "Separate a scan limit hint (may overproduce) from final SQL LIMIT. Assert an actual Some(limit) scan call in a control without ORDER BY; an ordered query can keep LIMIT above a sort and miss this path."
+    ],
+    "unknowns": [
+      "The test Inexact provider retains all candidates; it verifies planner/residual behavior, not a particular min/max algorithm."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "datafusion_session::table::TableProvider::scan",
+          "datafusion_session::table::TableProvider::supports_filters_pushdown",
+          "datafusion_session::table::TableProvider::scan_with_args",
+          "datafusion_expr::table_source::TableProviderFilterPushDown"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      },
+      {
+        "id": "probe",
+        "kind": "runtime_observation",
+        "tests": [
+          "provider_exact_inexact_projection_limit_match_reference"
+        ],
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Only the named assertions in the recorded Cargo profile."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "datafusion_session::table::TableProvider::scan",
+        "datafusion_session::table::TableProvider::supports_filters_pushdown",
+        "datafusion_session::table::TableProvider::scan_with_args",
+        "datafusion_expr::table_source::TableProviderFilterPushDown"
+      ],
+      "candidate_set": [
+        "Exact",
+        "Inexact",
+        "Unsupported"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "datafusion_session::table::TableProvider::scan",
+        "id": "116d00acf0401874b7f0d9f0",
+        "kind": "function",
+        "crate": "datafusion-session",
+        "record": "operations/datafusion_session.table.TableProvider.json",
+        "page": "operations/datafusion_session.table.TableProvider.md#op-116d00acf0401874b7f0d9f0",
+        "signature": "async fn scan(&self, state: &dyn Session, projection: Option<&Vec<usize>>, filters: &[Expr], limit: Option<usize>) -> Result<Arc<dyn ExecutionPlan>>"
+      },
+      {
+        "path": "datafusion_session::table::TableProvider::supports_filters_pushdown",
+        "id": "a929088704b5681a65528134",
+        "kind": "function",
+        "crate": "datafusion-session",
+        "record": "operations/datafusion_session.table.TableProvider.json",
+        "page": "operations/datafusion_session.table.TableProvider.md#op-a929088704b5681a65528134",
+        "signature": "fn supports_filters_pushdown(&self, filters: &[&Expr]) -> Result<Vec<TableProviderFilterPushDown>>"
+      },
+      {
+        "path": "datafusion_session::table::TableProvider::scan_with_args",
+        "id": "274938cecb923835571bdb77",
+        "kind": "function",
+        "crate": "datafusion-session",
+        "record": "operations/datafusion_session.table.TableProvider.json",
+        "page": "operations/datafusion_session.table.TableProvider.md#op-274938cecb923835571bdb77",
+        "signature": "async fn scan_with_args<'a>(&self, state: &dyn Session, args: ScanArgs<'a>) -> Result<ScanResult>"
+      },
+      {
+        "path": "datafusion_expr::table_source::TableProviderFilterPushDown",
+        "id": "4fd1b17084602ce2b715fb21",
+        "kind": "enum",
+        "crate": "datafusion-expr",
+        "record": "operations/datafusion_expr.table_source.TableProviderFilterPushDown.json",
+        "page": "operations/datafusion_expr.table_source.TableProviderFilterPushDown.md#op-4fd1b17084602ce2b715fb21",
+        "signature": "enum TableProviderFilterPushDown"
+      },
+      {
+        "path": "datafusion_expr::table_source::TableProviderFilterPushDown::Exact",
+        "id": "76dd051fb92b19d07ce613a6",
+        "kind": "variant",
+        "crate": "datafusion-expr",
+        "record": "operations/datafusion_expr.table_source.TableProviderFilterPushDown.json",
+        "page": "operations/datafusion_expr.table_source.TableProviderFilterPushDown.md#op-76dd051fb92b19d07ce613a6",
+        "signature": "Exact"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/df.pushdown.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "df.relations",
+    "title": "Choose relational cardinality, null-key and ordering semantics",
+    "task_aliases": [
+      "join duplicates",
+      "null keys join",
+      "union all distinct",
+      "set bag operations",
+      "sort limit top k",
+      "unnest list"
+    ],
+    "crates": [
+      "datafusion",
+      "datafusion-expr",
+      "datafusion-physical-plan",
+      "datafusion-functions-nested"
+    ],
+    "input": [
+      "DataFrame",
+      "Expr"
+    ],
+    "output": [
+      "DataFrame",
+      "LogicalPlan"
+    ],
+    "properties": [
+      "cardinality",
+      "duplicates",
+      "nulls",
+      "order",
+      "partitioning"
+    ],
+    "operations": [
+      "datafusion::dataframe::DataFrame::join",
+      "datafusion::dataframe::DataFrame::join_on",
+      "datafusion::dataframe::DataFrame::union",
+      "datafusion::dataframe::DataFrame::union_distinct",
+      "datafusion::dataframe::DataFrame::intersect",
+      "datafusion::dataframe::DataFrame::except",
+      "datafusion::dataframe::DataFrame::unnest_columns"
+    ],
+    "brief": "Join keys can multiply rows; equality and null-safe equality differ. Bag/set operations differ on duplicates, and neither partitioning nor streaming promises global result order.",
+    "choices": [
+      {
+        "candidate": "join / join_on",
+        "choose_when": "Combine matching rows with chosen join type/predicate",
+        "tradeoff": "Check multiplicity and null-safe versus ordinary equality.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "union / UNION ALL",
+        "choose_when": "Concatenate bags",
+        "tradeoff": "Preserves duplicate multiplicity, subject to compatible schemas.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "union_distinct / UNION",
+        "choose_when": "Set-like duplicate elimination",
+        "tradeoff": "Adds equality/dedup work; output order is unspecified without sort.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "unnest",
+        "choose_when": "Expand nested values into rows",
+        "tradeoff": "Row cardinality and null/empty-list options require explicit review.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "df.relations.cardinality",
+        "aspect": "cardinality",
+        "statement": "Many-to-many key matches multiply rows. Ordinary SQL equality does not match null keys; IS NOT DISTINCT FROM has different null equality. Select the join predicate deliberately.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.relations.sets",
+        "aspect": "sets",
+        "statement": "DataFrame union keeps duplicates; union_distinct removes them. Intersect/except expose distinct/all semantics via their APIs; inspect their flag and schema requirements rather than assuming SQL default multiplicities.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.relations.ordering",
+        "aspect": "ordering",
+        "statement": "Explicit ORDER BY establishes requested ordering. LIMIT without a total ordering does not identify deterministic rows among ties; partitioned execution changes arrival order.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.relations.schema",
+        "aspect": "schema",
+        "statement": "Align widths, types, column identity and metadata before relational combination. Compatible logical schema does not establish every physical metadata propagation path.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      }
+    ],
+    "implementation": [
+      "Write down expected multiplicity, null equality and tie behavior.",
+      "Use duplicate/null/empty inputs in a differential fixture.",
+      "Inspect explain output for sort/top-k and cardinality effects; validate values independently of plan shape."
+    ],
+    "unknowns": [
+      "The SQL probe covers ordinary/null-safe inner joins and distinct UNION/INTERSECT/EXCEPT plus UNION ALL; all join types and DataFrame all-flags are not runtime-qualified."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "datafusion::dataframe::DataFrame::join",
+          "datafusion::dataframe::DataFrame::join_on",
+          "datafusion::dataframe::DataFrame::union",
+          "datafusion::dataframe::DataFrame::union_distinct",
+          "datafusion::dataframe::DataFrame::intersect",
+          "datafusion::dataframe::DataFrame::except",
+          "datafusion::dataframe::DataFrame::unnest_columns"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      },
+      {
+        "id": "probe",
+        "kind": "runtime_observation",
+        "tests": [
+          "joins_sets_and_window_frames_have_distinct_cardinality"
+        ],
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Only the named assertions in the recorded Cargo profile."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "datafusion::dataframe::DataFrame::join",
+        "datafusion::dataframe::DataFrame::join_on",
+        "datafusion::dataframe::DataFrame::union",
+        "datafusion::dataframe::DataFrame::union_distinct",
+        "datafusion::dataframe::DataFrame::intersect",
+        "datafusion::dataframe::DataFrame::except",
+        "datafusion::dataframe::DataFrame::unnest_columns"
+      ],
+      "candidate_set": [
+        "join / join_on",
+        "union / UNION ALL",
+        "union_distinct / UNION",
+        "unnest"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "datafusion::dataframe::DataFrame::join",
+        "id": "8991ac8bbaecfd6a6972ed32",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-8991ac8bbaecfd6a6972ed32",
+        "signature": "fn join(self, right: DataFrame, join_type: JoinType, left_cols: &[&str], right_cols: &[&str], filter: Option<Expr>) -> Result<DataFrame>"
+      },
+      {
+        "path": "datafusion::dataframe::DataFrame::join_on",
+        "id": "bf2e40975b5857c34b3f7997",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-bf2e40975b5857c34b3f7997",
+        "signature": "fn join_on(self, right: DataFrame, join_type: JoinType, on_exprs: impl IntoIterator<Item = Expr>) -> Result<DataFrame>"
+      },
+      {
+        "path": "datafusion::dataframe::DataFrame::union",
+        "id": "ef61c631381b9b5946811db6",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-ef61c631381b9b5946811db6",
+        "signature": "fn union(self, dataframe: DataFrame) -> Result<DataFrame>"
+      },
+      {
+        "path": "datafusion::dataframe::DataFrame::union_distinct",
+        "id": "26f79a38ddbe6096a2d66b5b",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-26f79a38ddbe6096a2d66b5b",
+        "signature": "fn union_distinct(self, dataframe: DataFrame) -> Result<DataFrame>"
+      },
+      {
+        "path": "datafusion::dataframe::DataFrame::intersect",
+        "id": "6711a3af98d7542d1cec7903",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-6711a3af98d7542d1cec7903",
+        "signature": "fn intersect(self, dataframe: DataFrame) -> Result<DataFrame>"
+      },
+      {
+        "path": "datafusion::dataframe::DataFrame::except",
+        "id": "dbd92e8ee9b929d68d189748",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-dbd92e8ee9b929d68d189748",
+        "signature": "fn except(self, dataframe: DataFrame) -> Result<DataFrame>"
+      },
+      {
+        "path": "datafusion::dataframe::DataFrame::unnest_columns",
+        "id": "a62714b7d02a6f39683e377c",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-a62714b7d02a6f39683e377c",
+        "signature": "fn unnest_columns(self, columns: &[&str]) -> Result<DataFrame>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/df.relations.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "df.source",
+    "title": "Reuse a provider before implementing a new source",
+    "task_aliases": [
+      "materialized batches table",
+      "partitioned files",
+      "Parquet object storage",
+      "provider view cache",
+      "register table"
+    ],
+    "crates": [
+      "datafusion",
+      "datafusion-catalog",
+      "datafusion-datasource",
+      "datafusion-datasource-parquet",
+      "object_store",
+      "datafusion-catalog-listing"
+    ],
+    "input": [
+      "RecordBatch",
+      "files",
+      "LogicalPlan",
+      "ObjectStore"
+    ],
+    "output": [
+      "TableProvider",
+      "DataFrame",
+      "ExecutionPlan"
+    ],
+    "properties": [
+      "reuse",
+      "pruning",
+      "partitioning",
+      "schema",
+      "storage"
+    ],
+    "operations": [
+      "datafusion_catalog::memory::table::MemTable",
+      "datafusion_catalog::view::ViewTable",
+      "datafusion_catalog_listing::table::ListingTable",
+      "datafusion::execution::context::SessionContext::register_object_store",
+      "datafusion_session::table::TableProvider::scan"
+    ],
+    "brief": "MemTable exposes materialized partitioned batches; ViewTable exposes a logical plan; ListingTable composes supported file formats and stores. Custom providers can reuse these execution components.",
+    "choices": [
+      {
+        "candidate": "MemTable",
+        "choose_when": "Already materialized batches",
+        "tradeoff": "Owns in-memory table data; does not perform file pruning.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "ListingTable + ParquetSource",
+        "choose_when": "Files with partition/statistics pruning",
+        "tradeoff": "Requires store mapping, schema and listing/read configuration.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "ViewTable",
+        "choose_when": "Reusable logical relation",
+        "tradeoff": "Reuses a plan, not necessarily materialized results.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "custom TableProvider",
+        "choose_when": "Source behavior cannot be expressed by existing providers",
+        "tradeoff": "Implement the scan/capability contract; do not rebuild formats/stores unnecessarily.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "df.source.shape",
+        "aspect": "shape",
+        "statement": "MemTable receives schema and Vec<Vec<RecordBatch>> (outer partitions). TableProvider::scan builds Arc<dyn ExecutionPlan>; execution yields batches later.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.source.configuration",
+        "aspect": "configuration",
+        "statement": "ObjectStore registration belongs to the RuntimeEnv registry. Contexts may share it. URL scheme/authority and ListingTableUrl/file paths have different responsibilities.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.source.schema",
+        "aspect": "schema",
+        "statement": "Supply known schema to avoid unnecessary inference, but validate compatibility. Declare partition columns and inspect statistics/pruning; file discovery and metadata reads have costs.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      }
+    ],
+    "implementation": [
+      "Select the source representation and lifecycle first.",
+      "Compare built-in provider/format/source combinations.",
+      "Verify read projection, partition schema and predicate behavior on a small source-to-result fixture."
+    ],
+    "unknowns": [
+      "Cloud authentication, listing costs and invalidation depend on the selected ObjectStore/deployment; local probes do not qualify them."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "datafusion_catalog::memory::table::MemTable",
+          "datafusion_catalog::view::ViewTable",
+          "datafusion_catalog_listing::table::ListingTable",
+          "datafusion::execution::context::SessionContext::register_object_store",
+          "datafusion_session::table::TableProvider::scan"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      },
+      {
+        "id": "probe",
+        "kind": "runtime_observation",
+        "tests": [
+          "provider_exact_inexact_projection_limit_match_reference",
+          "parquet_listing_source_executes_query"
+        ],
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Only the named assertions in the recorded Cargo profile."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "datafusion_catalog::memory::table::MemTable",
+        "datafusion_catalog::view::ViewTable",
+        "datafusion_catalog_listing::table::ListingTable",
+        "datafusion::execution::context::SessionContext::register_object_store",
+        "datafusion_session::table::TableProvider::scan"
+      ],
+      "candidate_set": [
+        "MemTable",
+        "ListingTable + ParquetSource",
+        "ViewTable",
+        "custom TableProvider"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "datafusion_catalog::memory::table::MemTable",
+        "id": "edca0df891fe36e3d9bd9dea",
+        "kind": "struct",
+        "crate": "datafusion-catalog",
+        "record": "operations/datafusion_catalog.memory.table.MemTable.json",
+        "page": "operations/datafusion_catalog.memory.table.MemTable.md#op-edca0df891fe36e3d9bd9dea",
+        "signature": "struct MemTable"
+      },
+      {
+        "path": "datafusion_catalog::view::ViewTable",
+        "id": "bfab6ebe5a11caa5667b8bcd",
+        "kind": "struct",
+        "crate": "datafusion-catalog",
+        "record": "operations/datafusion_catalog.view.ViewTable.json",
+        "page": "operations/datafusion_catalog.view.ViewTable.md#op-bfab6ebe5a11caa5667b8bcd",
+        "signature": "struct ViewTable"
+      },
+      {
+        "path": "datafusion_catalog_listing::table::ListingTable",
+        "id": "00feae5c1ac67d3f887e695a",
+        "kind": "struct",
+        "crate": "datafusion-catalog-listing",
+        "record": "operations/datafusion_catalog_listing.table.ListingTable.json",
+        "page": "operations/datafusion_catalog_listing.table.ListingTable.md#op-00feae5c1ac67d3f887e695a",
+        "signature": "struct ListingTable"
+      },
+      {
+        "path": "datafusion::execution::context::SessionContext::register_object_store",
+        "id": "c0b8a75bdfc12fe8a5ee5d8e",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.execution.context.SessionContext.json",
+        "page": "operations/datafusion.execution.context.SessionContext.md#op-c0b8a75bdfc12fe8a5ee5d8e",
+        "signature": "fn register_object_store(&self, url: &Url, object_store: Arc<dyn ObjectStore>) -> Option<Arc<dyn ObjectStore>>"
+      },
+      {
+        "path": "datafusion_session::table::TableProvider::scan",
+        "id": "116d00acf0401874b7f0d9f0",
+        "kind": "function",
+        "crate": "datafusion-session",
+        "record": "operations/datafusion_session.table.TableProvider.json",
+        "page": "operations/datafusion_session.table.TableProvider.md#op-116d00acf0401874b7f0d9f0",
+        "signature": "async fn scan(&self, state: &dyn Session, projection: Option<&Vec<usize>>, filters: &[Expr], limit: Option<usize>) -> Result<Arc<dyn ExecutionPlan>>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/df.source.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "df.storage-reuse",
+    "title": "Separate source reuse, plan reuse, materialization and writes",
+    "task_aliases": [
+      "repeat query",
+      "reuse view cache",
+      "write Parquet files",
+      "object store registry",
+      "metadata cache",
+      "insert overwrite"
+    ],
+    "crates": [
+      "datafusion",
+      "datafusion-execution",
+      "datafusion-datasource",
+      "object_store",
+      "parquet"
+    ],
+    "input": [
+      "DataFrame",
+      "ObjectStore",
+      "TableProvider"
+    ],
+    "output": [
+      "files",
+      "DataFrame",
+      "ExecutionPlan"
+    ],
+    "properties": [
+      "reuse",
+      "storage",
+      "lifecycle",
+      "configuration",
+      "errors"
+    ],
+    "operations": [
+      "datafusion::dataframe::DataFrame::cache",
+      "datafusion::dataframe::DataFrame::into_view",
+      "datafusion::dataframe::DataFrame::write_parquet",
+      "datafusion::dataframe::DataFrame::write_table",
+      "datafusion_execution::runtime_env::RuntimeEnv",
+      "datafusion_session::table::TableProvider::insert_into"
+    ],
+    "brief": "Provider reuse, logical views, cached result batches and file-metadata caches reuse different things. File writers and provider DML also have different capability and failure boundaries.",
+    "choices": [
+      {
+        "candidate": "view / cloned logical plan",
+        "choose_when": "Reuse query definition",
+        "tradeoff": "Does not by itself freeze data or cache results.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "DataFrame::cache",
+        "choose_when": "Reuse materialized results",
+        "tradeoff": "Consumes memory and can become stale relative to changing sources.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "RuntimeEnv metadata cache/store registry",
+        "choose_when": "Reuse source metadata or storage handles",
+        "tradeoff": "Invalidation/lifetime differs from query-result caching.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "write_parquet / COPY / provider DML",
+        "choose_when": "Persist output or mutate a table",
+        "tradeoff": "Choose the actual sink contract, write mode and error handling.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "df.storage-reuse.configuration",
+        "aspect": "configuration",
+        "statement": "SessionContext clones share state, while RuntimeEnv resources may be shared across contexts. Choose isolation based on catalogs, configuration and workload ownership rather than one-context-per-service folklore.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.storage-reuse.writes",
+        "aspect": "writes",
+        "statement": "DataFrame writers execute query output into format/sink paths. write_table/INSERT depend on provider insertion support. A readable provider need not implement DML; COPY to files is not evidence it does.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "df.storage-reuse.failure",
+        "aspect": "failure",
+        "statement": "Inspect append/overwrite/partitioning and sink-specific partial-write behavior. Neither a successful plan nor Arrow batch validity establishes transactional or atomic persistence.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      }
+    ],
+    "implementation": [
+      "Specify exactly which computation/data/metadata is reused and when it becomes stale.",
+      "Verify writer and source ownership, registry lifetime and output schema.",
+      "Round-trip a small written file; separately qualify atomicity or cloud failure guarantees if required."
+    ],
+    "unknowns": [
+      "Cloud stores, transactional semantics and cache invalidation under external mutation are not established by local fixtures."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "datafusion::dataframe::DataFrame::cache",
+          "datafusion::dataframe::DataFrame::into_view",
+          "datafusion::dataframe::DataFrame::write_parquet",
+          "datafusion::dataframe::DataFrame::write_table",
+          "datafusion_execution::runtime_env::RuntimeEnv",
+          "datafusion_session::table::TableProvider::insert_into"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      },
+      {
+        "id": "probe",
+        "kind": "runtime_observation",
+        "tests": [
+          "stream_collect_cache_and_sort_resource_error",
+          "parquet_listing_source_executes_query"
+        ],
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Only the named assertions in the recorded Cargo profile."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "datafusion::dataframe::DataFrame::cache",
+        "datafusion::dataframe::DataFrame::into_view",
+        "datafusion::dataframe::DataFrame::write_parquet",
+        "datafusion::dataframe::DataFrame::write_table",
+        "datafusion_execution::runtime_env::RuntimeEnv",
+        "datafusion_session::table::TableProvider::insert_into"
+      ],
+      "candidate_set": [
+        "view / cloned logical plan",
+        "DataFrame::cache",
+        "RuntimeEnv metadata cache/store registry",
+        "write_parquet / COPY / provider DML"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "datafusion::dataframe::DataFrame::cache",
+        "id": "46de08d8309fcb4f0782d08e",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-46de08d8309fcb4f0782d08e",
+        "signature": "async fn cache(self) -> Result<DataFrame>"
+      },
+      {
+        "path": "datafusion::dataframe::DataFrame::into_view",
+        "id": "ce2618e84e6ecfd888a3b153",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-ce2618e84e6ecfd888a3b153",
+        "signature": "fn into_view(self) -> Arc<dyn TableProvider>"
+      },
+      {
+        "path": "datafusion::dataframe::DataFrame::write_parquet",
+        "id": "3c9ca113f3c5829bfb6ac6f0",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-3c9ca113f3c5829bfb6ac6f0",
+        "signature": "async fn write_parquet(self, path: &str, options: DataFrameWriteOptions, writer_options: Option<TableParquetOptions>) -> Result<Vec<RecordBatch>, DataFusionError>"
+      },
+      {
+        "path": "datafusion::dataframe::DataFrame::write_table",
+        "id": "03b06a16dfccd7287df86167",
+        "kind": "function",
+        "crate": "datafusion",
+        "record": "operations/datafusion.dataframe.DataFrame.json",
+        "page": "operations/datafusion.dataframe.DataFrame.md#op-03b06a16dfccd7287df86167",
+        "signature": "async fn write_table(self, table_name: &str, write_options: DataFrameWriteOptions) -> Result<Vec<RecordBatch>, DataFusionError>"
+      },
+      {
+        "path": "datafusion_execution::runtime_env::RuntimeEnv",
+        "id": "c598f4df4cf51824ae4b9a67",
+        "kind": "struct",
+        "crate": "datafusion-execution",
+        "record": "operations/datafusion_execution.runtime_env.RuntimeEnv.json",
+        "page": "operations/datafusion_execution.runtime_env.RuntimeEnv.md#op-c598f4df4cf51824ae4b9a67",
+        "signature": "struct RuntimeEnv"
+      },
+      {
+        "path": "datafusion_session::table::TableProvider::insert_into",
+        "id": "f6f850e68c1fe795e5e5fac4",
+        "kind": "function",
+        "crate": "datafusion-session",
+        "record": "operations/datafusion_session.table.TableProvider.json",
+        "page": "operations/datafusion_session.table.TableProvider.md#op-f6f850e68c1fe795e5e5fac4",
+        "signature": "async fn insert_into(&self, _state: &dyn Session, _input: Arc<dyn ExecutionPlan>, _insert_op: InsertOp) -> Result<Arc<dyn ExecutionPlan>>"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/df.storage-reuse.json"
+  },
+  {
+    "schema_version": 1,
+    "id": "parquet.selection",
+    "title": "Compose row-group pruning, row selection and decode filters",
+    "task_aliases": [
+      "Parquet row selection",
+      "skip row groups",
+      "page index",
+      "predicate decode",
+      "retained row coordinates"
+    ],
+    "crates": [
+      "parquet",
+      "datafusion-datasource-parquet"
+    ],
+    "input": [
+      "Parquet bytes",
+      "row groups",
+      "RowSelection",
+      "RowFilter"
+    ],
+    "output": [
+      "RecordBatch",
+      "reader"
+    ],
+    "properties": [
+      "pruning",
+      "coordinates",
+      "projection",
+      "io",
+      "metadata"
+    ],
+    "operations": [
+      "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_groups",
+      "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+      "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_filter",
+      "parquet::arrow::arrow_reader::selection::RowSelection"
+    ],
+    "brief": "with_row_groups applies before RowSelection. Selection coordinates describe only retained groups; predicate decode and output projection are additional stages with distinct I/O effects.",
+    "choices": [
+      {
+        "candidate": "DataFusion ParquetSource",
+        "choose_when": "Pruning should follow a relational predicate",
+        "tradeoff": "Reuses planner, statistics and source integration.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "RowSelection",
+        "choose_when": "Known row ranges can be skipped",
+        "tradeoff": "Rebase to retained groups; page indexes can make skipping more efficient.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "RowFilter",
+        "choose_when": "Predicates need decoded values",
+        "tradeoff": "Decode predicate columns before final projected output; measure predicate ordering/I/O.",
+        "kind": "authored_conditional_judgment"
+      },
+      {
+        "candidate": "row-group statistics / bloom / page index",
+        "choose_when": "Metadata can exclude candidates",
+        "tradeoff": "Depends on metadata written and predicates supported; these are not exact row filters.",
+        "kind": "authored_conditional_judgment"
+      }
+    ],
+    "claims": [
+      {
+        "id": "parquet.selection.coordinates",
+        "aspect": "coordinates",
+        "statement": "Rows belonging to excluded groups must not be counted in RowSelection. For 3-row groups [0,1,2] retaining [0,2], original row 7 has selected-domain position 4.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "parquet.selection.shape",
+        "aspect": "shape",
+        "statement": "ArrowReaderBuilder consumes configuration and builds a batch reader. RowSelection describes alternating selected/skipped row counts; output values and schema depend on projection/filter configuration.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      },
+      {
+        "id": "parquet.selection.io",
+        "aspect": "io",
+        "statement": "Selection restricts rows decoded and can avoid fetching pages. Page metadata enables efficient skipping, but output equality alone does not establish bytes read or decode cost.",
+        "kind": "upstream_contract_interpretation",
+        "evidence": [
+          "upstream"
+        ],
+        "conditions": [
+          "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+        ]
+      }
+    ],
+    "implementation": [
+      "Choose groups first, then generate/rebase selection coordinates.",
+      "Retain predicate columns until evaluation even when absent from output.",
+      "Compare row identities against an unpruned reader; instrument I/O separately for performance claims."
+    ],
+    "unknowns": [
+      "The fixture records metadata and scan bytes requested from its in-memory ChunkReader plus output identities. It does not measure network traffic, decoder CPU, page-index or bloom-filter effectiveness."
+    ],
+    "evidence": [
+      {
+        "id": "upstream",
+        "kind": "upstream_documentation",
+        "operations": [
+          "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_groups",
+          "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+          "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_filter",
+          "parquet::arrow::arrow_reader::selection::RowSelection"
+        ],
+        "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+      },
+      {
+        "id": "probe",
+        "kind": "runtime_observation",
+        "tests": [
+          "parquet_selection_is_relative_to_retained_row_groups"
+        ],
+        "path": "skill_improvement/evidence/implementation/probe-results.json",
+        "scope": "Only the named assertions in the recorded Cargo profile."
+      }
+    ],
+    "reviewed": "2026-09-18",
+    "invalidation": {
+      "dependencies": [
+        "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_groups",
+        "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+        "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_filter",
+        "parquet::arrow::arrow_reader::selection::RowSelection"
+      ],
+      "candidate_set": [
+        "DataFusion ParquetSource",
+        "RowSelection",
+        "RowFilter",
+        "row-group statistics / bloom / page index"
+      ],
+      "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+    },
+    "resolved_operations": [
+      {
+        "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_groups",
+        "id": "a242cc258e7519b5c6886ed9",
+        "kind": "function",
+        "crate": "parquet",
+        "record": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+        "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-a242cc258e7519b5c6886ed9",
+        "signature": "fn with_row_groups(self, row_groups: Vec<usize>) -> Self"
+      },
+      {
+        "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_selection",
+        "id": "521e662260c093bdc9d5c113",
+        "kind": "function",
+        "crate": "parquet",
+        "record": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+        "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-521e662260c093bdc9d5c113",
+        "signature": "fn with_row_selection(self, selection: RowSelection) -> Self"
+      },
+      {
+        "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder::with_row_filter",
+        "id": "8bea3b5ddc8fa0db0c89f3ec",
+        "kind": "function",
+        "crate": "parquet",
+        "record": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.json",
+        "page": "operations/parquet.arrow.arrow_reader.ArrowReaderBuilder.md#op-8bea3b5ddc8fa0db0c89f3ec",
+        "signature": "fn with_row_filter(self, filter: RowFilter) -> Self"
+      },
+      {
+        "path": "parquet::arrow::arrow_reader::selection::RowSelection",
+        "id": "42015b29e86ada83b6a84ed5",
+        "kind": "struct",
+        "crate": "parquet",
+        "record": "operations/parquet.arrow.arrow_reader.selection.RowSelection.json",
+        "page": "operations/parquet.arrow.arrow_reader.selection.RowSelection.md#op-42015b29e86ada83b6a84ed5",
+        "signature": "struct RowSelection"
+      }
+    ],
+    "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+    "source": "authoring/capabilities/parquet.selection.json"
+  }
+]

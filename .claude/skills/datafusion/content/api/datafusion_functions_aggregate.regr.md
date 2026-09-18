@@ -14,6 +14,9 @@ enum RegrType
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.RegrType.md).
+
+
 ---
 
 ## regr_avgx
@@ -26,6 +29,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::regr_avgx`
 fn regr_avgx(expr_y: datafusion_expr::Expr, expr_x: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_avgx.md).
+
+
 Compute a linear regression of type [RegrType::AvgX]
 
 ---
@@ -37,6 +43,9 @@ Compute a linear regression of type [RegrType::AvgX]
 ```rust
 fn regr_avgx_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_avgx_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`regr_avgx`]
 
@@ -52,6 +61,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::regr_avgy`
 fn regr_avgy(expr_y: datafusion_expr::Expr, expr_x: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_avgy.md).
+
+
 Compute a linear regression of type [RegrType::AvgY]
 
 ---
@@ -63,6 +75,9 @@ Compute a linear regression of type [RegrType::AvgY]
 ```rust
 fn regr_avgy_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_avgy_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`regr_avgy`]
 
@@ -78,6 +93,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::regr_count`
 fn regr_count(expr_y: datafusion_expr::Expr, expr_x: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_count.md).
+
+
 Compute a linear regression of type [RegrType::Count]
 
 ---
@@ -89,6 +107,9 @@ Compute a linear regression of type [RegrType::Count]
 ```rust
 fn regr_count_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_count_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`regr_count`]
 
@@ -104,6 +125,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::regr_intercept`
 fn regr_intercept(expr_y: datafusion_expr::Expr, expr_x: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_intercept.md).
+
+
 Compute a linear regression of type [RegrType::Intercept]
 
 ---
@@ -115,6 +139,9 @@ Compute a linear regression of type [RegrType::Intercept]
 ```rust
 fn regr_intercept_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_intercept_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`regr_intercept`]
 
@@ -130,6 +157,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::regr_r2`
 fn regr_r2(expr_y: datafusion_expr::Expr, expr_x: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_r2.md).
+
+
 Compute a linear regression of type [RegrType::R2]
 
 ---
@@ -141,6 +171,9 @@ Compute a linear regression of type [RegrType::R2]
 ```rust
 fn regr_r2_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_r2_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`regr_r2`]
 
@@ -156,6 +189,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::regr_slope`
 fn regr_slope(expr_y: datafusion_expr::Expr, expr_x: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_slope.md).
+
+
 Compute a linear regression of type [RegrType::Slope]
 
 ---
@@ -167,6 +203,9 @@ Compute a linear regression of type [RegrType::Slope]
 ```rust
 fn regr_slope_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_slope_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`regr_slope`]
 
@@ -182,6 +221,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::regr_sxx`
 fn regr_sxx(expr_y: datafusion_expr::Expr, expr_x: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_sxx.md).
+
+
 Compute a linear regression of type [RegrType::SXX]
 
 ---
@@ -193,6 +235,9 @@ Compute a linear regression of type [RegrType::SXX]
 ```rust
 fn regr_sxx_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_sxx_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`regr_sxx`]
 
@@ -208,6 +253,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::regr_sxy`
 fn regr_sxy(expr_y: datafusion_expr::Expr, expr_x: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_sxy.md).
+
+
 Compute a linear regression of type [RegrType::SXY]
 
 ---
@@ -219,6 +267,9 @@ Compute a linear regression of type [RegrType::SXY]
 ```rust
 fn regr_sxy_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_sxy_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`regr_sxy`]
 
@@ -234,6 +285,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::regr_syy`
 fn regr_syy(expr_y: datafusion_expr::Expr, expr_x: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_syy.md).
+
+
 Compute a linear regression of type [RegrType::SYY]
 
 ---
@@ -245,6 +299,9 @@ Compute a linear regression of type [RegrType::SYY]
 ```rust
 fn regr_syy_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.regr_syy_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`regr_syy`]
 
@@ -281,6 +338,9 @@ fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.Regr.md).
+
+
 ---
 
 ## RegrAccumulator
@@ -312,6 +372,9 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn supports_retract_batch(&self) -> bool
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.regr.RegrAccumulator.md).
+
 
 `RegrAccumulator` is used to compute linear regression aggregate functions
 by maintaining statistics needed to compute them in an online fashion.

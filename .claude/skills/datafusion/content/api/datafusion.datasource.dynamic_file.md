@@ -27,6 +27,9 @@ fn session_store(&self) -> &SessionStore
 async fn try_new(&self, url: &str) -> Result<Option<Arc<dyn TableProvider>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.datasource.dynamic_file.DynamicListTableFactory.md).
+
+
 [DynamicListTableFactory] is a factory that can create a [ListingTable] from the given url.
 
 ---

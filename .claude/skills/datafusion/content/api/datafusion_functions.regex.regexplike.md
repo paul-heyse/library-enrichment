@@ -10,6 +10,9 @@ Crate `datafusion-functions` · 2 public items · structured records in [`model/
 fn regexp_like(args: &[arrow::array::ArrayRef]) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.regex.regexplike.regexp_like.md).
+
+
 Tests a string using a regular expression returning true if at
 least one match, false otherwise.
 
@@ -83,5 +86,8 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 fn simplify(&self, args: Vec<Expr>, info: &SimplifyContext) -> Result<ExprSimplifyResult>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.regex.regexplike.RegexpLikeFunc.md).
+
 
 ---

@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::take::take`, `arrow::compute::take`
 fn take(values: &dyn Array, indices: &dyn Array, options: Option<TakeOptions>) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.take.take.md).
+
+
 Take elements by index from [Array], creating a new [Array] from those indexes.
 
 ```text
@@ -76,6 +79,9 @@ Also reachable as `arrow::compute::kernels::take::take_arrays`, `arrow::compute:
 fn take_arrays(arrays: &[ArrayRef], indices: &dyn Array, options: Option<TakeOptions>) -> Result<Vec<ArrayRef>, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.take.take_arrays.md).
+
+
 For each [ArrayRef] in the [`Vec<ArrayRef>`], take elements by index and create a new
 [`Vec<ArrayRef>`] from those indices.
 
@@ -137,6 +143,9 @@ Also reachable as `arrow::compute::kernels::take::take_record_batch`, `arrow::co
 fn take_record_batch(record_batch: &RecordBatch, indices: &dyn Array) -> Result<RecordBatch, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.take.take_record_batch.md).
+
+
 Take rows by index from [`RecordBatch`] and returns a new [`RecordBatch`] from those indexes.
 
 This function will call [`take`] on each array of the [`RecordBatch`] and assemble a new [`RecordBatch`].
@@ -191,6 +200,9 @@ struct TakeOptions
 **Fields**: `check_bounds`
 
 **Derives**: Clone, Debug, Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_select.take.TakeOptions.md).
+
 
 Options that define how `take` should behave
 

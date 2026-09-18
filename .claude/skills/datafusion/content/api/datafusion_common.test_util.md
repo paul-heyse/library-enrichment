@@ -12,6 +12,9 @@ Also reachable as `datafusion::test_util::arrow_test_data`
 fn arrow_test_data() -> String
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.test_util.arrow_test_data.md).
+
+
 Returns the arrow test data directory, which is by default stored
 in a git submodule rooted at `testing/data`.
 
@@ -37,6 +40,9 @@ assert!(std::path::PathBuf::from(csvdata).exists());
 fn batches_to_sort_string(batches: &[arrow::array::RecordBatch]) -> String
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.test_util.batches_to_sort_string.md).
+
+
 ---
 
 ## batches_to_string
@@ -47,6 +53,9 @@ fn batches_to_sort_string(batches: &[arrow::array::RecordBatch]) -> String
 fn batches_to_string(batches: &[arrow::array::RecordBatch]) -> String
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.test_util.batches_to_string.md).
+
+
 ---
 
 ## datafusion_test_data
@@ -56,6 +65,9 @@ fn batches_to_string(batches: &[arrow::array::RecordBatch]) -> String
 ```rust
 fn datafusion_test_data() -> String
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.test_util.datafusion_test_data.md).
+
 
 Returns the datafusion test data directory, which is by default rooted at `datafusion/core/tests/data`.
 
@@ -81,6 +93,9 @@ assert!(std::path::PathBuf::from(csvdata).exists());
 fn format_batches(results: &[arrow::array::RecordBatch]) -> Result<impl Display, arrow::error::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.test_util.format_batches.md).
+
+
 ---
 
 ## get_data_dir
@@ -92,6 +107,9 @@ Also reachable as `datafusion::test_util::get_data_dir`
 ```rust
 fn get_data_dir(udf_env: &str, submodule_data: &str) -> Result<std::path::PathBuf, Box<dyn Error>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.test_util.get_data_dir.md).
+
 
 Returns a directory path for finding test data.
 
@@ -114,6 +132,9 @@ Also reachable as `datafusion::test_util::parquet_test_data`
 ```rust
 fn parquet_test_data() -> String
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.test_util.parquet_test_data.md).
+
 
 Returns the parquet test data directory, which is by default
 stored in a git submodule rooted at
@@ -150,6 +171,9 @@ trait IntoArrayRef
 ```rust
 fn into_array_ref(self) -> ArrayRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.test_util.IntoArrayRef.md).
+
 
 Converts a vector or array into an ArrayRef.
 

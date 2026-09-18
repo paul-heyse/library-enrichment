@@ -41,6 +41,9 @@ fn set(&mut self, _: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key: &str, description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.parquet_config.DFParquetWriterVersion.md).
+
+
 Parquet writer version options for controlling the Parquet file format version
 
 This enum validates parquet writer version values at configuration time,

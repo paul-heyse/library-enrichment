@@ -20,6 +20,9 @@ enum Reader
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.record.reader.Reader.md).
+
+
 Reader tree for record assembly
 
 ---
@@ -39,6 +42,9 @@ struct ReaderIter
 ```rust
 fn next(&mut self) -> Option<Result<Row>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.record.reader.ReaderIter.md).
+
 
 Internal iterator of [`Row`]s for a reader.
 
@@ -69,6 +75,9 @@ fn with_batch_size(self, batch_size: usize) -> Self
 ```rust
 fn next(&mut self) -> Option<Result<Row>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.record.reader.RowIter.md).
+
 
 Access parquet data as an iterator of [`Row`]
 
@@ -105,6 +114,9 @@ fn build(&self, descr: SchemaDescPtr, row_group_reader: &dyn RowGroupReader) -> 
 fn new() -> Self
 fn with_batch_size(self, batch_size: usize) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.record.reader.TreeBuilder.md).
+
 
 Tree builder for `Reader` enum.
 Serves as a container of options for building a reader tree and a builder, and

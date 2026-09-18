@@ -28,6 +28,9 @@ fn serialize_metadata(&self) -> Option<String>
 fn storage_type(&self) -> DataType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.extension.DFExtensionType.md).
+
+
 Represents an implementation of a DataFusion extension type, including the storage [`DataType`].
 While, in general, an extension type can support several different storage types, a specific
 instance of it is always locked into just one exact storage type and metadata pairing.
@@ -82,6 +85,9 @@ directory.
 ```rust
 type DFExtensionTypeRef = std::sync::Arc<dyn DFExtensionType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.extension.DFExtensionTypeRef.md).
+
 
 A cheaply cloneable pointer to a [`DFExtensionType`].
 

@@ -1,0 +1,952 @@
+[
+  {
+    "id": "c7b50fdf31b5ebcd77bf3f63",
+    "path": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+    "name": "EliminateOuterJoin",
+    "owner": null,
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct EliminateOuterJoin",
+    "docs": "Attempt to simplify outer joins when filters make their null-padded\nrows impossible to observe.\n\nOuter joins are generally more expensive than inner joins and can block\npredicate pushdown and other optimizations. When a filter above an outer\njoin removes every row the join would add for unmatched input rows, the\njoin can be changed to a cheaper join type.\n\nFor example:\n\n```sql\nSELECT ...\nFROM a LEFT JOIN b ON ...\nWHERE b.xx = 100\n```\n\nFor unmatched rows from `a`, the LEFT JOIN would produce a row with\n`b.xx` set to NULL. The predicate `b.xx = 100` does not pass for those\nrows, so the query does not need the LEFT JOIN's null-padded output and\nthe join can be rewritten as an inner join.\n\nThe same reasoning can also simplify FULL joins to LEFT, RIGHT, or INNER\njoins when filters remove the rows padded on one or both sides.\n\nThis rule looks for a filter above an outer join:\n\n```text\nFilter(predicate)\n  Join(LEFT/RIGHT/FULL)\n```\n\nIt also handles plan shapes where projection pruning has inserted one or\nmore Projection nodes between the filter and join:\n\n```text\nFilter(predicate over projection output)\n  Projection(...)\n    ...\n      Join(LEFT/RIGHT/FULL)\n```\n\nIn the projection case, the rule rewrites a copy of the predicate through\neach Projection so it can analyze the predicate against the Join inputs.\nThe original filter predicate and Projection nodes are preserved when the\nplan is rebuilt.",
+    "span": {
+      "filename": "src/eliminate_outer_join.rs",
+      "begin": [
+        79,
+        1
+      ],
+      "end": [
+        79,
+        31
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": "unit",
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          511,
+          512,
+          513,
+          514,
+          515,
+          516,
+          517,
+          518,
+          519,
+          520,
+          521,
+          522,
+          523,
+          524,
+          525,
+          526,
+          527,
+          529,
+          531,
+          536
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "509",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.md",
+    "record_file": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.json",
+    "anchor": "op-c7b50fdf31b5ebcd77bf3f63",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "997eb32074cd11a9899c674e",
+    "path": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin::apply_order",
+    "name": "apply_order",
+    "owner": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_order(&self) -> Option<ApplyOrder>",
+    "docs": "",
+    "span": {
+      "filename": "src/eliminate_outer_join.rs",
+      "begin": [
+        94,
+        5
+      ],
+      "end": [
+        96,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 220,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ApplyOrder",
+                          "id": 221,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "220": "core::option::Option",
+      "221": "datafusion_optimizer::optimizer::ApplyOrder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "EliminateOuterJoin",
+          "id": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/eliminate_outer_join.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          147,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "533",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.md",
+    "record_file": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.json",
+    "anchor": "op-997eb32074cd11a9899c674e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "06aa6bd38d83eabe18c47639",
+    "path": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin::default",
+    "name": "default",
+    "owner": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn default() -> EliminateOuterJoin",
+    "docs": "",
+    "span": {
+      "filename": "src/eliminate_outer_join.rs",
+      "begin": [
+        78,
+        10
+      ],
+      "end": [
+        78,
+        17
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "resolved_path": {
+              "path": "EliminateOuterJoin",
+              "id": 509,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "509": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "EliminateOuterJoin",
+          "id": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/eliminate_outer_join.rs",
+        "begin": [
+          78,
+          10
+        ],
+        "end": [
+          78,
+          17
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "528",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.md",
+    "record_file": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.json",
+    "anchor": "op-06aa6bd38d83eabe18c47639",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9fba7b1cf21c09730df7e207",
+    "path": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin::fmt",
+    "name": "fmt",
+    "owner": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/eliminate_outer_join.rs",
+      "begin": [
+        78,
+        19
+      ],
+      "end": [
+        78,
+        24
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 53,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 54,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "53": "core::fmt::Formatter",
+      "54": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "EliminateOuterJoin",
+          "id": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/eliminate_outer_join.rs",
+        "begin": [
+          78,
+          19
+        ],
+        "end": [
+          78,
+          24
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "530",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.md",
+    "record_file": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.json",
+    "anchor": "op-9fba7b1cf21c09730df7e207",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "478cc2451e656049a92a21e9",
+    "path": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin::name",
+    "name": "name",
+    "owner": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &str",
+    "docs": "",
+    "span": {
+      "filename": "src/eliminate_outer_join.rs",
+      "begin": [
+        90,
+        5
+      ],
+      "end": [
+        92,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "EliminateOuterJoin",
+          "id": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/eliminate_outer_join.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          147,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "532",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.md",
+    "record_file": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.json",
+    "anchor": "op-478cc2451e656049a92a21e9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a1e399370b9583ebd967e061",
+    "path": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin::new",
+    "name": "new",
+    "owner": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/eliminate_outer_join.rs",
+      "begin": [
+        83,
+        5
+      ],
+      "end": [
+        85,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[expect(missing_docs)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "EliminateOuterJoin",
+          "id": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/eliminate_outer_join.rs",
+        "begin": [
+          81,
+          1
+        ],
+        "end": [
+          86,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "510",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.md",
+    "record_file": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.json",
+    "anchor": "op-a1e399370b9583ebd967e061",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "aba634df1e23045c0e9261af",
+    "path": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin::rewrite",
+    "name": "rewrite",
+    "owner": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn rewrite(&self, plan: LogicalPlan, _config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/eliminate_outer_join.rs",
+      "begin": [
+        102,
+        5
+      ],
+      "end": [
+        146,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "plan",
+              {
+                "resolved_path": {
+                  "path": "LogicalPlan",
+                  "id": 59,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "_config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "OptimizerConfig",
+                            "id": 223,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Transformed",
+                          "id": 148,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "LogicalPlan",
+                                      "id": 59,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "59": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "223": "datafusion_optimizer::optimizer::OptimizerConfig",
+      "61": "datafusion_common::error::Result",
+      "148": "datafusion_common::tree_node::Transformed"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "EliminateOuterJoin",
+          "id": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/eliminate_outer_join.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          147,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "535",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.md",
+    "record_file": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.json",
+    "anchor": "op-aba634df1e23045c0e9261af",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "323429b1bd2fe3720771ab4b",
+    "path": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin::supports_rewrite",
+    "name": "supports_rewrite",
+    "owner": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_rewrite(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/eliminate_outer_join.rs",
+      "begin": [
+        98,
+        5
+      ],
+      "end": [
+        100,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "EliminateOuterJoin",
+          "id": "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/eliminate_outer_join.rs",
+        "begin": [
+          89,
+          1
+        ],
+        "end": [
+          147,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "534",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.md",
+    "record_file": "operations/datafusion_optimizer.eliminate_outer_join.EliminateOuterJoin.json",
+    "anchor": "op-323429b1bd2fe3720771ab4b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

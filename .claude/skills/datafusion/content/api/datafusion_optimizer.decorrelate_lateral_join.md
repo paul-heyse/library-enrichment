@@ -29,6 +29,9 @@ fn rewrite(&self, plan: LogicalPlan, _config: &dyn OptimizerConfig) -> Result<Tr
 fn supports_rewrite(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.decorrelate_lateral_join.DecorrelateLateralJoin.md).
+
+
 Optimizer rule for rewriting lateral joins to joins
 
 ---

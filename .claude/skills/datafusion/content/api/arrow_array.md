@@ -12,6 +12,9 @@ Also reachable as `arrow::array::create_array`
 macro_rules! create_array
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.create_array.md).
+
+
 Creates an array from a literal slice of values,
 suitable for rapid testing and development.
 
@@ -49,6 +52,9 @@ Also reachable as `arrow::array::downcast_dictionary_array`, `arrow::downcast_di
 ```rust
 macro_rules! downcast_dictionary_array
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.downcast_dictionary_array.md).
+
 
 Downcast an [`Array`] to a [`DictionaryArray`] based on its [`DataType`], accepts
 a number of subsequent patterns to match the data type
@@ -97,6 +103,9 @@ Also reachable as `arrow::array::downcast_integer`
 macro_rules! downcast_integer
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.downcast_integer.md).
+
+
 Given one or more expressions evaluating to an integer [`DataType`] invokes the provided macro
 `m` with the corresponding integer [`ArrowPrimitiveType`], followed by any additional arguments
 
@@ -140,6 +149,9 @@ Also reachable as `arrow::array::downcast_integer_array`
 ```rust
 macro_rules! downcast_integer_array
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.downcast_integer_array.md).
+
 
 Given one or more expressions evaluating to an integer [`PrimitiveArray`] invokes the provided macro
 with the corresponding array, along with match statements for any non integer array types
@@ -185,6 +197,9 @@ Also reachable as `arrow::array::downcast_primitive`
 macro_rules! downcast_primitive
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.downcast_primitive.md).
+
+
 Given one or more expressions evaluating to primitive [`DataType`] invokes the provided macro
 `m` with the corresponding [`ArrowPrimitiveType`], followed by any additional arguments
 
@@ -227,6 +242,9 @@ Also reachable as `arrow::array::downcast_primitive_array`, `arrow::downcast_pri
 ```rust
 macro_rules! downcast_primitive_array
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.downcast_primitive_array.md).
+
 
 Downcast an [`Array`] to a [`PrimitiveArray`] based on its [`DataType`]
 accepts a number of subsequent patterns to match the data type
@@ -271,6 +289,9 @@ Also reachable as `arrow::array::downcast_run_array`
 ```rust
 macro_rules! downcast_run_array
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.downcast_run_array.md).
+
 
 Downcast an [`Array`] to a [`RunArray`] based on its [`DataType`], accepts
 a number of subsequent patterns to match the data type
@@ -319,6 +340,9 @@ Also reachable as `arrow::array::downcast_run_end_index`
 macro_rules! downcast_run_end_index
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.downcast_run_end_index.md).
+
+
 Given one or more expressions evaluating to an integer [`DataType`] invokes the provided macro
 `m` with the corresponding integer [`RunEndIndexType`], followed by any additional arguments
 
@@ -364,6 +388,9 @@ Also reachable as `arrow::array::downcast_temporal`
 macro_rules! downcast_temporal
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.downcast_temporal.md).
+
+
 Given one or more expressions evaluating to primitive [`DataType`] invokes the provided macro
 `m` with the corresponding [`ArrowPrimitiveType`], followed by any additional arguments
 
@@ -403,6 +430,9 @@ Also reachable as `arrow::array::downcast_temporal_array`
 ```rust
 macro_rules! downcast_temporal_array
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.downcast_temporal_array.md).
+
 
 Downcast an [`Array`] to a temporal [`PrimitiveArray`] based on its [`DataType`]
 accepts a number of subsequent patterns to match the data type
@@ -448,6 +478,9 @@ Also reachable as `arrow::array::record_batch`
 macro_rules! record_batch
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.record_batch.md).
+
+
 Creates a record batch from literal slice of values, suitable for rapid
 testing and development.
 
@@ -488,6 +521,9 @@ Also reachable as `arrow::array::ree_map`
 ```rust
 macro_rules! ree_map
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.ree_map.md).
+
 
 Recursively applies a function to the values of a RunEndEncoded array, preserving the run structure.
 

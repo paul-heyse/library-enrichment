@@ -1,0 +1,3053 @@
+[
+  {
+    "id": "051dfe2c8f53aab4fe5cb2ff",
+    "path": "arrow_array::builder::struct_builder::StructBuilder",
+    "name": "StructBuilder",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct StructBuilder",
+    "docs": "Builder for [`StructArray`]\n\nNote that callers should make sure that methods of all the child field builders are\nproperly called to maintain the consistency of the data structure.\n\n\nHandling arrays with complex layouts, such as `List<Struct<List<Struct>>>`, in Rust can be challenging due to its strong typing system.\nTo construct a collection builder ([`ListBuilder`], [`LargeListBuilder`], or [`MapBuilder`]) using [`make_builder`], multiple calls are required. This complexity arises from the recursive approach utilized by [`StructBuilder::from_fields`].\n\nInitially, [`StructBuilder::from_fields`] invokes [`make_builder`], which returns a `Box<dyn ArrayBuilder>`. To obtain the specific collection builder, one must first use [`StructBuilder::field_builder`] to get a `Collection<[Box<dyn ArrayBuilder>]>`. Subsequently, the `values()` result from this operation can be downcast to the desired builder type.\n\nFor example, when working with [`ListBuilder`], you would first call [`StructBuilder::field_builder::<ListBuilder<Box<dyn ArrayBuilder>>>`] and then downcast the [`Box<dyn ArrayBuilder>`] to the specific [`StructBuilder`] you need.\n\nFor a practical example see the code below:\n\n```rust\n   use arrow_array::builder::{ArrayBuilder, ListBuilder, StringBuilder, StructBuilder};\n   use arrow_schema::{DataType, Field, Fields};\n   use std::sync::Arc;\n\n   // This is an example column that has a List<Struct<List<Struct>>> layout\n   let mut example_col = ListBuilder::new(StructBuilder::from_fields(\n       vec![Field::new(\n           \"value_list\",\n           DataType::List(Arc::new(Field::new_list_field(\n               DataType::Struct(Fields::from(vec![\n                   Field::new(\"key\", DataType::Utf8, true),\n                   Field::new(\"value\", DataType::Utf8, true),\n               ])), //In this example we are trying to get to this builder and insert key/value pairs\n               true,\n           ))),\n           true,\n       )],\n       0,\n   ));\n\n  // We can obtain the StructBuilder without issues, because example_col was created with StructBuilder\n  let col_struct_builder: &mut StructBuilder = example_col.values();\n\n  // We can't obtain the ListBuilder<StructBuilder> with the expected generic types, because under the hood\n  // the StructBuilder was returned as a Box<dyn ArrayBuilder> and passed as such to the ListBuilder constructor\n\n  // This panics in runtime, even though we know that the builder is a ListBuilder<StructBuilder>.\n  // let sb = col_struct_builder\n  //     .field_builder::<ListBuilder<StructBuilder>>(0)\n  //     .as_mut()\n  //     .unwrap();\n\n  //To keep in line with Rust's strong typing, we fetch a ListBuilder<Box<dyn ArrayBuilder>> from the column StructBuilder first...\n  let mut list_builder_option =\n      col_struct_builder.field_builder::<ListBuilder<Box<dyn ArrayBuilder>>>(0);\n\n  let list_builder = list_builder_option.as_mut().unwrap();\n\n  // ... and then downcast the key/value pair values to a StructBuilder\n  let struct_builder = list_builder\n      .values()\n      .as_any_mut()\n      .downcast_mut::<StructBuilder>()\n      .unwrap();\n\n  // We can now append values to the StructBuilder\n  let key_builder = struct_builder.field_builder::<StringBuilder>(0).unwrap();\n  key_builder.append_value(\"my key\");\n\n  let value_builder = struct_builder.field_builder::<StringBuilder>(1).unwrap();\n  value_builder.append_value(\"my value\");\n\n  struct_builder.append(true);\n  list_builder.append(true);\n  col_struct_builder.append(true);\n  example_col.append(true);\n\n  let array = example_col.finish();\n\n  println!(\"My array: {:?}\", array);\n```\n",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        102,
+        1
+      ],
+      "end": [
+        106,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          2985,
+          2986,
+          2987,
+          2988,
+          2989,
+          2990,
+          2991,
+          2992,
+          2993,
+          2994,
+          2995,
+          2996,
+          2997,
+          2998,
+          2999,
+          3001,
+          3009
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`StructBuilder::field_builder`": 2970,
+      "`LargeListBuilder`": 722,
+      "`make_builder`": 2968,
+      "`StructBuilder::from_fields`": 2969,
+      "`ListBuilder`": 721,
+      "`StructArray`": 729,
+      "`MapBuilder`": 730,
+      "`StructBuilder::field_builder::<ListBuilder<Box<dyn ArrayBuilder>>>`": 2970,
+      "`Box<dyn ArrayBuilder>`": 1788,
+      "`StructBuilder`": 2971
+    },
+    "link_paths": {
+      "`StructBuilder::field_builder`": "arrow_array::builder::struct_builder::StructBuilder::field_builder",
+      "`LargeListBuilder`": "arrow_array::builder::LargeListBuilder",
+      "`make_builder`": "arrow_array::builder::make_builder",
+      "`StructBuilder::from_fields`": "arrow_array::builder::struct_builder::StructBuilder::from_fields",
+      "`ListBuilder`": "arrow_array::builder::ListBuilder",
+      "`StructArray`": "arrow_array::array::struct_array::StructArray",
+      "`MapBuilder`": "arrow_array::builder::map_builder::MapBuilder",
+      "`StructBuilder::field_builder::<ListBuilder<Box<dyn ArrayBuilder>>>`": "arrow_array::builder::struct_builder::StructBuilder::field_builder",
+      "`Box<dyn ArrayBuilder>`": "alloc::boxed::Box",
+      "`StructBuilder`": "arrow_array::builder::struct_builder::StructBuilder"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2971",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-051dfe2c8f53aab4fe5cb2ff",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`StructBuilder::field_builder`": "../operations/arrow_array.builder.struct_builder.StructBuilder.md#op-f4d1de2521251256c8d56494",
+      "`LargeListBuilder`": "../operations/arrow_array.builder.LargeListBuilder.md#op-522c9afea40c181a380a83f7",
+      "`make_builder`": "../operations/arrow_array.builder.make_builder.md#op-6d9975ab37c23201ddfa88a7",
+      "`StructBuilder::from_fields`": "../operations/arrow_array.builder.struct_builder.StructBuilder.md#op-a08efa0b6f317036e353af63",
+      "`ListBuilder`": "../operations/arrow_array.builder.ListBuilder.md#op-cde9abc0ccf9b02f84620bf9",
+      "`StructArray`": "../operations/arrow_array.array.struct_array.StructArray.md#op-994d82c95af72fa0e3aa6207",
+      "`MapBuilder`": "../operations/arrow_array.builder.map_builder.MapBuilder.md#op-29b3c25b26b6ef8ae009ae70",
+      "`StructBuilder::field_builder::<ListBuilder<Box<dyn ArrayBuilder>>>`": "../operations/arrow_array.builder.struct_builder.StructBuilder.md#op-f4d1de2521251256c8d56494",
+      "`StructBuilder`": "../operations/arrow_array.builder.struct_builder.StructBuilder.md#op-051dfe2c8f53aab4fe5cb2ff"
+    }
+  },
+  {
+    "id": "bf2176493bc9a0edb602284c",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::append",
+    "name": "append",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append(&mut self, is_valid: bool)",
+    "docs": "Appends an element (either null or non-null) to the struct. The actual elements\nshould be appended for each child sub-array in a consistent way.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        216,
+        5
+      ],
+      "end": [
+        218,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "is_valid",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2977",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-bf2176493bc9a0edb602284c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "12c17be5e3dc2a7357cbb044",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::append_non_nulls",
+    "name": "append_non_nulls",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_non_nulls(&mut self, n: usize)",
+    "docs": "Appends `n` non-null entries into the builder.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        222,
+        5
+      ],
+      "end": [
+        224,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2978",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-12c17be5e3dc2a7357cbb044",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "65a1063e6efb1b4f71de7d14",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::append_null",
+    "name": "append_null",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_null(&mut self)",
+    "docs": "Appends a null element to the struct.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        228,
+        5
+      ],
+      "end": [
+        230,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2979",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-65a1063e6efb1b4f71de7d14",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "125f30e2a339d18b8b39e60c",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::append_nulls",
+    "name": "append_nulls",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append_nulls(&mut self, n: usize)",
+    "docs": "Appends `n` `null`s into the builder.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        234,
+        5
+      ],
+      "end": [
+        236,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2980",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-125f30e2a339d18b8b39e60c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3660ae6753b411806b561e8e",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::as_any",
+    "name": "as_any",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any(&self) -> &dyn Any",
+    "docs": "Returns the builder as a non-mutable `Any` reference.\n\nThis is most useful when one wants to call non-mutable APIs on a specific builder\ntype. In this case, one can first cast this into a `Any`, and then use\n`downcast_ref` to get a reference on the specific builder.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        147,
+        5
+      ],
+      "end": [
+        149,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          164,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3006",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-3660ae6753b411806b561e8e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4a1915494c01fa710aca3b72",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::as_any_mut",
+    "name": "as_any_mut",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any_mut(&mut self) -> &mut dyn Any",
+    "docs": "Returns the builder as a mutable `Any` reference.\n\nThis is most useful when one wants to call mutable APIs on a specific builder\ntype. In this case, one can first cast this into a `Any`, and then use\n`downcast_mut` to get a reference on the specific builder.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        156,
+        5
+      ],
+      "end": [
+        158,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          164,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3007",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-4a1915494c01fa710aca3b72",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f4d1de2521251256c8d56494",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::field_builder",
+    "name": "field_builder",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn field_builder<T: ArrayBuilder>(&mut self, i: usize) -> Option<&mut T>",
+    "docs": "Returns a mutable reference to the child field builder at index `i`.\nResult will be `None` if the input type `T` provided doesn't match the actual\nfield builder's type.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        189,
+        5
+      ],
+      "end": [
+        191,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "i",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": true,
+                          "type": {
+                            "generic": "T"
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "ArrayBuilder",
+                          "id": 663,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "663": "arrow_array::builder::ArrayBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2970",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-f4d1de2521251256c8d56494",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fc3a31d61c34bf99234251de",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::field_builders",
+    "name": "field_builders",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn field_builders(&self) -> &[Box<dyn ArrayBuilder>]",
+    "docs": "Returns a reference to field builders",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        194,
+        5
+      ],
+      "end": [
+        196,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "Box",
+                    "id": 1788,
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "dyn_trait": {
+                                "traits": [
+                                  {
+                                    "trait": {
+                                      "path": "ArrayBuilder",
+                                      "id": 663,
+                                      "args": null
+                                    },
+                                    "generic_params": []
+                                  }
+                                ],
+                                "lifetime": null
+                              }
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1788": "alloc::boxed::Box",
+      "663": "arrow_array::builder::ArrayBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2973",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-fc3a31d61c34bf99234251de",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b44b8717c433fdb8704249b8",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::field_builders_mut",
+    "name": "field_builders_mut",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn field_builders_mut(&mut self) -> &mut [Box<dyn ArrayBuilder>]",
+    "docs": "Returns a mutable reference to field builders",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        199,
+        5
+      ],
+      "end": [
+        201,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "Box",
+                    "id": 1788,
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "dyn_trait": {
+                                "traits": [
+                                  {
+                                    "trait": {
+                                      "path": "ArrayBuilder",
+                                      "id": 663,
+                                      "args": null
+                                    },
+                                    "generic_params": []
+                                  }
+                                ],
+                                "lifetime": null
+                              }
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1788": "alloc::boxed::Box",
+      "663": "arrow_array::builder::ArrayBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2974",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-b44b8717c433fdb8704249b8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8249940eaeb1d129523f0028",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::fields",
+    "name": "fields",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fields(&self) -> &Fields",
+    "docs": "Returns the fields for the struct this builder is building.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        209,
+        5
+      ],
+      "end": [
+        211,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Fields",
+                  "id": 1231,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1231": "arrow_schema::fields::Fields"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2976",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-8249940eaeb1d129523f0028",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2851948daed099ed802c7093",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> StructArray",
+    "docs": "Builds the `StructArray` and reset this builder.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        239,
+        5
+      ],
+      "end": [
+        248,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "StructArray",
+              "id": 729,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "729": "arrow_array::array::struct_array::StructArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2981",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-2851948daed099ed802c7093",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e5d5444ae12f37b984587a70",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::finish",
+    "name": "finish",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> ArrayRef",
+    "docs": "Builds the array.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        129,
+        5
+      ],
+      "end": [
+        131,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          164,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3003",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-e5d5444ae12f37b984587a70",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "777b327bfa83d9e7ac53e7c3",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> StructArray",
+    "docs": "Builds the `StructArray` without resetting the builder.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        251,
+        5
+      ],
+      "end": [
+        270,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "StructArray",
+              "id": 729,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "729": "arrow_array::array::struct_array::StructArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2982",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-777b327bfa83d9e7ac53e7c3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b49546e5a2dbbedf1fc67725",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::finish_cloned",
+    "name": "finish_cloned",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_cloned(&self) -> ArrayRef",
+    "docs": "Builds the array without resetting the builder.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        134,
+        5
+      ],
+      "end": [
+        136,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          164,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3004",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-b49546e5a2dbbedf1fc67725",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "963137ac777317ae643b37c6",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::finish_preserve_values",
+    "name": "finish_preserve_values",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish_preserve_values(&mut self) -> ArrayRef",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        138,
+        5
+      ],
+      "end": [
+        140,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          164,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3005",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-963137ac777317ae643b37c6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f11ad4031d1d70774d36c371",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::fmt",
+    "name": "fmt",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        109,
+        5
+      ],
+      "end": [
+        115,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::fmt::Formatter",
+                      "id": 117,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 118,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "117": "core::fmt::Formatter",
+      "118": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          108,
+          1
+        ],
+        "end": [
+          116,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3000",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-f11ad4031d1d70774d36c371",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a08efa0b6f317036e353af63",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::from_fields",
+    "name": "from_fields",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from_fields(fields: impl Into<Fields>, capacity: usize) -> Self",
+    "docs": "Creates a new `StructBuilder` from [`Fields`] and `capacity`",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        177,
+        5
+      ],
+      "end": [
+        184,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "fields",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 20,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Fields",
+                                    "id": 1231,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ],
+            [
+              "capacity",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Into<Fields>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 20,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Fields",
+                                      "id": 1231,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "core::convert::Into",
+      "1231": "arrow_schema::fields::Fields"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Fields`": 1231
+    },
+    "link_paths": {
+      "`Fields`": "arrow_schema::fields::Fields"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2969",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-a08efa0b6f317036e353af63",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Fields`": "../operations/arrow_schema.fields.Fields.md#op-8db4115e48dc67eeb9be6faa"
+    }
+  },
+  {
+    "id": "7621a809ec1978f9158829c3",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::into_box_any",
+    "name": "into_box_any",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_box_any(Box<self>) -> Box<dyn Any>",
+    "docs": "Returns the boxed builder as a box of `Any`.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        161,
+        5
+      ],
+      "end": [
+        163,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Box",
+                  "id": 1788,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Box",
+              "id": 1788,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "Any",
+                                "id": 106,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1788": "alloc::boxed::Box",
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          164,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3008",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-7621a809ec1978f9158829c3",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "10bcc5831ecf6449ee876d5e",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::len",
+    "name": "len",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "Returns the number of array slots in the builder.\n\nNote that this always return the first child field builder's length, and it is\nthe caller's responsibility to maintain the consistency that all the child field\nbuilder should have the equal number of elements.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        124,
+        5
+      ],
+      "end": [
+        126,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ArrayBuilder",
+        "id": "arrow_array::builder::ArrayBuilder",
+        "args": null
+      },
+      "trait_path": "arrow_array::builder::ArrayBuilder",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          118,
+          1
+        ],
+        "end": [
+          164,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3002",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-10bcc5831ecf6449ee876d5e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2d6cab64b0961c8838a15289",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::new",
+    "name": "new",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(fields: impl Into<Fields>, field_builders: Vec<Box<dyn ArrayBuilder>>) -> Self",
+    "docs": "Creates a new `StructBuilder`",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        168,
+        5
+      ],
+      "end": [
+        174,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "fields",
+              {
+                "impl_trait": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Into",
+                        "id": 20,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Fields",
+                                    "id": 1231,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ]
+              }
+            ],
+            [
+              "field_builders",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Box",
+                              "id": 1788,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ArrayBuilder",
+                                                "id": 663,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "impl Into<Fields>",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Into",
+                          "id": 20,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Fields",
+                                      "id": 1231,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "20": "core::convert::Into",
+      "1231": "arrow_schema::fields::Fields",
+      "145": "alloc::vec::Vec",
+      "1788": "alloc::boxed::Box",
+      "663": "arrow_array::builder::ArrayBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2972",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-2d6cab64b0961c8838a15289",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "30cb180f67fda375301c3fc5",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::num_fields",
+    "name": "num_fields",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn num_fields(&self) -> usize",
+    "docs": "Returns the number of fields for the struct this builder is building.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        204,
+        5
+      ],
+      "end": [
+        206,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2975",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-30cb180f67fda375301c3fc5",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "76e5d0654005a16aa68d60aa",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::validity_capacity",
+    "name": "validity_capacity",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn validity_capacity(&self) -> usize",
+    "docs": "Returns the current null buffer allocated capacity, in bytes.",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        319,
+        5
+      ],
+      "end": [
+        321,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2984",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-76e5d0654005a16aa68d60aa",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "03d3b782c1c0a9a2bd88fb37",
+    "path": "arrow_array::builder::struct_builder::StructBuilder::validity_slice",
+    "name": "validity_slice",
+    "owner": "arrow_array::builder::struct_builder::StructBuilder",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn validity_slice(&self) -> Option<&[u8]>",
+    "docs": "Returns the current null buffer as a slice",
+    "span": {
+      "filename": "src/builder/struct_builder.rs",
+      "begin": [
+        314,
+        5
+      ],
+      "end": [
+        316,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "slice": {
+                              "primitive": "u8"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StructBuilder",
+          "id": "arrow_array::builder::struct_builder::StructBuilder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/builder/struct_builder.rs",
+        "begin": [
+          166,
+          1
+        ],
+        "end": [
+          322,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2983",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.struct_builder.StructBuilder.md",
+    "record_file": "operations/arrow_array.builder.struct_builder.StructBuilder.json",
+    "anchor": "op-03d3b782c1c0a9a2bd88fb37",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

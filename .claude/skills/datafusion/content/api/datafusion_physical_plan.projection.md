@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 19 public items · structured records in [`m
 fn all_alias_free_columns(exprs: &[ProjectionExpr]) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.all_alias_free_columns.md).
+
+
 Given the expression set of a projection, checks if the projection causes
 any renaming or constructs a non-`Column` physical expression.
 
@@ -23,6 +26,9 @@ any renaming or constructs a non-`Column` physical expression.
 fn all_columns(exprs: &[ProjectionExpr]) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.all_columns.md).
+
+
 Returns `true` if all the expressions in the argument are `Column`s.
 
 ---
@@ -34,6 +40,9 @@ Returns `true` if all the expressions in the argument are `Column`s.
 ```rust
 fn join_allows_pushdown(projection_as_columns: &[(super::expressions::Column, String)], join_schema: &arrow::datatypes::SchemaRef, far_right_left_col_ind: i32, far_left_right_col_ind: i32) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.join_allows_pushdown.md).
+
 
 Checks three conditions for pushing a projection down through a join:
 - Projection must narrow the join output schema.
@@ -51,6 +60,9 @@ Checks three conditions for pushing a projection down through a join:
 fn join_table_borders(left_table_column_count: usize, projection_as_columns: &[(super::expressions::Column, String)]) -> (i32, i32)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.join_table_borders.md).
+
+
 Returns the last index before encountering a column coming from the right table when traveling
 through the projection from left to right, and the last index before encountering a column
 coming from the left table when traveling through the projection from right to left.
@@ -67,6 +79,9 @@ if there is no column in the projection coming from the right side, it returns (
 fn make_with_child(projection: &ProjectionExec, child: &std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.make_with_child.md).
+
+
 Creates a new [`ProjectionExec`] instance with the given child plan and
 projected expressions, preserving the original output metadata.
 
@@ -79,6 +94,9 @@ projected expressions, preserving the original output metadata.
 ```rust
 fn new_join_children(projection_as_columns: &[(super::expressions::Column, String)], far_right_left_col_ind: i32, far_left_right_col_ind: i32, left_child: &std::sync::Arc<dyn ExecutionPlan>, right_child: &std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<(ProjectionExec, ProjectionExec)>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.new_join_children.md).
+
 
 If pushing down the projection over this join's children seems possible,
 this function constructs the new [`ProjectionExec`]s that will come on top
@@ -94,6 +112,9 @@ of the original children of the join.
 fn new_projections_for_columns(projection: &[ProjectionExpr], source: &[usize]) -> Vec<usize>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.new_projections_for_columns.md).
+
+
 Updates a source provider's projected columns according to the given
 projection operator's expressions. To use this function safely, one must
 ensure that all expressions are `Column` expressions without aliases.
@@ -108,6 +129,9 @@ ensure that all expressions are `Column` expressions without aliases.
 fn physical_to_column_exprs(exprs: &[ProjectionExpr]) -> Option<Vec<(super::expressions::Column, String)>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.physical_to_column_exprs.md).
+
+
 Downcasts all the expressions in `exprs` to `Column`s. If any of the given
 expressions is not a `Column`, returns `None`.
 
@@ -120,6 +144,9 @@ expressions is not a `Column`, returns `None`.
 ```rust
 fn remove_unnecessary_projections(plan: std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<std::sync::Arc<dyn ExecutionPlan>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.remove_unnecessary_projections.md).
+
 
 This function checks if `plan` is a [`ProjectionExec`], and inspects its
 input(s) to test whether it can push `plan` under its input(s). This function
@@ -136,6 +163,9 @@ by leveraging source providers with built-in projection capabilities.
 fn try_embed_projection<Exec: EmbeddedProjection + 'static>(projection: &ProjectionExec, execution_plan: &Exec) -> datafusion_common::Result<Option<std::sync::Arc<dyn ExecutionPlan>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.try_embed_projection.md).
+
+
 Some projection can't be pushed down left input or right input of hash join because filter or on need may need some columns that won't be used in later.
 By embed those projection to hash join, we can reduce the cost of build_batch_from_indices in hash join (build_batch_from_indices need to can compute::take() for each column) and avoid unnecessary output creation.
 
@@ -151,6 +181,9 @@ By embed those projection to hash join, we can reduce the cost of build_batch_fr
 fn try_pushdown_through_join(projection: &ProjectionExec, join_left: &std::sync::Arc<dyn ExecutionPlan>, join_right: &std::sync::Arc<dyn ExecutionPlan>, join_on: joins::utils::JoinOnRef<'_>, schema: &arrow::datatypes::SchemaRef, filter: Option<&joins::utils::JoinFilter>) -> datafusion_common::Result<Option<JoinData>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.try_pushdown_through_join.md).
+
+
 ---
 
 ## try_pushdown_through_join_with_column_indices
@@ -160,6 +193,9 @@ fn try_pushdown_through_join(projection: &ProjectionExec, join_left: &std::sync:
 ```rust
 fn try_pushdown_through_join_with_column_indices(projection: &ProjectionExec, join_left: &std::sync::Arc<dyn ExecutionPlan>, join_right: &std::sync::Arc<dyn ExecutionPlan>, join_on: joins::utils::JoinOnRef<'_>, schema: &arrow::datatypes::SchemaRef, filter: Option<&joins::utils::JoinFilter>, column_indices: &[joins::utils::ColumnIndex]) -> datafusion_common::Result<Option<JoinData>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.try_pushdown_through_join_with_column_indices.md).
+
 
 Attempts to move a projection below a join by mapping each join output
 column to the child column that produced it.
@@ -190,6 +226,9 @@ index outside the corresponding child schema.
 fn update_join_filter(projection_left_exprs: &[(super::expressions::Column, String)], projection_right_exprs: &[(super::expressions::Column, String)], join_filter: &joins::utils::JoinFilter, left_field_size: usize) -> Option<joins::utils::JoinFilter>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.update_join_filter.md).
+
+
 Tries to update the column indices of a [`JoinFilter`] as if the input of
 the join was replaced by a projection.
 
@@ -202,6 +241,9 @@ the join was replaced by a projection.
 ```rust
 fn update_join_on(proj_left_exprs: &[(super::expressions::Column, String)], proj_right_exprs: &[(super::expressions::Column, String)], hash_join_on: &[(datafusion_physical_expr_common::physical_expr::PhysicalExprRef, datafusion_physical_expr_common::physical_expr::PhysicalExprRef)], left_field_size: usize) -> Option<Vec<(datafusion_physical_expr_common::physical_expr::PhysicalExprRef, datafusion_physical_expr_common::physical_expr::PhysicalExprRef)>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.update_join_on.md).
+
 
 Tries to update the equi-join `Column`'s of a join as if the input of
 the join was replaced by a projection.
@@ -216,6 +258,9 @@ the join was replaced by a projection.
 fn update_ordering(ordering: datafusion_physical_expr_common::sort_expr::LexOrdering, projected_exprs: &[ProjectionExpr]) -> datafusion_common::Result<Option<datafusion_physical_expr_common::sort_expr::LexOrdering>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.update_ordering.md).
+
+
 Updates the given lexicographic ordering according to given projected
 expressions using the [`update_expr`] function.
 
@@ -228,6 +273,9 @@ expressions using the [`update_expr`] function.
 ```rust
 fn update_ordering_requirement(reqs: datafusion_physical_expr_common::sort_expr::LexRequirement, projected_exprs: &[ProjectionExpr]) -> datafusion_common::Result<Option<datafusion_physical_expr_common::sort_expr::LexRequirement>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.update_ordering_requirement.md).
+
 
 Updates the given lexicographic requirement according to given projected
 expressions using the [`update_expr`] function.
@@ -243,6 +291,9 @@ struct JoinData
 ```
 
 **Fields**: `projected_left_child`, `projected_right_child`, `join_filter`, `join_on`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.JoinData.md).
+
 
 ---
 
@@ -301,6 +352,9 @@ fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn Execut
 fn with_preserve_order(&self, preserve_order: bool) -> Option<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.ProjectionExec.md).
+
+
 [`ExecutionPlan`] for a projection
 
 Computes a set of scalar value expressions for each input row, producing one
@@ -327,6 +381,9 @@ trait EmbeddedProjection: ExecutionPlan + Sized
 ```rust
 fn with_projection(&self, projection: Option<Vec<usize>>) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.projection.EmbeddedProjection.md).
+
 
 Trait for execution plans that can embed a projection, avoiding a separate
 [`ProjectionExec`] wrapper.

@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::nth_value`
 fn nth_value(expr: datafusion_expr::Expr, n: i64, order_by: Vec<datafusion_expr::SortExpr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.nth_value.nth_value.md).
+
+
 Returns the nth value in a group of values.
 
 ---
@@ -23,6 +26,9 @@ Returns the nth value in a group of values.
 ```rust
 fn nth_value_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.nth_value.nth_value_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`NthValueAgg`]
 
@@ -56,6 +62,9 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.nth_value.NthValueAccumulator.md).
+
+
 ---
 
 ## NthValueAgg
@@ -87,6 +96,9 @@ fn reverse_expr(&self) -> ReversedUDAF
 fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.nth_value.NthValueAgg.md).
+
 
 Expression for a `NTH_VALUE(..., ... ORDER BY ...)` aggregation. In a multi
 partition setting, partial aggregations are computed for every partition,
@@ -121,5 +133,8 @@ fn size(&self) -> usize
 fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.nth_value.TrivialNthValueAccumulator.md).
+
 
 ---

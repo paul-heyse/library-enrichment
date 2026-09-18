@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## IncrementalReplay
 
 `enum` · `buoyant_kernel::snapshot::builder::IncrementalReplay`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.snapshot.builder.IncrementalReplay.md)
 
 Also reachable as `buoyant_kernel::snapshot::IncrementalReplay`, `delta_kernel::snapshot::builder::IncrementalReplay`
 
@@ -30,6 +31,7 @@ and set transactions (useful for writers), all without extra log replay.
 ## SnapshotBuilder
 
 `struct` · `buoyant_kernel::snapshot::builder::SnapshotBuilder`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.snapshot.builder.SnapshotBuilder.md)
 
 Also reachable as `buoyant_kernel::snapshot::SnapshotBuilder`, `delta_kernel::snapshot::builder::SnapshotBuilder`
 

@@ -10,6 +10,9 @@ Crate `parquet` · 35 public items · structured records in [`model/parquet.file
 const DEFAULT_BLOOM_FILTER_FPP: f64 = 0.05
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_BLOOM_FILTER_FPP.md).
+
+
 Default value for [`BloomFilterProperties::fpp()`]
 
 ---
@@ -21,6 +24,9 @@ Default value for [`BloomFilterProperties::fpp()`]
 ```rust
 const DEFAULT_BLOOM_FILTER_NDV: u64 = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_BLOOM_FILTER_NDV.md).
+
 
 Default value for [`BloomFilterProperties::ndv()`].
 
@@ -40,6 +46,9 @@ if the user configured a custom row group size.
 const DEFAULT_BLOOM_FILTER_POSITION: BloomFilterPosition = BloomFilterPosition::AfterRowGroup
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_BLOOM_FILTER_POSITION.md).
+
+
 Default value for [`WriterProperties::bloom_filter_position`]
 
 ---
@@ -51,6 +60,9 @@ Default value for [`WriterProperties::bloom_filter_position`]
 ```rust
 const DEFAULT_CDC_MAX_CHUNK_SIZE: usize = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_CDC_MAX_CHUNK_SIZE.md).
+
 
 Default maximum chunk size for content-defined chunking: 1024 KiB.
 
@@ -64,6 +76,9 @@ Default maximum chunk size for content-defined chunking: 1024 KiB.
 const DEFAULT_CDC_MIN_CHUNK_SIZE: usize = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_CDC_MIN_CHUNK_SIZE.md).
+
+
 Default minimum chunk size for content-defined chunking: 256 KiB.
 
 ---
@@ -75,6 +90,9 @@ Default minimum chunk size for content-defined chunking: 256 KiB.
 ```rust
 const DEFAULT_CDC_NORM_LEVEL: i32 = 0
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_CDC_NORM_LEVEL.md).
+
 
 Default normalization level for content-defined chunking.
 
@@ -88,6 +106,9 @@ Default normalization level for content-defined chunking.
 const DEFAULT_COERCE_TYPES: bool = false
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_COERCE_TYPES.md).
+
+
 Default values for [`WriterProperties::coerce_types`]
 
 ---
@@ -99,6 +120,9 @@ Default values for [`WriterProperties::coerce_types`]
 ```rust
 const DEFAULT_COLUMN_INDEX_TRUNCATE_LENGTH: Option<usize> = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_COLUMN_INDEX_TRUNCATE_LENGTH.md).
+
 
 Default value for [`WriterProperties::column_index_truncate_length`]
 
@@ -112,6 +136,9 @@ Default value for [`WriterProperties::column_index_truncate_length`]
 const DEFAULT_COMPRESSION: basic::Compression = Compression::UNCOMPRESSED
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_COMPRESSION.md).
+
+
 Default value for [`WriterProperties::compression`]
 
 ---
@@ -123,6 +150,9 @@ Default value for [`WriterProperties::compression`]
 ```rust
 const DEFAULT_CREATED_BY: &str = "parquet-rs version 59.3.0"
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_CREATED_BY.md).
+
 
 Default value for [`WriterProperties::created_by`]
 
@@ -136,6 +166,9 @@ Default value for [`WriterProperties::created_by`]
 const DEFAULT_DATA_PAGE_ROW_COUNT_LIMIT: usize = 20_000
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_DATA_PAGE_ROW_COUNT_LIMIT.md).
+
+
 Default value for [`WriterProperties::data_page_row_count_limit`]
 
 ---
@@ -147,6 +180,9 @@ Default value for [`WriterProperties::data_page_row_count_limit`]
 ```rust
 const DEFAULT_DATA_PAGE_V2_COMPRESSION_RATIO_THRESHOLD: f64 = 1.0
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_DATA_PAGE_V2_COMPRESSION_RATIO_THRESHOLD.md).
+
 
 Default value for [`WriterProperties::data_page_v2_compression_ratio_threshold`]
 
@@ -160,6 +196,9 @@ Default value for [`WriterProperties::data_page_v2_compression_ratio_threshold`]
 const DEFAULT_DICTIONARY_ENABLED: bool = true
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_DICTIONARY_ENABLED.md).
+
+
 Default value for [`WriterProperties::dictionary_enabled`]
 
 ---
@@ -171,6 +210,9 @@ Default value for [`WriterProperties::dictionary_enabled`]
 ```rust
 const DEFAULT_DICTIONARY_PAGE_SIZE_LIMIT: usize = DEFAULT_PAGE_SIZE
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_DICTIONARY_PAGE_SIZE_LIMIT.md).
+
 
 Default value for [`WriterProperties::dictionary_page_size_limit`]
 
@@ -184,6 +226,9 @@ Default value for [`WriterProperties::dictionary_page_size_limit`]
 const DEFAULT_MAX_ROW_GROUP_ROW_COUNT: usize = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_MAX_ROW_GROUP_ROW_COUNT.md).
+
+
 Default value for [`WriterProperties::max_row_group_row_count`]
 
 ---
@@ -195,6 +240,9 @@ Default value for [`WriterProperties::max_row_group_row_count`]
 ```rust
 const DEFAULT_OFFSET_INDEX_DISABLED: bool = false
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_OFFSET_INDEX_DISABLED.md).
+
 
 Default value for [`WriterProperties::offset_index_disabled`]
 
@@ -208,6 +256,9 @@ Default value for [`WriterProperties::offset_index_disabled`]
 const DEFAULT_PAGE_SIZE: usize = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_PAGE_SIZE.md).
+
+
 Default value for [`WriterProperties::data_page_size_limit`]
 
 ---
@@ -219,6 +270,9 @@ Default value for [`WriterProperties::data_page_size_limit`]
 ```rust
 const DEFAULT_STATISTICS_ENABLED: EnabledStatistics = EnabledStatistics::Page
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_STATISTICS_ENABLED.md).
+
 
 Default value for [`WriterProperties::statistics_enabled`]
 
@@ -232,6 +286,9 @@ Default value for [`WriterProperties::statistics_enabled`]
 const DEFAULT_STATISTICS_TRUNCATE_LENGTH: Option<usize> = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_STATISTICS_TRUNCATE_LENGTH.md).
+
+
 Default values for [`WriterProperties::statistics_truncate_length`]
 
 ---
@@ -243,6 +300,9 @@ Default values for [`WriterProperties::statistics_truncate_length`]
 ```rust
 const DEFAULT_WRITER_VERSION: WriterVersion = WriterVersion::PARQUET_1_0
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_WRITER_VERSION.md).
+
 
 Default value for [`WriterProperties::writer_version`]
 
@@ -256,6 +316,9 @@ Default value for [`WriterProperties::writer_version`]
 const DEFAULT_WRITE_BATCH_SIZE: usize = 1024
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_WRITE_BATCH_SIZE.md).
+
+
 Default value for [`WriterProperties::write_batch_size`]
 
 ---
@@ -268,6 +331,9 @@ Default value for [`WriterProperties::write_batch_size`]
 const DEFAULT_WRITE_PAGE_HEADER_STATISTICS: bool = false
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_WRITE_PAGE_HEADER_STATISTICS.md).
+
+
 Default value for [`WriterProperties::write_page_header_statistics`]
 
 ---
@@ -279,6 +345,9 @@ Default value for [`WriterProperties::write_page_header_statistics`]
 ```rust
 const DEFAULT_WRITE_PATH_IN_SCHEMA: bool = true
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.DEFAULT_WRITE_PATH_IN_SCHEMA.md).
+
 
 Default value for [`WriterProperties::write_path_in_schema`]
 
@@ -295,6 +364,9 @@ enum BloomFilterPosition
 **Variants**: `AfterRowGroup`, `End`
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.BloomFilterPosition.md).
+
 
 Where in the file [`ArrowWriter`](crate::arrow::arrow_writer::ArrowWriter) should
 write Bloom filters
@@ -322,6 +394,9 @@ enum EnabledStatistics
 ```rust
 fn from_str(s: &str) -> Result<Self, Self::Err>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.EnabledStatistics.md).
+
 
 Controls the level of statistics to be computed by the writer and stored in
 the parquet file.
@@ -361,6 +436,9 @@ fn as_num(&self) -> i32
 fn from_str(s: &str) -> Result<Self, Self::Err>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.WriterVersion.md).
+
+
 Parquet writer version.
 
 Basic constant, which is not part of the Thrift definition.
@@ -384,6 +462,9 @@ fn builder() -> BloomFilterPropertiesBuilder
 fn fpp(&self) -> f64
 fn ndv(&self) -> u64
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.BloomFilterProperties.md).
+
 
 Controls the bloom filter to be computed by the writer.
 
@@ -439,6 +520,9 @@ fn with_fpp(self, fpp: f64) -> Self
 fn with_max_ndv(self, ndv: u64) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.BloomFilterPropertiesBuilder.md).
+
+
 Builder for [`BloomFilterProperties`].
 
 Use [`BloomFilterProperties::builder`] or [`BloomFilterPropertiesBuilder::new`]
@@ -457,6 +541,9 @@ struct CdcOptions
 **Fields**: `min_chunk_size`, `max_chunk_size`, `norm_level`
 
 **Derives**: Clone, Copy, Debug, Default, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.CdcOptions.md).
+
 
 EXPERIMENTAL: Options for content-defined chunking (CDC).
 
@@ -486,6 +573,9 @@ struct ReaderProperties
 ```rust
 fn builder() -> ReaderPropertiesBuilder
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.ReaderProperties.md).
+
 
 Configuration settings for reading parquet files.
 
@@ -524,6 +614,9 @@ fn set_backward_compatible_lz4(self, value: bool) -> Self
 fn set_read_bloom_filter(self, value: bool) -> Self
 fn set_read_page_statistics(self, value: bool) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.ReaderPropertiesBuilder.md).
+
 
 Builder for parquet file reader configuration. See example on
 [`ReaderProperties`]
@@ -578,6 +671,9 @@ fn write_page_header_statistics(&self, col: &ColumnPath) -> bool
 fn write_path_in_schema(&self) -> bool
 fn writer_version(&self) -> WriterVersion
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.WriterProperties.md).
+
 
 Configuration settings for writing parquet files.
 
@@ -683,6 +779,9 @@ fn with_file_encryption_properties(self, file_encryption_properties: Arc<FileEnc
 fn from(props: WriterProperties) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.WriterPropertiesBuilder.md).
+
+
 Builder for  [`WriterProperties`] Parquet writer configuration.
 
 See example on [`WriterProperties`]
@@ -697,6 +796,9 @@ See example on [`WriterProperties`]
 type ReaderPropertiesPtr = std::sync::Arc<ReaderProperties>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.ReaderPropertiesPtr.md).
+
+
 Reference counted reader properties.
 
 ---
@@ -708,6 +810,9 @@ Reference counted reader properties.
 ```rust
 type WriterPropertiesPtr = std::sync::Arc<WriterProperties>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.properties.WriterPropertiesPtr.md).
+
 
 Reference counted writer properties.
 

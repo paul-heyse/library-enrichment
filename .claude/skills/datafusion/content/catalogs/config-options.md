@@ -1,7 +1,7 @@
 # Configuration settings
 
-155 settings, grouped by subsystem, each joined to the Rust builder method that
-sets it where one exists. Upstream's own table is the source and stays authoritative for
+155 settings, grouped by subsystem. Builder candidates are name-based discovery
+leads, not verified setting-to-setter mappings. Upstream's table is the source for
 defaults and descriptions: [`corpus/guides/user-guide/configs.md`](../corpus/guides/user-guide/configs.md).
 
 Three ways to reach a setting, in order of how specific they are:
@@ -12,13 +12,13 @@ SessionConfig::new().set_bool("datafusion.execution.collect_statistics", true)
 ctx.sql("SET datafusion.execution.batch_size = 4096")       // at runtime, from SQL
 ```
 
-A setting with no builder method is reachable only through the string form.
+Typed `ConfigOptions` fields and `SessionConfig::options_mut` provide another path. A missing builder candidate does not imply string-only access. RuntimeEnv settings also have a different construction/lifetime boundary from session SQL settings.
 
 ## `datafusion.catalog`
 
 Catalog and schema defaults
 
-| Setting | Default | Rust setter | Description |
+| Setting | Default | Builder candidate (heuristic) | Description |
 |---|---|---|---|
 | `datafusion.catalog.create_default_catalog_and_schema` | true | `SessionConfig::with_create_default_catalog_and_schema` | Whether the default catalog and schema should be created automatically. |
 | `datafusion.catalog.default_catalog` | datafusion | — | The default catalog name - this impacts what SQL queries use if not specified |
@@ -33,7 +33,7 @@ Catalog and schema defaults
 
 Execution: batching, parallelism, file formats, memory
 
-| Setting | Default | Rust setter | Description |
+| Setting | Default | Builder candidate (heuristic) | Description |
 |---|---|---|---|
 | `datafusion.execution.batch_size` | 8192 | `SessionConfig::with_batch_size` | Default batch size while creating new batches, it's especially useful for buffer-in-memory batches since creating tiny batches would result in too much metadata memory consumption |
 | `datafusion.execution.coalesce_batches` | true | `SessionConfig::with_coalesce_batches` | When set to true, record batches will be examined between each operator and small batches will be coalesced into larger batches. This is helpful when there are highly selective filters or joins that could produce tiny output batches. The target batch size is determined by the configuration setting |
@@ -111,7 +111,7 @@ Execution: batching, parallelism, file formats, memory
 
 EXPLAIN output
 
-| Setting | Default | Rust setter | Description |
+| Setting | Default | Builder candidate (heuristic) | Description |
 |---|---|---|---|
 | `datafusion.explain.analyze_categories` | all | — | Which metric categories to include in "EXPLAIN ANALYZE" output. Comma-separated list of: "rows", "bytes", "timing", "uncategorized". Use "none" to show plan structure only, or "all" (default) to show everything. Metrics without a declared category are treated as "uncategorized". |
 | `datafusion.explain.analyze_level` | dev | — | Verbosity level for "EXPLAIN ANALYZE". Default is "dev" "summary" shows common metrics for high-level insights. "dev" provides deep operator-level introspection for developers. |
@@ -127,7 +127,7 @@ EXPLAIN output
 
 Output formatting
 
-| Setting | Default | Rust setter | Description |
+| Setting | Default | Builder candidate (heuristic) | Description |
 |---|---|---|---|
 | `datafusion.format.date_format` | %Y-%m-%d | — | Date format for date arrays |
 | `datafusion.format.datetime_format` | %Y-%m-%dT%H:%M:%S%.f | — | Format for DateTime arrays |
@@ -143,7 +143,7 @@ Output formatting
 
 Optimizer and physical planning
 
-| Setting | Default | Rust setter | Description |
+| Setting | Default | Builder candidate (heuristic) | Description |
 |---|---|---|---|
 | `datafusion.optimizer.allow_symmetric_joins_without_pruning` | true | `SessionConfig::with_allow_symmetric_joins_without_pruning` | Should DataFusion allow symmetric hash joins for unbounded data sources even when its inputs do not have any ordering or filtering If the flag is not enabled, the SymmetricHashJoin operator will be unable to prune its internal buffers, resulting in certain join types - such as Full, Left, LeftAnti,… |
 | `datafusion.optimizer.default_filter_selectivity` | 20 | — | The default filter selectivity used by Filter Statistics when an exact selectivity cannot be determined. Valid values are between 0 (no selectivity) and 100 (all rows are selected). |
@@ -189,7 +189,7 @@ Optimizer and physical planning
 
 RuntimeEnv: memory pool and temporary storage
 
-| Setting | Default | Rust setter | Description |
+| Setting | Default | Builder candidate (heuristic) | Description |
 |---|---|---|---|
 | `datafusion.runtime.file_statistics_cache_limit` | 20M | `RuntimeEnvBuilder::with_file_statistics_cache_limit` | Maximum memory to use for file statistics cache. Supports suffixes K (kilobytes), M (megabytes), and G (gigabytes) or '0' for 0. Example: '2G' for 2 gigabytes. |
 | `datafusion.runtime.list_files_cache_limit` | 1M | — | Maximum memory to use for list files cache. Supports suffixes K (kilobytes), M (megabytes), and G (gigabytes) or '0' for 0. Example: '2G' for 2 gigabytes. |
@@ -204,7 +204,7 @@ RuntimeEnv: memory pool and temporary storage
 
 Spark compatibility
 
-| Setting | Default | Rust setter | Description |
+| Setting | Default | Builder candidate (heuristic) | Description |
 |---|---|---|---|
 | `datafusion.spark.map_key_dedup_policy` | EXCEPTION | — | Policy for handling duplicate keys in Spark-compatible map-construction functions (`map_from_arrays`, `map_from_entries`, `str_to_map`). Mirrors Spark's [`spark.sql.mapKeyDedupPolicy`](https://github.com/apache/spark/blob/cf3a34e19dfcf70e2d679217ff1ba21302212472/sql/catalyst/src/main/scala/org/apac… |
 
@@ -212,7 +212,7 @@ Spark compatibility
 
 SQL dialect and parsing
 
-| Setting | Default | Rust setter | Description |
+| Setting | Default | Builder candidate (heuristic) | Description |
 |---|---|---|---|
 | `datafusion.sql_parser.collect_spans` | false | — | When set to true, the source locations relative to the original SQL query (i.e. [`Span`](https://docs.rs/sqlparser/latest/sqlparser/tokenizer/struct.Span.html)) will be collected and recorded in the logical plan nodes. |
 | `datafusion.sql_parser.default_null_ordering` | nulls_max | — | Specifies the default null ordering for query results. There are 4 options: - `nulls_max`: Nulls appear last in ascending order. - `nulls_min`: Nulls appear first in ascending order. - `nulls_first`: Nulls always be first in any order. - `nulls_last`: Nulls always be last in any order. By default,… |

@@ -28,6 +28,9 @@ fn as_str(&self) -> &str
 fn deref(&self) -> &Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.comments.Comment.md).
+
+
 A unified type of the different source code comment formats.
 
 ---
@@ -58,6 +61,9 @@ fn deref(&self) -> &Self::Target
 fn span(&self) -> Span
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.comments.CommentWithSpan.md).
+
+
 A source code comment with information of its entire span.
 
 ---
@@ -78,6 +84,9 @@ struct Comments
 fn find<R: RangeBounds<Location>>(&self, range: R) -> Iter<'_>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.comments.Comments.md).
+
+
 An opaque container for comments from a parse SQL source code.
 
 ---
@@ -97,6 +106,9 @@ struct Iter<'a>
 ```rust
 fn next(&mut self) -> Option<Self::Item>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.comments.Iter.md).
+
 
 An opaque iterator implementation over comments served by [Comments::find].
 

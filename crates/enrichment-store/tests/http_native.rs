@@ -121,7 +121,7 @@ async fn delta_http_cache_reopens_exact_bytes_and_native_freshness_and_validator
     assert!(cache.select(&url, None, false).await.unwrap().is_none());
     let response = Fetched {
         status: 200,
-        bytes: b"exact cache source".to_vec(),
+        bytes: bytes::Bytes::from_static(b"exact cache source"),
         content_type: Some("text/plain".into()),
         etag: Some("v1".into()),
         last_modified: Some("Wed, 16 Sep 2026 00:00:00 GMT".into()),

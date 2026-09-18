@@ -65,6 +65,13 @@ pub fn field_rule(schema: &mut schemars::Schema, rule: crate::native_union::Rule
             schema.insert("minItems".into(), min.into());
             schema.insert("maxItems".into(), max.into());
         }
+        Rule::Set => {
+            schema.insert("uniqueItems".into(), true.into());
+        }
+        Rule::BinaryBytes { max } => {
+            schema.insert("maxLength".into(), max.saturating_mul(2).into());
+            schema.insert("pattern".into(), "^(?:[0-9a-f]{2})*$".into());
+        }
         _ => {}
     }
 }

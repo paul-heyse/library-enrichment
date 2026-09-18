@@ -7,7 +7,7 @@ use crate::StatePaths;
 
 pub const MARKER: &str = ".library-enrichment-state.json";
 /// The native Delta epoch requires fresh service-owned roots; earlier formats are rejected.
-pub const GENERATION: u32 = 11;
+pub const GENERATION: u32 = 26;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -217,139 +217,6 @@ pub fn exclusive(root: &Path, name: &str) -> io::Result<fs::File> {
     Ok(file)
 }
 
-/// Remove only bounded unpublished snapshot scratch after the daemon owns its writer lock.
-/// Completed snapshot directories and catalog files are outside this cleanup authority.
-/// # Errors
-/// Unknown paths, links, excessive inventories or I/O errors require operator inspection.
-pub fn recover_staging(paths: &crate::StatePaths) -> std::io::Result<usize> {
-    use std::{fs, io, os::unix::fs::MetadataExt};
-    let root = paths.staging();
-    match fs::symlink_metadata(&root) {
-        Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(0),
-        Err(e) => return Err(e),
-        Ok(m) if !m.is_dir() => {
-            return Err(io::Error::other("snapshot staging root is not a directory"));
-        }
-        Ok(_) => {}
-    }
-    let mut candidates = Vec::new();
-    for entry in fs::read_dir(&root)? {
-        if candidates.len() >= 1024 {
-            return Err(io::Error::other(
-                "unpublished snapshot directory bound exceeded",
-            ));
-        }
-        let entry = entry?;
-        let name = entry.file_name();
-        let name = name
-            .to_str()
-            .ok_or_else(|| io::Error::other("non-UTF8 snapshot scratch name"))?;
-        let suffix = [
-            "evidence-contribution-",
-            "evidence-environment-",
-            "evidence-union-",
-            "evidence-",
-        ]
-        .iter()
-        .find_map(|prefix| name.strip_prefix(prefix));
-        if !entry.file_type()?.is_dir()
-            || suffix.is_none_or(|s| {
-                !(6..=32).contains(&s.len()) || !s.bytes().all(|b| b.is_ascii_alphanumeric())
-            })
-        {
-            return Err(io::Error::other(
-                "unrecognized unpublished snapshot directory",
-            ));
-        }
-        let mut files = Vec::new();
-        let mut directories = Vec::new();
-        for file in fs::read_dir(entry.path())? {
-            if files.len() >= 32 {
-                return Err(io::Error::other("unpublished snapshot file bound exceeded"));
-            }
-            let file = file?;
-            let name = file.file_name();
-            let name = name
-                .to_str()
-                .ok_or_else(|| io::Error::other("non-UTF8 snapshot scratch file"))?;
-            if name
-                .strip_prefix("producer-references-")
-                .is_some_and(|suffix| {
-                    (6..=32).contains(&suffix.len())
-                        && suffix.bytes().all(|b| b.is_ascii_alphanumeric())
-                })
-                && file.file_type()?.is_dir()
-            {
-                if !directories.is_empty() {
-                    return Err(io::Error::other("multiple producer staging directories"));
-                }
-                for child in fs::read_dir(file.path())? {
-                    let child = child?;
-                    let metadata = fs::symlink_metadata(child.path())?;
-                    if !matches!(
-                        child.file_name().to_str(),
-                        Some(
-                            "producer_bindings.parquet"
-                                | "producer_relationships.parquet"
-                                | "producer_fragments.parquet"
-                                | "producer_inputs.parquet"
-                                | "producer_artifacts.parquet"
-                        )
-                    ) || !metadata.is_file()
-                        || metadata.nlink() != 1
-                        || metadata.len() > 256 * 1024 * 1024
-                        || files.len() >= 32
-                    {
-                        return Err(io::Error::other("unsafe or unknown producer staging child"));
-                    }
-                    files.push(child.path());
-                }
-                directories.push(file.path());
-                continue;
-            }
-            let expected = name == "manifest.json"
-                || crate::admission::Relation::ALL
-                    .iter()
-                    .any(|r| name == format!("{}.parquet", r.name()))
-                || name
-                    .strip_prefix(".manifest.json.")
-                    .and_then(|s| s.strip_suffix(".tmp"))
-                    .is_some_and(|s| {
-                        s.split_once('-').is_some_and(|(pid, count)| {
-                            !pid.is_empty()
-                                && !count.is_empty()
-                                && pid.bytes().chain(count.bytes()).all(|b| b.is_ascii_digit())
-                        })
-                    });
-            let metadata = fs::symlink_metadata(file.path())?;
-            if !expected
-                || !metadata.is_file()
-                || metadata.nlink() != 1
-                || metadata.len() > 256 * 1024 * 1024
-            {
-                return Err(io::Error::other(
-                    "unsafe or unrecognized unpublished snapshot file",
-                ));
-            }
-            files.push(file.path());
-        }
-        candidates.push((entry.path(), files, directories));
-    }
-    let count = candidates.len();
-    // Complete validation precedes deletion. The service writer lock excludes publication.
-    for (directory, files, children) in candidates {
-        for file in files {
-            fs::remove_file(file)?;
-        }
-        for child in children {
-            fs::remove_dir(child)?;
-        }
-        fs::remove_dir(directory)?;
-    }
-    fs::File::open(root)?.sync_all()?;
-    Ok(count)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -363,36 +230,6 @@ mod tests {
         assert!(initialize(&changed).is_err());
         verify(&first).unwrap();
     }
-    #[test]
-    fn staging_recovery_validates_every_candidate_before_deleting_anything() {
-        let temp = tempfile::tempdir().unwrap();
-        let paths = StatePaths::explicit(temp.path().join("cache"), temp.path().join("data"));
-        initialize(&paths).unwrap();
-        let valid = paths.staging().join("evidence-abcdef");
-        fs::create_dir_all(&valid).unwrap();
-        fs::write(valid.join("manifest.json"), "incomplete output").unwrap();
-        fs::create_dir(valid.join("producer-references-abcdef")).unwrap();
-        fs::write(
-            valid.join("producer-references-abcdef/producer_bindings.parquet"),
-            "interrupted ingestion",
-        )
-        .unwrap();
-        let bad = paths.staging().join("evidence-uvwxyz");
-        fs::create_dir(&bad).unwrap();
-        fs::write(bad.join("unknown"), "preserve").unwrap();
-        assert!(recover_staging(&paths).is_err());
-        assert!(valid.join("manifest.json").exists());
-        fs::remove_file(bad.join("unknown")).unwrap();
-        fs::hard_link(valid.join("manifest.json"), bad.join("manifest.json")).unwrap();
-        assert!(recover_staging(&paths).is_err());
-        fs::remove_file(bad.join("manifest.json")).unwrap();
-        std::os::unix::fs::symlink(valid.join("manifest.json"), bad.join("manifest.json")).unwrap();
-        assert!(recover_staging(&paths).is_err());
-        fs::remove_file(bad.join("manifest.json")).unwrap();
-        assert_eq!(recover_staging(&paths).unwrap(), 2);
-        assert!(paths.staging().read_dir().unwrap().next().is_none());
-    }
-
     #[test]
     fn state_identity_refuses_legacy_roots_links_and_overlap() {
         let temp = tempfile::tempdir().unwrap();

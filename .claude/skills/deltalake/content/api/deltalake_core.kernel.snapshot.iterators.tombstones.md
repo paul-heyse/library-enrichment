@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## TombstoneView
 
 `struct` · `deltalake_core::kernel::snapshot::iterators::tombstones::TombstoneView`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.snapshot.iterators.tombstones.TombstoneView.md)
 
 Also reachable as `deltalake::kernel::TombstoneView`, `deltalake_core::kernel::TombstoneView`
 

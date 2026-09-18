@@ -79,6 +79,9 @@ fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result
 fn with_projection(&self, projection: Option<Vec<usize>>) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.hash_join.exec.HashJoinExec.md).
+
+
 Join execution plan: Evaluates equijoin predicates in parallel on multiple
 partitions using a hash table and an optional filter list to apply post
 join.
@@ -310,6 +313,9 @@ fn with_type(self, join_type: JoinType) -> Self
 ```rust
 fn from(exec: &HashJoinExec) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.hash_join.exec.HashJoinExecBuilder.md).
+
 
 Helps to build [`HashJoinExec`].
 

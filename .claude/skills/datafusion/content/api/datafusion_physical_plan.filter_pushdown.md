@@ -22,6 +22,9 @@ enum FilterPushdownPhase
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.filter_pushdown.FilterPushdownPhase.md).
+
+
 ---
 
 ## PushedDown
@@ -43,6 +46,9 @@ fn and(self, other: PushedDown) -> PushedDown
 fn or(self, other: PushedDown) -> PushedDown
 fn wrap_expression(self, expr: Arc<dyn PhysicalExpr>) -> PushedDownPredicate
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.filter_pushdown.PushedDown.md).
+
 
 Discriminant for the result of pushing down a filter into a child node.
 
@@ -67,6 +73,9 @@ fn from_child_with_allowed_indices(parent_filters: &[Arc<dyn PhysicalExpr>], all
 fn with_self_filter(self, filter: Arc<dyn PhysicalExpr>) -> Self
 fn with_self_filters(self, filters: Vec<Arc<dyn PhysicalExpr>>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.filter_pushdown.ChildFilterDescription.md).
+
 
 Describes filter pushdown for a single child node.
 
@@ -95,6 +104,9 @@ fn all(&self) -> PushedDown
 fn any(&self) -> PushedDown
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.filter_pushdown.ChildFilterPushdownResult.md).
+
+
 The result of pushing down a single parent filter into all children.
 
 ---
@@ -110,6 +122,9 @@ struct ChildPushdownResult
 **Fields**: `parent_filters`, `self_filters`
 
 **Derives**: Clone, Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.filter_pushdown.ChildPushdownResult.md).
+
 
 The result of pushing down filters into a child node.
 
@@ -141,6 +156,9 @@ fn parent_filters(&self) -> Vec<Vec<PushedDownPredicate>>
 fn self_filters(&self) -> Vec<Vec<Arc<dyn PhysicalExpr>>>
 fn with_child(self, child: ChildFilterDescription) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.filter_pushdown.FilterDescription.md).
+
 
 Describes how filters should be pushed down to children.
 
@@ -175,6 +193,9 @@ fn with_parent_pushdown_result(filters: Vec<PushedDown>) -> Self
 fn with_updated_node(self, updated_node: T) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.filter_pushdown.FilterPushdownPropagation.md).
+
+
 The result of pushing down filters into a node.
 
 Returned from [`ExecutionPlan::handle_child_pushdown_result`] to communicate
@@ -206,6 +227,9 @@ fn into_inner(self) -> Arc<dyn PhysicalExpr>
 fn supported(predicate: Arc<dyn PhysicalExpr>) -> Self
 fn unsupported(predicate: Arc<dyn PhysicalExpr>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.filter_pushdown.PushedDownPredicate.md).
+
 
 The result of a plan for pushing down a filter into a child node.
 This contains references to filters so that nodes can mutate a filter

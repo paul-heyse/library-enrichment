@@ -10,6 +10,9 @@ Crate `datafusion-substrait` · 3 public items · structured records in [`model/
 fn from_alias(producer: &mut impl SubstraitProducer, alias: &datafusion::logical_expr::expr::Alias, schema: &datafusion::common::DFSchemaRef) -> datafusion::common::Result<substrait::proto::Expression>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.from_alias.md).
+
+
 ---
 
 ## to_substrait_extended_expr
@@ -19,6 +22,9 @@ fn from_alias(producer: &mut impl SubstraitProducer, alias: &datafusion::logical
 ```rust
 fn to_substrait_extended_expr(exprs: &[(&datafusion::logical_expr::Expr, &datafusion::arrow::datatypes::Field)], schema: &datafusion::common::DFSchemaRef, state: &datafusion::execution::SessionState) -> datafusion::common::Result<Box<substrait::proto::ExtendedExpression>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.to_substrait_extended_expr.md).
+
 
 Serializes a collection of expressions to a Substrait ExtendedExpression message
 
@@ -42,6 +48,9 @@ message.  The field names of the input schema will be serialized.
 ```rust
 fn to_substrait_rex(producer: &mut impl SubstraitProducer, expr: &datafusion::logical_expr::Expr, schema: &datafusion::common::DFSchemaRef) -> datafusion::common::Result<substrait::proto::Expression>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.to_substrait_rex.md).
+
 
 Convert DataFusion Expr to Substrait Rex
 

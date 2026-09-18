@@ -55,6 +55,9 @@ fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn Execut
 fn with_preserve_order(&self, preserve_order: bool) -> Option<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.coalesce_partitions.CoalescePartitionsExec.md).
+
+
 Merge execution plan executes partitions in parallel and combines them into a single
 partition. No guarantees are made about the order of the resulting partition.
 

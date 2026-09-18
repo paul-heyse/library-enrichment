@@ -5,6 +5,7 @@ Crate `deltalake-core` · 3 public items · structured records in [`model/deltal
 ## IORuntime
 
 `enum` · `deltalake_core::logstore::storage::runtime::IORuntime`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.storage.runtime.IORuntime.md)
 
 Also reachable as `deltalake::logstore::IORuntime`, `deltalake_core::logstore::IORuntime`
 
@@ -29,6 +30,7 @@ Provide custom Tokio RT or a runtime config
 ## DeltaIOStorageBackend
 
 `struct` · `deltalake_core::logstore::storage::runtime::DeltaIOStorageBackend`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.storage.runtime.DeltaIOStorageBackend.md)
 
 Also reachable as `deltalake::logstore::DeltaIOStorageBackend`, `deltalake_core::logstore::DeltaIOStorageBackend`
 
@@ -78,6 +80,7 @@ Wraps any object store and runs IO in it's own runtime [EXPERIMENTAL]
 ## RuntimeConfig
 
 `struct` · `deltalake_core::logstore::storage::runtime::RuntimeConfig`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.storage.runtime.RuntimeConfig.md)
 
 ```rust
 struct RuntimeConfig

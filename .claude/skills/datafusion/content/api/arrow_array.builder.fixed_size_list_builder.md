@@ -40,6 +40,9 @@ fn into_box_any(Box<self>) -> Box<dyn Any>
 fn len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.fixed_size_list_builder.FixedSizeListBuilder.md).
+
+
  Builder for [`FixedSizeListArray`]
 ```
 use arrow_array::{builder::{Int32Builder, FixedSizeListBuilder}, Array, Int32Array};

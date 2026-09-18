@@ -14,6 +14,9 @@ enum BloomFilterAlgorithm
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/parquet.basic.BloomFilterAlgorithm.md).
+
+
 The algorithm used in Bloom filter.
 
 ---
@@ -30,6 +33,9 @@ enum BloomFilterCompression
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/parquet.basic.BloomFilterCompression.md).
+
+
 The compression used in the Bloom filter.
 
 ---
@@ -45,6 +51,9 @@ enum BloomFilterHash
 **Variants**: `XXHASH`
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/parquet.basic.BloomFilterHash.md).
+
 
 The hash function used in Bloom filter. This function takes the hash of a column value
 using plain encoding.
@@ -70,6 +79,9 @@ enum BoundaryOrder
 ```rust
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.basic.BoundaryOrder.md).
+
 
 Enum to annotate whether lists of min/max elements inside ColumnIndex
 are ordered and if so, in which direction.
@@ -103,6 +115,9 @@ fn sort_order_for_type(logical_type: Option<&LogicalType>, converted_type: Conve
 ```rust
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.basic.ColumnOrder.md).
+
 
 Column order that specifies what method was used to aggregate min/max values for
 statistics.
@@ -143,6 +158,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```rust
 fn from_str(s: &str) -> std::result::Result<Self, Self::Err>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.basic.Compression.md).
+
 
 Supported block compression algorithms.
 
@@ -188,6 +206,9 @@ fn from(value: Compression) -> Self
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.basic.CompressionCodec.md).
+
+
 Supported compression algorithms.
 
 Codecs added in format version X.Y can be read by readers based on X.Y and later.
@@ -231,6 +252,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```rust
 fn from_str(s: &str) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.basic.ConvertedType.md).
+
 
 Common types (converted types) used by frameworks when using Parquet.
 
@@ -280,6 +304,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 fn from_str(s: &str) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.basic.EdgeInterpolationAlgorithm.md).
+
+
 Edge interpolation algorithm for [`LogicalType::Geography`]
 
 ---
@@ -309,6 +336,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```rust
 fn from_str(s: &str) -> Result<Self, Self::Err>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.basic.Encoding.md).
+
 
 Encodings supported by Parquet.
 
@@ -349,6 +379,9 @@ enum FieldRepetitionType
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.basic.FieldRepetitionType.md).
+
+
 Representation of field types in schema.
 
 ---
@@ -385,6 +418,9 @@ fn variant(specification_version: Option<i8>) -> Self
 fn from_str(s: &str) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.basic.LogicalType.md).
+
+
 Logical types used by version 2.4.0+ of the Parquet format.
 
 This is an *entirely new* struct as of version
@@ -412,6 +448,9 @@ enum PageType
 ```rust
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.basic.PageType.md).
+
 
 Available data pages for Parquet file format.
 Note that some of the page types may not be supported.
@@ -444,6 +483,9 @@ fn is_signed(&self) -> bool
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.basic.SortOrder.md).
+
+
 Sort order for page and column statistics.
 
 Types are associated with sort orders and column stats are aggregated using a sort
@@ -466,6 +508,9 @@ enum TimeUnit
 **Variants**: `MILLIS`, `MICROS`, `NANOS`
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/parquet.basic.TimeUnit.md).
+
 
 Time unit for `Time` and `Timestamp` logical types.
 
@@ -497,6 +542,9 @@ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 fn from_str(s: &str) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.basic.Type.md).
+
+
 Types supported by Parquet.
 
 These physical types are intended to be used in combination with the encodings to
@@ -517,6 +565,9 @@ struct DecimalType
 **Fields**: `scale`, `precision`
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/parquet.basic.DecimalType.md).
+
 
 ---
 
@@ -542,6 +593,9 @@ fn is_set(&self, val: Encoding) -> bool
 fn new_from_encodings<'a>(encodings: impl Iterator<Item = &'a Encoding>) -> Self
 fn try_new(val: i32) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.basic.EncodingMask.md).
+
 
 A bitmask representing the [`Encoding`]s employed while encoding a Parquet column chunk.
 
@@ -597,6 +651,9 @@ struct GeographyType
 fn algorithm(&self) -> Option<EdgeInterpolationAlgorithm>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.basic.GeographyType.md).
+
+
 ---
 
 ## GeometryType
@@ -611,6 +668,9 @@ struct GeometryType
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/parquet.basic.GeometryType.md).
+
+
 ---
 
 ## IntType
@@ -624,6 +684,9 @@ struct IntType
 **Fields**: `bit_width`, `is_signed`
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/parquet.basic.IntType.md).
+
 
 ---
 
@@ -641,6 +704,9 @@ struct TimestampType
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/parquet.basic.TimestampType.md).
+
+
 ---
 
 ## VariantType
@@ -655,6 +721,9 @@ struct VariantType
 
 **Derives**: Clone, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/parquet.basic.VariantType.md).
+
+
 ---
 
 ## Repetition
@@ -664,6 +733,9 @@ struct VariantType
 ```rust
 type Repetition = FieldRepetitionType
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.basic.Repetition.md).
+
 
 Type alias for thrift `FieldRepetitionType`
 

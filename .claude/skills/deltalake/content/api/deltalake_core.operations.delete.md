@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## DeleteBuilder
 
 `struct` · `deltalake_core::operations::delete::DeleteBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.delete.DeleteBuilder.md)
 
 Also reachable as `deltalake::operations::delete::DeleteBuilder`
 
@@ -33,13 +34,6 @@ fn with_writer_properties(self, writer_properties: WriterProperties) -> Self
 fn into_future(self) -> Self::IntoFuture
 ```
 
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
-```
-
 Delete Records from the Delta Table.
 See this module's documentation for more information
 
@@ -48,6 +42,7 @@ See this module's documentation for more information
 ## DeleteMetrics
 
 `struct` · `deltalake_core::operations::delete::DeleteMetrics`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.delete.DeleteMetrics.md)
 
 Also reachable as `deltalake::operations::delete::DeleteMetrics`
 

@@ -64,6 +64,9 @@ fn with_new_state(&self, state: Arc<dyn Any + Send + Sync>) -> Option<Arc<dyn Ex
 fn with_preserve_order(&self, preserve_order: bool) -> Option<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.source.DataSourceExec.md).
+
+
 [`ExecutionPlan`] that reads one or more files
 
 `DataSourceExec` implements common functionality such as applying
@@ -99,6 +102,9 @@ struct OpenArgs
 fn new(partition: usize, context: Arc<TaskContext>) -> Self
 fn with_shared_state(self, sibling_state: Option<Arc<dyn Any + Send + Sync>>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.source.OpenArgs.md).
+
 
 Arguments for [`DataSource::open_with_args`]
 
@@ -142,6 +148,9 @@ fn with_fetch(&self, _limit: Option<usize>) -> Option<Arc<dyn DataSource>>
 fn with_new_state(&self, _state: Arc<dyn Any + Send + Sync>) -> Option<Arc<dyn DataSource>>
 fn with_preserve_order(&self, _preserve_order: bool) -> Option<Arc<dyn DataSource>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.source.DataSource.md).
+
 
 A source of data, typically a list of files or memory
 

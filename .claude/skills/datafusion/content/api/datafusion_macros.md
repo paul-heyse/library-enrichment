@@ -10,6 +10,9 @@ Crate `datafusion-macros` · 1 public items · structured records in [`model/dat
 macro user_doc
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_macros.user_doc.md).
+
+
 This procedural macro is intended to parse a rust custom attribute and create user documentation
 from it by constructing a `DocumentBuilder()` automatically. The `Documentation` can be
 retrieved from the `documentation()` method

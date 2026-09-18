@@ -10,4 +10,7 @@ Crate `datafusion-substrait` · 1 public items · structured records in [`model/
 async fn from_cross_rel(consumer: &impl SubstraitConsumer, cross: &substrait::proto::CrossRel) -> datafusion::common::Result<datafusion::logical_expr::LogicalPlan>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.rel.cross_rel.from_cross_rel.md).
+
+
 ---

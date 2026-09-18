@@ -1,0 +1,306 @@
+[
+  {
+    "id": "31c70923996226d4d1940a34",
+    "path": "datafusion_common::hash_utils::with_hashes",
+    "name": "with_hashes",
+    "owner": null,
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_hashes<I, T, F, R>(arrays: I, random_state: &impl HashState, callback: F) -> error::Result<R> where I: IntoIterator<Item = T>, T: AsDynArray, F: FnOnce(&[u64]) -> error::Result<R>",
+    "docs": "Creates hashes for the given arrays using a thread-local buffer, then calls the provided callback\nwith an immutable reference to the computed hashes.\n\nThis function manages a thread-local buffer to avoid repeated allocations. The buffer is automatically\ntruncated if it exceeds `MAX_BUFFER_SIZE` after use.\n\n# Arguments\n* `arrays` - The arrays to hash (must contain at least one array)\n* `random_state` - The random state for hashing\n* `callback` - A function that receives an immutable reference to the hash slice and returns a result\n\n# Errors\nReturns an error if:\n- No arrays are provided\n- The function is called reentrantly (i.e., the callback invokes `with_hashes` again on the same thread)\n- The function is called during or after thread destruction\n\n# Example\n```ignore\nuse datafusion_common::hash_utils::{with_hashes, RandomState};\nuse arrow::array::{Int32Array, ArrayRef};\nuse std::sync::Arc;\n\nlet array: ArrayRef = Arc::new(Int32Array::from(vec![1, 2, 3]));\nlet random_state = RandomState::default();\n\nlet result = with_hashes([&array], &random_state, |hashes| {\n    // Use the hashes here\n    Ok(hashes.len())\n})?;\n```",
+    "span": {
+      "filename": "src/hash_utils.rs",
+      "begin": [
+        148,
+        1
+      ],
+      "end": [
+        189,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "arrays",
+              {
+                "generic": "I"
+              }
+            ],
+            [
+              "random_state",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "impl_trait": [
+                      {
+                        "trait_bound": {
+                          "trait": {
+                            "path": "HashState",
+                            "id": 3475,
+                            "args": null
+                          },
+                          "generic_params": [],
+                          "modifier": "none"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            [
+              "callback",
+              {
+                "generic": "F"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "crate::error::Result",
+              "id": 21,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "R"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "I",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "F",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "R",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            },
+            {
+              "name": "impl HashState",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "HashState",
+                          "id": 3475,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": true
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "I"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "IntoIterator",
+                        "id": 352,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [],
+                            "constraints": [
+                              {
+                                "name": "Item",
+                                "args": null,
+                                "binding": {
+                                  "equality": {
+                                    "type": {
+                                      "generic": "T"
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "T"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "AsDynArray",
+                        "id": 3487,
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "F"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "FnOnce",
+                        "id": 2974,
+                        "args": {
+                          "parenthesized": {
+                            "inputs": [
+                              {
+                                "borrowed_ref": {
+                                  "lifetime": null,
+                                  "is_mutable": false,
+                                  "type": {
+                                    "slice": {
+                                      "primitive": "u64"
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "output": {
+                              "resolved_path": {
+                                "path": "crate::error::Result",
+                                "id": 21,
+                                "args": {
+                                  "angle_bracketed": {
+                                    "args": [
+                                      {
+                                        "type": {
+                                          "generic": "R"
+                                        }
+                                      }
+                                    ],
+                                    "constraints": []
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3475": "datafusion_common::hash_utils::HashState",
+      "21": "datafusion_common::error::Result",
+      "352": "core::iter::traits::collect::IntoIterator",
+      "3487": "datafusion_common::hash_utils::AsDynArray",
+      "2974": "core::ops::function::FnOnce"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "3486",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.hash_utils.with_hashes.md",
+    "record_file": "operations/datafusion_common.hash_utils.with_hashes.json",
+    "anchor": "op-31c70923996226d4d1940a34",
+    "aliases": [
+      "datafusion_physical_plan::execution_plan::hash_utils::with_hashes",
+      "datafusion_physical_plan::hash_utils::with_hashes"
+    ],
+    "resolved_doc_links": {}
+  }
+]

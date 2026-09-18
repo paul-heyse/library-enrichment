@@ -29,6 +29,9 @@ fn reserve(&self, size: usize) -> Box<dyn MemoryReservation>
 fn used(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.pool.TrackingMemoryPool.md).
+
+
 A simple [`MemoryPool`] that reports the total memory usage
 
 ---
@@ -54,6 +57,9 @@ fn capacity(&self) -> usize
 fn reserve(&self, size: usize) -> Box<dyn MemoryReservation>
 fn used(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.pool.MemoryPool.md).
+
 
 A pool of memory that can be reserved and released.
 
@@ -104,6 +110,9 @@ trait MemoryReservation: Debug + Send + Sync
 fn resize(&mut self, new_size: usize)
 fn size(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.pool.MemoryReservation.md).
+
 
 A memory reservation within a [`MemoryPool`] that is freed on drop
 

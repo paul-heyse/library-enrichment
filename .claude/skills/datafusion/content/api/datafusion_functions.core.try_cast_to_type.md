@@ -32,6 +32,9 @@ fn signature(&self) -> &Signature
 fn simplify(&self, args: Vec<Expr>, info: &SimplifyContext) -> Result<ExprSimplifyResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.try_cast_to_type.TryCastToTypeFunc.md).
+
+
 Like [`cast_to_type`](super::cast_to_type::CastToTypeFunc) but returns NULL
 on cast failure instead of erroring.
 

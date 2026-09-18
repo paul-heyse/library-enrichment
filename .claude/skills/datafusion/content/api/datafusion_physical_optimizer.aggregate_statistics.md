@@ -28,6 +28,9 @@ fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> Resu
 fn schema_check(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.aggregate_statistics.AggregateStatistics.md).
+
+
 Optimizer that uses available statistics for aggregate functions
 
 ---

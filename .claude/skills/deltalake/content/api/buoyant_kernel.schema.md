@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 19 public items · structured records in [`model/buoya
 ## ColumnMetadataKey
 
 `enum` · `buoyant_kernel::schema::ColumnMetadataKey`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.ColumnMetadataKey.md)
 
 Also reachable as `delta_kernel::schema::ColumnMetadataKey`, `deltalake::ColumnMetadataKey`, `deltalake::kernel::ColumnMetadataKey`, `deltalake::kernel::schema::ColumnMetadataKey`, `deltalake::schema::ColumnMetadataKey`, `deltalake_core::ColumnMetadataKey`, `deltalake_core::kernel::ColumnMetadataKey`, `deltalake_core::kernel::schema::ColumnMetadataKey` (+1 more)
 
@@ -29,6 +30,7 @@ fn as_ref(&self) -> &str
 ## DataType
 
 `enum` · `buoyant_kernel::schema::DataType`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.DataType.md)
 
 Also reachable as `delta_kernel::schema::DataType`, `deltalake::DataType`, `deltalake::kernel::DataType`, `deltalake::kernel::schema::DataType`, `deltalake::schema::DataType`, `deltalake_core::DataType`, `deltalake_core::kernel::DataType`, `deltalake_core::kernel::schema::DataType` (+1 more)
 
@@ -57,12 +59,6 @@ fn variant_type(fields: impl IntoIterator<Item = StructField>) -> DeltaResult<Se
 
 ```rust
 fn try_from_arrow(arrow_datatype: &ArrowDataType) -> Result<Self, ArrowError>
-```
-
-**via `buoyant_kernel::schema::compare::SchemaComparison`**
-
-```rust
-fn can_read_as(&self, read_type: &Self) -> Result<(), Error>
 ```
 
 **via `core::convert::From`**
@@ -99,6 +95,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## MetadataColumnSpec
 
 `enum` · `buoyant_kernel::schema::MetadataColumnSpec`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.MetadataColumnSpec.md)
 
 Also reachable as `delta_kernel::schema::MetadataColumnSpec`
 
@@ -136,6 +133,7 @@ Metadata columns provide additional information about rows in a Delta table.
 ## MetadataValue
 
 `enum` · `buoyant_kernel::schema::MetadataValue`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.MetadataValue.md)
 
 Also reachable as `delta_kernel::schema::MetadataValue`, `deltalake::MetadataValue`, `deltalake::kernel::MetadataValue`, `deltalake::kernel::schema::MetadataValue`, `deltalake::schema::MetadataValue`, `deltalake_core::MetadataValue`, `deltalake_core::kernel::MetadataValue`, `deltalake_core::kernel::schema::MetadataValue` (+1 more)
 
@@ -182,6 +180,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## PrimitiveType
 
 `enum` · `buoyant_kernel::schema::PrimitiveType`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.PrimitiveType.md)
 
 Also reachable as `delta_kernel::schema::PrimitiveType`, `deltalake::PrimitiveType`, `deltalake::kernel::PrimitiveType`, `deltalake::kernel::schema::PrimitiveType`, `deltalake::schema::PrimitiveType`, `deltalake_core::PrimitiveType`, `deltalake_core::kernel::PrimitiveType`, `deltalake_core::kernel::schema::PrimitiveType` (+1 more)
 
@@ -232,6 +231,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## ArrayType
 
 `struct` · `buoyant_kernel::schema::ArrayType`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.ArrayType.md)
 
 Also reachable as `delta_kernel::schema::ArrayType`, `deltalake::ArrayType`, `deltalake::kernel::ArrayType`, `deltalake::kernel::schema::ArrayType`, `deltalake::schema::ArrayType`, `deltalake_core::ArrayType`, `deltalake_core::kernel::ArrayType`, `deltalake_core::kernel::schema::ArrayType` (+1 more)
 
@@ -270,6 +270,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## ColumnNamesAndTypes
 
 `struct` · `buoyant_kernel::schema::ColumnNamesAndTypes`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.ColumnNamesAndTypes.md)
 
 Also reachable as `delta_kernel::schema::ColumnNamesAndTypes`
 
@@ -300,6 +301,7 @@ Helper for RowVisitor implementations
 ## DecimalType
 
 `struct` · `buoyant_kernel::schema::DecimalType`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.DecimalType.md)
 
 Also reachable as `delta_kernel::schema::DecimalType`, `deltalake::DecimalType`, `deltalake::kernel::DecimalType`, `deltalake::kernel::schema::DecimalType`, `deltalake::schema::DecimalType`, `deltalake_core::DecimalType`, `deltalake_core::kernel::DecimalType`, `deltalake_core::kernel::schema::DecimalType` (+1 more)
 
@@ -336,6 +338,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## MapType
 
 `struct` · `buoyant_kernel::schema::MapType`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.MapType.md)
 
 Also reachable as `delta_kernel::schema::MapType`, `deltalake::MapType`, `deltalake::kernel::MapType`, `deltalake::kernel::schema::MapType`, `deltalake::schema::MapType`, `deltalake_core::MapType`, `deltalake_core::kernel::MapType`, `deltalake_core::kernel::schema::MapType` (+1 more)
 
@@ -376,6 +379,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## StructField
 
 `struct` · `buoyant_kernel::schema::StructField`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.StructField.md)
 
 Also reachable as `delta_kernel::schema::StructField`, `deltalake::StructField`, `deltalake::kernel::StructField`, `deltalake::kernel::schema::StructField`, `deltalake::schema::StructField`, `deltalake_core::StructField`, `deltalake_core::kernel::StructField`, `deltalake_core::kernel::schema::StructField` (+1 more)
 
@@ -427,18 +431,6 @@ fn try_from_arrow(arrow_field: &ArrowField) -> Result<Self, ArrowError>
 fn to_schema_field(self) -> StructField
 ```
 
-**via `buoyant_kernel::schema::compare::SchemaComparison`**
-
-```rust
-fn can_read_as(&self, read_field: &Self) -> Result<(), Error>
-```
-
-**via `buoyant_kernel::struct_patch::SchemaPatchItem`**
-
-```rust
-fn into_field(self) -> StructField
-```
-
 **via `core::fmt::Display`**
 
 ```rust
@@ -462,6 +454,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## StructFieldIntoIter
 
 `struct` · `buoyant_kernel::schema::StructFieldIntoIter`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.StructFieldIntoIter.md)
 
 Also reachable as `delta_kernel::schema::StructFieldIntoIter`
 
@@ -528,6 +521,7 @@ for field in struct_type {
 ## StructFieldRefIter
 
 `struct` · `buoyant_kernel::schema::StructFieldRefIter`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.StructFieldRefIter.md)
 
 Also reachable as `delta_kernel::schema::StructFieldRefIter`
 
@@ -604,6 +598,7 @@ for field in struct_type.fields() {
 ## StructType
 
 `struct` · `buoyant_kernel::schema::StructType`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.StructType.md)
 
 Also reachable as `delta_kernel::schema::StructType`, `deltalake::StructType`, `deltalake::kernel::StructType`, `deltalake::kernel::schema::StructType`, `deltalake::schema::StructType`, `deltalake_core::StructType`, `deltalake_core::kernel::StructType`, `deltalake_core::kernel::schema::StructType` (+1 more)
 
@@ -656,12 +651,6 @@ fn try_from_arrow(arrow_schema: &ArrowSchema) -> Result<Self, ArrowError>
 fn try_from_arrow(arrow_schema: ArrowSchemaRef) -> Result<Self, ArrowError>
 ```
 
-**via `buoyant_kernel::schema::compare::SchemaComparison`**
-
-```rust
-fn can_read_as(&self, read_type: &Self) -> Result<(), Error>
-```
-
 **via `core::fmt::Display`**
 
 ```rust
@@ -694,6 +683,7 @@ as well as struct columns that contain nested columns.
 ## StructTypeBuilder
 
 `struct` · `buoyant_kernel::schema::StructTypeBuilder`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.StructTypeBuilder.md)
 
 Also reachable as `delta_kernel::schema::StructTypeBuilder`
 
@@ -718,6 +708,7 @@ fn new() -> Self
 ## ToSchema
 
 `trait` · `buoyant_kernel::schema::ToSchema`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.ToSchema.md)
 
 Also reachable as `delta_kernel::schema::ToSchema`
 
@@ -754,6 +745,7 @@ Converts a type to a [`Schema`] that represents that type. Derivable for struct 
 ## ToSchemaField
 
 `trait` · `buoyant_kernel::schema::ToSchemaField`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.ToSchemaField.md)
 
 Also reachable as `delta_kernel::schema::ToSchemaField`
 
@@ -778,6 +770,7 @@ Converts field interpolation inputs in [`schema!`] and [`try_schema!`] to [`Stru
 ## Schema
 
 `type_alias` · `buoyant_kernel::schema::Schema`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.Schema.md)
 
 Also reachable as `delta_kernel::schema::Schema`
 
@@ -790,6 +783,7 @@ type Schema = StructType
 ## SchemaRef
 
 `type_alias` · `buoyant_kernel::schema::SchemaRef`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.SchemaRef.md)
 
 Also reachable as `delta_kernel::schema::SchemaRef`
 
@@ -802,6 +796,7 @@ type SchemaRef = std::sync::Arc<StructType>
 ## SchemaStructPatchBuilder
 
 `type_alias` · `buoyant_kernel::schema::SchemaStructPatchBuilder`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.SchemaStructPatchBuilder.md)
 
 Also reachable as `delta_kernel::schema::SchemaStructPatchBuilder`
 

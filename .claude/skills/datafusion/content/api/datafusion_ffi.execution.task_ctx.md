@@ -30,6 +30,9 @@ fn from(ctx: Arc<TaskContext>) -> Self
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.execution.task_ctx.FFI_TaskContext.md).
+
+
 A stable struct for sharing [`TaskContext`] across FFI boundaries.
 
 ---

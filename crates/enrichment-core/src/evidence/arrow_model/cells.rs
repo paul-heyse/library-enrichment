@@ -22,6 +22,8 @@ enum CellColumn {
     U64(arrow::array::UInt64Array),
     Decimal(arrow::array::Decimal128Array),
     FixedBinary(arrow::array::FixedSizeBinaryArray),
+    Binary(arrow::array::BinaryArray),
+    BinaryView(arrow::array::BinaryViewArray),
     I64(arrow::array::Int64Array),
     Timestamp(arrow::array::TimestampMicrosecondArray),
     I32(arrow::array::Int32Array),
@@ -53,6 +55,13 @@ impl CellColumn {
             .downcast_ref::<arrow::array::FixedSizeBinaryArray>()
         {
             Ok(Self::FixedBinary(a.clone()))
+        } else if let Some(a) = array.as_any().downcast_ref::<arrow::array::BinaryArray>() {
+            Ok(Self::Binary(a.clone()))
+        } else if let Some(a) = array
+            .as_any()
+            .downcast_ref::<arrow::array::BinaryViewArray>()
+        {
+            Ok(Self::BinaryView(a.clone()))
         } else if let Some(a) = array
             .as_any()
             .downcast_ref::<arrow::array::TimestampMicrosecondArray>()
@@ -94,6 +103,8 @@ impl CellColumn {
             Self::U64(a) => a.is_null(row),
             Self::Decimal(a) => a.is_null(row),
             Self::FixedBinary(a) => a.is_null(row),
+            Self::Binary(a) => a.is_null(row),
+            Self::BinaryView(a) => a.is_null(row),
             Self::I64(a) => a.is_null(row),
             Self::Timestamp(a) => a.is_null(row),
             Self::I32(a) => a.is_null(row),
@@ -220,6 +231,16 @@ impl<'a> Row<'a> {
                 .try_into()
                 .map_err(|_| invalid(format!("fixed binary width mismatch in {name}"))),
             _ => Err(invalid(format!("null or non-fixed-binary column {name}"))),
+        }
+    }
+
+    pub fn binary(self, name: &str) -> Result<&'a [u8], ArrowError> {
+        match self.column(name)? {
+            CellColumn::Binary(array) if !array.is_null(self.index) => Ok(array.value(self.index)),
+            CellColumn::BinaryView(array) if !array.is_null(self.index) => {
+                Ok(array.value(self.index))
+            }
+            _ => Err(invalid(format!("null or non-binary column {name}"))),
         }
     }
 
@@ -457,6 +478,18 @@ pub fn field(name: &str, array: &ArrayRef, nullable: bool, role: &str) -> Field 
 
 pub fn column(name: &str, array: ArrayRef, nullable: bool, role: &str) -> (Field, ArrayRef) {
     (field(name, &array, nullable, role), array)
+}
+
+/// A mechanical column boundary whose type supplies vocabulary and semantic metadata.
+pub fn native_column<T: crate::native_union::Cell>(
+    name: &str,
+    values: &[Option<&T>],
+    rule: crate::native_union::Rule,
+) -> Result<(Field, ArrayRef), ArrowError> {
+    Ok((
+        crate::native_union::field::<T>(name, rule),
+        T::encode(values)?,
+    ))
 }
 
 pub fn ruled_column(

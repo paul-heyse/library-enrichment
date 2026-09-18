@@ -54,6 +54,9 @@ fn len(&self) -> usize
 fn extend<I: IntoIterator<Item = Option<V>>>(&mut self, iter: I)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_bytes_dictionary_builder.GenericByteDictionaryBuilder.md).
+
+
 Builder for [`DictionaryArray`] of [`GenericByteArray`]
 
 For example to map a set of byte indices to String values. Note that
@@ -69,6 +72,9 @@ result in an ordered dictionary.
 ```rust
 type BinaryDictionaryBuilder<K> = GenericByteDictionaryBuilder<K, types::GenericBinaryType<i32>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_bytes_dictionary_builder.BinaryDictionaryBuilder.md).
+
 
 Builder for [`DictionaryArray`] of [`BinaryArray`](crate::array::BinaryArray)
 
@@ -114,6 +120,9 @@ assert_eq!(ava.value(1), b"def");
 type LargeBinaryDictionaryBuilder<K> = GenericByteDictionaryBuilder<K, types::GenericBinaryType<i64>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_bytes_dictionary_builder.LargeBinaryDictionaryBuilder.md).
+
+
 Builder for [`DictionaryArray`] of [`LargeBinaryArray`](crate::array::LargeBinaryArray)
 
 ---
@@ -126,6 +135,9 @@ Builder for [`DictionaryArray`] of [`LargeBinaryArray`](crate::array::LargeBinar
 type LargeStringDictionaryBuilder<K> = GenericByteDictionaryBuilder<K, types::GenericStringType<i64>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_bytes_dictionary_builder.LargeStringDictionaryBuilder.md).
+
+
 Builder for [`DictionaryArray`] of [`LargeStringArray`](crate::array::LargeStringArray)
 
 ---
@@ -137,6 +149,9 @@ Builder for [`DictionaryArray`] of [`LargeStringArray`](crate::array::LargeStrin
 ```rust
 type StringDictionaryBuilder<K> = GenericByteDictionaryBuilder<K, types::GenericStringType<i32>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_bytes_dictionary_builder.StringDictionaryBuilder.md).
+
 
 Builder for [`DictionaryArray`] of [`StringArray`](crate::array::StringArray)
 

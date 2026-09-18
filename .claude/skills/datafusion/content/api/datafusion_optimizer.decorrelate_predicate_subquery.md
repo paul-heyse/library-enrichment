@@ -29,6 +29,9 @@ fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Tra
 fn supports_rewrite(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.decorrelate_predicate_subquery.DecorrelatePredicateSubquery.md).
+
+
 Optimizer rule for rewriting predicate(IN/EXISTS) subquery to left semi/anti joins
 
 ---

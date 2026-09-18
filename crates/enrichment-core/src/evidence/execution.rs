@@ -47,6 +47,26 @@ impl Utf8Range {
 crate::native_vocabulary! {
     pub enum SemanticMethod { Hover = "hover", Definition = "definition", Implementation = "implementation", References = "references", Diagnostics = "diagnostics" }
 }
+impl SemanticMethod {
+    pub const fn protocol_method(self) -> &'static str {
+        match self {
+            Self::Hover => "textDocument/hover",
+            Self::Definition => "textDocument/definition",
+            Self::Implementation => "textDocument/implementation",
+            Self::References => "textDocument/references",
+            Self::Diagnostics => "textDocument/diagnostic",
+        }
+    }
+    pub const fn capability(self) -> &'static str {
+        match self {
+            Self::Hover => "hoverProvider",
+            Self::Definition => "definitionProvider",
+            Self::Implementation => "implementationProvider",
+            Self::References => "referencesProvider",
+            Self::Diagnostics => "diagnosticProvider",
+        }
+    }
+}
 
 crate::native_vocabulary! {
     pub enum ExecutionOutcome { Results = "results", Empty = "empty", Unsupported = "unsupported", Unresolved = "unresolved", Incomplete = "incomplete", Failed = "failed", Cancelled = "cancelled" }
@@ -176,6 +196,31 @@ execution_payloads! {
     UsageProbe(UsageProbe) = "usage_probe" => UsageProbes,
 }
 impl ExecutionPayload {
+    /// One native normalization graph for a captured consumer probe and read-only recovery.
+    pub fn usage_probe_expression(
+        mode: datafusion::logical_expr::Expr,
+        snippet: datafusion::logical_expr::Expr,
+        observation: datafusion::logical_expr::Expr,
+    ) -> datafusion::common::Result<datafusion::logical_expr::Expr> {
+        use crate::{evidence::arrow_model::expressions::record, native_union::Cell};
+        use datafusion::{functions::core::expr_ext::FieldAccessor, prelude::lit};
+        let probe = record(
+            &UsageProbe::data_type(),
+            &[
+                ("mode", mode),
+                ("snippet_artifact_id", snippet),
+                ("end", observation.clone().field("end")),
+                ("exit_code", observation.clone().field("exit_code")),
+                ("stdout", observation.clone().field("stdout")),
+                ("stderr", observation.field("stderr")),
+            ],
+        )?;
+        record(
+            &Self::data_type(),
+            &[("kind", lit("usage_probe")), ("usage_probe", probe)],
+        )
+    }
+
     /// Canonical result content is written before binding its source/observation identity.
     pub fn canonical_bytes(&self) -> Result<Vec<u8>, String> {
         let values =

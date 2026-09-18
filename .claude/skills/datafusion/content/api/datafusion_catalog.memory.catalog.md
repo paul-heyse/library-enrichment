@@ -31,6 +31,9 @@ fn schema(&self, name: &str) -> Option<Arc<dyn SchemaProvider>>
 fn schema_names(&self) -> Vec<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.memory.catalog.MemoryCatalogProvider.md).
+
+
 Simple in-memory implementation of a catalog.
 
 ---
@@ -64,6 +67,9 @@ fn catalog(&self, name: &str) -> Option<Arc<dyn CatalogProvider>>
 fn catalog_names(&self) -> Vec<String>
 fn register_catalog(&self, name: String, catalog: Arc<dyn CatalogProvider>) -> Option<Arc<dyn CatalogProvider>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.memory.catalog.MemoryCatalogProviderList.md).
+
 
 Simple in-memory list of catalogs
 

@@ -29,6 +29,9 @@ fn rewrite(&self, plan: LogicalPlan, _config: &dyn OptimizerConfig) -> Result<Tr
 fn supports_rewrite(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.eliminate_limit.EliminateLimit.md).
+
+
 Optimizer rule to replace `LIMIT 0` or `LIMIT` whose ancestor LIMIT's skip is
 greater than or equal to current's fetch
 

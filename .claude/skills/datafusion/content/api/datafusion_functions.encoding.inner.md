@@ -30,6 +30,9 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.encoding.inner.DecodeFunc.md).
+
+
 ---
 
 ## EncodeFunc
@@ -59,5 +62,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.encoding.inner.EncodeFunc.md).
+
 
 ---

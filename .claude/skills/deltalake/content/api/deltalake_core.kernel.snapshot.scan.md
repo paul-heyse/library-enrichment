@@ -5,6 +5,7 @@ Crate `deltalake-core` · 3 public items · structured records in [`model/deltal
 ## Scan
 
 `struct` · `deltalake_core::kernel::snapshot::scan::Scan`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.snapshot.scan.Scan.md)
 
 Also reachable as `deltalake::kernel::Scan`, `deltalake_core::kernel::Scan`
 
@@ -45,6 +46,7 @@ statistics materialization strategy) that satisfy the scan's schema and predicat
 ## ScanBuilder
 
 `struct` · `deltalake_core::kernel::snapshot::scan::ScanBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.snapshot.scan.ScanBuilder.md)
 
 Also reachable as `deltalake::kernel::ScanBuilder`, `deltalake_core::kernel::ScanBuilder`
 
@@ -73,6 +75,7 @@ Builder to scan a snapshot of a table.
 ## SendableScanMetadataStream
 
 `type_alias` · `deltalake_core::kernel::snapshot::scan::SendableScanMetadataStream`
+[Full member contracts, output types and access classification](../operations/deltalake_core.kernel.snapshot.scan.SendableScanMetadataStream.md)
 
 Also reachable as `deltalake::kernel::SendableScanMetadataStream`, `deltalake_core::kernel::SendableScanMetadataStream`
 

@@ -1,6 +1,6 @@
 # Writing data
 
-There are two write paths and they are not interchangeable. SQL-level `COPY` and `INSERT INTO` plan through the provider's `insert_into`, producing an `ExecutionPlan` that writes as it executes. The DataFrame path (`write_parquet`, `write_csv`, `write_json`, `write_table`) goes through `DataFrameWriteOptions`. A provider that does not override the DML methods supports neither: the defaults return an error, not a no-op.
+INSERT and provider DML require the corresponding provider capability. COPY and DataFrame file writers use format/sink paths; writing a query to a file does not require its source provider to support DML. Execution performs writes; inspect append/overwrite, output schema and failure/atomicity contracts separately.
 
 ## Entry points
 
@@ -71,7 +71,7 @@ Full table with Rust setters in [`../catalogs/config-options.md`](../catalogs/co
 ## Decision rules
 
 - `TableProvider` carries `insert_into`, `delete_from`, `update`, `merge_into` and `truncate` as provided methods — full DML is available to a custom provider, not just scans.
-- Output file count and size are controlled by settings, not by the call site; see the settings table below.
+- Output partitioning, writer options, execution settings and the sink determine file layout; inspect the selected writer rather than assuming a fixed file count.
 
 ## Anti-patterns
 

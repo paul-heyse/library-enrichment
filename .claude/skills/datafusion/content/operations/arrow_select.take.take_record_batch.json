@@ -1,0 +1,153 @@
+[
+  {
+    "id": "929c00ffe22d86d208c23db7",
+    "path": "arrow_select::take::take_record_batch",
+    "name": "take_record_batch",
+    "owner": null,
+    "crate": "arrow-select",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn take_record_batch(record_batch: &RecordBatch, indices: &dyn Array) -> Result<RecordBatch, arrow_schema::ArrowError>",
+    "docs": "Take rows by index from [`RecordBatch`] and returns a new [`RecordBatch`] from those indexes.\n\nThis function will call [`take`] on each array of the [`RecordBatch`] and assemble a new [`RecordBatch`].\n\n# Example\n```\n# use std::sync::Arc;\n# use arrow_array::{StringArray, Int32Array, UInt32Array, RecordBatch};\n# use arrow_schema::{DataType, Field, Schema};\n# use arrow_select::take::take_record_batch;\nlet schema = Arc::new(Schema::new(vec![\n    Field::new(\"a\", DataType::Int32, true),\n    Field::new(\"b\", DataType::Utf8, true),\n]));\nlet batch = RecordBatch::try_new(\n    schema.clone(),\n    vec![\n        Arc::new(Int32Array::from_iter_values(0..20)),\n        Arc::new(StringArray::from_iter_values(\n            (0..20).map(|i| format!(\"str-{}\", i)),\n        )),\n    ],\n)\n.unwrap();\n\nlet indices = UInt32Array::from(vec![1, 5, 10]);\nlet taken = take_record_batch(&batch, &indices).unwrap();\n\nlet expected = RecordBatch::try_new(\n    schema,\n    vec![\n        Arc::new(Int32Array::from(vec![1, 5, 10])),\n        Arc::new(StringArray::from(vec![\"str-1\", \"str-5\", \"str-10\"])),\n    ],\n)\n.unwrap();\nassert_eq!(taken, expected);\n```",
+    "span": {
+      "filename": "src/take.rs",
+      "begin": [
+        1121,
+        1
+      ],
+      "end": [
+        1131,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "record_batch",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "RecordBatch",
+                      "id": 10,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "indices",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Array",
+                            "id": 30,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 26,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "RecordBatch",
+                          "id": 10,
+                          "args": null
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "arrow_schema::ArrowError",
+                          "id": 27,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "arrow_array::record_batch::RecordBatch",
+      "30": "arrow_array::array::Array",
+      "26": "core::result::Result",
+      "27": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": null,
+    "links": {
+      "`take`": 12,
+      "`RecordBatch`": 10
+    },
+    "link_paths": {
+      "`take`": "arrow_select::take::take",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "090fb8aa8132faffd311e284eb64e0ed68d627286584d40794c7849408ae5905",
+      "format_version": 61,
+      "item_id": "28",
+      "origin": "https://docs.rs/crate/arrow-select/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_select.take.take_record_batch.md",
+    "record_file": "operations/arrow_select.take.take_record_batch.json",
+    "anchor": "op-929c00ffe22d86d208c23db7",
+    "aliases": [
+      "arrow::compute::kernels::take::take_record_batch",
+      "arrow::compute::take_record_batch"
+    ],
+    "resolved_doc_links": {
+      "`take`": "../operations/arrow_select.take.take.md#op-4197d454d308f4ceadb20600",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  }
+]

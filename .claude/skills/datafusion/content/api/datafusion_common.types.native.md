@@ -53,6 +53,9 @@ fn native(&self) -> &NativeType
 fn signature(&self) -> TypeSignature<'_>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.native.NativeType.md).
+
+
 Representation of a type that DataFusion can handle natively. It is a subset
 of the physical variants in Arrow's native [`DataType`].
 

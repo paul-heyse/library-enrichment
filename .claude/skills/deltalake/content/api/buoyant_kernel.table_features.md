@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 10 public items · structured records in [`model/buoya
 ## MAX_VALID_READER_VERSION
 
 `constant` · `buoyant_kernel::table_features::MAX_VALID_READER_VERSION`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.MAX_VALID_READER_VERSION.md)
 
 Also reachable as `delta_kernel::table_features::MAX_VALID_READER_VERSION`
 
@@ -19,6 +20,7 @@ Maximum reader protocol version that the kernel can handle.
 ## MAX_VALID_WRITER_VERSION
 
 `constant` · `buoyant_kernel::table_features::MAX_VALID_WRITER_VERSION`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.MAX_VALID_WRITER_VERSION.md)
 
 Also reachable as `delta_kernel::table_features::MAX_VALID_WRITER_VERSION`
 
@@ -33,6 +35,7 @@ Maximum writer protocol version that the kernel can handle.
 ## MIN_VALID_RW_VERSION
 
 `constant` · `buoyant_kernel::table_features::MIN_VALID_RW_VERSION`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.MIN_VALID_RW_VERSION.md)
 
 Also reachable as `delta_kernel::table_features::MIN_VALID_RW_VERSION`
 
@@ -47,6 +50,7 @@ Minimum reader/writer protocol version that the kernel can handle.
 ## SET_TABLE_FEATURE_SUPPORTED_PREFIX
 
 `constant` · `buoyant_kernel::table_features::SET_TABLE_FEATURE_SUPPORTED_PREFIX`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.SET_TABLE_FEATURE_SUPPORTED_PREFIX.md)
 
 Also reachable as `delta_kernel::table_features::SET_TABLE_FEATURE_SUPPORTED_PREFIX`
 
@@ -63,6 +67,7 @@ explicitly turn on support for the feature in the protocol.
 ## SET_TABLE_FEATURE_SUPPORTED_VALUE
 
 `constant` · `buoyant_kernel::table_features::SET_TABLE_FEATURE_SUPPORTED_VALUE`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.SET_TABLE_FEATURE_SUPPORTED_VALUE.md)
 
 Also reachable as `delta_kernel::table_features::SET_TABLE_FEATURE_SUPPORTED_VALUE`
 
@@ -78,6 +83,7 @@ Example: `"delta.feature.deletionVectors" -> "supported"`
 ## TABLE_FEATURES_MIN_READER_VERSION
 
 `constant` · `buoyant_kernel::table_features::TABLE_FEATURES_MIN_READER_VERSION`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.TABLE_FEATURES_MIN_READER_VERSION.md)
 
 Also reachable as `delta_kernel::table_features::TABLE_FEATURES_MIN_READER_VERSION`
 
@@ -93,6 +99,7 @@ When set to 3, the protocol requires an explicit `readerFeatures` array.
 ## TABLE_FEATURES_MIN_WRITER_VERSION
 
 `constant` · `buoyant_kernel::table_features::TABLE_FEATURES_MIN_WRITER_VERSION`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.TABLE_FEATURES_MIN_WRITER_VERSION.md)
 
 Also reachable as `delta_kernel::table_features::TABLE_FEATURES_MIN_WRITER_VERSION`
 
@@ -108,6 +115,7 @@ When set to 7, the protocol requires an explicit `writerFeatures` array.
 ## Operation
 
 `enum` · `buoyant_kernel::table_features::Operation`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.Operation.md)
 
 Also reachable as `delta_kernel::table_features::Operation`
 
@@ -126,6 +134,7 @@ Represents the type of operation being performed on a table
 ## TableFeature
 
 `enum` · `buoyant_kernel::table_features::TableFeature`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.TableFeature.md)
 
 Also reachable as `delta_kernel::table_features::TableFeature`
 
@@ -206,6 +215,7 @@ The kernel currently supports all reader features.
 ## TableFeatureIter
 
 `struct` · `buoyant_kernel::table_features::TableFeatureIter`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_features.TableFeatureIter.md)
 
 Also reachable as `delta_kernel::table_features::TableFeatureIter`
 

@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## ConstraintBuilder
 
 `struct` · `deltalake_core::operations::constraints::ConstraintBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.constraints.ConstraintBuilder.md)
 
 Also reachable as `deltalake::operations::constraints::ConstraintBuilder`
 
@@ -28,13 +29,6 @@ fn with_session_state(self, session: Arc<dyn Session>) -> Self
 
 ```rust
 fn into_future(self) -> Self::IntoFuture
-```
-
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
 ```
 
 Build a constraint to add to a table

@@ -12,6 +12,9 @@ enum Error
 
 **Variants**: `OpenCredentials`, `DecodeCredentials`, `MissingKey`, `InvalidKey`, `Sign`, `Encode`, `UnsupportedKey`, `TokenRequest`, `TokenResponseBody`, `ReadPem`
 
+[Full member, field, variant and typed contracts](../operations/object_store.gcp.credential.Error.md).
+
+
 ---
 
 ## GcpCredential
@@ -27,6 +30,9 @@ struct GcpCredential
 **Fields**: `bearer`
 
 **Derives**: Debug, Eq, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/object_store.gcp.credential.GcpCredential.md).
+
 
 A Google Cloud Storage Credential
 
@@ -45,6 +51,9 @@ struct GcpSigningCredential
 **Fields**: `email`, `private_key`
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/object_store.gcp.credential.GcpSigningCredential.md).
+
 
 A Google Cloud Storage Credential for signing
 
@@ -69,6 +78,9 @@ fn from_der(key: &[u8]) -> std::result::Result<Self, Error>
 fn from_pem(encoded: &[u8]) -> std::result::Result<Self, Error>
 fn from_pkcs8(key: &[u8]) -> std::result::Result<Self, Error>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.gcp.credential.ServiceAccountKey.md).
+
 
 A private RSA key for a service account
 

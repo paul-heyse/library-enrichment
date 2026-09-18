@@ -1,0 +1,82 @@
+[
+  {
+    "id": "11fcfb1ac6b8ac80101af1d3",
+    "path": "arrow_avro::writer",
+    "name": "writer",
+    "owner": null,
+    "crate": "arrow-avro",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod writer",
+    "docs": "Core functionality for writing Arrow arrays as Avro data\n\nImplements the primary writer interface and record encoding logic.\nAvro writer implementation for the `arrow-avro` crate.\n\n# Overview\n\nUse this module to serialize Arrow [`arrow_array::RecordBatch`] values into Avro. Three output\nmodes are supported:\n\n* **[`crate::writer::AvroWriter`]** — writes an **Object Container File (OCF)**: a self‑describing\n  file with header (schema JSON and metadata), optional compression, data blocks, and\n  sync markers. See Avro 1.11.1 \"Object Container Files.\"\n  <https://avro.apache.org/docs/1.11.1/specification/#object-container-files>\n\n* **[`crate::writer::AvroStreamWriter`]** — writes a **Single Object Encoding (SOE) Stream** without\n  any container framing. This is useful when the schema is known out‑of‑band (i.e.,\n  via a registry) and you want minimal overhead.\n\n* **[`crate::writer::Encoder`]** — a row-by-row encoder that buffers encoded records into a single\n  contiguous byte buffer and returns per-row [`bytes::Bytes`] slices.\n  Ideal for publishing individual messages to Kafka, Pulsar, or other message queues\n  where each message must be a self-contained Avro payload.\n\n## Which writer should you use?\n\n| Use Case | Recommended Type |\n|----------|------------------|\n| Write an OCF file to disk | [`crate::writer::AvroWriter`] |\n| Stream records continuously to a file/socket | [`crate::writer::AvroStreamWriter`] |\n| Publish individual records to Kafka/Pulsar | [`crate::writer::Encoder`] |\n| Need per-row byte slices for custom framing | [`crate::writer::Encoder`] |\n\n## Per-Record Prefix Formats\n\nFor [`crate::writer::AvroStreamWriter`] and [`crate::writer::Encoder`], each record is automatically prefixed\nbased on the fingerprint strategy:\n\n| Strategy | Prefix | Use Case |\n|----------|--------|----------|\n| `FingerprintStrategy::Rabin` (default) | `0xC3 0x01` + 8-byte LE Rabin fingerprint | Standard Avro SOE |\n| `FingerprintStrategy::Id(id)` | `0x00` + 4-byte BE schema ID | [Confluent Schema Registry] |\n| `FingerprintStrategy::Id64(id)` | `0x00` + 8-byte BE schema ID | [Apicurio Registry] |\n\n[Confluent Schema Registry]: https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#wire-format\n[Apicurio Registry]: https://www.apicur.io/registry/docs/apicurio-registry/1.3.3.Final/getting-started/assembly-using-kafka-client-serdes.html#registry-serdes-types-avro-registry\n\n## Choosing the Avro Schema\n\nBy default, the writer converts your Arrow schema to Avro (including a top‑level record\nname). If you already have an Avro schema JSON you want to use verbatim, put it into the\nArrow schema metadata under the [`SCHEMA_METADATA_KEY`](crate::schema::SCHEMA_METADATA_KEY)\nkey before constructing the writer. The builder will use that schema instead of generating\na new one.\n\n## Compression\n\nFor OCF ([`crate::writer::AvroWriter`]), you may enable a compression codec via\n[`crate::writer::WriterBuilder::with_compression`]. The chosen codec is written into the file header\nand used for subsequent blocks. SOE stream writing ([`crate::writer::AvroStreamWriter`], [`crate::writer::Encoder`])\ndoes not apply container‑level compression.\n\n# Examples\n\n## Writing an OCF File\n\n```\nuse std::sync::Arc;\nuse arrow_array::{ArrayRef, Int64Array, StringArray, RecordBatch};\nuse arrow_schema::{DataType, Field, Schema};\nuse arrow_avro::writer::AvroWriter;\n\n# fn main() -> Result<(), Box<dyn std::error::Error>> {\nlet schema = Schema::new(vec![\n    Field::new(\"id\", DataType::Int64, false),\n    Field::new(\"name\", DataType::Utf8, false),\n]);\n\nlet batch = RecordBatch::try_new(\n    Arc::new(schema.clone()),\n    vec![\n        Arc::new(Int64Array::from(vec![1, 2])) as ArrayRef,\n        Arc::new(StringArray::from(vec![\"alice\", \"bob\"])) as ArrayRef,\n    ],\n)?;\n\nlet mut writer = AvroWriter::new(Vec::<u8>::new(), schema)?;\nwriter.write(&batch)?;\nwriter.finish()?;\nlet bytes = writer.into_inner();\nassert!(!bytes.is_empty());\n# Ok(())\n# }\n```\n\n## Using the Row-by-Row Encoder for Message Queues\n\n```\nuse std::sync::Arc;\nuse arrow_array::{ArrayRef, Int32Array, RecordBatch};\nuse arrow_schema::{DataType, Field, Schema};\nuse arrow_avro::writer::{WriterBuilder, format::AvroSoeFormat};\nuse arrow_avro::schema::FingerprintStrategy;\n\n# fn main() -> Result<(), Box<dyn std::error::Error>> {\nlet schema = Schema::new(vec![Field::new(\"x\", DataType::Int32, false)]);\nlet batch = RecordBatch::try_new(\n    Arc::new(schema.clone()),\n    vec![Arc::new(Int32Array::from(vec![1, 2, 3])) as ArrayRef],\n)?;\n\n// Build an Encoder with Confluent wire format (schema ID = 42)\nlet mut encoder = WriterBuilder::new(schema)\n    .with_fingerprint_strategy(FingerprintStrategy::Id(42))\n    .build_encoder::<AvroSoeFormat>()?;\n\nencoder.encode(&batch)?;\n\n// Get the buffered rows (zero-copy views into a single backing buffer)\nlet rows = encoder.flush();\nassert_eq!(rows.len(), 3);\n\n// Each row has Confluent wire format: magic byte + 4-byte schema ID + body\nfor row in rows.iter() {\n    assert_eq!(row[0], 0x00); // Confluent magic byte\n}\n# Ok(())\n# }\n```\n\n---",
+    "span": {
+      "filename": "src/writer/mod.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        4468,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          488,
+          491,
+          530,
+          536,
+          539,
+          600,
+          601
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "crate::schema::SCHEMA_METADATA_KEY": 631,
+      "`crate::writer::Encoder`": 536,
+      "`bytes::Bytes`": 85,
+      "`arrow_array::RecordBatch`": 262,
+      "`crate::writer::AvroWriter`": 600,
+      "`crate::writer::AvroStreamWriter`": 601,
+      "`crate::writer::WriterBuilder::with_compression`": 534
+    },
+    "link_paths": {
+      "crate::schema::SCHEMA_METADATA_KEY": "arrow_avro::schema::SCHEMA_METADATA_KEY",
+      "`crate::writer::Encoder`": "arrow_avro::writer::Encoder",
+      "`bytes::Bytes`": "bytes::bytes::Bytes",
+      "`arrow_array::RecordBatch`": "arrow_array::record_batch::RecordBatch",
+      "`crate::writer::AvroWriter`": "arrow_avro::writer::AvroWriter",
+      "`crate::writer::AvroStreamWriter`": "arrow_avro::writer::AvroStreamWriter",
+      "`crate::writer::WriterBuilder::with_compression`": "arrow_avro::writer::WriterBuilder::with_compression"
+    },
+    "artifact": {
+      "id": "aa6c906290072b2b1489ba895bbae0f3eb5d1993aeac0f48a1bbbc564d95227a",
+      "format_version": 61,
+      "item_id": "632",
+      "origin": "https://docs.rs/crate/arrow-avro/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/arrow_avro.writer.md",
+    "record_file": "modules/arrow_avro.writer.json",
+    "anchor": "op-11fcfb1ac6b8ac80101af1d3",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::schema::SCHEMA_METADATA_KEY": "../operations/arrow_avro.schema.SCHEMA_METADATA_KEY.md#op-6c9d9646203a03df41b92676",
+      "`crate::writer::Encoder`": "../operations/arrow_avro.writer.Encoder.md#op-aabee555cff8f50e9279fede",
+      "`arrow_array::RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "`crate::writer::AvroWriter`": "../operations/arrow_avro.writer.AvroWriter.md#op-109f7d6c1f115d2ec6574736",
+      "`crate::writer::AvroStreamWriter`": "../operations/arrow_avro.writer.AvroStreamWriter.md#op-74718ef152874c77b8b4f550",
+      "`crate::writer::WriterBuilder::with_compression`": "../operations/arrow_avro.writer.WriterBuilder.md#op-daf5c1807130571209f17f80"
+    }
+  }
+]

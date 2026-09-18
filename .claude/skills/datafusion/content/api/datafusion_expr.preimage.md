@@ -12,6 +12,9 @@ enum PreimageResult
 
 **Variants**: `None`, `Range`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.preimage.PreimageResult.md).
+
+
 Return from [`crate::ScalarUDFImpl::preimage`]
 
 ---

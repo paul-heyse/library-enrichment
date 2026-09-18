@@ -1,0 +1,12 @@
+id: native-object-bytes-owner
+language: Rust
+severity: error
+message: Native object byte reads and synchronization must retain their owned I/O lane and byte reservation.
+files:
+  - crates/enrichment-store/src/durable_store.rs
+rule:
+  kind: call_expression
+  has:
+    field: function
+    regex: '(^|::)tokio::task::spawn_blocking$|^self\.inner\.get_ranges$'
+note: This guard covers the replaced unowned callback and buffer route. Native file metadata/preconditions remain delegated to LocalFileSystem on the I/O lane.

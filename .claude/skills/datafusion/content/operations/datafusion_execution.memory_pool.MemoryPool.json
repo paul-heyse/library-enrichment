@@ -1,0 +1,932 @@
+[
+  {
+    "id": "05e08c54432abb360395d4af",
+    "path": "datafusion_execution::memory_pool::MemoryPool",
+    "name": "MemoryPool",
+    "owner": null,
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait MemoryPool: Any + Send + Sync + std::fmt::Debug + Display",
+    "docs": "Tracks and potentially limits memory use across operators during execution.\n\n# Memory Management Overview\n\nDataFusion is a streaming query engine, processing most queries without\nbuffering the entire input. Most operators require a fixed amount of memory\nbased on the schema and target batch size. However, certain operations such\nas sorting and grouping/joining, require buffering intermediate results,\nwhich can require memory proportional to the number of input rows.\n\nRather than tracking all allocations, DataFusion takes a pragmatic approach:\nIntermediate memory used as data streams through the system is not accounted\n(it assumed to be \"small\") but the large consumers of memory must register\nand constrain their use. This design trades off the additional code\ncomplexity of memory tracking with limiting resource usage.\n\nWhen limiting memory with a `MemoryPool` you should typically reserve some\noverhead (e.g. 10%) for the \"small\" memory allocations that are not tracked.\n\n# Memory Management Design\n\nAs explained above, DataFusion's design ONLY limits operators that require\n\"large\" amounts of memory (proportional to number of input rows), such as\n`GroupByHashExec`. It does NOT track and limit memory used internally by\nother operators such as `DataSourceExec` or the `RecordBatch`es that flow\nbetween operators. Furthermore, operators should not reserve memory for the\nbatches they produce. Instead, if a consumer operator needs to hold batches\nfrom its producers in memory for an extended period, it is the consumer\noperator's responsibility to reserve the necessary memory for those batches.\n\nIn order to avoid allocating memory until the OS or the container system\nkills the process, DataFusion `ExecutionPlan`s (operators) that consume\nlarge amounts of memory must first request their desired allocation from a\n[`MemoryPool`] before allocating more.  The request is typically managed via\na  [`MemoryReservation`] and [`MemoryConsumer`].\n\nIf the allocation is successful, the operator should proceed and allocate\nthe desired memory. If the allocation fails, the operator must either first\nfree memory (e.g. by spilling to local disk) and try again, or error.\n\nNote that a `MemoryPool` can be shared by concurrently executing plans,\nwhich can be used to control memory usage in a multi-tenant system.\n\n# How MemoryPool works by example\n\nScenario 1:\nFor `Filter` operator, `RecordBatch`es will stream through it, so it\ndon't have to keep track of memory usage through [`MemoryPool`].\n\nScenario 2:\nFor `CrossJoin` operator, if the input size gets larger, the intermediate\nstate will also grow. So `CrossJoin` operator will use [`MemoryPool`] to\nlimit the memory usage.\n2.1 `CrossJoin` operator has read a new batch, asked memory pool for\nadditional memory. Memory pool updates the usage and returns success.\n2.2 `CrossJoin` has read another batch, and tries to reserve more memory\nagain, memory pool does not have enough memory. Since `CrossJoin` operator\nhas not implemented spilling, it will stop execution and return an error.\n\nScenario 3:\nFor `Aggregate` operator, its intermediate states will also accumulate as\nthe input size gets larger, but with spilling capability. When it tries to\nreserve more memory from the memory pool, and the memory pool has already\nreached the memory limit, it will return an error. Then, `Aggregate`\noperator will spill the intermediate buffers to disk, and release memory\nfrom the memory pool, and continue to retry memory reservation.\n\n# Related Structs\n\nTo better understand memory management in DataFusion, here are the key structs\nand their relationships:\n\n- [`MemoryConsumer`]: A named allocation traced by a particular operator. If an\n  execution is parallelized, and there are multiple partitions of the same\n  operator, each partition will have a separate `MemoryConsumer`.\n- `SharedRegistration`: A registration of a `MemoryConsumer` with a `MemoryPool`.\n  `SharedRegistration` and `MemoryPool` have a many-to-one relationship. `MemoryPool`\n  implementation can decide how to allocate memory based on the registered consumers.\n  (e.g. `FairSpillPool` will try to share available memory evenly among all registered\n  consumers)\n- [`MemoryReservation`]: Each `MemoryConsumer`/operator can have multiple\n  `MemoryReservation`s for different internal data structures. The relationship\n  between `MemoryConsumer` and `MemoryReservation` is one-to-many. This design\n  enables cleaner operator implementations:\n  - Different `MemoryReservation`s can be used for different purposes\n  - `MemoryReservation` follows RAII principles - to release a reservation,\n    simply drop the `MemoryReservation` object. When all `MemoryReservation`s\n    for a `SharedRegistration` are dropped, the `SharedRegistration` is dropped\n    when its reference count reaches zero, automatically unregistering the\n    `MemoryConsumer` from the `MemoryPool`.\n\n## Relationship Diagram\n\n```text\n┌──────────────────┐     ┌──────────────────┐\n│MemoryReservation │     │MemoryReservation │\n└───┬──────────────┘     └──────────────────┘ ......\n    │belongs to                    │\n    │      ┌───────────────────────┘           │  │\n    │      │                                   │  │\n    ▼      ▼                                   ▼  ▼\n┌────────────────────────┐       ┌────────────────────────┐\n│   SharedRegistration   │       │   SharedRegistration   │\n│   ┌────────────────┐   │       │   ┌────────────────┐   │\n│   │                │   │       │   │                │   │\n│   │ MemoryConsumer │   │       │   │ MemoryConsumer │   │\n│   │                │   │       │   │                │   │\n│   └────────────────┘   │       │   └────────────────┘   │\n└────────────┬───────────┘       └────────────┬───────────┘\n             │                                │\n             │                        register│into\n             │                                │\n             └─────────────┐   ┌──────────────┘\n                           │   │\n                           ▼   ▼\n   ╔═══════════════════════════════════════════════════╗\n   ║                                                   ║\n   ║                    MemoryPool                     ║\n   ║                                                   ║\n   ╚═══════════════════════════════════════════════════╝\n```\n\nFor example, there are two parallel partitions of an operator X: each partition\ncorresponds to a `MemoryConsumer` in the above diagram. Inside each partition of\noperator X, there are typically several `MemoryReservation`s - one for each\ninternal data structure that needs memory tracking (e.g., 1 reservation for the hash\ntable, and 1 reservation for buffered input, etc.).\n\n# Implementing `MemoryPool`\n\nYou can implement a custom allocation policy by implementing the\n[`MemoryPool`] trait and configuring a `SessionContext` appropriately.\nHowever, DataFusion comes with the following simple memory pool implementations that\nhandle many common cases:\n\n* [`UnboundedMemoryPool`]: no memory limits (the default)\n\n* [`GreedyMemoryPool`]: Limits memory usage to a fixed size using a \"first\n  come first served\" policy\n\n* [`FairSpillPool`]: Limits memory usage to a fixed size, allocating memory\n  to all spilling operators fairly\n\n* [`TrackConsumersPool`]: Wraps another [`MemoryPool`] and tracks consumers,\n  providing better error messages on the largest memory users.",
+    "span": {
+      "filename": "src/memory_pool/mod.rs",
+      "begin": [
+        188,
+        1
+      ],
+      "end": [
+        228,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          1164,
+          1166,
+          1168,
+          1165,
+          1167,
+          1169,
+          903,
+          1170
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Any",
+                "id": 55,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 18,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 20,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "std::fmt::Debug",
+                "id": 154,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Display",
+                "id": 509,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": [
+          943,
+          976,
+          1011,
+          1045,
+          1118
+        ]
+      }
+    },
+    "type_references": {
+      "55": "core::any::Any",
+      "18": "core::marker::Send",
+      "20": "core::marker::Sync",
+      "154": "core::fmt::Debug",
+      "509": "core::fmt::Display"
+    },
+    "impl_context": null,
+    "links": {
+      "`UnboundedMemoryPool`": 947,
+      "`GreedyMemoryPool`": 982,
+      "`TrackConsumersPool`": 1082,
+      "`FairSpillPool`": 981,
+      "`MemoryReservation`": 937,
+      "`MemoryPool`": 902,
+      "`MemoryConsumer`": 934
+    },
+    "link_paths": {
+      "`UnboundedMemoryPool`": "datafusion_execution::memory_pool::pool::UnboundedMemoryPool",
+      "`GreedyMemoryPool`": "datafusion_execution::memory_pool::pool::GreedyMemoryPool",
+      "`TrackConsumersPool`": "datafusion_execution::memory_pool::pool::TrackConsumersPool",
+      "`FairSpillPool`": "datafusion_execution::memory_pool::pool::FairSpillPool",
+      "`MemoryReservation`": "datafusion_execution::memory_pool::MemoryReservation",
+      "`MemoryPool`": "datafusion_execution::memory_pool::MemoryPool",
+      "`MemoryConsumer`": "datafusion_execution::memory_pool::MemoryConsumer"
+    },
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "902",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.MemoryPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.MemoryPool.json",
+    "anchor": "op-05e08c54432abb360395d4af",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`UnboundedMemoryPool`": "../operations/datafusion_execution.memory_pool.pool.UnboundedMemoryPool.md#op-bc210b8fe79074b67e0fb694",
+      "`GreedyMemoryPool`": "../operations/datafusion_execution.memory_pool.pool.GreedyMemoryPool.md#op-2f1ce34e98ac037b2abc0c26",
+      "`TrackConsumersPool`": "../operations/datafusion_execution.memory_pool.pool.TrackConsumersPool.md#op-68ccf7cd2608b07636f02ae9",
+      "`FairSpillPool`": "../operations/datafusion_execution.memory_pool.pool.FairSpillPool.md#op-beb0cc08c58aa417e2866734",
+      "`MemoryReservation`": "../operations/datafusion_execution.memory_pool.MemoryReservation.md#op-a0611bd048c178da7e0d05df",
+      "`MemoryPool`": "../operations/datafusion_execution.memory_pool.MemoryPool.md#op-05e08c54432abb360395d4af",
+      "`MemoryConsumer`": "../operations/datafusion_execution.memory_pool.MemoryConsumer.md#op-a6a1cc9789177d5167596e41"
+    }
+  },
+  {
+    "id": "901665d129617381f78ddd6c",
+    "path": "datafusion_execution::memory_pool::MemoryPool::grow",
+    "name": "grow",
+    "owner": "datafusion_execution::memory_pool::MemoryPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn grow(&self, reservation: &MemoryReservation, additional: usize)",
+    "docs": "Infallibly grow the provided `reservation` by `additional` bytes\n\nThis must always succeed",
+    "span": {
+      "filename": "src/memory_pool/mod.rs",
+      "begin": [
+        205,
+        5
+      ],
+      "end": [
+        205,
+        72
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "reservation",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "MemoryReservation",
+                      "id": 937,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "additional",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "937": "datafusion_execution::memory_pool::MemoryReservation"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "1165",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.MemoryPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.MemoryPool.json",
+    "anchor": "op-901665d129617381f78ddd6c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "17fe84af23b4f41e7f01b41e",
+    "path": "datafusion_execution::memory_pool::MemoryPool::memory_limit",
+    "name": "memory_limit",
+    "owner": "datafusion_execution::memory_pool::MemoryPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn memory_limit(&self) -> MemoryLimit",
+    "docs": "Return the memory limit of the pool\n\nThe default implementation of `MemoryPool::memory_limit`\nwill return `MemoryLimit::Unknown`.\nIf you are using your custom memory pool, but have the requirement to\nknow the memory usage limit of the pool, please implement this method\nto return it(`Memory::Finite(limit)`).",
+    "span": {
+      "filename": "src/memory_pool/mod.rs",
+      "begin": [
+        225,
+        5
+      ],
+      "end": [
+        227,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "MemoryLimit",
+              "id": 942,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "942": "datafusion_execution::memory_pool::MemoryLimit"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "1170",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.MemoryPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.MemoryPool.json",
+    "anchor": "op-17fe84af23b4f41e7f01b41e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0f0e8f533cb6517f9ca299fa",
+    "path": "datafusion_execution::memory_pool::MemoryPool::name",
+    "name": "name",
+    "owner": "datafusion_execution::memory_pool::MemoryPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &str",
+    "docs": "Return pool name",
+    "span": {
+      "filename": "src/memory_pool/mod.rs",
+      "begin": [
+        190,
+        5
+      ],
+      "end": [
+        190,
+        28
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "1164",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.MemoryPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.MemoryPool.json",
+    "anchor": "op-0f0e8f533cb6517f9ca299fa",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1314b1707a7bd206ae235f18",
+    "path": "datafusion_execution::memory_pool::MemoryPool::register",
+    "name": "register",
+    "owner": "datafusion_execution::memory_pool::MemoryPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn register(&self, _consumer: &MemoryConsumer)",
+    "docs": "Registers a new [`MemoryConsumer`]\n\nNote: Subsequent calls to [`Self::grow`] must be made to reserve memory",
+    "span": {
+      "filename": "src/memory_pool/mod.rs",
+      "begin": [
+        195,
+        5
+      ],
+      "end": [
+        195,
+        54
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_consumer",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "MemoryConsumer",
+                      "id": 934,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "934": "datafusion_execution::memory_pool::MemoryConsumer"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::grow`": 1165,
+      "`MemoryConsumer`": 934
+    },
+    "link_paths": {
+      "`Self::grow`": "datafusion_execution::memory_pool::MemoryPool::grow",
+      "`MemoryConsumer`": "datafusion_execution::memory_pool::MemoryConsumer"
+    },
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "1166",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.MemoryPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.MemoryPool.json",
+    "anchor": "op-1314b1707a7bd206ae235f18",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::grow`": "../operations/datafusion_execution.memory_pool.MemoryPool.md#op-901665d129617381f78ddd6c",
+      "`MemoryConsumer`": "../operations/datafusion_execution.memory_pool.MemoryConsumer.md#op-a6a1cc9789177d5167596e41"
+    }
+  },
+  {
+    "id": "b2c68b53e8e4ef3cae11576a",
+    "path": "datafusion_execution::memory_pool::MemoryPool::reserved",
+    "name": "reserved",
+    "owner": "datafusion_execution::memory_pool::MemoryPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn reserved(&self) -> usize",
+    "docs": "Return the total amount of memory reserved",
+    "span": {
+      "filename": "src/memory_pool/mod.rs",
+      "begin": [
+        216,
+        5
+      ],
+      "end": [
+        216,
+        33
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "903",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.MemoryPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.MemoryPool.json",
+    "anchor": "op-b2c68b53e8e4ef3cae11576a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2f7bc0a4f5fb725a09daa959",
+    "path": "datafusion_execution::memory_pool::MemoryPool::shrink",
+    "name": "shrink",
+    "owner": "datafusion_execution::memory_pool::MemoryPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn shrink(&self, reservation: &MemoryReservation, shrink: usize)",
+    "docs": "Infallibly shrink the provided `reservation` by `shrink` bytes",
+    "span": {
+      "filename": "src/memory_pool/mod.rs",
+      "begin": [
+        208,
+        5
+      ],
+      "end": [
+        208,
+        70
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "reservation",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "MemoryReservation",
+                      "id": 937,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "shrink",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "937": "datafusion_execution::memory_pool::MemoryReservation"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "1167",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.MemoryPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.MemoryPool.json",
+    "anchor": "op-2f7bc0a4f5fb725a09daa959",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6a4b695aac89e13396396a9f",
+    "path": "datafusion_execution::memory_pool::MemoryPool::try_grow",
+    "name": "try_grow",
+    "owner": "datafusion_execution::memory_pool::MemoryPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_grow(&self, reservation: &MemoryReservation, additional: usize) -> Result<()>",
+    "docs": "Attempt to grow the provided `reservation` by `additional` bytes\n\nOn error the `allocation` will not be increased in size",
+    "span": {
+      "filename": "src/memory_pool/mod.rs",
+      "begin": [
+        213,
+        5
+      ],
+      "end": [
+        213,
+        90
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "reservation",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "MemoryReservation",
+                      "id": 937,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "additional",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 253,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "937": "datafusion_execution::memory_pool::MemoryReservation",
+      "253": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "1169",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.MemoryPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.MemoryPool.json",
+    "anchor": "op-6a4b695aac89e13396396a9f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d32df2abd6a19de7f780ba32",
+    "path": "datafusion_execution::memory_pool::MemoryPool::unregister",
+    "name": "unregister",
+    "owner": "datafusion_execution::memory_pool::MemoryPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn unregister(&self, _consumer: &MemoryConsumer)",
+    "docs": "Records the destruction of a [`MemoryReservation`] with [`MemoryConsumer`]\n\nNote: Prior calls to [`Self::shrink`] must be made to free any reserved memory",
+    "span": {
+      "filename": "src/memory_pool/mod.rs",
+      "begin": [
+        200,
+        5
+      ],
+      "end": [
+        200,
+        56
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_consumer",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "MemoryConsumer",
+                      "id": 934,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "934": "datafusion_execution::memory_pool::MemoryConsumer"
+    },
+    "impl_context": null,
+    "links": {
+      "`MemoryReservation`": 937,
+      "`Self::shrink`": 1167,
+      "`MemoryConsumer`": 934
+    },
+    "link_paths": {
+      "`MemoryReservation`": "datafusion_execution::memory_pool::MemoryReservation",
+      "`Self::shrink`": "datafusion_execution::memory_pool::MemoryPool::shrink",
+      "`MemoryConsumer`": "datafusion_execution::memory_pool::MemoryConsumer"
+    },
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "1168",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.MemoryPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.MemoryPool.json",
+    "anchor": "op-d32df2abd6a19de7f780ba32",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MemoryReservation`": "../operations/datafusion_execution.memory_pool.MemoryReservation.md#op-a0611bd048c178da7e0d05df",
+      "`Self::shrink`": "../operations/datafusion_execution.memory_pool.MemoryPool.md#op-2f7bc0a4f5fb725a09daa959",
+      "`MemoryConsumer`": "../operations/datafusion_execution.memory_pool.MemoryConsumer.md#op-a6a1cc9789177d5167596e41"
+    }
+  }
+]

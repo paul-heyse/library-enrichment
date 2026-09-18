@@ -10,6 +10,9 @@ Crate `arrow-flight` · 4 public items · structured records in [`model/arrow_fl
 const GRPC_TARGET_MAX_FLIGHT_SIZE_BYTES: usize = 2097152
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.encode.GRPC_TARGET_MAX_FLIGHT_SIZE_BYTES.md).
+
+
 Default target size for encoded [`FlightData`].
 
 Note this value would normally be 4MB, but the size calculation is
@@ -28,6 +31,9 @@ enum DictionaryHandling
 **Variants**: `Hydrate`, `Resend`
 
 **Derives**: Debug, PartialEq, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.encode.DictionaryHandling.md).
+
 
 Defines how a [`FlightDataEncoder`] encodes [`DictionaryArray`]s
 
@@ -82,6 +88,9 @@ fn known_schema(&self) -> Option<SchemaRef>
 fn poll_next(Pin<&mut self>, cx: &mut std::task::Context<'_>) -> Poll<Option<Self::Item>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.encode.FlightDataEncoder.md).
+
+
 Stream that encodes a stream of record batches to flight data.
 
 See [`FlightDataEncoderBuilder`] for details and example.
@@ -110,6 +119,9 @@ fn with_metadata(self, app_metadata: Bytes) -> Self
 fn with_options(self, options: IpcWriteOptions) -> Self
 fn with_schema(self, schema: SchemaRef) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.encode.FlightDataEncoderBuilder.md).
+
 
 Creates a [`Stream`] of [`FlightData`]s from a
 `Stream` of [`Result`]<[`RecordBatch`], [`FlightError`]>.

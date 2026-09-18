@@ -28,6 +28,9 @@ fn poll(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Self::Output>
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.elapsed_compute.ElapsedComputeFuture.md).
+
+
 Wraps any [`Future`] and accumulates the wall-clock time spent inside
 each [`Future::poll`] call into `elapsed_compute`. Everything that
 executes synchronously within a `poll()` scope is measured — including
@@ -60,6 +63,9 @@ trait ElapsedComputeFutureExt: Future + Sized
 ```rust
 fn with_elapsed_compute(self, elapsed_compute: Time) -> ElapsedComputeFuture<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.metrics.elapsed_compute.ElapsedComputeFutureExt.md).
+
 
 Extension trait that wraps any [`Future`] with [`ElapsedComputeFuture`].
 

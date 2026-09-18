@@ -12,6 +12,9 @@ Also reachable as `datafusion::datasource::file_format::parquet::apply_file_sche
 fn apply_file_schema_type_coercions(table_schema: &arrow::datatypes::Schema, file_schema: &arrow::datatypes::Schema) -> Option<arrow::datatypes::Schema>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.schema_coercion.apply_file_schema_type_coercions.md).
+
+
 Apply necessary schema type coercions to make file schema match table schema.
 
 This function performs two main types of transformations in a single pass:
@@ -42,6 +45,9 @@ Also reachable as `datafusion::datasource::file_format::parquet::coerce_int96_to
 fn coerce_int96_to_resolution(parquet_schema: &parquet::schema::types::SchemaDescriptor, file_schema: &arrow::datatypes::Schema, time_unit: &arrow::datatypes::TimeUnit) -> Option<arrow::datatypes::Schema>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.schema_coercion.coerce_int96_to_resolution.md).
+
+
 Coerces the file schema's Timestamps to the provided TimeUnit if the
 Parquet schema contains INT96.
 
@@ -61,6 +67,9 @@ Also reachable as `datafusion::datasource::file_format::parquet::transform_binar
 fn transform_binary_to_string(schema: &arrow::datatypes::Schema) -> arrow::datatypes::Schema
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.schema_coercion.transform_binary_to_string.md).
+
+
 Transform a schema so that any binary types are strings
 
 ---
@@ -74,6 +83,9 @@ Also reachable as `datafusion::datasource::file_format::parquet::transform_schem
 ```rust
 fn transform_schema_to_view(schema: &arrow::datatypes::Schema) -> arrow::datatypes::Schema
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.schema_coercion.transform_schema_to_view.md).
+
 
 Transform a schema to use view types for Utf8 and Binary
 
@@ -98,6 +110,9 @@ fn coerce(self) -> Option<Schema>
 fn new(parquet_schema: &'a SchemaDescriptor, file_schema: &'a Schema, time_unit: &'a TimeUnit) -> Self
 fn with_timezone(self, timezone: Option<Arc<str>>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.schema_coercion.Int96Coercer.md).
+
 
 Builder for coercing INT96-originated Timestamp columns in `file_schema`
 to a specific [`TimeUnit`], optionally attaching a timezone.

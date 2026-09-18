@@ -30,7 +30,7 @@ from uuid import uuid4
 
 from fastmcp import FastMCP
 from fastmcp.exceptions import ValidationError as ToolValidationError
-from fastmcp.resources.base import ResourceResult
+from fastmcp.resources import ResourceResult, ResourceTemplate, TextResource
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
 from fastmcp.tools import Tool, ToolResult
 from jsonschema import Draft202012Validator, validators
@@ -264,6 +264,15 @@ class NativeTool(Tool):
         return framing.native_result(payload, response.get("delivery_bytes"), delivery)
 
 
+class NativeResourceTemplate(ResourceTemplate):
+    """Mechanical FastMCP resource reads over the generated native catalog."""
+
+    rpc_method: str
+
+    async def read(self, arguments: dict[str, Any]) -> ResourceResult:
+        return await _native_resource(self.rpc_method, arguments)
+
+
 def build_server() -> FastMCP:
     """Construct the MCP server and register the tool catalog.
 
@@ -300,52 +309,31 @@ def build_server() -> FastMCP:
             )
         )
 
-    # Resource templates (blueprint §7.4) delegate to the same core reads as the tools, so a
-    # client that surfaces resources and one that only surfaces tools see identical bytes.
-    @mcp.resource(
-        "library-evidence://workflow",
-        name="research_workflow",
-        description="Current selection, coverage, jobs, recovery and result-reading guidance.",
-        mime_type="text/markdown",
-    )
-    async def workflow_resource() -> str:
-        guidance = Path(__file__).with_name("_guidance").joinpath("tool-contract.md")
-        return "Registered tools: " + ", ".join(TOOL_NAMES) + "\n\n" + guidance.read_text()
-
-    @mcp.resource(
-        "library-evidence://artifacts/{artifact_id}",
-        name="artifact",
-        description="A stored artifact, paged; the same read as the `read_artifact` tool.",
-        mime_type="application/json",
-    )
-    async def artifact_resource(artifact_id: str) -> ResourceResult:
-        return await _native_resource("artifact.read", {"artifact_id": artifact_id})
-
-    @mcp.resource(
-        "library-evidence://contexts/{context_id}/overview",
-        name="context_overview",
-        description="The faceted overview of a context; the same read as library_overview.",
-        mime_type="application/json",
-    )
-    async def overview_resource(context_id: str) -> ResourceResult:
-        return await _native_resource("library.overview", {"context_id": context_id})
-
-    @mcp.resource(
-        "library-evidence://snapshots/{snapshot_id}/manifest",
-        name="snapshot_manifest",
-        description="What a snapshot contains: counts, producers and coverage.",
-        mime_type="application/json",
-    )
-    async def manifest_resource(snapshot_id: str) -> ResourceResult:
-        return await _native_resource("snapshot.manifest", {"snapshot_id": snapshot_id})
-
-    @mcp.resource(
-        "library-evidence://jobs/{job_id}/result",
-        name="job_result",
-        mime_type="application/json",
-    )
-    async def job_resource(job_id: str) -> ResourceResult:
-        return await _native_resource("job.control", {"job_id": job_id})
+    for binding in presentation.resources():
+        if binding["source"]["kind"] == "guidance":
+            guidance = Path(__file__).parent.joinpath(binding["source"]["package_path"])
+            mcp.add_resource(
+                TextResource(
+                    uri=binding["uri"],
+                    name=binding["name"],
+                    description=binding["description"],
+                    mime_type=binding["mime_type"],
+                    text=(
+                        "Registered tools: " + ", ".join(TOOL_NAMES) + "\n\n" + guidance.read_text()
+                    ),
+                )
+            )
+        else:
+            mcp.add_template(
+                NativeResourceTemplate(
+                    uri_template=binding["uri"],
+                    name=binding["name"],
+                    description=binding["description"],
+                    mime_type=binding["mime_type"],
+                    parameters=binding["parameters"],
+                    rpc_method=binding["rpc"],
+                )
+            )
 
     return mcp
 

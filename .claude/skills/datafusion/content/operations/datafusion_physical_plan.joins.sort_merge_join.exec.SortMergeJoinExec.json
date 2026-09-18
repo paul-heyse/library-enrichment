@@ -1,0 +1,5455 @@
+[
+  {
+    "id": "f1df017b4f9f3f9c2ca109fe",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "name": "SortMergeJoinExec",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct SortMergeJoinExec",
+    "docs": "Join execution plan that executes equi-join predicates on multiple partitions using Sort-Merge\njoin algorithm and applies an optional filter post join. Can be used to join arbitrarily large\ninputs where one or both of the inputs don't fit in the available memory.\n\n# Join Expressions\n\nEqui-join predicate (e.g. `<col1> = <col2>`) expressions are represented by [`Self::on`].\n\nNon-equality predicates, which can not be pushed down to join inputs (e.g.\n`<col1> != <col2>`) are known as \"filter expressions\" and are evaluated\nafter the equijoin predicates. They are represented by [`Self::filter`]. These are optional\nexpressions.\n\n# Sorting\n\nAssumes that both the left and right input to the join are pre-sorted. It is not the\nresponsibility of this execution plan to sort the inputs.\n\n# \"Streamed\" vs \"Buffered\"\n\nThe number of record batches of streamed input currently present in the memory will depend\non the output batch size of the execution plan. There is no spilling support for streamed input.\nThe comparisons are performed from values of join keys in streamed input with the values of\njoin keys in buffered input. One row in streamed record batch could be matched with multiple rows in\nbuffered input batches. Streamed input batches are represented by `StreamedBatch`.\n\nBuffered input is buffered for all record batches having the same value of join key.\nIf the memory limit increases beyond the specified value and spilling is enabled,\nbuffered batches could be spilled to disk. If spilling is disabled, the execution\nwill fail under the same conditions. Multiple record batches of buffered could currently reside\nin memory/disk during the execution. The number of buffered batches residing in\nmemory/disk depends on the number of rows of buffered input having the same value\nof join key as that of streamed input rows currently present in memory. Due to pre-sorted inputs,\nthe algorithm understands when it is not needed anymore, and releases the buffered batches\nfrom memory/disk. Buffered input batches are represented by `BufferedBatch`.\n\nDepending on the type of join, left or right input may be selected as streamed or buffered\nrespectively. For example, in a left-outer join, the left execution plan will be selected as\nstreamed input while in a right-outer join, the right execution plan will be selected as the\nstreamed input.\n\nReference for the algorithm:\n<https://en.wikipedia.org/wiki/Sort-merge_join>.\n\nHelpful short video demonstration:\n<https://www.youtube.com/watch?v=jiWCPJtDE2c>.",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        108,
+        1
+      ],
+      "end": [
+        133,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [
+              3521,
+              3522,
+              3523,
+              3524,
+              3525,
+              3530,
+              3531
+            ],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          3543,
+          3545,
+          3546,
+          3547,
+          3548,
+          3549,
+          3550,
+          3551,
+          3552,
+          3553,
+          3554,
+          3555,
+          3556,
+          3557,
+          3558,
+          3559,
+          3560,
+          3561,
+          3562,
+          3563,
+          3565,
+          3567,
+          1536,
+          2023
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Self::filter`": 3534,
+      "`Self::on`": 3533
+    },
+    "link_paths": {
+      "`Self::filter`": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::filter",
+      "`Self::on`": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::on"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1537",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-f1df017b4f9f3f9c2ca109fe",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec"
+    ],
+    "resolved_doc_links": {
+      "`Self::filter`": "../operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md#op-c14452ac6a39382a5de532da",
+      "`Self::on`": "../operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md#op-70bf0868fe6379f68a846696"
+    }
+  },
+  {
+    "id": "781b58620b8bc4e4a8838e23",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::apply_expressions",
+    "name": "apply_expressions",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        443,
+        5
+      ],
+      "end": [
+        450,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "FnMut",
+                            "id": 795,
+                            "args": {
+                              "parenthesized": {
+                                "inputs": [
+                                  {
+                                    "borrowed_ref": {
+                                      "lifetime": null,
+                                      "is_mutable": false,
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "Arc",
+                                          "id": 94,
+                                          "args": {
+                                            "angle_bracketed": {
+                                              "args": [
+                                                {
+                                                  "type": {
+                                                    "dyn_trait": {
+                                                      "traits": [
+                                                        {
+                                                          "trait": {
+                                                            "path": "crate::PhysicalExpr",
+                                                            "id": 629,
+                                                            "args": null
+                                                          },
+                                                          "generic_params": []
+                                                        }
+                                                      ],
+                                                      "lifetime": null
+                                                    }
+                                                  }
+                                                }
+                                              ],
+                                              "constraints": []
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ],
+                                "output": {
+                                  "resolved_path": {
+                                    "path": "Result",
+                                    "id": 99,
+                                    "args": {
+                                      "angle_bracketed": {
+                                        "args": [
+                                          {
+                                            "type": {
+                                              "resolved_path": {
+                                                "path": "TreeNodeRecursion",
+                                                "id": 796,
+                                                "args": null
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "constraints": []
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "TreeNodeRecursion",
+                          "id": 796,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "795": "core::ops::function::FnMut",
+      "94": "alloc::sync::Arc",
+      "629": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "99": "datafusion_common::error::Result",
+      "796": "datafusion_common::tree_node::TreeNodeRecursion"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2013",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-781b58620b8bc4e4a8838e23",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::apply_expressions"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d4e4829e123e696bf375b1ff",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::child_stats_requests",
+    "name": "child_stats_requests",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn child_stats_requests(&self, partition: Option<usize>) -> Vec<ChildStats>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        599,
+        5
+      ],
+      "end": [
+        601,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ChildStats",
+                          "id": 804,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "2": "alloc::vec::Vec",
+      "804": "datafusion_physical_plan::statistics::ChildStats"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2019",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-d4e4829e123e696bf375b1ff",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::child_stats_requests"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7044501f1f8afe599276430b",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::children",
+    "name": "children",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        439,
+        5
+      ],
+      "end": [
+        441,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2012",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-7044501f1f8afe599276430b",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::children"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f6833c1f2d20e8630f57e2e2",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::clone",
+    "name": "clone",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> SortMergeJoinExec",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        107,
+        17
+      ],
+      "end": [
+        107,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "SortMergeJoinExec",
+              "id": 1537,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1537": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          107,
+          17
+        ],
+        "end": [
+          107,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3566",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-f6833c1f2d20e8630f57e2e2",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ddce6ace15467e7daa635d3b",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::execute",
+    "name": "execute",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        504,
+        5
+      ],
+      "end": [
+        593,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "partition",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "context",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "TaskContext",
+                              "id": 800,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "SendableRecordBatchStream",
+                          "id": 103,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "800": "datafusion_execution::task::TaskContext",
+      "99": "datafusion_common::error::Result",
+      "103": "datafusion_execution::stream::SendableRecordBatchStream"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2017",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-ddce6ace15467e7daa635d3b",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::execute"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c14452ac6a39382a5de532da",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::filter",
+    "name": "filter",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn filter(&self) -> &Option<JoinFilter>",
+    "docs": "Ref to join filter",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        266,
+        5
+      ],
+      "end": [
+        268,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "JoinFilter",
+                              "id": 3159,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "3159": "datafusion_physical_plan::joins::join_filter::JoinFilter"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3534",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-c14452ac6a39382a5de532da",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::filter"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e089540d9d5e65a3c06a60fb",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::filter",
+    "name": "filter",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "filter: Option<joins::utils::JoinFilter>",
+    "docs": "Filters which are applied while finding matching rows",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        116,
+        5
+      ],
+      "end": [
+        116,
+        35
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "Option",
+          "id": 281,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::joins::utils::JoinFilter",
+                      "id": 3159,
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "3159": "datafusion_physical_plan::joins::join_filter::JoinFilter"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3524",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-e089540d9d5e65a3c06a60fb",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::filter"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ce5d46846a14f48008050b7c",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        107,
+        10
+      ],
+      "end": [
+        107,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          107,
+          10
+        ],
+        "end": [
+          107,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3564",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-ce5d46846a14f48008050b7c",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "84b3f757f30e97eae67e5a34",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::fmt_as",
+    "name": "fmt_as",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        350,
+        5
+      ],
+      "end": [
+        400,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "t",
+              {
+                "resolved_path": {
+                  "path": "DisplayFormatType",
+                  "id": 778,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Formatter",
+                      "id": 64,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 65,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "778": "datafusion_physical_plan::display::DisplayFormatType",
+      "64": "core::fmt::Formatter",
+      "65": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "DisplayAs",
+        "id": "datafusion_physical_plan::display::DisplayAs",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::display::DisplayAs",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          349,
+          1
+        ],
+        "end": [
+          401,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "1535",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-84b3f757f30e97eae67e5a34",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::fmt_as"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "17829e6e42a06f7be39916f5",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::input_distribution_requirements",
+    "name": "input_distribution_requirements",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn input_distribution_requirements(&self) -> InputDistributionRequirements",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        416,
+        5
+      ],
+      "end": [
+        426,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "InputDistributionRequirements",
+              "id": 786,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "786": "datafusion_physical_plan::distribution_requirements::InputDistributionRequirements"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2009",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-17829e6e42a06f7be39916f5",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::input_distribution_requirements"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4949508220affb169595d722",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::join_type",
+    "name": "join_type",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn join_type(&self) -> JoinType",
+    "docs": "Join type",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        256,
+        5
+      ],
+      "end": [
+        258,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "JoinType",
+              "id": 3154,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3154": "datafusion_common::join_type::JoinType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3538",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-4949508220affb169595d722",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::join_type"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c28b47771da3bd2061f63b61",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::join_type",
+    "name": "join_type",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "join_type: datafusion_common::JoinType",
+    "docs": "How the join is performed",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        118,
+        5
+      ],
+      "end": [
+        118,
+        28
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "datafusion_common::JoinType",
+          "id": 3154,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "3154": "datafusion_common::join_type::JoinType"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3525",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-c28b47771da3bd2061f63b61",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::join_type"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8a795622ed64cbf1c4f71a9a",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::left",
+    "name": "left",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn left(&self) -> &Arc<dyn ExecutionPlan>",
+    "docs": "Ref to left execution plan",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        261,
+        5
+      ],
+      "end": [
+        263,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3539",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-8a795622ed64cbf1c4f71a9a",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::left"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e1b150c589881e45d8174780",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::left",
+    "name": "left",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "left: std::sync::Arc<dyn ExecutionPlan>",
+    "docs": "Left sorted joining execution plan",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        110,
+        5
+      ],
+      "end": [
+        110,
+        37
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "std::sync::Arc",
+          "id": 94,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "ExecutionPlan",
+                            "id": 126,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3521",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-e1b150c589881e45d8174780",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::left"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c7153fada428197fb21692d9",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::maintains_input_order",
+    "name": "maintains_input_order",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn maintains_input_order(&self) -> Vec<bool>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        435,
+        5
+      ],
+      "end": [
+        437,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "bool"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2011",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-c7153fada428197fb21692d9",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::maintains_input_order"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "34956ca50ac0c0d9aabb4bb6",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::metrics",
+    "name": "metrics",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn metrics(&self) -> Option<MetricsSet>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        595,
+        5
+      ],
+      "end": [
+        597,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 281,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "MetricsSet",
+                          "id": 802,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "281": "core::option::Option",
+      "802": "datafusion_physical_expr_common::metrics::MetricsSet"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2018",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-34956ca50ac0c0d9aabb4bb6",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::metrics"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "736057f0a096f2e0ffeb32ea",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::name",
+    "name": "name",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &'static str",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        404,
+        5
+      ],
+      "end": [
+        406,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": "'static",
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2006",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-736057f0a096f2e0ffeb32ea",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::name"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "69c38d97def3800639035566",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::null_equality",
+    "name": "null_equality",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn null_equality(&self) -> NullEquality",
+    "docs": "Null equality",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        276,
+        5
+      ],
+      "end": [
+        278,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "NullEquality",
+              "id": 3164,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3164": "datafusion_common::null_equality::NullEquality"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3541",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-69c38d97def3800639035566",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::null_equality"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "af1bbabb031e7a50edaac059",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::null_equality",
+    "name": "null_equality",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "null_equality: datafusion_common::NullEquality",
+    "docs": "Defines the null equality for the join.",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        130,
+        5
+      ],
+      "end": [
+        130,
+        36
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "datafusion_common::NullEquality",
+          "id": 3164,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "3164": "datafusion_common::null_equality::NullEquality"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3531",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-af1bbabb031e7a50edaac059",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::null_equality"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4e34ec2de3f1f35527ef1825",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::on",
+    "name": "on",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "on: joins::utils::JoinOn",
+    "docs": "Set of common columns used to join on",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        114,
+        5
+      ],
+      "end": [
+        114,
+        19
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "crate::joins::utils::JoinOn",
+          "id": 3213,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "3213": "datafusion_physical_plan::joins::JoinOn"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3523",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-4e34ec2de3f1f35527ef1825",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::on"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "70bf0868fe6379f68a846696",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::on",
+    "name": "on",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn on(&self) -> &[(PhysicalExprRef, PhysicalExprRef)]",
+    "docs": "Set of common columns used to join on",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        246,
+        5
+      ],
+      "end": [
+        248,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "tuple": [
+                    {
+                      "resolved_path": {
+                        "path": "PhysicalExprRef",
+                        "id": 3153,
+                        "args": null
+                      }
+                    },
+                    {
+                      "resolved_path": {
+                        "path": "PhysicalExprRef",
+                        "id": 3153,
+                        "args": null
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3153": "datafusion_physical_expr_common::physical_expr::PhysicalExprRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3533",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-70bf0868fe6379f68a846696",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::on"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9111721267205a59a60b808c",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::probe_side",
+    "name": "probe_side",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn probe_side(join_type: &JoinType) -> JoinSide",
+    "docs": "Get probe side (e.g streaming side) information for this sort merge join.\nIn current implementation, probe side is determined according to join type.",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        209,
+        5
+      ],
+      "end": [
+        225,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "join_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "JoinType",
+                      "id": 3154,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "JoinSide",
+              "id": 3225,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3154": "datafusion_common::join_type::JoinType",
+      "3225": "datafusion_common::join_type::JoinSide"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3536",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-9111721267205a59a60b808c",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::probe_side"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ab018a6d85a187a630c3d79b",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::properties",
+    "name": "properties",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        408,
+        5
+      ],
+      "end": [
+        410,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "PlanProperties",
+                              "id": 730,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "730": "datafusion_physical_plan::execution_plan::PlanProperties"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2007",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-ab018a6d85a187a630c3d79b",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::properties"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f778b566f4b7154501b9c3a7",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::replace_children",
+    "name": "replace_children",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, options: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        452,
+        5
+      ],
+      "end": [
+        482,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "ReplaceChildrenOptions",
+                  "id": 792,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "792": "datafusion_physical_plan::execution_plan::ReplaceChildrenOptions",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2014",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-f778b566f4b7154501b9c3a7",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::replace_children"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7558d31570fdfce6e2cd1332",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::required_input_distribution",
+    "name": "required_input_distribution",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn required_input_distribution(&self) -> Vec<Distribution>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        412,
+        5
+      ],
+      "end": [
+        414,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Distribution",
+                          "id": 784,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "784": "datafusion_physical_expr::partitioning::Distribution"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2008",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-7558d31570fdfce6e2cd1332",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::required_input_distribution"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bd2adca8df6caa3281682570",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::required_input_ordering",
+    "name": "required_input_ordering",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn required_input_ordering(&self) -> Vec<Option<OrderingRequirements>>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        428,
+        5
+      ],
+      "end": [
+        433,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 281,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "OrderingRequirements",
+                                      "id": 788,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "281": "core::option::Option",
+      "788": "datafusion_physical_expr_common::sort_expr::OrderingRequirements"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2010",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-bd2adca8df6caa3281682570",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::required_input_ordering"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0a40f1b651af16fa98c0ef39",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::right",
+    "name": "right",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "right: std::sync::Arc<dyn ExecutionPlan>",
+    "docs": "Right sorting joining execution plan",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        112,
+        5
+      ],
+      "end": [
+        112,
+        38
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "std::sync::Arc",
+          "id": 94,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "ExecutionPlan",
+                            "id": 126,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3522",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-0a40f1b651af16fa98c0ef39",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::right"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3130c2639a4bda7d2ad056e9",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::right",
+    "name": "right",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn right(&self) -> &Arc<dyn ExecutionPlan>",
+    "docs": "Ref to right execution plan",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        251,
+        5
+      ],
+      "end": [
+        253,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3537",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-3130c2639a4bda7d2ad056e9",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::right"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "00aa2a9103561e60a9a9881d",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::sort_options",
+    "name": "sort_options",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn sort_options(&self) -> &[SortOptions]",
+    "docs": "Ref to sort options",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        271,
+        5
+      ],
+      "end": [
+        273,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "SortOptions",
+                    "id": 3492,
+                    "args": null
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3492": "arrow_schema::SortOptions"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3540",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-00aa2a9103561e60a9a9881d",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::sort_options"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4d8a272dd993d8fd756d163e",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::sort_options",
+    "name": "sort_options",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "sort_options: Vec<arrow::compute::SortOptions>",
+    "docs": "Sort options of join columns used in sorting left and right execution plans",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        128,
+        5
+      ],
+      "end": [
+        128,
+        39
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "Vec",
+          "id": 2,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "arrow::compute::SortOptions",
+                      "id": 3492,
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "2": "alloc::vec::Vec",
+      "3492": "arrow_schema::SortOptions"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3530",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-4d8a272dd993d8fd756d163e",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::sort_options"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ea1b3f134ea15966327b1dc1",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::statistics_from_inputs",
+    "name": "statistics_from_inputs",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn statistics_from_inputs(&self, input_stats: &[Arc<Statistics>], _args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        603,
+        5
+      ],
+      "end": [
+        625,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "input_stats",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "Arc",
+                        "id": 94,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "resolved_path": {
+                                    "path": "Statistics",
+                                    "id": 806,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "_args",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "StatisticsArgs",
+                      "id": 807,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Statistics",
+                                      "id": 806,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "806": "datafusion_common::stats::Statistics",
+      "807": "datafusion_physical_plan::statistics::StatisticsArgs",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2020",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-ea1b3f134ea15966327b1dc1",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::statistics_from_inputs"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b2f590f267ab88e8914e97b5",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::swap_inputs",
+    "name": "swap_inputs",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn swap_inputs(&self) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "# Notes:\n\nThis function should be called BEFORE inserting any repartitioning\noperators on the join's children. Check [`super::super::HashJoinExec::swap_inputs`]\nfor more details.",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        315,
+        5
+      ],
+      "end": [
+        346,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "99": "datafusion_common::error::Result",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`super::super::HashJoinExec::swap_inputs`": 3124
+    },
+    "link_paths": {
+      "`super::super::HashJoinExec::swap_inputs`": "datafusion_physical_plan::joins::hash_join::exec::HashJoinExec::swap_inputs"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3542",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-b2f590f267ab88e8914e97b5",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::swap_inputs"
+    ],
+    "resolved_doc_links": {
+      "`super::super::HashJoinExec::swap_inputs`": "../operations/datafusion_physical_plan.joins.hash_join.exec.HashJoinExec.md#op-ab8ffc5ca4894926893b682e"
+    }
+  },
+  {
+    "id": "49c96081c265cc8c924c265f",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::try_from_proto",
+    "name": "try_from_proto",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "Reconstruct a [`SortMergeJoinExec`] from its protobuf representation.\n\nThe exact inverse of [`ExecutionPlan::try_to_proto`].\n\n[`ExecutionPlan::try_to_proto`]: crate::ExecutionPlan::try_to_proto",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        745,
+        5
+      ],
+      "end": [
+        825,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "node",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                      "id": 752,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::proto::ExecutionPlanDecodeCtx",
+                      "id": 753,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "752": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode",
+      "753": "datafusion_physical_plan::proto::ExecutionPlanDecodeCtx",
+      "99": "datafusion_common::error::Result",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          739,
+          1
+        ],
+        "end": [
+          826,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`SortMergeJoinExec`": 1537,
+      "crate::ExecutionPlan::try_to_proto": 943
+    },
+    "link_paths": {
+      "`SortMergeJoinExec`": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+      "crate::ExecutionPlan::try_to_proto": "datafusion_physical_plan::execution_plan::ExecutionPlan::try_to_proto"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3544",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-49c96081c265cc8c924c265f",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::try_from_proto"
+    ],
+    "resolved_doc_links": {
+      "`SortMergeJoinExec`": "../operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md#op-f1df017b4f9f3f9c2ca109fe",
+      "crate::ExecutionPlan::try_to_proto": "../operations/datafusion_physical_plan.execution_plan.ExecutionPlan.md#op-759ee1c728536c82a93b9a30"
+    }
+  },
+  {
+    "id": "4211b73129ef64e78a8b298b",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::try_new",
+    "name": "try_new",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_new(left: Arc<dyn ExecutionPlan>, right: Arc<dyn ExecutionPlan>, on: JoinOn, filter: Option<JoinFilter>, join_type: JoinType, sort_options: Vec<SortOptions>, null_equality: NullEquality) -> Result<Self>",
+    "docs": "Tries to create a new [SortMergeJoinExec].\nThe inputs are sorted using `sort_options` are applied to the columns in the `on`\n# Error\nThis function errors when it is not possible to join the left and right sides on keys `on`.",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        140,
+        5
+      ],
+      "end": [
+        205,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "left",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "right",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ExecutionPlan",
+                                    "id": 126,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "on",
+              {
+                "resolved_path": {
+                  "path": "JoinOn",
+                  "id": 3213,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "filter",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 281,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "JoinFilter",
+                              "id": 3159,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "join_type",
+              {
+                "resolved_path": {
+                  "path": "JoinType",
+                  "id": 3154,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "sort_options",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "SortOptions",
+                              "id": 3492,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "null_equality",
+              {
+                "resolved_path": {
+                  "path": "NullEquality",
+                  "id": 3164,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "3213": "datafusion_physical_plan::joins::JoinOn",
+      "281": "core::option::Option",
+      "3159": "datafusion_physical_plan::joins::join_filter::JoinFilter",
+      "3154": "datafusion_common::join_type::JoinType",
+      "2": "alloc::vec::Vec",
+      "3492": "arrow_schema::SortOptions",
+      "3164": "datafusion_common::null_equality::NullEquality",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          135,
+          1
+        ],
+        "end": [
+          347,
+          2
+        ]
+      }
+    },
+    "links": {
+      "SortMergeJoinExec": 1537
+    },
+    "link_paths": {
+      "SortMergeJoinExec": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "3535",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-4211b73129ef64e78a8b298b",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::try_new"
+    ],
+    "resolved_doc_links": {
+      "SortMergeJoinExec": "../operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md#op-f1df017b4f9f3f9c2ca109fe"
+    }
+  },
+  {
+    "id": "ed68c131e2c9fbb12b86e90c",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::try_swapping_with_projection",
+    "name": "try_swapping_with_projection",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_swapping_with_projection(&self, projection: &ProjectionExec) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+    "docs": "Tries to swap the projection with its input [`SortMergeJoinExec`]. If it can be done,\nit returns the new swapped version having the [`SortMergeJoinExec`] as the top plan.\nOtherwise, it returns None.",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        630,
+        5
+      ],
+      "end": [
+        680,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "projection",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ProjectionExec",
+                      "id": 1063,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 281,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "Arc",
+                                      "id": 94,
+                                      "args": {
+                                        "angle_bracketed": {
+                                          "args": [
+                                            {
+                                              "type": {
+                                                "dyn_trait": {
+                                                  "traits": [
+                                                    {
+                                                      "trait": {
+                                                        "path": "ExecutionPlan",
+                                                        "id": 126,
+                                                        "args": null
+                                                      },
+                                                      "generic_params": []
+                                                    }
+                                                  ],
+                                                  "lifetime": null
+                                                }
+                                              }
+                                            }
+                                          ],
+                                          "constraints": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1063": "datafusion_physical_plan::projection::ProjectionExec",
+      "99": "datafusion_common::error::Result",
+      "281": "core::option::Option",
+      "94": "alloc::sync::Arc",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`SortMergeJoinExec`": 1537
+    },
+    "link_paths": {
+      "`SortMergeJoinExec`": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2021",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-ed68c131e2c9fbb12b86e90c",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::try_swapping_with_projection"
+    ],
+    "resolved_doc_links": {
+      "`SortMergeJoinExec`": "../operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md#op-f1df017b4f9f3f9c2ca109fe"
+    }
+  },
+  {
+    "id": "3dbe60fb3706568248188888",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::try_to_proto",
+    "name": "try_to_proto",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        683,
+        5
+      ],
+      "end": [
+        735,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"proto\"), span: src/joins/sort_merge_join/exec.rs:682:11: 682:28 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::proto::ExecutionPlanEncodeCtx",
+                      "id": 818,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 281,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "datafusion_proto_models::protobuf::PhysicalPlanNode",
+                                      "id": 752,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "818": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx",
+      "99": "datafusion_common::error::Result",
+      "281": "core::option::Option",
+      "752": "datafusion_proto_models::generated::datafusion::PhysicalPlanNode"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2022",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-3dbe60fb3706568248188888",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::try_to_proto"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bb5c8eee32ee4023ce6a1086",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::with_new_children",
+    "name": "with_new_children",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        484,
+        5
+      ],
+      "end": [
+        492,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2015",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-bb5c8eee32ee4023ce6a1086",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::with_new_children"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "434d2b667e511ecf97d8e90b",
+    "path": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec::with_new_children_and_same_properties",
+    "name": "with_new_children_and_same_properties",
+    "owner": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/joins/sort_merge_join/exec.rs",
+      "begin": [
+        494,
+        5
+      ],
+      "end": [
+        502,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 94,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 2,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 94,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "dyn_trait": {
+                                          "traits": [
+                                            {
+                                              "trait": {
+                                                "path": "ExecutionPlan",
+                                                "id": 126,
+                                                "args": null
+                                              },
+                                              "generic_params": []
+                                            }
+                                          ],
+                                          "lifetime": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 99,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 94,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "ExecutionPlan",
+                                            "id": 126,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "alloc::sync::Arc",
+      "2": "alloc::vec::Vec",
+      "126": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "99": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "SortMergeJoinExec",
+          "id": "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "ExecutionPlan",
+        "id": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "args": null
+      },
+      "trait_path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/joins/sort_merge_join/exec.rs",
+        "begin": [
+          403,
+          1
+        ],
+        "end": [
+          736,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "2016",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md",
+    "record_file": "operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.json",
+    "anchor": "op-434d2b667e511ecf97d8e90b",
+    "aliases": [
+      "datafusion_physical_plan::joins::SortMergeJoinExec::with_new_children_and_same_properties"
+    ],
+    "resolved_doc_links": {}
+  }
+]

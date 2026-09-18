@@ -10,6 +10,9 @@ Crate `datafusion-datasource` · 2 public items · structured records in [`model
 const END_SCAN_LOOKAHEAD: u64 = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.boundary_stream.END_SCAN_LOOKAHEAD.md).
+
+
 How far past `raw_end` the initial bounded fetch covers. If the terminating
 newline is not found within this window, `ScanningLastTerminator` issues
 successive same-sized GETs until the newline is located or EOF is reached.
@@ -37,6 +40,9 @@ async fn new(store: Arc<dyn ObjectStore>, location: object_store::path::Path, ra
 ```rust
 fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.boundary_stream.AlignedBoundaryStream.md).
+
 
 A stream wrapper that lazily aligns byte boundaries to newline characters.
 

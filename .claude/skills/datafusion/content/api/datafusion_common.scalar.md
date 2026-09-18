@@ -147,6 +147,9 @@ fn from_str(s: &str) -> Result<Self, Self::Err>
 fn heap_size(&self, ctx: &mut DFHeapSizeCtx) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.scalar.ScalarValue.md).
+
+
 A dynamically typed, nullable single value.
 
 While an arrow  [`Array`]) stores one or more values of the same type, in a
@@ -289,6 +292,9 @@ for the definitive reference.
 fn copy_array_data(src_data: &arrow::array::ArrayData) -> arrow::array::ArrayData
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.scalar.copy_array_data.md).
+
+
 Compacts the data of an `ArrayData` into a new `ArrayData`.
 
 This is useful when you want to minimize the memory footprint of an
@@ -327,6 +333,9 @@ as necessary.
 fn date_to_timestamp_multiplier(source_type: &arrow::datatypes::DataType, target_type: &arrow::datatypes::DataType) -> Option<i64>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.scalar.date_to_timestamp_multiplier.md).
+
+
 Returns the multiplier that converts the input date representation into the
 desired timestamp unit, if the conversion requires a multiplication that can
 overflow an `i64`.
@@ -340,6 +349,9 @@ overflow an `i64`.
 ```rust
 fn dict_from_values<K: ArrowDictionaryKeyType>(values_array: arrow::array::ArrayRef) -> error::Result<arrow::array::ArrayRef>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.scalar.dict_from_values.md).
+
 
 Create a `DictionaryArray` from the provided values array.
 
@@ -366,6 +378,9 @@ Useful for wrapping arrays in dictionary form.
 fn ensure_timestamp_in_bounds(value: i64, multiplier: i64, source_type: &arrow::datatypes::DataType, target_type: &arrow::datatypes::DataType) -> error::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.scalar.ensure_timestamp_in_bounds.md).
+
+
 Ensures the provided value can be represented as a timestamp with the given
 multiplier. Returns an [`DataFusionError::Execution`] when the converted
 value would overflow the timestamp range.
@@ -379,6 +394,9 @@ value would overflow the timestamp range.
 ```rust
 fn get_dict_value<K: ArrowDictionaryKeyType>(array: &dyn Array, index: usize) -> error::Result<(&arrow::array::ArrayRef, Option<usize>)>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.scalar.get_dict_value.md).
+
 
 Return a reference to the values array and the index into it for a
 dictionary array
@@ -397,6 +415,9 @@ Errors if the array cannot be downcasted to DictionaryArray
 fn partial_cmp_struct(s1: &arrow::array::StructArray, s2: &arrow::array::StructArray) -> Option<std::cmp::Ordering>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.scalar.partial_cmp_struct.md).
+
+
 ---
 
 ## timestamp_to_timestamp_multiplier
@@ -406,6 +427,9 @@ fn partial_cmp_struct(s1: &arrow::array::StructArray, s2: &arrow::array::StructA
 ```rust
 fn timestamp_to_timestamp_multiplier(source_type: &arrow::datatypes::DataType, target_type: &arrow::datatypes::DataType) -> Option<i64>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.scalar.timestamp_to_timestamp_multiplier.md).
+
 
 Returns the multiplier that converts the input timestamp representation into
 the desired timestamp unit, if the conversion requires a multiplication that
@@ -437,6 +461,9 @@ trait ScalarType<T: ArrowNativeType>
 ```rust
 fn scalar(r: Option<T>) -> ScalarValue
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.scalar.ScalarType.md).
+
 
 Trait used to map a NativeType to a ScalarValue
 

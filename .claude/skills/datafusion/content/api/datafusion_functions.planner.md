@@ -24,4 +24,7 @@ fn plan_position(&self, args: Vec<Expr>) -> Result<PlannerResult<Vec<Expr>>>
 fn plan_substring(&self, args: Vec<Expr>) -> Result<PlannerResult<Vec<Expr>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.planner.UserDefinedFunctionPlanner.md).
+
+
 ---

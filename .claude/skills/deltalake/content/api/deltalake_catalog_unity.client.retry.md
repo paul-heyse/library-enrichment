@@ -5,6 +5,7 @@ Crate `deltalake-catalog-unity` · 3 public items · structured records in [`mod
 ## RetryConfig
 
 `struct` · `deltalake_catalog_unity::client::retry::RetryConfig`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.client.retry.RetryConfig.md)
 
 ```rust
 struct RetryConfig
@@ -24,6 +25,7 @@ backoff with jitter. See [`BackoffConfig`] for more information
 ## RetryError
 
 `struct` · `deltalake_catalog_unity::client::retry::RetryError`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.client.retry.RetryError.md)
 
 ```rust
 struct RetryError
@@ -58,6 +60,7 @@ Retry request error
 ## Result
 
 `type_alias` · `deltalake_catalog_unity::client::retry::Result`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.client.retry.Result.md)
 
 ```rust
 type Result<T, E = RetryError> = std::result::Result<T, E>

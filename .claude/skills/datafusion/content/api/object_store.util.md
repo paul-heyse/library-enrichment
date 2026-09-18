@@ -12,6 +12,9 @@ Also reachable as `datafusion::object_store::OBJECT_STORE_COALESCE_DEFAULT`, `ob
 const OBJECT_STORE_COALESCE_DEFAULT: u64 = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.util.OBJECT_STORE_COALESCE_DEFAULT.md).
+
+
 Range requests with a gap less than or equal to this,
 will be coalesced into a single request by [`coalesce_ranges`]
 
@@ -52,6 +55,9 @@ fn from(value: T) -> Self
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.util.GetRange.md).
+
+
 Request only a portion of an object's bytes
 
 These can be created from [usize] ranges, like
@@ -81,6 +87,9 @@ enum InvalidGetRange
 
 **Variants**: `StartTooLarge`, `Inconsistent`, `TooLarge`
 
+[Full member, field, variant and typed contracts](../operations/object_store.util.InvalidGetRange.md).
+
+
 ---
 
 ## coalesce_ranges
@@ -92,6 +101,9 @@ Also reachable as `datafusion::object_store::coalesce_ranges`, `object_store::co
 ```rust
 async fn coalesce_ranges<F, E, Fut>(ranges: &[std::ops::Range<u64>], fetch: F, coalesce: u64) -> super::Result<Vec<bytes::Bytes>, E> where F: Send + FnMut(std::ops::Range<u64>) -> Fut, E: Send, Fut: std::future::Future<Output = super::Result<bytes::Bytes, E>> + Send
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.util.coalesce_ranges.md).
+
 
 Takes a function `fetch` that can fetch a range of bytes and uses this to
 fetch the provided byte `ranges`
@@ -112,6 +124,9 @@ Also reachable as `datafusion::object_store::collect_bytes`, `object_store::coll
 ```rust
 async fn collect_bytes<S, E>(stream: S, size_hint: Option<u64>) -> super::Result<bytes::Bytes, E> where E: Send, S: Stream<Item = super::Result<bytes::Bytes, E>> + Send + Unpin
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.util.collect_bytes.md).
+
 
 Collect a stream into [`Bytes`] avoiding copying in the event of a single chunk
 

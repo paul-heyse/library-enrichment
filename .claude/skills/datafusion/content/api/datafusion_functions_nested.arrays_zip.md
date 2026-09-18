@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::arrays_zip`, `datafusion_functions_neste
 fn arrays_zip(arg: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.arrays_zip.arrays_zip.md).
+
+
 combines one or multiple arrays into a single array of structs.
 
 ---
@@ -23,6 +26,9 @@ combines one or multiple arrays into a single array of structs.
 ```rust
 fn arrays_zip_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.arrays_zip.arrays_zip_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArraysZip
@@ -57,5 +63,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.arrays_zip.ArraysZip.md).
+
 
 ---

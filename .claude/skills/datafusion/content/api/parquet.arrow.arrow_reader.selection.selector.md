@@ -23,6 +23,9 @@ fn select(row_count: usize) -> Self
 fn skip(row_count: usize) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_reader.selection.selector.RowSelector.md).
+
+
 [`RowSelection`] is a collection of [`RowSelector`] used to skip rows when
 scanning a parquet file
 

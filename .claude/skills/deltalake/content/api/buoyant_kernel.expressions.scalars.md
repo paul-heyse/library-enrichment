@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 5 public items · structured records in [`model/buoyan
 ## Scalar
 
 `enum` · `buoyant_kernel::expressions::scalars::Scalar`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.scalars.Scalar.md)
 
 Also reachable as `buoyant_kernel::expressions::Scalar`, `delta_kernel::expressions::scalars::Scalar`
 
@@ -98,6 +99,7 @@ For SQL NULL semantics, use [`Scalar::logical_eq`] or [`Scalar::logical_partial_
 ## ArrayData
 
 `struct` · `buoyant_kernel::expressions::scalars::ArrayData`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.scalars.ArrayData.md)
 
 Also reachable as `buoyant_kernel::expressions::ArrayData`, `delta_kernel::expressions::scalars::ArrayData`
 
@@ -135,6 +137,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## DecimalData
 
 `struct` · `buoyant_kernel::expressions::scalars::DecimalData`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.scalars.DecimalData.md)
 
 Also reachable as `buoyant_kernel::expressions::DecimalData`, `delta_kernel::expressions::scalars::DecimalData`
 
@@ -173,6 +176,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## MapData
 
 `struct` · `buoyant_kernel::expressions::scalars::MapData`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.scalars.MapData.md)
 
 Also reachable as `buoyant_kernel::expressions::MapData`, `delta_kernel::expressions::scalars::MapData`
 
@@ -209,6 +213,7 @@ fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S:
 ## StructData
 
 `struct` · `buoyant_kernel::expressions::scalars::StructData`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.expressions.scalars.StructData.md)
 
 Also reachable as `buoyant_kernel::expressions::StructData`, `delta_kernel::expressions::scalars::StructData`
 

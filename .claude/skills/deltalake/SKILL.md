@@ -1,113 +1,86 @@
 ---
 name: deltalake
-description: Find what delta-rs and the Delta kernel can actually do, at a pinned commit, from a prebuilt index of the full API surface, the upstream guides, the integration tests and the Delta protocol specification. Use when implementing against deltalake, when choosing between operations or storage backends, when a capability might exist but you are not sure, and to check whether code already written is leaving capability on the table. Do not use for general Rust questions unrelated to Delta Lake.
+description: Choose built-in Delta Lake operations, kernel interfaces and storage/catalog adapters from task routes, reviewed input/output/effect contracts, exact git-capture APIs and executed evidence. Use for delta-rs reads, writes, merge, CDF, schema, transactions, protocol features, retention and DataFusion integration; check built-ins before designing custom implementations.
 ---
 
-# delta-rs capability repository
+# Choose a Delta capability before designing the implementation
 
-This library moves faster than anything written about it. `DeltaOps` — the entry point every
-blog post, every older reference and most of your training data teaches — **does not exist at
-this pin**. The operations are inherent methods on `DeltaTable`: `table.delete()`, not
-`DeltaOps(table).delete()`. It was still the documented entry point on 2026-08-23 and was gone
-by 2026-09-11, and it is not the only change of that kind.
+This reference targets delta-rs **58f07cd62bfbce3649a7e1c87c696288068ae184** and its buoyant
+kernel fork **8ba063f8f84fec222000f66d40d70911d7c79675**, with DataFusion **55.1.0**,
+Arrow/Parquet **59.3.0** and object_store **0.13.2**. This is an unpublished git profile,
+not a claim about a published deltalake crate or current upstream head. Check the consumer
+lockfile before transferring an API claim. See [capture/runtime profiles](content/profile.json).
 
-So the failure this skill exists to prevent is not "I could not find the answer". It is
-**confidently writing the previous API**. Check the index before deciding how something is
-spelled, and before deciding a capability is absent.
+## Start from the task
 
-`content/` is prebuilt and pinned. Nothing here queries the network or a service.
+From this skill directory; absolute script paths work from any directory:
 
-## What is pinned
+```sh
+python3 scripts/reference.py find --task "replay batch after ambiguous commit error" --limit 2
+python3 scripts/reference.py find --task "custom session UDF fallback" --limit 2
+python3 scripts/reference.py find --crate deltalake-aws
+python3 scripts/reference.py show delta.cdf
+python3 scripts/reference.py compare delta.write delta.replace delta.merge
+python3 scripts/reference.py show deltalake::DeltaTable --member scan_table --view contract
+```
 
-delta-rs **`58f07cd6`** on `main` (2026-09-15), because the newest published release — 0.32.4,
-June 2026 — pins arrow 58 and datafusion 53. Only unreleased `main` is on arrow 59 /
-datafusion 55 / object_store 0.13.2. The Delta kernel is pinned separately at
-`buoyant-data/delta-kernel-rs@8ba063f8`, because delta-rs tracks it by *branch*, and a branch
-is not a pin.
+The offline reader uses only Python's standard library. Output has a byte budget; if it returns
+`text_fragment` and `next_offset`, repeat with `--offset` to continue. `--view contract` expands
+full docs/types; `--view evidence` expands support. No sibling skill or MCP server is required.
+See [reader usage](scripts/README.md).
 
-## Escalation ladder
+| Need | Route |
+|---|---|
+| Select without knowing a symbol | [Task decisions](content/routes/tasks.md) |
+| Find ownership, features or adapters | [All 13 crate roles](content/routes/crates.md), [feature coverage](content/index/coverage.tsv) |
+| Cross a representation boundary | [Input/output routes](content/routes/representations.md), [DataFusion/Arrow seam](content/integration/README.md) |
+| Understand mutation and recovery | [Effects](content/routes/effects.md), [commit](content/capabilities/delta.commit.md), [replay](content/capabilities/delta.replay.md) |
+| Find constructors and awaited/build/flush results | [Operation map](content/catalogs/operations.md) |
+| Decide feature support | [Protocol matrix](content/catalogs/table-features.md) |
+| Locate integration traits | [Integration routes](content/catalogs/integrations.md) |
+| Search beyond reviewed families | [Full operations](content/index/operations.tsv), [aliases](content/index/aliases.tsv) |
 
-Stop at the first rung that answers the question.
+## Read a decision as a contract
 
-0. **Orienting in an unfamiliar area?** Start at `content/topics/00-map.md` and read the one
-   page for that capability. Each maps a capability to its entry points, extension points and
-   examples, so it replaces a dozen index lookups. Skip this rung when you already know the
-   symbol you want.
-1. **Does it exist, and how is it spelled?** `rg` over `content/index/*.tsv`.
-   ```
-   rg -i 'vacuum|retention' content/index/symbols.tsv
-   rg -P '^deltalake_core::table::DeltaTable\t' content/index/methods.tsv | cut -f2,4
-   ```
-2. **Which operation, and what can I configure?** `content/catalogs/operations.md` — all 24
-   builders, the method that constructs each, and every `with_*` it accepts.
-3. **Full prose for a resolved item.** Read `content/api/<module>.md`. The path is a rule, not
-   a lookup: take the canonical path's module part and replace `::` with `.`.
-   `deltalake_core::table::DeltaTable` → `content/api/deltalake_core.table.md`.
-4. **Can I plug into it?** Read `content/traits/<Trait>.md` — required versus provided methods,
-   every in-tree implementor, and the upstream code that implements it.
-5. **How is it actually used?** Structural search over the corpus.
-   ```
-   ast-grep run -l rust -p 'impl $TRAIT for $TYPE { $$$ }' content/corpus
-   ast-grep scan -c queries/sgconfig.yml --filter '^corpus-' content/corpus
-   ```
-6. **What is my own code missing?** Run the capability-gap rules against the working repository.
-   ```
-   ast-grep scan -c queries/sgconfig.yml --filter '^project-' <path to the repo you are editing>
-   ```
+Each brief names conditional alternatives, inputs/outputs, effects, failure boundaries,
+implementation considerations, evidence and unknowns. Eighteen reviewed families are selective
+depth; the captured API is wider. Source observations, runtime assertions and recommendations
+are different forms of evidence.
 
-Rung 6 is the one to reach for unprompted after writing delta-rs code. It is cheap, and
-`project-deltaops-entry-point` alone catches the single most likely thing to be written from
-memory.
+Before coding establish table/snapshot state, actual Arrow representation, Cargo/table-feature
+prerequisites, session/planner/store context, result/error shape and publication boundary. Use
+linked member contracts for consuming `self`, lifetimes, trait imports, associated future outputs
+and defaults.
 
-Four catalogs sit outside the ladder because they answer a lookup directly:
-`content/catalogs/table-properties.md`, `table-features.md`, `errors.md` (the variants a retry
-policy must branch on), and `foreign-impls.md` (every DataFusion, Arrow, object_store and
-kernel trait this library implements, split into implementors you can name and implementors you
-cannot — most of the physical-plan seam is the second kind, so read the column before treating
-one as something you can substitute). `crate-map.md` says which of the 13 crates owns what.
+Canonical paths are identities, not automatically legal imports. **Returned-inferred** builders
+such as LoadBuilder are callable through public return values; their private module paths cannot
+be imported. **Internal trait** methods are implementation evidence, not caller APIs. Prefer public
+operations over internal plans. Integration routes are entry leads, not verified call graphs.
 
-## Rules that keep answers correct
+## Pin-specific findings that change design choices
 
-**The operations live on `DeltaTable`.** `DeltaOps` is gone. If you are about to write
-`DeltaOps(table)`, read `content/catalogs/operations.md` instead.
+- Providers retain snapshots. Refresh and rebuild for current results; an already loaded snapshot
+  takes precedence over the provider builder's version option in the probe.
+- Delta scans apply log state, mapping and deletion vectors. Raw Parquet can return a different
+  relation. A partition-first schema exposed a `scan_table().with_columns` projection-order defect;
+  provider/DataFrame name projection worked.
+- Delta operation sessions need Delta's planner. A trait wrapper's default fallback can discard
+  caller functions; choose and verify its fallback policy.
+- Repeating a transaction marker did not suppress sequential append. A hook error occurred after
+  a commit was visible. Recovery needs state inspection before retrying.
+- `SaveMode::Ignore` appended on the tested existing-table write path. CDF clamped an ending version
+  beyond head; do not checkpoint past the observed range.
+- Feature recognition, checker admission and operation support differ. Mapping scans worked while
+  CDF rejected mapping. Vacuum defaults to **dry_run=false** and **Lite**.
 
-**The data model is the kernel's, and the crate is renamed.** `Schema` and `SchemaRef` are
-`buoyant_kernel::schema::StructType`. Cargo renames that crate to `delta_kernel`, so source and
-documentation write `delta_kernel::schema::StructType` while the index's canonical path says
-`buoyant_kernel::…`. Both resolve through `content/index/aliases.tsv`; quote the canonical path
-when you report a finding.
+Follow the briefs to assertions and limitations; these are bounded findings at this exact profile.
 
-**Absence from `symbols.tsv` is not absence from the library.** `--all-features` is impossible
-here — `rustls` and `native-tls` are mutually exclusive — so this index was built under one
-explicit feature envelope. `content/index/coverage.tsv` lists every feature of every crate as
-`on` or `off`, with a reason for each exclusion. Check it before reporting that something does
-not exist, and say which you mean.
+## Evidence and maintenance
 
-**Some types exist but cannot be named.** A type declared in a private module and returned by a
-public method is real, callable and awaitable — and impossible to `use`, or to write in a
-signature. `content/index/unnameable.tsv` lists them. rustdoc also drops such a type's impls,
-so this repository documents them from a second capture; without that, `LoadBuilder` would
-appear to have no methods at all.
+Use [structural queries](queries/README.md) as leads; syntax does not resolve receiver types.
+Context7/upstream guides aid discovery, while git captures, source, locks and assertions decide
+version-sensitive claims. An empty search is not proof of absence. Cloud/native adapters need
+separate environments; local tests do not certify them.
 
-**Re-exports that leave the indexed set are written down, not swallowed.**
-`content/index/unresolved.tsv` is why `deltalake::arrow::…` and `deltalake::datafusion::…`
-resolve to nothing here: those are re-exports of crates this repository does not index. That is
-a boundary, not a gap — use the DataFusion or Arrow reference for them.
-
-**ast-grep establishes syntax, not semantics.** It resolves no imports, types or dispatch. A
-trait implemented in the corpus is syntax-confirmed; which crate a bare identifier refers to is
-not established by ast-grep at all. Report the difference rather than collapsing it.
-
-## Reporting
-
-Cite the canonical path and the file you read it in. When a capability exists but you are not
-recommending it, say so explicitly — the point of this repository is that the caller learns the
-option existed. When the index is silent, report silence rather than absence, and name which of
-the three reasons applies: not in this feature envelope, not in an indexed crate, or genuinely
-not present at this commit.
-
-## Additional references
-
-Read `reference.md` for the full layout, the record and column schemas, the rule inventory, the
-known limits, and runnable query recipes. Read `queries/README.md` before writing a new rule or
-changing one. Read `build/README.md` before rebuilding or re-pinning.
+See [maintenance](MAINTENANCE.md) for replay, refresh, invalidation and portable bundles, and the
+[implementation report](skill_improvement/IMPLEMENTATION_REPORT.md) for dated results and limits.

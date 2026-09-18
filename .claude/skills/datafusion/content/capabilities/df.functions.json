@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "id": "df.functions",
+  "title": "Discover built-ins in the actual session before writing a UDF",
+  "task_aliases": [
+    "built in scalar functions",
+    "nested list array map",
+    "SQL aliases",
+    "table function",
+    "return field volatility",
+    "custom UDF alternative"
+  ],
+  "crates": [
+    "datafusion-functions",
+    "datafusion-functions-nested",
+    "datafusion-functions-aggregate",
+    "datafusion-functions-window",
+    "datafusion-functions-table",
+    "datafusion-expr"
+  ],
+  "input": [
+    "Expr",
+    "ColumnarValue",
+    "SessionState"
+  ],
+  "output": [
+    "Expr",
+    "ColumnarValue",
+    "TableProvider"
+  ],
+  "properties": [
+    "registry",
+    "features",
+    "coercion",
+    "volatility",
+    "nulls",
+    "metadata"
+  ],
+  "operations": [
+    "datafusion::execution::session_state::SessionState::scalar_functions",
+    "datafusion::execution::session_state::SessionState::aggregate_functions",
+    "datafusion::execution::session_state::SessionState::window_functions",
+    "datafusion::execution::session_state::SessionState::table_functions",
+    "datafusion_expr::udf::ScalarUDFImpl"
+  ],
+  "brief": "Search the SQL catalog, runtime registry and defining function crate. An indexed constructor is not proof of registration under a consumer's feature profile; names/aliases, signature and return-field logic are separate facts.",
+  "choices": [
+    {
+      "candidate": "built-in expr_fn / SQL function",
+      "choose_when": "Existing semantics fit the query",
+      "tradeoff": "Keep optimizer visibility; inspect null/coercion/volatility contracts.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "Arrow kernel",
+      "choose_when": "Already operating on arrays inside an execution boundary",
+      "tradeoff": "Avoid unnecessary SQL/UDF registration but manage schema and scalar broadcasting.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "custom ScalarUDFImpl",
+      "choose_when": "Semantics genuinely differ",
+      "tradeoff": "Declare signature, volatility, invocation and output-field behavior; prove any optimizer hooks.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "table function",
+      "choose_when": "Arguments produce a relation rather than a scalar column",
+      "tradeoff": "Registration and output TableProvider differ from scalar functions.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "df.functions.discovery",
+      "aspect": "discovery",
+      "statement": "SessionState exposes scalar/aggregate/window/table function maps. The captured registry records registered names, canonical names, aliases and signature Debug text for one explicit profile.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.functions.shape",
+      "aspect": "shape",
+      "statement": "ScalarUDFImpl receives invocation arguments including ColumnarValue inputs and row-count/field context. Inspect invoke_with_args and return_field_from_args; scalar versus array and nullable output cannot be inferred from the SQL name.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.functions.optimizer",
+      "aspect": "optimizer",
+      "statement": "Volatility, simplification, ordering/bounds and short-circuit hooks affect planning. Defaults may be appropriate; incorrect advertised properties can change results.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    },
+    {
+      "id": "df.functions.availability",
+      "aspect": "availability",
+      "statement": "Cargo features, default function installation and session registrations all matter. Runtime registry capture is not a list of every function constructible from the 60 indexed crates.",
+      "kind": "upstream_contract_interpretation",
+      "evidence": [
+        "upstream"
+      ],
+      "conditions": [
+        "DataFusion 55.1.0 / Arrow-Parquet 59.3.0 as applicable"
+      ]
+    }
+  ],
+  "implementation": [
+    "Find a SQL name or task synonym, resolve its defining implementation and expr_fn helper.",
+    "Check actual registry membership and Cargo features.",
+    "Read the specific function's signature, coercion and return-field/null contract before composing."
+  ],
+  "unknowns": [
+    "The registry signature is Debug output, not a stable signature serialization. Return-field behavior still requires per-function reading/probing."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "operations": [
+        "datafusion::execution::session_state::SessionState::scalar_functions",
+        "datafusion::execution::session_state::SessionState::aggregate_functions",
+        "datafusion::execution::session_state::SessionState::window_functions",
+        "datafusion::execution::session_state::SessionState::table_functions",
+        "datafusion_expr::udf::ScalarUDFImpl"
+      ],
+      "scope": "Pinned hosted rustdoc; availability depends on the consumer profile."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "datafusion::execution::session_state::SessionState::scalar_functions",
+      "datafusion::execution::session_state::SessionState::aggregate_functions",
+      "datafusion::execution::session_state::SessionState::window_functions",
+      "datafusion::execution::session_state::SessionState::table_functions",
+      "datafusion_expr::udf::ScalarUDFImpl"
+    ],
+    "candidate_set": [
+      "built-in expr_fn / SQL function",
+      "Arrow kernel",
+      "custom ScalarUDFImpl",
+      "table function"
+    ],
+    "reason": "Review changed signatures, docs, availability, and newly viable alternatives."
+  },
+  "resolved_operations": [
+    {
+      "path": "datafusion::execution::session_state::SessionState::scalar_functions",
+      "id": "25a7ddf8e699878347177717",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.execution.session_state.SessionState.json",
+      "page": "operations/datafusion.execution.session_state.SessionState.md#op-25a7ddf8e699878347177717",
+      "signature": "fn scalar_functions(&self) -> &HashMap<String, Arc<ScalarUDF>>"
+    },
+    {
+      "path": "datafusion::execution::session_state::SessionState::scalar_functions",
+      "id": "7217e9deef5ad1504d02344c",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.execution.session_state.SessionState.json",
+      "page": "operations/datafusion.execution.session_state.SessionState.md#op-7217e9deef5ad1504d02344c",
+      "signature": "fn scalar_functions(&self) -> &HashMap<String, Arc<ScalarUDF>>"
+    },
+    {
+      "path": "datafusion::execution::session_state::SessionState::aggregate_functions",
+      "id": "4124c4769553c5205807a198",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.execution.session_state.SessionState.json",
+      "page": "operations/datafusion.execution.session_state.SessionState.md#op-4124c4769553c5205807a198",
+      "signature": "fn aggregate_functions(&self) -> &HashMap<String, Arc<AggregateUDF>>"
+    },
+    {
+      "path": "datafusion::execution::session_state::SessionState::aggregate_functions",
+      "id": "9fdfaa976ad7dd6e78a31ea2",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.execution.session_state.SessionState.json",
+      "page": "operations/datafusion.execution.session_state.SessionState.md#op-9fdfaa976ad7dd6e78a31ea2",
+      "signature": "fn aggregate_functions(&self) -> &HashMap<String, Arc<AggregateUDF>>"
+    },
+    {
+      "path": "datafusion::execution::session_state::SessionState::window_functions",
+      "id": "6a9570c68f50f57459d0efea",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.execution.session_state.SessionState.json",
+      "page": "operations/datafusion.execution.session_state.SessionState.md#op-6a9570c68f50f57459d0efea",
+      "signature": "fn window_functions(&self) -> &HashMap<String, Arc<WindowUDF>>"
+    },
+    {
+      "path": "datafusion::execution::session_state::SessionState::window_functions",
+      "id": "bb943909cf0840cc57392a9a",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.execution.session_state.SessionState.json",
+      "page": "operations/datafusion.execution.session_state.SessionState.md#op-bb943909cf0840cc57392a9a",
+      "signature": "fn window_functions(&self) -> &HashMap<String, Arc<WindowUDF>>"
+    },
+    {
+      "path": "datafusion::execution::session_state::SessionState::table_functions",
+      "id": "fd1ec9d036c9069c93dd438f",
+      "kind": "function",
+      "crate": "datafusion",
+      "record": "operations/datafusion.execution.session_state.SessionState.json",
+      "page": "operations/datafusion.execution.session_state.SessionState.md#op-fd1ec9d036c9069c93dd438f",
+      "signature": "fn table_functions(&self) -> &HashMap<String, Arc<TableFunction>>"
+    },
+    {
+      "path": "datafusion_expr::udf::ScalarUDFImpl",
+      "id": "7caee2ff206563b536e983e0",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "record": "operations/datafusion_expr.udf.ScalarUDFImpl.json",
+      "page": "operations/datafusion_expr.udf.ScalarUDFImpl.md#op-7caee2ff206563b536e983e0",
+      "signature": "trait ScalarUDFImpl: Debug + DynEq + DynHash + Send + Sync + Any"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/df.functions.json"
+}

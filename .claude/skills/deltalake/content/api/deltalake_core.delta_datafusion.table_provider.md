@@ -5,6 +5,7 @@ Crate `deltalake-core` · 3 public items · structured records in [`model/deltal
 ## DeltaScanConfig
 
 `struct` · `deltalake_core::delta_datafusion::table_provider::DeltaScanConfig`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.table_provider.DeltaScanConfig.md)
 
 Also reachable as `deltalake::delta_datafusion::DeltaScanConfig`, `deltalake_core::delta_datafusion::DeltaScanConfig`
 
@@ -48,6 +49,7 @@ Include additional metadata columns during a [`crate::delta_datafusion::DeltaSca
 ## DeltaScanConfigBuilder
 
 `struct` · `deltalake_core::delta_datafusion::table_provider::DeltaScanConfigBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.table_provider.DeltaScanConfigBuilder.md)
 
 Also reachable as `deltalake::delta_datafusion::DeltaScanConfigBuilder`, `deltalake_core::delta_datafusion::DeltaScanConfigBuilder`
 
@@ -76,6 +78,7 @@ Used to specify if additional metadata columns are exposed to the user
 ## TableProviderBuilder
 
 `struct` · `deltalake_core::delta_datafusion::table_provider::TableProviderBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.table_provider.TableProviderBuilder.md)
 
 Also reachable as `deltalake::delta_datafusion::TableProviderBuilder`, `deltalake_core::delta_datafusion::TableProviderBuilder`
 

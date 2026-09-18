@@ -33,6 +33,9 @@ fn table_names(&self) -> Vec<String>
 async fn table_type(&self, name: &str) -> Result<Option<TableType>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_session.schema.SchemaProvider.md).
+
+
 Represents a schema, comprising a number of named tables.
 
 Please see [`CatalogProvider`] for details of implementing a custom catalog.

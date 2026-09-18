@@ -5,6 +5,7 @@ Crate `deltalake-opendal` · 1 public items · structured records in [`model/del
 ## ConditionalPutShim
 
 `struct` · `deltalake_opendal::shim::ConditionalPutShim`
+[Full member contracts, output types and access classification](../operations/deltalake_opendal.shim.ConditionalPutShim.md)
 
 Also reachable as `deltalake::opendal::ConditionalPutShim`, `deltalake_opendal::ConditionalPutShim`
 

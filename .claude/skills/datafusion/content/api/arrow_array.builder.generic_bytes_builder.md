@@ -54,6 +54,9 @@ fn len(&self) -> usize
 fn extend<I: IntoIterator<Item = Option<V>>>(&mut self, iter: I)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_bytes_builder.GenericByteBuilder.md).
+
+
 Builder for [`GenericByteArray`]
 
 For building strings, see docs on [`GenericStringBuilder`].
@@ -82,6 +85,9 @@ fn append_value(&mut self, value: &[u8])
 fn type_name() -> &'static str
 fn with_capacity(capacity: usize) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_bytes_builder.BinaryLikeArrayBuilder.md).
+
 
 Trait for binary-like array builders
 
@@ -112,6 +118,9 @@ fn type_name() -> &'static str
 fn with_capacity(capacity: usize) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_bytes_builder.StringLikeArrayBuilder.md).
+
+
 Trait for string-like array builders
 
 This trait provides unified interface for builders that append string-like data
@@ -137,6 +146,9 @@ fn append_value(&mut self, value: &[u8])
 fn type_name() -> &'static str
 fn with_capacity(capacity: usize) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_bytes_builder.GenericBinaryBuilder.md).
+
 
  Array builder for [`GenericBinaryArray`][crate::GenericBinaryArray]
 
@@ -204,6 +216,9 @@ fn append_value(&mut self, value: &str)
 fn type_name() -> &'static str
 fn with_capacity(capacity: usize) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.generic_bytes_builder.GenericStringBuilder.md).
+
 
 Array builder for [`GenericStringArray`][crate::GenericStringArray]
 

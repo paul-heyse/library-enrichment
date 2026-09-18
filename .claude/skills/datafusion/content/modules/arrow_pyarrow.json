@@ -1,0 +1,86 @@
+[
+  {
+    "id": "c44ece0b78b0605a609c7981",
+    "path": "arrow_pyarrow",
+    "name": "arrow_pyarrow",
+    "owner": null,
+    "crate": "arrow-pyarrow",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod arrow_pyarrow",
+    "docs": "Pass Arrow objects from and to PyArrow, using Arrow's\n[C Data Interface](https://arrow.apache.org/docs/format/CDataInterface.html)\nand [pyo3](https://docs.rs/pyo3/latest/pyo3/).\n\nFor underlying implementation, see the [ffi] module.\n\nOne can use these to write Python functions that take and return PyArrow\nobjects, with automatic conversion to corresponding arrow-rs types.\n\n```ignore\n#[pyfunction]\nfn double_array(array: PyArrowType<ArrayData>) -> PyResult<PyArrowType<ArrayData>> {\n    let array = array.0; // Extract from PyArrowType wrapper\n    let array: Arc<dyn Array> = make_array(array); // Convert ArrayData to ArrayRef\n    let array: &Int32Array = array.as_any().downcast_ref()\n        .ok_or_else(|| PyValueError::new_err(\"expected int32 array\"))?;\n    let array: Int32Array = array.iter().map(|x| x.map(|x| x * 2)).collect();\n    Ok(PyArrowType(array.into_data()))\n}\n```\n\n| pyarrow type                | arrow-rs type                                                      |\n|-----------------------------|--------------------------------------------------------------------|\n| `pyarrow.DataType`          | [DataType]                                                         |\n| `pyarrow.Field`             | [Field]                                                            |\n| `pyarrow.Schema`            | [Schema]                                                           |\n| `pyarrow.Array`             | [ArrayData]                                                        |\n| `pyarrow.RecordBatch`       | [RecordBatch]                                                      |\n| `pyarrow.RecordBatchReader` | [ArrowArrayStreamReader] / `Box<dyn RecordBatchReader + Send>` (1) |\n| `pyarrow.Table`             | [Table] (2)                                                        |\n\n(1) `pyarrow.RecordBatchReader` can be imported as [ArrowArrayStreamReader]. Either\n[ArrowArrayStreamReader] or `Box<dyn RecordBatchReader + Send>` can be exported\nas `pyarrow.RecordBatchReader`. (`Box<dyn RecordBatchReader + Send>` is typically\neasier to create.)\n\n(2) Although arrow-rs offers [Table], a convenience wrapper for [pyarrow.Table](https://arrow.apache.org/docs/python/generated/pyarrow.Table)\nthat internally holds `Vec<RecordBatch>`, it is meant primarily for use cases where you already\nhave `Vec<RecordBatch>` on the Rust side and want to export that in bulk as a `pyarrow.Table`.\nIn general, it is recommended to use streaming approaches instead of dealing with data in bulk.\nFor example, a `pyarrow.Table` (or any other object that implements the ArrayStream PyCapsule\ninterface) can be imported to Rust through `PyArrowType<ArrowArrayStreamReader>` instead of\nforcing eager reading into `Vec<RecordBatch>`.",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        647,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": true,
+        "items": [
+          1,
+          64,
+          67,
+          93,
+          107,
+          90,
+          159
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "Field": 73,
+      "ArrowArrayStreamReader": 87,
+      "ffi": 201,
+      "DataType": 70,
+      "Table": 90,
+      "Schema": 76,
+      "ArrayData": 79,
+      "RecordBatch": 85
+    },
+    "link_paths": {
+      "Field": "arrow_schema::field::Field",
+      "ArrowArrayStreamReader": "arrow_array::ffi_stream::ArrowArrayStreamReader",
+      "ffi": "arrow_array::ffi",
+      "DataType": "arrow_schema::datatype::DataType",
+      "Table": "arrow_pyarrow::Table",
+      "Schema": "arrow_schema::schema::Schema",
+      "ArrayData": "arrow_data::data::ArrayData",
+      "RecordBatch": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "4feb526531144150e7980afc877a4645ecc913e63c89a3eee79145e1f6dc642c",
+      "format_version": 61,
+      "item_id": "202",
+      "origin": "https://docs.rs/crate/arrow-pyarrow/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/arrow_pyarrow.md",
+    "record_file": "modules/arrow_pyarrow.json",
+    "anchor": "op-c44ece0b78b0605a609c7981",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Field": "../operations/arrow_schema.field.Field.md#op-66eb7ef45bcc129b0a0189cf",
+      "ArrowArrayStreamReader": "../operations/arrow_array.ffi_stream.ArrowArrayStreamReader.md#op-0390051e3be11e60c2b7f3d0",
+      "ffi": "../modules/arrow_array.ffi.md#op-b725a1de54eced6ce05f9387",
+      "DataType": "../operations/arrow_schema.datatype.DataType.md#op-bf69df5b14436e006d3a531c",
+      "Table": "../operations/arrow_pyarrow.Table.md#op-758e308e4d06e3cbb65d6e7f",
+      "Schema": "../operations/arrow_schema.schema.Schema.md#op-144709aa539d6163483c2050",
+      "ArrayData": "../operations/arrow_data.data.ArrayData.md#op-5666976474a0e5276141ce78",
+      "RecordBatch": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  }
+]

@@ -29,6 +29,9 @@ fn with_ignore_nulls(self, ignore_nulls: bool) -> Self
 fn with_reversed(self, is_reversed: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.aggregate.AggregateExprBuilder.md).
+
+
 Builder for physical [`AggregateFunctionExpr`]
 
 `AggregateFunctionExpr` contains the information necessary to call
@@ -77,6 +80,9 @@ fn with_beneficial_ordering(Arc<self>, beneficial_ordering: bool) -> Result<Opti
 fn with_new_expressions(&self, args: Vec<Arc<dyn PhysicalExpr>>, order_by_exprs: Vec<Arc<dyn PhysicalExpr>>) -> Option<AggregateFunctionExpr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.aggregate.AggregateFunctionExpr.md).
+
+
 Physical aggregate expression of a UDAF.
 
 Instances are constructed via [`AggregateExprBuilder`].
@@ -93,6 +99,9 @@ struct AggregatePhysicalExpressions
 
 **Fields**: `args`, `order_by_exprs`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.aggregate.AggregatePhysicalExpressions.md).
+
+
 Stores the physical expressions used inside the `AggregateExpr`.
 
 ---
@@ -108,6 +117,9 @@ struct LoweredAggregate
 **Fields**: `aggregate`, `filter`, `order_bys`
 
 **Derives**: Clone, Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.aggregate.LoweredAggregate.md).
+
 
 Result of lowering a logical aggregate expression into physical aggregate
 planning pieces.
@@ -130,6 +142,9 @@ fn new(expr: &'a Expr, logical_input_schema: &'a DFSchema, physical_input_schema
 fn with_human_display(self, human_display: impl Into<String>) -> Self
 fn with_name(self, name: impl Into<String>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.aggregate.LoweredAggregateBuilder.md).
+
 
 Builder for converting a logical aggregate [`Expr`] into physical aggregate
 planning pieces.

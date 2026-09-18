@@ -78,6 +78,9 @@ fn from_iter<I: IntoIterator<Item = &'a Option<Ptr>>>(iter: I) -> Self
 fn from_iter<I: IntoIterator<Item = Option<Ptr>>>(iter: I) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.byte_array.GenericByteArray.md).
+
+
 An array of [variable length byte arrays](https://arrow.apache.org/docs/format/Columnar.html#variable-size-binary-layout)
 
 See [`StringArray`] and [`LargeStringArray`] for storing utf8 encoded string data

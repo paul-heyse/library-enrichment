@@ -1,0 +1,3145 @@
+[
+  {
+    "id": "05065cf369d14ac5f8039639",
+    "path": "deltalake_core::logstore::LogStore",
+    "name": "LogStore",
+    "owner": null,
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "trait",
+    "signature": "trait LogStore: Send + Sync + AsAny",
+    "docs": "Trait for critical operations required to read and write commit entries in Delta logs.\n\nThe correctness is predicated on the atomicity and durability guarantees of\nthe implementation of this interface. Specifically,\n\n- Atomic visibility: Any commit created via `write_commit_entry` must become visible atomically.\n- Mutual exclusion: Only one writer must be able to create a commit for a specific version.\n- Consistent listing: Once a commit entry for version `v` has been written, any future call to\n  `get_latest_version` must return a version >= `v`, i.e. the underlying file system entry must\n  become visible immediately.",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        373,
+        1
+      ],
+      "end": [
+        493,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          3784,
+          3785,
+          3786,
+          3787,
+          3788,
+          3789,
+          3790,
+          3791,
+          3792,
+          3793,
+          3794,
+          3795,
+          3796,
+          3797,
+          3798,
+          3799
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 15,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 17,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "AsAny",
+                "id": 103,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": [
+          3816
+        ]
+      }
+    },
+    "type_references": {
+      "15": "core::marker::Send",
+      "17": "core::marker::Sync",
+      "103": "buoyant_kernel::AsAny"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "2499",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L373",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "4048",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-05065cf369d14ac5f8039639",
+    "aliases": [
+      "deltalake::logstore::LogStore"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ad443984e672f2edd8c7e8d0",
+    "path": "deltalake_core::logstore::LogStore::abort_commit_entry",
+    "name": "abort_commit_entry",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "async fn abort_commit_entry(&self, version: Version, commit_or_bytes: CommitOrBytes, operation_id: Uuid) -> Result<(), TransactionError>",
+    "docs": "Abort the commit entry for the given version.",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        397,
+        5
+      ],
+      "end": [
+        402,
+        39
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "version",
+              {
+                "resolved_path": {
+                  "path": "Version",
+                  "id": 804,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "commit_or_bytes",
+              {
+                "resolved_path": {
+                  "path": "CommitOrBytes",
+                  "id": 3187,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "operation_id",
+              {
+                "resolved_path": {
+                  "path": "Uuid",
+                  "id": 3098,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 112,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 100,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 113,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 44,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "tuple": []
+                                                                    }
+                                                                  },
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "TransactionError",
+                                                                        "id": 834,
+                                                                        "args": null
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 15,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "804": "buoyant_kernel::Version",
+      "3187": "deltalake_core::logstore::CommitOrBytes",
+      "3098": "uuid::Uuid",
+      "112": "core::pin::Pin",
+      "100": "alloc::boxed::Box",
+      "113": "core::future::future::Future",
+      "44": "core::result::Result",
+      "834": "deltalake_core::kernel::transaction::TransactionError",
+      "15": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3788",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L397",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6252",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-ad443984e672f2edd8c7e8d0",
+    "aliases": [
+      "deltalake::logstore::LogStore::abort_commit_entry"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1b81c313f643c07cf88abcba",
+    "path": "deltalake_core::logstore::LogStore::config",
+    "name": "config",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn config(&self) -> &LogStoreConfig",
+    "docs": "Get configuration representing configured log store.",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        478,
+        5
+      ],
+      "end": [
+        478,
+        41
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "LogStoreConfig",
+                  "id": 3738,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3738": "deltalake_core::logstore::LogStoreConfig"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3798",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L478",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6262",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-1b81c313f643c07cf88abcba",
+    "aliases": [
+      "deltalake::logstore::LogStore::config"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "defc876ee41d20be7d177ae3",
+    "path": "deltalake_core::logstore::LogStore::engine",
+    "name": "engine",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn engine(&self, operation_id: Option<Uuid>) -> Arc<dyn Engine>",
+    "docs": "Get a kernel [`Engine`] backed by this log store's root object store.",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        415,
+        5
+      ],
+      "end": [
+        418,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "operation_id",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 7,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Uuid",
+                              "id": 3098,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Arc",
+              "id": 98,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "Engine",
+                                "id": 2437,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "7": "core::option::Option",
+      "3098": "uuid::Uuid",
+      "98": "alloc::sync::Arc",
+      "2437": "buoyant_kernel::Engine"
+    },
+    "impl_context": null,
+    "links": {
+      "`Engine`": 2437
+    },
+    "link_paths": {
+      "`Engine`": "buoyant_kernel::Engine"
+    },
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3792",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L415",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6256",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-defc876ee41d20be7d177ae3",
+    "aliases": [
+      "deltalake::logstore::LogStore::engine"
+    ],
+    "resolved_doc_links": {
+      "`Engine`": "../operations/buoyant_kernel.Engine.md#op-144f8dad57c79b7743fd1386"
+    }
+  },
+  {
+    "id": "716c8cb00dde5d65f1333a8c",
+    "path": "deltalake_core::logstore::LogStore::get_latest_version",
+    "name": "get_latest_version",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "async fn get_latest_version(&self, start_version: Version) -> DeltaResult<Version>",
+    "docs": "Find latest version currently stored in the delta log.",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        405,
+        5
+      ],
+      "end": [
+        405,
+        88
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "start_version",
+              {
+                "resolved_path": {
+                  "path": "Version",
+                  "id": 804,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 112,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 100,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 113,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "DeltaResult",
+                                                            "id": 10,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "Version",
+                                                                        "id": 804,
+                                                                        "args": null
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 15,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "804": "buoyant_kernel::Version",
+      "112": "core::pin::Pin",
+      "100": "alloc::boxed::Box",
+      "113": "core::future::future::Future",
+      "10": "deltalake_core::errors::DeltaResult",
+      "15": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3789",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L405",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6253",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-716c8cb00dde5d65f1333a8c",
+    "aliases": [
+      "deltalake::logstore::LogStore::get_latest_version"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "af69f4ae6699b2dcbece902f",
+    "path": "deltalake_core::logstore::LogStore::is_delta_table_location",
+    "name": "is_delta_table_location",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "async fn is_delta_table_location(&self) -> DeltaResult<bool>",
+    "docs": "Check if the location is a delta table location",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        445,
+        5
+      ],
+      "end": [
+        475,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 112,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 100,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 113,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "DeltaResult",
+                                                            "id": 10,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "primitive": "bool"
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 15,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "112": "core::pin::Pin",
+      "100": "alloc::boxed::Box",
+      "113": "core::future::future::Future",
+      "10": "deltalake_core::errors::DeltaResult",
+      "15": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3797",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L445",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6261",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-af69f4ae6699b2dcbece902f",
+    "aliases": [
+      "deltalake::logstore::LogStore::is_delta_table_location"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "36204e9b780498088413e7d0",
+    "path": "deltalake_core::logstore::LogStore::log_path",
+    "name": "log_path",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn log_path(&self) -> &Path",
+    "docs": "[Path] to Delta log",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        432,
+        5
+      ],
+      "end": [
+        434,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Path",
+                  "id": 271,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "271": "object_store::path::Path"
+    },
+    "impl_context": null,
+    "links": {
+      "Path": 271
+    },
+    "link_paths": {
+      "Path": "object_store::path::Path"
+    },
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3795",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L432",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6259",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-36204e9b780498088413e7d0",
+    "aliases": [
+      "deltalake::logstore::LogStore::log_path"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a92b79b2311e55cbb0ec62c6",
+    "path": "deltalake_core::logstore::LogStore::name",
+    "name": "name",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn name(&self) -> String",
+    "docs": "Return the name of this LogStore implementation",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        375,
+        5
+      ],
+      "end": [
+        375,
+        30
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "String",
+              "id": 9,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "9": "alloc::string::String"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3784",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L375",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6248",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-a92b79b2311e55cbb0ec62c6",
+    "aliases": [
+      "deltalake::logstore::LogStore::name"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0198126cbb978386b9fb33f9",
+    "path": "deltalake_core::logstore::LogStore::object_store",
+    "name": "object_store",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn object_store(&self, operation_id: Option<Uuid>) -> Arc<dyn ObjectStore>",
+    "docs": "Get object store, can pass operation_id for object stores linked to an operation",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        408,
+        5
+      ],
+      "end": [
+        408,
+        80
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "operation_id",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 7,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Uuid",
+                              "id": 3098,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Arc",
+              "id": 98,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "ObjectStore",
+                                "id": 235,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "7": "core::option::Option",
+      "3098": "uuid::Uuid",
+      "98": "alloc::sync::Arc",
+      "235": "object_store::ObjectStore"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3790",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L408",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6254",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-0198126cbb978386b9fb33f9",
+    "aliases": [
+      "deltalake::logstore::LogStore::object_store"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fe2473b571dfdacfee9b8dd4",
+    "path": "deltalake_core::logstore::LogStore::object_store_url",
+    "name": "object_store_url",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn object_store_url(&self) -> ObjectStoreUrl",
+    "docs": "Generate a unique enough url to identify the store in datafusion.\nThe DF object store registry only cares about the scheme and the host of the url for\nregistering/fetching. In our case the scheme is hard-coded to \"delta-rs\", so to get a unique\nhost we convert the location from this `LogStore` to a valid name, combining the\noriginal scheme, host and path with invalid characters replaced.\n\nThis is a legacy/migration helper for delta-rs DataFusion integrations that use a\nsynthetic per-table `delta-rs://...` URL mapping to a table-scoped (prefixed) object store.\nIt will not work correctly with fully-qualified file URLs (e.g. shallow clones).",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        490,
+        5
+      ],
+      "end": [
+        492,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"datafusion\"), span: crates/core/src/logstore/mod.rs:480:11: 480:33 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ObjectStoreUrl",
+              "id": 3800,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3800": "datafusion_execution::object_store::ObjectStoreUrl"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3799",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L490",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6263",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-fe2473b571dfdacfee9b8dd4",
+    "aliases": [
+      "deltalake::logstore::LogStore::object_store_url"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "588b23afe8a4c58de3f58cb7",
+    "path": "deltalake_core::logstore::LogStore::read_commit_entry",
+    "name": "read_commit_entry",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "async fn read_commit_entry(&self, version: Version) -> DeltaResult<Option<Bytes>>",
+    "docs": "Read data for commit entry with the given version.",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        383,
+        5
+      ],
+      "end": [
+        383,
+        87
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "version",
+              {
+                "resolved_path": {
+                  "path": "Version",
+                  "id": 804,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 112,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 100,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 113,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "DeltaResult",
+                                                            "id": 10,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "Option",
+                                                                        "id": 7,
+                                                                        "args": {
+                                                                          "angle_bracketed": {
+                                                                            "args": [
+                                                                              {
+                                                                                "type": {
+                                                                                  "resolved_path": {
+                                                                                    "path": "Bytes",
+                                                                                    "id": 2963,
+                                                                                    "args": null
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            ],
+                                                                            "constraints": []
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 15,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "804": "buoyant_kernel::Version",
+      "112": "core::pin::Pin",
+      "100": "alloc::boxed::Box",
+      "113": "core::future::future::Future",
+      "10": "deltalake_core::errors::DeltaResult",
+      "7": "core::option::Option",
+      "2963": "bytes::bytes::Bytes",
+      "15": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3786",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L383",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6250",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-588b23afe8a4c58de3f58cb7",
+    "aliases": [
+      "deltalake::logstore::LogStore::read_commit_entry"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c4296f8375e4a7013cea0c5b",
+    "path": "deltalake_core::logstore::LogStore::refresh",
+    "name": "refresh",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "async fn refresh(&self) -> DeltaResult<()>",
+    "docs": "Trigger sync operation on log store to.",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        378,
+        5
+      ],
+      "end": [
+        380,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: async_yields_async, clippy ::\ndiverging_sub_expression, clippy :: let_unit_value, clippy ::\nneedless_arbitrary_self_type, clippy :: no_effect_underscore_binding, clippy\n:: shadow_same, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds, clippy :: used_underscore_binding)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 112,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 100,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 113,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "DeltaResult",
+                                                            "id": 10,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "tuple": []
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 15,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "112": "core::pin::Pin",
+      "100": "alloc::boxed::Box",
+      "113": "core::future::future::Future",
+      "10": "deltalake_core::errors::DeltaResult",
+      "15": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3785",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L378",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6249",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-c4296f8375e4a7013cea0c5b",
+    "aliases": [
+      "deltalake::logstore::LogStore::refresh"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a3a091cfdafd930bd9c5fd1a",
+    "path": "deltalake_core::logstore::LogStore::root_object_store",
+    "name": "root_object_store",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn root_object_store(&self, operation_id: Option<Uuid>) -> Arc<dyn ObjectStore>",
+    "docs": "Get the object store rooted at the table root (not the delta log), optionally scoped to\nan operation.",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        412,
+        5
+      ],
+      "end": [
+        412,
+        85
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "operation_id",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 7,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Uuid",
+                              "id": 3098,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Arc",
+              "id": 98,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "ObjectStore",
+                                "id": 235,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "7": "core::option::Option",
+      "3098": "uuid::Uuid",
+      "98": "alloc::sync::Arc",
+      "235": "object_store::ObjectStore"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3791",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L412",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6255",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-a3a091cfdafd930bd9c5fd1a",
+    "aliases": [
+      "deltalake::logstore::LogStore::root_object_store"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ea1cc547568423794e8b5081",
+    "path": "deltalake_core::logstore::LogStore::root_url",
+    "name": "root_url",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn root_url(&self) -> &Url",
+    "docs": "Get fully qualified uri for table root",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        427,
+        5
+      ],
+      "end": [
+        429,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Url",
+                  "id": 2430,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2430": "url::Url"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3794",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L427",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6258",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-ea1cc547568423794e8b5081",
+    "aliases": [
+      "deltalake::logstore::LogStore::root_url"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "383cd058626ee6358b13f45e",
+    "path": "deltalake_core::logstore::LogStore::to_uri",
+    "name": "to_uri",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn to_uri(&self, location: &Path) -> String",
+    "docs": "[Path] to Delta log",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        421,
+        5
+      ],
+      "end": [
+        424,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "location",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Path",
+                      "id": 271,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "String",
+              "id": 9,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "271": "object_store::path::Path",
+      "9": "alloc::string::String"
+    },
+    "impl_context": null,
+    "links": {
+      "Path": 271
+    },
+    "link_paths": {
+      "Path": "object_store::path::Path"
+    },
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3793",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L421",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6257",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-383cd058626ee6358b13f45e",
+    "aliases": [
+      "deltalake::logstore::LogStore::to_uri"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f2dce631d951082d90907558",
+    "path": "deltalake_core::logstore::LogStore::transaction_url",
+    "name": "transaction_url",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn transaction_url(&self, _operation_id: Option<Uuid>) -> DeltaResult<Url>",
+    "docs": "Generate the appropriate [Url] to use for executing an operation.\n\n This can be useful for branching LogStore implementations such as LakeFS which may return\n something other than the base URL.",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        440,
+        5
+      ],
+      "end": [
+        442,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "_operation_id",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 7,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Uuid",
+                              "id": 3098,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DeltaResult",
+              "id": 10,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Url",
+                          "id": 2430,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "7": "core::option::Option",
+      "3098": "uuid::Uuid",
+      "10": "deltalake_core::errors::DeltaResult",
+      "2430": "url::Url"
+    },
+    "impl_context": null,
+    "links": {
+      "Url": 2430
+    },
+    "link_paths": {
+      "Url": "url::Url"
+    },
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3796",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L440",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6260",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-f2dce631d951082d90907558",
+    "aliases": [
+      "deltalake::logstore::LogStore::transaction_url"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8c1a621a395047b4abdf36b3",
+    "path": "deltalake_core::logstore::LogStore::write_commit_entry",
+    "name": "write_commit_entry",
+    "owner": "deltalake_core::logstore::LogStore",
+    "crate": "deltalake-core",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "async fn write_commit_entry(&self, version: Version, commit_or_bytes: CommitOrBytes, operation_id: Uuid) -> Result<(), TransactionError>",
+    "docs": "Write list of actions as delta commit entry for given version.\n\nThis operation can be retried with a higher version in case the write\nfails with [`TransactionError::VersionAlreadyExists`].",
+    "span": {
+      "filename": "crates/core/src/logstore/mod.rs",
+      "begin": [
+        389,
+        5
+      ],
+      "end": [
+        394,
+        39
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "version",
+              {
+                "resolved_path": {
+                  "path": "Version",
+                  "id": 804,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "commit_or_bytes",
+              {
+                "resolved_path": {
+                  "path": "CommitOrBytes",
+                  "id": 3187,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "operation_id",
+              {
+                "resolved_path": {
+                  "path": "Uuid",
+                  "id": 3098,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 112,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 100,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 113,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 44,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "tuple": []
+                                                                    }
+                                                                  },
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "TransactionError",
+                                                                        "id": 834,
+                                                                        "args": null
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 15,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "804": "buoyant_kernel::Version",
+      "3187": "deltalake_core::logstore::CommitOrBytes",
+      "3098": "uuid::Uuid",
+      "112": "core::pin::Pin",
+      "100": "alloc::boxed::Box",
+      "113": "core::future::future::Future",
+      "44": "core::result::Result",
+      "834": "deltalake_core::kernel::transaction::TransactionError",
+      "15": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {
+      "`TransactionError::VersionAlreadyExists`": 2856
+    },
+    "link_paths": {
+      "`TransactionError::VersionAlreadyExists`": "deltalake_core::kernel::transaction::TransactionError::VersionAlreadyExists"
+    },
+    "artifact": {
+      "id": "f7a71ae864632ec7b8eab8cf83b62ddb21df590104a7156800516481721020bb",
+      "format_version": 61,
+      "item_id": "3787",
+      "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.json.zst",
+      "compressed_sha256": "7070c7972a3b0e191cdf9eb9a46de68f785f6e100af83b638256d09b1b6a67dd"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "cloud",
+        "datafusion",
+        "datafusion-datasource",
+        "datafusion-physical-expr-adapter",
+        "datafusion-proto",
+        "default",
+        "json",
+        "nanosecond-timestamps",
+        "rustls"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L389",
+    "supplemental_artifacts": [
+      {
+        "id": "1f901586f668dab9883eca20aaca11365aa8a3df7a2d10651ca00bd9a1cb9f63",
+        "format_version": 61,
+        "item_id": "6251",
+        "origin": "https://github.com/delta-io/delta-rs/tree/58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/deltalake_core.private.json.zst",
+        "compressed_sha256": "dd8f604a89ecadb8da27be4389a0d805e49ff7b899f77592ea8e78a17059d05e"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/deltalake_core.logstore.LogStore.md",
+    "record_file": "operations/deltalake_core.logstore.LogStore.json",
+    "anchor": "op-8c1a621a395047b4abdf36b3",
+    "aliases": [
+      "deltalake::logstore::LogStore::write_commit_entry"
+    ],
+    "resolved_doc_links": {
+      "`TransactionError::VersionAlreadyExists`": "../operations/deltalake_core.kernel.transaction.TransactionError.md#op-ab277057e0fcfe546a0db97b"
+    }
+  }
+]

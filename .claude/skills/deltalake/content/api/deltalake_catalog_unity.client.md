@@ -5,6 +5,7 @@ Crate `deltalake-catalog-unity` · 2 public items · structured records in [`mod
 ## ClientOptions
 
 `struct` · `deltalake_catalog_unity::client::ClientOptions`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.client.ClientOptions.md)
 
 ```rust
 struct ClientOptions
@@ -25,6 +26,7 @@ HTTP client configuration for remote catalogs
 ## ClientOptionsBuilder
 
 `struct` · `deltalake_catalog_unity::client::ClientOptionsBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.client.ClientOptionsBuilder.md)
 
 ```rust
 struct ClientOptionsBuilder<TypedBuilderFields = ((), (), (), (), (), (), (), (), (), (), (), (), (), (), ())>

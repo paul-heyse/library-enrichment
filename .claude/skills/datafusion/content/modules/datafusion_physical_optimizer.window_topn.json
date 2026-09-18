@@ -1,0 +1,65 @@
+[
+  {
+    "id": "6f5f2b3b713a833eca107471",
+    "path": "datafusion_physical_optimizer::window_topn",
+    "name": "window_topn",
+    "owner": null,
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "module",
+    "signature": "mod window_topn",
+    "docs": "[`WindowTopN`] optimizer rule for per-partition top-K window queries.\n\nDetects queries of the form:\n\n```sql\nSELECT * FROM (\n    SELECT *, ROW_NUMBER() OVER (PARTITION BY pk ORDER BY val) as rn\n    FROM t\n) WHERE rn <= K;\n```\n\nor with `RANK()` in place of `ROW_NUMBER()`:\n\n```sql\nSELECT * FROM (\n    SELECT *, RANK() OVER (PARTITION BY pk ORDER BY val) as rk\n    FROM t\n) WHERE rk <= K;\n```\n\nAnd replaces the `FilterExec → BoundedWindowAggExec` pipeline with\n`BoundedWindowAggExec → PartitionedTopKExec(fetch=K)`, removing the\n`FilterExec` and inserting `PartitionedTopKExec` under the window.\n\nThe appropriate [`WindowFnKind`] is forwarded to `PartitionedTopKExec`.\nRANK requires a non-empty `ORDER BY` clause (otherwise all rows tie at\nrank 1 and the optimization is degenerate).\n\nSee [`PartitionedTopKExec`] for details on the replacement operator.\n\n[`PartitionedTopKExec`]: datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec\n[`WindowFnKind`]: datafusion_physical_plan::sorts::partitioned_topk::WindowFnKind",
+    "span": {
+      "filename": "src/window_topn.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        361,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          811
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec": 810,
+      "`WindowTopN`": 811,
+      "datafusion_physical_plan::sorts::partitioned_topk::WindowFnKind": 843
+    },
+    "link_paths": {
+      "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec": "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+      "`WindowTopN`": "datafusion_physical_optimizer::window_topn::WindowTopN",
+      "datafusion_physical_plan::sorts::partitioned_topk::WindowFnKind": "datafusion_physical_plan::sorts::partitioned_topk::WindowFnKind"
+    },
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "844",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/datafusion_physical_optimizer.window_topn.md",
+    "record_file": "modules/datafusion_physical_optimizer.window_topn.json",
+    "anchor": "op-6f5f2b3b713a833eca107471",
+    "aliases": [],
+    "resolved_doc_links": {
+      "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec": "../operations/datafusion_physical_plan.sorts.partitioned_topk.PartitionedTopKExec.md#op-665d9b8c9f50ce696eacb602",
+      "`WindowTopN`": "../operations/datafusion_physical_optimizer.window_topn.WindowTopN.md#op-d3e707f45dfad8feac4ca8f0",
+      "datafusion_physical_plan::sorts::partitioned_topk::WindowFnKind": "../operations/datafusion_physical_plan.sorts.partitioned_topk.WindowFnKind.md#op-4da708ba7c2adb8dcf339cf3"
+    }
+  }
+]

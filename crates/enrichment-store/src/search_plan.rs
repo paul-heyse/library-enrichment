@@ -1,7 +1,6 @@
 //! Search filtering, scoring, definition folding, counting and keyset paging stay in the plan.
 
 use crate::{
-    projection,
     runtime::QueryRuntime,
     scoring::{self, ScoreKind},
     views,
@@ -13,9 +12,10 @@ use datafusion::{
     prelude::{SessionContext, col, lit},
 };
 use enrichment_core::{
-    evidence::{FragmentKind, SymbolKind, path::PublicPath, relational::FactSource},
+    evidence::{FragmentKind, path::PublicPath},
+    native_union::{Cell, Rule},
     search::{page::SearchKey, spec::SearchSpec},
-    wire::data::{HitKind, ScoreFactor},
+    wire::{Evidence, data::SearchHit},
 };
 
 pub struct SearchOptions {
@@ -23,31 +23,75 @@ pub struct SearchOptions {
     pub fragment_kinds: Vec<FragmentKind>,
     pub area: Option<PublicPath>,
     pub page_size: usize,
+    pub offset: u64,
     pub after: Option<SearchKey>,
 }
 
-/// A final bounded result row, carrying the exact fact used to rank/cite it.
-#[derive(Debug)]
-pub struct RankedEvidence {
-    pub key: SearchKey,
-    pub fact_id: String,
-    pub subject: enrichment_core::evidence::relational::SubjectRef,
-    pub hit: HitKind,
-    pub path: Option<String>,
-    pub symbol_kind: Option<SymbolKind>,
-    pub signature: Option<String>,
-    pub fragment_kind: Option<FragmentKind>,
-    pub excerpt: String,
-    pub also_at: Vec<String>,
-    pub deprecated: bool,
-    pub factors: Vec<ScoreFactor>,
-    pub source: FactSource,
+enrichment_core::native_struct! {
+    /// The native hit/citation pair carries its cursor key through bounded delivery.
+    pub struct SearchResult {
+        key: SearchKey => Rule::Text,
+        hit: SearchHit => Rule::Text,
+        citation: Evidence => Rule::Text,
+    }
+}
+
+fn present(frame: DataFrame, excerpt_characters: usize) -> Result<DataFrame> {
+    use datafusion::logical_expr::when;
+    use enrichment_core::evidence::arrow_model::expressions::record;
+    let input = record(
+        &crate::research_citations::CitationInput::data_type(),
+        &[
+            ("fact_id", col("fact_id")),
+            ("subject", col("subject_ref")),
+            ("display_subject", col("label")),
+            ("source", col("source")),
+            ("text", col("excerpt")),
+        ],
+    )?;
+    let frame = frame.with_column(
+        "citation",
+        crate::research_citations::citation(input, excerpt_characters)?,
+    )?;
+    let frame = frame.with_column("evidence_id", col("citation").field("evidence_id"))?;
+    let key = record(
+        &SearchKey::data_type(),
+        &[
+            ("score", col("ranking").field("score")),
+            ("hit_order", col("hit_order")),
+            ("subject", col("label")),
+            ("candidate_id", col("candidate_id")),
+        ],
+    )?;
+    let hit = record(
+        &SearchHit::data_type(),
+        &[
+            (
+                "hit",
+                when(col("hit_order").eq(lit(0u32)), lit("symbol"))
+                    .when(col("hit_order").eq(lit(1u32)), lit("fragment"))
+                    .otherwise(lit(datafusion::common::ScalarValue::Utf8(None)))?,
+            ),
+            ("score", col("ranking").field("score")),
+            ("factors", col("ranking").field("factors")),
+            ("evidence_id", col("evidence_id")),
+            ("path", col("path")),
+            ("symbol_kind", col("symbol_kind")),
+            ("signature", col("signature")),
+            ("also_at", col("also_at")),
+            ("deprecated", col("deprecated")),
+            ("fragment_kind", col("fragment_kind")),
+            ("subject", col("label")),
+            ("excerpt", col("citation").field("excerpt")),
+        ],
+    )?;
+    frame.select(vec![key.alias("key"), hit.alias("hit"), col("citation")])
 }
 
 pub struct SearchPage {
     pub total: u64,
-    pub rows: Vec<RankedEvidence>,
-    pub has_more: bool,
+    pub rows: Vec<SearchResult>,
+    pub boundary: crate::page_plan::Boundary,
 }
 
 /// Build the canonical folded relation in one already scoped domain session.
@@ -245,6 +289,7 @@ pub async fn page(
     runtime: &QueryRuntime,
     spec: &SearchSpec,
     options: &SearchOptions,
+    excerpt_characters: usize,
 ) -> Result<SearchPage> {
     if options.page_size == 0 || options.page_size > 1024 {
         return Err(DataFusionError::ResourcesExhausted(
@@ -284,15 +329,24 @@ pub async fn page(
     } else {
         folded
     };
-    let sorted = filtered
-        .sort(vec![
-            col("rank_score").sort(false, false),
-            col("hit_order").sort(true, false),
-            col("label").sort(true, false),
-            col("candidate_id").sort(true, false),
-        ])?
-        .limit(0, Some(options.page_size + 1))?;
-    crate::native_catalog::work(session, "search_page", sorted.into_view())?;
+    let sorted = filtered.sort(vec![
+        col("rank_score").sort(false, false),
+        col("hit_order").sort(true, false),
+        col("label").sort(true, false),
+        col("candidate_id").sort(true, false),
+    ])?;
+    let selected = crate::page_plan::select(
+        runtime,
+        sorted,
+        crate::page_plan::Policy {
+            page_size: options.page_size as u64,
+            offset: options.offset,
+            total: Some(total),
+            detail: false,
+        },
+    )
+    .await?;
+    crate::native_catalog::work(session, "search_page", selected.frame.into_view())?;
     let hydrated = session
         .sql(
             r"
@@ -323,23 +377,19 @@ pub async fn page(
             ),
         )?;
     }
-    let output = runtime
-        .execute_family(hydrated, Some(crate::preparation::QueryFamily::Search))
+    crate::preparation::QueryFamily::Search.require(hydrated.schema().as_arrow())?;
+    let rows = runtime
+        .records::<SearchResult>(present(hydrated, excerpt_characters)?, options.page_size)
         .await?;
-    let mut rows = output
-        .batches
-        .iter()
-        .map(projection::search::rows)
-        .collect::<std::result::Result<Vec<_>, _>>()?
-        .into_iter()
-        .flatten()
-        .collect::<Vec<_>>();
-    let has_more = rows.len() > options.page_size;
-    rows.truncate(options.page_size);
+    if rows.len() as u64 != selected.boundary.returned {
+        return Err(DataFusionError::Internal(
+            "search hydration changed page cardinality".into(),
+        ));
+    }
     Ok(SearchPage {
         total,
         rows,
-        has_more,
+        boundary: selected.boundary,
     })
 }
 
@@ -362,3 +412,6 @@ fn after(key: &SearchKey) -> datafusion::logical_expr::Expr {
             .and(same_subject)
             .and(col("candidate_id").gt(lit(&key.candidate_id))))
 }
+
+#[cfg(test)]
+mod tests;

@@ -34,6 +34,9 @@ fn from(value: FixedShapeTensor) -> Self
 fn try_from(value: &Field) -> Result<Self, Self::Error>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_schema.extension.canonical.CanonicalExtensionType.md).
+
+
 Canonical extension types.
 
 <https://arrow.apache.org/docs/format/CanonicalExtensions.html#format-canonical-extensions>

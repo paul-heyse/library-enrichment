@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::sum`
 fn sum(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.sum.sum.md).
+
+
 Returns the sum of a group of values.
 
 ---
@@ -26,6 +29,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::sum_distinct`
 fn sum_distinct(expr: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.sum.sum_distinct.md).
+
+
 ---
 
 ## sum_udaf
@@ -35,6 +41,9 @@ fn sum_distinct(expr: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```rust
 fn sum_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.sum.sum_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`Sum`]
 
@@ -69,6 +78,9 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn supports_retract_batch(&self) -> bool
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.sum.SlidingDistinctSumAccumulator.md).
+
 
 A sliding‐window accumulator for `SUM(DISTINCT)` over Int64 columns.
 Maintains a running sum so that `evaluate()` is O(1).
@@ -111,5 +123,8 @@ fn simplify_expr_op_literal(&self, agg_function: &AggregateFunction, arg: &Expr,
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 fn value_from_stats(&self, statistics_args: &StatisticsArgs<'_>) -> Option<ScalarValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.sum.Sum.md).
+
 
 ---

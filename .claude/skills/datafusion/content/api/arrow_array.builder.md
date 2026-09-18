@@ -12,6 +12,9 @@ Also reachable as `arrow::array::make_builder`
 fn make_builder(datatype: &arrow_schema::DataType, capacity: usize) -> Box<dyn ArrayBuilder>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.make_builder.md).
+
+
 Returns a builder with capacity for `capacity` elements of datatype
 `DataType`.
 
@@ -66,6 +69,9 @@ fn into_box_any(Box<self>) -> Box<dyn Any>
 fn is_empty(&self) -> bool
 fn len(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.ArrayBuilder.md).
+
 
 Trait for dealing with different array builders at runtime
 
@@ -128,6 +134,9 @@ Also reachable as `arrow::array::BinaryBuilder`
 type BinaryBuilder = GenericBinaryBuilder<i32>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.BinaryBuilder.md).
+
+
 Builder for [`BinaryArray`](crate::array::BinaryArray)
 
 See examples on [`GenericBinaryBuilder`]
@@ -143,6 +152,9 @@ Also reachable as `arrow::array::LargeBinaryBuilder`
 ```rust
 type LargeBinaryBuilder = GenericBinaryBuilder<i64>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.LargeBinaryBuilder.md).
+
 
 Builder for [`LargeBinaryArray`](crate::array::LargeBinaryArray)
 
@@ -160,6 +172,9 @@ Also reachable as `arrow::array::LargeListBuilder`
 type LargeListBuilder<T> = GenericListBuilder<i64, T>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.LargeListBuilder.md).
+
+
 Builder for [`LargeListArray`](crate::array::LargeListArray)
 
 ---
@@ -174,6 +189,9 @@ Also reachable as `arrow::array::LargeListViewBuilder`
 type LargeListViewBuilder<T> = GenericListViewBuilder<i64, T>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.LargeListViewBuilder.md).
+
+
 Builder for [`LargeListViewArray`](crate::array::LargeListViewArray)
 
 ---
@@ -187,6 +205,9 @@ Also reachable as `arrow::array::LargeStringBuilder`
 ```rust
 type LargeStringBuilder = GenericStringBuilder<i64>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.LargeStringBuilder.md).
+
 
 Builder for [`LargeStringArray`](crate::array::LargeStringArray)
 
@@ -204,6 +225,9 @@ Also reachable as `arrow::array::ListBuilder`
 type ListBuilder<T> = GenericListBuilder<i32, T>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.ListBuilder.md).
+
+
 Builder for [`ListArray`](crate::array::ListArray)
 
 ---
@@ -218,6 +242,9 @@ Also reachable as `arrow::array::ListViewBuilder`
 type ListViewBuilder<T> = GenericListViewBuilder<i32, T>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.ListViewBuilder.md).
+
+
 Builder for [`ListViewArray`](crate::array::ListViewArray)
 
 ---
@@ -231,6 +258,9 @@ Also reachable as `arrow::array::StringBuilder`
 ```rust
 type StringBuilder = GenericStringBuilder<i32>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.StringBuilder.md).
+
 
 Builder for [`StringArray`](crate::array::StringArray)
 

@@ -47,13 +47,13 @@ Three trait families, each with a registration call on `SessionContext`. Beyond 
 
 ## Decision rules
 
-- Implement `groups_accumulator_supported` and `create_groups_accumulator` for any aggregate that will run over many groups; the row-at-a-time `Accumulator` path is much slower.
+- For grouped aggregates, evaluate GroupsAccumulator specialization against workload and state layout; the general Accumulator consumes batches, not necessarily individual rows.
 - `simplify` lets a UDF rewrite itself at plan time, which is often cheaper than evaluating it.
 - Declare `Volatility` honestly — marking a volatile function `Immutable` lets the optimizer fold it away.
 
 ## Anti-patterns
 
-- Implementing only `invoke_with_args` and leaving every optimizer hook at its default.
+- Advertising optimizer properties or specialized accumulators without proving their semantic preconditions.
 - Registering a UDF globally when it is only needed for one session or one query.
 
 ## Agent checklist

@@ -12,6 +12,9 @@ Also reachable as `datafusion_expr::binary::binary_numeric_coercion`, `datafusio
 fn binary_numeric_coercion(lhs_type: &arrow::datatypes::DataType, rhs_type: &arrow::datatypes::DataType) -> Option<arrow::datatypes::DataType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.binary.binary_numeric_coercion.md).
+
+
 Coerce `lhs_type` and `rhs_type` to a common type where both are numeric
 
 ---
@@ -25,6 +28,9 @@ Also reachable as `datafusion_expr::binary::binary_to_string_coercion`, `datafus
 ```rust
 fn binary_to_string_coercion(lhs_type: &arrow::datatypes::DataType, rhs_type: &arrow::datatypes::DataType) -> Option<arrow::datatypes::DataType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.binary.binary_to_string_coercion.md).
+
 
 Coercion rules for binary (Binary/LargeBinary) to string (Utf8/LargeUtf8):
 If one argument is binary and the other is a string then coerce to string
@@ -41,6 +47,9 @@ Also reachable as `datafusion_expr::binary::comparison_coercion`, `datafusion_ex
 ```rust
 fn comparison_coercion(lhs_type: &arrow::datatypes::DataType, rhs_type: &arrow::datatypes::DataType) -> Option<arrow::datatypes::DataType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.binary.comparison_coercion.md).
+
 
 Coerce `lhs_type` and `rhs_type` to a common type for comparison
 contexts — any context where two values are compared rather than
@@ -75,6 +84,9 @@ Also reachable as `datafusion_expr::binary::decimal_coercion`, `datafusion_expr:
 fn decimal_coercion(lhs_type: &arrow::datatypes::DataType, rhs_type: &arrow::datatypes::DataType) -> Option<arrow::datatypes::DataType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.binary.decimal_coercion.md).
+
+
 Decimal coercion rules.
 
 ---
@@ -88,6 +100,9 @@ Also reachable as `datafusion_expr::binary::like_coercion`, `datafusion_expr::ty
 ```rust
 fn like_coercion(lhs_type: &arrow::datatypes::DataType, rhs_type: &arrow::datatypes::DataType) -> Option<arrow::datatypes::DataType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.binary.like_coercion.md).
+
 
 Coercion rules for like operations.
 This is a union of string coercion rules, dictionary coercion rules, and REE coercion rules
@@ -106,6 +121,9 @@ Also reachable as `datafusion_expr::binary::regex_coercion`, `datafusion_expr::t
 fn regex_coercion(lhs_type: &arrow::datatypes::DataType, rhs_type: &arrow::datatypes::DataType) -> Option<arrow::datatypes::DataType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.binary.regex_coercion.md).
+
+
 Coercion rules for regular expression comparison operations.
 This is a union of string coercion rules, dictionary coercion rules, and REE coercion rules.
 
@@ -120,6 +138,9 @@ Also reachable as `datafusion_expr::binary::string_coercion`, `datafusion_expr::
 ```rust
 fn string_coercion(lhs_type: &arrow::datatypes::DataType, rhs_type: &arrow::datatypes::DataType) -> Option<arrow::datatypes::DataType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.binary.string_coercion.md).
+
 
 Coercion rules for string view types (Utf8/LargeUtf8/Utf8View):
 If at least one argument is a string view, we coerce to string view
@@ -139,6 +160,9 @@ Also reachable as `datafusion_expr::binary::try_type_union_resolution`, `datafus
 fn try_type_union_resolution(data_types: &[arrow::datatypes::DataType]) -> datafusion_common::Result<Vec<arrow::datatypes::DataType>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.binary.try_type_union_resolution.md).
+
+
 Handle type union resolution including struct type and others.
 
 ---
@@ -153,6 +177,9 @@ Also reachable as `datafusion_expr::binary::try_type_union_resolution_with_struc
 fn try_type_union_resolution_with_struct(data_types: &[arrow::datatypes::DataType]) -> datafusion_common::Result<Vec<arrow::datatypes::DataType>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.binary.try_type_union_resolution_with_struct.md).
+
+
 ---
 
 ## type_union_coercion
@@ -164,6 +191,9 @@ Also reachable as `datafusion_expr::binary::type_union_coercion`, `datafusion_ex
 ```rust
 fn type_union_coercion(lhs_type: &arrow::datatypes::DataType, rhs_type: &arrow::datatypes::DataType) -> Option<arrow::datatypes::DataType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.binary.type_union_coercion.md).
+
 
 Coerce `lhs_type` and `rhs_type` to a common type for type unification
 contexts — where two values must be brought to a common type but are not
@@ -189,6 +219,9 @@ Also reachable as `datafusion_expr::binary::type_union_resolution`, `datafusion_
 ```rust
 fn type_union_resolution(data_types: &[arrow::datatypes::DataType]) -> Option<arrow::datatypes::DataType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.binary.type_union_resolution.md).
+
 
 Coerce dissimilar data types to a single data type.
 ARRAY literals, VALUES, COALESCE, and array concatenation are examples
@@ -225,6 +258,9 @@ fn set_lhs_spans(&mut self, spans: Spans)
 fn set_op_spans(&mut self, spans: Spans)
 fn set_rhs_spans(&mut self, spans: Spans)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr_common.type_coercion.binary.BinaryTypeCoercer.md).
+
 
 Provides type information about a binary expression, coercing different
 input types into a sensible output type.

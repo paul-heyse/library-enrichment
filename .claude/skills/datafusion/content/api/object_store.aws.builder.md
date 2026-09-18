@@ -42,6 +42,9 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private228::Result<Self, _
 fn serialize<__S>(&self, __serializer: __S) -> _serde::__private228::Result<__S::Ok, __S::Error> where __S: _serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.aws.builder.AmazonS3ConfigKey.md).
+
+
 Configuration keys for [`AmazonS3Builder`]
 
 Configuration via keys can be done via [`AmazonS3Builder::with_config`]
@@ -65,6 +68,9 @@ enum S3EncryptionConfigKey
 ```
 
 **Variants**: `ServerSideEncryption`, `KmsKeyId`, `BucketKeyEnabled`, `CustomerEncryptionKey`
+
+[Full member, field, variant and typed contracts](../operations/object_store.aws.builder.S3EncryptionConfigKey.md).
+
 
 Encryption configuration options for S3.
 
@@ -129,6 +135,9 @@ fn with_unsigned_payload(self, unsigned_payload: bool) -> Self
 fn with_url(self, url: impl Into<String>) -> Self
 fn with_virtual_hosted_style_request(self, virtual_hosted_style_request: bool) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.aws.builder.AmazonS3Builder.md).
+
 
 Configure a connection to Amazon S3 using the specified credentials in
 the specified Amazon region and bucket.

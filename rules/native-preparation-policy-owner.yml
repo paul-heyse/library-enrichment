@@ -1,0 +1,24 @@
+id: native-preparation-policy-owner
+language: Rust
+severity: error
+message: Native preparation and python_distribution plans own source admission and metadata selection; drivers execute admitted I/O.
+files:
+  - crates/enrichment-daemon/src/execution/capsule.rs
+  - crates/enrichment-daemon/src/execution/rustdoc.rs
+  - crates/enrichment-daemon/src/execution/python_closure.rs
+  - crates/enrichment-daemon/src/ops/python.rs
+rule:
+  any:
+    - kind: call_expression
+      has:
+        field: function
+        regex: '(^|::)(validate_cargo_sources|validate_metadata|metadata_headers)$'
+    - kind: call_expression
+      has:
+        field: function
+        regex: '(^|::)fs::(read|read_to_string)$'
+    - kind: struct_item
+      has:
+        field: name
+        regex: '^BuildSpec$'
+note: Bounded archive/filesystem capture and external-format decoding remain permitted in their dedicated owners. This rule checks syntax, not dispatch.

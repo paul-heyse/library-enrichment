@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "id": "df.coalesce",
+  "title": "Use coalesce through its planning contract",
+  "task_aliases": [
+    "first non null value",
+    "coalesce fallback",
+    "nullable default",
+    "coalesce direct invoke"
+  ],
+  "crates": [
+    "datafusion-functions",
+    "datafusion-expr",
+    "datafusion-optimizer"
+  ],
+  "input": [
+    "Expr",
+    "Field",
+    "DataType"
+  ],
+  "output": [
+    "Expr",
+    "ColumnarValue"
+  ],
+  "properties": [
+    "nulls",
+    "coercion",
+    "short-circuit",
+    "planning",
+    "metadata"
+  ],
+  "operations": [
+    "datafusion_functions::core::coalesce::CoalesceFunc",
+    "datafusion_functions::core::coalesce",
+    "datafusion_functions::core::expr_fn::coalesce"
+  ],
+  "brief": "In DataFusion 55.1.0 coalesce is simplified to CASE; its invocation hook returns an internal error if called directly. Use the analyzer/simplifier/planner path, including custom coercion and return-field logic.",
+  "choices": [
+    {
+      "candidate": "SQL coalesce / expr_fn::coalesce",
+      "choose_when": "Return the first non-null compatible expression for each row",
+      "tradeoff": "Enter normal planning so the built-in can coerce and rewrite to CASE.",
+      "kind": "authored_conditional_judgment"
+    },
+    {
+      "candidate": "Arrow array selection / explicit CASE",
+      "choose_when": "Work directly with arrays or need a different conditional policy",
+      "tradeoff": "Match null, type, scalar/array and short-circuit semantics explicitly.",
+      "kind": "authored_conditional_judgment"
+    }
+  ],
+  "claims": [
+    {
+      "id": "df.coalesce.inputs",
+      "aspect": "inputs",
+      "statement": "At least one argument is required. CoalesceFunc declares Signature::user_defined with Immutable volatility and coerce_types uses try_type_union_resolution. A generic constructor alone does not establish argument compatibility.",
+      "kind": "upstream_source",
+      "evidence": [
+        "source"
+      ],
+      "conditions": [
+        "DataFusion functions 55.1.0; arguments must pass the normal coercion and simplification pipeline"
+      ]
+    },
+    {
+      "id": "df.coalesce.output-field",
+      "aspect": "output-field",
+      "statement": "return_field_from_args returns the first non-Null datatype after argument coercion (or the first datatype when all are Null). Output is nullable only when all argument fields are nullable. It constructs a new Field named coalesce; do not infer input metadata propagation.",
+      "kind": "upstream_source",
+      "evidence": [
+        "source"
+      ],
+      "conditions": [
+        "DataFusion functions 55.1.0; arguments must pass the normal coercion and simplification pipeline"
+      ]
+    },
+    {
+      "id": "df.coalesce.rewrite",
+      "aspect": "rewrite",
+      "statement": "simplify rejects zero arguments, returns the sole argument unchanged, or builds CASE WHEN arg IS NOT NULL THEN arg ... ELSE last_arg. invoke_with_args returns an internal error stating coalesce should have been simplified to case.",
+      "kind": "upstream_source",
+      "evidence": [
+        "source"
+      ],
+      "conditions": [
+        "DataFusion functions 55.1.0; arguments must pass the normal coercion and simplification pipeline"
+      ]
+    },
+    {
+      "id": "df.coalesce.conditional",
+      "aspect": "conditional",
+      "statement": "short_circuits is true. conditional_arguments identifies the first argument as eager and later arguments as lazy. Do not equate these hooks with arbitrary user-code side-effect guarantees.",
+      "kind": "upstream_source",
+      "evidence": [
+        "source"
+      ],
+      "conditions": [
+        "DataFusion functions 55.1.0; arguments must pass the normal coercion and simplification pipeline"
+      ]
+    }
+  ],
+  "implementation": [
+    "Resolve the function in the intended session registry and feature profile.",
+    "Construct expressions, then use normal analysis/simplification/physical planning; do not invoke CoalesceFunc as a standalone Arrow kernel.",
+    "Assert both output field and values, including all-null, non-null fallback, mixed types and no-argument controls."
+  ],
+  "unknowns": [
+    "The probe covers Int32 nullable/non-null fallback and Int32/Int64 coercion. Nested/extension metadata and arbitrary side effects are not tested."
+  ],
+  "evidence": [
+    {
+      "id": "source",
+      "kind": "upstream_source",
+      "path": "skill_improvement/evidence/implementation/source-exports/datafusion-functions-55.1.0/src/core/coalesce.rs",
+      "scope": "Published crate source; source-exports sibling SOURCE_MANIFEST.json records archive and file digests."
+    },
+    {
+      "id": "probe",
+      "kind": "runtime_observation",
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "tests": [
+        "coalesce_uses_planning_and_preserves_nonnull_fallback"
+      ],
+      "scope": "Named test assertions only, recorded feature profile."
+    }
+  ],
+  "reviewed": "2026-09-18",
+  "invalidation": {
+    "dependencies": [
+      "datafusion_functions::core::coalesce::CoalesceFunc",
+      "datafusion_functions::core::coalesce",
+      "datafusion_functions::core::expr_fn::coalesce"
+    ],
+    "candidate_set": [
+      "SQL coalesce / expr_fn::coalesce",
+      "Arrow array selection / explicit CASE"
+    ],
+    "reason": "Review changed coercion, simplification, invocation and field behavior."
+  }
+}

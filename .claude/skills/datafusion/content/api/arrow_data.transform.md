@@ -16,6 +16,9 @@ enum Capacities
 
 **Derives**: Clone, Debug
 
+[Full member, field, variant and typed contracts](../operations/arrow_data.transform.Capacities.md).
+
+
 Define capacities to pre-allocate for child data or data buffers.
 
 ---
@@ -47,6 +50,9 @@ fn try_extend(&mut self, index: usize, start: usize, end: usize) -> Result<(), A
 fn try_extend_nulls(&mut self, len: usize) -> Result<(), ArrowError>
 fn with_capacities(arrays: Vec<&'a ArrayData>, use_nulls: bool, capacities: Capacities) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_data.transform.MutableArrayData.md).
+
 
 Efficiently create an [ArrayData] from one or more existing [ArrayData]s by
 copying chunks.

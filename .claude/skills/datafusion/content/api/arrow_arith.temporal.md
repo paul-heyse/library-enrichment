@@ -30,6 +30,9 @@ fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 fn from_str(s: &str) -> Result<Self, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.temporal.DatePart.md).
+
+
 Valid parts to extract from date/time/timestamp arrays.
 
 See [`date_part`].
@@ -48,6 +51,9 @@ Also reachable as `arrow::compute::date_part`, `arrow::compute::kernels::tempora
 ```rust
 fn date_part(array: &dyn Array, part: DatePart) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.temporal.date_part.md).
+
 
 Given an array, return a new array with the extracted [`DatePart`] as signed 32-bit
 integer values.

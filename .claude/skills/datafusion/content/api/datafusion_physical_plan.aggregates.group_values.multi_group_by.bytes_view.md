@@ -33,6 +33,9 @@ fn vectorized_append(&mut self, array: &ArrayRef, rows: &[usize]) -> Result<()>
 fn vectorized_equal_to(&self, group_indices: &[usize], array: &ArrayRef, rows: &[usize], equal_to_results: &mut BooleanBufferBuilder)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.bytes_view.ByteViewGroupValueBuilder.md).
+
+
 An implementation of [`GroupColumn`] for binary view and utf8 view types.
 
 Stores a collection of binary view or utf8 view group values in a buffer

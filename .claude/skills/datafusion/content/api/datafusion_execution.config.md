@@ -86,6 +86,9 @@ fn with_target_partitions(self, n: usize) -> Self
 fn from(options: ConfigOptions) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_execution.config.SessionConfig.md).
+
+
 Configuration options for [`SessionContext`].
 
 Can be passed to [`SessionContext::new_with_config`] to customize the configuration of DataFusion.

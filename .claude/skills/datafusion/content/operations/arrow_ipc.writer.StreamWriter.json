@@ -1,0 +1,1986 @@
+[
+  {
+    "id": "b808ea0aac7879e19d25b939",
+    "path": "arrow_ipc::writer::StreamWriter",
+    "name": "StreamWriter",
+    "owner": null,
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct StreamWriter<W>",
+    "docs": "Arrow Stream Writer\n\nWrites Arrow [`RecordBatch`]es to bytes using the [IPC Streaming Format].\n\n# See Also\n\n* [`FileWriter`] for writing IPC Files\n\n# Example - Basic usage\n```\n# use arrow_array::record_batch;\n# use arrow_ipc::writer::StreamWriter;\n# let mut stream = vec![]; // mimic a stream for the example\nlet batch = record_batch!((\"a\", Int32, [1, 2, 3])).unwrap();\n// create a new writer, the schema must be known in advance\nlet mut writer = StreamWriter::try_new(&mut stream, &batch.schema()).unwrap();\n// write each batch to the underlying stream\nwriter.write(&batch).unwrap();\n// When all batches are written, call finish to flush all buffers\nwriter.finish().unwrap();\n```\n# Example - Efficient delta dictionaries\n```\n# use arrow_array::record_batch;\n# use arrow_ipc::writer::{StreamWriter, IpcWriteOptions};\n# use arrow_ipc::writer::DictionaryHandling;\n# use arrow_schema::{DataType, Field, Schema, SchemaRef};\n# use arrow_array::{\n#    builder::StringDictionaryBuilder, types::Int32Type, Array, ArrayRef, DictionaryArray,\n#    RecordBatch, StringArray,\n# };\n# use std::sync::Arc;\n\nlet schema = Arc::new(Schema::new(vec![Field::new(\n   \"col1\",\n   DataType::Dictionary(Box::from(DataType::Int32), Box::from(DataType::Utf8)),\n   true,\n)]));\n\nlet mut builder = StringDictionaryBuilder::<arrow_array::types::Int32Type>::new();\n\n// `finish_preserve_values` will keep the dictionary values along with their\n// key assignments so that they can be re-used in the next batch.\nbuilder.append(\"a\").unwrap();\nbuilder.append(\"b\").unwrap();\nlet array1 = builder.finish_preserve_values();\nlet batch1 = RecordBatch::try_new(schema.clone(), vec![Arc::new(array1) as ArrayRef]).unwrap();\n\n// In this batch, 'a' will have the same dictionary key as 'a' in the previous batch,\n// and 'd' will take the next available key.\nbuilder.append(\"a\").unwrap();\nbuilder.append(\"d\").unwrap();\nlet array2 = builder.finish_preserve_values();\nlet batch2 = RecordBatch::try_new(schema.clone(), vec![Arc::new(array2) as ArrayRef]).unwrap();\n\nlet mut stream = vec![];\n// You must set `.with_dictionary_handling(DictionaryHandling::Delta)` to\n// enable delta dictionaries in the writer\nlet options = IpcWriteOptions::default().with_dictionary_handling(DictionaryHandling::Delta);\nlet mut writer = StreamWriter::try_new_with_options(&mut stream, &schema, options).unwrap();\n\n// When writing the first batch, a dictionary message with 'a' and 'b' will be written\n// prior to the record batch.\nwriter.write(&batch1).unwrap();\n// With the second batch only a delta dictionary with 'd' will be written\n// prior to the record batch. This is only possible with `finish_preserve_values`.\n// Without it, 'a' and 'd' in this batch would have different keys than the\n// first batch and so we'd have to send a replacement dictionary with new keys\n// for both.\nwriter.write(&batch2).unwrap();\nwriter.finish().unwrap();\n```\n[IPC Streaming Format]: https://arrow.apache.org/docs/format/Columnar.html#ipc-streaming-format",
+    "span": {
+      "filename": "src/writer.rs",
+      "begin": [
+        2015,
+        1
+      ],
+      "end": [
+        2028,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "W",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          588,
+          596,
+          597,
+          598,
+          599,
+          600,
+          601,
+          602,
+          603,
+          604,
+          605,
+          606,
+          607,
+          608,
+          609,
+          610,
+          611,
+          614
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`FileWriter`": 518,
+      "`RecordBatch`": 118
+    },
+    "link_paths": {
+      "`FileWriter`": "arrow_ipc::writer::FileWriter",
+      "`RecordBatch`": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "517",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.writer.StreamWriter.md",
+    "record_file": "operations/arrow_ipc.writer.StreamWriter.json",
+    "anchor": "op-b808ea0aac7879e19d25b939",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`FileWriter`": "../operations/arrow_ipc.writer.FileWriter.md#op-de36feaee6f6c9a3aec5da12",
+      "`RecordBatch`": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "3d644ef8b80a5b12179cb587",
+    "path": "arrow_ipc::writer::StreamWriter::close",
+    "name": "close",
+    "owner": "arrow_ipc::writer::StreamWriter",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn close(self) -> Result<(), ArrowError>",
+    "docs": "",
+    "span": {
+      "filename": "src/writer.rs",
+      "begin": [
+        2191,
+        5
+      ],
+      "end": [
+        2193,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "44": "core::result::Result",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamWriter",
+          "id": "arrow_ipc::writer::StreamWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "RecordBatchWriter",
+        "id": "arrow_array::record_batch::RecordBatchWriter",
+        "args": null
+      },
+      "trait_path": "arrow_array::record_batch::RecordBatchWriter",
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer.rs",
+        "begin": [
+          2186,
+          1
+        ],
+        "end": [
+          2194,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "613",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.writer.StreamWriter.md",
+    "record_file": "operations/arrow_ipc.writer.StreamWriter.json",
+    "anchor": "op-3d644ef8b80a5b12179cb587",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "cfd74b35f68e3588da399f1f",
+    "path": "arrow_ipc::writer::StreamWriter::finish",
+    "name": "finish",
+    "owner": "arrow_ipc::writer::StreamWriter",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn finish(&mut self) -> Result<(), ArrowError>",
+    "docs": "Write continuation bytes, and mark the stream as done",
+    "span": {
+      "filename": "src/writer.rs",
+      "begin": [
+        2103,
+        5
+      ],
+      "end": [
+        2118,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "44": "core::result::Result",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamWriter",
+          "id": "arrow_ipc::writer::StreamWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer.rs",
+        "begin": [
+          2039,
+          1
+        ],
+        "end": [
+          2184,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "591",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.writer.StreamWriter.md",
+    "record_file": "operations/arrow_ipc.writer.StreamWriter.json",
+    "anchor": "op-cfd74b35f68e3588da399f1f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "34b59c4b7036cac83d9f6030",
+    "path": "arrow_ipc::writer::StreamWriter::flush",
+    "name": "flush",
+    "owner": "arrow_ipc::writer::StreamWriter",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn flush(&mut self) -> Result<(), ArrowError>",
+    "docs": "Flush the underlying writer.\n\nBoth the BufWriter and the underlying writer are flushed.",
+    "span": {
+      "filename": "src/writer.rs",
+      "begin": [
+        2135,
+        5
+      ],
+      "end": [
+        2138,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "44": "core::result::Result",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamWriter",
+          "id": "arrow_ipc::writer::StreamWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer.rs",
+        "begin": [
+          2039,
+          1
+        ],
+        "end": [
+          2184,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "594",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.writer.StreamWriter.md",
+    "record_file": "operations/arrow_ipc.writer.StreamWriter.json",
+    "anchor": "op-34b59c4b7036cac83d9f6030",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6475cc55b408a54258a79946",
+    "path": "arrow_ipc::writer::StreamWriter::get_mut",
+    "name": "get_mut",
+    "owner": "arrow_ipc::writer::StreamWriter",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_mut(&mut self) -> &mut W",
+    "docs": "Gets a mutable reference to the underlying writer.\n\nIt is inadvisable to directly write to the underlying writer.",
+    "span": {
+      "filename": "src/writer.rs",
+      "begin": [
+        2128,
+        5
+      ],
+      "end": [
+        2130,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "generic": "W"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamWriter",
+          "id": "arrow_ipc::writer::StreamWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer.rs",
+        "begin": [
+          2039,
+          1
+        ],
+        "end": [
+          2184,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "593",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.writer.StreamWriter.md",
+    "record_file": "operations/arrow_ipc.writer.StreamWriter.json",
+    "anchor": "op-6475cc55b408a54258a79946",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "646a2ab874f091eaa486a6bd",
+    "path": "arrow_ipc::writer::StreamWriter::get_ref",
+    "name": "get_ref",
+    "owner": "arrow_ipc::writer::StreamWriter",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_ref(&self) -> &W",
+    "docs": "Gets a reference to the underlying writer.",
+    "span": {
+      "filename": "src/writer.rs",
+      "begin": [
+        2121,
+        5
+      ],
+      "end": [
+        2123,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "generic": "W"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamWriter",
+          "id": "arrow_ipc::writer::StreamWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer.rs",
+        "begin": [
+          2039,
+          1
+        ],
+        "end": [
+          2184,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "592",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.writer.StreamWriter.md",
+    "record_file": "operations/arrow_ipc.writer.StreamWriter.json",
+    "anchor": "op-646a2ab874f091eaa486a6bd",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "312891b0974b18d1552d982c",
+    "path": "arrow_ipc::writer::StreamWriter::into_inner",
+    "name": "into_inner",
+    "owner": "arrow_ipc::writer::StreamWriter",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_inner(self) -> Result<W, ArrowError>",
+    "docs": "Unwraps the the underlying writer.\n\nThe writer is flushed and the StreamWriter is finished before returning.\n\n# Errors\n\nAn ['Err'](Result::Err) may be returned if an error occurs while finishing the StreamWriter\nor while flushing the writer.\n\n# Example\n\n```\n# use arrow_ipc::writer::{StreamWriter, IpcWriteOptions};\n# use arrow_ipc::MetadataVersion;\n# use arrow_schema::{ArrowError, Schema};\n# fn main() -> Result<(), ArrowError> {\n// The result we expect from an empty schema\nlet expected = vec![\n    255, 255, 255, 255,  48,   0,   0,   0,\n     16,   0,   0,   0,   0,   0,  10,   0,\n     12,   0,  10,   0,   9,   0,   4,   0,\n     10,   0,   0,   0,  16,   0,   0,   0,\n      0,   1,   4,   0,   8,   0,   8,   0,\n      0,   0,   4,   0,   8,   0,   0,   0,\n      4,   0,   0,   0,   0,   0,   0,   0,\n    255, 255, 255, 255,   0,   0,   0,   0\n];\n\nlet schema = Schema::empty();\nlet buffer: Vec<u8> = Vec::new();\nlet options = IpcWriteOptions::try_new(8, false, MetadataVersion::V5)?;\nlet stream_writer = StreamWriter::try_new_with_options(buffer, &schema, options)?;\n\nassert_eq!(stream_writer.into_inner()?, expected);\n# Ok(())\n# }\n```",
+    "span": {
+      "filename": "src/writer.rs",
+      "begin": [
+        2177,
+        5
+      ],
+      "end": [
+        2183,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "W"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "44": "core::result::Result",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamWriter",
+          "id": "arrow_ipc::writer::StreamWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer.rs",
+        "begin": [
+          2039,
+          1
+        ],
+        "end": [
+          2184,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Result::Err": 271
+    },
+    "link_paths": {
+      "Result::Err": "core::result::Result::Err"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "595",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.writer.StreamWriter.md",
+    "record_file": "operations/arrow_ipc.writer.StreamWriter.json",
+    "anchor": "op-312891b0974b18d1552d982c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "094105a98440871df40f3ee9",
+    "path": "arrow_ipc::writer::StreamWriter::try_new",
+    "name": "try_new",
+    "owner": "arrow_ipc::writer::StreamWriter",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new(writer: W, schema: &Schema) -> Result<Self, ArrowError>",
+    "docs": "Try to create a new writer, with the schema written as part of the header.\n\nNote that there is no internal buffering. See also [`StreamWriter::try_new_buffered`].\n\n# Errors\n\nAn ['Err'](Result::Err) may be returned if writing the header to the writer fails.",
+    "span": {
+      "filename": "src/writer.rs",
+      "begin": [
+        2047,
+        5
+      ],
+      "end": [
+        2050,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "writer",
+              {
+                "generic": "W"
+              }
+            ],
+            [
+              "schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Schema",
+                      "id": 1,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "arrow_schema::schema::Schema",
+      "44": "core::result::Result",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamWriter",
+          "id": "arrow_ipc::writer::StreamWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer.rs",
+        "begin": [
+          2039,
+          1
+        ],
+        "end": [
+          2184,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`StreamWriter::try_new_buffered`": 587,
+      "Result::Err": 271
+    },
+    "link_paths": {
+      "`StreamWriter::try_new_buffered`": "arrow_ipc::writer::StreamWriter::try_new_buffered",
+      "Result::Err": "core::result::Result::Err"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "586",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.writer.StreamWriter.md",
+    "record_file": "operations/arrow_ipc.writer.StreamWriter.json",
+    "anchor": "op-094105a98440871df40f3ee9",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`StreamWriter::try_new_buffered`": "../operations/arrow_ipc.writer.StreamWriter.md#op-8cb740091b4aeaae99dcf288"
+    }
+  },
+  {
+    "id": "8cb740091b4aeaae99dcf288",
+    "path": "arrow_ipc::writer::StreamWriter::try_new_buffered",
+    "name": "try_new_buffered",
+    "owner": "arrow_ipc::writer::StreamWriter",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_buffered(writer: W, schema: &Schema) -> Result<Self, ArrowError>",
+    "docs": "Try to create a new stream writer with the writer wrapped in a BufWriter.\n\nSee [`StreamWriter::try_new`] for an unbuffered version.",
+    "span": {
+      "filename": "src/writer.rs",
+      "begin": [
+        2034,
+        5
+      ],
+      "end": [
+        2036,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "writer",
+              {
+                "generic": "W"
+              }
+            ],
+            [
+              "schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Schema",
+                      "id": 1,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "arrow_schema::schema::Schema",
+      "44": "core::result::Result",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamWriter",
+          "id": "arrow_ipc::writer::StreamWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::io::BufWriter",
+                      "id": "alloc::io::buffered::bufwriter::BufWriter",
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "type": {
+                                "generic": "W"
+                              }
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer.rs",
+        "begin": [
+          2030,
+          1
+        ],
+        "end": [
+          2037,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`StreamWriter::try_new`": 586
+    },
+    "link_paths": {
+      "`StreamWriter::try_new`": "arrow_ipc::writer::StreamWriter::try_new"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "587",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.writer.StreamWriter.md",
+    "record_file": "operations/arrow_ipc.writer.StreamWriter.json",
+    "anchor": "op-8cb740091b4aeaae99dcf288",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`StreamWriter::try_new`": "../operations/arrow_ipc.writer.StreamWriter.md#op-094105a98440871df40f3ee9"
+    }
+  },
+  {
+    "id": "5bbed701c9c05c790b5dff22",
+    "path": "arrow_ipc::writer::StreamWriter::try_new_with_options",
+    "name": "try_new_with_options",
+    "owner": "arrow_ipc::writer::StreamWriter",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_with_options(writer: W, schema: &Schema, write_options: IpcWriteOptions) -> Result<Self, ArrowError>",
+    "docs": "Try to create a new writer with [`IpcWriteOptions`].\n\n# Errors\n\nAn ['Err'](Result::Err) may be returned if writing the header to the writer fails.",
+    "span": {
+      "filename": "src/writer.rs",
+      "begin": [
+        2057,
+        5
+      ],
+      "end": [
+        2082,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "writer",
+              {
+                "generic": "W"
+              }
+            ],
+            [
+              "schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Schema",
+                      "id": 1,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "write_options",
+              {
+                "resolved_path": {
+                  "path": "IpcWriteOptions",
+                  "id": 359,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "arrow_schema::schema::Schema",
+      "359": "arrow_ipc::writer::IpcWriteOptions",
+      "44": "core::result::Result",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamWriter",
+          "id": "arrow_ipc::writer::StreamWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer.rs",
+        "begin": [
+          2039,
+          1
+        ],
+        "end": [
+          2184,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Result::Err": 271,
+      "`IpcWriteOptions`": 359
+    },
+    "link_paths": {
+      "Result::Err": "core::result::Result::Err",
+      "`IpcWriteOptions`": "arrow_ipc::writer::IpcWriteOptions"
+    },
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "589",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.writer.StreamWriter.md",
+    "record_file": "operations/arrow_ipc.writer.StreamWriter.json",
+    "anchor": "op-5bbed701c9c05c790b5dff22",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`IpcWriteOptions`": "../operations/arrow_ipc.writer.IpcWriteOptions.md#op-7958df777a3d4faa0bb68d5a"
+    }
+  },
+  {
+    "id": "171528eecf9f0129ed9da6cd",
+    "path": "arrow_ipc::writer::StreamWriter::write",
+    "name": "write",
+    "owner": "arrow_ipc::writer::StreamWriter",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>",
+    "docs": "Write a record batch to the stream",
+    "span": {
+      "filename": "src/writer.rs",
+      "begin": [
+        2085,
+        5
+      ],
+      "end": [
+        2100,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "RecordBatch",
+                      "id": 118,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "118": "arrow_array::record_batch::RecordBatch",
+      "44": "core::result::Result",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamWriter",
+          "id": "arrow_ipc::writer::StreamWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer.rs",
+        "begin": [
+          2039,
+          1
+        ],
+        "end": [
+          2184,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "590",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.writer.StreamWriter.md",
+    "record_file": "operations/arrow_ipc.writer.StreamWriter.json",
+    "anchor": "op-171528eecf9f0129ed9da6cd",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7919f0cc098153cdcb130334",
+    "path": "arrow_ipc::writer::StreamWriter::write",
+    "name": "write",
+    "owner": "arrow_ipc::writer::StreamWriter",
+    "crate": "arrow-ipc",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>",
+    "docs": "",
+    "span": {
+      "filename": "src/writer.rs",
+      "begin": [
+        2187,
+        5
+      ],
+      "end": [
+        2189,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "batch",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "RecordBatch",
+                      "id": 118,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 72,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "118": "arrow_array::record_batch::RecordBatch",
+      "44": "core::result::Result",
+      "72": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "StreamWriter",
+          "id": "arrow_ipc::writer::StreamWriter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "generic": "W"
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": {
+        "path": "RecordBatchWriter",
+        "id": "arrow_array::record_batch::RecordBatchWriter",
+        "args": null
+      },
+      "trait_path": "arrow_array::record_batch::RecordBatchWriter",
+      "generics": {
+        "params": [
+          {
+            "name": "W",
+            "kind": {
+              "type": {
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "Write",
+                        "id": "core::io::write::Write",
+                        "args": null
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "default": null,
+                "is_synthetic": false
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/writer.rs",
+        "begin": [
+          2186,
+          1
+        ],
+        "end": [
+          2194,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e093b42af08aeac42dd8dfd5dc24a05e01c1aa8cea9992a30bdac9623451b9b1",
+      "format_version": 61,
+      "item_id": "612",
+      "origin": "https://docs.rs/crate/arrow-ipc/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_ipc.writer.StreamWriter.md",
+    "record_file": "operations/arrow_ipc.writer.StreamWriter.json",
+    "anchor": "op-7919f0cc098153cdcb130334",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

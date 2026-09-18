@@ -25,6 +25,9 @@ fn name(&self) -> &str
 fn schema(&self) -> &DFSchemaRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.DdlStatement.md).
+
+
 Various types of DDL  (CREATE / DROP) catalog manipulation
 
 ---
@@ -43,6 +46,9 @@ struct CreateCatalog
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.CreateCatalog.md).
+
+
 Creates a catalog (aka "Database").
 
 ---
@@ -60,6 +66,9 @@ struct CreateCatalogSchema
 **Fields**: `schema_name`, `if_not_exists`, `schema`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.CreateCatalogSchema.md).
+
 
 Creates a schema.
 
@@ -85,6 +94,9 @@ struct CreateExternalTable
 fn builder(name: impl Into<TableReference>, location: impl Into<String>, file_type: impl Into<String>, schema: DFSchemaRef) -> CreateExternalTableBuilder
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.CreateExternalTable.md).
+
+
 Creates an external table.
 
 ---
@@ -96,6 +108,9 @@ Creates an external table.
 ```rust
 struct CreateExternalTableBuilder
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.CreateExternalTableBuilder.md).
+
 
 Builder for [`CreateExternalTable`] that provides a fluent API for construction.
 
@@ -116,6 +131,9 @@ struct CreateFunction
 **Fields**: `or_replace`, `temporary`, `name`, `args`, `return_type`, `params`, `schema`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.CreateFunction.md).
+
 
 Arguments passed to the `CREATE FUNCTION` statement
 
@@ -155,6 +173,9 @@ fn apply_elements<F: FnMut(&'a Expr) -> Result<TreeNodeRecursion>>(&'a self, f: 
 fn map_elements<F: FnMut(Expr) -> Result<Transformed<Expr>>>(self, f: F) -> Result<Transformed<Self>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.CreateFunctionBody.md).
+
+
 Part of the `CREATE FUNCTION` statement
 
 See [`CreateFunction`] for details
@@ -175,6 +196,9 @@ struct CreateIndex
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.CreateIndex.md).
+
+
 ---
 
 ## CreateMemoryTable
@@ -190,6 +214,9 @@ struct CreateMemoryTable
 **Fields**: `name`, `constraints`, `input`, `if_not_exists`, `or_replace`, `column_defaults`, `temporary`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.CreateMemoryTable.md).
+
 
 Creates an in memory table.
 
@@ -209,6 +236,9 @@ struct CreateView
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.CreateView.md).
+
+
 Creates a view.
 
 ---
@@ -226,6 +256,9 @@ struct DropCatalogSchema
 **Fields**: `name`, `if_exists`, `cascade`, `schema`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.DropCatalogSchema.md).
+
 
 Drops a schema
 
@@ -245,6 +278,9 @@ struct DropFunction
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.DropFunction.md).
+
+
 ---
 
 ## DropTable
@@ -260,6 +296,9 @@ struct DropTable
 **Fields**: `name`, `if_exists`, `schema`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.DropTable.md).
+
 
 Drops a table.
 
@@ -278,6 +317,9 @@ struct DropView
 **Fields**: `name`, `if_exists`, `schema`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.DropView.md).
+
 
 Drops a view.
 
@@ -305,6 +347,9 @@ struct OperateFunctionArg
 fn apply_elements<F: FnMut(&'a Expr) -> Result<TreeNodeRecursion>>(&'a self, f: F) -> Result<TreeNodeRecursion>
 fn map_elements<F: FnMut(Expr) -> Result<Transformed<Expr>>>(self, f: F) -> Result<Transformed<Self>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.ddl.OperateFunctionArg.md).
+
 
 Part of the `CREATE FUNCTION` statement
 

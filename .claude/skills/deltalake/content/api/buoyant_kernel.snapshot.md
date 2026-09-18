@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 4 public items · structured records in [`model/buoyan
 ## CheckpointWriteResult
 
 `enum` · `buoyant_kernel::snapshot::CheckpointWriteResult`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.snapshot.CheckpointWriteResult.md)
 
 Also reachable as `delta_kernel::snapshot::CheckpointWriteResult`
 
@@ -23,6 +24,7 @@ Result of attempting to write a checkpoint file.
 ## ChecksumWriteResult
 
 `enum` · `buoyant_kernel::snapshot::ChecksumWriteResult`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.snapshot.ChecksumWriteResult.md)
 
 Also reachable as `delta_kernel::snapshot::ChecksumWriteResult`
 
@@ -41,6 +43,7 @@ Result of attempting to write a version checksum (CRC) file.
 ## Snapshot
 
 `struct` · `buoyant_kernel::snapshot::Snapshot`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.snapshot.Snapshot.md)
 
 Also reachable as `buoyant_kernel::Snapshot`, `delta_kernel::snapshot::Snapshot`
 
@@ -106,6 +109,7 @@ frozen log segment.
 ## SnapshotRef
 
 `type_alias` · `buoyant_kernel::snapshot::SnapshotRef`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.snapshot.SnapshotRef.md)
 
 Also reachable as `buoyant_kernel::SnapshotRef`, `delta_kernel::snapshot::SnapshotRef`
 

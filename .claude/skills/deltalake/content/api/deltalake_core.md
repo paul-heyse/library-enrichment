@@ -5,6 +5,7 @@ Crate `deltalake-core` · 6 public items · structured records in [`model/deltal
 ## crate_version
 
 `function` · `deltalake_core::crate_version`
+[Full member contracts, output types and access classification](../operations/deltalake_core.crate_version.md)
 
 Also reachable as `deltalake::crate_version`
 
@@ -24,6 +25,7 @@ assert!(!deltalake_core::crate_version().is_empty());
 ## init_client_version
 
 `function` · `deltalake_core::init_client_version`
+[Full member contracts, output types and access classification](../operations/deltalake_core.init_client_version.md)
 
 Also reachable as `deltalake::init_client_version`
 
@@ -42,6 +44,7 @@ calls after the first are ignored.
 ## open_table
 
 `function` · `deltalake_core::open_table`
+[Full member contracts, output types and access classification](../operations/deltalake_core.open_table.md)
 
 Also reachable as `deltalake::open_table`
 
@@ -59,6 +62,7 @@ Will fail fast if specified `table_url` is a local path but doesn't exist.
 ## open_table_with_ds
 
 `function` · `deltalake_core::open_table_with_ds`
+[Full member contracts, output types and access classification](../operations/deltalake_core.open_table_with_ds.md)
 
 Also reachable as `deltalake::open_table_with_ds`
 
@@ -78,6 +82,7 @@ Will fail fast if specified `table_url` is a local path but doesn't exist.
 ## open_table_with_storage_options
 
 `function` · `deltalake_core::open_table_with_storage_options`
+[Full member contracts, output types and access classification](../operations/deltalake_core.open_table_with_storage_options.md)
 
 Also reachable as `deltalake::open_table_with_storage_options`
 
@@ -95,6 +100,7 @@ Will fail fast if specified `table_url` is a local path but doesn't exist.
 ## open_table_with_version
 
 `function` · `deltalake_core::open_table_with_version`
+[Full member contracts, output types and access classification](../operations/deltalake_core.open_table_with_version.md)
 
 Also reachable as `deltalake::open_table_with_version`
 

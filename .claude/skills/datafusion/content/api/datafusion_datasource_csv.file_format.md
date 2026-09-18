@@ -30,6 +30,9 @@ fn decode(&mut self, buf: &[u8]) -> Result<usize, ArrowError>
 fn flush(&mut self) -> Result<Option<RecordBatch>, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_csv.file_format.CsvDecoder.md).
+
+
 ---
 
 ## CsvFormat
@@ -84,6 +87,9 @@ async fn infer_schema(&self, state: &dyn Session, store: &Arc<dyn ObjectStore>, 
 async fn infer_stats(&self, _state: &dyn Session, _store: &Arc<dyn ObjectStore>, table_schema: SchemaRef, _object: &ObjectMeta) -> Result<Statistics>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_csv.file_format.CsvFormat.md).
+
+
 Character Separated Value [`FileFormat`] implementation.
 
 ---
@@ -124,6 +130,9 @@ fn create(&self, state: &dyn Session, format_options: &HashMap<String, String>) 
 fn default(&self) -> Arc<dyn FileFormat>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_csv.file_format.CsvFormatFactory.md).
+
+
 Factory used to create [`CsvFormat`]
 
 ---
@@ -155,6 +164,9 @@ fn with_header(self, header: bool) -> Self
 ```rust
 fn serialize(&self, batch: RecordBatch, initial: bool) -> Result<Bytes>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_csv.file_format.CsvSerializer.md).
+
 
 Define a struct for serializing CSV records to a stream
 
@@ -208,6 +220,9 @@ async fn write_all(&self, data: SendableRecordBatchStream, context: &Arc<TaskCon
 ```rust
 fn fmt_as(&self, t: DisplayFormatType, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_csv.file_format.CsvSink.md).
+
 
 Implements [`DataSink`] for writing to a CSV file.
 

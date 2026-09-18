@@ -5,6 +5,7 @@ Crate `deltalake-core` · 2 public items · structured records in [`model/deltal
 ## Constraint
 
 `struct` · `deltalake_core::table::columns::Constraint`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.columns.Constraint.md)
 
 Also reachable as `deltalake::table::Constraint`, `deltalake_core::table::Constraint`
 
@@ -51,6 +52,7 @@ A constraint in a check constraint
 ## GeneratedColumn
 
 `struct` · `deltalake_core::table::columns::GeneratedColumn`
+[Full member contracts, output types and access classification](../operations/deltalake_core.table.columns.GeneratedColumn.md)
 
 Also reachable as `deltalake::table::GeneratedColumn`, `deltalake_core::table::GeneratedColumn`
 

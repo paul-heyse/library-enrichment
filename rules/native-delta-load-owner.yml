@@ -1,0 +1,22 @@
+id: native-delta-load-owner
+language: Rust
+severity: error
+message: Delta cold loads and incremental refreshes belong to native_delta and the shared snapshot registry.
+files:
+  - crates/enrichment-store/src/**
+  - crates/enrichment-daemon/src/**
+ignores:
+  - crates/enrichment-store/src/native_delta.rs
+  - "**/tests.rs"
+  - "**/tests/**"
+rule:
+  any:
+    - kind: identifier
+    - kind: type_identifier
+    - kind: field_identifier
+  regex: '^(DeltaTableBuilder|open_table|open_table_with_storage_options|load_version|update_incremental)$'
+  not:
+    inside:
+      pattern: 'mod tests { $$$BODY }'
+      stopBy: end
+note: This checks known API spellings, not import resolution. Exact loads, mutable-head discovery, reservations and invalidation must share the runtime owner. Inline tests may probe upstream behavior.

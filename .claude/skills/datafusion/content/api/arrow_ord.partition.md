@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::partition::partition`, `arrow::compu
 fn partition(columns: &[arrow_array::ArrayRef]) -> Result<Partitions, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ord.partition.partition.md).
+
+
 Given a list of lexicographically sorted columns, computes the [`Partitions`],
 where a partition consists of the set of consecutive rows with equal values
 
@@ -89,6 +92,9 @@ fn is_empty(&self) -> bool
 fn len(&self) -> usize
 fn ranges(&self) -> Vec<Range<usize>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ord.partition.Partitions.md).
+
 
 A computed set of partitions, see [`partition`]
 

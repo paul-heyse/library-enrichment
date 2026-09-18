@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 2 public items · structured records in [`model/data
 fn make_array_inner(arrays: &[arrow::array::ArrayRef]) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.spark_array.make_array_inner.md).
+
+
 `make_array_inner` is the implementation of the `make_array` function.
 Constructs an array using the input `data` as `ArrayRef`.
 Returns a reference-counted `Array` instance result.
@@ -44,5 +47,8 @@ fn return_field_from_args(&self, args: ReturnFieldArgs<'_>) -> Result<FieldRef>
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.spark_array.SparkArray.md).
+
 
 ---

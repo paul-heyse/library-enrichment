@@ -1,10 +1,9 @@
 //! Native factory preparation and bounded, complete service-owned storage discovery.
 //! Captured providers retain their exact Delta snapshot. Discovery cannot select publication.
 use crate::native_delta::{
-    CONTRACT_PROPERTY, CONTRACT_TABLE, DeltaStore, StorageContract, contract_catalog,
+    CONTRACT_PROPERTY, CONTRACT_TABLE, DeltaStore, LoadedTable, StorageContract, contract_catalog,
     requires_plain_binary, verify_contract,
 };
-use arrow::datatypes::DataType;
 use async_trait::async_trait;
 use datafusion::{
     catalog::{
@@ -28,7 +27,7 @@ use std::{
 
 #[derive(Debug)]
 struct Captured {
-    table: DeltaTable,
+    table: LoadedTable,
     contract: StorageContract,
     runtime: Arc<RuntimeEnv>,
 }
@@ -71,7 +70,7 @@ impl DeltaTableOpener for Captured {
             return Err(invalid("factory command differs from owned capture"));
         }
         Ok((
-            self.table.clone(),
+            self.table.table_clone(),
             scan(session, &self.table, &self.contract)?,
         ))
     }
@@ -79,16 +78,17 @@ impl DeltaTableOpener for Captured {
 
 pub(crate) async fn captured_provider(
     context: &SessionContext,
-    table: DeltaTable,
+    table: LoadedTable,
     contract: StorageContract,
 ) -> Result<Arc<dyn TableProvider>> {
+    let memory = table.memory();
     let location = table.log_store().root_url().to_string();
     let factory = DeltaTableFactory::with_opener(Arc::new(Captured {
         table,
         contract,
         runtime: context.runtime_env(),
     }));
-    factory
+    let provider = factory
         .create(
             &context.state(),
             &CreateExternalTable::builder(
@@ -99,7 +99,8 @@ pub(crate) async fn captured_provider(
             )
             .build(),
         )
-        .await
+        .await?;
+    Ok(crate::leases::accounted_provider(provider, memory))
 }
 
 /// A complete immutable inventory for maintenance/preparation. It is never a head selector.
@@ -110,8 +111,16 @@ pub struct Discovered {
 
 struct Discover {
     delta: DeltaStore,
-    contracts: Option<DeltaTable>,
-    captures: Mutex<BTreeMap<String, enrichment_core::operation::StorageCapture>>,
+    contracts: Option<LoadedTable>,
+    captures: Mutex<
+        BTreeMap<
+            String,
+            (
+                enrichment_core::operation::StorageCapture,
+                Arc<crate::snapshot_registry::SnapshotMemory>,
+            ),
+        >,
+    >,
 }
 impl std::fmt::Debug for Discover {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -152,56 +161,89 @@ impl DeltaTableOpener for Discover {
                 .contracts
                 .as_ref()
                 .ok_or_else(|| invalid("semantic registry absent"))?;
-            let context = self.delta.session();
-            let provider =
-                captured_provider(&context, registry.clone(), contract_catalog()?).await?;
-            let output = self
-                .delta
-                .runtime
-                .execute(
-                    context
-                        .read_table(provider)?
-                        .filter(col("contract_id").eq(lit(id)))?
-                        .select(vec![col("arrow_schema")])?
-                        .limit(0, Some(2))?,
+            self.delta
+                .registered_contract(
+                    registry,
+                    &enrichment_core::identity::SchemaContractId::try_from(id.clone())
+                        .map_err(external)?,
                 )
-                .await?;
-            if output.rows != 1 {
-                return Err(invalid("discovered contract is missing or ambiguous"));
-            }
-            let column = arrow::compute::cast(output.batches[0].column(0), &DataType::Binary)?;
-            let bytes = datafusion::common::cast::as_binary_array(&column)?.value(0);
-            let reader =
-                arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(bytes), None)?;
-            let contract = StorageContract::new(reader.schema())?;
-            if contract.identity() != id {
-                return Err(invalid("discovered contract identity mismatch"));
-            }
-            contract
+                .await?
         };
         let config = scan(session, &table, &contract)?;
         let capture = enrichment_core::operation::StorageCapture {
             name: name.to_owned(),
-            table_id: table.snapshot().map_err(external)?.metadata().id().into(),
-            version: table
-                .version()
-                .ok_or_else(|| invalid("unloaded discovered table"))?,
-            contract_id: contract.identity().into(),
+            source: crate::native_delta::capture_version(name, &table, &contract)?,
         };
         if self
             .captures
             .lock()
             .map_err(|_| invalid("discovery capture poisoned"))?
-            .insert(name.to_owned(), capture)
+            .insert(name.to_owned(), (capture, table.memory()))
             .is_some()
         {
             return Err(invalid("duplicate discovered table"));
         }
-        Ok((table, config))
+        Ok((table.table_clone(), config))
     }
 }
 
 impl DeltaStore {
+    /// One schema-registry decoder for discovery and native maintenance. The current
+    /// registry is authority; decoded schemas must reproduce the complete contract id.
+    pub(crate) async fn registered_contract(
+        &self,
+        registry: &LoadedTable,
+        id: &enrichment_core::identity::SchemaContractId,
+    ) -> Result<StorageContract> {
+        let context = self.session();
+        let provider = captured_provider(&context, registry.clone(), contract_catalog()?).await?;
+        let output = self
+            .runtime
+            .execute(
+                context
+                    .read_table(provider)?
+                    .filter(col("contract_id").eq(lit(id)))?
+                    .select(vec![col("arrow_schema")])?
+                    .limit(0, Some(2))?,
+            )
+            .await?;
+        if output.rows != 1 {
+            return Err(invalid("registered contract is missing or ambiguous"));
+        }
+        let column = arrow::compute::cast(
+            output.batches[0].column(0),
+            &arrow::datatypes::DataType::Binary,
+        )?;
+        let bytes = datafusion::common::cast::as_binary_array(&column)?.value(0);
+        let contract = StorageContract::from_ipc(bytes)?;
+        if contract.identity() != id {
+            return Err(invalid(
+                "registered schema identity or schema-only IPC framing mismatch",
+            ));
+        }
+        Ok(contract)
+    }
+
+    pub(crate) async fn current_contract(&self, name: &str) -> Result<StorageContract> {
+        if name == CONTRACT_TABLE {
+            return contract_catalog();
+        }
+        let table = self.load(name, None).await?;
+        let id = table
+            .snapshot()
+            .map_err(external)?
+            .metadata()
+            .configuration()
+            .get(CONTRACT_PROPERTY)
+            .ok_or_else(|| invalid("table has no registered semantic contract"))?;
+        let registry = self.load(CONTRACT_TABLE, None).await?;
+        self.registered_contract(
+            &registry,
+            &enrichment_core::identity::SchemaContractId::try_from(id.clone()).map_err(external)?,
+        )
+        .await
+    }
+
     /// Inspect a complete bounded storage inventory, retaining exact provider captures.
     /// # Errors
     /// Unknown/incomplete contracts, bounded listing exhaustion and collisions refuse the inventory.
@@ -234,6 +276,15 @@ impl DeltaStore {
                 .table(&name)
                 .await?
                 .ok_or_else(|| invalid("discovered table vanished"))?;
+            let memory = opener
+                .captures
+                .lock()
+                .map_err(|_| invalid("discovery capture poisoned"))?
+                .get(&name)
+                .ok_or_else(|| invalid("discovery charge absent"))?
+                .1
+                .clone();
+            let provider = crate::leases::accounted_provider(provider, memory);
             tables.insert(name, context.read_table(provider)?.into_view());
         }
         let captures = opener
@@ -241,7 +292,7 @@ impl DeltaStore {
             .lock()
             .map_err(|_| invalid("discovery capture poisoned"))?
             .values()
-            .cloned()
+            .map(|(capture, _)| capture.clone())
             .collect();
         Ok(Discovered { tables, captures })
     }

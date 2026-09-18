@@ -14,6 +14,9 @@ enum WindowShiftKind
 
 **Derives**: Debug, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.lead_lag.WindowShiftKind.md).
+
+
 ---
 
 ## lag
@@ -25,6 +28,9 @@ Also reachable as `datafusion_functions_window::expr_fn::lag`
 ```rust
 fn lag(arg: datafusion_expr::Expr, shift_offset: Option<i64>, default_value: Option<datafusion_common::ScalarValue>) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.lead_lag.lag.md).
+
 
 Create an expression to represent the `lag` window function
 
@@ -43,6 +49,9 @@ If omitted, offset defaults to 1 and default to null
 fn lag_udwf() -> std::sync::Arc<datafusion_expr::WindowUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.lead_lag.lag_udwf.md).
+
+
 Returns a [`WindowUDF`](datafusion_expr::WindowUDF) for [`lag`].
 
 Returns the row value that precedes the current row by a specified offset within partition. If no such row exists, then returns the default value.
@@ -58,6 +67,9 @@ Also reachable as `datafusion_functions_window::expr_fn::lead`
 ```rust
 fn lead(arg: datafusion_expr::Expr, shift_offset: Option<i64>, default_value: Option<datafusion_common::ScalarValue>) -> datafusion_expr::Expr
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.lead_lag.lead.md).
+
 
 Create an expression to represent the `lead` window function
 
@@ -75,6 +87,9 @@ If omitted, offset defaults to 1 and default to null
 ```rust
 fn lead_udwf() -> std::sync::Arc<datafusion_expr::WindowUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.lead_lag.lead_udwf.md).
+
 
 Returns a [`WindowUDF`](datafusion_expr::WindowUDF) for [`lead`].
 
@@ -114,6 +129,9 @@ fn partition_evaluator(&self, partition_evaluator_args: PartitionEvaluatorArgs<'
 fn reverse_expr(&self) -> ReversedUDWF
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_window.lead_lag.WindowShift.md).
+
 
 window shift expression
 

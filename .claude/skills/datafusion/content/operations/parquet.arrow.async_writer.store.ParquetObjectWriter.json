@@ -1,0 +1,1026 @@
+[
+  {
+    "id": "8e75eaffdac8304a2df1acdd",
+    "path": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+    "name": "ParquetObjectWriter",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct ParquetObjectWriter",
+    "docs": "[`ParquetObjectWriter`] for writing to parquet to [`ObjectStore`]\n\nThis type is deprecated: [`BufWriter`] implements [`AsyncWrite`] and can\ntherefore be passed to [`AsyncArrowWriter`] directly via the blanket\n[`AsyncFileWriter`] implementation for [`AsyncWrite`] types:\n\n```\n# use arrow_array::{ArrayRef, Int64Array, RecordBatch};\n# use object_store::buffered::BufWriter;\n# use object_store::memory::InMemory;\n# use object_store::path::Path;\n# use object_store::{ObjectStore, ObjectStoreExt};\n# use std::sync::Arc;\n\n# use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;\n# use parquet::arrow::AsyncArrowWriter;\n\n# #[tokio::main(flavor=\"current_thread\")]\n# async fn main() {\n    let store = Arc::new(InMemory::new());\n\n    let col = Arc::new(Int64Array::from_iter_values([1, 2, 3])) as ArrayRef;\n    let to_write = RecordBatch::try_from_iter([(\"col\", col)]).unwrap();\n\n    let object_store_writer = BufWriter::new(store.clone(), Path::from(\"test\"));\n    let mut writer =\n        AsyncArrowWriter::try_new(object_store_writer, to_write.schema(), None).unwrap();\n    writer.write(&to_write).await.unwrap();\n    writer.close().await.unwrap();\n\n    let buffer = store\n        .get(&Path::from(\"test\"))\n        .await\n        .unwrap()\n        .bytes()\n        .await\n        .unwrap();\n    let mut reader = ParquetRecordBatchReaderBuilder::try_new(buffer)\n        .unwrap()\n        .build()\n        .unwrap();\n    let read = reader.next().unwrap().unwrap();\n\n    assert_eq!(to_write, read);\n# }\n```\n\n[`AsyncWrite`]: tokio::io::AsyncWrite\n[`AsyncArrowWriter`]: crate::arrow::async_writer::AsyncArrowWriter",
+    "span": {
+      "filename": "src/arrow/async_writer/store.rs",
+      "begin": [
+        83,
+        1
+      ],
+      "end": [
+        85,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": {
+      "since": "59.2.0",
+      "note": "Pass an `object_store::buffered::BufWriter` to `AsyncArrowWriter` directly instead; see https://github.com/apache/arrow-rs/issues/10308 and `parquet/examples/object_store.rs`."
+    },
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          3556,
+          3557,
+          3558,
+          3559,
+          3560,
+          3561,
+          3562,
+          3563,
+          3564,
+          3565,
+          3566,
+          3567,
+          3568,
+          3569,
+          3570,
+          3572,
+          3575,
+          3577
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`BufWriter`": 3549,
+      "tokio::io::AsyncWrite": 3550,
+      "`AsyncFileWriter`": 3552,
+      "`ObjectStore`": 3456,
+      "crate::arrow::async_writer::AsyncArrowWriter": 3551,
+      "`ParquetObjectWriter`": 3548
+    },
+    "link_paths": {
+      "`BufWriter`": "object_store::buffered::BufWriter",
+      "tokio::io::AsyncWrite": "tokio::io::async_write::AsyncWrite",
+      "`AsyncFileWriter`": "parquet::arrow::async_writer::AsyncFileWriter",
+      "`ObjectStore`": "object_store::ObjectStore",
+      "crate::arrow::async_writer::AsyncArrowWriter": "parquet::arrow::async_writer::AsyncArrowWriter",
+      "`ParquetObjectWriter`": "parquet::arrow::async_writer::store::ParquetObjectWriter"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3548",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.json",
+    "anchor": "op-8e75eaffdac8304a2df1acdd",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BufWriter`": "../operations/object_store.buffered.BufWriter.md#op-f092e35da4d4adde7c2b58f9",
+      "`AsyncFileWriter`": "../operations/parquet.arrow.async_writer.AsyncFileWriter.md#op-d1acaf94f7f04028351c03f9",
+      "`ObjectStore`": "../operations/object_store.ObjectStore.md#op-94894eaf9e5f6b785baca8ca",
+      "crate::arrow::async_writer::AsyncArrowWriter": "../operations/parquet.arrow.async_writer.AsyncArrowWriter.md#op-d9df4726e3133f2ae1d81ca9",
+      "`ParquetObjectWriter`": "../operations/parquet.arrow.async_writer.store.ParquetObjectWriter.md#op-8e75eaffdac8304a2df1acdd"
+    }
+  },
+  {
+    "id": "ef3af8bfb25a5cb79d072f98",
+    "path": "parquet::arrow::async_writer::store::ParquetObjectWriter::complete",
+    "name": "complete",
+    "owner": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn complete(&mut self) -> BoxFuture<'_, Result<()>>",
+    "docs": "",
+    "span": {
+      "filename": "src/arrow/async_writer/store.rs",
+      "begin": [
+        118,
+        5
+      ],
+      "end": [
+        125,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BoxFuture",
+              "id": 3398,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'_"
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Result",
+                          "id": 107,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "tuple": []
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3398": "futures_core::future::BoxFuture",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetObjectWriter",
+          "id": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "AsyncFileWriter",
+        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+        "args": null
+      },
+      "trait_path": "parquet::arrow::async_writer::AsyncFileWriter",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/store.rs",
+        "begin": [
+          108,
+          1
+        ],
+        "end": [
+          126,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3574",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.json",
+    "anchor": "op-ef3af8bfb25a5cb79d072f98",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c3550327b13bc2965bd499a8",
+    "path": "parquet::arrow::async_writer::store::ParquetObjectWriter::fmt",
+    "name": "fmt",
+    "owner": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/arrow/async_writer/store.rs",
+      "begin": [
+        82,
+        10
+      ],
+      "end": [
+        82,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 67,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 68,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "67": "core::fmt::Formatter",
+      "68": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetObjectWriter",
+          "id": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/store.rs",
+        "begin": [
+          82,
+          10
+        ],
+        "end": [
+          82,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3571",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.json",
+    "anchor": "op-c3550327b13bc2965bd499a8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f258531909fbfb3deaf960e2",
+    "path": "parquet::arrow::async_writer::store::ParquetObjectWriter::from",
+    "name": "from",
+    "owner": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from(w: BufWriter) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/arrow/async_writer/store.rs",
+      "begin": [
+        129,
+        5
+      ],
+      "end": [
+        131,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "w",
+              {
+                "resolved_path": {
+                  "path": "BufWriter",
+                  "id": 3549,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3549": "object_store::buffered::BufWriter"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetObjectWriter",
+          "id": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "BufWriter",
+                    "id": "object_store::buffered::BufWriter",
+                    "args": null
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/store.rs",
+        "begin": [
+          128,
+          1
+        ],
+        "end": [
+          132,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3576",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.json",
+    "anchor": "op-f258531909fbfb3deaf960e2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f2f55ce10cf8bd6c9179a0ba",
+    "path": "parquet::arrow::async_writer::store::ParquetObjectWriter::from_buf_writer",
+    "name": "from_buf_writer",
+    "owner": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from_buf_writer(w: BufWriter) -> Self",
+    "docs": "Construct a new ParquetObjectWriter via a existing BufWriter.",
+    "span": {
+      "filename": "src/arrow/async_writer/store.rs",
+      "begin": [
+        97,
+        5
+      ],
+      "end": [
+        99,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "w",
+              {
+                "resolved_path": {
+                  "path": "BufWriter",
+                  "id": 3549,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3549": "object_store::buffered::BufWriter"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetObjectWriter",
+          "id": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/store.rs",
+        "begin": [
+          88,
+          1
+        ],
+        "end": [
+          105,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3553",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.json",
+    "anchor": "op-f2f55ce10cf8bd6c9179a0ba",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ec940fe5e853bff959e06d2b",
+    "path": "parquet::arrow::async_writer::store::ParquetObjectWriter::into_inner",
+    "name": "into_inner",
+    "owner": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_inner(self) -> BufWriter",
+    "docs": "Consume the writer and return the underlying BufWriter.",
+    "span": {
+      "filename": "src/arrow/async_writer/store.rs",
+      "begin": [
+        102,
+        5
+      ],
+      "end": [
+        104,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BufWriter",
+              "id": 3549,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3549": "object_store::buffered::BufWriter"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetObjectWriter",
+          "id": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/store.rs",
+        "begin": [
+          88,
+          1
+        ],
+        "end": [
+          105,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3555",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.json",
+    "anchor": "op-ec940fe5e853bff959e06d2b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "db267944b3a9f0f03fb27c05",
+    "path": "parquet::arrow::async_writer::store::ParquetObjectWriter::new",
+    "name": "new",
+    "owner": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(store: Arc<dyn ObjectStore>, path: Path) -> Self",
+    "docs": "Create a new [`ParquetObjectWriter`] that writes to the specified path in the given store.\n\nTo configure the writer behavior, please build [`BufWriter`] and then use [`Self::from_buf_writer`]",
+    "span": {
+      "filename": "src/arrow/async_writer/store.rs",
+      "begin": [
+        92,
+        5
+      ],
+      "end": [
+        94,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "store",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 2578,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "ObjectStore",
+                                    "id": 3456,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "path",
+              {
+                "resolved_path": {
+                  "path": "Path",
+                  "id": 3457,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "2578": "alloc::sync::Arc",
+      "3456": "object_store::ObjectStore",
+      "3457": "object_store::path::Path"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetObjectWriter",
+          "id": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/store.rs",
+        "begin": [
+          88,
+          1
+        ],
+        "end": [
+          105,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`BufWriter`": 3549,
+      "`Self::from_buf_writer`": 3553,
+      "`ParquetObjectWriter`": 3548
+    },
+    "link_paths": {
+      "`BufWriter`": "object_store::buffered::BufWriter",
+      "`Self::from_buf_writer`": "parquet::arrow::async_writer::store::ParquetObjectWriter::from_buf_writer",
+      "`ParquetObjectWriter`": "parquet::arrow::async_writer::store::ParquetObjectWriter"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3554",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.json",
+    "anchor": "op-db267944b3a9f0f03fb27c05",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`BufWriter`": "../operations/object_store.buffered.BufWriter.md#op-f092e35da4d4adde7c2b58f9",
+      "`Self::from_buf_writer`": "../operations/parquet.arrow.async_writer.store.ParquetObjectWriter.md#op-f2f55ce10cf8bd6c9179a0ba",
+      "`ParquetObjectWriter`": "../operations/parquet.arrow.async_writer.store.ParquetObjectWriter.md#op-8e75eaffdac8304a2df1acdd"
+    }
+  },
+  {
+    "id": "e1bbfbdfe06d037188d537f2",
+    "path": "parquet::arrow::async_writer::store::ParquetObjectWriter::write",
+    "name": "write",
+    "owner": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn write(&mut self, bs: Bytes) -> BoxFuture<'_, Result<()>>",
+    "docs": "",
+    "span": {
+      "filename": "src/arrow/async_writer/store.rs",
+      "begin": [
+        109,
+        5
+      ],
+      "end": [
+        116,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "bs",
+              {
+                "resolved_path": {
+                  "path": "Bytes",
+                  "id": 1105,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "BoxFuture",
+              "id": 3398,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'_"
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Result",
+                          "id": 107,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "tuple": []
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1105": "bytes::bytes::Bytes",
+      "3398": "futures_core::future::BoxFuture",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetObjectWriter",
+          "id": "parquet::arrow::async_writer::store::ParquetObjectWriter",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "AsyncFileWriter",
+        "id": "parquet::arrow::async_writer::AsyncFileWriter",
+        "args": null
+      },
+      "trait_path": "parquet::arrow::async_writer::AsyncFileWriter",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/async_writer/store.rs",
+        "begin": [
+          108,
+          1
+        ],
+        "end": [
+          126,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3573",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.md",
+    "record_file": "operations/parquet.arrow.async_writer.store.ParquetObjectWriter.json",
+    "anchor": "op-e1bbfbdfe06d037188d537f2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

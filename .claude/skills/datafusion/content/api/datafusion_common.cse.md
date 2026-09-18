@@ -14,6 +14,9 @@ enum FoundCommonNodes<N>
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cse.FoundCommonNodes.md).
+
+
 The result of potentially rewriting a list of [`TreeNode`]s to eliminate common
 subtrees.
 
@@ -33,6 +36,9 @@ struct CSE<N, C: CSEController<Node = N>>
 fn extract_common_nodes(&mut self, nodes_list: Vec<Vec<N>>) -> Result<FoundCommonNodes<N>>
 fn new(controller: C) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cse.CSE.md).
+
 
 The main entry point of Common Subexpression Elimination.
 
@@ -62,6 +68,9 @@ fn rewrite_f_down(&mut self, _node: &Self::Node)
 fn rewrite_f_up(&mut self, _node: &Self::Node)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cse.CSEController.md).
+
+
 The [`TreeNode`] specific definition of elimination.
 
 ---
@@ -84,6 +93,9 @@ trait HashNode
 ```rust
 fn hash_node<H: Hasher>(&self, state: &mut H)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cse.HashNode.md).
+
 
 Hashes the direct content of an [`TreeNode`] without recursing into its children.
 
@@ -116,6 +128,9 @@ trait NormalizeEq: Eq + Normalizeable
 fn normalize_eq(&self, other: &Self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cse.NormalizeEq.md).
+
+
 The `NormalizeEq` trait extends `Eq` and `Normalizeable` to provide a method for comparing
 normalized nodes in optimizations like Common Subexpression Elimination (CSE).
 
@@ -145,6 +160,9 @@ trait Normalizeable
 ```rust
 fn can_normalize(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.cse.Normalizeable.md).
+
 
 The `Normalizeable` trait defines a method to determine whether a node can be normalized.
 

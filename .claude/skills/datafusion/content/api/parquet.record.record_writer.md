@@ -19,6 +19,9 @@ fn schema(&self) -> Result<TypePtr, ParquetError>
 fn write_to_row_group<W: std::io::Write + Send>(&self, row_group_writer: &mut SerializedRowGroupWriter<'_, W>) -> Result<(), ParquetError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.record.record_writer.RecordWriter.md).
+
+
 Trait describing how to write a record (the implementator) to a row group writer.
 
 [`parquet_derive`] crate provides a derive macro [`ParquetRecordWriter`] for this trait

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## serialize_partition_value
 
 `function` · `buoyant_kernel::partition::serialization::serialize_partition_value`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.partition.serialization.serialize_partition_value.md)
 
 Also reachable as `delta_kernel::partition::serialization::serialize_partition_value`
 

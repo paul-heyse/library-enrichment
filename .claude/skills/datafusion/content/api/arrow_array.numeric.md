@@ -12,6 +12,9 @@ Also reachable as `arrow::datatypes::ArrowNumericType`
 trait ArrowNumericType: ArrowPrimitiveType
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.numeric.ArrowNumericType.md).
+
+
 A subtype of primitive type that represents numeric values.
 
 ---

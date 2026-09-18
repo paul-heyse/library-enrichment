@@ -28,6 +28,9 @@ fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> Resu
 fn schema_check(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.limited_distinct_aggregation.LimitedDistinctAggregation.md).
+
+
 An optimizer rule that passes a `limit` hint into grouped aggregations which don't require all
 rows in the group to be processed for correctness. Example queries fitting this description are:
 - `SELECT distinct l_orderkey FROM lineitem LIMIT 10;`

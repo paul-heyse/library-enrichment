@@ -12,6 +12,9 @@ Also reachable as `arrow::ipc::TensorDimOffset`, `arrow_ipc::TensorDimOffset`
 enum TensorDimOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.TensorDimOffset.md).
+
+
 ---
 
 ## TensorOffset
@@ -23,6 +26,9 @@ Also reachable as `arrow::ipc::TensorOffset`, `arrow_ipc::TensorOffset`
 ```rust
 enum TensorOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.TensorOffset.md).
+
 
 ---
 
@@ -36,6 +42,9 @@ Also reachable as `arrow::ipc::finish_size_prefixed_tensor_buffer`, `arrow_ipc::
 fn finish_size_prefixed_tensor_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<Tensor<'a>>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.finish_size_prefixed_tensor_buffer.md).
+
+
 ---
 
 ## finish_tensor_buffer
@@ -48,6 +57,9 @@ Also reachable as `arrow::ipc::finish_tensor_buffer`, `arrow_ipc::finish_tensor_
 fn finish_tensor_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<Tensor<'a>>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.finish_tensor_buffer.md).
+
+
 ---
 
 ## root_as_tensor
@@ -59,6 +71,9 @@ Also reachable as `arrow::ipc::root_as_tensor`, `arrow_ipc::root_as_tensor`
 ```rust
 fn root_as_tensor(buf: &[u8]) -> Result<Tensor<'_>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.root_as_tensor.md).
+
 
 Verifies that a buffer of bytes contains a `Tensor`
 and returns it.
@@ -79,6 +94,9 @@ Also reachable as `arrow::ipc::root_as_tensor_unchecked`, `arrow_ipc::root_as_te
 unsafe fn root_as_tensor_unchecked(buf: &[u8]) -> Tensor<'_>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.root_as_tensor_unchecked.md).
+
+
 Assumes, without verification, that a buffer of bytes contains a Tensor and returns it.
 # Safety
 Callers must trust the given bytes do indeed contain a valid `Tensor`.
@@ -94,6 +112,9 @@ Also reachable as `arrow::ipc::root_as_tensor_with_opts`, `arrow_ipc::root_as_te
 ```rust
 fn root_as_tensor_with_opts<'b, 'o>(opts: &'o flatbuffers::VerifierOptions, buf: &'b [u8]) -> Result<Tensor<'b>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.root_as_tensor_with_opts.md).
+
 
 Verifies, with the given options, that a buffer of bytes
 contains a `Tensor` and returns it.
@@ -114,6 +135,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_tensor`, `arrow_ipc::size_p
 fn size_prefixed_root_as_tensor(buf: &[u8]) -> Result<Tensor<'_>, flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.size_prefixed_root_as_tensor.md).
+
+
 Verifies that a buffer of bytes contains a size prefixed
 `Tensor` and returns it.
 Note that verification is still experimental and may not
@@ -133,6 +157,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_tensor_unchecked`, `arrow_i
 unsafe fn size_prefixed_root_as_tensor_unchecked(buf: &[u8]) -> Tensor<'_>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.size_prefixed_root_as_tensor_unchecked.md).
+
+
 Assumes, without verification, that a buffer of bytes contains a size prefixed Tensor and returns it.
 # Safety
 Callers must trust the given bytes do indeed contain a valid size prefixed `Tensor`.
@@ -148,6 +175,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_tensor_with_opts`, `arrow_i
 ```rust
 fn size_prefixed_root_as_tensor_with_opts<'b, 'o>(opts: &'o flatbuffers::VerifierOptions, buf: &'b [u8]) -> Result<Tensor<'b>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.size_prefixed_root_as_tensor_with_opts.md).
+
 
 Verifies, with the given verifier options, that a buffer of
 bytes contains a size prefixed `Tensor` and returns
@@ -224,6 +254,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.Tensor.md).
+
+
 ---
 
 ## TensorArgs
@@ -239,6 +272,9 @@ struct TensorArgs<'a>
 **Fields**: `type_type`, `type_`, `shape`, `strides`, `data`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.TensorArgs.md).
+
 
 ---
 
@@ -263,6 +299,9 @@ fn add_type_type(&mut self, type_type: Type)
 fn finish(self) -> flatbuffers::WIPOffset<Tensor<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> TensorBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.TensorBuilder.md).
+
 
 ---
 
@@ -303,6 +342,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.TensorDim.md).
+
+
 ----------------------------------------------------------------------
 Data structures for dense tensors
 Shape data for a single axis in a tensor
@@ -322,6 +364,9 @@ struct TensorDimArgs<'a>
 **Fields**: `size`, `name`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.TensorDimArgs.md).
+
 
 ---
 
@@ -343,5 +388,8 @@ fn add_size(&mut self, size: i64)
 fn finish(self) -> flatbuffers::WIPOffset<TensorDim<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> TensorDimBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.Tensor.TensorDimBuilder.md).
+
 
 ---

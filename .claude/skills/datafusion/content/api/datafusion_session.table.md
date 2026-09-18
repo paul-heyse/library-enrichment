@@ -27,6 +27,9 @@ fn with_projection(self, projection: Option<&'a [usize]>) -> Self
 fn with_statistics_requests(self, statistics_requests: &'a [StatisticsRequest]) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_session.table.ScanArgs.md).
+
+
 Arguments for scanning a table with [`TableProvider::scan_with_args`].
 
 ---
@@ -59,6 +62,9 @@ fn plan(&self) -> &Arc<dyn ExecutionPlan>
 fn from(plan: Arc<dyn ExecutionPlan>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_session.table.ScanResult.md).
+
+
 Result of a table scan operation from [`TableProvider::scan_with_args`].
 
 ---
@@ -85,6 +91,9 @@ fn name(&self) -> &str
 fn new(name: String, fun: Arc<dyn TableFunctionImpl>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_session.table.TableFunction.md).
+
+
 A table that uses a function to generate data
 
 ---
@@ -106,6 +115,9 @@ fn exprs(&self) -> &'e [Expr]
 fn new(exprs: &'e [Expr], session: &'s dyn Session) -> Self
 fn session(&self) -> &'s dyn Session
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_session.table.TableFunctionArgs.md).
+
 
 Describes arguments provided to the table function call.
 
@@ -133,6 +145,9 @@ trait TableFunctionImpl: Debug + Sync + Send + Any
 fn call(&self, _exprs: &[Expr]) -> Result<Arc<dyn TableProvider>>
 fn call_with_args(&self, args: TableFunctionArgs<'_, '_>) -> Result<Arc<dyn TableProvider>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_session.table.TableFunctionImpl.md).
+
 
 A trait for table function implementations
 
@@ -181,6 +196,9 @@ async fn truncate(&self, _state: &dyn Session) -> Result<Arc<dyn ExecutionPlan>>
 async fn update(&self, _state: &dyn Session, _assignments: Vec<(String, Expr)>, _filters: Vec<Expr>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_session.table.TableProvider.md).
+
+
 A table which can be queried and modified.
 
 Please see [`CatalogProvider`] for details of implementing a custom catalog.
@@ -221,6 +239,9 @@ trait TableProviderFactory: Debug + Sync + Send
 ```rust
 async fn create(&self, state: &dyn Session, cmd: &CreateExternalTable) -> Result<Arc<dyn TableProvider>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_session.table.TableProviderFactory.md).
+
 
 A factory which creates [`TableProvider`]s at runtime given a URL.
 

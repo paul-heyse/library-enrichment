@@ -46,6 +46,9 @@ fn schema(&self) -> arrow::datatypes::SchemaRef
 fn poll_next(std::pin::Pin<&mut self>, cx: &mut std::task::Context<'_>) -> Poll<Option<Self::Item>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.record_batch_stream.FFI_RecordBatchStream.md).
+
+
 A stable struct for sharing [`RecordBatchStream`] across FFI boundaries.
 We use the async-ffi crate for handling async calls across libraries.
 
@@ -60,5 +63,8 @@ struct RecordBatchStreamPrivateData
 ```
 
 **Fields**: `rbs`, `runtime`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.record_batch_stream.RecordBatchStreamPrivateData.md).
+
 
 ---

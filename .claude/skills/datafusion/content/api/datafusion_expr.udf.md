@@ -18,6 +18,9 @@ struct ReturnFieldArgs<'a>
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udf.ReturnFieldArgs.md).
+
+
 Information about arguments passed to the function
 
 This structure contains metadata about how the function was called
@@ -47,6 +50,9 @@ struct ScalarFunctionArgs
 ```rust
 fn return_type(&self) -> &DataType
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udf.ScalarFunctionArgs.md).
+
 
 Arguments passed to [`ScalarUDFImpl::invoke_with_args`] when invoking a
 scalar function.
@@ -115,6 +121,9 @@ fn name(&self) -> &str
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udf.ScalarUDF.md).
+
+
 Logical representation of a Scalar User Defined Function.
 
 A scalar function produces a single row output for each row of input. This
@@ -151,6 +160,9 @@ struct StructFieldMapping
 ```
 
 **Fields**: `field_accessor`, `fields`
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udf.StructFieldMapping.md).
+
 
 Describes how a struct-producing UDF's output fields correspond to its
 input arguments. This enables the optimizer to propagate orderings
@@ -437,6 +449,9 @@ fn strictly_order_preserving(&self, _inputs: &[ExprProperties]) -> Result<bool>
 fn struct_field_mapping(&self, _literal_args: &[Option<ScalarValue>]) -> Option<StructFieldMapping>
 fn with_updated_config(&self, _config: &ConfigOptions) -> Option<ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udf.ScalarUDFImpl.md).
+
 
 Trait for implementing user defined scalar functions.
 

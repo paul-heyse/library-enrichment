@@ -58,6 +58,9 @@ fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.coalesce_batches.CoalesceBatchesExec.md).
+
+
 `CoalesceBatchesExec` combines small batches into larger batches for more
 efficient vectorized processing by later operators.
 

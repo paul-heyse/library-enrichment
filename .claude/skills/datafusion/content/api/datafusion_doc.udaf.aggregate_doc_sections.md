@@ -12,6 +12,9 @@ Also reachable as `datafusion_doc::aggregate_doc_sections::DOC_SECTION_APPROXIMA
 const DOC_SECTION_APPROXIMATE: DocSection = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udaf.aggregate_doc_sections.DOC_SECTION_APPROXIMATE.md).
+
+
 ---
 
 ## DOC_SECTION_GENERAL
@@ -23,6 +26,9 @@ Also reachable as `datafusion_doc::aggregate_doc_sections::DOC_SECTION_GENERAL`,
 ```rust
 const DOC_SECTION_GENERAL: DocSection = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udaf.aggregate_doc_sections.DOC_SECTION_GENERAL.md).
+
 
 ---
 
@@ -36,6 +42,9 @@ Also reachable as `datafusion_doc::aggregate_doc_sections::DOC_SECTION_STATISTIC
 const DOC_SECTION_STATISTICAL: DocSection = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udaf.aggregate_doc_sections.DOC_SECTION_STATISTICAL.md).
+
+
 ---
 
 ## doc_sections
@@ -47,5 +56,8 @@ Also reachable as `datafusion_doc::aggregate_doc_sections::doc_sections`, `dataf
 ```rust
 fn doc_sections() -> Vec<DocSection>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.udaf.aggregate_doc_sections.doc_sections.md).
+
 
 ---

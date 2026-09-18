@@ -5,6 +5,7 @@ Crate `buoyant_kernel_engine` · 4 public items · structured records in [`model
 ## build_add_file_metadata
 
 `function` · `buoyant_kernel_engine::build_add_file_metadata`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.build_add_file_metadata.md)
 
 Also reachable as `delta_kernel_default_engine::build_add_file_metadata`
 
@@ -30,6 +31,7 @@ Arrow-based engines that write parquet files themselves (bypassing
 ## DefaultEngine
 
 `struct` · `buoyant_kernel_engine::DefaultEngine`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.DefaultEngine.md)
 
 Also reachable as `delta_kernel_default_engine::DefaultEngine`
 
@@ -65,6 +67,7 @@ fn storage_handler(&self) -> Arc<dyn StorageHandler>
 ## DefaultEngineBuilder
 
 `struct` · `buoyant_kernel_engine::DefaultEngineBuilder`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.DefaultEngineBuilder.md)
 
 Also reachable as `delta_kernel_default_engine::DefaultEngineBuilder`
 
@@ -110,6 +113,7 @@ let engine = DefaultEngineBuilder::new(Arc::new(LocalFileSystem::new()))
 ## DefaultTaskExecutor
 
 `struct` · `buoyant_kernel_engine::DefaultTaskExecutor`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel_engine.DefaultTaskExecutor.md)
 
 Also reachable as `delta_kernel_default_engine::DefaultTaskExecutor`
 

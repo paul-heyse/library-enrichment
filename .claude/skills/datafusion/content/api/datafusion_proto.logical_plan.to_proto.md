@@ -10,6 +10,9 @@ Crate `datafusion-proto` · 4 public items · structured records in [`model/data
 fn serialize_expr(expr: &datafusion_expr::Expr, codec: &dyn LogicalExtensionCodec) -> Result<protobuf::LogicalExprNode, protobuf::ToProtoError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.to_proto.serialize_expr.md).
+
+
 ---
 
 ## serialize_exprs
@@ -19,6 +22,9 @@ fn serialize_expr(expr: &datafusion_expr::Expr, codec: &dyn LogicalExtensionCode
 ```rust
 fn serialize_exprs<'a, I>(exprs: I, codec: &dyn LogicalExtensionCodec) -> Result<Vec<protobuf::LogicalExprNode>, protobuf::ToProtoError> where I: IntoIterator<Item = &'a datafusion_expr::Expr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.to_proto.serialize_exprs.md).
+
 
 ---
 
@@ -30,6 +36,9 @@ fn serialize_exprs<'a, I>(exprs: I, codec: &dyn LogicalExtensionCodec) -> Result
 fn serialize_merge_into_op(op: &datafusion_expr::dml::MergeIntoOp, codec: &dyn LogicalExtensionCodec) -> Result<protobuf::MergeIntoOpNode, protobuf::ToProtoError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.to_proto.serialize_merge_into_op.md).
+
+
 ---
 
 ## serialize_sorts
@@ -39,5 +48,8 @@ fn serialize_merge_into_op(op: &datafusion_expr::dml::MergeIntoOp, codec: &dyn L
 ```rust
 fn serialize_sorts<'a, I>(sorts: I, codec: &dyn LogicalExtensionCodec) -> Result<Vec<protobuf::SortExprNode>, protobuf::ToProtoError> where I: IntoIterator<Item = &'a datafusion_expr::SortExpr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.to_proto.serialize_sorts.md).
+
 
 ---

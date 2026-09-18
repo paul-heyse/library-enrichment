@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::inner_product`, `datafusion_functions_ne
 fn inner_product(array1: datafusion_expr::Expr, array2: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.inner_product.inner_product.md).
+
+
 returns the inner product (dot product) of two numeric arrays.
 
 ---
@@ -23,6 +26,9 @@ returns the inner product (dot product) of two numeric arrays.
 ```rust
 fn inner_product_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.inner_product.inner_product_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 InnerProduct
@@ -58,5 +64,8 @@ fn name(&self) -> &str
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.inner_product.InnerProduct.md).
+
 
 ---

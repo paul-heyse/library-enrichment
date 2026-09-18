@@ -10,6 +10,9 @@ Crate `parquet` · 1 public items · structured records in [`model/parquet.parqu
 struct OrderedF64
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.parquet_thrift.OrderedF64.md).
+
+
 Wrapper for thrift `double` fields. This is used to provide
 an implementation of `Eq` for floats. This implementation
 uses IEEE 754 total order.

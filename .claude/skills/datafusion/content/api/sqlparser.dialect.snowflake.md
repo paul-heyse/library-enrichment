@@ -12,6 +12,9 @@ Also reachable as `sqlparser::dialect::parse_snowflake_stage_name`
 fn parse_snowflake_stage_name(parser: &mut parser::Parser<'_>) -> Result<ast::ObjectName, parser::ParserError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.snowflake.parse_snowflake_stage_name.md).
+
+
 Parses a Snowflake stage name, which may start with `@` for internal stages.
 Examples: `@mystage`, `@namespace.stage`, `schema.table`
 
@@ -95,6 +98,9 @@ fn supports_values_as_table_factor(&self) -> bool
 fn supports_window_function_null_treatment_arg(&self) -> bool
 fn supports_within_after_array_aggregation(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.snowflake.SnowflakeDialect.md).
+
 
 A [`Dialect`] for [Snowflake](https://www.snowflake.com/)
 

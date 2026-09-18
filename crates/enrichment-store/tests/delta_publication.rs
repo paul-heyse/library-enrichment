@@ -42,8 +42,8 @@ fn metadata() -> SnapshotMetadata {
 
 fn evidence(metadata: &SnapshotMetadata) -> EvidenceRows {
     support::rust_evidence_for(
-        metadata.release.release_id.as_str(),
-        metadata.environment.environment_id.as_str(),
+        metadata.release.release_id.clone(),
+        metadata.environment.environment_id.clone(),
     )
 }
 
@@ -127,14 +127,27 @@ async fn publication_journey(root: std::sync::Arc<tempfile::TempDir>, repo: Evid
         .unwrap();
     assert_eq!(selected.publication, publication);
     let mut forged = publication.clone();
-    forged.tables[0].table_id = "foreign-table".into();
+    forged.tables[0].source.table.table_id = "foreign-table".into();
     let native = enrichment_store::delta_evidence::EvidenceTables::new(
         &root.path().join("data/delta"),
         repo.runtime.clone(),
     )
     .unwrap();
-    let protection = enrichment_store::leases::ReadProtection::Root(
-        enrichment_store::leases::shared(&root.path().join("data")).unwrap(),
+    let protection = enrichment_store::leases::ReadProtection::Durable(
+        repo.retention()
+            .enroll(
+                "forged-provider-check".into(),
+                enrichment_store::retention::ProtectionKind::Query,
+                publication
+                    .tables
+                    .iter()
+                    .map(|binding| enrichment_store::retention::Dependency::Table {
+                        value: binding.selection(),
+                    })
+                    .collect(),
+            )
+            .await
+            .unwrap(),
     );
     assert!(native.providers(&forged.tables, protection).await.is_err());
     // A private cohort and an actual native OPTIMIZE commit lie inside the next CDF window.
@@ -147,23 +160,17 @@ async fn publication_journey(root: std::sync::Arc<tempfile::TempDir>, repo: Evid
     native
         .append(
             enrichment_store::admission::Relation::Fragments,
-            "unpublished-candidate",
+            &enrichment_core::identity::CohortId::new(),
             session.table("snapshot.evidence.fragments").await.unwrap(),
             fragments.rows,
         )
         .await
         .unwrap();
-    let maintenance = enrichment_store::native_delta::DeltaStore::new(
-        &root.path().join("data/delta"),
-        repo.runtime.clone(),
-    )
-    .unwrap();
-    let (_, metrics) = maintenance
-        .load(&fragments.table_uri, None)
-        .await
-        .unwrap()
-        .optimize()
-        .with_session_state(std::sync::Arc::new(repo.runtime.session().state()))
+    let (_, metrics) = native
+        .compact(
+            enrichment_store::admission::Relation::Fragments,
+            &repo.retention(),
+        )
         .await
         .unwrap();
     assert!(metrics.num_files_removed >= 2);
@@ -252,7 +259,7 @@ async fn publication_journey(root: std::sync::Arc<tempfile::TempDir>, repo: Evid
             data_root: root.path().join("data"),
             cache_root: root.path().join("cache"),
         },
-        metadata.context.context_id.as_str(),
+        metadata.context.context_id.to_string().as_str(),
         &destination,
     )
     .await
@@ -272,7 +279,10 @@ async fn publication_journey(root: std::sync::Arc<tempfile::TempDir>, repo: Evid
         .find(|b| b.relation == "fragments")
         .unwrap();
     let table = delta
-        .load(&fragment_binding.table_uri, Some(fragment_binding.version))
+        .load(
+            &fragment_binding.source.table.table_uri,
+            Some(fragment_binding.source.version),
+        )
         .await
         .unwrap();
     deltalake::protocol::checkpoints::create_checkpoint(&table, None)
@@ -281,9 +291,9 @@ async fn publication_journey(root: std::sync::Arc<tempfile::TempDir>, repo: Evid
     std::fs::remove_file(
         root.path()
             .join("data/delta")
-            .join(&fragment_binding.table_uri)
+            .join(&fragment_binding.source.table.table_uri)
             .join("_delta_log")
-            .join(format!("{:020}.json", fragment_binding.version)),
+            .join(format!("{:020}.json", fragment_binding.source.version)),
     )
     .unwrap();
     let initial = pin

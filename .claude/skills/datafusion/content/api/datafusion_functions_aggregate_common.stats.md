@@ -16,6 +16,9 @@ enum StatsType
 
 **Derives**: Clone, Copy, Debug, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.stats.StatsType.md).
+
+
 TODO: Move this to functions-aggregate module
 Enum used for differentiating population and sample for statistical functions
 

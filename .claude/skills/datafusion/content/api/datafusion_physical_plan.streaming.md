@@ -50,6 +50,9 @@ fn with_fetch(&self, limit: Option<usize>) -> Option<Arc<dyn ExecutionPlan>>
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.streaming.StreamingTableExec.md).
+
+
 An [`ExecutionPlan`] for one or more [`PartitionStream`]s.
 
 If your source can be represented as one or more [`PartitionStream`]s, you can
@@ -75,6 +78,9 @@ trait PartitionStream: Debug + Send + Sync
 fn execute(&self, ctx: Arc<TaskContext>) -> SendableRecordBatchStream
 fn schema(&self) -> &SchemaRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.streaming.PartitionStream.md).
+
 
 A partition that can be converted into a [`SendableRecordBatchStream`]
 

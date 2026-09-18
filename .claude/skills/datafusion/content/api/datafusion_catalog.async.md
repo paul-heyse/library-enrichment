@@ -17,6 +17,9 @@ async fn resolve(&self, references: &[TableReference], config: &SessionConfig, c
 async fn schema(&self, name: &str) -> Result<Option<Arc<dyn AsyncSchemaProvider>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.async.AsyncCatalogProvider.md).
+
+
 A trait for catalog providers that must resolve schemas asynchronously
 
 The [`CatalogProvider::schema`] method is synchronous because asynchronous operations should
@@ -40,6 +43,9 @@ async fn catalog(&self, name: &str) -> Result<Option<Arc<dyn AsyncCatalogProvide
 async fn resolve(&self, references: &[TableReference], config: &SessionConfig) -> Result<Arc<dyn CatalogProviderList>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.async.AsyncCatalogProviderList.md).
+
+
 A trait for catalog provider lists that must resolve catalogs asynchronously
 
 The [`CatalogProviderList::catalog`] method is synchronous because asynchronous operations should
@@ -62,6 +68,9 @@ trait AsyncSchemaProvider: Send + Sync
 async fn resolve(&self, references: &[TableReference], config: &SessionConfig, catalog_name: &str, schema_name: &str) -> Result<Arc<dyn SchemaProvider>>
 async fn table(&self, name: &str) -> Result<Option<Arc<dyn TableProvider>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.async.AsyncSchemaProvider.md).
+
 
 A trait for schema providers that must resolve tables asynchronously
 

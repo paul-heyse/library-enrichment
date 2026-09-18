@@ -19,6 +19,9 @@ fn is_empty(&self) -> bool
 fn num_of_distinct_key(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.Map.md).
+
+
 The build-side map of a hash join, indexing build rows by join key.
 
 Under [`NullEquality::NullEqualsNothing`], build rows with a NULL in any
@@ -43,6 +46,9 @@ enum PartitionMode
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.PartitionMode.md).
+
+
 Hash join Partitioning mode
 
 ---
@@ -59,6 +65,9 @@ enum StreamJoinPartitionMode
 
 **Derives**: Clone, Copy, Debug, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.StreamJoinPartitionMode.md).
+
+
 Partitioning mode to use for symmetric hash join
 
 ---
@@ -73,6 +82,9 @@ Also reachable as `datafusion_physical_plan::joins::utils::JoinOn`
 type JoinOn = Vec<(datafusion_physical_expr::PhysicalExprRef, datafusion_physical_expr::PhysicalExprRef)>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.JoinOn.md).
+
+
 The on clause of the join, as vector of (left, right) columns.
 
 ---
@@ -86,6 +98,9 @@ Also reachable as `datafusion_physical_plan::joins::utils::JoinOnRef`
 ```rust
 type JoinOnRef<'a> = &'a [(datafusion_physical_expr::PhysicalExprRef, datafusion_physical_expr::PhysicalExprRef)]
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.JoinOnRef.md).
+
 
 Reference for JoinOn.
 

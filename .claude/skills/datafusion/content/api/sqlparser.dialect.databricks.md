@@ -51,6 +51,9 @@ fn supports_table_versioning(&self) -> bool
 fn supports_values_as_table_factor(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.databricks.DatabricksDialect.md).
+
+
 A [`Dialect`] for [Databricks SQL](https://www.databricks.com/)
 
 See <https://docs.databricks.com/en/sql/language-manual/index.html>.

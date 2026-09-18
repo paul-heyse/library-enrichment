@@ -10,6 +10,9 @@ Crate `arrow` · 3 public items · structured records in [`model/arrow.util.data
 fn create_random_array(field: &Field, size: usize, null_density: f32, true_density: f32) -> error::Result<ArrayRef>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.data_gen.create_random_array.md).
+
+
 Create a random [ArrayRef] from a [DataType] with a length,
 null density and true density (for [BooleanArray]).
 
@@ -29,6 +32,9 @@ null density and true density (for [BooleanArray]).
 ```rust
 fn create_random_batch(schema: SchemaRef, size: usize, null_density: f32, true_density: f32) -> error::Result<RecordBatch>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.data_gen.create_random_batch.md).
+
 
 Create a random [RecordBatch] from a schema
 
@@ -62,6 +68,9 @@ fn gen_range<R: Rng>(rng: &mut R) -> Self::Native where Self::Native: SampleUnif
 fn random<R: Rng>(rng: &mut R) -> Self::Native where Self::Native: SampleUniform
 fn value_range() -> impl SampleRange<Self::Native>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.data_gen.RandomTemporalValue.md).
+
 
 Useful for testing. The range of values are not likely to be representative of the
 actual bounds.

@@ -29,6 +29,9 @@ fn rewrite(&self, plan: LogicalPlan, _config: &dyn OptimizerConfig) -> Result<Tr
 fn supports_rewrite(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.eliminate_filter.EliminateFilter.md).
+
+
 Optimization rule that eliminate the scalar value (true/false/null) filter
 with an [LogicalPlan::EmptyRelation]
 

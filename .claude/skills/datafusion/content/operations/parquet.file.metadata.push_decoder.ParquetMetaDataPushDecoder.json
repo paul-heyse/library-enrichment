@@ -1,0 +1,1736 @@
+[
+  {
+    "id": "e00d43ab5b4fd446b342b085",
+    "path": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+    "name": "ParquetMetaDataPushDecoder",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct ParquetMetaDataPushDecoder",
+    "docs": "A push decoder for [`ParquetMetaData`].\n\nThis structure implements a push API for decoding Parquet metadata, which\ndecouples IO from the metadata decoding logic (sometimes referred to as\n[Sans-IO]).\n\nSee [`ParquetMetaDataReader`] for a pull-based API that incorporates IO and\nis simpler to use for basic use cases. This decoder is best for customizing\nyour IO operations to minimize bytes read, prefetch data, or use async IO.\n\n[Sans-IO]: https://sans-io.readthedocs.io\n[`ParquetMetaDataReader`]: crate::file::metadata::ParquetMetaDataReader\n\n# Example\n\nThe most basic usage is to feed the decoder with the necessary byte ranges\nas requested as shown below. This minimizes the number of bytes read, but\nrequires the most IO operations - one to read the footer and then one\nto read the metadata, and possibly more if page indexes are requested.\n\n```rust\n# use std::ops::Range;\n# use bytes::Bytes;\n# use arrow_array::record_batch;\n# use parquet::DecodeResult;\n# use parquet::arrow::ArrowWriter;\n# use parquet::errors::ParquetError;\n# use parquet::file::metadata::{ParquetMetaData, ParquetMetaDataPushDecoder};\n#\n# fn decode_metadata() -> Result<ParquetMetaData, ParquetError> {\n# let file_bytes = {\n#   let mut buffer = vec![0];\n#   let batch = record_batch!((\"a\", Int32, [1, 2, 3])).unwrap();\n#   let mut writer = ArrowWriter::try_new(&mut buffer, batch.schema(), None).unwrap();\n#   writer.write(&batch).unwrap();\n#   writer.close().unwrap();\n#   Bytes::from(buffer)\n# };\n# // mimic IO by returning a function that returns the bytes for a given range\n# let get_range = |range: &Range<u64>| -> Bytes {\n#    let start = range.start as usize;\n#     let end = range.end as usize;\n#    file_bytes.slice(start..end)\n# };\n#\n# let file_len = file_bytes.len() as u64;\n// The `ParquetMetaDataPushDecoder` needs to know the file length.\nlet mut decoder = ParquetMetaDataPushDecoder::try_new(file_len).unwrap();\n// try to decode the metadata. If more data is needed, the decoder will tell you what ranges\nloop {\n    match decoder.try_decode() {\n       Ok(DecodeResult::Data(metadata)) => { return Ok(metadata); } // decode successful\n       Ok(DecodeResult::NeedsData(ranges)) => {\n          // The decoder needs more data\n          //\n          // In this example, we call a function that returns the bytes for each given range.\n          // In a real application, you would likely read the data from a file or network.\n          let data = ranges.iter().map(|range| get_range(range)).collect();\n          // Push the data into the decoder and try to decode again on the next iteration.\n          decoder.push_ranges(ranges, data).unwrap();\n       }\n       Ok(DecodeResult::Finished) => { unreachable!(\"returned metadata in previous match arm\") }\n       Err(e) => return Err(e),\n    }\n}\n# }\n```\n\n# Example with \"prefetching\"\n\nBy default, the [`ParquetMetaDataPushDecoder`] will request only the exact byte\nranges it needs. This minimizes the number of bytes read, however it\nrequires at least two IO operations to read the metadata - one to read the\nfooter and then one to read the metadata.\n\nIf the file has a \"Page Index\" (see [Self::with_page_index_policy]), three\nIO operations are required to read the metadata, as the page index is\nnot part of the normal metadata footer.\n\nTo reduce the number of IO operations in systems with high per operation\noverhead (e.g. cloud storage), you can \"prefetch\" the data and then push\nthe data into the decoder before calling [`Self::try_decode`]. If you do\nnot push enough bytes, the decoder will return the ranges that are still\nneeded.\n\nThis approach can also be used when you have the entire file already in memory\nfor other reasons.\n```rust\n# use std::ops::Range;\n# use bytes::Bytes;\n# use arrow_array::record_batch;\n# use parquet::DecodeResult;\n# use parquet::arrow::ArrowWriter;\n# use parquet::errors::ParquetError;\n# use parquet::file::metadata::{ParquetMetaData, ParquetMetaDataPushDecoder};\n#\n# fn decode_metadata() -> Result<ParquetMetaData, ParquetError> {\n# let file_bytes = {\n#   let mut buffer = vec![0];\n#   let batch = record_batch!((\"a\", Int32, [1, 2, 3])).unwrap();\n#   let mut writer = ArrowWriter::try_new(&mut buffer, batch.schema(), None).unwrap();\n#   writer.write(&batch).unwrap();\n#   writer.close().unwrap();\n#   Bytes::from(buffer)\n# };\n#\nlet file_len = file_bytes.len() as u64;\n// For this example, we \"prefetch\" all the bytes which we have in memory,\n// but in a real application, you would likely read a chunk from the end\n// for example 1MB.\nlet prefetched_bytes = file_bytes.clone();\nlet mut decoder = ParquetMetaDataPushDecoder::try_new(file_len).unwrap();\n// push the prefetched bytes into the decoder\ndecoder.push_ranges(vec![0..file_len], vec![prefetched_bytes]).unwrap();\n// The decoder will now be able to decode the metadata. Note in a real application,\n// unless you can guarantee that the pushed data is enough to decode the metadata,\n// you still need to call `try_decode` in a loop until it returns `DecodeResult::Data`\n// as shown in  the previous example\n    match decoder.try_decode() {\n        Ok(DecodeResult::Data(metadata)) => { return Ok(metadata); } // decode successful\n        other => { panic!(\"expected DecodeResult::Data, got: {other:?}\") }\n    }\n# }\n```\n\n# Example using [`AsyncRead`]\n\n[`ParquetMetaDataPushDecoder`] is designed to work with any data source that can\nprovide byte ranges, including async IO sources. However, it does not\nimplement async IO itself. To use async IO, you simply write an async\nwrapper around it that reads the required byte ranges and pushes them into the\ndecoder.\n```rust\n# use std::ops::Range;\n# use bytes::Bytes;\nuse tokio::io::{AsyncRead, AsyncReadExt, AsyncSeek, AsyncSeekExt};\n# use arrow_array::record_batch;\n# use parquet::DecodeResult;\n# use parquet::arrow::ArrowWriter;\n# use parquet::errors::ParquetError;\n# use parquet::file::metadata::{ParquetMetaData, ParquetMetaDataPushDecoder};\n#\n// This function decodes Parquet Metadata from anything that implements\n// [`AsyncRead`] and [`AsyncSeek`] such as a tokio::fs::File\nasync fn decode_metadata(\n  file_len: u64,\n  mut async_source: impl AsyncRead + AsyncSeek + Unpin\n) -> Result<ParquetMetaData, ParquetError> {\n  // We need a ParquetMetaDataPushDecoder to decode the metadata.\n  let mut decoder = ParquetMetaDataPushDecoder::try_new(file_len).unwrap();\n  loop {\n    match decoder.try_decode() {\n       Ok(DecodeResult::Data(metadata)) => { return Ok(metadata); } // decode successful\n       Ok(DecodeResult::NeedsData(ranges)) => {\n          // The decoder needs more data\n          //\n          // In this example we use the AsyncRead and AsyncSeek traits to read the\n          // required ranges from the async source.\n          let mut data = Vec::with_capacity(ranges.len());\n          for range in &ranges {\n            let mut buffer = vec![0; (range.end - range.start) as usize];\n            async_source.seek(std::io::SeekFrom::Start(range.start)).await?;\n            async_source.read_exact(&mut buffer).await?;\n            data.push(Bytes::from(buffer));\n          }\n          // Push the data into the decoder and try to decode again on the next iteration.\n          decoder.push_ranges(ranges, data).unwrap();\n       }\n       Ok(DecodeResult::Finished) => { unreachable!(\"returned metadata in previous match arm\") }\n       Err(e) => return Err(e),\n    }\n  }\n}\n```\n[`AsyncRead`]: tokio::io::AsyncRead",
+    "span": {
+      "filename": "src/file/metadata/push_decoder.rs",
+      "begin": [
+        222,
+        1
+      ],
+      "end": [
+        233,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgAttrTrace([NameValue { name: \"feature\", value: Some(\"arrow\"), span: src/file/metadata/push_decoder.rs:52:5: 52:22 (#0) },\nNameValue { name: \"feature\", value: Some(\"arrow\"), span: src/file/metadata/push_decoder.rs:124:5: 124:22 (#0) },\nNameValue { name: \"feature\", value: Some(\"arrow\"), span: src/file/metadata/push_decoder.rs:174:5: 174:22 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          5305,
+          5306,
+          5307,
+          5308,
+          5309,
+          5310,
+          5311,
+          5312,
+          5313,
+          5314,
+          5315,
+          5316,
+          5317,
+          5318,
+          5319,
+          5321
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "crate::file::metadata::ParquetMetaDataReader": 3399,
+      "tokio::io::AsyncRead": 3413,
+      "`Self::try_decode`": 5294,
+      "`ParquetMetaData`": 3004,
+      "`ParquetMetaDataPushDecoder`": 3036,
+      "Self::with_page_index_policy": 5293
+    },
+    "link_paths": {
+      "crate::file::metadata::ParquetMetaDataReader": "parquet::file::metadata::reader::ParquetMetaDataReader",
+      "tokio::io::AsyncRead": "tokio::io::async_read::AsyncRead",
+      "`Self::try_decode`": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::try_decode",
+      "`ParquetMetaData`": "parquet::file::metadata::ParquetMetaData",
+      "`ParquetMetaDataPushDecoder`": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+      "Self::with_page_index_policy": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::with_page_index_policy"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3036",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md",
+    "record_file": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.json",
+    "anchor": "op-e00d43ab5b4fd446b342b085",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataPushDecoder"
+    ],
+    "resolved_doc_links": {
+      "crate::file::metadata::ParquetMetaDataReader": "../operations/parquet.file.metadata.reader.ParquetMetaDataReader.md#op-ecb8df4cd7e741eec25c5144",
+      "`Self::try_decode`": "../operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md#op-064d44bfc9d1c502efa056cc",
+      "`ParquetMetaData`": "../operations/parquet.file.metadata.ParquetMetaData.md#op-02f1f382aa720b3a6b89476b",
+      "`ParquetMetaDataPushDecoder`": "../operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md#op-e00d43ab5b4fd446b342b085",
+      "Self::with_page_index_policy": "../operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md#op-48663bd4d902450e3347bcc6"
+    }
+  },
+  {
+    "id": "d7d46ed28bdb3b19035497f2",
+    "path": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::clear_all_ranges",
+    "name": "clear_all_ranges",
+    "owner": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn clear_all_ranges(&mut self)",
+    "docs": "Clear any staged byte ranges currently buffered for future decode work.",
+    "span": {
+      "filename": "src/file/metadata/push_decoder.rs",
+      "begin": [
+        362,
+        5
+      ],
+      "end": [
+        364,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataPushDecoder",
+          "id": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/push_decoder.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          458,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5304",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md",
+    "record_file": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.json",
+    "anchor": "op-d7d46ed28bdb3b19035497f2",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataPushDecoder::clear_all_ranges"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1df83a4f7ded1695a0fa3d4f",
+    "path": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::fmt",
+    "name": "fmt",
+    "owner": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/file/metadata/push_decoder.rs",
+      "begin": [
+        221,
+        10
+      ],
+      "end": [
+        221,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 67,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 68,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "67": "core::fmt::Formatter",
+      "68": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataPushDecoder",
+          "id": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/push_decoder.rs",
+        "begin": [
+          221,
+          10
+        ],
+        "end": [
+          221,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5320",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md",
+    "record_file": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.json",
+    "anchor": "op-1df83a4f7ded1695a0fa3d4f",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataPushDecoder::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a11b3757e2438804aa2ed849",
+    "path": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::push_range",
+    "name": "push_range",
+    "owner": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn push_range(&mut self, range: Range<u64>, buffer: Bytes) -> Result<()>",
+    "docs": "Pushes a single range of data into the decoder's buffer.",
+    "span": {
+      "filename": "src/file/metadata/push_decoder.rs",
+      "begin": [
+        351,
+        5
+      ],
+      "end": [
+        359,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "range",
+              {
+                "resolved_path": {
+                  "path": "Range",
+                  "id": 21,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "u64"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "buffer",
+              {
+                "resolved_path": {
+                  "path": "Bytes",
+                  "id": 1105,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "21": "core::ops::range::Range",
+      "1105": "bytes::bytes::Bytes",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataPushDecoder",
+          "id": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/push_decoder.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          458,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5303",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md",
+    "record_file": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.json",
+    "anchor": "op-a11b3757e2438804aa2ed849",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataPushDecoder::push_range"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "23cc78012283dc140264555d",
+    "path": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::push_ranges",
+    "name": "push_ranges",
+    "owner": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn push_ranges(&mut self, ranges: Vec<Range<u64>>, buffers: Vec<Bytes>) -> Result<()>",
+    "docs": "Push the data into the decoder's buffer.\n\nThe decoder does not immediately attempt to decode the metadata\nafter pushing data. Instead, it accumulates the pushed data until you\ncall [`Self::try_decode`].\n\n# Determining required data:\n\nTo determine what ranges are required to decode the metadata, you can\neither:\n\n1. Call [`Self::try_decode`] first to get the exact ranges required (see\n   example on [`Self`])\n\n2. Speculatively push any data that you have available, which may\n   include more than the footer data or requested bytes.\n\nSpeculatively pushing data can be used when  \"prefetching\" data. See\nexample on [`Self`]",
+    "span": {
+      "filename": "src/file/metadata/push_decoder.rs",
+      "begin": [
+        340,
+        5
+      ],
+      "end": [
+        348,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "ranges",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 1171,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Range",
+                              "id": 21,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "u64"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "buffers",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 1171,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Bytes",
+                              "id": 1105,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1171": "alloc::vec::Vec",
+      "21": "core::ops::range::Range",
+      "1105": "bytes::bytes::Bytes",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataPushDecoder",
+          "id": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/push_decoder.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          458,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::try_decode`": 5294,
+      "`Self`": 3036
+    },
+    "link_paths": {
+      "`Self::try_decode`": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::try_decode",
+      "`Self`": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5302",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md",
+    "record_file": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.json",
+    "anchor": "op-23cc78012283dc140264555d",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataPushDecoder::push_ranges"
+    ],
+    "resolved_doc_links": {
+      "`Self::try_decode`": "../operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md#op-064d44bfc9d1c502efa056cc",
+      "`Self`": "../operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md#op-e00d43ab5b4fd446b342b085"
+    }
+  },
+  {
+    "id": "064d44bfc9d1c502efa056cc",
+    "path": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::try_decode",
+    "name": "try_decode",
+    "owner": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_decode(&mut self) -> Result<DecodeResult<ParquetMetaData>>",
+    "docs": "Try to decode the metadata from the pushed data, returning the\ndecoded metadata or an error if not enough data is available.",
+    "span": {
+      "filename": "src/file/metadata/push_decoder.rs",
+      "begin": [
+        368,
+        5
+      ],
+      "end": [
+        445,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "DecodeResult",
+                          "id": 3648,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "ParquetMetaData",
+                                      "id": 3004,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3648": "parquet::DecodeResult",
+      "3004": "parquet::file::metadata::ParquetMetaData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataPushDecoder",
+          "id": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/push_decoder.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          458,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5294",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md",
+    "record_file": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.json",
+    "anchor": "op-064d44bfc9d1c502efa056cc",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataPushDecoder::try_decode"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7c9e560fe355239993cc9f5c",
+    "path": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::try_new",
+    "name": "try_new",
+    "owner": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new(file_len: u64) -> Result<Self>",
+    "docs": "Create a new `ParquetMetaDataPushDecoder` with the given file length.\n\nBy default, this will read page indexes and column indexes. See\n[`ParquetMetaDataPushDecoder::with_page_index_policy`] for more detail.\n\nSee examples on [`ParquetMetaDataPushDecoder`].",
+    "span": {
+      "filename": "src/file/metadata/push_decoder.rs",
+      "begin": [
+        242,
+        5
+      ],
+      "end": [
+        256,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "file_len",
+              {
+                "primitive": "u64"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataPushDecoder",
+          "id": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/push_decoder.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          458,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ParquetMetaDataPushDecoder::with_page_index_policy`": 5293,
+      "`ParquetMetaDataPushDecoder`": 3036
+    },
+    "link_paths": {
+      "`ParquetMetaDataPushDecoder::with_page_index_policy`": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::with_page_index_policy",
+      "`ParquetMetaDataPushDecoder`": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5295",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md",
+    "record_file": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.json",
+    "anchor": "op-7c9e560fe355239993cc9f5c",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataPushDecoder::try_new"
+    ],
+    "resolved_doc_links": {
+      "`ParquetMetaDataPushDecoder::with_page_index_policy`": "../operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md#op-48663bd4d902450e3347bcc6",
+      "`ParquetMetaDataPushDecoder`": "../operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md#op-e00d43ab5b4fd446b342b085"
+    }
+  },
+  {
+    "id": "282e6cb2539655c9b3da157c",
+    "path": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::try_new_with_metadata",
+    "name": "try_new_with_metadata",
+    "owner": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new_with_metadata(file_len: u64, metadata: ParquetMetaData) -> Result<Self>",
+    "docs": "Create a decoder with the given `ParquetMetaData` already known.\n\nThis can be used to parse and populate the page index structures\nafter the metadata has already been decoded.",
+    "span": {
+      "filename": "src/file/metadata/push_decoder.rs",
+      "begin": [
+        269,
+        5
+      ],
+      "end": [
+        273,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "file_len",
+              {
+                "primitive": "u64"
+              }
+            ],
+            [
+              "metadata",
+              {
+                "resolved_path": {
+                  "path": "ParquetMetaData",
+                  "id": 3004,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3004": "parquet::file::metadata::ParquetMetaData",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataPushDecoder",
+          "id": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/push_decoder.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          458,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5296",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md",
+    "record_file": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.json",
+    "anchor": "op-282e6cb2539655c9b3da157c",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataPushDecoder::try_new_with_metadata"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0cac64151977b37124ce0a8e",
+    "path": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::with_column_index_policy",
+    "name": "with_column_index_policy",
+    "owner": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_column_index_policy(self, column_index_policy: PageIndexPolicy) -> Self",
+    "docs": "Set the policy for reading the ColumnIndex (part of the PageIndex)",
+    "span": {
+      "filename": "src/file/metadata/push_decoder.rs",
+      "begin": [
+        292,
+        5
+      ],
+      "end": [
+        295,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "column_index_policy",
+              {
+                "resolved_path": {
+                  "path": "PageIndexPolicy",
+                  "id": 3076,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3076": "parquet::file::metadata::reader::PageIndexPolicy"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataPushDecoder",
+          "id": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/push_decoder.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          458,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5298",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md",
+    "record_file": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.json",
+    "anchor": "op-0cac64151977b37124ce0a8e",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataPushDecoder::with_column_index_policy"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "79c7c8c84a228f52286631dc",
+    "path": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::with_file_decryption_properties",
+    "name": "with_file_decryption_properties",
+    "owner": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_file_decryption_properties(self, file_decryption_properties: Option<std::sync::Arc<FileDecryptionProperties>>) -> Self",
+    "docs": "Provide decryption properties for decoding encrypted Parquet files",
+    "span": {
+      "filename": "src/file/metadata/push_decoder.rs",
+      "begin": [
+        311,
+        5
+      ],
+      "end": [
+        319,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"encryption\"), span: src/file/metadata/push_decoder.rs:309:11: 309:33 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "file_decryption_properties",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 74,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "std::sync::Arc",
+                              "id": 2578,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "FileDecryptionProperties",
+                                          "id": 3088,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "74": "core::option::Option",
+      "2578": "alloc::sync::Arc",
+      "3088": null
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataPushDecoder",
+          "id": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/push_decoder.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          458,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5301",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md",
+    "record_file": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.json",
+    "anchor": "op-79c7c8c84a228f52286631dc",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataPushDecoder::with_file_decryption_properties"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "91b28bac9f0fda3e26a2cd65",
+    "path": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::with_metadata_options",
+    "name": "with_metadata_options",
+    "owner": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_metadata_options(self, options: Option<Arc<ParquetMetaDataOptions>>) -> Self",
+    "docs": "Set the options to use when decoding the Parquet metadata.",
+    "span": {
+      "filename": "src/file/metadata/push_decoder.rs",
+      "begin": [
+        304,
+        5
+      ],
+      "end": [
+        307,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "options",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 74,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 2578,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "ParquetMetaDataOptions",
+                                          "id": 3096,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "74": "core::option::Option",
+      "2578": "alloc::sync::Arc",
+      "3096": "parquet::file::metadata::options::ParquetMetaDataOptions"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataPushDecoder",
+          "id": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/push_decoder.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          458,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5300",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md",
+    "record_file": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.json",
+    "anchor": "op-91b28bac9f0fda3e26a2cd65",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataPushDecoder::with_metadata_options"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e0ad5385972e8a106701a700",
+    "path": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::with_offset_index_policy",
+    "name": "with_offset_index_policy",
+    "owner": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_offset_index_policy(self, offset_index_policy: PageIndexPolicy) -> Self",
+    "docs": "Set the policy for reading the OffsetIndex (part of the PageIndex)",
+    "span": {
+      "filename": "src/file/metadata/push_decoder.rs",
+      "begin": [
+        298,
+        5
+      ],
+      "end": [
+        301,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "offset_index_policy",
+              {
+                "resolved_path": {
+                  "path": "PageIndexPolicy",
+                  "id": 3076,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3076": "parquet::file::metadata::reader::PageIndexPolicy"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataPushDecoder",
+          "id": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/push_decoder.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          458,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5299",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md",
+    "record_file": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.json",
+    "anchor": "op-e0ad5385972e8a106701a700",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataPushDecoder::with_offset_index_policy"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "48663bd4d902450e3347bcc6",
+    "path": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder::with_page_index_policy",
+    "name": "with_page_index_policy",
+    "owner": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn with_page_index_policy(self, page_index_policy: PageIndexPolicy) -> Self",
+    "docs": "Enable or disable reading the page index structures described in\n\"[Parquet page index] Layout to Support Page Skipping\".\n\nDefaults to [`PageIndexPolicy::Optional`]\n\nThis requires\n1. The Parquet file to have been written with page indexes\n2. Additional data to be pushed into the decoder (as the page indexes are not part of the thrift footer)\n\n[Parquet page index]: https://github.com/apache/parquet-format/blob/master/PageIndex.md",
+    "span": {
+      "filename": "src/file/metadata/push_decoder.rs",
+      "begin": [
+        285,
+        5
+      ],
+      "end": [
+        289,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "page_index_policy",
+              {
+                "resolved_path": {
+                  "path": "PageIndexPolicy",
+                  "id": 3076,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3076": "parquet::file::metadata::reader::PageIndexPolicy"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ParquetMetaDataPushDecoder",
+          "id": "parquet::file::metadata::push_decoder::ParquetMetaDataPushDecoder",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file/metadata/push_decoder.rs",
+        "begin": [
+          235,
+          1
+        ],
+        "end": [
+          458,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`PageIndexPolicy::Optional`": 5297
+    },
+    "link_paths": {
+      "`PageIndexPolicy::Optional`": "parquet::file::metadata::reader::PageIndexPolicy::Optional"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "5293",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.md",
+    "record_file": "operations/parquet.file.metadata.push_decoder.ParquetMetaDataPushDecoder.json",
+    "anchor": "op-48663bd4d902450e3347bcc6",
+    "aliases": [
+      "parquet::file::metadata::ParquetMetaDataPushDecoder::with_page_index_policy"
+    ],
+    "resolved_doc_links": {
+      "`PageIndexPolicy::Optional`": "../operations/parquet.file.metadata.reader.PageIndexPolicy.md#op-048be08cc587a4d901ecc115"
+    }
+  }
+]

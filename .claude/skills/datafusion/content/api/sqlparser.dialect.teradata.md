@@ -46,6 +46,9 @@ fn supports_top_before_distinct(&self) -> bool
 fn supports_window_function_null_treatment_arg(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.dialect.teradata.TeradataDialect.md).
+
+
 A [`Dialect`] for [Teradata](https://docs.teradata.com/).
 
 ---

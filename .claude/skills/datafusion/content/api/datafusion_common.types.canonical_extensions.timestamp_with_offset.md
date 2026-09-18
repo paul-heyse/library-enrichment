@@ -28,6 +28,9 @@ fn serialize_metadata(&self) -> Option<String>
 fn storage_type(&self) -> DataType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.canonical_extensions.timestamp_with_offset.DFTimestampWithOffset.md).
+
+
 Defines the extension type logic for the canonical `arrow.timestamp_with_offset` extension type.
 This extension type allows associating a different offset for each timestamp in a column.
 

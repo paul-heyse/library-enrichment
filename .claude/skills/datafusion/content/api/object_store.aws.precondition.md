@@ -24,6 +24,9 @@ enum S3ConditionalPut
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.aws.precondition.S3ConditionalPut.md).
+
+
 Configure how to provide conditional put support for [`AmazonS3`].
 
 [`AmazonS3`]: super::AmazonS3
@@ -51,6 +54,9 @@ enum S3CopyIfNotExists
 ```rust
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.aws.precondition.S3CopyIfNotExists.md).
+
 
 Configure how to provide [`CopyMode::Create`] for [`AmazonS3`].
 

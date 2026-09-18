@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## WriterStatsConfig
 
 `struct` · `deltalake_core::operations::write::configs::WriterStatsConfig`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.write.configs.WriterStatsConfig.md)
 
 Also reachable as `deltalake::operations::write::WriterStatsConfig`, `deltalake::operations::write::configs::WriterStatsConfig`, `deltalake_core::operations::write::WriterStatsConfig`
 

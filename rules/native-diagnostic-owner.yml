@@ -1,0 +1,19 @@
+id: native-diagnostic-owner
+language: Rust
+severity: error
+message: Telemetry retains the declared Diagnostic and native recovery actions without a second payload codec.
+files:
+  - crates/enrichment-core/src/telemetry.rs
+  - crates/enrichment-store/src/telemetry_history.rs
+rule:
+  any:
+    - kind: field_declaration
+      has:
+        field: name
+        regex: '^recovery_payload$'
+    - kind: macro_invocation
+      has:
+        field: macro
+        regex: '(^|::)native_(struct|split_record|union)$'
+      regex: '\brecovery_payload\s*:'
+note: The retired Failure record independently changed sequence semantics and encoded recovery actions as JSON. The native Diagnostic declaration owns both history and delivery.

@@ -10,6 +10,9 @@ Crate `object_store` · 3 public items · structured records in [`model/object_s
 const DEFAULT_BUFFER_SIZE: usize = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.buffered.DEFAULT_BUFFER_SIZE.md).
+
+
 The default buffer size used by [`BufReader`]
 
 ---
@@ -52,6 +55,9 @@ fn poll_read(Pin<&mut self>, cx: &mut Context<'_>, out: &mut ReadBuf<'_>) -> Pol
 fn poll_complete(Pin<&mut self>, _cx: &mut Context<'_>) -> Poll<std::io::Result<u64>>
 fn start_seek(Pin<&mut self>, position: SeekFrom) -> std::io::Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.buffered.BufReader.md).
+
 
 An async-buffered reader compatible with the tokio IO traits
 
@@ -106,6 +112,9 @@ fn poll_flush(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Result<(), Error>>
 fn poll_shutdown(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Result<(), Error>>
 fn poll_write(Pin<&mut self>, cx: &mut Context<'_>, buf: &[u8]) -> Poll<Result<usize, Error>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.buffered.BufWriter.md).
+
 
 An async buffered writer compatible with the tokio IO traits
 

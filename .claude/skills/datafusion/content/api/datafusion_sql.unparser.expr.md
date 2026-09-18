@@ -12,6 +12,9 @@ Also reachable as `datafusion_sql::unparser::expr_to_sql`
 fn expr_to_sql(expr: &datafusion_expr::Expr) -> datafusion_common::Result<ast::Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_sql.unparser.expr.expr_to_sql.md).
+
+
 Convert a DataFusion [`Expr`] to [`ast::Expr`]
 
 This function is the opposite of [`SqlToRel::sql_to_expr`] and can be used

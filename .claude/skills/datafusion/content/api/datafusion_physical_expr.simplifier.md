@@ -19,6 +19,9 @@ fn new(schema: &'a Schema) -> Self
 fn simplify(&self, expr: Arc<dyn PhysicalExpr>) -> Result<Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.simplifier.PhysicalExprSimplifier.md).
+
+
 Simplifies physical expressions by applying various optimizations
 
 This can be useful after adapting expressions from a table schema

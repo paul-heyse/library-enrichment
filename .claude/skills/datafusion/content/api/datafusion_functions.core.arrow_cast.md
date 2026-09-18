@@ -32,6 +32,9 @@ fn signature(&self) -> &Signature
 fn simplify(&self, args: Vec<Expr>, info: &SimplifyContext) -> Result<ExprSimplifyResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.arrow_cast.ArrowCastFunc.md).
+
+
 Implements casting to arbitrary arrow types (rather than SQL types)
 
 Note that the `arrow_cast` function is somewhat special in that its

@@ -5,6 +5,7 @@ Crate `deltalake-catalog-unity` · 2 public items · structured records in [`mod
 ## Backoff
 
 `struct` · `deltalake_catalog_unity::client::backoff::Backoff`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.client.backoff.Backoff.md)
 
 ```rust
 struct Backoff
@@ -29,6 +30,7 @@ Consecutive calls to [`Backoff::tick`] will return the next backoff interval
 ## BackoffConfig
 
 `struct` · `deltalake_catalog_unity::client::backoff::BackoffConfig`
+[Full member contracts, output types and access classification](../operations/deltalake_catalog_unity.client.backoff.BackoffConfig.md)
 
 ```rust
 struct BackoffConfig

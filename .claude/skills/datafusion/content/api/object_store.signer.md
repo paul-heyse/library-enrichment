@@ -23,6 +23,9 @@ async fn signed_url(&self, method: Method, path: &Path, expires_in: Duration) ->
 async fn signed_urls(&self, method: Method, paths: &[Path], expires_in: Duration) -> Result<Vec<Url>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.signer.Signer.md).
+
+
 Universal API to generate presigned URLs from multiple object store services.
 
 ---

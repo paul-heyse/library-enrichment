@@ -10,6 +10,9 @@ Crate `arrow-ipc` · 9 public items · structured records in [`model/arrow_ipc.r
 fn read_dictionary(buf: &arrow_buffer::Buffer, batch: DictionaryBatch<'_>, schema: &Schema, dictionaries_by_id: &mut std::collections::HashMap<i64, ArrayRef>, metadata: &MetadataVersion) -> Result<(), ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.reader.read_dictionary.md).
+
+
 Read the dictionary from the buffer and provided metadata,
 updating the `dictionaries_by_id` with the resulting dictionary
 
@@ -23,6 +26,9 @@ updating the `dictionaries_by_id` with the resulting dictionary
 fn read_dictionary_impl(buf: &arrow_buffer::Buffer, batch: DictionaryBatch<'_>, schema: &Schema, dictionaries_by_id: &mut std::collections::HashMap<i64, ArrayRef>, metadata: &MetadataVersion, require_alignment: bool, skip_validation: arrow_data::UnsafeFlag) -> Result<(), ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.reader.read_dictionary_impl.md).
+
+
 Low-level version of [`read_dictionary`] with alignment and validation controls
 
 ---
@@ -34,6 +40,9 @@ Low-level version of [`read_dictionary`] with alignment and validation controls
 ```rust
 fn read_footer_length(buf: [u8; 10]) -> Result<usize, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.reader.read_footer_length.md).
+
 
 Read the footer length from the last 10 bytes of an Arrow IPC file
 
@@ -48,6 +57,9 @@ Expects a 4 byte footer length followed by `b"ARROW1"`
 ```rust
 fn read_record_batch(buf: &arrow_buffer::Buffer, batch: RecordBatch<'_>, schema: SchemaRef, dictionaries_by_id: &std::collections::HashMap<i64, ArrayRef>, projection: Option<&[usize]>, metadata: &MetadataVersion) -> Result<RecordBatch, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.reader.read_record_batch.md).
+
 
 Creates a record batch from binary data using the `crate::RecordBatch` indexes and the `Schema`.
 
@@ -82,6 +94,9 @@ fn with_projection(self, projection: Vec<usize>) -> Self
 fn with_require_alignment(self, require_alignment: bool) -> Self
 unsafe fn with_skip_validation(self, skip_validation: bool) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.reader.FileDecoder.md).
+
 
 A low-level, push-based interface for reading an IPC file
 
@@ -188,6 +203,9 @@ fn schema(&self) -> SchemaRef
 fn next(&mut self) -> Option<Self::Item>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.reader.FileReader.md).
+
+
 Arrow File Reader
 
 Reads Arrow [`RecordBatch`]es from bytes in the [IPC File Format],
@@ -255,6 +273,9 @@ fn with_max_footer_fb_tables(self, max_footer_fb_tables: usize) -> Self
 fn with_projection(self, projection: Vec<usize>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.reader.FileReaderBuilder.md).
+
+
 Build an Arrow [`FileReader`] with custom options.
 
 ---
@@ -276,6 +297,9 @@ fn with_projection(self, projection: Option<&'a [usize]>) -> Self
 fn with_require_alignment(self, require_alignment: bool) -> Self
 fn with_skip_validation(self, skip_validation: UnsafeFlag) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.reader.RecordBatchDecoder.md).
+
 
 State for decoding Arrow arrays from an [IPC RecordBatch] structure to
 [`RecordBatch`]
@@ -320,6 +344,9 @@ fn schema(&self) -> SchemaRef
 ```rust
 fn next(&mut self) -> Option<Self::Item>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.reader.StreamReader.md).
+
 
 Arrow Stream Reader
 

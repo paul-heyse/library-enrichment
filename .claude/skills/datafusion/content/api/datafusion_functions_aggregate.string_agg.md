@@ -10,6 +10,9 @@ Crate `datafusion-functions-aggregate` · 3 public items · structured records i
 fn string_agg(expr: datafusion_expr::Expr, delimiter: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.string_agg.string_agg.md).
+
+
 Concatenates the values of string expressions and places separator values between them
 
 ---
@@ -21,6 +24,9 @@ Concatenates the values of string expressions and places separator values betwee
 ```rust
 fn string_agg_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.string_agg.string_agg_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`StringAgg`]
 
@@ -57,6 +63,9 @@ fn reverse_expr(&self) -> datafusion_expr::ReversedUDAF
 fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.string_agg.StringAgg.md).
+
 
 STRING_AGG aggregate expression
 

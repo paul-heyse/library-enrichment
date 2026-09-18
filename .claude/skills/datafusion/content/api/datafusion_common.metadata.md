@@ -10,6 +10,9 @@ Crate `datafusion-common` · 4 public items · structured records in [`model/dat
 fn check_metadata_with_storage_equal(actual: (&arrow::datatypes::DataType, Option<&std::collections::HashMap<String, String>>), expected: (&arrow::datatypes::DataType, Option<&std::collections::HashMap<String, String>>), what: &str, context: &str) -> Result<(), DataFusionError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.metadata.check_metadata_with_storage_equal.md).
+
+
 Assert equality of data types where one or both sides may have field metadata
 
 This currently compares absent metadata (e.g., one side was a DataType) and
@@ -31,6 +34,9 @@ actual and expected do not compare to equal.
 ```rust
 fn format_type_and_metadata(data_type: &arrow::datatypes::DataType, metadata: Option<&std::collections::HashMap<String, String>>) -> String
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.metadata.format_type_and_metadata.md).
+
 
 Given a data type represented by storage and optional metadata, generate
 a user-facing string
@@ -82,6 +88,9 @@ fn from(inner: BTreeMap<String, String>) -> Self
 fn from(map: &HashMap<String, String>) -> Self
 fn from(map: std::collections::HashMap<String, String>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.metadata.FieldMetadata.md).
+
 
 Literal metadata
 
@@ -149,6 +158,9 @@ fn value(&self) -> &ScalarValue
 ```rust
 fn from(value: ScalarValue) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.metadata.ScalarAndMetadata.md).
+
 
 A [`ScalarValue`] with optional [`FieldMetadata`]
 

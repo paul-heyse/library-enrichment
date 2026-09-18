@@ -1,0 +1,1884 @@
+[
+  {
+    "id": "9b64c4444ea3b8dc26e08d7e",
+    "path": "buoyant_kernel::table_changes::TableChanges",
+    "name": "TableChanges",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct",
+    "signature": "struct TableChanges",
+    "docs": "Represents a call to read the Change Data Feed (CDF) between two versions of a table. The schema\nof `TableChanges` will be the schema of the table at the end version with three additional\ncolumns:\n- `_change_type`: String representing the type of change that for that commit. This may be one\n  of `delete`, `insert`, `update_preimage`, or `update_postimage`.\n- `_commit_version`: Long representing the commit the change occurred in.\n- `_commit_timestamp`: Time at which the commit occurred. The timestamp is retrieved from the\n  file modification time of the log file. No timezone is associated with the timestamp.\n\n  Currently, in-commit timestamps (ICT) is not supported. In the future when ICT is enabled, the\n  timestamp will be retrieved from the `inCommitTimestamp` field of the CommitInfo` action.\n  See issue [#559](https://github.com/delta-io/delta-kernel-rs/issues/559)\n  For details on In-Commit Timestamps, see the [Protocol](https://github.com/delta-io/delta/blob/master/PROTOCOL.md#in-commit-timestamps).\n\n\nThree properties must hold for the entire CDF range:\n- Reading must be supported for every commit in the range. Currently the only read feature\n  allowed is deletion vectors. This will be expanded in the future to support more delta table\n  features. Because only deletion vectors are supported, reader version 2 will not be allowed.\n  That is\n- Change Data Feed must be enabled for the entire range with the `delta.enableChangeDataFeed`\n  table property set to `true`. Performing change data feed on  tables with column mapping is\n  currently disallowed. We check that column mapping is disabled, or the column mapping mode is\n  `None`.\n- The schema for each commit must be compatible with the end schema. This means that all the\n  same fields and their nullability are the same. Schema compatibility will be expanded in the\n  future to allow compatible schemas that are not the exact same.\n  See issue [#523](https://github.com/delta-io/delta-kernel-rs/issues/523)\n\n # Examples\n Get `TableChanges` for versions 0 to 1 (inclusive)\n ```rust\n # use buoyant_kernel as delta_kernel;\n # use test_utils::delta_kernel_default_engine::{storage::store_from_url, DefaultEngineBuilder};\n # use delta_kernel::{SnapshotRef, Error};\n # use delta_kernel::table_changes::TableChanges;\n # let path = \"./tests/data/table-with-cdf\";\n let url = delta_kernel::try_parse_uri(path)?;\n # let engine = DefaultEngineBuilder::new(store_from_url(&url)?).build();\n let table_changes = TableChanges::try_new(url, &engine, 0, Some(1))?;\n # Ok::<(), Error>(())\n ````\nFor more details, see the following sections of the protocol:\n- [Add CDC File](https://github.com/delta-io/delta/blob/master/PROTOCOL.md#add-cdc-file)\n- [Change Data Files](https://github.com/delta-io/delta/blob/master/PROTOCOL.md#change-data-files).",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        115,
+        1
+      ],
+      "end": [
+        122,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          8130,
+          8131,
+          8132,
+          8133,
+          8134,
+          8135,
+          8136,
+          8137,
+          8138,
+          8139,
+          8140,
+          8141,
+          8142,
+          8143,
+          8144,
+          8145,
+          8146,
+          8147,
+          8148,
+          8149,
+          8150,
+          8151,
+          8152,
+          8153,
+          8154,
+          8155,
+          8156,
+          8157,
+          8159
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8041",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L115",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "11893",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-9b64c4444ea3b8dc26e08d7e",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f2cc7e8cb90da72ad3a25d98",
+    "path": "buoyant_kernel::table_changes::TableChanges::end_version",
+    "name": "end_version",
+    "owner": "buoyant_kernel::table_changes::TableChanges",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn end_version(&self) -> Version",
+    "docs": "The end version (inclusive) of the [`TableChanges`]. If no `end_version` was specified in\n[`TableChanges::try_new`], this returns the newest version as of the call to `try_new`.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        224,
+        5
+      ],
+      "end": [
+        226,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Version",
+              "id": 1650,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1650": "buoyant_kernel::Version"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableChanges",
+          "id": "buoyant_kernel::table_changes::TableChanges",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+        "begin": [
+          124,
+          1
+        ],
+        "end": [
+          246,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TableChanges::try_new`": 8123,
+      "`TableChanges`": 8041
+    },
+    "link_paths": {
+      "`TableChanges::try_new`": "buoyant_kernel::table_changes::TableChanges::try_new",
+      "`TableChanges`": "buoyant_kernel::table_changes::TableChanges"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8125",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L224",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "12112",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-f2cc7e8cb90da72ad3a25d98",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges::end_version"
+    ],
+    "resolved_doc_links": {
+      "`TableChanges::try_new`": "../operations/buoyant_kernel.table_changes.TableChanges.md#op-a5d450caf29d1abf2248d86a",
+      "`TableChanges`": "../operations/buoyant_kernel.table_changes.TableChanges.md#op-9b64c4444ea3b8dc26e08d7e"
+    }
+  },
+  {
+    "id": "edf557e403fec0c346701ccb",
+    "path": "buoyant_kernel::table_changes::TableChanges::fmt",
+    "name": "fmt",
+    "owner": "buoyant_kernel::table_changes::TableChanges",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        114,
+        10
+      ],
+      "end": [
+        114,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 102,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 103,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "102": "core::fmt::Formatter",
+      "103": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableChanges",
+          "id": "buoyant_kernel::table_changes::TableChanges",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+        "begin": [
+          114,
+          10
+        ],
+        "end": [
+          114,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8158",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L114",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "12145",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-edf557e403fec0c346701ccb",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0bb7103f76529fdb5712c10a",
+    "path": "buoyant_kernel::table_changes::TableChanges::into_scan_builder",
+    "name": "into_scan_builder",
+    "owner": "buoyant_kernel::table_changes::TableChanges",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn into_scan_builder(self) -> TableChangesScanBuilder",
+    "docs": "Consume this `TableChanges` to create a [`TableChangesScanBuilder`]",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        243,
+        5
+      ],
+      "end": [
+        245,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "TableChangesScanBuilder",
+              "id": 8080,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "8080": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableChanges",
+          "id": "buoyant_kernel::table_changes::TableChanges",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+        "begin": [
+          124,
+          1
+        ],
+        "end": [
+          246,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TableChangesScanBuilder`": 8080
+    },
+    "link_paths": {
+      "`TableChangesScanBuilder`": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8129",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L243",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "12116",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-0bb7103f76529fdb5712c10a",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges::into_scan_builder"
+    ],
+    "resolved_doc_links": {
+      "`TableChangesScanBuilder`": "../operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.md#op-4e86551bf6a1e8510c810267"
+    }
+  },
+  {
+    "id": "99e1d80aaaf86d070d5b762c",
+    "path": "buoyant_kernel::table_changes::TableChanges::scan_builder",
+    "name": "scan_builder",
+    "owner": "buoyant_kernel::table_changes::TableChanges",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn scan_builder(Arc<self>) -> TableChangesScanBuilder",
+    "docs": "Create a [`TableChangesScanBuilder`] for an `Arc<TableChanges>`.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        238,
+        5
+      ],
+      "end": [
+        240,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 40,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "TableChangesScanBuilder",
+              "id": 8080,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "40": "alloc::sync::Arc",
+      "8080": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableChanges",
+          "id": "buoyant_kernel::table_changes::TableChanges",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+        "begin": [
+          124,
+          1
+        ],
+        "end": [
+          246,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TableChangesScanBuilder`": 8080
+    },
+    "link_paths": {
+      "`TableChangesScanBuilder`": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8128",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L238",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "12115",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-99e1d80aaaf86d070d5b762c",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges::scan_builder"
+    ],
+    "resolved_doc_links": {
+      "`TableChangesScanBuilder`": "../operations/buoyant_kernel.table_changes.scan.TableChangesScanBuilder.md#op-4e86551bf6a1e8510c810267"
+    }
+  },
+  {
+    "id": "b90da4e6f31ed2f12e0bdbcf",
+    "path": "buoyant_kernel::table_changes::TableChanges::schema",
+    "name": "schema",
+    "owner": "buoyant_kernel::table_changes::TableChanges",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn schema(&self) -> &Schema",
+    "docs": "The logical schema of the change data feed. For details on the shape of the schema, see\n[`TableChanges`].",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        229,
+        5
+      ],
+      "end": [
+        231,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Schema",
+                  "id": 6324,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6324": "buoyant_kernel::schema::Schema"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableChanges",
+          "id": "buoyant_kernel::table_changes::TableChanges",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+        "begin": [
+          124,
+          1
+        ],
+        "end": [
+          246,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TableChanges`": 8041
+    },
+    "link_paths": {
+      "`TableChanges`": "buoyant_kernel::table_changes::TableChanges"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8126",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L229",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "12113",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-b90da4e6f31ed2f12e0bdbcf",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges::schema"
+    ],
+    "resolved_doc_links": {
+      "`TableChanges`": "../operations/buoyant_kernel.table_changes.TableChanges.md#op-9b64c4444ea3b8dc26e08d7e"
+    }
+  },
+  {
+    "id": "b97db2b25fb41bbefe34f308",
+    "path": "buoyant_kernel::table_changes::TableChanges::start_version",
+    "name": "start_version",
+    "owner": "buoyant_kernel::table_changes::TableChanges",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn start_version(&self) -> Version",
+    "docs": "The start version of the `TableChanges`.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        219,
+        5
+      ],
+      "end": [
+        221,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Version",
+              "id": 1650,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1650": "buoyant_kernel::Version"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableChanges",
+          "id": "buoyant_kernel::table_changes::TableChanges",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+        "begin": [
+          124,
+          1
+        ],
+        "end": [
+          246,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8124",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L219",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "12111",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-b97db2b25fb41bbefe34f308",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges::start_version"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c259deac2ced58df21e4babd",
+    "path": "buoyant_kernel::table_changes::TableChanges::table_root",
+    "name": "table_root",
+    "owner": "buoyant_kernel::table_changes::TableChanges",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn table_root(&self) -> &Url",
+    "docs": "Path to the root of the table that is being read.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        233,
+        5
+      ],
+      "end": [
+        235,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Url",
+                  "id": 254,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "254": "url::Url"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableChanges",
+          "id": "buoyant_kernel::table_changes::TableChanges",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+        "begin": [
+          124,
+          1
+        ],
+        "end": [
+          246,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8127",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L233",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "12114",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-c259deac2ced58df21e4babd",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges::table_root"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a5d450caf29d1abf2248d86a",
+    "path": "buoyant_kernel::table_changes::TableChanges::try_new",
+    "name": "try_new",
+    "owner": "buoyant_kernel::table_changes::TableChanges",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "function",
+    "signature": "fn try_new(table_root: Url, engine: &dyn Engine, start_version: Version, end_version: Option<Version>) -> DeltaResult<Self>",
+    "docs": "Creates a new [`TableChanges`] instance for the given version range. This function checks\nthese properties:\n- The change data feed table feature must be enabled in both the start or end versions.\n- Other than the deletion vector reader feature, no other reader features are enabled for\n  the table.\n- The schemas at the start and end versions are the same.\n\nNote that this does not check that change data feed is enabled for every commit in the\nrange. It also does not check that the schema remains the same for the entire range.\n\n# Parameters\n- `table_root`: url pointing at the table root (where `_delta_log` folder is located)\n- `engine`: Implementation of [`Engine`] apis.\n- `start_version`: The start version of the change data feed\n- `end_version`: The end version (inclusive) of the change data feed. If this is none, this\n  defaults to the newest table version.",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        141,
+        5
+      ],
+      "end": [
+        216,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "table_root",
+              {
+                "resolved_path": {
+                  "path": "Url",
+                  "id": 254,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "engine",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Engine",
+                            "id": 926,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "start_version",
+              {
+                "resolved_path": {
+                  "path": "Version",
+                  "id": 1650,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "end_version",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 23,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Version",
+                              "id": 1650,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DeltaResult",
+              "id": 239,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "254": "url::Url",
+      "926": "buoyant_kernel::Engine",
+      "1650": "buoyant_kernel::Version",
+      "23": "core::option::Option",
+      "239": "buoyant_kernel::error::DeltaResult"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TableChanges",
+          "id": "buoyant_kernel::table_changes::TableChanges",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+        "begin": [
+          124,
+          1
+        ],
+        "end": [
+          246,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`TableChanges`": 8041,
+      "`Engine`": 926
+    },
+    "link_paths": {
+      "`TableChanges`": "buoyant_kernel::table_changes::TableChanges",
+      "`Engine`": "buoyant_kernel::Engine"
+    },
+    "artifact": {
+      "id": "ff2d1094a372f00bad8b0dcda9fcb68fb2edb846427bfd6ad29c75edd37e7e26",
+      "format_version": 61,
+      "item_id": "8123",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "public",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.json.zst",
+      "compressed_sha256": "313abc6fb1c8f598da0ec9b1e08a88590560b3d9fb9c3c74091f527d754bd969"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "public",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L141",
+    "supplemental_artifacts": [
+      {
+        "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+        "format_version": 61,
+        "item_id": "12110",
+        "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+        "role": "private",
+        "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+        "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+      }
+    ],
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-a5d450caf29d1abf2248d86a",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges::try_new"
+    ],
+    "resolved_doc_links": {
+      "`TableChanges`": "../operations/buoyant_kernel.table_changes.TableChanges.md#op-9b64c4444ea3b8dc26e08d7e",
+      "`Engine`": "../operations/buoyant_kernel.Engine.md#op-144f8dad57c79b7743fd1386"
+    }
+  },
+  {
+    "id": "a55dbad4b266bf8e9e6c8650",
+    "path": "buoyant_kernel::table_changes::TableChanges::end_snapshot",
+    "name": "end_snapshot",
+    "owner": "buoyant_kernel::table_changes::TableChanges",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "end_snapshot: snapshot::SnapshotRef",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        118,
+        5
+      ],
+      "end": [
+        118,
+        30
+      ]
+    },
+    "visibility": {
+      "restricted": {
+        "parent": 11851,
+        "path": "::table_changes"
+      }
+    },
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "crate::snapshot::SnapshotRef",
+          "id": 2240,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "2240": "buoyant_kernel::snapshot::SnapshotRef"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "12106",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L118",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-a55dbad4b266bf8e9e6c8650",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges::end_snapshot"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "041f453bbe01eb0475644d57",
+    "path": "buoyant_kernel::table_changes::TableChanges::log_segment",
+    "name": "log_segment",
+    "owner": "buoyant_kernel::table_changes::TableChanges",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "log_segment: log_segment::LogSegment",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        116,
+        5
+      ],
+      "end": [
+        116,
+        39
+      ]
+    },
+    "visibility": "crate",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "crate::log_segment::LogSegment",
+          "id": 750,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "750": "buoyant_kernel::log_segment::LogSegment"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "12104",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L116",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-041f453bbe01eb0475644d57",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges::log_segment"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6535c0336b050ef4a09d3fe2",
+    "path": "buoyant_kernel::table_changes::TableChanges::schema",
+    "name": "schema",
+    "owner": "buoyant_kernel::table_changes::TableChanges",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "schema: schema::Schema",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        120,
+        5
+      ],
+      "end": [
+        120,
+        19
+      ]
+    },
+    "visibility": {
+      "restricted": {
+        "parent": 11851,
+        "path": "::table_changes"
+      }
+    },
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "crate::schema::Schema",
+          "id": 1148,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "1148": "buoyant_kernel::schema::Schema"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "12108",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L120",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-6535c0336b050ef4a09d3fe2",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges::schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0c28c25631383a1ed5fbf0c5",
+    "path": "buoyant_kernel::table_changes::TableChanges::start_table_config",
+    "name": "start_table_config",
+    "owner": "buoyant_kernel::table_changes::TableChanges",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "start_table_config: table_configuration::TableConfiguration",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        121,
+        5
+      ],
+      "end": [
+        121,
+        43
+      ]
+    },
+    "visibility": {
+      "restricted": {
+        "parent": 11851,
+        "path": "::table_changes"
+      }
+    },
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "crate::table_configuration::TableConfiguration",
+          "id": 2367,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "2367": "buoyant_kernel::table_configuration::TableConfiguration"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "12109",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L121",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-0c28c25631383a1ed5fbf0c5",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges::start_table_config"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1a46b2a002bed19b2829bdc1",
+    "path": "buoyant_kernel::table_changes::TableChanges::start_version",
+    "name": "start_version",
+    "owner": "buoyant_kernel::table_changes::TableChanges",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "start_version: Version",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        119,
+        5
+      ],
+      "end": [
+        119,
+        27
+      ]
+    },
+    "visibility": {
+      "restricted": {
+        "parent": 11851,
+        "path": "::table_changes"
+      }
+    },
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "crate::Version",
+          "id": 2289,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "2289": "buoyant_kernel::Version"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "12107",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L119",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-1a46b2a002bed19b2829bdc1",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges::start_version"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4a193c7e950cbc1bff9c924e",
+    "path": "buoyant_kernel::table_changes::TableChanges::table_root",
+    "name": "table_root",
+    "owner": "buoyant_kernel::table_changes::TableChanges",
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "struct_field",
+    "signature": "table_root: url::Url",
+    "docs": "",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/table_changes/mod.rs",
+      "begin": [
+        117,
+        5
+      ],
+      "end": [
+        117,
+        20
+      ]
+    },
+    "visibility": {
+      "restricted": {
+        "parent": 11851,
+        "path": "::table_changes"
+      }
+    },
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "url::Url",
+          "id": 467,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "467": "url::Url"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "12105",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_field",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/table_changes/mod.rs#L117",
+    "reader_notes": [],
+    "page": "operations/buoyant_kernel.table_changes.TableChanges.md",
+    "record_file": "operations/buoyant_kernel.table_changes.TableChanges.json",
+    "anchor": "op-4a193c7e950cbc1bff9c924e",
+    "aliases": [
+      "delta_kernel::table_changes::TableChanges::table_root"
+    ],
+    "resolved_doc_links": {}
+  }
+]

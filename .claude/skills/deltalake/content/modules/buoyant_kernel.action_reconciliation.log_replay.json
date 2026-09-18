@@ -1,0 +1,92 @@
+[
+  {
+    "id": "cfe3087aa02a2cbf50e49fd7",
+    "path": "buoyant_kernel::action_reconciliation::log_replay",
+    "name": "log_replay",
+    "owner": null,
+    "crate": "buoyant_kernel",
+    "version": "1.0.0+58f07cd6",
+    "kind": "module",
+    "signature": "mod log_replay",
+    "docs": "The [`ActionReconciliationProcessor`] implements specialized log replay logic for performing\naction reconciliation. It processes log files in reverse chronological order (newest to oldest)\nand selects the set of actions to be included.\n\nUses cases include checkpointing and log compaction.\n\n## Actions Included\n\nThis processor applies several filtering and deduplication steps to each batch of log actions:\n\n1. **Protocol and Metadata**: Retains exactly one of each - keeping only the latest protocol and\n   metadata actions.\n2. **Txn Actions**: Keeps exactly one `txn` action for each unique app ID, always selecting the\n   latest one encountered.\n3. **File Actions**: Resolves file actions to produce the latest state of the table, keeping the\n   most recent valid add actions and unexpired remove actions (tombstones) that are newer than\n   `minimum_file_retention_timestamp`.\n\n## Architecture\n\n- [`ActionReconciliationVisitor`]: Implements [`RowVisitor`] to examine each action in a batch\n  and determine if it should be included. It maintains state for deduplication across multiple\n  actions in a batch and efficiently handles all filtering rules.\n\n- [`ActionReconciliationProcessor`]: Implements the [`LogReplayProcessor`] trait and\n  orchestrates the overall process. For each batch of log actions, it:\n  1. Creates a visitor with the current deduplication state\n  2. Applies the visitor to filter actions in the batch\n  3. Tracks state for deduplication across batches\n  4. Produces a [`ActionReconciliationBatch`] result which includes both the filtered data and\n     counts of actions selected",
+    "span": {
+      "filename": "/home/paul/.cargo/git/checkouts/delta-kernel-rs-ed98d9651ec5fb51/8ba063f/kernel/src/action_reconciliation/log_replay.rs",
+      "begin": [
+        1,
+        1
+      ],
+      "end": [
+        1416,
+        2
+      ]
+    },
+    "visibility": "crate",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          12,
+          109,
+          156,
+          200,
+          110,
+          266
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`LogReplayProcessor`": 13,
+      "`RowVisitor`": 325,
+      "`ActionReconciliationBatch`": 109,
+      "`ActionReconciliationVisitor`": 110,
+      "`ActionReconciliationProcessor`": 12
+    },
+    "link_paths": {
+      "`LogReplayProcessor`": "buoyant_kernel::log_replay::LogReplayProcessor",
+      "`RowVisitor`": "buoyant_kernel::engine_data::RowVisitor",
+      "`ActionReconciliationBatch`": "buoyant_kernel::action_reconciliation::log_replay::ActionReconciliationBatch",
+      "`ActionReconciliationVisitor`": "buoyant_kernel::action_reconciliation::log_replay::ActionReconciliationVisitor",
+      "`ActionReconciliationProcessor`": "buoyant_kernel::action_reconciliation::log_replay::ActionReconciliationProcessor"
+    },
+    "artifact": {
+      "id": "96d1a96f87aeb5a932a27a55d94e73d2864db60bc61da146b189a9ec5dd7d2be",
+      "format_version": 61,
+      "item_id": "3",
+      "origin": "https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675",
+      "role": "private",
+      "file": "build/acquired/delta-rs@58f07cd6-2cba8df0c7fc/buoyant_kernel.private.json.zst",
+      "compressed_sha256": "95bb3565b0258de0257004a90f3ba81d4c724f1127b743f9be83194003e516b5"
+    },
+    "availability": {
+      "profile": "content/profile.json",
+      "features": [
+        "arrow-59",
+        "arrow-conversion",
+        "arrow-expression",
+        "default",
+        "default-engine-base",
+        "internal-api",
+        "nanosecond-timestamps",
+        "need-arrow",
+        "reqwest"
+      ],
+      "note": "Observed in this git capture; consumer feature graph must be matched."
+    },
+    "access": "internal_module",
+    "source_url": "https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/action_reconciliation/log_replay.rs#L1",
+    "reader_notes": [],
+    "page": "modules/buoyant_kernel.action_reconciliation.log_replay.md",
+    "record_file": "modules/buoyant_kernel.action_reconciliation.log_replay.json",
+    "anchor": "op-cfe3087aa02a2cbf50e49fd7",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`LogReplayProcessor`": "../operations/buoyant_kernel.log_replay.LogReplayProcessor.md#op-e6ee4714f432a749429a820c",
+      "`RowVisitor`": "../operations/buoyant_kernel.engine_data.RowVisitor.md#op-4cb6a6c8c9e1c025811a750f"
+    }
+  }
+]

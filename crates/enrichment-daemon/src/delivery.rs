@@ -186,24 +186,26 @@ pub(crate) async fn recover_result(
         .retained_result(runtime, &artifact.artifact_id)
         .await
         .map_err(io::Error::other)?;
+    let captured = catalog
+        .capture_result(&declared)
+        .await
+        .map_err(io::Error::other)?;
     let owned = blobs.clone();
     let descriptor = artifact.clone();
     let (index, _) = runtime
         .blocking(move || owned.read_result_sections(&descriptor, &[], MAX_RESULT_BYTES as u64))
         .await
         .map_err(io::Error::other)??;
-    let record = catalog
-        .result_record(&declared)
-        .await
-        .map_err(io::Error::other)?;
-    if index.record != record {
-        return Err(io::Error::other(
-            "retained native record differs from immutable result",
-        ));
-    }
+    enrichment_store::result_plan::admit_retained(
+        runtime,
+        index.record.clone(),
+        captured.record.clone(),
+    )
+    .await
+    .map_err(io::Error::other)?;
     enrichment_store::result_delivery::retained(
         runtime,
-        record.header,
+        captured.record.header,
         artifact,
         &index,
         enrichment_store::result_delivery::DeliveryOptions {
@@ -248,9 +250,17 @@ mod tests {
         let coverage = result.coverage.clone();
         let expected_data = serde_json::to_value(&result.data).unwrap();
         result.delivery.set_limits(Some(8192), 8192);
-        let reply = encode(&blobs, &catalog, &runtime, result, 8192, Some(8192))
-            .await
-            .unwrap();
+        let reply = encode(
+            &blobs,
+            &catalog,
+            &runtime,
+            result,
+            8192,
+            Some(8192),
+            enrichment_core::mcp_delivery::DeliveryProfile::Envelope,
+        )
+        .await
+        .unwrap();
         assert_eq!(reply.status(), enrichment_core::wire::Status::Partial);
         assert_eq!(reply.coverage, coverage);
         assert!(reply.data.is_empty());
@@ -318,18 +328,18 @@ mod tests {
                 limitations: vec![],
             },
         );
-        answer.context_id = Some(context.to_string());
-        answer.snapshot_id = Some(snapshot.to_string());
+        answer.context_id = Some(context.clone());
+        answer.snapshot_id = Some(snapshot.clone());
         let (artifact, _) =
             store_result(&blobs, &answer, enrichment_store::result::JOB_URI).unwrap();
         assert!(artifact.size_bytes > JOURNAL_BYTES as u64);
         let publication = enrichment_core::evidence::catalog::JobPublication {
-            job_id: format!("job_{}", "a".repeat(32)),
+            job_id: format!("job_{}", "a".repeat(32)).try_into().unwrap(),
             context_id: context,
             snapshot_id: snapshot,
             kind: enrichment_core::evidence::catalog::PublishedJobKind::Resolve,
             state: enrichment_core::wire::JobState::Succeeded,
-            attempt_id: "attempt_fixture".into(),
+            attempt_id: enrichment_core::identity::AttemptId::new(),
             result_artifact_ids: vec![artifact.artifact_id.clone()],
             delivery: artifact.clone(),
         };
@@ -387,13 +397,29 @@ mod tests {
             size(&answer, size_bytes).unwrap(),
             serde_json::to_vec(&answer).unwrap().len()
         );
-        let first = encode(&blobs, &catalog, &runtime, answer.clone(), 4096, Some(4096))
-            .await
-            .unwrap();
+        let first = encode(
+            &blobs,
+            &catalog,
+            &runtime,
+            answer.clone(),
+            4096,
+            Some(4096),
+            enrichment_core::mcp_delivery::DeliveryProfile::Envelope,
+        )
+        .await
+        .unwrap();
         answer.request_id = envelope::new_request_id();
-        let second = encode(&blobs, &catalog, &runtime, answer, 4096, Some(4096))
-            .await
-            .unwrap();
+        let second = encode(
+            &blobs,
+            &catalog,
+            &runtime,
+            answer,
+            4096,
+            Some(4096),
+            enrichment_core::mcp_delivery::DeliveryProfile::Envelope,
+        )
+        .await
+        .unwrap();
         assert_eq!(
             serde_json::to_value(&first.delivery).unwrap()["artifact_id"],
             serde_json::to_value(&second.delivery).unwrap()["artifact_id"]

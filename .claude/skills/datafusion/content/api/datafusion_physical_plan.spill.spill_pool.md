@@ -12,6 +12,9 @@ Crate `datafusion-physical-plan` · 6 public items · structured records in [`mo
 fn channel(max_file_size_bytes: usize, spill_manager: std::sync::Arc<super::spill_manager::SpillManager>) -> (SpillPoolWriter, datafusion_execution::SendableRecordBatchStream)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.spill.spill_pool.channel.md).
+
+
 Alias for [`mpsc_channel`].
 
 ---
@@ -23,6 +26,9 @@ Alias for [`mpsc_channel`].
 ```rust
 fn mpsc_channel(max_file_size_bytes: usize, spill_manager: std::sync::Arc<super::spill_manager::SpillManager>) -> (SpillPoolWriter, datafusion_execution::SendableRecordBatchStream)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.spill.spill_pool.mpsc_channel.md).
+
 
 Creates a paired writer and reader for a spill pool with MPSC (multi-producer,
 single-consumer) semantics. See [`spsc_channel`] for the general architecture description
@@ -62,6 +68,9 @@ async stream combinators. The writer can be cloned to create additional writers.
 ```rust
 fn spsc_channel(max_file_size_bytes: usize, spill_manager: std::sync::Arc<super::spill_manager::SpillManager>) -> (SpillPoolSink, datafusion_execution::SendableRecordBatchStream)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.spill.spill_pool.spsc_channel.md).
+
 
 Creates a paired writer and reader for a spill pool with SPSC (single-producer,
 single-consumer) semantics and strict FIFO ordering.
@@ -259,6 +268,9 @@ fn schema(&self) -> SchemaRef
 fn poll_next(std::pin::Pin<&mut self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.spill.spill_pool.SpillPoolReader.md).
+
+
 A stream that reads from a SpillPool. The reader guarantees FIFO order if a single writer is used.
 
 Created by [`spsc_channel`]. See that function for architecture diagrams and usage examples.
@@ -301,6 +313,9 @@ fn push_batch(&self, batch: &RecordBatch) -> Result<()>
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.spill.spill_pool.SpillPoolSink.md).
+
+
 Single writer for a spill pool that cannot be cloned.
 
 Created by [`spsc_channel`] and [`SpillPoolWriter::new_sink`].
@@ -323,6 +338,9 @@ struct SpillPoolWriter
 fn new_sink(&self) -> SpillPoolSink
 fn push_batch(&self, batch: &RecordBatch) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.spill.spill_pool.SpillPoolWriter.md).
+
 
 Writer for a spill pool that can be cloned to produce additional writers.
 

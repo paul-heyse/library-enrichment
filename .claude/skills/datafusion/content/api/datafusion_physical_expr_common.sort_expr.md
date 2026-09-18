@@ -49,6 +49,9 @@ fn deref(&self) -> &Self::Target
 fn deref_mut(&mut self) -> &mut Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.sort_expr.OrderingRequirements.md).
+
+
 Represents a plan's input ordering requirements. Vector elements represent
 alternative ordering requirements in the order of preference. The list of
 alternatives can be either hard or soft, depending on whether the operator
@@ -72,6 +75,9 @@ The following always hold true for a `OrderingRequirements`:
 fn format_physical_sort_requirement_list(exprs: &[PhysicalSortRequirement]) -> impl Display + '_
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.sort_expr.format_physical_sort_requirement_list.md).
+
+
 Writes a list of [`PhysicalSortRequirement`]s to a `std::fmt::Formatter`.
 
 Example output: `[a + 1, b]`
@@ -85,6 +91,9 @@ Example output: `[a + 1, b]`
 ```rust
 fn is_reversed_sort_options(lhs: &arrow::compute::kernels::sort::SortOptions, rhs: &arrow::compute::kernels::sort::SortOptions) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.sort_expr.is_reversed_sort_options.md).
+
 
 Check if two SortOptions represent reversed orderings.
 
@@ -118,6 +127,9 @@ assert!(is_reversed_sort_options(&desc_nulls_first, &asc_nulls_last));
 fn optional_ordering_try_from_proto(nodes: &[datafusion_proto_models::protobuf::PhysicalSortExprNode], ctx: &physical_expr::proto_decode::PhysicalExprDecodeCtx<'_>) -> datafusion_common::Result<Option<LexOrdering>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.sort_expr.optional_ordering_try_from_proto.md).
+
+
 Counterpart of [`optional_ordering_try_to_proto`]: an empty list decodes
 as `None`.
 
@@ -131,6 +143,9 @@ as `None`.
 fn optional_ordering_try_to_proto(ordering: Option<&LexOrdering>, ctx: &physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> datafusion_common::Result<Vec<datafusion_proto_models::protobuf::PhysicalSortExprNode>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.sort_expr.optional_ordering_try_to_proto.md).
+
+
 Serialize an optional [`LexOrdering`], encoding `None` as an empty list.
 
 ---
@@ -142,6 +157,9 @@ Serialize an optional [`LexOrdering`], encoding `None` as an empty list.
 ```rust
 fn options_compatible(options_lhs: &arrow::compute::kernels::sort::SortOptions, options_rhs: &arrow::compute::kernels::sort::SortOptions, nullable: bool) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.sort_expr.options_compatible.md).
+
 
 Returns whether the given two [`SortOptions`] are compatible. Here,
 compatibility means that they are either exactly equal, or they differ only
@@ -157,6 +175,9 @@ column in question is not nullable (specified by the `nullable` parameter).
 ```rust
 fn sort_exprs_try_from_proto(nodes: &[datafusion_proto_models::protobuf::PhysicalSortExprNode], ctx: &physical_expr::proto_decode::PhysicalExprDecodeCtx<'_>) -> datafusion_common::Result<Vec<PhysicalSortExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.sort_expr.sort_exprs_try_from_proto.md).
+
 
 Reconstruct a sequence of sort expressions from the flat
 [`PhysicalSortExprNode`] list, the counterpart of
@@ -180,6 +201,9 @@ one. Callers with the former convention can use
 ```rust
 fn sort_exprs_try_to_proto<E: std::borrow::Borrow<PhysicalSortExpr>>(exprs: impl IntoIterator<Item = E>, ctx: &physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> datafusion_common::Result<Vec<datafusion_proto_models::protobuf::PhysicalSortExprNode>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.sort_expr.sort_exprs_try_to_proto.md).
+
 
 Serialize a sequence of sort expressions into the flat
 [`PhysicalSortExprNode`] list the wire format uses for an ordering.
@@ -256,6 +280,9 @@ fn into_iter(self) -> Self::IntoIter
 fn deref(&self) -> &Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.sort_expr.LexOrdering.md).
+
+
 This object represents a lexicographical ordering and contains a vector
 of `PhysicalSortExpr` objects.
 
@@ -312,6 +339,9 @@ fn into_iter(self) -> Self::IntoIter
 ```rust
 fn deref(&self) -> &Self::Target
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.sort_expr.LexRequirement.md).
+
 
 This object represents a lexicographical ordering requirement and contains
 a vector of `PhysicalSortRequirement` objects.
@@ -375,6 +405,9 @@ fn from(value: PhysicalSortRequirement) -> Self
 ```rust
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.sort_expr.PhysicalSortExpr.md).
+
 
 Represents Sort operation for a column in a RecordBatch
 
@@ -457,6 +490,9 @@ fn from(value: PhysicalSortExpr) -> Self
 ```rust
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr_common.sort_expr.PhysicalSortRequirement.md).
+
 
 Represents sort requirement associated with a plan
 

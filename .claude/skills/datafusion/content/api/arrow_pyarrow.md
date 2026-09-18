@@ -26,6 +26,9 @@ fn new_err<A>(args: A) -> PyErr where A: PyErrArguments + ::core::marker::Send +
 fn type_object_raw(py: Python<'_>) -> *mut ffi::PyTypeObject
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_pyarrow.ArrowException.md).
+
+
 A Rust type representing an exception defined in Python code.
 
 This type was created by the [`pyo3::import_exception!`] macro - see its documentation
@@ -66,6 +69,9 @@ fn extract(value: Borrowed<'_, '_, PyAny>) -> PyResult<Self>
 ```rust
 fn into_pyobject(self, py: Python<'py>) -> PyResult<Self::Output>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_pyarrow.PyArrowType.md).
+
 
 A newtype wrapper for types implementing [`FromPyArrow`] or [`IntoPyArrow`].
 
@@ -116,6 +122,9 @@ fn into_pyarrow(self, py: Python<'_>) -> PyResult<Bound<'_, PyAny>>
 fn try_from(value: Box<dyn RecordBatchReader>) -> Result<Self, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_pyarrow.Table.md).
+
+
 This is a convenience wrapper around `Vec<RecordBatch>` that tries to simplify conversion from
 and to `pyarrow.Table`.
 
@@ -163,6 +172,9 @@ trait FromPyArrow: Sized
 fn from_pyarrow_bound(value: &Bound<'_, PyAny>) -> PyResult<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_pyarrow.FromPyArrow.md).
+
+
 Trait for converting Python objects to arrow-rs types.
 
 ---
@@ -188,6 +200,9 @@ trait IntoPyArrow
 ```rust
 fn into_pyarrow<'py>(self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_pyarrow.IntoPyArrow.md).
+
 
 Convert an arrow-rs type into a PyArrow object.
 
@@ -218,6 +233,9 @@ trait ToPyArrow
 fn to_pyarrow<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_pyarrow.ToPyArrow.md).
+
+
 Create a new PyArrow object from a arrow-rs type.
 
 ---
@@ -231,6 +249,9 @@ Also reachable as `arrow::pyarrow::PyArrowException`
 ```rust
 type PyArrowException = ArrowException
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_pyarrow.PyArrowException.md).
+
 
 Represents an exception raised by PyArrow.
 

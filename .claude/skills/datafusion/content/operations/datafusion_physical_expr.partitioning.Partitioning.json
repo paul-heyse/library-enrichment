@@ -1,0 +1,1792 @@
+[
+  {
+    "id": "b631e1d1890e8ea81608b4a4",
+    "path": "datafusion_physical_expr::partitioning::Partitioning",
+    "name": "Partitioning",
+    "owner": null,
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "enum",
+    "signature": "enum Partitioning",
+    "docs": "Output partitioning supported by [`ExecutionPlan`]s.\n\nCalling [`ExecutionPlan::execute`] produce one or more independent streams of\n[`RecordBatch`]es in parallel, referred to as partitions. The streams are Rust\n`async` [`Stream`]s (a special kind of future). The number of output\npartitions varies based on the input and the operation performed.\n\nFor example, an `ExecutionPlan` that has output partitioning of 3 will\nproduce 3 distinct output streams as the result of calling\n`ExecutionPlan::execute(0)`, `ExecutionPlan::execute(1)`, and\n`ExecutionPlan::execute(2)`, as shown below:\n\n```text\n                                                  ...         ...        ...\n              ...                                  ▲           ▲           ▲\n                                                   │           │           │\n               ▲                                   │           │           │\n               │                                   │           │           │\n               │                               ┌───┴────┐  ┌───┴────┐  ┌───┴────┐\n    ┌────────────────────┐                     │ Stream │  │ Stream │  │ Stream │\n    │   ExecutionPlan    │                     │  (0)   │  │  (1)   │  │  (2)   │\n    └────────────────────┘                     └────────┘  └────────┘  └────────┘\n               ▲                                   ▲           ▲           ▲\n               │                                   │           │           │\n    ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─                          │           │           │\n            Input        │                         │           │           │\n    └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─                          │           │           │\n               ▲                               ┌ ─ ─ ─ ─   ┌ ─ ─ ─ ─   ┌ ─ ─ ─ ─\n               │                                 Input  │    Input  │    Input  │\n               │                               │ Stream    │ Stream    │ Stream\n                                                  (0)   │     (1)   │     (2)   │\n              ...                              └ ─ ▲ ─ ─   └ ─ ▲ ─ ─   └ ─ ▲ ─ ─\n                                                   │           │           │\n                                                   │           │           │\n                                                   │           │           │\n\nExecutionPlan with 1 input                      3 (async) streams, one for each\nthat has 3 partitions, which itself             output partition\nhas 3 output partitions\n```\n\nIt is common (but not required) that an `ExecutionPlan` has the same number\nof input partitions as output partitions. However, some plans have different\nnumbers such as the `RepartitionExec` that redistributes batches from some\nnumber of inputs to some number of outputs\n\n```text\n              ...                                     ...         ...        ...\n\n                                                       ▲           ▲           ▲\n               ▲                                       │           │           │\n               │                                       │           │           │\n      ┌────────┴───────────┐                           │           │           │\n      │  RepartitionExec   │                      ┌────┴───┐  ┌────┴───┐  ┌────┴───┐\n      └────────────────────┘                      │ Stream │  │ Stream │  │ Stream │\n               ▲                                  │  (0)   │  │  (1)   │  │  (2)   │\n               │                                  └────────┘  └────────┘  └────────┘\n               │                                       ▲           ▲           ▲\n               ...                                     │           │           │\n                                                       └──────────┐│┌──────────┘\n                                                                  │││\n                                                                  │││\nRepartitionExec with 1 input\npartition and 3 output partitions                 3 (async) streams, that internally\n                                                   pull from the same input stream\n                                                                 ...\n```\n\n# Additional Examples\n\nA simple `FileScanExec` might produce one output stream (partition) for each\nfile (note the actual DataFusion file scanners can read individual files in\nparallel, potentially producing multiple partitions per file)\n\nPlans such as `SortPreservingMerge` produce a single output stream\n(1 output partition) by combining some number of input streams (input partitions)\n\nPlans such as `FilterExec` produce the same number of output streams\n(partitions) as input streams (partitions).\n\n[`RecordBatch`]: arrow::record_batch::RecordBatch\n[`ExecutionPlan::execute`]: https://docs.rs/datafusion/latest/datafusion/physical_plan/trait.ExecutionPlan.html#tymethod.execute\n[`ExecutionPlan`]: https://docs.rs/datafusion/latest/datafusion/physical_plan/trait.ExecutionPlan.html\n[`Stream`]: https://docs.rs/futures/latest/futures/stream/trait.Stream.html",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        121,
+        1
+      ],
+      "end": [
+        131,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "enum": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "has_stripped_variants": false,
+        "variants": [
+          1966,
+          1969,
+          1972,
+          1974
+        ],
+        "impls": [
+          1982,
+          1986,
+          1987,
+          1988,
+          1989,
+          1990,
+          1991,
+          1992,
+          1993,
+          1994,
+          1995,
+          1996,
+          1997,
+          1998,
+          1999,
+          2000,
+          2001,
+          2002,
+          2003,
+          2004,
+          2006,
+          2008,
+          2010,
+          2012
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "arrow::record_batch::RecordBatch": 348
+    },
+    "link_paths": {
+      "arrow::record_batch::RecordBatch": "arrow_array::record_batch::RecordBatch"
+    },
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "1975",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-b631e1d1890e8ea81608b4a4",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning",
+      "datafusion::physical_plan::Partitioning",
+      "datafusion_physical_expr::Partitioning",
+      "datafusion_physical_plan::Partitioning",
+      "datafusion_physical_plan::execution_plan::Partitioning"
+    ],
+    "resolved_doc_links": {
+      "arrow::record_batch::RecordBatch": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34"
+    }
+  },
+  {
+    "id": "2e61f3626627abaac1462fec",
+    "path": "datafusion_physical_expr::partitioning::Partitioning::Hash",
+    "name": "Hash",
+    "owner": "datafusion_physical_expr::partitioning::Partitioning",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Hash",
+    "docs": "Allocate rows based on a hash of one of more expressions and the specified number of\npartitions",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        126,
+        5
+      ],
+      "end": [
+        126,
+        44
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            1967,
+            1968
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "1969",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-2e61f3626627abaac1462fec",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning::Hash",
+      "datafusion::physical_plan::Partitioning::Hash",
+      "datafusion_physical_expr::Partitioning::Hash",
+      "datafusion_physical_plan::Partitioning::Hash",
+      "datafusion_physical_plan::execution_plan::Partitioning::Hash"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "416521ebc0d82658601f1876",
+    "path": "datafusion_physical_expr::partitioning::Partitioning::Range",
+    "name": "Range",
+    "owner": "datafusion_physical_expr::partitioning::Partitioning",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Range",
+    "docs": "Partition rows by source-declared ranges",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        128,
+        5
+      ],
+      "end": [
+        128,
+        29
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            1970
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "1972",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-416521ebc0d82658601f1876",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning::Range",
+      "datafusion::physical_plan::Partitioning::Range",
+      "datafusion_physical_expr::Partitioning::Range",
+      "datafusion_physical_plan::Partitioning::Range",
+      "datafusion_physical_plan::execution_plan::Partitioning::Range"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c43db61e90295e278e145c28",
+    "path": "datafusion_physical_expr::partitioning::Partitioning::RoundRobinBatch",
+    "name": "RoundRobinBatch",
+    "owner": "datafusion_physical_expr::partitioning::Partitioning",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "RoundRobinBatch",
+    "docs": "Allocate batches using a round-robin algorithm and the specified number of partitions",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        123,
+        5
+      ],
+      "end": [
+        123,
+        27
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            1965
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "1966",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-c43db61e90295e278e145c28",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning::RoundRobinBatch",
+      "datafusion::physical_plan::Partitioning::RoundRobinBatch",
+      "datafusion_physical_expr::Partitioning::RoundRobinBatch",
+      "datafusion_physical_plan::Partitioning::RoundRobinBatch",
+      "datafusion_physical_plan::execution_plan::Partitioning::RoundRobinBatch"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "744bc6600f997e21b89b9460",
+    "path": "datafusion_physical_expr::partitioning::Partitioning::UnknownPartitioning",
+    "name": "UnknownPartitioning",
+    "owner": "datafusion_physical_expr::partitioning::Partitioning",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "UnknownPartitioning",
+    "docs": "Unknown partitioning scheme with a known number of partitions",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        130,
+        5
+      ],
+      "end": [
+        130,
+        31
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            1973
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "1974",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-744bc6600f997e21b89b9460",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning::UnknownPartitioning",
+      "datafusion::physical_plan::Partitioning::UnknownPartitioning",
+      "datafusion_physical_expr::Partitioning::UnknownPartitioning",
+      "datafusion_physical_plan::Partitioning::UnknownPartitioning",
+      "datafusion_physical_plan::execution_plan::Partitioning::UnknownPartitioning"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f9deb76c0d855776e37bb371",
+    "path": "datafusion_physical_expr::partitioning::Partitioning::clone",
+    "name": "clone",
+    "owner": "datafusion_physical_expr::partitioning::Partitioning",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> Partitioning",
+    "docs": "",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        120,
+        17
+      ],
+      "end": [
+        120,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Partitioning",
+              "id": 1975,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1975": "datafusion_physical_expr::partitioning::Partitioning"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Partitioning",
+          "id": "datafusion_physical_expr::partitioning::Partitioning",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/partitioning.rs",
+        "begin": [
+          120,
+          17
+        ],
+        "end": [
+          120,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2007",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-f9deb76c0d855776e37bb371",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning::clone",
+      "datafusion::physical_plan::Partitioning::clone",
+      "datafusion_physical_expr::Partitioning::clone",
+      "datafusion_physical_plan::Partitioning::clone",
+      "datafusion_physical_plan::execution_plan::Partitioning::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6bbf8bfc3daef13a28936d78",
+    "path": "datafusion_physical_expr::partitioning::Partitioning::eq",
+    "name": "eq",
+    "owner": "datafusion_physical_expr::partitioning::Partitioning",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &Partitioning) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        673,
+        5
+      ],
+      "end": [
+        687,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Partitioning",
+                      "id": 1975,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1975": "datafusion_physical_expr::partitioning::Partitioning"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Partitioning",
+          "id": "datafusion_physical_expr::partitioning::Partitioning",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/partitioning.rs",
+        "begin": [
+          672,
+          1
+        ],
+        "end": [
+          688,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2011",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-6bbf8bfc3daef13a28936d78",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning::eq",
+      "datafusion::physical_plan::Partitioning::eq",
+      "datafusion_physical_expr::Partitioning::eq",
+      "datafusion_physical_plan::Partitioning::eq",
+      "datafusion_physical_plan::execution_plan::Partitioning::eq"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1750e9b66266f3dcfd93d784",
+    "path": "datafusion_physical_expr::partitioning::Partitioning::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_expr::partitioning::Partitioning",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        120,
+        10
+      ],
+      "end": [
+        120,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 107,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 108,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "core::fmt::Formatter",
+      "108": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Partitioning",
+          "id": "datafusion_physical_expr::partitioning::Partitioning",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/partitioning.rs",
+        "begin": [
+          120,
+          10
+        ],
+        "end": [
+          120,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2005",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-1750e9b66266f3dcfd93d784",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning::fmt",
+      "datafusion::physical_plan::Partitioning::fmt",
+      "datafusion_physical_expr::Partitioning::fmt",
+      "datafusion_physical_plan::Partitioning::fmt",
+      "datafusion_physical_plan::execution_plan::Partitioning::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bf73350d6cd4c9ad0a8b6150",
+    "path": "datafusion_physical_expr::partitioning::Partitioning::fmt",
+    "name": "fmt",
+    "owner": "datafusion_physical_expr::partitioning::Partitioning",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        134,
+        5
+      ],
+      "end": [
+        150,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "fmt::Formatter",
+                      "id": 107,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "fmt::Result",
+              "id": 108,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "core::fmt::Formatter",
+      "108": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Partitioning",
+          "id": "datafusion_physical_expr::partitioning::Partitioning",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Display",
+        "id": "core::fmt::Display",
+        "args": null
+      },
+      "trait_path": "core::fmt::Display",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/partitioning.rs",
+        "begin": [
+          133,
+          1
+        ],
+        "end": [
+          151,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "2009",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-bf73350d6cd4c9ad0a8b6150",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning::fmt",
+      "datafusion::physical_plan::Partitioning::fmt",
+      "datafusion_physical_expr::Partitioning::fmt",
+      "datafusion_physical_plan::Partitioning::fmt",
+      "datafusion_physical_plan::execution_plan::Partitioning::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5595e9c77293dc1be328b2f8",
+    "path": "datafusion_physical_expr::partitioning::Partitioning::partition_count",
+    "name": "partition_count",
+    "owner": "datafusion_physical_expr::partitioning::Partitioning",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn partition_count(&self) -> usize",
+    "docs": "Returns the number of partitions in this partitioning scheme",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        361,
+        5
+      ],
+      "end": [
+        367,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Partitioning",
+          "id": "datafusion_physical_expr::partitioning::Partitioning",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/partitioning.rs",
+        "begin": [
+          359,
+          1
+        ],
+        "end": [
+          520,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "1976",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-5595e9c77293dc1be328b2f8",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning::partition_count",
+      "datafusion::physical_plan::Partitioning::partition_count",
+      "datafusion_physical_expr::Partitioning::partition_count",
+      "datafusion_physical_plan::Partitioning::partition_count",
+      "datafusion_physical_plan::execution_plan::Partitioning::partition_count"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e4c83fb0ae46c77931da0381",
+    "path": "datafusion_physical_expr::partitioning::Partitioning::project",
+    "name": "project",
+    "owner": "datafusion_physical_expr::partitioning::Partitioning",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn project(&self, mapping: &ProjectionMapping, input_eq_properties: &EquivalenceProperties) -> Self",
+    "docs": "Calculate the output partitioning after applying the given projection.",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        490,
+        5
+      ],
+      "end": [
+        519,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "mapping",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ProjectionMapping",
+                      "id": 558,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "input_eq_properties",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "EquivalenceProperties",
+                      "id": 453,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "558": "datafusion_physical_expr::projection::ProjectionMapping",
+      "453": "datafusion_physical_expr::equivalence::properties::EquivalenceProperties"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Partitioning",
+          "id": "datafusion_physical_expr::partitioning::Partitioning",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/partitioning.rs",
+        "begin": [
+          359,
+          1
+        ],
+        "end": [
+          520,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "1981",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-e4c83fb0ae46c77931da0381",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning::project",
+      "datafusion::physical_plan::Partitioning::project",
+      "datafusion_physical_expr::Partitioning::project",
+      "datafusion_physical_plan::Partitioning::project",
+      "datafusion_physical_plan::execution_plan::Partitioning::project"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6969e0e55418a29d57c89477",
+    "path": "datafusion_physical_expr::partitioning::Partitioning::satisfaction",
+    "name": "satisfaction",
+    "owner": "datafusion_physical_expr::partitioning::Partitioning",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn satisfaction(&self, required: &Distribution, eq_properties: &EquivalenceProperties, allow_subset: bool) -> PartitioningSatisfaction",
+    "docs": "Returns how this [`Partitioning`] satisfies the partitioning scheme mandated\nby the `required` [`Distribution`].",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        402,
+        5
+      ],
+      "end": [
+        450,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[expect(deprecated, reason =\n\"HashPartitioned is accepted during the KeyPartitioned migration\")]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "required",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Distribution",
+                      "id": 1978,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "eq_properties",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "EquivalenceProperties",
+                      "id": 453,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "allow_subset",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "PartitioningSatisfaction",
+              "id": 1980,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1978": "datafusion_physical_expr::partitioning::Distribution",
+      "453": "datafusion_physical_expr::equivalence::properties::EquivalenceProperties",
+      "1980": "datafusion_physical_expr::partitioning::PartitioningSatisfaction"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Partitioning",
+          "id": "datafusion_physical_expr::partitioning::Partitioning",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/partitioning.rs",
+        "begin": [
+          359,
+          1
+        ],
+        "end": [
+          520,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Partitioning`": 1975,
+      "`Distribution`": 1978
+    },
+    "link_paths": {
+      "`Partitioning`": "datafusion_physical_expr::partitioning::Partitioning",
+      "`Distribution`": "datafusion_physical_expr::partitioning::Distribution"
+    },
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "1979",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-6969e0e55418a29d57c89477",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning::satisfaction",
+      "datafusion::physical_plan::Partitioning::satisfaction",
+      "datafusion_physical_expr::Partitioning::satisfaction",
+      "datafusion_physical_plan::Partitioning::satisfaction",
+      "datafusion_physical_plan::execution_plan::Partitioning::satisfaction"
+    ],
+    "resolved_doc_links": {
+      "`Partitioning`": "../operations/datafusion_physical_expr.partitioning.Partitioning.md#op-b631e1d1890e8ea81608b4a4",
+      "`Distribution`": "../operations/datafusion_physical_expr.partitioning.Distribution.md#op-1570134c2bb176dfcdc9c836"
+    }
+  },
+  {
+    "id": "1fe9af867ab18c752360709a",
+    "path": "datafusion_physical_expr::partitioning::Partitioning::satisfy",
+    "name": "satisfy",
+    "owner": "datafusion_physical_expr::partitioning::Partitioning",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn satisfy(&self, required: &Distribution, eq_properties: &EquivalenceProperties) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        387,
+        5
+      ],
+      "end": [
+        394,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": {
+      "since": "52.0.0",
+      "note": "Use satisfaction instead"
+    },
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "required",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Distribution",
+                      "id": 1978,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "eq_properties",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "EquivalenceProperties",
+                      "id": 453,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1978": "datafusion_physical_expr::partitioning::Distribution",
+      "453": "datafusion_physical_expr::equivalence::properties::EquivalenceProperties"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Partitioning",
+          "id": "datafusion_physical_expr::partitioning::Partitioning",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/partitioning.rs",
+        "begin": [
+          359,
+          1
+        ],
+        "end": [
+          520,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "1977",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-1fe9af867ab18c752360709a",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning::satisfy",
+      "datafusion::physical_plan::Partitioning::satisfy",
+      "datafusion_physical_expr::Partitioning::satisfy",
+      "datafusion_physical_plan::Partitioning::satisfy",
+      "datafusion_physical_plan::execution_plan::Partitioning::satisfy"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e3ff452970d24fbacd73216d",
+    "path": "datafusion_physical_expr::partitioning::Partitioning::try_from_proto",
+    "name": "try_from_proto",
+    "owner": "datafusion_physical_expr::partitioning::Partitioning",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::Partitioning, ctx: &datafusion_physical_expr_common::physical_expr::proto_decode::PhysicalExprDecodeCtx<'_>) -> Result<Option<Self>>",
+    "docs": "Reconstruct a [`Partitioning`] from its protobuf representation.\n\nReturns `Ok(None)` when the message carries no `partition_method`, which\nthe wire format uses to mean \"no output partitioning declared\"; callers\nfor which it is required should turn that into their own error.",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        592,
+        5
+      ],
+      "end": [
+        646,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "node",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_proto_models::protobuf::Partitioning",
+                      "id": 1984,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_physical_expr_common::physical_expr::proto_decode::PhysicalExprDecodeCtx",
+                      "id": 779,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 41,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Option",
+                          "id": 115,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "generic": "Self"
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1984": "datafusion_proto_models::generated::datafusion::Partitioning",
+      "779": "datafusion_physical_expr_common::physical_expr::proto_decode::PhysicalExprDecodeCtx",
+      "41": "datafusion_common::error::Result",
+      "115": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Partitioning",
+          "id": "datafusion_physical_expr::partitioning::Partitioning",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/partitioning.rs",
+        "begin": [
+          533,
+          1
+        ],
+        "end": [
+          647,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Partitioning`": 1975
+    },
+    "link_paths": {
+      "`Partitioning`": "datafusion_physical_expr::partitioning::Partitioning"
+    },
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "1985",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-e3ff452970d24fbacd73216d",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning::try_from_proto",
+      "datafusion::physical_plan::Partitioning::try_from_proto",
+      "datafusion_physical_expr::Partitioning::try_from_proto",
+      "datafusion_physical_plan::Partitioning::try_from_proto",
+      "datafusion_physical_plan::execution_plan::Partitioning::try_from_proto"
+    ],
+    "resolved_doc_links": {
+      "`Partitioning`": "../operations/datafusion_physical_expr.partitioning.Partitioning.md#op-b631e1d1890e8ea81608b4a4"
+    }
+  },
+  {
+    "id": "016fcced53cecab826c263f8",
+    "path": "datafusion_physical_expr::partitioning::Partitioning::try_to_proto",
+    "name": "try_to_proto",
+    "owner": "datafusion_physical_expr::partitioning::Partitioning",
+    "crate": "datafusion-physical-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_to_proto(&self, ctx: &datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> Result<datafusion_proto_models::protobuf::Partitioning>",
+    "docs": "Serialize this partitioning into its protobuf representation.",
+    "span": {
+      "filename": "src/partitioning.rs",
+      "begin": [
+        535,
+        5
+      ],
+      "end": [
+        585,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "ctx",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncodeCtx",
+                      "id": 826,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 41,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "datafusion_proto_models::protobuf::Partitioning",
+                          "id": 1984,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "826": "datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncodeCtx",
+      "41": "datafusion_common::error::Result",
+      "1984": "datafusion_proto_models::generated::datafusion::Partitioning"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Partitioning",
+          "id": "datafusion_physical_expr::partitioning::Partitioning",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/partitioning.rs",
+        "begin": [
+          533,
+          1
+        ],
+        "end": [
+          647,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "2df0d918603fd8e7675589e421b507956b52a9d4f4919836d0ee2cf7526b4e90",
+      "format_version": 61,
+      "item_id": "1983",
+      "origin": "https://docs.rs/crate/datafusion-physical-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_physical_expr.partitioning.Partitioning.md",
+    "record_file": "operations/datafusion_physical_expr.partitioning.Partitioning.json",
+    "anchor": "op-016fcced53cecab826c263f8",
+    "aliases": [
+      "datafusion::physical_expr::Partitioning::try_to_proto",
+      "datafusion::physical_plan::Partitioning::try_to_proto",
+      "datafusion_physical_expr::Partitioning::try_to_proto",
+      "datafusion_physical_plan::Partitioning::try_to_proto",
+      "datafusion_physical_plan::execution_plan::Partitioning::try_to_proto"
+    ],
+    "resolved_doc_links": {}
+  }
+]

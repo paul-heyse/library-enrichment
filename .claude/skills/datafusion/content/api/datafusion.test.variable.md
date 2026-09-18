@@ -27,6 +27,9 @@ fn get_type(&self, _: &[String]) -> Option<DataType>
 fn get_value(&self, var_names: Vec<String>) -> Result<ScalarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion.test.variable.SystemVar.md).
+
+
 System variable
 
 ---
@@ -55,6 +58,9 @@ fn new() -> Self
 fn get_type(&self, var_names: &[String]) -> Option<DataType>
 fn get_value(&self, var_names: Vec<String>) -> Result<ScalarValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion.test.variable.UserDefinedVar.md).
+
 
 user defined variable
 

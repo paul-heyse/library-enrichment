@@ -10,6 +10,9 @@ Crate `arrow-avro` · 15 public items · structured records in [`model/arrow_avr
 const AVRO_DOC_METADATA_KEY: &str = "avro.doc"
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.AVRO_DOC_METADATA_KEY.md).
+
+
 Metadata key used to store the documentation for a type in an Avro schema.
 
 ---
@@ -21,6 +24,9 @@ Metadata key used to store the documentation for a type in an Avro schema.
 ```rust
 const AVRO_ENUM_SYMBOLS_METADATA_KEY: &str = "avro.enum.symbols"
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.AVRO_ENUM_SYMBOLS_METADATA_KEY.md).
+
 
 Metadata key used to represent Avro enum symbols in an Arrow schema.
 
@@ -34,6 +40,9 @@ Metadata key used to represent Avro enum symbols in an Arrow schema.
 const AVRO_FIELD_DEFAULT_METADATA_KEY: &str = "avro.field.default"
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.AVRO_FIELD_DEFAULT_METADATA_KEY.md).
+
+
 Metadata key used to store the default value of a field in an Avro schema.
 
 ---
@@ -45,6 +54,9 @@ Metadata key used to store the default value of a field in an Avro schema.
 ```rust
 const AVRO_NAMESPACE_METADATA_KEY: &str = "avro.namespace"
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.AVRO_NAMESPACE_METADATA_KEY.md).
+
 
 Metadata key used to store the name of a type in an Avro schema.
 
@@ -58,6 +70,9 @@ Metadata key used to store the name of a type in an Avro schema.
 const AVRO_NAME_METADATA_KEY: &str = "avro.name"
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.AVRO_NAME_METADATA_KEY.md).
+
+
 Metadata key used to store the name of a type in an Avro schema.
 
 ---
@@ -69,6 +84,9 @@ Metadata key used to store the name of a type in an Avro schema.
 ```rust
 const AVRO_ROOT_RECORD_DEFAULT_NAME: &str = "topLevelRecord"
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.AVRO_ROOT_RECORD_DEFAULT_NAME.md).
+
 
 Default name for the root record in an Avro schema.
 
@@ -82,6 +100,9 @@ Default name for the root record in an Avro schema.
 const CONFLUENT_MAGIC: [u8; 1] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.CONFLUENT_MAGIC.md).
+
+
 The Confluent "magic" byte (`0x00`)
 
 ---
@@ -93,6 +114,9 @@ The Confluent "magic" byte (`0x00`)
 ```rust
 const MAX_PREFIX_LEN: usize = 34
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.MAX_PREFIX_LEN.md).
+
 
 The maximum possible length of a prefix.
 SHA256 (32) + single-object magic (2)
@@ -107,6 +131,9 @@ SHA256 (32) + single-object magic (2)
 const SCHEMA_METADATA_KEY: &str = "avro.schema"
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.SCHEMA_METADATA_KEY.md).
+
+
 The metadata key used for storing the JSON encoded `Schema`
 
 ---
@@ -118,6 +145,9 @@ The metadata key used for storing the JSON encoded `Schema`
 ```rust
 const SINGLE_OBJECT_MAGIC: [u8; 2] = _
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.SINGLE_OBJECT_MAGIC.md).
+
 
 The Avro single‑object encoding “magic” bytes (`0xC3 0x01`)
 
@@ -152,6 +182,9 @@ fn from(s: &FingerprintStrategy) -> Self
 fn from(s: FingerprintStrategy) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.Fingerprint.md).
+
+
 A schema fingerprint in one of the supported formats.
 
 This is used as the key inside `SchemaStore` `HashMap`. Each `SchemaStore`
@@ -185,6 +218,9 @@ fn from(s: FingerprintStrategy) -> Self
 fn from(fp: &Fingerprint) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.FingerprintAlgorithm.md).
+
+
 Supported fingerprint algorithms for Avro schema identification.
 For use with Confluent Schema Registry IDs, set to None.
 
@@ -211,6 +247,9 @@ fn from(f: &Fingerprint) -> Self
 fn from(f: FingerprintAlgorithm) -> Self
 fn from(f: Fingerprint) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.FingerprintStrategy.md).
+
 
 Defines the strategy for generating the per-record prefix for an Avro binary stream.
 
@@ -255,6 +294,9 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, _
 fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.AvroSchema.md).
+
+
 A wrapper for an Avro schema in its JSON string representation.
 
 ---
@@ -287,6 +329,9 @@ fn set(&mut self, fingerprint: Fingerprint, schema: AvroSchema) -> Result<Finger
 ```rust
 fn try_from(schemas: HashMap<Fingerprint, AvroSchema>) -> Result<Self, Self::Error>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_avro.schema.SchemaStore.md).
+
 
 An in-memory cache of Avro schemas, indexed by their fingerprint.
 

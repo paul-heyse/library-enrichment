@@ -1,0 +1,1961 @@
+[
+  {
+    "id": "62aae50647c3bfb123164a55",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "name": "PeakRecordingPool",
+    "owner": null,
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct PeakRecordingPool",
+    "docs": "Wraps a [`MemoryPool`], recording the high-water mark of\n[`MemoryPool::reserved`] as reservations come and go.\n\nEvery method delegates to the wrapped pool, so wrapping does not change how\nmemory is granted, limited, or reported. The one thing it does change is\ndowncasting: `rt.memory_pool.downcast_ref::<FairSpillPool>()` now finds this\nwrapper instead of the pool it wraps. Nothing in the benchmarks relies on\nthat, and [`Self::from_pool`] uses the same mechanism to find the recorder.\n\nBoth high-water marks are held per instance, so a benchmark that builds a\nfresh runtime per query gets a reading scoped to that query without any\ncoordination.\n\n# Example\n\n```\n# use std::sync::Arc;\n# use datafusion_execution::memory_pool::{GreedyMemoryPool, MemoryConsumer, MemoryPool, PeakRecordingPool};\nlet recording = Arc::new(PeakRecordingPool::new(Arc::new(GreedyMemoryPool::new(1024))));\nlet pool: Arc<dyn MemoryPool> = Arc::clone(&recording) as _;\n\nlet reservation = MemoryConsumer::new(\"example\").register(&pool);\nreservation.try_grow(512)?;\nreservation.shrink(512);\n\n// The pool is back to empty, but the high-water mark is retained.\nassert_eq!(pool.reserved(), 0);\nassert_eq!(recording.peak_reserved(), 512);\n\n// The recorder can also be recovered from the pool it was installed as.\nassert_eq!(PeakRecordingPool::from_pool(&*pool).unwrap().peak_reserved(), 512);\n# Ok::<(), datafusion_common::DataFusionError>(())\n```",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        86,
+        1
+      ],
+      "end": [
+        95,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          910,
+          911,
+          912,
+          913,
+          914,
+          915,
+          916,
+          917,
+          918,
+          919,
+          920,
+          921,
+          922,
+          923,
+          924,
+          925,
+          926,
+          927,
+          929,
+          931,
+          943
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`MemoryPool::reserved`": 903,
+      "`MemoryPool`": 902,
+      "`Self::from_pool`": 904
+    },
+    "link_paths": {
+      "`MemoryPool::reserved`": "datafusion_execution::memory_pool::MemoryPool::reserved",
+      "`MemoryPool`": "datafusion_execution::memory_pool::MemoryPool",
+      "`Self::from_pool`": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::from_pool"
+    },
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "905",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-62aae50647c3bfb123164a55",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`MemoryPool::reserved`": "../operations/datafusion_execution.memory_pool.MemoryPool.md#op-b2c68b53e8e4ef3cae11576a",
+      "`MemoryPool`": "../operations/datafusion_execution.memory_pool.MemoryPool.md#op-05e08c54432abb360395d4af",
+      "`Self::from_pool`": "../operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md#op-e22ea613f41970af8032246d"
+    }
+  },
+  {
+    "id": "d263331eea5862728c4c549f",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::fmt",
+    "name": "fmt",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        164,
+        5
+      ],
+      "end": [
+        170,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Formatter",
+                      "id": 151,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 152,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "151": "core::fmt::Formatter",
+      "152": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          163,
+          1
+        ],
+        "end": [
+          171,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "928",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-d263331eea5862728c4c549f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "dc9c4c6a45f965cc391b4758",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::fmt",
+    "name": "fmt",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        174,
+        5
+      ],
+      "end": [
+        178,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Formatter",
+                      "id": 151,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 152,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "151": "core::fmt::Formatter",
+      "152": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Display",
+        "id": "core::fmt::Display",
+        "args": null
+      },
+      "trait_path": "core::fmt::Display",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          173,
+          1
+        ],
+        "end": [
+          179,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "930",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-dc9c4c6a45f965cc391b4758",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e22ea613f41970af8032246d",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::from_pool",
+    "name": "from_pool",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn from_pool(pool: &dyn MemoryPool) -> Option<&Self>",
+    "docs": "The recorder installed as `pool`, if there is one.\n\nReturns `None` whenever a benchmark runs without a memory limit, since\n`CommonOpt::runtime_env_builder` only installs the wrapper alongside a\npool it has a limit for.",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        116,
+        5
+      ],
+      "end": [
+        118,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "pool",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "MemoryPool",
+                            "id": 902,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 17,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "generic": "Self"
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "902": "datafusion_execution::memory_pool::MemoryPool",
+      "17": "core::option::Option"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          97,
+          1
+        ],
+        "end": [
+          161,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "904",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-e22ea613f41970af8032246d",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3ae26d1bf13df9b50911b48f",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::grow",
+    "name": "grow",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn grow(&self, reservation: &MemoryReservation, additional: usize)",
+    "docs": "",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        194,
+        5
+      ],
+      "end": [
+        197,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "reservation",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "MemoryReservation",
+                      "id": 937,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "additional",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "937": "datafusion_execution::memory_pool::MemoryReservation"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "MemoryPool",
+        "id": "datafusion_execution::memory_pool::MemoryPool",
+        "args": null
+      },
+      "trait_path": "datafusion_execution::memory_pool::MemoryPool",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          217,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "936",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-3ae26d1bf13df9b50911b48f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b7bb6a8748430659960d8cf4",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::max_reserved",
+    "name": "max_reserved",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn max_reserved(&self) -> usize",
+    "docs": "Peak reservation, in bytes, since this pool was created.\n\nUnlike [`Self::peak_reserved`] this is never reset, so it reports the\npeak across every query that shared this pool.",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        129,
+        5
+      ],
+      "end": [
+        131,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          97,
+          1
+        ],
+        "end": [
+          161,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::peak_reserved`": 908
+    },
+    "link_paths": {
+      "`Self::peak_reserved`": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::peak_reserved"
+    },
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "909",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-b7bb6a8748430659960d8cf4",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::peak_reserved`": "../operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md#op-217a2cf6b86d48282593086c"
+    }
+  },
+  {
+    "id": "b5967864c6b384db03fee85e",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::memory_limit",
+    "name": "memory_limit",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn memory_limit(&self) -> MemoryLimit",
+    "docs": "",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        214,
+        5
+      ],
+      "end": [
+        216,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "MemoryLimit",
+              "id": 942,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "942": "datafusion_execution::memory_pool::MemoryLimit"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "MemoryPool",
+        "id": "datafusion_execution::memory_pool::MemoryPool",
+        "args": null
+      },
+      "trait_path": "datafusion_execution::memory_pool::MemoryPool",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          217,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "941",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-b5967864c6b384db03fee85e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e20494398d2db3e2e9d6cd7b",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::name",
+    "name": "name",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &str",
+    "docs": "",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        182,
+        5
+      ],
+      "end": [
+        184,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "MemoryPool",
+        "id": "datafusion_execution::memory_pool::MemoryPool",
+        "args": null
+      },
+      "trait_path": "datafusion_execution::memory_pool::MemoryPool",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          217,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "932",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-e20494398d2db3e2e9d6cd7b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1b1d1f51ce5d2e8fd67cf563",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::new",
+    "name": "new",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new(inner: Arc<dyn MemoryPool>) -> Self",
+    "docs": "Wrap `inner`, recording its peak reservation from here on.\n\n`inner` is expected to be empty: the running total starts at zero, so\nanything reserved before wrapping is not counted.",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        102,
+        5
+      ],
+      "end": [
+        109,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "inner",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 14,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "MemoryPool",
+                                    "id": 902,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "14": "alloc::sync::Arc",
+      "902": "datafusion_execution::memory_pool::MemoryPool"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          97,
+          1
+        ],
+        "end": [
+          161,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "906",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-1b1d1f51ce5d2e8fd67cf563",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "217a2cf6b86d48282593086c",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::peak_reserved",
+    "name": "peak_reserved",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn peak_reserved(&self) -> usize",
+    "docs": "Peak reservation, in bytes, since the last [`Self::reset_peak`].",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        121,
+        5
+      ],
+      "end": [
+        123,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          97,
+          1
+        ],
+        "end": [
+          161,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::reset_peak`": 907
+    },
+    "link_paths": {
+      "`Self::reset_peak`": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::reset_peak"
+    },
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "908",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-217a2cf6b86d48282593086c",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::reset_peak`": "../operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md#op-2ac562e53ba5465662667b11"
+    }
+  },
+  {
+    "id": "fdcc26a45aff00cbf6a7df5e",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::register",
+    "name": "register",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn register(&self, consumer: &MemoryConsumer)",
+    "docs": "",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        186,
+        5
+      ],
+      "end": [
+        188,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "consumer",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "MemoryConsumer",
+                      "id": 934,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "934": "datafusion_execution::memory_pool::MemoryConsumer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "MemoryPool",
+        "id": "datafusion_execution::memory_pool::MemoryPool",
+        "args": null
+      },
+      "trait_path": "datafusion_execution::memory_pool::MemoryPool",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          217,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "933",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-fdcc26a45aff00cbf6a7df5e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2aa170df35d11528b3b30043",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::reserved",
+    "name": "reserved",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn reserved(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        210,
+        5
+      ],
+      "end": [
+        212,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "MemoryPool",
+        "id": "datafusion_execution::memory_pool::MemoryPool",
+        "args": null
+      },
+      "trait_path": "datafusion_execution::memory_pool::MemoryPool",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          217,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "940",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-2aa170df35d11528b3b30043",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2ac562e53ba5465662667b11",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::reset_peak",
+    "name": "reset_peak",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn reset_peak(&self)",
+    "docs": "Reset the value returned by [`Self::peak_reserved`] to what is reserved\nright now, so the next reading covers only what follows.\n\n`BenchmarkRun::start_new_case` calls this, giving each benchmark query\nits own reading. Anything still held when a query starts — data the\nbenchmark loaded up front, say — stays in the reading, since the query\nruns with those bytes reserved.",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        140,
+        5
+      ],
+      "end": [
+        143,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          97,
+          1
+        ],
+        "end": [
+          161,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::peak_reserved`": 908
+    },
+    "link_paths": {
+      "`Self::peak_reserved`": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::peak_reserved"
+    },
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "907",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-2ac562e53ba5465662667b11",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::peak_reserved`": "../operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md#op-217a2cf6b86d48282593086c"
+    }
+  },
+  {
+    "id": "7cb6ce2937be5e30952d9221",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::shrink",
+    "name": "shrink",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn shrink(&self, reservation: &MemoryReservation, shrink: usize)",
+    "docs": "",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        199,
+        5
+      ],
+      "end": [
+        202,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "reservation",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "MemoryReservation",
+                      "id": 937,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "shrink",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "937": "datafusion_execution::memory_pool::MemoryReservation"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "MemoryPool",
+        "id": "datafusion_execution::memory_pool::MemoryPool",
+        "args": null
+      },
+      "trait_path": "datafusion_execution::memory_pool::MemoryPool",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          217,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "938",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-7cb6ce2937be5e30952d9221",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3c4e1ca574890e9b83c0c21f",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::try_grow",
+    "name": "try_grow",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_grow(&self, reservation: &MemoryReservation, additional: usize) -> Result<()>",
+    "docs": "",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        204,
+        5
+      ],
+      "end": [
+        208,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "reservation",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "MemoryReservation",
+                      "id": 937,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "additional",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 253,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "937": "datafusion_execution::memory_pool::MemoryReservation",
+      "253": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "MemoryPool",
+        "id": "datafusion_execution::memory_pool::MemoryPool",
+        "args": null
+      },
+      "trait_path": "datafusion_execution::memory_pool::MemoryPool",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          217,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "939",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-3c4e1ca574890e9b83c0c21f",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "91c0583545f45f09cebaeaf6",
+    "path": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool::unregister",
+    "name": "unregister",
+    "owner": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+    "crate": "datafusion-execution",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn unregister(&self, consumer: &MemoryConsumer)",
+    "docs": "",
+    "span": {
+      "filename": "src/memory_pool/peak_recording.rs",
+      "begin": [
+        190,
+        5
+      ],
+      "end": [
+        192,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "consumer",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "MemoryConsumer",
+                      "id": 934,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "934": "datafusion_execution::memory_pool::MemoryConsumer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PeakRecordingPool",
+          "id": "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "MemoryPool",
+        "id": "datafusion_execution::memory_pool::MemoryPool",
+        "args": null
+      },
+      "trait_path": "datafusion_execution::memory_pool::MemoryPool",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/memory_pool/peak_recording.rs",
+        "begin": [
+          181,
+          1
+        ],
+        "end": [
+          217,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "7f27422e0ab94d68248a053c525848d54a74225a156130eeee0bc8b1e53de7f6",
+      "format_version": 61,
+      "item_id": "935",
+      "origin": "https://docs.rs/crate/datafusion-execution/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.md",
+    "record_file": "operations/datafusion_execution.memory_pool.peak_recording.PeakRecordingPool.json",
+    "anchor": "op-91c0583545f45f09cebaeaf6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

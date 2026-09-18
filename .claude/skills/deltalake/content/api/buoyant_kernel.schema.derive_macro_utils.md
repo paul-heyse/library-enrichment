@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 3 public items · structured records in [`model/buoyan
 ## GetNullableContainerStructField
 
 `trait` · `buoyant_kernel::schema::derive_macro_utils::GetNullableContainerStructField`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.derive_macro_utils.GetNullableContainerStructField.md)
 
 Also reachable as `delta_kernel::schema::derive_macro_utils::GetNullableContainerStructField`
 
@@ -27,6 +28,7 @@ fn get_nullable_container_struct_field(name: impl Into<String>) -> StructField
 ## GetStructField
 
 `trait` · `buoyant_kernel::schema::derive_macro_utils::GetStructField`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.derive_macro_utils.GetStructField.md)
 
 Also reachable as `delta_kernel::schema::derive_macro_utils::GetStructField`
 
@@ -53,6 +55,7 @@ struct fields, which otherwise default to non-nullable.
 ## ToDataType
 
 `trait` · `buoyant_kernel::schema::derive_macro_utils::ToDataType`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.schema.derive_macro_utils.ToDataType.md)
 
 Also reachable as `delta_kernel::schema::derive_macro_utils::ToDataType`
 

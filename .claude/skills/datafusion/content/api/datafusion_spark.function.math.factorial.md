@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 2 public items · structured records in [`model/data
 fn spark_factorial(args: &[datafusion_expr::ColumnarValue]) -> datafusion_common::Result<datafusion_expr::ColumnarValue, datafusion_common::DataFusionError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.factorial.spark_factorial.md).
+
+
 ---
 
 ## SparkFactorial
@@ -39,6 +42,9 @@ fn name(&self) -> &str
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.factorial.SparkFactorial.md).
+
 
 <https://spark.apache.org/docs/latest/api/sql/index.html#factorial>
 

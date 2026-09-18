@@ -79,6 +79,61 @@ fn candidate(name: &str, revision: &str) -> (ControlBatch, Context, SnapshotId) 
     (delta, context, snapshot_id)
 }
 
+/// CP12 only: an actual Delta commit followed by a deliberately lost acknowledgement.
+#[tokio::test]
+async fn unknown_control_acknowledgement_reconciles_content_without_reappending() {
+    let dir = tempfile::tempdir().unwrap();
+    let runtime = runtime(dir.path());
+    let catalog = ControlStore::open(dir.path(), runtime.clone()).unwrap();
+    let initial = catalog.pin().await.unwrap();
+    let predecessor = initial.generation();
+    let release = Release::new(ReleaseKey {
+        ecosystem: Ecosystem::Rust,
+        registry: "crates.io".into(),
+        package: "unknown-ack".into(),
+        version: "1.0.0".into(),
+        artifact_digest: None,
+    });
+    let probe = dir.path().join(".publication-probe");
+    std::fs::create_dir(&probe).unwrap();
+    std::fs::write(
+        probe.join("armed.json"),
+        br#"{"point":"control_append_durable","token":"0123456789abcdef0123456789abcdef"}"#,
+    )
+    .unwrap();
+    // A wrong release token makes the post-commit diagnostic return an error immediately.
+    std::fs::write(probe.join("release"), b"wrong acknowledgement").unwrap();
+    let result = catalog
+        .commit(ControlBatch {
+            releases: vec![release.clone()],
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+    assert!(
+        matches!(result, CommitOutcome::Committed { generation } if generation == predecessor + 1)
+    );
+    assert!(probe.join("reached.json").is_file());
+    let reopened = ControlStore::inspect(dir.path(), runtime.clone()).unwrap();
+    let current = reopened.pin().await.unwrap();
+    assert_eq!(current.generation(), predecessor + 1, "one physical append");
+    assert_eq!(
+        current
+            .release(&runtime, &release.release_id)
+            .await
+            .unwrap(),
+        Some(release)
+    );
+    let session = current.session(&runtime).await.unwrap();
+    let rows = runtime
+        .execute(session.table("state.records.releases").await.unwrap())
+        .await
+        .unwrap();
+    assert_eq!(rows.rows, 1);
+    drop((rows, session, current, reopened, initial, catalog));
+    runtime.close_diagnostics().await.unwrap();
+}
+
 #[tokio::test]
 async fn compaction_preserves_all_snapshot_membership_and_pinned_selections() {
     let dir = tempfile::tempdir().expect("directory");
@@ -136,7 +191,7 @@ async fn compaction_preserves_all_snapshot_membership_and_pinned_selections() {
                 .is_some()
         );
     }
-    let cold = ControlStore::read_only(dir.path(), runtime.clone()).expect("read only");
+    let cold = ControlStore::inspect(dir.path(), runtime.clone()).expect("read only");
     assert_eq!(
         cold.pin().await.expect("cold admission").identity(),
         after.identity()

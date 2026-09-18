@@ -1,0 +1,74 @@
+[
+  {
+    "id": "7740abfc6951a3b36b7929d7",
+    "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed",
+    "name": "row_backed",
+    "owner": null,
+    "crate": "datafusion-physical-plan",
+    "version": "55.1.0",
+    "kind": "module",
+    "signature": "mod row_backed",
+    "docs": "A generic [`GroupColumn`] backed by the arrow row format.\n\nUnlike the type-specialized builders in this module (primitive, byte,\nboolean, ...), [`RowsGroupColumn`] works for *any* data type that arrow's\n[`RowConverter`] can encode — including nested types such as `Struct`,\n`List`, `LargeList` and `FixedSizeList`. It stores one group value per row\nin a single-column [`Rows`] buffer and compares group keys by their encoded\nbytes.\n\n# Why this exists\n\n[`GroupValuesColumn`] can only be used when *every* column of the group-by\nkey has a [`GroupColumn`] implementation; otherwise the whole aggregation\nfalls back to the row-wise [`GroupValuesRows`], which is materially slower\nand heavier for the columns that *would* have qualified for the column-wise\nfast path. By providing a generic fallback `GroupColumn`, a schema like\n`GROUP BY int_col, struct_col` keeps `int_col` on its fast native builder\nand only pays the row-encoding cost on `struct_col`, instead of dragging both\ncolumns onto `GroupValuesRows`.\n\n# Relationship to hashing\n\nThis column does not hash anything itself: [`GroupValuesColumn`] hashes the\nraw input columns via `create_hashes`, which already supports nested types.\nEquality is decided here by comparing arrow-row bytes. For the two to agree\non group identity, values that this column considers equal must hash equal —\nsee the float `-0.0` / `NaN` note on [`RowsGroupColumn`].\n\n[`GroupValuesColumn`]: crate::aggregates::group_values::multi_group_by::GroupValuesColumn\n[`GroupValuesRows`]: crate::aggregates::group_values::GroupValuesRows",
+    "span": {
+      "filename": "src/aggregates/group_values/multi_group_by/row_backed.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        1129,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          236
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Rows`": 268,
+      "`GroupColumn`": 151,
+      "crate::aggregates::group_values::GroupValuesRows": 235,
+      "`RowConverter`": 234,
+      "`RowsGroupColumn`": 236,
+      "crate::aggregates::group_values::multi_group_by::GroupValuesColumn": 269
+    },
+    "link_paths": {
+      "`Rows`": "arrow_row::Rows",
+      "`GroupColumn`": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+      "crate::aggregates::group_values::GroupValuesRows": "datafusion_physical_plan::aggregates::group_values::row::GroupValuesRows",
+      "`RowConverter`": "arrow_row::RowConverter",
+      "`RowsGroupColumn`": "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn",
+      "crate::aggregates::group_values::multi_group_by::GroupValuesColumn": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupValuesColumn"
+    },
+    "artifact": {
+      "id": "eba399b8129e2056e252ae83e57ebdf4d4bc0a2a459ba9cbb632cecfb2b46caa",
+      "format_version": 61,
+      "item_id": "270",
+      "origin": "https://docs.rs/crate/datafusion-physical-plan/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.md",
+    "record_file": "modules/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.json",
+    "anchor": "op-7740abfc6951a3b36b7929d7",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Rows`": "../operations/arrow_row.Rows.md#op-21ce3501b5312cc762135114",
+      "`GroupColumn`": "../operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.GroupColumn.md#op-204596f00d03b5d0c6d4dde1",
+      "crate::aggregates::group_values::GroupValuesRows": "../operations/datafusion_physical_plan.aggregates.group_values.row.GroupValuesRows.md#op-582641990575e3e296c3f1a9",
+      "`RowConverter`": "../operations/arrow_row.RowConverter.md#op-3289371bf6ccaf9946ba91e3",
+      "`RowsGroupColumn`": "../operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.row_backed.RowsGroupColumn.md#op-c4432d606b876f77c52a957c",
+      "crate::aggregates::group_values::multi_group_by::GroupValuesColumn": "../operations/datafusion_physical_plan.aggregates.group_values.multi_group_by.GroupValuesColumn.md#op-d30b963fd166b9aca3827c13"
+    }
+  }
+]

@@ -1,0 +1,1732 @@
+[
+  {
+    "id": "3289371bf6ccaf9946ba91e3",
+    "path": "arrow_row::RowConverter",
+    "name": "RowConverter",
+    "owner": null,
+    "crate": "arrow-row",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct RowConverter",
+    "docs": " Converts [`ArrayRef`] columns into a [row-oriented](self) format.\n\n *Note: The encoding of the row format may change from release to release.*\n\n ## Overview\n\n The row format is a variable length byte sequence created by\n concatenating the encoded form of each column. The encoding for\n each column depends on its datatype (and sort options).\n\n The encoding is carefully designed in such a way that escaping is\n unnecessary: it is never ambiguous as to whether a byte is part of\n a sentinel (e.g. null) or a value.\n\n ## Unsigned Integer Encoding\n\n A null integer is encoded as a `0_u8`, followed by a zero-ed number of bytes corresponding\n to the integer's length.\n\n A valid integer is encoded as `1_u8`, followed by the big-endian representation of the\n integer.\n\n ```text\n               ┌──┬──┬──┬──┐      ┌──┬──┬──┬──┬──┐\n    3          │03│00│00│00│      │01│00│00│00│03│\n               └──┴──┴──┴──┘      └──┴──┴──┴──┴──┘\n               ┌──┬──┬──┬──┐      ┌──┬──┬──┬──┬──┐\n   258         │02│01│00│00│      │01│00│00│01│02│\n               └──┴──┴──┴──┘      └──┴──┴──┴──┴──┘\n               ┌──┬──┬──┬──┐      ┌──┬──┬──┬──┬──┐\n  23423        │7F│5B│00│00│      │01│00│00│5B│7F│\n               └──┴──┴──┴──┘      └──┴──┴──┴──┴──┘\n               ┌──┬──┬──┬──┐      ┌──┬──┬──┬──┬──┐\n  NULL         │??│??│??│??│      │00│00│00│00│00│\n               └──┴──┴──┴──┘      └──┴──┴──┴──┴──┘\n\n              32-bit (4 bytes)        Row Format\n  Value        Little Endian\n ```\n\n ## Signed Integer Encoding\n\n Signed integers have their most significant sign bit flipped, and are then encoded in the\n same manner as an unsigned integer.\n\n ```text\n        ┌──┬──┬──┬──┐       ┌──┬──┬──┬──┐       ┌──┬──┬──┬──┬──┐\n     5  │05│00│00│00│       │05│00│00│80│       │01│80│00│00│05│\n        └──┴──┴──┴──┘       └──┴──┴──┴──┘       └──┴──┴──┴──┴──┘\n        ┌──┬──┬──┬──┐       ┌──┬──┬──┬──┐       ┌──┬──┬──┬──┬──┐\n    -5  │FB│FF│FF│FF│       │FB│FF│FF│7F│       │01│7F│FF│FF│FB│\n        └──┴──┴──┴──┘       └──┴──┴──┴──┘       └──┴──┴──┴──┴──┘\n\n  Value  32-bit (4 bytes)    High bit flipped      Row Format\n          Little Endian\n ```\n\n ## Float Encoding\n\n Floats are converted from IEEE 754 representation to a signed integer representation\n by flipping all bar the sign bit if they are negative.\n\n They are then encoded in the same manner as a signed integer.\n\n ## Fixed Length Bytes Encoding\n\n Fixed length bytes are encoded in the same fashion as primitive types above.\n\n For a fixed length array of length `n`:\n\n A null is encoded as `0_u8` null sentinel followed by `n` `0_u8` bytes\n\n A valid value is encoded as `1_u8` followed by the value bytes\n\n ## Variable Length Bytes (including Strings) Encoding\n\n A null is encoded as a `0_u8`.\n\n An empty byte array is encoded as `1_u8`.\n\n A non-null, non-empty byte array is encoded as `2_u8` followed by the byte array\n encoded using a block based scheme described below.\n\n The byte array is broken up into fixed-width blocks, each block is written in turn\n to the output, followed by `0xFF_u8`. The final block is padded to 32-bytes\n with `0_u8` and written to the output, followed by the un-padded length in bytes\n of this final block as a `u8`. The first 4 blocks have a length of 8, with subsequent\n blocks using a length of 32, this is to reduce space amplification for small strings.\n\n Note the following example encodings use a block size of 4 bytes for brevity:\n\n ```text\n                       ┌───┬───┬───┬───┬───┬───┐\n  \"MEEP\"               │02 │'M'│'E'│'E'│'P'│04 │\n                       └───┴───┴───┴───┴───┴───┘\n\n                       ┌───┐\n  \"\"                   │01 |\n                       └───┘\n\n  NULL                 ┌───┐\n                       │00 │\n                       └───┘\n\n \"Defenestration\"      ┌───┬───┬───┬───┬───┬───┐\n                       │02 │'D'│'e'│'f'│'e'│FF │\n                       └───┼───┼───┼───┼───┼───┤\n                           │'n'│'e'│'s'│'t'│FF │\n                           ├───┼───┼───┼───┼───┤\n                           │'r'│'a'│'t'│'r'│FF │\n                           ├───┼───┼───┼───┼───┤\n                           │'a'│'t'│'i'│'o'│FF │\n                           ├───┼───┼───┼───┼───┤\n                           │'n'│00 │00 │00 │01 │\n                           └───┴───┴───┴───┴───┘\n ```\n\n This approach is loosely inspired by [COBS] encoding, and chosen over more traditional\n [byte stuffing] as it is more amenable to vectorisation, in particular AVX-256.\n\n ## Dictionary Encoding\n\n Dictionary encoded arrays are hydrated to their underlying values\n\n ## REE Encoding\n\n REE (Run End Encoding) arrays, A form of Run Length Encoding, are hydrated to their underlying values.\n\n ## Struct Encoding\n\n A null is encoded as a `0_u8`.\n\n A valid value is encoded as `1_u8` followed by the row encoding of each child.\n\n This encoding effectively flattens the schema in a depth-first fashion.\n\n For example\n\n ```text\n ┌───────┬────────────────────────┬───────┐\n │ Int32 │ Struct[Int32, Float32] │ Int32 │\n └───────┴────────────────────────┴───────┘\n ```\n\n Is encoded as\n\n ```text\n ┌───────┬───────────────┬───────┬─────────┬───────┐\n │ Int32 │ Null Sentinel │ Int32 │ Float32 │ Int32 │\n └───────┴───────────────┴───────┴─────────┴───────┘\n ```\n\n ## List and Map Encoding\n\n Lists are encoded by first encoding all child elements to the row format.\n\n The Map encoding is the same with the only difference being that the child elements are key-value pairs.\n\n A list/map value is then encoded as the concatenation of each of the child elements,\n separately encoded using the variable length encoding described above, followed\n by the variable length encoding of an empty byte array.\n\n For example given:\n\n ```text\n [1_u8, 2_u8, 3_u8]\n [1_u8, null]\n []\n null\n ```\n\n The elements would be converted to:\n\n ```text\n     ┌──┬──┐     ┌──┬──┐     ┌──┬──┐     ┌──┬──┐        ┌──┬──┐\n  1  │01│01│  2  │01│02│  3  │01│03│  1  │01│01│  null  │00│00│\n     └──┴──┘     └──┴──┘     └──┴──┘     └──┴──┘        └──┴──┘\n```\n\n Which would be encoded as\n\n ```text\n                         ┌──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┐\n  [1_u8, 2_u8, 3_u8]     │02│01│01│00│00│02│02│01│02│00│00│02│02│01│03│00│00│02│01│\n                         └──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┘\n                          └──── 1_u8 ────┘   └──── 2_u8 ────┘  └──── 3_u8 ────┘\n\n                         ┌──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┐\n  [1_u8, null]           │02│01│01│00│00│02│02│00│00│00│00│02│01│\n                         └──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┘\n                          └──── 1_u8 ────┘   └──── null ────┘\n\n```\n\n With `[]` represented by an empty byte array, and `null` a null byte array.\n\n ### Map Equality\n\n **Note:** Maps with different order of keys are not equal in row format\n i.e. row_format({\"hello\": 1, \"world\": 2}) != row_format({\"world\": 2, \"hello\": 1})\n\n ```\n # use std::sync::Arc;\n # use arrow_row::{RowConverter, SortField};\n # use arrow_array::{Array, Int32Array, StringArray, MapArray};\n\n // [{ \"hello\": 1, \"world\": 2 }, { \"hey\": 3, \"you\": 4 }]\n let map_1 = MapArray::from_vec_of_maps::<StringArray, Int32Array, _, _>(vec![\n   Some(vec![(\"hello\", Some(1)), (\"world\", Some(2))]),\n   Some(vec![(\"hey\", Some(3)), (\"you\", Some(4))]),\n ], false);\n // [{ \"world\": 2, \"hello\": 1 }, { \"hey\": 3, \"you\": 4 }]\n let map_2 = MapArray::from_vec_of_maps::<StringArray, Int32Array, _, _>(vec![\n   Some(vec![(\"world\", Some(2)), (\"hello\", Some(1))]),\n   Some(vec![(\"hey\", Some(3)), (\"you\", Some(4))]),\n ], false);\n\n let converter = RowConverter::new(vec![SortField::new(map_1.data_type().clone())]).unwrap();\n\n let map_1_rows = converter.convert_columns(&[Arc::new(map_1)]).unwrap();\n let map_2_rows = converter.convert_columns(&[Arc::new(map_2)]).unwrap();\n\n // Attention! these maps are NOT equal since the order of the keys are different\n assert_ne!(map_1_rows.row(0), map_2_rows.row(0));\n\n // These maps ARE equal since the order and the content of the keys and values are the same\n assert_eq!(map_1_rows.row(1), map_2_rows.row(1));\n ```\n\n If you DO want to treat maps with different order of keys as the same in row format you should canonicalize them first.\n\n ## Fixed Size List Encoding\n\n Fixed Size Lists are encoded by first encoding all child elements to the row format.\n\n A non-null list value is then encoded as 0x01 followed by the concatenation of each\n of the child elements. A null list value is encoded as a null marker.\n\n For example given:\n\n ```text\n [1_u8, 2_u8]\n [3_u8, null]\n null\n ```\n\n The elements would be converted to:\n\n ```text\n     ┌──┬──┐     ┌──┬──┐     ┌──┬──┐        ┌──┬──┐\n  1  │01│01│  2  │01│02│  3  │01│03│  null  │00│00│\n     └──┴──┘     └──┴──┘     └──┴──┘        └──┴──┘\n```\n\n Which would be encoded as\n\n ```text\n                 ┌──┬──┬──┬──┬──┐\n  [1_u8, 2_u8]   │01│01│01│01│02│\n                 └──┴──┴──┴──┴──┘\n                     └ 1 ┘ └ 2 ┘\n                 ┌──┬──┬──┬──┬──┐\n  [3_u8, null]   │01│01│03│00│00│\n                 └──┴──┴──┴──┴──┘\n                     └ 1 ┘ └null┘\n                 ┌──┐\n  null           │00│\n                 └──┘\n\n```\n\n ## ListView Encoding\n\n ListView arrays differ from List arrays in their representation: instead of using\n consecutive offset pairs to define each list, ListView uses explicit offset and size\n pairs for each element. This allows ListView elements to reference arbitrary (potentially\n overlapping) regions of the child array.\n\n Despite this structural difference, ListView uses the **same row encoding as List**.\n Each list value is encoded as the concatenation of its child elements (each separately\n variable-length encoded), followed by a variable-length encoded empty byte array terminator.\n\n **Important**: When a ListView is decoded back from row format, it is still a\n ListView, but any child element sharing that may have existed in the original\n (where multiple list entries could reference overlapping regions of the child\n array) is **not preserved** - each list's children are decoded independently\n with sequential offsets.\n\n For example, given a ListView with offset/size pairs:\n\n ```text\n offsets: [0, 1, 0]\n sizes:   [2, 2, 0]\n values:  [1_u8, 2_u8, 3_u8]\n\n Resulting lists:\n [1_u8, 2_u8]  (offset=0, size=2 -> values[0..2])\n [2_u8, 3_u8]  (offset=1, size=2 -> values[1..3])\n []            (offset=0, size=0 -> empty)\n ```\n\n The elements would be encoded identically to List encoding:\n\n ```text\n                         ┌──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┐\n  [1_u8, 2_u8]           │02│01│01│00│00│02│02│01│02│00│00│02│01│\n                         └──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┘\n                          └──── 1_u8 ────┘   └──── 2_u8 ────┘\n\n                         ┌──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┐\n  [2_u8, 3_u8]           │02│01│02│00│00│02│02│01│03│00│00│02│01│\n                         └──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┘\n                          └──── 2_u8 ────┘   └──── 3_u8 ────┘\n\n```\n\n Note that element `2_u8` appears in both encoded rows, even though it was shared\n in the original ListView, and `[]` is represented by an empty byte array.\n\n ## Union Encoding\n\n A union value is encoded as a single type-id byte followed by the row encoding of the selected child value.\n The type-id byte is always present; union arrays have no top-level null marker, so nulls are represented by the child encoding.\n\n For example, given a union of Int32 (type_id = 0) and Utf8 (type_id = 1):\n\n ```text\n                           ┌──┬──────────────┐\n  3                        │00│01│80│00│00│03│\n                           └──┴──────────────┘\n                            │  └─ signed integer encoding (non-null)\n                            └──── type_id\n\n                           ┌──┬────────────────────────────────┐\n \"abc\"                     │01│02│'a'│'b'│'c'│00│00│00│00│00│03│\n                           └──┴────────────────────────────────┘\n                            │  └─ string encoding (non-null)\n                            └──── type_id\n\n                           ┌──┬──────────────┐\n null Int32                │00│00│00│00│00│00│\n                           └──┴──────────────┘\n                            │  └─ signed integer encoding (null)\n                            └──── type_id\n\n                           ┌──┬──┐\n null Utf8                 │01│00│\n                           └──┴──┘\n                            │  └─ string encoding (null)\n                            └──── type_id\n ```\n\n See [`UnionArray`] for more details on union types.\n\n # Ordering\n\n ## Float Ordering\n\n Floats are totally ordered in accordance to the `totalOrder` predicate as defined\n in the IEEE 754 (2008 revision) floating point standard.\n\n The ordering established by this does not always agree with the\n [`PartialOrd`] and [`PartialEq`] implementations of `f32`. For example,\n they consider negative and positive zero equal, while this does not\n\n ## Null Ordering\n\n The encoding described above will order nulls first, this can be inverted by representing\n nulls as `0xFF_u8` instead of `0_u8`\n\n ## Union Ordering\n\n Values of the same type are ordered according to the ordering of that type.\n Values of different types are ordered by their type id.\n The type_id is negated when descending order is specified.\n\n ## Reverse Column Ordering\n\n The order of a given column can be reversed by negating the encoded bytes of non-null values\n\n [COBS]: https://en.wikipedia.org/wiki/Consistent_Overhead_Byte_Stuffing\n [byte stuffing]: https://en.wikipedia.org/wiki/High-Level_Data_Link_Control#Asynchronous_framing",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        568,
+        1
+      ],
+      "end": [
+        572,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          31,
+          32,
+          34,
+          36,
+          38,
+          40,
+          42,
+          44,
+          47,
+          51,
+          55,
+          58,
+          62,
+          66,
+          69,
+          71,
+          76
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`PartialOrd`": 9,
+      "self": 7,
+      "`ArrayRef`": 6,
+      "`UnionArray`": 8,
+      "`PartialEq`": 10
+    },
+    "link_paths": {
+      "`PartialOrd`": "core::cmp::PartialOrd",
+      "self": "arrow_row",
+      "`ArrayRef`": "arrow_array::array::ArrayRef",
+      "`UnionArray`": "arrow_array::array::union_array::UnionArray",
+      "`PartialEq`": "core::cmp::PartialEq"
+    },
+    "artifact": {
+      "id": "9be3b9f5bf642dbe3eb9f0f726b24b46448628fe68ecdeeea81a53ad5e01091f",
+      "format_version": 61,
+      "item_id": "11",
+      "origin": "https://docs.rs/crate/arrow-row/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_row.RowConverter.md",
+    "record_file": "operations/arrow_row.RowConverter.json",
+    "anchor": "op-3289371bf6ccaf9946ba91e3",
+    "aliases": [
+      "arrow::row::RowConverter"
+    ],
+    "resolved_doc_links": {
+      "self": "../modules/arrow_row.md#op-303caac8dd00f839fb954c1c",
+      "`ArrayRef`": "../operations/arrow_array.array.ArrayRef.md#op-657cc3ff3d24afcacda590e1",
+      "`UnionArray`": "../operations/arrow_array.array.union_array.UnionArray.md#op-39e2f188616dc0298ba644ac"
+    }
+  },
+  {
+    "id": "69a9ab377eed19a94e263b06",
+    "path": "arrow_row::RowConverter::append",
+    "name": "append",
+    "owner": "arrow_row::RowConverter",
+    "crate": "arrow-row",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn append(&self, rows: &mut Rows, columns: &[ArrayRef]) -> Result<(), ArrowError>",
+    "docs": "Convert [`ArrayRef`] columns appending to an existing [`Rows`]\n\nSee [`Row`] for information on when [`Row`] can be compared\n\n# Panics\n\nPanics if\n* The schema of `columns` does not match that provided to [`RowConverter::new`]\n* The provided [`Rows`] were not created by this [`RowConverter`]\n\n```\n# use std::sync::Arc;\n# use std::collections::HashSet;\n# use arrow_array::cast::AsArray;\n# use arrow_array::StringArray;\n# use arrow_row::{Row, RowConverter, SortField};\n# use arrow_schema::DataType;\n#\nlet converter = RowConverter::new(vec![SortField::new(DataType::Utf8)]).unwrap();\nlet a1 = StringArray::from(vec![\"hello\", \"world\"]);\nlet a2 = StringArray::from(vec![\"a\", \"a\", \"hello\"]);\n\nlet mut rows = converter.empty_rows(5, 128);\nconverter.append(&mut rows, &[Arc::new(a1)]).unwrap();\nconverter.append(&mut rows, &[Arc::new(a2)]).unwrap();\n\nlet back = converter.convert_rows(&rows).unwrap();\nlet values: Vec<_> = back[0].as_string::<i32>().iter().map(Option::unwrap).collect();\nassert_eq!(&values, &[\"hello\", \"world\", \"a\", \"a\", \"hello\"]);\n```",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        1041,
+        5
+      ],
+      "end": [
+        1104,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "rows",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Rows",
+                      "id": 18,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "columns",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 6,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 15,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 16,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "18": "arrow_row::Rows",
+      "6": "arrow_array::array::ArrayRef",
+      "15": "core::result::Result",
+      "16": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowConverter",
+          "id": "arrow_row::RowConverter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/lib.rs",
+        "begin": [
+          956,
+          1
+        ],
+        "end": [
+          1276,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Rows`": 18,
+      "`Row`": 19,
+      "`RowConverter::new`": 12,
+      "`ArrayRef`": 6,
+      "`RowConverter`": 11
+    },
+    "link_paths": {
+      "`Rows`": "arrow_row::Rows",
+      "`Row`": "arrow_row::Row",
+      "`RowConverter::new`": "arrow_row::RowConverter::new",
+      "`ArrayRef`": "arrow_array::array::ArrayRef",
+      "`RowConverter`": "arrow_row::RowConverter"
+    },
+    "artifact": {
+      "id": "9be3b9f5bf642dbe3eb9f0f726b24b46448628fe68ecdeeea81a53ad5e01091f",
+      "format_version": 61,
+      "item_id": "22",
+      "origin": "https://docs.rs/crate/arrow-row/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_row.RowConverter.md",
+    "record_file": "operations/arrow_row.RowConverter.json",
+    "anchor": "op-69a9ab377eed19a94e263b06",
+    "aliases": [
+      "arrow::row::RowConverter::append"
+    ],
+    "resolved_doc_links": {
+      "`Rows`": "../operations/arrow_row.Rows.md#op-21ce3501b5312cc762135114",
+      "`Row`": "../operations/arrow_row.Row.md#op-a32be7fffe0a916746ead966",
+      "`RowConverter::new`": "../operations/arrow_row.RowConverter.md#op-0eb3cadddfeaafa7cf8f988c",
+      "`ArrayRef`": "../operations/arrow_array.array.ArrayRef.md#op-657cc3ff3d24afcacda590e1",
+      "`RowConverter`": "../operations/arrow_row.RowConverter.md#op-3289371bf6ccaf9946ba91e3"
+    }
+  },
+  {
+    "id": "610a34b7b5b57c4d480dfde7",
+    "path": "arrow_row::RowConverter::convert_columns",
+    "name": "convert_columns",
+    "owner": "arrow_row::RowConverter",
+    "crate": "arrow-row",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn convert_columns(&self, columns: &[ArrayRef]) -> Result<Rows, ArrowError>",
+    "docs": "Convert [`ArrayRef`] columns into [`Rows`]\n\nSee [`Row`] for information on when [`Row`] can be compared\n\nSee [`Self::convert_rows`] for converting [`Rows`] back into [`ArrayRef`]\n\n# Panics\n\nPanics if the schema of `columns` does not match that provided to [`RowConverter::new`]",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        1004,
+        5
+      ],
+      "end": [
+        1009,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "columns",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 6,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 15,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Rows",
+                          "id": 18,
+                          "args": null
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 16,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "6": "arrow_array::array::ArrayRef",
+      "15": "core::result::Result",
+      "18": "arrow_row::Rows",
+      "16": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowConverter",
+          "id": "arrow_row::RowConverter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/lib.rs",
+        "begin": [
+          956,
+          1
+        ],
+        "end": [
+          1276,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Rows`": 18,
+      "`Row`": 19,
+      "`RowConverter::new`": 12,
+      "`ArrayRef`": 6,
+      "`Self::convert_rows`": 20
+    },
+    "link_paths": {
+      "`Rows`": "arrow_row::Rows",
+      "`Row`": "arrow_row::Row",
+      "`RowConverter::new`": "arrow_row::RowConverter::new",
+      "`ArrayRef`": "arrow_array::array::ArrayRef",
+      "`Self::convert_rows`": "arrow_row::RowConverter::convert_rows"
+    },
+    "artifact": {
+      "id": "9be3b9f5bf642dbe3eb9f0f726b24b46448628fe68ecdeeea81a53ad5e01091f",
+      "format_version": 61,
+      "item_id": "21",
+      "origin": "https://docs.rs/crate/arrow-row/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_row.RowConverter.md",
+    "record_file": "operations/arrow_row.RowConverter.json",
+    "anchor": "op-610a34b7b5b57c4d480dfde7",
+    "aliases": [
+      "arrow::row::RowConverter::convert_columns"
+    ],
+    "resolved_doc_links": {
+      "`Rows`": "../operations/arrow_row.Rows.md#op-21ce3501b5312cc762135114",
+      "`Row`": "../operations/arrow_row.Row.md#op-a32be7fffe0a916746ead966",
+      "`RowConverter::new`": "../operations/arrow_row.RowConverter.md#op-0eb3cadddfeaafa7cf8f988c",
+      "`ArrayRef`": "../operations/arrow_array.array.ArrayRef.md#op-657cc3ff3d24afcacda590e1",
+      "`Self::convert_rows`": "../operations/arrow_row.RowConverter.md#op-772d3ca81b1fb03bb6f2e3a4"
+    }
+  },
+  {
+    "id": "772d3ca81b1fb03bb6f2e3a4",
+    "path": "arrow_row::RowConverter::convert_rows",
+    "name": "convert_rows",
+    "owner": "arrow_row::RowConverter",
+    "crate": "arrow-row",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn convert_rows<'a, I>(&self, rows: I) -> Result<Vec<ArrayRef>, ArrowError> where I: IntoIterator<Item = Row<'a>>",
+    "docs": "Convert [`Rows`] columns into [`ArrayRef`]\n\nSee [`Self::convert_columns`] for converting [`ArrayRef`] into [`Rows`]\n\n# Panics\n\nPanics if the rows were not produced by this [`RowConverter`]",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        1113,
+        5
+      ],
+      "end": [
+        1147,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "rows",
+              {
+                "generic": "I"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 15,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 13,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "ArrayRef",
+                                      "id": 6,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 16,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "I",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "I"
+                },
+                "bounds": [
+                  {
+                    "trait_bound": {
+                      "trait": {
+                        "path": "IntoIterator",
+                        "id": 23,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [],
+                            "constraints": [
+                              {
+                                "name": "Item",
+                                "args": null,
+                                "binding": {
+                                  "equality": {
+                                    "type": {
+                                      "resolved_path": {
+                                        "path": "Row",
+                                        "id": 19,
+                                        "args": {
+                                          "angle_bracketed": {
+                                            "args": [
+                                              {
+                                                "lifetime": "'a"
+                                              }
+                                            ],
+                                            "constraints": []
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "generic_params": [],
+                      "modifier": "none"
+                    }
+                  }
+                ],
+                "generic_params": []
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "15": "core::result::Result",
+      "13": "alloc::vec::Vec",
+      "6": "arrow_array::array::ArrayRef",
+      "16": "arrow_schema::error::ArrowError",
+      "23": "core::iter::traits::collect::IntoIterator",
+      "19": "arrow_row::Row"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowConverter",
+          "id": "arrow_row::RowConverter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/lib.rs",
+        "begin": [
+          956,
+          1
+        ],
+        "end": [
+          1276,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Rows`": 18,
+      "`Self::convert_columns`": 21,
+      "`ArrayRef`": 6,
+      "`RowConverter`": 11
+    },
+    "link_paths": {
+      "`Rows`": "arrow_row::Rows",
+      "`Self::convert_columns`": "arrow_row::RowConverter::convert_columns",
+      "`ArrayRef`": "arrow_array::array::ArrayRef",
+      "`RowConverter`": "arrow_row::RowConverter"
+    },
+    "artifact": {
+      "id": "9be3b9f5bf642dbe3eb9f0f726b24b46448628fe68ecdeeea81a53ad5e01091f",
+      "format_version": 61,
+      "item_id": "20",
+      "origin": "https://docs.rs/crate/arrow-row/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_row.RowConverter.md",
+    "record_file": "operations/arrow_row.RowConverter.json",
+    "anchor": "op-772d3ca81b1fb03bb6f2e3a4",
+    "aliases": [
+      "arrow::row::RowConverter::convert_rows"
+    ],
+    "resolved_doc_links": {
+      "`Rows`": "../operations/arrow_row.Rows.md#op-21ce3501b5312cc762135114",
+      "`Self::convert_columns`": "../operations/arrow_row.RowConverter.md#op-610a34b7b5b57c4d480dfde7",
+      "`ArrayRef`": "../operations/arrow_array.array.ArrayRef.md#op-657cc3ff3d24afcacda590e1",
+      "`RowConverter`": "../operations/arrow_row.RowConverter.md#op-3289371bf6ccaf9946ba91e3"
+    }
+  },
+  {
+    "id": "cfb061e7cbeb709e581edaea",
+    "path": "arrow_row::RowConverter::empty_rows",
+    "name": "empty_rows",
+    "owner": "arrow_row::RowConverter",
+    "crate": "arrow-row",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn empty_rows(&self, row_capacity: usize, data_capacity: usize) -> Rows",
+    "docs": "Returns an empty [`Rows`] with capacity for `row_capacity` rows with\na total length of `data_capacity`\n\nThis can be used to buffer a selection of [`Row`]\n\n```\n# use std::sync::Arc;\n# use std::collections::HashSet;\n# use arrow_array::cast::AsArray;\n# use arrow_array::StringArray;\n# use arrow_row::{Row, RowConverter, SortField};\n# use arrow_schema::DataType;\n#\nlet converter = RowConverter::new(vec![SortField::new(DataType::Utf8)]).unwrap();\nlet array = StringArray::from(vec![\"hello\", \"world\", \"a\", \"a\", \"hello\"]);\n\n// Convert to row format and deduplicate\nlet converted = converter.convert_columns(&[Arc::new(array)]).unwrap();\nlet mut distinct_rows = converter.empty_rows(3, 100);\nlet mut dedup: HashSet<Row> = HashSet::with_capacity(3);\nconverted.iter().filter(|row| dedup.insert(*row)).for_each(|row| distinct_rows.push(row));\n\n// Note: we could skip buffering and feed the filtered iterator directly\n// into convert_rows, this is done for demonstration purposes only\nlet distinct = converter.convert_rows(&distinct_rows).unwrap();\nlet values: Vec<_> = distinct[0].as_string::<i32>().iter().map(Option::unwrap).collect();\nassert_eq!(&values, &[\"hello\", \"world\", \"a\"]);\n```",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        1177,
+        5
+      ],
+      "end": [
+        1189,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "row_capacity",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "data_capacity",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Rows",
+              "id": 18,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "18": "arrow_row::Rows"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowConverter",
+          "id": "arrow_row::RowConverter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/lib.rs",
+        "begin": [
+          956,
+          1
+        ],
+        "end": [
+          1276,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Rows`": 18,
+      "`Row`": 19
+    },
+    "link_paths": {
+      "`Rows`": "arrow_row::Rows",
+      "`Row`": "arrow_row::Row"
+    },
+    "artifact": {
+      "id": "9be3b9f5bf642dbe3eb9f0f726b24b46448628fe68ecdeeea81a53ad5e01091f",
+      "format_version": 61,
+      "item_id": "24",
+      "origin": "https://docs.rs/crate/arrow-row/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_row.RowConverter.md",
+    "record_file": "operations/arrow_row.RowConverter.json",
+    "anchor": "op-cfb061e7cbeb709e581edaea",
+    "aliases": [
+      "arrow::row::RowConverter::empty_rows"
+    ],
+    "resolved_doc_links": {
+      "`Rows`": "../operations/arrow_row.Rows.md#op-21ce3501b5312cc762135114",
+      "`Row`": "../operations/arrow_row.Row.md#op-a32be7fffe0a916746ead966"
+    }
+  },
+  {
+    "id": "8bdecee307b852c8e836a334",
+    "path": "arrow_row::RowConverter::fmt",
+    "name": "fmt",
+    "owner": "arrow_row::RowConverter",
+    "crate": "arrow-row",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        567,
+        10
+      ],
+      "end": [
+        567,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 74,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 75,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "74": "core::fmt::Formatter",
+      "75": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowConverter",
+          "id": "arrow_row::RowConverter",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/lib.rs",
+        "begin": [
+          567,
+          10
+        ],
+        "end": [
+          567,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "9be3b9f5bf642dbe3eb9f0f726b24b46448628fe68ecdeeea81a53ad5e01091f",
+      "format_version": 61,
+      "item_id": "73",
+      "origin": "https://docs.rs/crate/arrow-row/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_row.RowConverter.md",
+    "record_file": "operations/arrow_row.RowConverter.json",
+    "anchor": "op-8bdecee307b852c8e836a334",
+    "aliases": [
+      "arrow::row::RowConverter::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "917e88735bd670bb31698c8c",
+    "path": "arrow_row::RowConverter::from_binary",
+    "name": "from_binary",
+    "owner": "arrow_row::RowConverter",
+    "crate": "arrow-row",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from_binary(&self, array: BinaryArray) -> Rows",
+    "docs": "Create a new [Rows] instance from the given binary data.\n\n```\n# use std::sync::Arc;\n# use std::collections::HashSet;\n# use arrow_array::cast::AsArray;\n# use arrow_array::StringArray;\n# use arrow_row::{OwnedRow, Row, RowConverter, RowParser, SortField};\n# use arrow_schema::DataType;\n#\nlet converter = RowConverter::new(vec![SortField::new(DataType::Utf8)]).unwrap();\nlet array = StringArray::from(vec![\"hello\", \"world\", \"a\", \"a\", \"hello\"]);\nlet rows = converter.convert_columns(&[Arc::new(array)]).unwrap();\n\n// We can convert rows into binary format and back in batch.\nlet values: Vec<OwnedRow> = rows.iter().map(|r| r.owned()).collect();\nlet binary = rows.try_into_binary().expect(\"known-small array\");\nlet converted = converter.from_binary(binary.clone());\nassert!(converted.iter().eq(values.iter().map(|r| r.row())));\n```\n\n# Panics\n\nThis function expects the passed [BinaryArray] to contain valid row data as produced by this\n[RowConverter]. It will panic if any rows are null. Operations on the returned [Rows] may\npanic if the data is malformed.",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        1217,
+        5
+      ],
+      "end": [
+        1235,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "array",
+              {
+                "resolved_path": {
+                  "path": "BinaryArray",
+                  "id": 25,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Rows",
+              "id": 18,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "25": "arrow_array::array::binary_array::BinaryArray",
+      "18": "arrow_row::Rows"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowConverter",
+          "id": "arrow_row::RowConverter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/lib.rs",
+        "begin": [
+          956,
+          1
+        ],
+        "end": [
+          1276,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Rows": 18,
+      "BinaryArray": 25,
+      "RowConverter": 11
+    },
+    "link_paths": {
+      "Rows": "arrow_row::Rows",
+      "BinaryArray": "arrow_array::array::binary_array::BinaryArray",
+      "RowConverter": "arrow_row::RowConverter"
+    },
+    "artifact": {
+      "id": "9be3b9f5bf642dbe3eb9f0f726b24b46448628fe68ecdeeea81a53ad5e01091f",
+      "format_version": 61,
+      "item_id": "26",
+      "origin": "https://docs.rs/crate/arrow-row/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_row.RowConverter.md",
+    "record_file": "operations/arrow_row.RowConverter.json",
+    "anchor": "op-917e88735bd670bb31698c8c",
+    "aliases": [
+      "arrow::row::RowConverter::from_binary"
+    ],
+    "resolved_doc_links": {
+      "Rows": "../operations/arrow_row.Rows.md#op-21ce3501b5312cc762135114",
+      "BinaryArray": "../operations/arrow_array.array.binary_array.BinaryArray.md#op-7129d9dc68ce402f881c540c",
+      "RowConverter": "../operations/arrow_row.RowConverter.md#op-3289371bf6ccaf9946ba91e3"
+    }
+  },
+  {
+    "id": "0eb3cadddfeaafa7cf8f988c",
+    "path": "arrow_row::RowConverter::new",
+    "name": "new",
+    "owner": "arrow_row::RowConverter",
+    "crate": "arrow-row",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(fields: Vec<SortField>) -> Result<Self, ArrowError>",
+    "docs": "Create a new [`RowConverter`] with the provided schema",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        958,
+        5
+      ],
+      "end": [
+        970,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "fields",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 13,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "SortField",
+                              "id": 14,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 15,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 16,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "13": "alloc::vec::Vec",
+      "14": "arrow_row::SortField",
+      "15": "core::result::Result",
+      "16": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowConverter",
+          "id": "arrow_row::RowConverter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/lib.rs",
+        "begin": [
+          956,
+          1
+        ],
+        "end": [
+          1276,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RowConverter`": 11
+    },
+    "link_paths": {
+      "`RowConverter`": "arrow_row::RowConverter"
+    },
+    "artifact": {
+      "id": "9be3b9f5bf642dbe3eb9f0f726b24b46448628fe68ecdeeea81a53ad5e01091f",
+      "format_version": 61,
+      "item_id": "12",
+      "origin": "https://docs.rs/crate/arrow-row/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_row.RowConverter.md",
+    "record_file": "operations/arrow_row.RowConverter.json",
+    "anchor": "op-0eb3cadddfeaafa7cf8f988c",
+    "aliases": [
+      "arrow::row::RowConverter::new"
+    ],
+    "resolved_doc_links": {
+      "`RowConverter`": "../operations/arrow_row.RowConverter.md#op-3289371bf6ccaf9946ba91e3"
+    }
+  },
+  {
+    "id": "4e836f01a5d467c50abda04a",
+    "path": "arrow_row::RowConverter::parser",
+    "name": "parser",
+    "owner": "arrow_row::RowConverter",
+    "crate": "arrow-row",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn parser(&self) -> RowParser",
+    "docs": "Returns a [`RowParser`] that can be used to parse [`Row`] from bytes",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        1255,
+        5
+      ],
+      "end": [
+        1257,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "RowParser",
+              "id": 27,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "27": "arrow_row::RowParser"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowConverter",
+          "id": "arrow_row::RowConverter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/lib.rs",
+        "begin": [
+          956,
+          1
+        ],
+        "end": [
+          1276,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`RowParser`": 27,
+      "`Row`": 19
+    },
+    "link_paths": {
+      "`RowParser`": "arrow_row::RowParser",
+      "`Row`": "arrow_row::Row"
+    },
+    "artifact": {
+      "id": "9be3b9f5bf642dbe3eb9f0f726b24b46448628fe68ecdeeea81a53ad5e01091f",
+      "format_version": 61,
+      "item_id": "28",
+      "origin": "https://docs.rs/crate/arrow-row/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_row.RowConverter.md",
+    "record_file": "operations/arrow_row.RowConverter.json",
+    "anchor": "op-4e836f01a5d467c50abda04a",
+    "aliases": [
+      "arrow::row::RowConverter::parser"
+    ],
+    "resolved_doc_links": {
+      "`RowParser`": "../operations/arrow_row.RowParser.md#op-955916db32b3a0fe58460e3a",
+      "`Row`": "../operations/arrow_row.Row.md#op-a32be7fffe0a916746ead966"
+    }
+  },
+  {
+    "id": "b0909ae4fa1f7f96e04f05c4",
+    "path": "arrow_row::RowConverter::parser_skip_utf8_validation",
+    "name": "parser_skip_utf8_validation",
+    "owner": "arrow_row::RowConverter",
+    "crate": "arrow-row",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn parser_skip_utf8_validation(&self) -> RowParser",
+    "docs": "Like [`Self::parser`] but skips UTF-8 validation on decode.\n\n# Safety\nThe caller must ensure all row bytes contain valid UTF-8 for string columns.",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        1263,
+        5
+      ],
+      "end": [
+        1265,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "RowParser",
+              "id": 27,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "27": "arrow_row::RowParser"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowConverter",
+          "id": "arrow_row::RowConverter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/lib.rs",
+        "begin": [
+          956,
+          1
+        ],
+        "end": [
+          1276,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::parser`": 28
+    },
+    "link_paths": {
+      "`Self::parser`": "arrow_row::RowConverter::parser"
+    },
+    "artifact": {
+      "id": "9be3b9f5bf642dbe3eb9f0f726b24b46448628fe68ecdeeea81a53ad5e01091f",
+      "format_version": 61,
+      "item_id": "29",
+      "origin": "https://docs.rs/crate/arrow-row/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_row.RowConverter.md",
+    "record_file": "operations/arrow_row.RowConverter.json",
+    "anchor": "op-b0909ae4fa1f7f96e04f05c4",
+    "aliases": [
+      "arrow::row::RowConverter::parser_skip_utf8_validation"
+    ],
+    "resolved_doc_links": {
+      "`Self::parser`": "../operations/arrow_row.RowConverter.md#op-4e836f01a5d467c50abda04a"
+    }
+  },
+  {
+    "id": "05e5654254329417ff05780b",
+    "path": "arrow_row::RowConverter::size",
+    "name": "size",
+    "owner": "arrow_row::RowConverter",
+    "crate": "arrow-row",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn size(&self) -> usize",
+    "docs": "Returns the size of this instance in bytes\n\nIncludes the size of `Self`.",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        1270,
+        5
+      ],
+      "end": [
+        1275,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowConverter",
+          "id": "arrow_row::RowConverter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/lib.rs",
+        "begin": [
+          956,
+          1
+        ],
+        "end": [
+          1276,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "9be3b9f5bf642dbe3eb9f0f726b24b46448628fe68ecdeeea81a53ad5e01091f",
+      "format_version": 61,
+      "item_id": "30",
+      "origin": "https://docs.rs/crate/arrow-row/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_row.RowConverter.md",
+    "record_file": "operations/arrow_row.RowConverter.json",
+    "anchor": "op-05e5654254329417ff05780b",
+    "aliases": [
+      "arrow::row::RowConverter::size"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "79616c2881c517486a6328ea",
+    "path": "arrow_row::RowConverter::supports_fields",
+    "name": "supports_fields",
+    "owner": "arrow_row::RowConverter",
+    "crate": "arrow-row",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn supports_fields(fields: &[SortField]) -> bool",
+    "docs": "Check if the given fields are supported by the row format.",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        973,
+        5
+      ],
+      "end": [
+        975,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "fields",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "SortField",
+                        "id": 14,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "14": "arrow_row::SortField"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "RowConverter",
+          "id": "arrow_row::RowConverter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/lib.rs",
+        "begin": [
+          956,
+          1
+        ],
+        "end": [
+          1276,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "9be3b9f5bf642dbe3eb9f0f726b24b46448628fe68ecdeeea81a53ad5e01091f",
+      "format_version": 61,
+      "item_id": "17",
+      "origin": "https://docs.rs/crate/arrow-row/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_row.RowConverter.md",
+    "record_file": "operations/arrow_row.RowConverter.json",
+    "anchor": "op-79616c2881c517486a6328ea",
+    "aliases": [
+      "arrow::row::RowConverter::supports_fields"
+    ],
+    "resolved_doc_links": {}
+  }
+]

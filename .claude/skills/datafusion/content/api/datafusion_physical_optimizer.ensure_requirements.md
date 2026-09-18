@@ -28,6 +28,9 @@ fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> Resu
 fn schema_check(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.EnsureRequirements.md).
+
+
 Optimizer rule that enforces both distribution and sorting requirements.
 
 This rule combines the functionality of `EnforceDistribution` and

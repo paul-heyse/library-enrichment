@@ -1,0 +1,608 @@
+[
+  {
+    "id": "c2a994be3b7cca3db9a55992",
+    "path": "arrow_cast::display::ArrayFormatter",
+    "name": "ArrayFormatter",
+    "owner": null,
+    "crate": "arrow-cast",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct ArrayFormatter<'a>",
+    "docs": "A string formatter for an [`Array`]\n\nThis can be used with [`std::write`] to write type-erased `dyn Array`\n\n```\n# use std::fmt::{Display, Formatter, Write};\n# use arrow_array::{Array, ArrayRef, Int32Array};\n# use arrow_cast::display::{ArrayFormatter, FormatOptions};\n# use arrow_schema::ArrowError;\nstruct MyContainer {\n    values: ArrayRef,\n}\n\nimpl Display for MyContainer {\n    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {\n        let options = FormatOptions::default();\n        let formatter = ArrayFormatter::try_new(self.values.as_ref(), &options)\n            .map_err(|_| std::fmt::Error)?;\n\n        let mut iter = 0..self.values.len();\n        if let Some(idx) = iter.next() {\n            write!(f, \"{}\", formatter.value(idx))?;\n        }\n        for idx in iter {\n            write!(f, \", {}\", formatter.value(idx))?;\n        }\n        Ok(())\n    }\n}\n```\n\n[`ValueFormatter::write`] can also be used to get a semantic error, instead of the\nopaque [`std::fmt::Error`]\n\n```\n# use std::fmt::Write;\n# use arrow_array::Array;\n# use arrow_cast::display::{ArrayFormatter, FormatOptions};\n# use arrow_schema::ArrowError;\nfn format_array(\n    f: &mut dyn Write,\n    array: &dyn Array,\n    options: &FormatOptions,\n) -> Result<(), ArrowError> {\n    let formatter = ArrayFormatter::try_new(array, options)?;\n    for i in 0..array.len() {\n        formatter.value(i).write(f)?\n    }\n    Ok(())\n}\n```\n",
+    "span": {
+      "filename": "src/display.rs",
+      "begin": [
+        500,
+        1
+      ],
+      "end": [
+        503,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'a",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "impls": [
+          296,
+          297,
+          298,
+          299,
+          300,
+          301,
+          302,
+          303,
+          304,
+          305,
+          306,
+          307,
+          308,
+          309,
+          310
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`std::fmt::Error`": 197,
+      "`ValueFormatter::write`": 265,
+      "`Array`": 145,
+      "`std::write`": 290
+    },
+    "link_paths": {
+      "`std::fmt::Error`": "core::fmt::Error",
+      "`ValueFormatter::write`": "arrow_cast::display::ValueFormatter::write",
+      "`Array`": "arrow_array::array::Array",
+      "`std::write`": "core::write"
+    },
+    "artifact": {
+      "id": "752ca5e430612af62fa54422058472f37db7f433eac44e7b27649fd34a282785",
+      "format_version": 61,
+      "item_id": "215",
+      "origin": "https://docs.rs/crate/arrow-cast/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_cast.display.ArrayFormatter.md",
+    "record_file": "operations/arrow_cast.display.ArrayFormatter.json",
+    "anchor": "op-c2a994be3b7cca3db9a55992",
+    "aliases": [
+      "arrow::util::display::ArrayFormatter"
+    ],
+    "resolved_doc_links": {
+      "`ValueFormatter::write`": "../operations/arrow_cast.display.ValueFormatter.md#op-670b0503c94f323521d1c48c",
+      "`Array`": "../operations/arrow_array.array.Array.md#op-cabb9fba5e3e968cee823d21"
+    }
+  },
+  {
+    "id": "4e8a9734ff686328c6a5aefd",
+    "path": "arrow_cast::display::ArrayFormatter::new",
+    "name": "new",
+    "owner": "arrow_cast::display::ArrayFormatter",
+    "crate": "arrow-cast",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn new(format: Box<dyn DisplayIndex + 'a>, safe: bool) -> Self",
+    "docs": "Returns an [`ArrayFormatter`] using the provided formatter.",
+    "span": {
+      "filename": "src/display.rs",
+      "begin": [
+        507,
+        5
+      ],
+      "end": [
+        509,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "format",
+              {
+                "resolved_path": {
+                  "path": "Box",
+                  "id": 292,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "dyn_trait": {
+                              "traits": [
+                                {
+                                  "trait": {
+                                    "path": "DisplayIndex",
+                                    "id": 293,
+                                    "args": null
+                                  },
+                                  "generic_params": []
+                                }
+                              ],
+                              "lifetime": "'a"
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "safe",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "292": "alloc::boxed::Box",
+      "293": "arrow_cast::display::DisplayIndex"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayFormatter",
+          "id": "arrow_cast::display::ArrayFormatter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/display.rs",
+        "begin": [
+          505,
+          1
+        ],
+        "end": [
+          529,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrayFormatter`": 215
+    },
+    "link_paths": {
+      "`ArrayFormatter`": "arrow_cast::display::ArrayFormatter"
+    },
+    "artifact": {
+      "id": "752ca5e430612af62fa54422058472f37db7f433eac44e7b27649fd34a282785",
+      "format_version": 61,
+      "item_id": "291",
+      "origin": "https://docs.rs/crate/arrow-cast/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_cast.display.ArrayFormatter.md",
+    "record_file": "operations/arrow_cast.display.ArrayFormatter.json",
+    "anchor": "op-4e8a9734ff686328c6a5aefd",
+    "aliases": [
+      "arrow::util::display::ArrayFormatter::new"
+    ],
+    "resolved_doc_links": {
+      "`ArrayFormatter`": "../operations/arrow_cast.display.ArrayFormatter.md#op-c2a994be3b7cca3db9a55992"
+    }
+  },
+  {
+    "id": "be20a7f02dffb528e47f0716",
+    "path": "arrow_cast::display::ArrayFormatter::try_new",
+    "name": "try_new",
+    "owner": "arrow_cast::display::ArrayFormatter",
+    "crate": "arrow-cast",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new(array: &'a dyn Array, options: &FormatOptions<'a>) -> Result<Self, ArrowError>",
+    "docs": "Returns an [`ArrayFormatter`] that can be used to format `array`\n\nThis returns an error if an array of the given data type cannot be formatted",
+    "span": {
+      "filename": "src/display.rs",
+      "begin": [
+        514,
+        5
+      ],
+      "end": [
+        519,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "array",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'a",
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "Array",
+                            "id": 145,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "options",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "FormatOptions",
+                      "id": 70,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'a"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 45,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "145": "arrow_array::array::Array",
+      "70": "arrow_cast::display::FormatOptions",
+      "44": "core::result::Result",
+      "45": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayFormatter",
+          "id": "arrow_cast::display::ArrayFormatter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/display.rs",
+        "begin": [
+          505,
+          1
+        ],
+        "end": [
+          529,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrayFormatter`": 215
+    },
+    "link_paths": {
+      "`ArrayFormatter`": "arrow_cast::display::ArrayFormatter"
+    },
+    "artifact": {
+      "id": "752ca5e430612af62fa54422058472f37db7f433eac44e7b27649fd34a282785",
+      "format_version": 61,
+      "item_id": "294",
+      "origin": "https://docs.rs/crate/arrow-cast/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_cast.display.ArrayFormatter.md",
+    "record_file": "operations/arrow_cast.display.ArrayFormatter.json",
+    "anchor": "op-be20a7f02dffb528e47f0716",
+    "aliases": [
+      "arrow::util::display::ArrayFormatter::try_new"
+    ],
+    "resolved_doc_links": {
+      "`ArrayFormatter`": "../operations/arrow_cast.display.ArrayFormatter.md#op-c2a994be3b7cca3db9a55992"
+    }
+  },
+  {
+    "id": "d4c679eadcfed8a0752a1122",
+    "path": "arrow_cast::display::ArrayFormatter::value",
+    "name": "value",
+    "owner": "arrow_cast::display::ArrayFormatter",
+    "crate": "arrow-cast",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn value(&self, idx: usize) -> ValueFormatter<'_>",
+    "docs": "Returns a [`ValueFormatter`] that implements [`Display`] for\nthe value of the array at `idx`",
+    "span": {
+      "filename": "src/display.rs",
+      "begin": [
+        523,
+        5
+      ],
+      "end": [
+        528,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "idx",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ValueFormatter",
+              "id": 263,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "lifetime": "'_"
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "263": "arrow_cast::display::ValueFormatter"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrayFormatter",
+          "id": "arrow_cast::display::ArrayFormatter",
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "lifetime": "'a"
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [
+          {
+            "name": "'a",
+            "kind": {
+              "lifetime": {
+                "outlives": []
+              }
+            }
+          }
+        ],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/display.rs",
+        "begin": [
+          505,
+          1
+        ],
+        "end": [
+          529,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ValueFormatter`": 263,
+      "`Display`": 262
+    },
+    "link_paths": {
+      "`ValueFormatter`": "arrow_cast::display::ValueFormatter",
+      "`Display`": "core::fmt::Display"
+    },
+    "artifact": {
+      "id": "752ca5e430612af62fa54422058472f37db7f433eac44e7b27649fd34a282785",
+      "format_version": 61,
+      "item_id": "295",
+      "origin": "https://docs.rs/crate/arrow-cast/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_cast.display.ArrayFormatter.md",
+    "record_file": "operations/arrow_cast.display.ArrayFormatter.json",
+    "anchor": "op-d4c679eadcfed8a0752a1122",
+    "aliases": [
+      "arrow::util::display::ArrayFormatter::value"
+    ],
+    "resolved_doc_links": {
+      "`ValueFormatter`": "../operations/arrow_cast.display.ValueFormatter.md#op-9ae555388794c1910e97ad8a"
+    }
+  }
+]

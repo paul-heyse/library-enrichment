@@ -16,6 +16,9 @@ enum VarType
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.var_provider.VarType.md).
+
+
 Variable type, system/user defined
 
 ---
@@ -27,6 +30,9 @@ Variable type, system/user defined
 ```rust
 fn is_system_variables(variable_names: &[String]) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.var_provider.is_system_variables.md).
+
 
 Returns true if the specified string is a "system" variable such as
 `@@version`
@@ -58,6 +64,9 @@ trait VarProvider: std::fmt::Debug
 fn get_type(&self, var_names: &[String]) -> Option<DataType>
 fn get_value(&self, var_names: Vec<String>) -> Result<ScalarValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.var_provider.VarProvider.md).
+
 
 A var provider for `@variable` and `@@variable` runtime values.
 

@@ -1,0 +1,113 @@
+[
+  {
+    "id": "479447cadbe2fea59dfbce59",
+    "path": "arrow_array::builder::generic_bytes_dictionary_builder::StringDictionaryBuilder",
+    "name": "StringDictionaryBuilder",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "type_alias",
+    "signature": "type StringDictionaryBuilder<K> = GenericByteDictionaryBuilder<K, types::GenericStringType<i32>>",
+    "docs": "Builder for [`DictionaryArray`] of [`StringArray`](crate::array::StringArray)\n\n```\n// Create a dictionary array indexed by bytes whose values are Strings.\n// It can thus hold up to 256 distinct string values.\n\n# use arrow_array::builder::StringDictionaryBuilder;\n# use arrow_array::{Int8Array, StringArray};\n# use arrow_array::types::Int8Type;\n\nlet mut builder = StringDictionaryBuilder::<Int8Type>::new();\n\n// The builder builds the dictionary value by value\nbuilder.append(\"abc\").unwrap();\nbuilder.append_null();\nbuilder.append_n(\"def\", 2).unwrap();  // appends \"def\" twice with a single lookup\nbuilder.append(\"abc\").unwrap();\nlet array = builder.finish();\n\nassert_eq!(\n  array.keys(),\n  &Int8Array::from(vec![Some(0), None, Some(1), Some(1), Some(0)])\n);\n\n// Values are polymorphic and so require a downcast.\nlet av = array.values();\nlet ava: &StringArray = av.as_any().downcast_ref::<StringArray>().unwrap();\n\nassert_eq!(ava.value(0), \"abc\");\nassert_eq!(ava.value(1), \"def\");\n\n```",
+    "span": {
+      "filename": "src/builder/generic_bytes_dictionary_builder.rs",
+      "begin": [
+        561,
+        1
+      ],
+      "end": [
+        561,
+        95
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "type_alias": {
+        "type": {
+          "resolved_path": {
+            "path": "GenericByteDictionaryBuilder",
+            "id": 3015,
+            "args": {
+              "angle_bracketed": {
+                "args": [
+                  {
+                    "type": {
+                      "generic": "K"
+                    }
+                  },
+                  {
+                    "type": {
+                      "resolved_path": {
+                        "path": "crate::types::GenericStringType",
+                        "id": 212,
+                        "args": {
+                          "angle_bracketed": {
+                            "args": [
+                              {
+                                "type": {
+                                  "primitive": "i32"
+                                }
+                              }
+                            ],
+                            "constraints": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                ],
+                "constraints": []
+              }
+            }
+          }
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "K",
+              "kind": {
+                "type": {
+                  "bounds": [],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        }
+      }
+    },
+    "type_references": {
+      "3015": "arrow_array::builder::generic_bytes_dictionary_builder::GenericByteDictionaryBuilder",
+      "212": "arrow_array::types::GenericStringType"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::array::StringArray": 172,
+      "`DictionaryArray`": 277
+    },
+    "link_paths": {
+      "crate::array::StringArray": "arrow_array::array::string_array::StringArray",
+      "`DictionaryArray`": "arrow_array::array::dictionary_array::DictionaryArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "3064",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.builder.generic_bytes_dictionary_builder.StringDictionaryBuilder.md",
+    "record_file": "operations/arrow_array.builder.generic_bytes_dictionary_builder.StringDictionaryBuilder.json",
+    "anchor": "op-479447cadbe2fea59dfbce59",
+    "aliases": [],
+    "resolved_doc_links": {
+      "crate::array::StringArray": "../operations/arrow_array.array.string_array.StringArray.md#op-5d32f770159d415652a55945",
+      "`DictionaryArray`": "../operations/arrow_array.array.dictionary_array.DictionaryArray.md#op-761ab0c11d727f026bdc2e47"
+    }
+  }
+]

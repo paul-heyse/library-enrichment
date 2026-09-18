@@ -29,6 +29,9 @@ fn try_new(metadata: VariantMetadata<'m>, value: &'v [u8]) -> Result<Self, Arrow
 fn with_full_validation(self) -> Result<Self, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant.variant.list.VariantList.md).
+
+
 [`Variant`] Array.
 
 See the [Variant spec] for details.

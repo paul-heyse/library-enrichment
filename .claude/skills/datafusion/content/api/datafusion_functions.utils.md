@@ -12,6 +12,9 @@ Crate `datafusion-functions` · 7 public items · structured records in [`model/
 fn calculate_binary_decimal_math<L, R, O, F>(left: &dyn Array, right: &datafusion_expr::ColumnarValue, fun: F, precision: u8, scale: i8) -> datafusion_common::Result<std::sync::Arc<arrow::array::PrimitiveArray<O>>> where L: DecimalType, R: ArrowPrimitiveType, O: DecimalType, F: Fn(L::Native, R::Native) -> datafusion_common::Result<O::Native, arrow::error::ArrowError>, R::Native: TryFrom<datafusion_common::ScalarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.utils.calculate_binary_decimal_math.md).
+
+
 Computes a binary math function for input arrays using a specified function
 and applies rescaling to given precision and scale.
 Generic types:
@@ -29,6 +32,9 @@ Generic types:
 ```rust
 fn calculate_binary_decimal_math_cast<L, R, O, F>(left: &dyn Array, right: &datafusion_expr::ColumnarValue, fun: F, precision: u8, scale: i8, cast_target: &arrow::datatypes::DataType) -> datafusion_common::Result<std::sync::Arc<arrow::array::PrimitiveArray<O>>> where L: DecimalType, R: ArrowPrimitiveType, O: DecimalType, F: Fn(L::Native, R::Native) -> datafusion_common::Result<O::Native, arrow::error::ArrowError>, R::Native: TryFrom<datafusion_common::ScalarValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.utils.calculate_binary_decimal_math_cast.md).
+
 
 Computes a binary math function for input arrays using a specified function
 and applies rescaling to given precision and scale.
@@ -59,6 +65,9 @@ the right operand scale.
 fn calculate_binary_math<L, R, O, F>(left: &dyn Array, right: &datafusion_expr::ColumnarValue, fun: F) -> datafusion_common::Result<std::sync::Arc<arrow::array::PrimitiveArray<O>>> where L: ArrowPrimitiveType, R: ArrowPrimitiveType, O: ArrowPrimitiveType, F: Fn(L::Native, R::Native) -> datafusion_common::Result<O::Native, arrow::error::ArrowError>, R::Native: TryFrom<datafusion_common::ScalarValue>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.utils.calculate_binary_math.md).
+
+
 Computes a binary math function for input arrays using a specified function.
 Generic types:
 - `L`: Left array primitive type
@@ -76,6 +85,9 @@ Generic types:
 fn decimal128_to_i128(value: i128, scale: i8) -> datafusion_common::Result<i128, arrow::error::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.utils.decimal128_to_i128.md).
+
+
 Converts Decimal128 components (value and scale) to an unscaled i128
 
 ---
@@ -88,6 +100,9 @@ Converts Decimal128 components (value and scale) to an unscaled i128
 fn decimal32_to_i32(value: i32, scale: i8) -> datafusion_common::Result<i32, arrow::error::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.utils.decimal32_to_i32.md).
+
+
 ---
 
 ## decimal64_to_i64
@@ -98,6 +113,9 @@ fn decimal32_to_i32(value: i32, scale: i8) -> datafusion_common::Result<i32, arr
 fn decimal64_to_i64(value: i64, scale: i8) -> datafusion_common::Result<i64, arrow::error::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.utils.decimal64_to_i64.md).
+
+
 ---
 
 ## make_scalar_function
@@ -107,6 +125,9 @@ fn decimal64_to_i64(value: i64, scale: i8) -> datafusion_common::Result<i64, arr
 ```rust
 fn make_scalar_function<F>(inner: F, hints: Vec<datafusion_expr::function::Hint>) -> impl Fn(&[datafusion_expr::ColumnarValue]) -> datafusion_common::Result<datafusion_expr::ColumnarValue> where F: Fn(&[arrow::array::ArrayRef]) -> datafusion_common::Result<arrow::array::ArrayRef>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.utils.make_scalar_function.md).
+
 
 Creates a scalar function implementation for the given function.
 * `inner` - the function to be executed

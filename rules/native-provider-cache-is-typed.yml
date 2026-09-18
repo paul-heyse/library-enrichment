@@ -1,0 +1,20 @@
+id: native-provider-cache-is-typed
+language: Rust
+severity: error
+message: In-process immutable caches retain typed shared state; persisted provider encoding belongs to provider_replay.
+files:
+  - crates/enrichment-store/src/provider_cache.rs
+  - crates/enrichment-store/src/contract_cache.rs
+  - crates/enrichment-store/src/snapshot_registry.rs
+  - crates/enrichment-store/src/native_cache.rs
+rule:
+  any:
+    - kind: identifier
+    - kind: type_identifier
+    - kind: field_identifier
+  regex: '^(serde_json|DeltaLogicalCodec|DeltaPhysicalCodec|encode_immutable_provider|try_decode_table_provider)$'
+  not:
+    inside:
+      pattern: 'mod tests { $$$BODY }'
+      stopBy: end
+note: Restricted to cache owners so native contract metadata, transport codecs, replay and independent probes remain valid consumers. No serialization is needed for an in-process cache hit.

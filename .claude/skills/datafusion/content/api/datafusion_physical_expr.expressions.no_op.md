@@ -39,6 +39,9 @@ fn nullable(&self, _input_schema: &Schema) -> Result<bool>
 fn with_new_children(Arc<self>, _children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.no_op.NoOp.md).
+
+
 A place holder expression, can not be evaluated.
 
 Used in some cases where an `Arc<dyn PhysicalExpr>` is needed, such as `children()`

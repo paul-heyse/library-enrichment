@@ -1,0 +1,2797 @@
+[
+  {
+    "id": "75302dfa669885e17a5c9093",
+    "path": "datafusion_session::session::Session",
+    "name": "Session",
+    "owner": null,
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait Session: Send + Sync",
+    "docs": "Interface for accessing [`SessionState`] from the catalog and data source.\n\nThis trait provides access to the information needed to plan and execute\nqueries, such as configuration, functions, and runtime environment. See the\ndocumentation on [`SessionState`] for more information.\n\nHistorically, the `SessionState` struct was passed directly to catalog\ntraits such as [`TableProvider`], which required a direct dependency on the\nDataFusion core. The interface required is now defined by this trait. See\n[#10782] for more details.\n\n[#10782]: https://github.com/apache/datafusion/issues/10782\n\n# Migration from `SessionState`\n\nUsing trait methods is preferred, as the implementation may change in future\nversions. However, you can downcast a `Session` to a `SessionState` as shown\nin the example below. If you find yourself needing to do this, please open\nan issue on the DataFusion repository so we can extend the trait to provide\nthe required information.\n\n```\n# use datafusion_session::Session;\n# use datafusion_common::{Result, exec_datafusion_err};\n# struct SessionState {}\n// Given a `Session` reference, get the concrete `SessionState` reference\n// Note: this may stop working in future versions,\nfn session_state_from_session(session: &dyn Session) -> Result<&SessionState> {\n    session\n        .as_any()\n        .downcast_ref::<SessionState>()\n        .ok_or_else(|| {\n            exec_datafusion_err!(\"Failed to downcast Session to SessionState\")\n        })\n}\n```\n\n[`SessionState`]: https://docs.rs/datafusion/latest/datafusion/execution/session_state/struct.SessionState.html\n[`TableProvider`]: https://docs.rs/datafusion/latest/datafusion/catalog/trait.TableProvider.html",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        80,
+        1
+      ],
+      "end": [
+        206,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          148,
+          150,
+          151,
+          152,
+          154,
+          155,
+          156,
+          157,
+          153,
+          158,
+          159,
+          162,
+          164,
+          166,
+          168,
+          170,
+          172,
+          174,
+          175,
+          177,
+          178,
+          179
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 5,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Sync",
+                "id": 7,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": []
+      }
+    },
+    "type_references": {
+      "5": "core::marker::Send",
+      "7": "core::marker::Sync"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "2",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-75302dfa669885e17a5c9093",
+    "aliases": [
+      "datafusion::catalog::Session",
+      "datafusion_catalog::Session",
+      "datafusion_session::Session"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6864c3d5a9217ea4b216825e",
+    "path": "datafusion_session::session::Session::aggregate_functions",
+    "name": "aggregate_functions",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn aggregate_functions(&self) -> &HashMap<String, Arc<AggregateUDF>>",
+    "docs": "Return reference to aggregate_functions",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        176,
+        5
+      ],
+      "end": [
+        176,
+        74
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "HashMap",
+                  "id": 160,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "String",
+                              "id": 61,
+                              "args": null
+                            }
+                          }
+                        },
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 62,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "AggregateUDF",
+                                          "id": 165,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "160": "std::collections::hash::map::HashMap",
+      "61": "alloc::string::String",
+      "62": "alloc::sync::Arc",
+      "165": "datafusion_expr::udaf::AggregateUDF"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "164",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-6864c3d5a9217ea4b216825e",
+    "aliases": [
+      "datafusion::catalog::Session::aggregate_functions",
+      "datafusion_catalog::Session::aggregate_functions",
+      "datafusion_session::Session::aggregate_functions"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "28dcd000dfe9b9cc49ed1c0e",
+    "path": "datafusion_session::session::Session::as_any",
+    "name": "as_any",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn as_any(&self) -> &dyn Any",
+    "docs": "",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        190,
+        5
+      ],
+      "end": [
+        190,
+        34
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 43,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "43": "core::any::Any"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "174",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-28dcd000dfe9b9cc49ed1c0e",
+    "aliases": [
+      "datafusion::catalog::Session::as_any",
+      "datafusion_catalog::Session::as_any",
+      "datafusion_session::Session::as_any"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "421be28c58b70ba26def1a1f",
+    "path": "datafusion_session::session::Session::catalog_list",
+    "name": "catalog_list",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn catalog_list(&self) -> Arc<dyn CatalogProviderList>",
+    "docs": "Return the catalogs registered with this session.",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        88,
+        5
+      ],
+      "end": [
+        88,
+        60
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Arc",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "CatalogProviderList",
+                                "id": 69,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "62": "alloc::sync::Arc",
+      "69": "datafusion_session::catalog::CatalogProviderList"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "151",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-421be28c58b70ba26def1a1f",
+    "aliases": [
+      "datafusion::catalog::Session::catalog_list",
+      "datafusion_catalog::Session::catalog_list",
+      "datafusion_session::Session::catalog_list"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "988730b2db63ed6a1d5f8829",
+    "path": "datafusion_session::session::Session::config",
+    "name": "config",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn config(&self) -> &SessionConfig",
+    "docs": "Return the [`SessionConfig`]",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        85,
+        5
+      ],
+      "end": [
+        85,
+        40
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "SessionConfig",
+                  "id": 149,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "149": "datafusion_execution::config::SessionConfig"
+    },
+    "impl_context": null,
+    "links": {
+      "`SessionConfig`": 149
+    },
+    "link_paths": {
+      "`SessionConfig`": "datafusion_execution::config::SessionConfig"
+    },
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "150",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-988730b2db63ed6a1d5f8829",
+    "aliases": [
+      "datafusion::catalog::Session::config",
+      "datafusion_catalog::Session::config",
+      "datafusion_session::Session::config"
+    ],
+    "resolved_doc_links": {
+      "`SessionConfig`": "../operations/datafusion_execution.config.SessionConfig.md#op-5db676088685c6e8b0496c08"
+    }
+  },
+  {
+    "id": "8529c4d4d8ba21f5d58f7072",
+    "path": "datafusion_session::session::Session::config_options",
+    "name": "config_options",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn config_options(&self) -> &ConfigOptions",
+    "docs": "return the [`ConfigOptions`]",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        91,
+        5
+      ],
+      "end": [
+        93,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ConfigOptions",
+                  "id": 82,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "82": "datafusion_common::config::ConfigOptions"
+    },
+    "impl_context": null,
+    "links": {
+      "`ConfigOptions`": 82
+    },
+    "link_paths": {
+      "`ConfigOptions`": "datafusion_common::config::ConfigOptions"
+    },
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "152",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-8529c4d4d8ba21f5d58f7072",
+    "aliases": [
+      "datafusion::catalog::Session::config_options",
+      "datafusion_catalog::Session::config_options",
+      "datafusion_session::Session::config_options"
+    ],
+    "resolved_doc_links": {
+      "`ConfigOptions`": "../operations/datafusion_common.config.ConfigOptions.md#op-0fede8afa640e38e337e0cc4"
+    }
+  },
+  {
+    "id": "ce46cad8a2c7c7d1ae10f45b",
+    "path": "datafusion_session::session::Session::create_physical_expr",
+    "name": "create_physical_expr",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn create_physical_expr(&self, expr: Expr, df_schema: &DFSchema) -> Result<Arc<dyn PhysicalExpr>>",
+    "docs": "Create a [`PhysicalExpr`] from an [`Expr`] after applying type\ncoercion, and function rewrites.\n\nNote: The expression is not simplified or otherwise optimized:  `a = 1\n+ 2` will not be simplified to `a = 3` as this is a more involved process.\nSee the [expr_api] example for how to simplify expressions.\n\n[expr_api]: https://github.com/apache/datafusion/blob/main/datafusion-examples/examples/query_planning/expr_api.rs",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        163,
+        5
+      ],
+      "end": [
+        167,
+        40
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "expr",
+              {
+                "resolved_path": {
+                  "path": "Expr",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "df_schema",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "DFSchema",
+                      "id": 129,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 73,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Arc",
+                          "id": 62,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "PhysicalExpr",
+                                            "id": 130,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "datafusion_expr::expr::Expr",
+      "129": "datafusion_common::dfschema::DFSchema",
+      "73": "datafusion_common::error::Result",
+      "62": "alloc::sync::Arc",
+      "130": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+    },
+    "impl_context": null,
+    "links": {
+      "`Expr`": 128,
+      "`PhysicalExpr`": 130
+    },
+    "link_paths": {
+      "`Expr`": "datafusion_expr::expr::Expr",
+      "`PhysicalExpr`": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+    },
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "158",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-ce46cad8a2c7c7d1ae10f45b",
+    "aliases": [
+      "datafusion::catalog::Session::create_physical_expr",
+      "datafusion_catalog::Session::create_physical_expr",
+      "datafusion_session::Session::create_physical_expr"
+    ],
+    "resolved_doc_links": {
+      "`Expr`": "../operations/datafusion_expr.expr.Expr.md#op-230499d6f244cf7372db53bc",
+      "`PhysicalExpr`": "../operations/datafusion_physical_expr_common.physical_expr.PhysicalExpr.md#op-fe8284c43330456b0d4e6af7"
+    }
+  },
+  {
+    "id": "f8a00c1a238fc9102cc1e8b7",
+    "path": "datafusion_session::session::Session::create_physical_plan",
+    "name": "create_physical_plan",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "async fn create_physical_plan(&self, logical_plan: &LogicalPlan) -> Result<Arc<dyn ExecutionPlan>>",
+    "docs": "Creates a physical [`ExecutionPlan`] plan from a [`LogicalPlan`].\n\nNote: this will optimize the provided plan first.\n\nThis function will error for [`LogicalPlan`]s such as catalog DDL like\n`CREATE TABLE`, which do not have corresponding physical plans and must\nbe handled by another layer, typically the `SessionContext`.",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        150,
+        5
+      ],
+      "end": [
+        153,
+        41
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[allow(elided_named_lifetimes, clippy :: type_complexity, clippy ::\ntype_repetition_in_bounds)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life0",
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "logical_plan",
+              {
+                "borrowed_ref": {
+                  "lifetime": "'life1",
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "LogicalPlan",
+                      "id": 94,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "::core::pin::Pin",
+              "id": 96,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Box",
+                          "id": 97,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "dyn_trait": {
+                                      "traits": [
+                                        {
+                                          "trait": {
+                                            "path": "::core::future::Future",
+                                            "id": 98,
+                                            "args": {
+                                              "angle_bracketed": {
+                                                "args": [],
+                                                "constraints": [
+                                                  {
+                                                    "name": "Output",
+                                                    "args": null,
+                                                    "binding": {
+                                                      "equality": {
+                                                        "type": {
+                                                          "resolved_path": {
+                                                            "path": "Result",
+                                                            "id": 73,
+                                                            "args": {
+                                                              "angle_bracketed": {
+                                                                "args": [
+                                                                  {
+                                                                    "type": {
+                                                                      "resolved_path": {
+                                                                        "path": "Arc",
+                                                                        "id": 62,
+                                                                        "args": {
+                                                                          "angle_bracketed": {
+                                                                            "args": [
+                                                                              {
+                                                                                "type": {
+                                                                                  "dyn_trait": {
+                                                                                    "traits": [
+                                                                                      {
+                                                                                        "trait": {
+                                                                                          "path": "ExecutionPlan",
+                                                                                          "id": 89,
+                                                                                          "args": null
+                                                                                        },
+                                                                                        "generic_params": []
+                                                                                      }
+                                                                                    ],
+                                                                                    "lifetime": null
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            ],
+                                                                            "constraints": []
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "constraints": []
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "generic_params": []
+                                        },
+                                        {
+                                          "trait": {
+                                            "path": "::core::marker::Send",
+                                            "id": 5,
+                                            "args": null
+                                          },
+                                          "generic_params": []
+                                        }
+                                      ],
+                                      "lifetime": "'async_trait"
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "'life0",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'life1",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            },
+            {
+              "name": "'async_trait",
+              "kind": {
+                "lifetime": {
+                  "outlives": []
+                }
+              }
+            }
+          ],
+          "where_predicates": [
+            {
+              "bound_predicate": {
+                "type": {
+                  "generic": "Self"
+                },
+                "bounds": [
+                  {
+                    "outlives": "'async_trait"
+                  }
+                ],
+                "generic_params": []
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life0",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            },
+            {
+              "lifetime_predicate": {
+                "lifetime": "'life1",
+                "outlives": [
+                  "'async_trait"
+                ]
+              }
+            }
+          ]
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "96": "core::pin::Pin",
+      "97": "alloc::boxed::Box",
+      "98": "core::future::future::Future",
+      "73": "datafusion_common::error::Result",
+      "62": "alloc::sync::Arc",
+      "89": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "5": "core::marker::Send"
+    },
+    "impl_context": null,
+    "links": {
+      "`ExecutionPlan`": 89,
+      "`LogicalPlan`": 94
+    },
+    "link_paths": {
+      "`ExecutionPlan`": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "`LogicalPlan`": "datafusion_expr::logical_plan::plan::LogicalPlan"
+    },
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "153",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-f8a00c1a238fc9102cc1e8b7",
+    "aliases": [
+      "datafusion::catalog::Session::create_physical_plan",
+      "datafusion_catalog::Session::create_physical_plan",
+      "datafusion_session::Session::create_physical_plan"
+    ],
+    "resolved_doc_links": {
+      "`ExecutionPlan`": "../operations/datafusion_physical_plan.execution_plan.ExecutionPlan.md#op-ac09436cd73f869917923673",
+      "`LogicalPlan`": "../operations/datafusion_expr.logical_plan.plan.LogicalPlan.md#op-2f2092c4f87ff1cc0b33c3da"
+    }
+  },
+  {
+    "id": "94617c2ccffe946a034523ac",
+    "path": "datafusion_session::session::Session::default_table_options",
+    "name": "default_table_options",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn default_table_options(&self) -> TableOptions",
+    "docs": "return the TableOptions options with its extensions",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        196,
+        5
+      ],
+      "end": [
+        199,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "TableOptions",
+              "id": 176,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "176": "datafusion_common::config::TableOptions"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "177",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-94617c2ccffe946a034523ac",
+    "aliases": [
+      "datafusion::catalog::Session::default_table_options",
+      "datafusion_catalog::Session::default_table_options",
+      "datafusion_session::Session::default_table_options"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c5a7666452593efcd2f3271e",
+    "path": "datafusion_session::session::Session::execution_props",
+    "name": "execution_props",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn execution_props(&self) -> &ExecutionProps",
+    "docs": "Return the execution properties",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        188,
+        5
+      ],
+      "end": [
+        188,
+        50
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ExecutionProps",
+                  "id": 173,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "173": "datafusion_expr::execution_props::ExecutionProps"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "172",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-c5a7666452593efcd2f3271e",
+    "aliases": [
+      "datafusion::catalog::Session::execution_props",
+      "datafusion_catalog::Session::execution_props",
+      "datafusion_session::Session::execution_props"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2a0df6cdf9b2c2f9d4694161",
+    "path": "datafusion_session::session::Session::extension_type_registry",
+    "name": "extension_type_registry",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn extension_type_registry(&self) -> &ExtensionTypeRegistryRef",
+    "docs": "Return a reference to the extension type registry",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        182,
+        5
+      ],
+      "end": [
+        182,
+        68
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ExtensionTypeRegistryRef",
+                  "id": 169,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "169": "datafusion_expr::registry::ExtensionTypeRegistryRef"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "168",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-2a0df6cdf9b2c2f9d4694161",
+    "aliases": [
+      "datafusion::catalog::Session::extension_type_registry",
+      "datafusion_catalog::Session::extension_type_registry",
+      "datafusion_session::Session::extension_type_registry"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "91837a408b507749becfd15c",
+    "path": "datafusion_session::session::Session::higher_order_functions",
+    "name": "higher_order_functions",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn higher_order_functions(&self) -> &HashMap<String, Arc<HigherOrderUDF>>",
+    "docs": "Return reference to higher_order_functions",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        173,
+        5
+      ],
+      "end": [
+        173,
+        79
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "HashMap",
+                  "id": 160,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "String",
+                              "id": 61,
+                              "args": null
+                            }
+                          }
+                        },
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 62,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "HigherOrderUDF",
+                                          "id": 163,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "160": "std::collections::hash::map::HashMap",
+      "61": "alloc::string::String",
+      "62": "alloc::sync::Arc",
+      "163": "datafusion_expr::higher_order_function::HigherOrderUDF"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "162",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-91837a408b507749becfd15c",
+    "aliases": [
+      "datafusion::catalog::Session::higher_order_functions",
+      "datafusion_catalog::Session::higher_order_functions",
+      "datafusion_session::Session::higher_order_functions"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f44d26653aa48c6d8006b502",
+    "path": "datafusion_session::session::Session::optimize",
+    "name": "optimize",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn optimize(&self, plan: &LogicalPlan) -> Result<LogicalPlan>",
+    "docs": "Optimize a logical plan.\n\n# Warning\n\nThe default implementation returns the plan **unchanged**, applying no\nlogical optimizations whatsoever. This is almost never what you want:\nwithout optimization, queries execute in their naive, unoptimized form\nand may be dramatically slower or fail to run at all. The default exists\nonly so this crate need not depend on the optimizer; any real session\nshould override this method (for example by delegating to\n`SessionState::optimize`).",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        118,
+        5
+      ],
+      "end": [
+        120,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "plan",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "LogicalPlan",
+                      "id": 94,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 73,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "LogicalPlan",
+                          "id": 94,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "94": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "73": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "155",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-f44d26653aa48c6d8006b502",
+    "aliases": [
+      "datafusion::catalog::Session::optimize",
+      "datafusion_catalog::Session::optimize",
+      "datafusion_session::Session::optimize"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1b8ad5ef6b69d42d96c7adbe",
+    "path": "datafusion_session::session::Session::physical_optimizers",
+    "name": "physical_optimizers",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn physical_optimizers(&self) -> &[Arc<dyn PhysicalOptimizerRule + Send + Sync>]",
+    "docs": "Return the physical optimizer rules for this session.\n\n# Warning\n\nThe default implementation returns **no rules**. This is almost never\nwhat you want: DataFusion relies on physical optimizer rules for\ncorrectness-critical rewrites (such as inserting the repartitioning and\ncoalescing needed for parallel and multi-partition execution), so a\nsession with no rules will produce plans that are inefficient or that\nfail to execute. The default exists only so this crate need not depend\non the optimizer; any real session should override this method (for\nexample by returning `SessionState::physical_optimizers`).",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        134,
+        5
+      ],
+      "end": [
+        136,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "slice": {
+                  "resolved_path": {
+                    "path": "Arc",
+                    "id": 62,
+                    "args": {
+                      "angle_bracketed": {
+                        "args": [
+                          {
+                            "type": {
+                              "dyn_trait": {
+                                "traits": [
+                                  {
+                                    "trait": {
+                                      "path": "PhysicalOptimizerRule",
+                                      "id": 92,
+                                      "args": null
+                                    },
+                                    "generic_params": []
+                                  },
+                                  {
+                                    "trait": {
+                                      "path": "Send",
+                                      "id": 5,
+                                      "args": null
+                                    },
+                                    "generic_params": []
+                                  },
+                                  {
+                                    "trait": {
+                                      "path": "Sync",
+                                      "id": 7,
+                                      "args": null
+                                    },
+                                    "generic_params": []
+                                  }
+                                ],
+                                "lifetime": null
+                              }
+                            }
+                          }
+                        ],
+                        "constraints": []
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "62": "alloc::sync::Arc",
+      "92": "datafusion_session::physical_optimizer::PhysicalOptimizerRule",
+      "5": "core::marker::Send",
+      "7": "core::marker::Sync"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "156",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-1b8ad5ef6b69d42d96c7adbe",
+    "aliases": [
+      "datafusion::catalog::Session::physical_optimizers",
+      "datafusion_catalog::Session::physical_optimizers",
+      "datafusion_session::Session::physical_optimizers"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d9a5770e1d1190279fe94203",
+    "path": "datafusion_session::session::Session::query_planner",
+    "name": "query_planner",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn query_planner(&self) -> Arc<dyn QueryPlanner + Send + Sync>",
+    "docs": "Return the query planner for this session.\n\n# Warning\n\nThe default implementation returns an [`UnsupportedQueryPlanner`], so\n[`Session::create_physical_plan`] will fail. Sessions that support\nphysical planning should override this method (for example by returning\n`SessionState::query_planner`).",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        103,
+        5
+      ],
+      "end": [
+        105,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Arc",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "dyn_trait": {
+                          "traits": [
+                            {
+                              "trait": {
+                                "path": "QueryPlanner",
+                                "id": 99,
+                                "args": null
+                              },
+                              "generic_params": []
+                            },
+                            {
+                              "trait": {
+                                "path": "Send",
+                                "id": 5,
+                                "args": null
+                              },
+                              "generic_params": []
+                            },
+                            {
+                              "trait": {
+                                "path": "Sync",
+                                "id": 7,
+                                "args": null
+                              },
+                              "generic_params": []
+                            }
+                          ],
+                          "lifetime": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "62": "alloc::sync::Arc",
+      "99": "datafusion_session::planner::QueryPlanner",
+      "5": "core::marker::Send",
+      "7": "core::marker::Sync"
+    },
+    "impl_context": null,
+    "links": {
+      "`Session::create_physical_plan`": 153,
+      "`UnsupportedQueryPlanner`": 102
+    },
+    "link_paths": {
+      "`Session::create_physical_plan`": "datafusion_session::session::Session::create_physical_plan",
+      "`UnsupportedQueryPlanner`": "datafusion_session::planner::UnsupportedQueryPlanner"
+    },
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "154",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-d9a5770e1d1190279fe94203",
+    "aliases": [
+      "datafusion::catalog::Session::query_planner",
+      "datafusion_catalog::Session::query_planner",
+      "datafusion_session::Session::query_planner"
+    ],
+    "resolved_doc_links": {
+      "`Session::create_physical_plan`": "../operations/datafusion_session.session.Session.md#op-f8a00c1a238fc9102cc1e8b7",
+      "`UnsupportedQueryPlanner`": "../operations/datafusion_session.planner.UnsupportedQueryPlanner.md#op-3bc87131bbd1f7aa565e0e75"
+    }
+  },
+  {
+    "id": "c7fc0b9aeb7dd61b5e812286",
+    "path": "datafusion_session::session::Session::runtime_env",
+    "name": "runtime_env",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn runtime_env(&self) -> &Arc<RuntimeEnv>",
+    "docs": "Return the runtime env",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        185,
+        5
+      ],
+      "end": [
+        185,
+        47
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 62,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "RuntimeEnv",
+                              "id": 171,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "62": "alloc::sync::Arc",
+      "171": "datafusion_execution::runtime_env::RuntimeEnv"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "170",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-c7fc0b9aeb7dd61b5e812286",
+    "aliases": [
+      "datafusion::catalog::Session::runtime_env",
+      "datafusion_catalog::Session::runtime_env",
+      "datafusion_session::Session::runtime_env"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b4a552abb131ef3ab6667d27",
+    "path": "datafusion_session::session::Session::scalar_functions",
+    "name": "scalar_functions",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn scalar_functions(&self) -> &HashMap<String, Arc<ScalarUDF>>",
+    "docs": "Return reference to scalar_functions",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        170,
+        5
+      ],
+      "end": [
+        170,
+        68
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "HashMap",
+                  "id": 160,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "String",
+                              "id": 61,
+                              "args": null
+                            }
+                          }
+                        },
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 62,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "ScalarUDF",
+                                          "id": 161,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "160": "std::collections::hash::map::HashMap",
+      "61": "alloc::string::String",
+      "62": "alloc::sync::Arc",
+      "161": "datafusion_expr::udf::ScalarUDF"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "159",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-b4a552abb131ef3ab6667d27",
+    "aliases": [
+      "datafusion::catalog::Session::scalar_functions",
+      "datafusion_catalog::Session::scalar_functions",
+      "datafusion_session::Session::scalar_functions"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "db8333384155bf37ad2b0a12",
+    "path": "datafusion_session::session::Session::session_id",
+    "name": "session_id",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn session_id(&self) -> &str",
+    "docs": "Return the session ID",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        82,
+        5
+      ],
+      "end": [
+        82,
+        34
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "148",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-db8333384155bf37ad2b0a12",
+    "aliases": [
+      "datafusion::catalog::Session::session_id",
+      "datafusion_catalog::Session::session_id",
+      "datafusion_session::Session::session_id"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0c5021fe52f5fee8f150e4d3",
+    "path": "datafusion_session::session::Session::statistics_registry",
+    "name": "statistics_registry",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn statistics_registry(&self) -> Option<&StatisticsRegistry>",
+    "docs": "Return the optional statistics registry used during physical optimization.",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        139,
+        5
+      ],
+      "end": [
+        141,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 64,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "StatisticsRegistry",
+                              "id": 85,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "64": "core::option::Option",
+      "85": "datafusion_physical_plan::operator_statistics::StatisticsRegistry"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "157",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-0c5021fe52f5fee8f150e4d3",
+    "aliases": [
+      "datafusion::catalog::Session::statistics_registry",
+      "datafusion_catalog::Session::statistics_registry",
+      "datafusion_session::Session::statistics_registry"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "36b543d889732e51f3f7bcf4",
+    "path": "datafusion_session::session::Session::table_options",
+    "name": "table_options",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn table_options(&self) -> &TableOptions",
+    "docs": "Return the table options",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        193,
+        5
+      ],
+      "end": [
+        193,
+        46
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "TableOptions",
+                  "id": 176,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "176": "datafusion_common::config::TableOptions"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "175",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-36b543d889732e51f3f7bcf4",
+    "aliases": [
+      "datafusion::catalog::Session::table_options",
+      "datafusion_catalog::Session::table_options",
+      "datafusion_session::Session::table_options"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3421caa9fd6f62f343aa5a55",
+    "path": "datafusion_session::session::Session::table_options_mut",
+    "name": "table_options_mut",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn table_options_mut(&mut self) -> &mut TableOptions",
+    "docs": "Returns a mutable reference to [`TableOptions`]",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        202,
+        5
+      ],
+      "end": [
+        202,
+        58
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": true,
+              "type": {
+                "resolved_path": {
+                  "path": "TableOptions",
+                  "id": 176,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "176": "datafusion_common::config::TableOptions"
+    },
+    "impl_context": null,
+    "links": {
+      "`TableOptions`": 176
+    },
+    "link_paths": {
+      "`TableOptions`": "datafusion_common::config::TableOptions"
+    },
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "178",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-3421caa9fd6f62f343aa5a55",
+    "aliases": [
+      "datafusion::catalog::Session::table_options_mut",
+      "datafusion_catalog::Session::table_options_mut",
+      "datafusion_session::Session::table_options_mut"
+    ],
+    "resolved_doc_links": {
+      "`TableOptions`": "../operations/datafusion_common.config.TableOptions.md#op-0523542c8dd1656aea13ac4e"
+    }
+  },
+  {
+    "id": "86beddb384c16d2959a50795",
+    "path": "datafusion_session::session::Session::task_ctx",
+    "name": "task_ctx",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn task_ctx(&self) -> Arc<TaskContext>",
+    "docs": "Get a new TaskContext to run in this session",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        205,
+        5
+      ],
+      "end": [
+        205,
+        44
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Arc",
+              "id": 62,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "TaskContext",
+                          "id": 180,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "62": "alloc::sync::Arc",
+      "180": "datafusion_execution::task::TaskContext"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "179",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-86beddb384c16d2959a50795",
+    "aliases": [
+      "datafusion::catalog::Session::task_ctx",
+      "datafusion_catalog::Session::task_ctx",
+      "datafusion_session::Session::task_ctx"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "eea199d7dc08ee051316a1e1",
+    "path": "datafusion_session::session::Session::window_functions",
+    "name": "window_functions",
+    "owner": "datafusion_session::session::Session",
+    "crate": "datafusion-session",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn window_functions(&self) -> &HashMap<String, Arc<WindowUDF>>",
+    "docs": "Return reference to window functions",
+    "span": {
+      "filename": "src/session.rs",
+      "begin": [
+        179,
+        5
+      ],
+      "end": [
+        179,
+        68
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "HashMap",
+                  "id": 160,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "String",
+                              "id": 61,
+                              "args": null
+                            }
+                          }
+                        },
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Arc",
+                              "id": 62,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "resolved_path": {
+                                          "path": "WindowUDF",
+                                          "id": 167,
+                                          "args": null
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "160": "std::collections::hash::map::HashMap",
+      "61": "alloc::string::String",
+      "62": "alloc::sync::Arc",
+      "167": "datafusion_expr::udwf::WindowUDF"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "1a5255832e4619caf7c873a1b531467c59ea19eec08484c9945f3ac67e050c0a",
+      "format_version": 61,
+      "item_id": "166",
+      "origin": "https://docs.rs/crate/datafusion-session/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_session.session.Session.md",
+    "record_file": "operations/datafusion_session.session.Session.json",
+    "anchor": "op-eea199d7dc08ee051316a1e1",
+    "aliases": [
+      "datafusion::catalog::Session::window_functions",
+      "datafusion_catalog::Session::window_functions",
+      "datafusion_session::Session::window_functions"
+    ],
+    "resolved_doc_links": {}
+  }
+]

@@ -9,13 +9,7 @@ use crate::{
     service::Service,
 };
 use enrichment_core::{
-    canonical,
-    evidence::{
-        SymbolHeader,
-        execution::{ExecutionOutcome, ExecutionPayload, RuntimeObject},
-        relational::SubjectRef,
-    },
-    execution::ProcessEnd,
+    evidence::{SymbolHeader, execution::ExecutionPayload, relational::SubjectRef},
     policy::ExecutionProfile,
     request::InspectionOptions,
     wire::EvidenceClass,
@@ -25,7 +19,7 @@ use std::{
     sync::{Arc, atomic::AtomicBool},
 };
 
-const HELPER: &str = include_str!("../execution/runtime_object.py");
+use enrichment_core::execution::producer::RUNTIME_OBJECT_HELPER as HELPER;
 
 pub async fn produce(
     service: &Service,
@@ -67,30 +61,25 @@ pub async fn produce(
     let outcome = async {
         let prepared = capsule::prepare(service, opened, &runner, image, &format!("runtime-{}", uuid::Uuid::new_v4().simple()), cancel.clone()).await.map_err(preparation_error)?;
         let mut inputs = inspect_execution::capsule_inputs(service, opened, &prepared).await?;
-        let encoded = canonical::to_canonical_string(&serde_json::json!({"selection": selection, "max_output_bytes": service.config.execution.output_bytes.clamp(1024,1_048_576)}));
+        let encoded = enrichment_store::runtime_object_plan::selection_transport(&service.repository.runtime, selection, service.config.execution.output_bytes.clamp(1024,1_048_576)).await.map_err(io::Error::other)?;
         prepared.write_input("runtime_object.py", HELPER)?;
         prepared.write_input("runtime-selection.json", &encoded)?;
         inputs.push(inspect_execution::store(service, HELPER.as_bytes(), "producer://runtime-object/2/helper", "text/x-python")?);
         inputs.push(inspect_execution::store(service, encoded.as_bytes(), "consumer://runtime-selection/2", "application/json")?);
-        let observation = runner.run(image, &prepared.root, &capsule::strings(&["/usr/local/bin/python3", "-I", "-S", "/capsule/runtime_object.py"]), cancel).await?;
-        let (result, raw) = if observation.end == ProcessEnd::Exited && observation.exit_code == Some(0) {
-            let raw: serde_json::Value = serde_json::from_str(&observation.stdout).map_err(|e| io::Error::other(format!("runtime producer returned invalid bounded JSON: {e}")))?;
-            let result: RuntimeObject = serde_json::from_value(raw["result"].clone())?;
-            (result, raw)
-        } else {
-            (RuntimeObject { module: selection.module.clone(), selection: selection.attributes.clone(), outcome: match observation.end {
-                ProcessEnd::Cancelled => ExecutionOutcome::Cancelled,
-                ProcessEnd::Deadline | ProcessEnd::OutputLimit => ExecutionOutcome::Incomplete,
-                ProcessEnd::Exited => ExecutionOutcome::Failed,
-            }, type_name: None, signature: None, docstring: None, attributes: Vec::new(), limitations: vec![format!("Runtime observation ended {:?} with exit {:?}; the process log is retained.", observation.end, observation.exit_code)] }, serde_json::Value::Null)
-        };
-        if result.module != selection.module || result.selection != selection.attributes { return Err(io::Error::other("runtime result differs from explicit selection")); }
-        ExecutionPayload::RuntimeObject(result.clone()).validate(&SubjectRef::Symbol { symbol_id: symbol.symbol_id.clone() }).map_err(io::Error::other)?;
-        Ok(Produced { environment: prepared.environment.clone(), image: image.clone(), containment,
+        let observation = runner.for_capsule(&prepared).run(image, &prepared.root, &enrichment_core::execution::producer::Invocation::RuntimeObject, cancel).await?;
+        let result = enrichment_store::runtime_object_plan::lower(
+            &service.repository.runtime,
+            &enrichment_core::native_runtime::Capture {
+                selection: selection.clone(),
+                subject: SubjectRef::Symbol { symbol_id: symbol.symbol_id.clone() },
+                observation: observation.clone(),
+            },
+        ).await.map_err(io::Error::other)?;
+        Ok(Produced { environment: prepared.prepared.environment.clone(), image: image.clone(), containment,
             producer: "runtime-object".into(), version: inspect_execution::producer_identity(true)?.1, profile: ExecutionProfile::Runtime,
             started_at, finished_at: enrichment_core::native_time::ObservationTime::now().map_err(std::io::Error::other)?,
             facts: vec![(SubjectRef::Symbol { symbol_id: symbol.symbol_id.clone() }, ExecutionPayload::RuntimeObject(result), EvidenceClass::RuntimeObserved)],
-            inputs, lock: prepared.lock.clone(), transcript: serde_json::json!({"preparation":prepared.observations,"runtime":observation,"report":raw}) })
+            inputs, lock: prepared.prepared.lock.as_bytes().to_vec(), transcript: serde_json::json!({"preparation":prepared.observations,"runtime":observation}) })
     }.await;
     service.execution.wait_for_cleanup(&lease).await?;
     outcome

@@ -14,6 +14,9 @@ enum PushBatchStatus
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.coalesce.PushBatchStatus.md).
+
+
 Status returned by [`LimitedBatchCoalescer::push_batch`]
 
 ---
@@ -38,6 +41,9 @@ fn next_completed_batch(&mut self) -> Option<RecordBatch>
 fn push_batch(&mut self, batch: RecordBatch) -> Result<PushBatchStatus>
 fn schema(&self) -> SchemaRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.coalesce.LimitedBatchCoalescer.md).
+
 
 Concatenate multiple [`RecordBatch`]es and apply a limit
 

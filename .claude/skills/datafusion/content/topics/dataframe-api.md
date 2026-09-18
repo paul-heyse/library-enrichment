@@ -1,6 +1,6 @@
 # DataFrame API
 
-A `DataFrame` is a `LogicalPlan` plus the `SessionState` that will execute it. Every transformation returns a new `DataFrame`; nothing runs until a terminal method is called. `collect()` materializes everything, `execute_stream()` yields batches as they are produced. The 63 methods include a great deal that is not obvious from the common examples — `join_on`, `unnest_columns`, `repartition`, `cache`, `describe`, `write_table`.
+A DataFrame combines a logical plan with execution state. Transformations generally construct plans; collect materializes output, execute_stream yields fallible batches, and cache materializes a reusable in-memory result. Methods such as describe or writers may execute work; inspect their contracts.
 
 ## Entry points
 
@@ -24,7 +24,7 @@ A `DataFrame` is a `LogicalPlan` plus the `SessionState` that will execute it. E
 
 ## Decision rules
 
-- Prefer `execute_stream()` over `collect()` whenever the result is not known to be small.
+- Choose execute_stream for incremental consumption or collect for intentional materialization; neither choice determines every operator's working set.
 - `into_parts()` drops to the `LogicalPlan` and `SessionState` when you need to run the analyzer, optimizer and physical planner yourself.
 - `cache()` materializes an intermediate result when a plan reuses it several times.
 

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 7 public items · structured records in [`model/buoyan
 ## DEFAULT_NUM_INDEXED_COLS
 
 `constant` · `buoyant_kernel::table_properties::DEFAULT_NUM_INDEXED_COLS`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_properties.DEFAULT_NUM_INDEXED_COLS.md)
 
 Also reachable as `delta_kernel::table_properties::DEFAULT_NUM_INDEXED_COLS`
 
@@ -20,6 +21,7 @@ is not specified.
 ## DELTA_PROPERTY_PREFIX
 
 `constant` · `buoyant_kernel::table_properties::DELTA_PROPERTY_PREFIX`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_properties.DELTA_PROPERTY_PREFIX.md)
 
 Also reachable as `delta_kernel::table_properties::DELTA_PROPERTY_PREFIX`
 
@@ -34,6 +36,7 @@ Prefix for delta table properties (e.g., `delta.enableChangeDataFeed`, `delta.ap
 ## CheckpointPolicy
 
 `enum` · `buoyant_kernel::table_properties::CheckpointPolicy`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_properties.CheckpointPolicy.md)
 
 Also reachable as `delta_kernel::table_properties::CheckpointPolicy`
 
@@ -66,6 +69,7 @@ The checkpoint policy applied when writing checkpoints
 ## DataSkippingNumIndexedCols
 
 `enum` · `buoyant_kernel::table_properties::DataSkippingNumIndexedCols`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_properties.DataSkippingNumIndexedCols.md)
 
 Also reachable as `delta_kernel::table_properties::DataSkippingNumIndexedCols`
 
@@ -90,6 +94,7 @@ fn try_from(value: &str) -> Result<Self, Self::Error>
 ## IsolationLevel
 
 `enum` · `buoyant_kernel::table_properties::IsolationLevel`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_properties.IsolationLevel.md)
 
 Also reachable as `delta_kernel::table_properties::IsolationLevel`
 
@@ -122,6 +127,7 @@ The isolation level applied during transaction
 ## ParquetCompressionCodec
 
 `enum` · `buoyant_kernel::table_properties::ParquetCompressionCodec`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_properties.ParquetCompressionCodec.md)
 
 Also reachable as `delta_kernel::table_properties::ParquetCompressionCodec`
 
@@ -168,6 +174,7 @@ See [Table Properties] in the Delta protocol.
 ## TableProperties
 
 `struct` · `buoyant_kernel::table_properties::TableProperties`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.table_properties.TableProperties.md)
 
 Also reachable as `delta_kernel::table_properties::TableProperties`
 

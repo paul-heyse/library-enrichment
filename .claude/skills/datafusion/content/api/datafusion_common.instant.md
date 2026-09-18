@@ -10,6 +10,9 @@ Crate `datafusion-common` · 1 public items · structured records in [`model/dat
 type Instant = std::time::Instant
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.instant.Instant.md).
+
+
 DataFusion wrapper around [`std::time::Instant`]. This is only a type alias.
 
 ---

@@ -14,6 +14,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_SPARSE_MATRIX_COMPRESSED_AXIS`, `arrow_i
 const ENUM_MAX_SPARSE_MATRIX_COMPRESSED_AXIS: i16 = 1
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.ENUM_MAX_SPARSE_MATRIX_COMPRESSED_AXIS.md).
+
+
 ---
 
 ## ENUM_MAX_SPARSE_TENSOR_INDEX
@@ -27,6 +30,9 @@ Also reachable as `arrow::ipc::ENUM_MAX_SPARSE_TENSOR_INDEX`, `arrow_ipc::ENUM_M
 ```rust
 const ENUM_MAX_SPARSE_TENSOR_INDEX: u8 = 3
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.ENUM_MAX_SPARSE_TENSOR_INDEX.md).
+
 
 ---
 
@@ -42,6 +48,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_SPARSE_MATRIX_COMPRESSED_AXIS`, `arrow_i
 const ENUM_MIN_SPARSE_MATRIX_COMPRESSED_AXIS: i16 = 0
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.ENUM_MIN_SPARSE_MATRIX_COMPRESSED_AXIS.md).
+
+
 ---
 
 ## ENUM_MIN_SPARSE_TENSOR_INDEX
@@ -55,6 +64,9 @@ Also reachable as `arrow::ipc::ENUM_MIN_SPARSE_TENSOR_INDEX`, `arrow_ipc::ENUM_M
 ```rust
 const ENUM_MIN_SPARSE_TENSOR_INDEX: u8 = 0
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.ENUM_MIN_SPARSE_TENSOR_INDEX.md).
+
 
 ---
 
@@ -70,6 +82,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_SPARSE_MATRIX_COMPRESSED_AXIS`, `arro
 const ENUM_VALUES_SPARSE_MATRIX_COMPRESSED_AXIS: [SparseMatrixCompressedAxis; 2] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.ENUM_VALUES_SPARSE_MATRIX_COMPRESSED_AXIS.md).
+
+
 ---
 
 ## ENUM_VALUES_SPARSE_TENSOR_INDEX
@@ -84,6 +99,9 @@ Also reachable as `arrow::ipc::ENUM_VALUES_SPARSE_TENSOR_INDEX`, `arrow_ipc::ENU
 const ENUM_VALUES_SPARSE_TENSOR_INDEX: [SparseTensorIndex; 4] = _
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.ENUM_VALUES_SPARSE_TENSOR_INDEX.md).
+
+
 ---
 
 ## SparseMatrixIndexCSXOffset
@@ -95,6 +113,9 @@ Also reachable as `arrow::ipc::SparseMatrixIndexCSXOffset`, `arrow_ipc::SparseMa
 ```rust
 enum SparseMatrixIndexCSXOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseMatrixIndexCSXOffset.md).
+
 
 ---
 
@@ -108,6 +129,9 @@ Also reachable as `arrow::ipc::SparseTensorIndexCOOOffset`, `arrow_ipc::SparseTe
 enum SparseTensorIndexCOOOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseTensorIndexCOOOffset.md).
+
+
 ---
 
 ## SparseTensorIndexCSFOffset
@@ -119,6 +143,9 @@ Also reachable as `arrow::ipc::SparseTensorIndexCSFOffset`, `arrow_ipc::SparseTe
 ```rust
 enum SparseTensorIndexCSFOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseTensorIndexCSFOffset.md).
+
 
 ---
 
@@ -132,6 +159,9 @@ Also reachable as `arrow::ipc::SparseTensorOffset`, `arrow_ipc::SparseTensorOffs
 enum SparseTensorOffset
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseTensorOffset.md).
+
+
 ---
 
 ## finish_size_prefixed_sparse_tensor_buffer
@@ -143,6 +173,9 @@ Also reachable as `arrow::ipc::finish_size_prefixed_sparse_tensor_buffer`, `arro
 ```rust
 fn finish_size_prefixed_sparse_tensor_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<SparseTensor<'a>>)
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.finish_size_prefixed_sparse_tensor_buffer.md).
+
 
 ---
 
@@ -156,6 +189,9 @@ Also reachable as `arrow::ipc::finish_sparse_tensor_buffer`, `arrow_ipc::finish_
 fn finish_sparse_tensor_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<SparseTensor<'a>>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.finish_sparse_tensor_buffer.md).
+
+
 ---
 
 ## root_as_sparse_tensor
@@ -167,6 +203,9 @@ Also reachable as `arrow::ipc::root_as_sparse_tensor`, `arrow_ipc::root_as_spars
 ```rust
 fn root_as_sparse_tensor(buf: &[u8]) -> Result<SparseTensor<'_>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.root_as_sparse_tensor.md).
+
 
 Verifies that a buffer of bytes contains a `SparseTensor`
 and returns it.
@@ -187,6 +226,9 @@ Also reachable as `arrow::ipc::root_as_sparse_tensor_unchecked`, `arrow_ipc::roo
 unsafe fn root_as_sparse_tensor_unchecked(buf: &[u8]) -> SparseTensor<'_>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.root_as_sparse_tensor_unchecked.md).
+
+
 Assumes, without verification, that a buffer of bytes contains a SparseTensor and returns it.
 # Safety
 Callers must trust the given bytes do indeed contain a valid `SparseTensor`.
@@ -202,6 +244,9 @@ Also reachable as `arrow::ipc::root_as_sparse_tensor_with_opts`, `arrow_ipc::roo
 ```rust
 fn root_as_sparse_tensor_with_opts<'b, 'o>(opts: &'o flatbuffers::VerifierOptions, buf: &'b [u8]) -> Result<SparseTensor<'b>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.root_as_sparse_tensor_with_opts.md).
+
 
 Verifies, with the given options, that a buffer of bytes
 contains a `SparseTensor` and returns it.
@@ -222,6 +267,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_sparse_tensor`, `arrow_ipc:
 fn size_prefixed_root_as_sparse_tensor(buf: &[u8]) -> Result<SparseTensor<'_>, flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.size_prefixed_root_as_sparse_tensor.md).
+
+
 Verifies that a buffer of bytes contains a size prefixed
 `SparseTensor` and returns it.
 Note that verification is still experimental and may not
@@ -241,6 +289,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_sparse_tensor_unchecked`, `
 unsafe fn size_prefixed_root_as_sparse_tensor_unchecked(buf: &[u8]) -> SparseTensor<'_>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.size_prefixed_root_as_sparse_tensor_unchecked.md).
+
+
 Assumes, without verification, that a buffer of bytes contains a size prefixed SparseTensor and returns it.
 # Safety
 Callers must trust the given bytes do indeed contain a valid size prefixed `SparseTensor`.
@@ -256,6 +307,9 @@ Also reachable as `arrow::ipc::size_prefixed_root_as_sparse_tensor_with_opts`, `
 ```rust
 fn size_prefixed_root_as_sparse_tensor_with_opts<'b, 'o>(opts: &'o flatbuffers::VerifierOptions, buf: &'b [u8]) -> Result<SparseTensor<'b>, flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.size_prefixed_root_as_sparse_tensor_with_opts.md).
+
 
 Verifies, with the given verifier options, that a buffer of
 bytes contains a size prefixed `SparseTensor` and returns
@@ -311,6 +365,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseMatrixCompressedAxis.md).
+
+
 ---
 
 ## SparseMatrixIndexCSX
@@ -353,6 +410,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseMatrixIndexCSX.md).
+
+
 Compressed Sparse format, that is matrix-specific.
 
 ---
@@ -370,6 +430,9 @@ struct SparseMatrixIndexCSXArgs<'a>
 **Fields**: `compressedAxis`, `indptrType`, `indptrBuffer`, `indicesType`, `indicesBuffer`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseMatrixIndexCSXArgs.md).
+
 
 ---
 
@@ -394,6 +457,9 @@ fn add_indptrType(&mut self, indptrType: flatbuffers::WIPOffset<Int<'b>>)
 fn finish(self) -> flatbuffers::WIPOffset<SparseMatrixIndexCSX<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SparseMatrixIndexCSXBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseMatrixIndexCSXBuilder.md).
+
 
 ---
 
@@ -468,6 +534,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseTensor.md).
+
+
 ---
 
 ## SparseTensorArgs
@@ -483,6 +552,9 @@ struct SparseTensorArgs<'a>
 **Fields**: `type_type`, `type_`, `shape`, `non_zero_length`, `sparseIndex_type`, `sparseIndex`, `data`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseTensorArgs.md).
+
 
 ---
 
@@ -509,6 +581,9 @@ fn add_type_type(&mut self, type_type: Type)
 fn finish(self) -> flatbuffers::WIPOffset<SparseTensor<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SparseTensorBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseTensorBuilder.md).
+
 
 ---
 
@@ -557,6 +632,9 @@ unsafe fn push(&self, dst: &mut [u8], _written_len: usize)
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseTensorIndex.md).
+
+
 ---
 
 ## SparseTensorIndexCOO
@@ -597,6 +675,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 ```rust
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseTensorIndexCOO.md).
+
 
 ----------------------------------------------------------------------
 EXPERIMENTAL: Data structures for sparse tensors
@@ -647,6 +728,9 @@ struct SparseTensorIndexCOOArgs<'a>
 
 **Derives**: Default
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseTensorIndexCOOArgs.md).
+
+
 ---
 
 ## SparseTensorIndexCOOBuilder
@@ -669,6 +753,9 @@ fn add_isCanonical(&mut self, isCanonical: bool)
 fn finish(self) -> flatbuffers::WIPOffset<SparseTensorIndexCOO<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SparseTensorIndexCOOBuilder<'a, 'b, A>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseTensorIndexCOOBuilder.md).
+
 
 ---
 
@@ -712,6 +799,9 @@ unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner
 fn run_verifier(v: &mut flatbuffers::Verifier<'_, '_>, pos: usize) -> Result<(), flatbuffers::InvalidFlatbuffer>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseTensorIndexCSF.md).
+
+
 Compressed Sparse Fiber (CSF) sparse tensor index.
 
 ---
@@ -729,6 +819,9 @@ struct SparseTensorIndexCSFArgs<'a>
 **Fields**: `indptrType`, `indptrBuffers`, `indicesType`, `indicesBuffers`, `axisOrder`
 
 **Derives**: Default
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseTensorIndexCSFArgs.md).
+
 
 ---
 
@@ -754,6 +847,9 @@ fn finish(self) -> flatbuffers::WIPOffset<SparseTensorIndexCSF<'a>>
 fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SparseTensorIndexCSFBuilder<'a, 'b, A>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseTensorIndexCSFBuilder.md).
+
+
 ---
 
 ## SparseTensorIndexUnionTableOffset
@@ -765,5 +861,8 @@ Also reachable as `arrow::ipc::SparseTensorIndexUnionTableOffset`, `arrow_ipc::S
 ```rust
 struct SparseTensorIndexUnionTableOffset
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.gen.SparseTensor.SparseTensorIndexUnionTableOffset.md).
+
 
 ---

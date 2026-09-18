@@ -1,6 +1,7 @@
 //! Native physical ownership and storage accounting in the atomic control catalog.
 //! Filesystem/process code captures observations; these plans select admissible transitions.
 mod capsules;
+pub use crate::retention_tasks::ReleaseSlot;
 use crate::{
     control::{ControlStore, Table},
     native_catalog,
@@ -14,6 +15,7 @@ use datafusion::{
     functions::core::expr_ext::FieldAccessor,
     prelude::*,
 };
+use enrichment_core::identity::{PhysicalOwnerId, StorageReservationId};
 pub use enrichment_core::operation::ownership::{
     ExecutionRoot, OwnershipObservation, PhysicalOwner, PhysicalState, RetainedCapsule,
     StorageReservation,
@@ -48,11 +50,11 @@ impl std::fmt::Debug for OwnershipStore {
     }
 }
 enrichment_core::native_struct! { struct OwnershipInput {
-    name: String => Rule::NonEmpty,
+    owner_id: PhysicalOwnerId => Rule::Text,
     observation: OwnershipObservation => Rule::Text,
 } }
-enrichment_core::native_struct! { struct QuarantinePath {
-    path: String => Rule::NonEmpty,
+enrichment_core::native_struct! { struct QuarantineId {
+    reservation_id: StorageReservationId => Rule::Text,
 } }
 impl OwnershipStore {
     pub fn new(
@@ -74,11 +76,14 @@ impl OwnershipStore {
     pub fn cache(&self) -> &str {
         &self.cache
     }
-    pub fn release_after_removal(&self, id: String) {
+    pub fn reserve_release(&self) -> Result<ReleaseSlot> {
+        self.runtime.reserve_release()
+    }
+    pub fn release_after_removal(&self, id: StorageReservationId, slot: ReleaseSlot) {
         let store = self.clone();
         if let Err(error) = self
             .runtime
-            .release_retention(async move { store.release_storage(&id).await })
+            .release_retention(slot, async move { store.release_storage(&id).await })
         {
             eprintln!("library-enrichmentd: retained native storage reservation: {error}");
         }
@@ -107,7 +112,8 @@ impl OwnershipStore {
             native_catalog::work(
                 &session,
                 "captured_root",
-                session.read_batch(batch.clone())?.into_view(),
+                crate::native_catalog::batch(&session, "physical_ownership", batch.clone())?
+                    .into_view(),
             )?;
             self.runtime
                 .require_empty(
@@ -148,7 +154,7 @@ impl OwnershipStore {
         Err(conflict())
     }
     pub async fn reserve_owner(&self, owner: PhysicalOwner) -> Result<()> {
-        let key = format!("physical-owner/{}", owner.name);
+        let key = format!("physical-owner/{}", owner.owner_id);
         for _ in 0..16 {
             let pin = self.control.pin().await?;
             let session = pin.session(&self.runtime).await?;
@@ -157,14 +163,17 @@ impl OwnershipStore {
             native_catalog::work(
                 &session,
                 "new_owner",
-                session
-                    .read_batch(PhysicalOwner::batch(&[candidate])?)?
-                    .into_view(),
+                crate::native_catalog::batch(
+                    &session,
+                    "physical_ownership",
+                    PhysicalOwner::batch(&[candidate])?,
+                )?
+                .into_view(),
             )?;
-            self.runtime.require_empty(session.sql("SELECT name AS witness FROM new_owner WHERE state<>'reserved' OR cache<>$1 OR creator_pid IS NOT NULL OR creator_boot_id IS NOT NULL OR NOT regexp_like(name,'^libenr-[a-f0-9]{32}$')").await?.with_param_values(vec![datafusion::common::ScalarValue::from(self.cache.clone())])?,"physical_owner_initial","ownership").await?;
-            self.runtime.require_empty(session.sql("SELECT n.name AS witness FROM new_owner n LEFT ANTI JOIN state.records.execution_roots r ON n.root=r.root AND n.cache=r.cache").await?,"physical_owner_root","ownership").await?;
-            self.runtime.require_empty(session.sql("SELECT n.name AS witness FROM new_owner n JOIN state.records.physical_owners p ON n.name=p.name WHERE n.root<>p.root OR n.cache<>p.cache OR n.capsule<>p.capsule OR n.image<>p.image OR n.operation_id<>p.operation_id OR n.authority<>p.authority OR p.state<>'reserved'").await?,"physical_owner_identity","ownership").await?;
-            let missing=self.runtime.execute(session.sql("SELECT n.* FROM new_owner n LEFT ANTI JOIN state.records.physical_owners p ON n.name=p.name").await?).await?;
+            self.runtime.require_empty(session.sql("SELECT owner_id AS witness FROM new_owner WHERE state<>'reserved' OR cache<>$1 OR creator_pid IS NOT NULL OR creator_boot_id IS NOT NULL").await?.with_param_values(vec![datafusion::common::ScalarValue::from(self.cache.clone())])?,"physical_owner_initial","ownership").await?;
+            self.runtime.require_empty(session.sql("SELECT n.owner_id AS witness FROM new_owner n LEFT ANTI JOIN state.records.execution_roots r ON n.root=r.root AND n.cache=r.cache").await?,"physical_owner_root","ownership").await?;
+            self.runtime.require_empty(session.sql("SELECT n.owner_id AS witness FROM new_owner n JOIN state.records.physical_owners p ON n.owner_id=p.owner_id WHERE n.root<>p.root OR n.cache<>p.cache OR n.capsule<>p.capsule OR n.image<>p.image OR n.operation_id<>p.operation_id OR n.authority<>p.authority OR p.state<>'reserved'").await?,"physical_owner_identity","ownership").await?;
+            let missing=self.runtime.execute(session.sql("SELECT n.* FROM new_owner n LEFT ANTI JOIN state.records.physical_owners p ON n.owner_id=p.owner_id").await?).await?;
             if missing.rows == 0 {
                 return Ok(());
             }
@@ -188,9 +197,13 @@ impl OwnershipStore {
         Err(conflict())
     }
     /// Observations cannot alter the owner, operation or authority that was captured first.
-    pub async fn observe(&self, name: &str, observation: OwnershipObservation) -> Result<()> {
+    pub async fn observe(
+        &self,
+        owner_id: &PhysicalOwnerId,
+        observation: OwnershipObservation,
+    ) -> Result<()> {
         let batch = OwnershipInput::batch(&[OwnershipInput {
-            name: name.into(),
+            owner_id: *owner_id,
             observation,
         }])?;
         for _ in 0..16 {
@@ -199,16 +212,17 @@ impl OwnershipStore {
             native_catalog::work(
                 &session,
                 "owner_observation",
-                session.read_batch(batch.clone())?.into_view(),
+                crate::native_catalog::batch(&session, "physical_ownership", batch.clone())?
+                    .into_view(),
             )?;
-            let frame=session.sql("SELECT p.*,o.observation AS observation FROM state.records.physical_owners p JOIN owner_observation o ON p.name=o.name WHERE p.cache=$1").await?.with_param_values(vec![datafusion::common::ScalarValue::from(self.cache.clone())])?;
+            let frame=session.sql("SELECT p.*,o.observation AS observation FROM state.records.physical_owners p JOIN owner_observation o ON p.owner_id=o.owner_id WHERE p.cache=$1").await?.with_param_values(vec![datafusion::common::ScalarValue::from(self.cache.clone())])?;
             let members = PhysicalOwner::fields()
                 .iter()
                 .map(|field| (field.name().clone(), col(field.name())))
                 .collect::<Vec<_>>();
             let members = members
                 .iter()
-                .map(|(name, expr)| (name.as_str(), expr.clone()))
+                .map(|(owner_id, expr)| (owner_id.as_str(), expr.clone()))
                 .collect::<Vec<_>>();
             let frame = frame.select(vec![
                 record(&PhysicalOwner::data_type(), &members)?.alias("owner"),
@@ -216,7 +230,7 @@ impl OwnershipStore {
             ])?;
             native_catalog::work(&session, "owner_transition", frame.into_view())?;
             self.runtime.require_empty(session.sql("SELECT 'missing_owner' AS witness FROM owner_transition HAVING count(*)<>1").await?,"physical_owner_present","ownership").await?;
-            self.runtime.require_empty(session.sql("SELECT owner.name AS witness FROM owner_transition WHERE (CASE observation.kind
+            self.runtime.require_empty(session.sql("SELECT owner.owner_id AS witness FROM owner_transition WHERE (CASE observation.kind
                 WHEN 'creating' THEN owner.state='reserved' OR (owner.state='creating' AND owner.creator_boot_id=observation.creating.boot_id AND owner.creator_pid IS NULL)
                 WHEN 'creator' THEN owner.state='creating' AND (owner.creator_pid IS NULL OR owner.creator_pid=observation.creator.pid)
                 WHEN 'settled' THEN owner.state IN ('creating','settled') AND owner.creator_boot_id=observation.settled.boot_id
@@ -252,7 +266,7 @@ impl OwnershipStore {
                         .into_iter()
                         .map(|b| (Table::PhysicalOwners, b))
                         .collect(),
-                    vec![format!("physical-owner/{name}")],
+                    vec![format!("physical-owner/{owner_id}")],
                 )
                 .await?
                 .is_some()
@@ -265,21 +279,12 @@ impl OwnershipStore {
     /// A live creator is never retired merely because a container is momentarily absent.
     pub async fn cleanup_candidates(
         &self,
-        name: Option<&str>,
+        owner_id: Option<&PhysicalOwnerId>,
         boot: &str,
     ) -> Result<Vec<PhysicalOwner>> {
-        let pin = self.control.pin().await?;
-        let session = pin.session(&self.runtime).await?;
-        let mut frame = session
-            .table(Table::PhysicalOwners.reference())
-            .await?
-            .filter(
-                col("cache")
-                    .eq(lit(self.cache.clone()))
-                    .and(col("state").not_eq(lit("absent"))),
-            )?;
-        if let Some(name) = name {
-            frame = frame.filter(col("name").eq(lit(name)))?;
+        let mut frame = self.active_owner_plan().await?;
+        if let Some(owner_id) = owner_id {
+            frame = frame.filter(col("owner_id").eq(lit(owner_id)))?;
         }
         self.runtime
             .require_empty(
@@ -292,12 +297,31 @@ impl OwnershipStore {
                                 .or(col("creator_boot_id").eq(lit(boot))),
                         ),
                     )?
-                    .select(vec![col("name")])?,
+                    .select(vec![col("owner_id")])?,
                 "physical_creator_unresolved",
                 "ownership",
             )
             .await?;
         self.runtime.records::<PhysicalOwner>(frame, 1024).await
+    }
+    /// Read-only observations include unresolved creators. Unlike cleanup_candidates,
+    /// this does not confer eligibility to reconcile or remove a physical process.
+    pub async fn active_owners(&self) -> Result<Vec<PhysicalOwner>> {
+        self.runtime
+            .records::<PhysicalOwner>(self.active_owner_plan().await?, 1024)
+            .await
+    }
+    async fn active_owner_plan(&self) -> Result<DataFrame> {
+        let pin = self.control.pin().await?;
+        let session = pin.session(&self.runtime).await?;
+        session
+            .table(Table::PhysicalOwners.reference())
+            .await?
+            .filter(
+                col("cache")
+                    .eq(lit(self.cache.clone()))
+                    .and(col("state").not_eq(lit("absent"))),
+            )
     }
     pub async fn reserve_storage(
         &self,
@@ -319,12 +343,15 @@ impl OwnershipStore {
             native_catalog::work(
                 &session,
                 "new_reservation",
-                session
-                    .read_batch(StorageReservation::batch(&[candidate])?)?
-                    .into_view(),
+                crate::native_catalog::batch(
+                    &session,
+                    "physical_ownership",
+                    StorageReservation::batch(&[candidate])?,
+                )?
+                .into_view(),
             )?;
-            self.runtime.require_empty(session.sql("SELECT reservation_id AS witness FROM new_reservation WHERE released OR cache<>$1 OR NOT regexp_like(reservation_id,'^[a-f0-9]{32}$') OR quarantine<>concat(cache,'/handoff/',reservation_id)").await?.with_param_values(vec![datafusion::common::ScalarValue::from(self.cache.clone())])?,"storage_reservation_scope","ownership").await?;
-            self.runtime.require_empty(session.sql("SELECT n.reservation_id AS witness FROM new_reservation n JOIN state.records.storage_reservations r ON n.reservation_id=r.reservation_id WHERE n.cache<>r.cache OR n.quarantine<>r.quarantine OR n.bytes<>r.bytes OR r.released").await?,"storage_reservation_identity","ownership").await?;
+            self.runtime.require_empty(session.sql("SELECT reservation_id AS witness FROM new_reservation WHERE released OR cache<>$1").await?.with_param_values(vec![datafusion::common::ScalarValue::from(self.cache.clone())])?,"storage_reservation_scope","ownership").await?;
+            self.runtime.require_empty(session.sql("SELECT n.reservation_id AS witness FROM new_reservation n JOIN state.records.storage_reservations r ON n.reservation_id=r.reservation_id WHERE n.cache<>r.cache OR n.bytes<>r.bytes OR r.released").await?,"storage_reservation_identity","ownership").await?;
             let missing=session.sql("SELECT n.* FROM new_reservation n LEFT ANTI JOIN state.records.storage_reservations r ON n.reservation_id=r.reservation_id").await?;
             let output = self.runtime.execute(missing).await?;
             if output.rows == 0 {
@@ -369,32 +396,23 @@ impl OwnershipStore {
     }
     /// Admit the whole physical inventory before selecting any cleanup path. Missing reserved
     /// directories and interrupted unregistered directories share the same owned namespace.
-    pub async fn recovery_quarantines(&self, captured: Vec<String>) -> Result<Vec<String>> {
+    pub async fn recovery_quarantines(
+        &self,
+        captured: Vec<StorageReservationId>,
+    ) -> Result<Vec<StorageReservationId>> {
         let pin = self.control.pin().await?;
         let session = pin.session(&self.runtime).await?;
-        let rows = captured
-            .into_iter()
-            .map(|path| QuarantinePath { path })
-            .collect::<Vec<_>>();
-        native_catalog::work(
-            &session,
-            "captured_quarantines",
-            session
-                .read_batch(QuarantinePath::batch(&rows)?)?
-                .into_view(),
-        )?;
-        self.runtime.require_empty(session.sql("SELECT path AS witness FROM captured_quarantines WHERE NOT starts_with(path,concat($1,'/handoff/')) OR NOT regexp_like(substr(path,length($1)+10),'^[a-f0-9]{32}$')").await?.with_param_values(vec![datafusion::common::ScalarValue::from(self.cache.clone())])?,"quarantine_namespace","ownership").await?;
-        let selected=session.sql("SELECT path FROM captured_quarantines UNION SELECT quarantine AS path FROM state.records.storage_reservations WHERE cache=$1 AND NOT released").await?.with_param_values(vec![datafusion::common::ScalarValue::from(self.cache.clone())])?;
+        let selected = quarantine_plan(&self.runtime, &session, &captured, &self.cache).await?;
         Ok(self
             .runtime
-            .records::<QuarantinePath>(selected, 1024)
+            .records::<QuarantineId>(selected, 1024)
             .await?
             .into_iter()
-            .map(|row| row.path)
+            .map(|row| row.reservation_id)
             .collect())
     }
     /// The driver calls this only after quarantine removal and directory synchronization.
-    pub async fn release_storage(&self, id: &str) -> Result<()> {
+    pub async fn release_storage(&self, id: &StorageReservationId) -> Result<()> {
         for _ in 0..16 {
             // A coordinator-only transition needs the catalog's bootstrap protection,
             // not a new read lease whose drop would recursively enqueue another release.
@@ -438,6 +456,28 @@ impl OwnershipStore {
         Err(conflict())
     }
 }
+async fn quarantine_plan(
+    runtime: &QueryRuntime,
+    session: &SessionContext,
+    captured: &[StorageReservationId],
+    cache: &str,
+) -> Result<DataFrame> {
+    let rows = captured
+        .iter()
+        .copied()
+        .map(|reservation_id| QuarantineId { reservation_id })
+        .collect::<Vec<_>>();
+    native_catalog::work(
+        session,
+        "captured_quarantines",
+        crate::native_catalog::batch(session, "physical_ownership", QuarantineId::batch(&rows)?)?
+            .into_view(),
+    )?;
+    runtime.require_empty(session.sql("SELECT reservation_id AS witness FROM captured_quarantines GROUP BY reservation_id HAVING count(*)<>1").await?, "quarantine_inventory_unique", "ownership").await?;
+    let selected=session.sql("SELECT reservation_id FROM captured_quarantines UNION SELECT reservation_id FROM state.records.storage_reservations WHERE cache=$1 AND NOT released").await?.with_param_values(vec![datafusion::common::ScalarValue::from(cache.to_owned())])?;
+    Ok(selected)
+}
+
 fn conflict() -> DataFusionError {
     DataFusionError::Execution("physical ownership conflict bound exceeded".into())
 }
@@ -445,6 +485,65 @@ fn conflict() -> DataFusionError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    async fn typed_quarantine_recovery_selects_exact_cache_and_captured_orphans() -> Result<()> {
+        use crate::native_catalog::{BindingKind, BoundCatalog, Tables};
+        let root = tempfile::tempdir()?;
+        let runtime = QueryRuntime::new(root.path(), Default::default())?;
+        let active = StorageReservation {
+            reservation_id: StorageReservationId::new(),
+            cache: "/owned".into(),
+            bytes: 8,
+            released: false,
+            sequence: 1,
+        };
+        let foreign = StorageReservation {
+            reservation_id: StorageReservationId::new(),
+            cache: "/foreign".into(),
+            ..active.clone()
+        };
+        let released = StorageReservation {
+            reservation_id: StorageReservationId::new(),
+            released: true,
+            ..active.clone()
+        };
+        let tables = Tables::from([(
+            "storage_reservations".into(),
+            native_catalog::batch(
+                &runtime.session(),
+                "ownership",
+                StorageReservation::batch(&[active.clone(), foreign, released])?,
+            )?
+            .into_view(),
+        )]);
+        let catalog = BoundCatalog::default().with_schema(BindingKind::FoldedRecords, tables);
+        let bind = || {
+            runtime.bound_session(std::collections::BTreeMap::from([(
+                "state".into(),
+                Arc::new(catalog.clone()) as Arc<dyn datafusion::catalog::CatalogProvider>,
+            )]))
+        };
+        let orphan = StorageReservationId::new();
+        let rows = runtime
+            .records::<QuarantineId>(
+                quarantine_plan(&runtime, &bind()?, &[orphan], "/owned").await?,
+                8,
+            )
+            .await?;
+        let found = rows
+            .into_iter()
+            .map(|row| row.reservation_id)
+            .collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(found, [orphan, active.reservation_id].into());
+        assert!(
+            quarantine_plan(&runtime, &bind()?, &[orphan, orphan], "/owned")
+                .await
+                .is_err()
+        );
+        runtime.close_diagnostics().await?;
+        Ok(())
+    }
+
     #[tokio::test]
     async fn native_creator_fencing_and_capacity_survive_reopen()
     -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -463,17 +562,17 @@ mod tests {
                 broker: "/usr/bin/podman".into(),
             })
             .await?;
-        let name = format!("libenr-{}", "a".repeat(32));
+        let owner_id = PhysicalOwnerId::new();
         store
             .reserve_owner(PhysicalOwner {
-                name: name.clone(),
+                owner_id,
                 root,
                 cache: store.cache.clone(),
                 capsule: "/fixture".into(),
                 image: "sha256:fixture".into(),
-                operation_id: "fixture".into(),
+                operation_id: format!("process_{}", "1".repeat(64)).try_into().unwrap(),
                 authority: enrichment_core::execution::ProcessAuthority::Qualification {
-                    definition_id: "fixture".into(),
+                    definition_id: format!("process_{}", "1".repeat(64)).try_into().unwrap(),
                 },
                 created_at: enrichment_core::native_time::ObservationTime::now()?,
                 state: PhysicalState::Reserved,
@@ -484,7 +583,7 @@ mod tests {
             .await?;
         store
             .observe(
-                &name,
+                &owner_id,
                 OwnershipObservation::Creating {
                     boot_id: "boot-a".into(),
                 },
@@ -496,7 +595,7 @@ mod tests {
         assert!(
             reopened
                 .observe(
-                    &name,
+                    &owner_id,
                     OwnershipObservation::Absent {
                         boot_id: "boot-a".into()
                     }
@@ -507,7 +606,7 @@ mod tests {
         assert_eq!(reopened.cleanup_candidates(None, "boot-b").await?.len(), 1);
         reopened
             .observe(
-                &name,
+                &owner_id,
                 OwnershipObservation::Absent {
                     boot_id: "boot-b".into(),
                 },
@@ -519,11 +618,10 @@ mod tests {
                 .await?
                 .is_empty()
         );
-        let id = "b".repeat(32);
+        let id = StorageReservationId::new();
         let reservation = StorageReservation {
-            reservation_id: id.clone(),
+            reservation_id: id,
             cache: store.cache.clone(),
-            quarantine: format!("{}/handoff/{id}", store.cache),
             bytes: 8,
             released: false,
             sequence: 0,
@@ -535,23 +633,17 @@ mod tests {
             .reserve_storage(reservation.clone(), || Ok(0), 8)
             .await?;
         let mut other = reservation.clone();
-        other.reservation_id = "c".repeat(32);
-        other.quarantine = format!("{}/handoff/{}", store.cache, other.reservation_id);
+        other.reservation_id = StorageReservationId::new();
         other.bytes = 1;
         assert!(reopened.reserve_storage(other, || Ok(0), 8).await.is_err());
         assert_eq!(
             reopened
-                .recovery_quarantines(vec![reservation.quarantine.clone()])
+                .recovery_quarantines(vec![reservation.reservation_id])
                 .await?,
-            vec![reservation.quarantine]
+            vec![reservation.reservation_id]
         );
-        assert!(
-            reopened
-                .recovery_quarantines(vec!["/not-owned".into()])
-                .await
-                .is_err()
-        );
-        reopened.release_after_removal(id);
+        assert!(reopened.recovery_quarantines(vec![id, id]).await.is_err());
+        reopened.release_after_removal(id, reopened.reserve_release()?);
         reopened.runtime.close_diagnostics().await?;
         // Reopen from durable state after the real queued release and writer drain.
         let checked_runtime =

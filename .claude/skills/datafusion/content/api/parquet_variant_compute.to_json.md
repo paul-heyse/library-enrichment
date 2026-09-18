@@ -12,6 +12,9 @@ Also reachable as `parquet::variant::variant_to_json`, `parquet_variant_compute:
 fn variant_to_json(input: &arrow::array::ArrayRef) -> Result<arrow::array::StringArray, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant_compute.to_json.variant_to_json.md).
+
+
 Transform a batch of Variant represented as STRUCT<metadata: BINARY, value: BINARY> to a batch
 of JSON strings where nulls are preserved. The JSON strings in the input must be valid.
 

@@ -1,0 +1,13 @@
+id: native-field-rules-no-role-dispatch
+language: Rust
+severity: error
+message: Intrinsic and reference admission consume field rules, not presentation roles.
+files:
+  - crates/enrichment-core/src/evidence/arrow_model/checks.rs
+  - crates/enrichment-core/src/native_schema.rs
+  - crates/enrichment-store/src/field_admission.rs
+rule:
+  any:
+    - pattern: $METADATA.get("enrichment.role")
+    - pattern: $ROLE.strip_prefix("vocabulary:")
+note: Generated Cell and Rule metadata own semantics. Catalog display may still report roles; it cannot turn them into policy.

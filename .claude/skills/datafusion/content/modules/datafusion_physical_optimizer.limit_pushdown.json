@@ -1,0 +1,64 @@
+[
+  {
+    "id": "bdc2eb705a33e412e7328255",
+    "path": "datafusion_physical_optimizer::limit_pushdown",
+    "name": "limit_pushdown",
+    "owner": null,
+    "crate": "datafusion-physical-optimizer",
+    "version": "55.1.0",
+    "kind": "module",
+    "signature": "mod limit_pushdown",
+    "docs": "[`LimitPushdown`] pushes `LIMIT` down through `ExecutionPlan`s to reduce\ndata transfer as much as possible.\n\n# Plan Limit Absorption\nIn addition to pushing down `GlobalLimitExec` and `LocalLimitExec` nodes in\nthe plan, some operators can \"absorb\" a limit and stop early during\nexecution.\n\n## Background: vectorized volcano execution model\nDataFusion uses a batched volcano model. For most operators, output is\nproduced in batches of `datafusion.execution.batch_size` (default 8192), so\nthe batch sizes typically look like:\n```text\n8192, 8192, ..., 8192, 100 (the final batch may be partial)\n```\n\n## Example\nFor a join with an expensive, selective predicate:\n```text\nGlobalLimitExec: skip=0, fetch=10\n-- NestedLoopJoinExec(on=expr_expensive_and_selective)\n--- DataSourceExec()\n--- DataSourceExec()\n```\n\nUnder this model, `NestedLoopJoinExec` would keep working until it can emit\na full batch (8192 rows), even though the query only needs 10. If the limit\ncannot be pushed below the join, we can still embed it inside the join so it\nstops once the limit is satisfied. The transformed plan looks like:\n\n```text\nNestedLoopJoinExec(on=expr_expensive_and_selective, fetch=10)\n--- DataSourceExec()\n--- DataSourceExec()\n```\n\n## Implementation\nThe current optimizer rule optionally pushes `fetch` requirements into\noperators via [`ExecutionPlan::with_fetch`].\n\nTo support early termination in operators, [`LimitedBatchCoalescer`](https://docs.rs/datafusion/latest/datafusion/physical_plan/coalesce/struct.LimitedBatchCoalescer.html)\ncan help manage the output buffer.\n\nReference implementation in Hash Join: <https://github.com/apache/datafusion/pull/20228>",
+    "span": {
+      "filename": "src/limit_pushdown.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        460,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          305,
+          337,
+          365
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`LimitPushdown`": 305,
+      "`ExecutionPlan::with_fetch`": 366
+    },
+    "link_paths": {
+      "`LimitPushdown`": "datafusion_physical_optimizer::limit_pushdown::LimitPushdown",
+      "`ExecutionPlan::with_fetch`": "datafusion_physical_plan::execution_plan::ExecutionPlan::with_fetch"
+    },
+    "artifact": {
+      "id": "57811db7323ab0a338e3c40d1f6b8a0de3287df85813f79311f63a8e135c62af",
+      "format_version": 61,
+      "item_id": "367",
+      "origin": "https://docs.rs/crate/datafusion-physical-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/datafusion_physical_optimizer.limit_pushdown.md",
+    "record_file": "modules/datafusion_physical_optimizer.limit_pushdown.json",
+    "anchor": "op-bdc2eb705a33e412e7328255",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`LimitPushdown`": "../operations/datafusion_physical_optimizer.limit_pushdown.LimitPushdown.md#op-5e4f8ca3ba0b51aa7a5956ca",
+      "`ExecutionPlan::with_fetch`": "../operations/datafusion_physical_plan.execution_plan.ExecutionPlan.md#op-9cea7d2e63946ce72cec4604"
+    }
+  }
+]

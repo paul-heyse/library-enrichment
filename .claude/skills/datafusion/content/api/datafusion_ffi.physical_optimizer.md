@@ -28,6 +28,9 @@ fn new(context: &dyn PhysicalOptimizerContext) -> Self
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_optimizer.FFI_PhysicalOptimizerContext.md).
+
+
 A stable struct for sharing [`PhysicalOptimizerContext`] across FFI boundaries.
 
 This provides access to configuration options for optimizer rules that need
@@ -61,6 +64,9 @@ fn new(rule: Arc<dyn PhysicalOptimizerRule + Send + Sync>, runtime: Option<Handl
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_optimizer.FFI_PhysicalOptimizerRule.md).
+
+
 A stable struct for sharing [`PhysicalOptimizerRule`] across FFI boundaries.
 
 ---
@@ -85,6 +91,9 @@ fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> Resu
 fn optimize_with_context(&self, plan: Arc<dyn ExecutionPlan>, context: &dyn PhysicalOptimizerContext) -> Result<Arc<dyn ExecutionPlan>>
 fn schema_check(&self) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.physical_optimizer.ForeignPhysicalOptimizerRule.md).
+
 
 This wrapper struct exists on the receiver side of the FFI interface, so it has
 no guarantees about being able to access the data in `private_data`. Any functions

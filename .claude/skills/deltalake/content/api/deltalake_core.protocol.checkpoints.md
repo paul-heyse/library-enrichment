@@ -5,6 +5,7 @@ Crate `deltalake-core` · 4 public items · structured records in [`model/deltal
 ## cleanup_expired_logs_for
 
 `function` · `deltalake_core::protocol::checkpoints::cleanup_expired_logs_for`
+[Full member contracts, output types and access classification](../operations/deltalake_core.protocol.checkpoints.cleanup_expired_logs_for.md)
 
 Also reachable as `deltalake::checkpoints::cleanup_expired_logs_for`, `deltalake::protocol::checkpoints::cleanup_expired_logs_for`, `deltalake_core::checkpoints::cleanup_expired_logs_for`
 
@@ -36,6 +37,7 @@ why cleanup must align to an existing checkpoint.
 ## cleanup_metadata
 
 `function` · `deltalake_core::protocol::checkpoints::cleanup_metadata`
+[Full member contracts, output types and access classification](../operations/deltalake_core.protocol.checkpoints.cleanup_metadata.md)
 
 Also reachable as `deltalake::checkpoints::cleanup_metadata`, `deltalake::protocol::checkpoints::cleanup_metadata`, `deltalake_core::checkpoints::cleanup_metadata`
 
@@ -51,6 +53,7 @@ the `logRetentionDuration` property of the Delta Table, 30 days by default.
 ## create_checkpoint
 
 `function` · `deltalake_core::protocol::checkpoints::create_checkpoint`
+[Full member contracts, output types and access classification](../operations/deltalake_core.protocol.checkpoints.create_checkpoint.md)
 
 Also reachable as `deltalake::checkpoints::create_checkpoint`, `deltalake::protocol::checkpoints::create_checkpoint`, `deltalake_core::checkpoints::create_checkpoint`
 
@@ -65,6 +68,7 @@ Creates checkpoint at current table version
 ## create_checkpoint_from_table_url_and_cleanup
 
 `function` · `deltalake_core::protocol::checkpoints::create_checkpoint_from_table_url_and_cleanup`
+[Full member contracts, output types and access classification](../operations/deltalake_core.protocol.checkpoints.create_checkpoint_from_table_url_and_cleanup.md)
 
 Also reachable as `deltalake::checkpoints::create_checkpoint_from_table_url_and_cleanup`, `deltalake::protocol::checkpoints::create_checkpoint_from_table_url_and_cleanup`, `deltalake_core::checkpoints::create_checkpoint_from_table_url_and_cleanup`
 

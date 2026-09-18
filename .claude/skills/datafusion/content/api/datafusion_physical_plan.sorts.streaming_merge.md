@@ -14,6 +14,9 @@ struct SortedSpillFile
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.sorts.streaming_merge.SortedSpillFile.md).
+
+
 ---
 
 ## StreamingMergeBuilder
@@ -42,5 +45,8 @@ fn with_sorted_spill_files(self, sorted_spill_files: Vec<SortedSpillFile>) -> Se
 fn with_spill_manager(self, spill_manager: SpillManager) -> Self
 fn with_streams(self, streams: Vec<SendableRecordBatchStream>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.sorts.streaming_merge.StreamingMergeBuilder.md).
+
 
 ---

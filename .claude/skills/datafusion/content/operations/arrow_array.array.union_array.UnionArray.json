@@ -1,0 +1,4026 @@
+[
+  {
+    "id": "39e2f188616dc0298ba644ac",
+    "path": "arrow_array::array::union_array::UnionArray",
+    "name": "UnionArray",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct UnionArray",
+    "docs": "An array of [values of varying types](https://arrow.apache.org/docs/format/Columnar.html#union-layout)\n\nEach slot in a [UnionArray] can have a value chosen from a number\nof types.  Each of the possible types are named like the fields of\na [`StructArray`](crate::StructArray).  A `UnionArray` can\nhave two possible memory layouts, \"dense\" or \"sparse\".  For more\ninformation on please see the\n[specification](https://arrow.apache.org/docs/format/Columnar.html#union-layout).\n\n[UnionBuilder](crate::builder::UnionBuilder) can be used to\ncreate [UnionArray]'s of primitive types. `UnionArray`'s of nested\ntypes are also supported but not via `UnionBuilder`, see the tests\nfor examples.\n\n# Examples\n## Create a dense UnionArray `[1, 3.2, 34]`\n```\nuse arrow_buffer::ScalarBuffer;\nuse arrow_schema::*;\nuse std::sync::Arc;\nuse arrow_array::{Array, Int32Array, Float64Array, UnionArray};\n\nlet int_array = Int32Array::from(vec![1, 34]);\nlet float_array = Float64Array::from(vec![3.2]);\nlet type_ids = [0, 1, 0].into_iter().collect::<ScalarBuffer<i8>>();\nlet offsets = [0, 0, 1].into_iter().collect::<ScalarBuffer<i32>>();\n\nlet union_fields = [\n    (0, Arc::new(Field::new(\"A\", DataType::Int32, false))),\n    (1, Arc::new(Field::new(\"B\", DataType::Float64, false))),\n].into_iter().collect::<UnionFields>();\n\nlet children = vec![\n    Arc::new(int_array) as Arc<dyn Array>,\n    Arc::new(float_array),\n];\n\nlet array = UnionArray::try_new(\n    union_fields,\n    type_ids,\n    Some(offsets),\n    children,\n).unwrap();\n\nlet value = array.value(0).as_any().downcast_ref::<Int32Array>().unwrap().value(0);\nassert_eq!(1, value);\n\nlet value = array.value(1).as_any().downcast_ref::<Float64Array>().unwrap().value(0);\nassert!(3.2 - value < f64::EPSILON);\n\nlet value = array.value(2).as_any().downcast_ref::<Int32Array>().unwrap().value(0);\nassert_eq!(34, value);\n```\n\n## Create a sparse UnionArray `[1, 3.2, 34]`\n```\nuse arrow_buffer::ScalarBuffer;\nuse arrow_schema::*;\nuse std::sync::Arc;\nuse arrow_array::{Array, Int32Array, Float64Array, UnionArray};\n\nlet int_array = Int32Array::from(vec![Some(1), None, Some(34)]);\nlet float_array = Float64Array::from(vec![None, Some(3.2), None]);\nlet type_ids = [0_i8, 1, 0].into_iter().collect::<ScalarBuffer<i8>>();\n\nlet union_fields = [\n    (0, Arc::new(Field::new(\"A\", DataType::Int32, false))),\n    (1, Arc::new(Field::new(\"B\", DataType::Float64, false))),\n].into_iter().collect::<UnionFields>();\n\nlet children = vec![\n    Arc::new(int_array) as Arc<dyn Array>,\n    Arc::new(float_array),\n];\n\nlet array = UnionArray::try_new(\n    union_fields,\n    type_ids,\n    None,\n    children,\n).unwrap();\n\nlet value = array.value(0).as_any().downcast_ref::<Int32Array>().unwrap().value(0);\nassert_eq!(1, value);\n\nlet value = array.value(1).as_any().downcast_ref::<Float64Array>().unwrap().value(0);\nassert!(3.2 - value < f64::EPSILON);\n\nlet value = array.value(2).as_any().downcast_ref::<Int32Array>().unwrap().value(0);\nassert_eq!(34, value);\n```",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        123,
+        1
+      ],
+      "end": [
+        128,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          1329,
+          1330,
+          1331,
+          1332,
+          1333,
+          1334,
+          1335,
+          1336,
+          1337,
+          1338,
+          1339,
+          1340,
+          1341,
+          1342,
+          1343,
+          1344,
+          1345,
+          1346,
+          1348,
+          1350,
+          1352,
+          1368,
+          1370
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "UnionArray": 1313,
+      "crate::builder::UnionBuilder": 1314,
+      "crate::StructArray": 729
+    },
+    "link_paths": {
+      "UnionArray": "arrow_array::array::union_array::UnionArray",
+      "crate::builder::UnionBuilder": "arrow_array::builder::union_builder::UnionBuilder",
+      "crate::StructArray": "arrow_array::array::struct_array::StructArray"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1313",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-39e2f188616dc0298ba644ac",
+    "aliases": [],
+    "resolved_doc_links": {
+      "UnionArray": "../operations/arrow_array.array.union_array.UnionArray.md#op-39e2f188616dc0298ba644ac",
+      "crate::builder::UnionBuilder": "../operations/arrow_array.builder.union_builder.UnionBuilder.md#op-b141f16685d6c84bf0f6ab31",
+      "crate::StructArray": "../operations/arrow_array.array.struct_array.StructArray.md#op-994d82c95af72fa0e3aa6207"
+    }
+  },
+  {
+    "id": "c50cf8ca077f83951e06f2bc",
+    "path": "arrow_array::array::union_array::UnionArray::as_any",
+    "name": "as_any",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn as_any(&self) -> &dyn Any",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        747,
+        5
+      ],
+      "end": [
+        749,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "dyn_trait": {
+                  "traits": [
+                    {
+                      "trait": {
+                        "path": "Any",
+                        "id": 106,
+                        "args": null
+                      },
+                      "generic_params": []
+                    }
+                  ],
+                  "lifetime": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "106": "core::any::Any"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1353",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-c50cf8ca077f83951e06f2bc",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "11fde666ceb29e594dae6e59",
+    "path": "arrow_array::array::union_array::UnionArray::child",
+    "name": "child",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn child(&self, type_id: i8) -> &ArrayRef",
+    "docs": "Accesses the child array for `type_id`.\n\n# Panics\n\nPanics if the `type_id` provided is not present in the array's DataType\nin the `Union`.",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        250,
+        5
+      ],
+      "end": [
+        254,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "type_id",
+              {
+                "primitive": "i8"
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ArrayRef",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          130,
+          1
+        ],
+        "end": [
+          679,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1318",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-11fde666ceb29e594dae6e59",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a7bdebe00e23e326bcaeeb54",
+    "path": "arrow_array::array::union_array::UnionArray::claim",
+    "name": "claim",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn claim(&self, pool: &dyn arrow_buffer::MemoryPool)",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        951,
+        5
+      ],
+      "end": [
+        959,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"pool\"), span: src/array/union_array.rs:950:11: 950:27 (#0) }])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "pool",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "arrow_buffer::MemoryPool",
+                            "id": 138,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "138": "arrow_buffer::pool::MemoryPool"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1367",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-a7bdebe00e23e326bcaeeb54",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b41e0262509123b20ec389b9",
+    "path": "arrow_array::array::union_array::UnionArray::clone",
+    "name": "clone",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> UnionArray",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        122,
+        10
+      ],
+      "end": [
+        122,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "UnionArray",
+              "id": 1313,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1313": "arrow_array::array::union_array::UnionArray"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          122,
+          10
+        ],
+        "end": [
+          122,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1347",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-b41e0262509123b20ec389b9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7c995f8792739ca808e6b211",
+    "path": "arrow_array::array::union_array::UnionArray::data_type",
+    "name": "data_type",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn data_type(&self) -> &DataType",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        759,
+        5
+      ],
+      "end": [
+        761,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "DataType",
+                  "id": 126,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "126": "arrow_schema::datatype::DataType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1356",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-7c995f8792739ca808e6b211",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "1904fe0c7d68d5de40ff6b84",
+    "path": "arrow_array::array::union_array::UnionArray::fields",
+    "name": "fields",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fields(&self) -> &UnionFields",
+    "docs": "Returns the [`UnionFields`] for the union.",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        315,
+        5
+      ],
+      "end": [
+        320,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "UnionFields",
+                  "id": 1316,
+                  "args": null
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1316": "arrow_schema::fields::UnionFields"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          130,
+          1
+        ],
+        "end": [
+          679,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`UnionFields`": 1316
+    },
+    "link_paths": {
+      "`UnionFields`": "arrow_schema::fields::UnionFields"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1325",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-1904fe0c7d68d5de40ff6b84",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`UnionFields`": "../operations/arrow_schema.fields.UnionFields.md#op-daca7b2fe864f8176f562862"
+    }
+  },
+  {
+    "id": "0c5a49cd52907c2f1c50218e",
+    "path": "arrow_array::array::union_array::UnionArray::fmt",
+    "name": "fmt",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        963,
+        5
+      ],
+      "end": [
+        997,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::fmt::Formatter",
+                      "id": 117,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 118,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "117": "core::fmt::Formatter",
+      "118": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          962,
+          1
+        ],
+        "end": [
+          998,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1369",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-0c5a49cd52907c2f1c50218e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8fd2c6f498f7c920ecf5441c",
+    "path": "arrow_array::array::union_array::UnionArray::from",
+    "name": "from",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn from(data: ArrayData) -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        682,
+        5
+      ],
+      "end": [
+        717,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "data",
+              {
+                "resolved_path": {
+                  "path": "ArrayData",
+                  "id": 123,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "From",
+        "id": "core::convert::From",
+        "args": {
+          "angle_bracketed": {
+            "args": [
+              {
+                "type": {
+                  "resolved_path": {
+                    "path": "ArrayData",
+                    "id": "arrow_data::data::ArrayData",
+                    "args": null
+                  }
+                }
+              }
+            ],
+            "constraints": []
+          }
+        }
+      },
+      "trait_path": "core::convert::From",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          681,
+          1
+        ],
+        "end": [
+          718,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1349",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-8fd2c6f498f7c920ecf5441c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d66dbf242ab392d5c1c0f4f5",
+    "path": "arrow_array::array::union_array::UnionArray::get_array_memory_size",
+    "name": "get_array_memory_size",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_array_memory_size(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        936,
+        5
+      ],
+      "end": [
+        948,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1366",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-d66dbf242ab392d5c1c0f4f5",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "db7dfa9abe5e0821375e45c6",
+    "path": "arrow_array::array::union_array::UnionArray::get_buffer_memory_size",
+    "name": "get_buffer_memory_size",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_buffer_memory_size(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        924,
+        5
+      ],
+      "end": [
+        934,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1365",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-db7dfa9abe5e0821375e45c6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3fcabc83480ab3b6bae76cab",
+    "path": "arrow_array::array::union_array::UnionArray::into_data",
+    "name": "into_data",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_data(self) -> ArrayData",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        755,
+        5
+      ],
+      "end": [
+        757,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayData",
+              "id": 123,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1355",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-3fcabc83480ab3b6bae76cab",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e78b8c853e10c64db7305897",
+    "path": "arrow_array::array::union_array::UnionArray::into_parts",
+    "name": "into_parts",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn into_parts(self) -> (UnionFields, ScalarBuffer<i8>, Option<ScalarBuffer<i32>>, Vec<ArrayRef>)",
+    "docs": "Deconstruct this array into its constituent parts\n\n# Example\n\n```\n# use arrow_array::array::UnionArray;\n# use arrow_array::types::Int32Type;\n# use arrow_array::builder::UnionBuilder;\n# use arrow_buffer::ScalarBuffer;\n# fn main() -> Result<(), arrow_schema::ArrowError> {\nlet mut builder = UnionBuilder::new_dense();\nbuilder.append::<Int32Type>(\"a\", 1).unwrap();\nlet union_array = builder.build()?;\n\n// Deconstruct into parts\nlet (union_fields, type_ids, offsets, children) = union_array.into_parts();\n\n// Reconstruct from parts\nlet union_array = UnionArray::try_new(\n    union_fields,\n    type_ids,\n    offsets,\n    children,\n);\n# Ok(())\n# }\n```",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        382,
+        5
+      ],
+      "end": [
+        406,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[allow(clippy::type_complexity)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "tuple": [
+              {
+                "resolved_path": {
+                  "path": "UnionFields",
+                  "id": 1316,
+                  "args": null
+                }
+              },
+              {
+                "resolved_path": {
+                  "path": "ScalarBuffer",
+                  "id": 924,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "i8"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              },
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ScalarBuffer",
+                              "id": 924,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "i32"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              },
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayRef",
+                              "id": 128,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1316": "arrow_schema::fields::UnionFields",
+      "924": "arrow_buffer::buffer::scalar::ScalarBuffer",
+      "12": "core::option::Option",
+      "145": "alloc::vec::Vec",
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          130,
+          1
+        ],
+        "end": [
+          679,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1328",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-e78b8c853e10c64db7305897",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bbb6e7a01ea746c03d1740c6",
+    "path": "arrow_array::array::union_array::UnionArray::is_dense",
+    "name": "is_dense",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_dense(&self) -> bool",
+    "docs": "Returns whether the `UnionArray` is dense (or sparse if `false`).",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        323,
+        5
+      ],
+      "end": [
+        328,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          130,
+          1
+        ],
+        "end": [
+          679,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1326",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-bbb6e7a01ea746c03d1740c6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2531bd1751a3ee4fb42426b9",
+    "path": "arrow_array::array::union_array::UnionArray::is_empty",
+    "name": "is_empty",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_empty(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        771,
+        5
+      ],
+      "end": [
+        773,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1359",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-2531bd1751a3ee4fb42426b9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "5f56d523c937ce91160a03aa",
+    "path": "arrow_array::array::union_array::UnionArray::is_nullable",
+    "name": "is_nullable",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn is_nullable(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        917,
+        5
+      ],
+      "end": [
+        922,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1364",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-5f56d523c937ce91160a03aa",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ae6b887af236ed2057718ad8",
+    "path": "arrow_array::array::union_array::UnionArray::len",
+    "name": "len",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn len(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        767,
+        5
+      ],
+      "end": [
+        769,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1358",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-ae6b887af236ed2057718ad8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b964f66267980a82e93b54f2",
+    "path": "arrow_array::array::union_array::UnionArray::logical_nulls",
+    "name": "logical_nulls",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn logical_nulls(&self) -> Option<NullBuffer>",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        794,
+        5
+      ],
+      "end": [
+        915,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "NullBuffer",
+                          "id": 13,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1363",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-b964f66267980a82e93b54f2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "fdfda96ba12732c1d59876a7",
+    "path": "arrow_array::array::union_array::UnionArray::new_unchecked",
+    "name": "new_unchecked",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "unsafe fn new_unchecked(fields: UnionFields, type_ids: ScalarBuffer<i8>, offsets: Option<ScalarBuffer<i32>>, children: Vec<ArrayRef>) -> Self",
+    "docs": "Creates a new `UnionArray`.\n\nAccepts type ids, child arrays and optionally offsets (for dense unions) to create\na new `UnionArray`.  This method makes no attempt to validate the data provided by the\ncaller and assumes that each of the components are correct and consistent with each other.\nSee `try_new` for an alternative that validates the data provided.\n\n# Safety\n\nThe `type_ids` values should be non-negative and must match one of the type ids of the fields provided in `fields`.\nThese values are used to index into the `children` arrays.\n\nThe `offsets` is provided in the case of a dense union, sparse unions should use `None`.\nIf provided the `offsets` values should be non-negative and must be less than the length of the\ncorresponding array.\n\nIn both cases above we use signed integer types to maintain compatibility with other\nArrow implementations.",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        149,
+        5
+      ],
+      "end": [
+        172,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "fields",
+              {
+                "resolved_path": {
+                  "path": "UnionFields",
+                  "id": 1316,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "type_ids",
+              {
+                "resolved_path": {
+                  "path": "ScalarBuffer",
+                  "id": 924,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "i8"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "offsets",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ScalarBuffer",
+                              "id": 924,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "i32"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayRef",
+                              "id": 128,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": true,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1316": "arrow_schema::fields::UnionFields",
+      "924": "arrow_buffer::buffer::scalar::ScalarBuffer",
+      "12": "core::option::Option",
+      "145": "alloc::vec::Vec",
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          130,
+          1
+        ],
+        "end": [
+          679,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1315",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-fdfda96ba12732c1d59876a7",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c464101585be5791dfbf43bd",
+    "path": "arrow_array::array::union_array::UnionArray::nulls",
+    "name": "nulls",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn nulls(&self) -> Option<&NullBuffer>",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        790,
+        5
+      ],
+      "end": [
+        792,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "NullBuffer",
+                              "id": 13,
+                              "args": null
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "13": "arrow_buffer::buffer::null::NullBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1362",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-c464101585be5791dfbf43bd",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c67723117176d41df3a855d9",
+    "path": "arrow_array::array::union_array::UnionArray::offset",
+    "name": "offset",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn offset(&self) -> usize",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        786,
+        5
+      ],
+      "end": [
+        788,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1361",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-c67723117176d41df3a855d9",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "34d3587ee53af3fcb54b95f6",
+    "path": "arrow_array::array::union_array::UnionArray::offsets",
+    "name": "offsets",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn offsets(&self) -> Option<&ScalarBuffer<i32>>",
+    "docs": "Returns the `offsets` buffer if this is a dense array",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        272,
+        5
+      ],
+      "end": [
+        274,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "resolved_path": {
+                              "path": "ScalarBuffer",
+                              "id": 924,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "i32"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "12": "core::option::Option",
+      "924": "arrow_buffer::buffer::scalar::ScalarBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          130,
+          1
+        ],
+        "end": [
+          679,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1321",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-34d3587ee53af3fcb54b95f6",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f47cbe39060f595f8e3fb97e",
+    "path": "arrow_array::array::union_array::UnionArray::shrink_to_fit",
+    "name": "shrink_to_fit",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn shrink_to_fit(&mut self)",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        775,
+        5
+      ],
+      "end": [
+        784,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1360",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-f47cbe39060f595f8e3fb97e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "16a92234230e52fc5561083e",
+    "path": "arrow_array::array::union_array::UnionArray::slice",
+    "name": "slice",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn slice(&self, offset: usize, length: usize) -> ArrayRef",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        763,
+        5
+      ],
+      "end": [
+        765,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "length",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1357",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-16a92234230e52fc5561083e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e895abb4cd31bca1e0792e09",
+    "path": "arrow_array::array::union_array::UnionArray::slice",
+    "name": "slice",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn slice(&self, offset: usize, length: usize) -> Self",
+    "docs": "Returns a zero-copy slice of this array with the indicated offset and length.",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        331,
+        5
+      ],
+      "end": [
+        352,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "offset",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "length",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          130,
+          1
+        ],
+        "end": [
+          679,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1327",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-e895abb4cd31bca1e0792e09",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d1ed89fff52b21186663869c",
+    "path": "arrow_array::array::union_array::UnionArray::to_data",
+    "name": "to_data",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn to_data(&self) -> ArrayData",
+    "docs": "",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        751,
+        5
+      ],
+      "end": [
+        753,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayData",
+              "id": 123,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "123": "arrow_data::data::ArrayData"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Array",
+        "id": "arrow_array::array::Array",
+        "args": null
+      },
+      "trait_path": "arrow_array::array::Array",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          746,
+          1
+        ],
+        "end": [
+          960,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1354",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-d1ed89fff52b21186663869c",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b41936bc5e65c51c4b23a490",
+    "path": "arrow_array::array::union_array::UnionArray::try_new",
+    "name": "try_new",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn try_new(fields: UnionFields, type_ids: ScalarBuffer<i8>, offsets: Option<ScalarBuffer<i32>>, children: Vec<ArrayRef>) -> Result<Self, ArrowError>",
+    "docs": "Attempts to create a new `UnionArray`, validating the inputs provided.\n\nThe order of child arrays child array order must match the fields order",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        177,
+        5
+      ],
+      "end": [
+        242,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "fields",
+              {
+                "resolved_path": {
+                  "path": "UnionFields",
+                  "id": 1316,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "type_ids",
+              {
+                "resolved_path": {
+                  "path": "ScalarBuffer",
+                  "id": 924,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "i8"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "offsets",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 12,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ScalarBuffer",
+                              "id": 924,
+                              "args": {
+                                "angle_bracketed": {
+                                  "args": [
+                                    {
+                                      "type": {
+                                        "primitive": "i32"
+                                      }
+                                    }
+                                  ],
+                                  "constraints": []
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "children",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 145,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "ArrayRef",
+                              "id": 128,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 45,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowError",
+                          "id": 186,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1316": "arrow_schema::fields::UnionFields",
+      "924": "arrow_buffer::buffer::scalar::ScalarBuffer",
+      "12": "core::option::Option",
+      "145": "alloc::vec::Vec",
+      "128": "arrow_array::array::ArrayRef",
+      "45": "core::result::Result",
+      "186": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          130,
+          1
+        ],
+        "end": [
+          679,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1317",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-b41936bc5e65c51c4b23a490",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d1288f4dc0f68d9573ae716a",
+    "path": "arrow_array::array::union_array::UnionArray::type_id",
+    "name": "type_id",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn type_id(&self, index: usize) -> i8",
+    "docs": "Returns the `type_id` for the array slot at `index`.\n\n# Panics\n\nPanics if `index` is greater than or equal to the number of child arrays",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        261,
+        5
+      ],
+      "end": [
+        264,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "index",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "i8"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          130,
+          1
+        ],
+        "end": [
+          679,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1319",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-d1288f4dc0f68d9573ae716a",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9ae99b7ece335c69081e6d00",
+    "path": "arrow_array::array::union_array::UnionArray::type_ids",
+    "name": "type_ids",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn type_ids(&self) -> &ScalarBuffer<i8>",
+    "docs": "Returns the `type_ids` buffer for this array",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        267,
+        5
+      ],
+      "end": [
+        269,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "resolved_path": {
+                  "path": "ScalarBuffer",
+                  "id": 924,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "i8"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "924": "arrow_buffer::buffer::scalar::ScalarBuffer"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          130,
+          1
+        ],
+        "end": [
+          679,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1320",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-9ae99b7ece335c69081e6d00",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8d3778beaf14eb0bd11874b0",
+    "path": "arrow_array::array::union_array::UnionArray::type_names",
+    "name": "type_names",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn type_names(&self) -> Vec<&str>",
+    "docs": "Returns the names of the types in the union.",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        304,
+        5
+      ],
+      "end": [
+        312,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 145,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "borrowed_ref": {
+                          "lifetime": null,
+                          "is_mutable": false,
+                          "type": {
+                            "primitive": "str"
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "145": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          130,
+          1
+        ],
+        "end": [
+          679,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1324",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-8d3778beaf14eb0bd11874b0",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c371c6af9049f2382fd15626",
+    "path": "arrow_array::array::union_array::UnionArray::value",
+    "name": "value",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn value(&self, i: usize) -> ArrayRef",
+    "docs": "Returns the array's value at index `i`.\n\nNote: This method does not check for nulls and the value is arbitrary\n(but still well-defined) if [`is_null`](Self::is_null) returns true for the index.\n\n# Panics\nPanics if index `i` is out of bounds",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        296,
+        5
+      ],
+      "end": [
+        301,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "i",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "ArrayRef",
+              "id": 128,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          130,
+          1
+        ],
+        "end": [
+          679,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self::is_null": 32
+    },
+    "link_paths": {
+      "Self::is_null": "arrow_array::array::Array::is_null"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1323",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-c371c6af9049f2382fd15626",
+    "aliases": [],
+    "resolved_doc_links": {
+      "Self::is_null": "../operations/arrow_array.array.Array.md#op-fc6aff0e0247c3255575b6e1"
+    }
+  },
+  {
+    "id": "fd28a39f5f1c4caac5c73dee",
+    "path": "arrow_array::array::union_array::UnionArray::value_offset",
+    "name": "value_offset",
+    "owner": "arrow_array::array::union_array::UnionArray",
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn value_offset(&self, index: usize) -> usize",
+    "docs": "Returns the offset into the underlying values array for the array slot at `index`.\n\n# Panics\n\nPanics if `index` is greater than or equal the length of the array.",
+    "span": {
+      "filename": "src/array/union_array.rs",
+      "begin": [
+        281,
+        5
+      ],
+      "end": [
+        287,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "index",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "UnionArray",
+          "id": "arrow_array::array::union_array::UnionArray",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/array/union_array.rs",
+        "begin": [
+          130,
+          1
+        ],
+        "end": [
+          679,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "1322",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_array.array.union_array.UnionArray.md",
+    "record_file": "operations/arrow_array.array.union_array.UnionArray.json",
+    "anchor": "op-fd28a39f5f1c4caac5c73dee",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

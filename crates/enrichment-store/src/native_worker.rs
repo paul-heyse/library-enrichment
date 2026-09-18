@@ -2,44 +2,20 @@
 
 use crate::provider::FileWitness;
 use datafusion::error::{DataFusionError, Result};
-use enrichment_core::canonical;
-use serde::{Deserialize, Serialize};
+use enrichment_core::{
+    canonical,
+    execution::rustdoc_decoder::{
+        CONTROL_BYTES, DEADLINE_SECONDS, MEMORY_BYTES, PROTOCOL, Report, Request, STDERR_BYTES,
+    },
+};
 use std::{
     fs::File,
-    io::{self, Read, Seek, Write},
+    io::{self, Read, Seek},
     path::PathBuf,
-    process::{Child, Command, Stdio},
-    sync::{
-        Arc,
-        atomic::{AtomicBool, Ordering},
-    },
-    time::{Duration, Instant},
+    process::Stdio,
+    sync::Arc,
+    time::Duration,
 };
-
-const PROTOCOL: &str = "native-rustdoc-arrow/2";
-const CONTROL_BYTES: usize = 16 * 1024;
-const ADDRESS_BYTES: u64 = 1024 * 1024 * 1024;
-// Serializes actual decoder processes, including tasks whose callers were cancelled.
-static DECODER: std::sync::Mutex<()> = std::sync::Mutex::new(());
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct Request {
-    pub extraction: crate::native_rustdoc::Extraction,
-    pub path: PathBuf,
-    pub digest: String,
-    pub bytes: u64,
-    pub deadline: Duration,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct Report {
-    protocol: String,
-    request_digest: String,
-    pub(crate) producer_revision: String,
-    pub(crate) rustdoc: crate::native_rustdoc::Receipt,
-}
 
 fn invalid(message: impl Into<String>) -> DataFusionError {
     DataFusionError::Execution(message.into())
@@ -67,151 +43,135 @@ fn executable() -> io::Result<PathBuf> {
     Ok(path)
 }
 
-struct Running(Child);
-impl Drop for Running {
-    fn drop(&mut self) {
-        // Covers errors, cancellation of the owning blocking task, and the wall deadline.
-        let _ = self.0.kill();
-        let _ = self.0.wait();
-    }
-}
-
-struct CancelOnDrop(Arc<AtomicBool>);
-impl Drop for CancelOnDrop {
-    fn drop(&mut self) {
-        self.0.store(true, Ordering::Release);
-    }
-}
-
-pub(crate) async fn run_blocking<T: Send + 'static>(
-    work: impl FnOnce(Arc<AtomicBool>) -> Result<T> + Send + 'static,
-) -> Result<T> {
-    let flag = Arc::new(AtomicBool::new(false));
-    let _cancel = CancelOnDrop(Arc::clone(&flag));
-    let operation = crate::runtime::capture_operation();
-    tokio::task::spawn_blocking(move || operation.run(|| work(flag)))
-        .await
-        .map_err(|e| invalid(e.to_string()))?
-}
-
-pub(crate) fn run_request(request: Request, cancelled: &AtomicBool) -> Result<Report> {
-    let started = Instant::now();
-    // Waiting tasks cannot launch fresh decoders after their own admission deadline.
-    let guard = loop {
-        if cancelled.load(Ordering::Acquire) || started.elapsed() >= request.deadline {
-            return Err(DataFusionError::ResourcesExhausted(
-                "native decoder queue cancelled or deadline exceeded".into(),
-            ));
-        }
-        match DECODER.try_lock() {
-            Ok(guard) => break guard,
-            Err(std::sync::TryLockError::WouldBlock) => {
-                std::thread::sleep(Duration::from_millis(2))
-            }
-            Err(_) => return Err(invalid("native decoder coordinator poisoned")),
-        }
-    };
-    canonical::serialized_size(&request, CONTROL_BYTES).map_err(|e| invalid(e.to_string()))?;
-    let bytes = serde_json::to_vec(&request).map_err(|e| invalid(e.to_string()))?;
-    let mut child = Running(
-        Command::new(executable()?)
-            .env_clear()
-            .current_dir("/")
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()?,
-    );
-    child
-        .0
-        .stdin
-        .take()
-        .ok_or_else(|| invalid("missing decoder input"))?
-        .write_all(&bytes)?;
-    let output = supervise(child, started, request.deadline, cancelled)?;
-    let report: Report = serde_json::from_slice(&output).map_err(|e| invalid(e.to_string()))?;
-    if report.producer_revision != crate::runtime::DEFINITION_REVISION {
+/// Input/output ownership is enrolled before the request crosses stdin. The fixed sibling
+/// executable and matching compiled report remain the native decoder identity boundary.
+pub(crate) async fn run_request(
+    runtime: &crate::runtime::QueryRuntime,
+    request: Request,
+    directory: Arc<crate::PrivateDirectory>,
+) -> Result<Report> {
+    if request.root != directory.path() {
         return Err(invalid(
-            "native decoder compiled definition differs; rebuild/install the matching native worker",
+            "native decoder requires its exact private input/output root",
         ));
     }
-    if report.protocol != PROTOCOL || report.request_digest != canonical::sha256_hex(&bytes) {
-        return Err(invalid("native decoder report identity mismatch"));
-    }
-    drop(guard);
+    let held = directory.clone();
+    runtime
+        .blocking(move || held.directory(crate::private_directory::Kind::Rustdoc, held.path()))
+        .await??;
+    let parent = crate::native_effect::authorize().await?;
+    let executable = runtime.blocking(executable).await??;
+    let prepared =
+        Arc::new(crate::rustdoc_decoder_plan::prepare(parent, request, executable).await?);
+    let request = &prepared.value.request;
+    let deadline = tokio::time::Instant::now()
+        + Duration::from_secs(request.deadline_seconds).min(runtime.remaining()?);
+    let permit = tokio::time::timeout_at(deadline, runtime.parser_permit())
+        .await
+        .map_err(|_| invalid("native decoder admission deadline"))?
+        .map_err(|e| invalid(e.to_string()))?;
+    canonical::serialized_size(&request, CONTROL_BYTES).map_err(|e| invalid(e.to_string()))?;
+    let bytes = enrichment_core::json_output::JsonOutput::serialize(
+        &runtime.session().runtime_env().memory_pool,
+        &request,
+    )?;
+    prepared.parent.check().await?;
+    let memory = crate::static_worker::parser_memory(runtime, prepared.value.memory_bytes)?;
+    let mut command = tokio::process::Command::new(&prepared.value.executable);
+    command
+        .args(&prepared.value.argv)
+        .env_clear()
+        .envs(&prepared.value.environment)
+        .current_dir(&prepared.value.cwd)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    let mut child = crate::static_worker::OwnedChild::start(
+        runtime,
+        &mut command,
+        (directory.clone(), permit, memory, prepared.clone()),
+    )?;
+    let pid = child
+        .child()
+        .id()
+        .ok_or_else(|| invalid("native decoder PID missing"))?;
+    tokio::time::timeout_at(deadline, directory.protect_child(pid))
+        .await
+        .map_err(|_| invalid("native decoder enrollment deadline"))??;
+    let output = tokio::select! {
+        value = supervise(child, bytes.as_str().as_bytes(), deadline) => value?,
+        error = prepared.parent.revoked() => return Err(error),
+    };
+    let report: Report = serde_json::from_slice(&output).map_err(|e| invalid(e.to_string()))?;
+    crate::rustdoc_decoder_plan::admit_report(
+        runtime,
+        &report,
+        &canonical::sha256_hex(bytes.as_str().as_bytes()),
+    )
+    .await?;
+    prepared.parent.check().await?;
     Ok(report)
 }
 
-// Supervision is shared with tests that exercise actual exit, timeout and pipe behavior.
-// There is no executable selection in the production interface.
-fn supervise(
-    mut child: Running,
-    started: Instant,
-    deadline: Duration,
-    cancelled: &AtomicBool,
+// Bounded protocol mechanics shared with isolated pipe/exit/cancellation tests.
+async fn supervise(
+    mut owned: crate::static_worker::OwnedChild,
+    input: &[u8],
+    deadline: tokio::time::Instant,
 ) -> Result<Vec<u8>> {
-    let source = child
-        .0
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    let child = owned.child();
+    let mut stdin = child
+        .stdin
+        .take()
+        .ok_or_else(|| invalid("missing decoder input"))?;
+    let mut stdout = child
         .stdout
         .take()
-        .ok_or_else(|| invalid("missing decoder output"))?;
-    let overflow = Arc::new(AtomicBool::new(false));
-    let flag = Arc::clone(&overflow);
-    let output = std::thread::spawn(move || {
-        let mut bytes = Vec::new();
-        source
-            .take(CONTROL_BYTES as u64 + 1)
-            .read_to_end(&mut bytes)?;
-        if bytes.len() > CONTROL_BYTES {
-            flag.store(true, Ordering::Release);
-        }
-        Ok::<_, io::Error>(bytes)
-    });
-    let stderr = child.0.stderr.take();
-    let diagnostics = std::thread::spawn(move || {
-        let mut bytes = Vec::new();
-        if let Some(source) = stderr {
-            source.take(4097).read_to_end(&mut bytes)?;
-        }
-        Ok::<_, io::Error>(bytes)
-    });
-    let status = loop {
-        if cancelled.load(Ordering::Acquire) || started.elapsed() >= deadline {
-            break Err(DataFusionError::ResourcesExhausted(
-                "native decoder cancelled or wall deadline exceeded".into(),
-            ));
-        }
-        if overflow.load(Ordering::Acquire) {
-            break Err(invalid("native decoder report too large"));
-        }
-        match child.0.try_wait() {
-            Ok(Some(status)) => break Ok(status),
-            Ok(None) => std::thread::sleep(Duration::from_millis(2)),
-            Err(e) => break Err(e.into()),
-        }
+        .ok_or_else(|| invalid("missing decoder output"))?
+        .take(CONTROL_BYTES as u64 + 1);
+    let mut stderr = child
+        .stderr
+        .take()
+        .ok_or_else(|| invalid("missing decoder diagnostics"))?
+        .take(STDERR_BYTES as u64 + 1);
+    let mut output = Vec::new();
+    let mut diagnostics = Vec::new();
+    let run = async {
+        let (_, _, _, status) = tokio::try_join!(
+            async {
+                stdin.write_all(input).await?;
+                drop(stdin);
+                Ok::<_, io::Error>(())
+            },
+            async {
+                stdout.read_to_end(&mut output).await?;
+                if output.len() > CONTROL_BYTES {
+                    return Err(io::Error::other("native decoder report too large"));
+                }
+                Ok(())
+            },
+            async {
+                stderr.read_to_end(&mut diagnostics).await?;
+                if diagnostics.len() > STDERR_BYTES {
+                    return Err(io::Error::other("native decoder diagnostic byte bound"));
+                }
+                Ok(())
+            },
+            child.wait(),
+        )?;
+        Ok::<_, io::Error>(status)
     };
-    // Closing/reaping the native child closes its output; always join the bounded drain thread.
-    drop(child);
-    let bytes = output
-        .join()
-        .map_err(|_| invalid("native decoder output reader panicked"))??;
-    if bytes.len() > CONTROL_BYTES {
-        return Err(invalid("native decoder report too large"));
-    }
-    let diagnostics = diagnostics
-        .join()
-        .map_err(|_| invalid("native decoder diagnostic reader panicked"))??;
-    if diagnostics.len() > 4096 {
-        return Err(invalid("native decoder diagnostic byte bound"));
-    }
-    let status = status?;
+    let status = tokio::time::timeout_at(deadline, run)
+        .await
+        .map_err(|_| invalid("native decoder wall deadline exceeded"))??;
     if !status.success() {
         return Err(invalid(format!(
-            "native admission rejected input or exceeded process limits ({status}): {}",
+            "native decoder rejected input ({status}): {}",
             String::from_utf8_lossy(&diagnostics)
         )));
     }
-    Ok(bytes)
+    Ok(output)
 }
 
 /// Entry point for the dedicated trusted native validator executable. Never call from the daemon.
@@ -229,18 +189,24 @@ pub fn worker_main() -> Result<()> {
     let request: Request = serde_json::from_slice(&bytes).map_err(|e| invalid(e.to_string()))?;
     let mut report = decode(&request)?;
     report.request_digest = canonical::sha256_hex(&bytes);
-    serde_json::to_writer(io::stdout().lock(), &report).map_err(|e| invalid(e.to_string()))?;
+    let mut output =
+        enrichment_core::native_json::BoundedWriter::new(io::stdout().lock(), CONTROL_BYTES);
+    serde_json::to_writer(&mut output, &report).map_err(|e| invalid(e.to_string()))?;
     Ok(())
 }
 
 fn decode(request: &Request) -> Result<Report> {
-    if request.bytes > enrichment_core::producer::rustdoc::facts::MAX_BYTES
-        || request.deadline.is_zero()
-        || !request.path.is_absolute()
+    if request.protocol != PROTOCOL
+        || request.bytes == 0
+        || request.bytes > enrichment_core::producer::rustdoc::facts::MAX_BYTES
+        || !(1..=DEADLINE_SECONDS).contains(&request.deadline_seconds)
+        || !request.root.is_absolute()
+        || request.artifact_id != enrichment_core::evidence::artifact_id_for(&request.sha256)
     {
         return Err(invalid("invalid native decoder request bounds"));
     }
-    let witness = FileWitness::read(&request.path)?;
+    let path = request.input();
+    let witness = FileWitness::read(&path)?;
     let mut options = File::options();
     options.read(true);
     #[cfg(target_os = "linux")]
@@ -248,7 +214,7 @@ fn decode(request: &Request) -> Result<Report> {
         use std::os::unix::fs::OpenOptionsExt;
         options.custom_flags(0x20000 | 0x800); // O_NOFOLLOW | O_NONBLOCK
     }
-    let mut source = options.open(&request.path)?;
+    let mut source = options.open(&path)?;
     if !source.metadata()?.is_file() {
         return Err(invalid("native input is not a regular file"));
     }
@@ -256,19 +222,19 @@ fn decode(request: &Request) -> Result<Report> {
         &mut source,
         enrichment_core::producer::rustdoc::facts::MAX_BYTES,
     )?;
-    if digest != request.digest || count != request.bytes {
+    if digest != request.sha256 || count != request.bytes {
         return Err(invalid("native input digest mismatch"));
     }
     source.rewind()?;
-    let receipt = crate::native_rustdoc::extract(&mut source, &request.extraction, request)?;
-    if FileWitness::read(&request.path)? != witness {
+    let streams = crate::native_rustdoc::extract(&mut source, request)?;
+    if FileWitness::read(&path)? != witness {
         return Err(invalid("native rustdoc input changed"));
     }
     Ok(Report {
         protocol: PROTOCOL.into(),
         request_digest: String::new(),
         producer_revision: crate::runtime::DEFINITION_REVISION.into(),
-        rustdoc: receipt,
+        streams,
     })
 }
 
@@ -283,7 +249,7 @@ fn process_limits() -> io::Result<()> {
         fn getrlimit(resource: i32, limit: *mut Limit) -> i32;
         fn setrlimit(resource: i32, limit: *const Limit) -> i32;
     }
-    for (resource, cap) in [(9, ADDRESS_BYTES), (0, 30), (4, 0)] {
+    for (resource, cap) in [(9, MEMORY_BYTES), (0, DEADLINE_SECONDS), (4, 0)] {
         // AS, CPU, CORE
         let mut limit = Limit {
             current: 0,
@@ -322,8 +288,26 @@ fn process_limits() -> io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn decoder_supervision_rejects_overflow_abnormal_exit_and_reaps_timeout() {
+    fn child(
+        runtime: &crate::runtime::QueryRuntime,
+        program: &str,
+        args: &[&str],
+        owner: impl Send + Sync + 'static,
+    ) -> crate::static_worker::OwnedChild {
+        let mut command = tokio::process::Command::new(program);
+        command
+            .args(args)
+            .env_clear()
+            .current_dir("/")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        crate::static_worker::OwnedChild::start(runtime, &mut command, owner).unwrap()
+    }
+    #[tokio::test]
+    async fn decoder_supervision_rejects_overflow_abnormal_exit_and_reaps_timeout() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let runtime = crate::runtime::QueryRuntime::new(root.path(), Default::default())?;
         for (program, args, expected) in [
             (
                 "/usr/bin/head",
@@ -337,67 +321,63 @@ mod tests {
             ),
             ("/bin/sleep", vec!["5"], "wall deadline"),
         ] {
-            let child = Command::new(program)
-                .args(args)
-                .env_clear()
-                .current_dir("/")
-                .stdin(Stdio::null())
-                .stdout(Stdio::piped())
-                .stderr(Stdio::null())
-                .spawn()
-                .expect("real child");
-            let pid = child.id();
+            let spawned = child(&runtime, program, &args, ());
             let failure = supervise(
-                Running(child),
-                Instant::now(),
-                Duration::from_millis(100),
-                &AtomicBool::new(false),
+                spawned,
+                b"",
+                tokio::time::Instant::now() + Duration::from_millis(100),
             )
-            .expect_err("invalid or stalled output");
+            .await
+            .unwrap_err();
             assert!(failure.to_string().contains(expected), "{failure}");
-            assert!(
-                !std::path::Path::new(&format!("/proc/{pid}")).exists(),
-                "child reaped"
-            );
         }
+        runtime.close_diagnostics().await?;
+        Ok(())
     }
-
     #[tokio::test]
-    async fn dropped_admission_future_cancels_and_reaps_running_decoder() {
-        let (ready, running) = tokio::sync::oneshot::channel();
-        let (done, completion) = tokio::sync::oneshot::channel();
-        let task = tokio::spawn(run_blocking(move |cancel| {
-            let child = Command::new("/bin/sleep")
-                .arg("5")
-                .env_clear()
-                .current_dir("/")
-                .stdin(Stdio::null())
-                .stdout(Stdio::piped())
-                .stderr(Stdio::null())
-                .spawn()?;
-            let pid = child.id();
-            let _ = ready.send(pid);
-            let result = supervise(
-                Running(child),
-                Instant::now(),
-                Duration::from_secs(10),
-                &cancel,
-            );
-            let _ = done.send(result.is_err());
-            Ok(())
-        }));
-        let pid = running.await.expect("started child");
-        task.abort();
-        assert!(task.await.expect_err("aborted caller").is_cancelled());
+    async fn dropped_admission_future_cancels_and_reaps_running_decoder() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let runtime = crate::runtime::QueryRuntime::new(
+            root.path(),
+            crate::runtime::QueryLimits {
+                concurrency: 1,
+                native: enrichment_core::config::NativeQueryConfig {
+                    parser_concurrency: 1,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+        )?;
+        let permit = runtime.parser_permit().await?;
+        let pool = runtime.session().runtime_env().memory_pool.clone();
+        let baseline = pool.reserved();
+        let memory = crate::static_worker::parser_memory(&runtime, MEMORY_BYTES)?;
+        assert_eq!(pool.reserved(), baseline + MEMORY_BYTES as usize);
+        let mut spawned = child(&runtime, "/bin/sleep", &["30"], (permit, memory));
+        let pid = spawned.child().id().unwrap();
         assert!(
-            tokio::time::timeout(Duration::from_secs(1), completion)
+            tokio::time::timeout(Duration::from_millis(20), runtime.parser_permit())
                 .await
-                .expect("prompt cancellation")
-                .expect("completion")
+                .is_err()
         );
-        assert!(
-            !std::path::Path::new(&format!("/proc/{pid}")).exists(),
-            "child reaped after caller drop"
+        assert_eq!(
+            runtime
+                .execute(runtime.session().sql("SELECT 1 AS value").await?)
+                .await?
+                .rows,
+            1
         );
+        let task = tokio::spawn(supervise(
+            spawned,
+            b"",
+            tokio::time::Instant::now() + Duration::from_secs(60),
+        ));
+        task.abort();
+        assert!(task.await.unwrap_err().is_cancelled());
+        runtime.close_diagnostics().await?;
+        assert!(runtime.parser_permit().await.is_err());
+        assert!(!std::path::Path::new(&format!("/proc/{pid}")).exists());
+        assert_eq!(pool.reserved(), baseline);
+        Ok(())
     }
 }

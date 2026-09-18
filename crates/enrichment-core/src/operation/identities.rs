@@ -75,6 +75,26 @@ crate::native_struct! {
     }
 }
 crate::native_struct! {
+    pub struct RustdocBuildConfiguration {
+        environment: crate::identity::Environment => Rule::Text,
+        rustc_identity: String => Rule::NonEmpty,
+        producer_version: String => Rule::NonEmpty,
+        format_version: u32 => Rule::Text,
+        image_id: String => Rule::NonEmpty,
+        containment_identity: String => Rule::Sha256,
+    }
+}
+impl RustdocBuildConfiguration {
+    /// Retained configuration bytes use the same native value encoder as other producer
+    /// inputs. JSON rendering and member order cannot become configuration authority.
+    pub fn canonical_bytes(&self) -> datafusion::common::Result<Vec<u8>> {
+        crate::native_identity::record_bytes(
+            "enrichment/rustdoc-build-configuration/1",
+            <Self as crate::native_union::NativeStruct>::encode(&[Some(self)])?,
+        )
+    }
+}
+crate::native_struct! {
     pub struct CapsuleIdentity {
         release: crate::identity::Release => Rule::Text,
         environment: crate::identity::Environment => Rule::Text,

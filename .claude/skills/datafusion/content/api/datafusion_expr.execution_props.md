@@ -28,6 +28,9 @@ fn start_execution(&mut self) -> &Self
 fn with_query_execution_start_time(self, query_execution_start_time: DateTime<Utc>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.execution_props.ExecutionProps.md).
+
+
 Holds properties and scratch state used while optimizing a [`LogicalPlan`]
 and translating it into an executable physical plan, such as the statement
 start time used during simplification.

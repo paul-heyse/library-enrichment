@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 3 public items · structured records in [`model/buoyan
 ## ActionsWithCheckpointInfo
 
 `struct` · `buoyant_kernel::log_segment::ActionsWithCheckpointInfo`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.log_segment.ActionsWithCheckpointInfo.md)
 
 Also reachable as `delta_kernel::log_segment::ActionsWithCheckpointInfo`
 
@@ -24,6 +25,7 @@ This struct provides named access to the return values instead of tuple indexing
 ## CheckpointReadInfo
 
 `struct` · `buoyant_kernel::log_segment::CheckpointReadInfo`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.log_segment.CheckpointReadInfo.md)
 
 Also reachable as `delta_kernel::log_segment::CheckpointReadInfo`
 
@@ -58,6 +60,7 @@ Returned alongside the actions iterator from checkpoint reading functions.
 ## LogSegment
 
 `struct` · `buoyant_kernel::log_segment::LogSegment`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.log_segment.LogSegment.md)
 
 Also reachable as `delta_kernel::log_segment::LogSegment`
 

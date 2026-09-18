@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## DataLayout
 
 `enum` · `buoyant_kernel::transaction::data_layout::DataLayout`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transaction.data_layout.DataLayout.md)
 
 Also reachable as `delta_kernel::transaction::data_layout::DataLayout`
 

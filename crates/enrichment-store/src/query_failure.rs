@@ -139,9 +139,16 @@ fn diagnose(source: Source<'_>) -> Diagnostic {
                     error.downcast_ref::<crate::preparation::InvariantFailure>()
                 {
                     invariant.apply(&mut diagnostic);
-                    diagnostic.actions.push(RecoveryAction::ReportDefect {
+                    if matches!(
+                        invariant.cause,
+                        DiagnosticCause::CorruptState
+                            | DiagnosticCause::Internal
+                            | DiagnosticCause::InvalidPlan
+                    ) {
+                        diagnostic.actions.push(RecoveryAction::ReportDefect {
                             reason: "Report the named invariant, affected identities and correlation ID; this is a native admission or result-contract failure.".into(),
                         });
+                    }
                     invariant.cause
                 } else if let Some(error) = error.downcast_ref::<std::io::Error>() {
                     io_cause(error)

@@ -31,6 +31,9 @@ fn to_usize(self) -> Option<usize>
 fn usize_as(i: usize) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.native.ArrowNativeType.md).
+
+
 Trait expressing a Rust type that has the same in-memory representation as
 Arrow.
 
@@ -74,6 +77,9 @@ trait ToByteSlice
 ```rust
 fn to_byte_slice(&self) -> &[u8]
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.native.ToByteSlice.md).
+
 
 Allows conversion from supported Arrow types to a byte slice.
 

@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 1 public items · structured records in [`model/buoyan
 ## ColumnTrie
 
 `struct` · `buoyant_kernel::column_trie::ColumnTrie`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.column_trie.ColumnTrie.md)
 
 Also reachable as `delta_kernel::column_trie::ColumnTrie`
 

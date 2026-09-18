@@ -16,6 +16,9 @@ struct DocSection
 
 **Derives**: Clone, Debug, Default, Eq, Hash, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.DocSection.md).
+
+
 ---
 
 ## Documentation
@@ -38,6 +41,9 @@ struct Documentation
 fn builder(doc_section: DocSection, description: impl Into<String>, syntax_example: impl Into<String>) -> DocumentationBuilder
 fn to_doc_attribute(&self) -> String
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.Documentation.md).
+
 
 Documentation for use by `ScalarUDFImpl`, `AggregateUDFImpl` and `WindowUDFImpl` functions.
 
@@ -84,6 +90,9 @@ fn with_sql_example(self, sql_example: impl Into<String>) -> Self
 fn with_standard_argument(self, arg_name: impl Into<String>, expression_type: Option<&str>) -> Self
 fn with_syntax_example(self, syntax_example: impl Into<String>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_doc.DocumentationBuilder.md).
+
 
 A builder for [`Documentation`]'s.
 

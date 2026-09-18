@@ -41,6 +41,9 @@ fn table_type(&self) -> TableType
 async fn update(&self, state: &dyn Session, assignments: Vec<(String, Expr)>, filters: Vec<Expr>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.memory.table.MemTable.md).
+
+
 In-memory data source for presenting a `Vec<RecordBatch>` as a
 data source that can be queried by DataFusion. This allows data to
 be pre-loaded into memory and then repeatedly queried without

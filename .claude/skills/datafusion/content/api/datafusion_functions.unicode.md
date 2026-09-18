@@ -10,6 +10,9 @@ Crate `datafusion-functions` · 14 public items · structured records in [`model
 fn character_length() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.character_length.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of character_length
 
 ---
@@ -21,6 +24,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of character_l
 ```rust
 fn find_in_set() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.find_in_set.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of find_in_set
 
@@ -34,6 +40,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of find_in_set
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.functions.md).
+
+
 Returns all DataFusion functions defined in this package
 
 ---
@@ -45,6 +54,9 @@ Returns all DataFusion functions defined in this package
 ```rust
 fn initcap() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.initcap.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of initcap
 
@@ -58,6 +70,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of initcap
 fn left() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.left.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of left
 
 ---
@@ -69,6 +84,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of left
 ```rust
 fn lpad() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.lpad.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of lpad
 
@@ -82,6 +100,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of lpad
 fn reverse() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.reverse.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of reverse
 
 ---
@@ -93,6 +114,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of reverse
 ```rust
 fn right() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.right.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of right
 
@@ -106,6 +130,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of right
 fn rpad() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.rpad.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of rpad
 
 ---
@@ -117,6 +144,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of rpad
 ```rust
 fn strpos() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.strpos.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of strpos
 
@@ -130,6 +160,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of strpos
 fn substr() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.substr.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of substr
 
 ---
@@ -141,6 +174,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of substr
 ```rust
 fn substr_index() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.substr_index.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of substr_index
 
@@ -154,6 +190,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of substr_inde
 fn substring() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.substring.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of substring
 
 ---
@@ -165,6 +204,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of substring
 ```rust
 fn translate() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.unicode.translate.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of translate
 

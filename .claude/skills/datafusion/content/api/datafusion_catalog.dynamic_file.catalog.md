@@ -28,6 +28,9 @@ fn catalog_names(&self) -> Vec<String>
 fn register_catalog(&self, name: String, catalog: Arc<dyn CatalogProvider>) -> Option<Arc<dyn CatalogProvider>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.dynamic_file.catalog.DynamicFileCatalog.md).
+
+
 Wrap another catalog provider list
 
 ---
@@ -60,6 +63,9 @@ fn table_exist(&self, name: &str) -> bool
 fn table_names(&self) -> Vec<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.dynamic_file.catalog.DynamicFileSchemaProvider.md).
+
+
 Implements the [DynamicFileSchemaProvider] that can create tables provider from the file path.
 
 The provider will try to create a table provider from the file path if the table provider
@@ -84,6 +90,9 @@ trait UrlTableFactory: Debug + Sync + Send
 ```rust
 async fn try_new(&self, url: &str) -> datafusion_common::Result<Option<Arc<dyn TableProvider>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.dynamic_file.catalog.UrlTableFactory.md).
+
 
 [UrlTableFactory] is a factory that can create a table provider from the given url.
 

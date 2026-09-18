@@ -35,6 +35,9 @@ fn supports_filters_pushdown(&self, filters: &[&Expr]) -> Result<Vec<TableProvid
 fn table_type(&self) -> TableType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.view.ViewTable.md).
+
+
 An implementation of `TableProvider` that uses another logical plan.
 
 ---

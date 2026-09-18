@@ -16,7 +16,7 @@ pub async fn research(
         datafusion::common::cast::as_struct_array(&values)?.clone(),
     );
     let schema = batch.schema();
-    let frame = session.read_batch(batch)?;
+    let frame = crate::native_catalog::batch(&session, "request_admission", batch)?;
     let input = frame.clone();
     if let Some(invalid) = runtime
         .native_read(
@@ -50,6 +50,8 @@ pub async fn research(
         UNION ALL SELECT 'inspection_preview_scope' FROM aspects a JOIN operation.declarations.inspection_aspects d ON a.aspect.aspect=d.aspect
           WHERE a.aspect.max_characters IS NOT NULL AND NOT d.preview
         UNION ALL SELECT 'inspection_cursor_bound' FROM aspects WHERE octet_length(aspect.cursor)>32768
+        UNION ALL SELECT 'inspection_singleton_cursor' FROM aspects a JOIN operation.declarations.inspection_aspects d ON a.aspect.aspect=d.aspect
+          WHERE a.aspect.cursor IS NOT NULL AND d.observation IN ('source','configuration')
         UNION ALL SELECT 'duplicate_discovery_kind' FROM discovery GROUP BY facet.kind HAVING count(*)>1
         UNION ALL SELECT 'discovery_cursor_bound' FROM discovery WHERE octet_length(facet.cursor)>32768
         UNION ALL SELECT 'runtime_execution_selection' FROM execution
@@ -155,7 +157,8 @@ pub(crate) async fn validate(
     research(runtime, &arguments.clone().into(), input_bound).await?;
     let session = runtime.session();
     let values = Arguments::encode(&[Some(arguments)])?;
-    session.register_batch(
+    crate::native_catalog::input(
+        &session,
         "request_input",
         arrow::record_batch::RecordBatch::from(
             datafusion::common::cast::as_struct_array(&values)?.clone(),
@@ -164,8 +167,8 @@ pub(crate) async fn validate(
     let scope = session.sql(r#"
       SELECT 'missing_pinned_job_scope' AS witness FROM request_input
       WHERE kind IN ('verify','inspect') AND (
-        coalesce(verify.request.context_id,inspect.request.context_id) IS NULL OR
-        coalesce(verify.request.snapshot_id,inspect.request.snapshot_id) IS NULL)
+        native_coalesce(verify.request.context_id,inspect.request.context_id) IS NULL OR
+        native_coalesce(verify.request.snapshot_id,inspect.request.snapshot_id) IS NULL)
       UNION ALL SELECT 'missing_inspection_execution_intent' FROM request_input
       WHERE kind='inspect' AND (inspect.request.execution IS NULL OR inspect.request.execution.intent='retained')
       UNION ALL SELECT 'comparison_acquisition_form' FROM request_input
@@ -252,6 +255,27 @@ mod tests {
             selection: Default::default(),
             max_bytes: None,
         };
+        assert!(
+            validate(
+                &runtime,
+                &Arguments::Inspect {
+                    request: inspect.clone()
+                },
+                32768
+            )
+            .await
+            .is_err(),
+            "execution requires an explicit matching observation aspect"
+        );
+        let selected = |aspect| enrichment_core::wire::ResearchSelection::Explicit {
+            aspects: vec![enrichment_core::wire::AspectSelection {
+                aspect,
+                cursor: None,
+                max_items: 32,
+                max_characters: None,
+            }],
+        };
+        inspect.selection = selected(enrichment_core::wire::InspectionAspect::Semantics);
         validate(
             &runtime,
             &Arguments::Inspect {
@@ -288,6 +312,7 @@ mod tests {
             }),
             ..Default::default()
         });
+        inspect.selection = selected(enrichment_core::wire::InspectionAspect::Runtime);
         validate(
             &runtime,
             &Arguments::Inspect {
@@ -314,7 +339,7 @@ mod tests {
             release_id: format!("rel_{}", "1".repeat(64)).try_into().unwrap(),
             environment_id: format!("env_{}", "1".repeat(64)).try_into().unwrap(),
             context_id: format!("ctx_{}", "1".repeat(64)).try_into().unwrap(),
-            attempt_id: "attempt".into(),
+            attempt_id: enrichment_core::identity::AttemptId::new(),
             input_artifact_ids: vec![format!("art_{}", "a".repeat(64))],
             result_artifact_id: format!("art_{}", "a".repeat(64)),
         };

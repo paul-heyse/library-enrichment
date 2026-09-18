@@ -5,6 +5,7 @@ Crate `deltalake-core` · 4 public items · structured records in [`model/deltal
 ## DataFusionDataReader
 
 `struct` · `deltalake_core::datafile::datafusion_ext::DataFusionDataReader`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.datafusion_ext.DataFusionDataReader.md)
 
 Also reachable as `deltalake::datafile::datafusion_ext::DataFusionDataReader`
 
@@ -41,6 +42,7 @@ It carries its own session so it can also satisfy [`DeltaDataReader`].
 ## ScanOptions
 
 `struct` · `deltalake_core::datafile::datafusion_ext::ScanOptions`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.datafusion_ext.ScanOptions.md)
 
 Also reachable as `deltalake::datafile::datafusion_ext::ScanOptions`
 
@@ -67,6 +69,7 @@ Options controlling a DataFusion-backed scan.
 ## DeltaDataReaderExt
 
 `trait` · `deltalake_core::datafile::datafusion_ext::DeltaDataReaderExt`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.datafusion_ext.DeltaDataReaderExt.md)
 
 Also reachable as `deltalake::datafile::datafusion_ext::DeltaDataReaderExt`
 
@@ -91,6 +94,7 @@ DataFusion extension to [`DeltaDataReader`]: a full scan with pushdown.
 ## DeltaDataWriterExt
 
 `trait` · `deltalake_core::datafile::datafusion_ext::DeltaDataWriterExt`
+[Full member contracts, output types and access classification](../operations/deltalake_core.datafile.datafusion_ext.DeltaDataWriterExt.md)
 
 Also reachable as `deltalake::datafile::datafusion_ext::DeltaDataWriterExt`
 

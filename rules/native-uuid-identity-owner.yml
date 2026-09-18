@@ -1,0 +1,21 @@
+id: native-uuid-identity-owner
+language: Rust
+severity: error
+message: Durable job and lifecycle identities use distinct core binary declarations.
+files:
+  - crates/enrichment-core/src/**/*.rs
+  - crates/enrichment-store/src/**/*.rs
+  - crates/enrichment-daemon/src/**/*.rs
+rule:
+  any:
+    - kind: field_declaration
+      has:
+        field: name
+        regex: '^(job_id|interest_id|attempt_id|producing_attempt|lease_id|obligation_id|run_id|owner_id|reservation_id)$'
+      regex: '\b(job_id|interest_id|attempt_id|producing_attempt|lease_id|obligation_id|run_id|owner_id|reservation_id)\s*:\s*(String|&str)\b'
+    - kind: macro_invocation
+      has:
+        field: macro
+        regex: '(^|::)native_(struct|split_record|union)$'
+      regex: '\b(job_id|interest_id|attempt_id|producing_attempt|lease_id|obligation_id|run_id|owner_id|reservation_id)\s*:\s*(String|&str)\b'
+note: This source-shape guard prevents the retired text field owner. Full-field admission and parameter units establish domain behavior; path and diagnostic rendering remain boundary operations.

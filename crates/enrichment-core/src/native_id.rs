@@ -1,4 +1,4 @@
-//! Checked identity construction and diagnostic representation at native expression boundaries.
+//! Checked binary identity/digest construction and diagnostic representation at native boundaries.
 //! Hashing, comparisons and hex formatting remain built-in DataFusion operations.
 use crate::{
     native_types::{IdentityType, TypeMetadata},
@@ -24,32 +24,56 @@ enum Direction {
     Bytes,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum Meaning {
+    Identity(Domain),
+    Sha256,
+}
+impl Meaning {
+    fn name(self) -> &'static str {
+        match self {
+            Self::Identity(domain) => domain.prefix(),
+            Self::Sha256 => "sha256_digest",
+        }
+    }
+    fn field(self, nullable: bool) -> Field {
+        match self {
+            Self::Identity(domain) => identity_field(domain, nullable),
+            Self::Sha256 => crate::native_union::field::<crate::native_digest::Sha256Digest>(
+                "digest",
+                crate::native_union::Rule::Text,
+            )
+            .with_nullable(nullable),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash)]
 struct IdentityProjection {
-    domain: Domain,
+    meaning: Meaning,
     direction: Direction,
     name: String,
     signature: Signature,
 }
 
-fn function(domain: Domain, direction: Direction) -> ScalarUDF {
+fn function(meaning: Meaning, direction: Direction) -> ScalarUDF {
     let name = format!(
         "native_identity_{}_{}/10",
-        domain.prefix(),
+        meaning.name(),
         match direction {
             Direction::FromHash => "from_hash",
             Direction::Bytes => "bytes",
         }
     );
     ScalarUDF::from(IdentityProjection {
-        domain,
+        meaning,
         direction,
         name,
         signature: Signature::user_defined(Volatility::Immutable),
     })
 }
 fn identity_field(domain: Domain, nullable: bool) -> Field {
-    let kind = DataType::FixedSizeBinary(32);
+    let kind = DataType::FixedSizeBinary(domain.byte_width());
     let extension =
         IdentityType::try_new(&kind, TypeMetadata::new(domain)).expect("declared identity domain");
     Field::new("identity", kind, nullable).with_extension_type(extension)
@@ -57,7 +81,11 @@ fn identity_field(domain: Domain, nullable: bool) -> Field {
 
 /// Only the typed native hash path grants an identity domain to its 32-byte result.
 pub fn from_hash(domain: Domain, hash: Expr) -> Expr {
-    function(domain, Direction::FromHash).call(vec![hash])
+    function(Meaning::Identity(domain), Direction::FromHash).call(vec![hash])
+}
+
+pub(crate) fn digest_from_hash(hash: Expr) -> Expr {
+    function(Meaning::Sha256, Direction::FromHash).call(vec![hash])
 }
 
 /// One-way diagnostic projection: the result is text and cannot compare as an identity.
@@ -80,10 +108,14 @@ pub fn diagnostic(field: &Field, value: Expr) -> Result<Expr> {
                 .map(String::as_str),
         )?;
         let domain = *metadata.meaning();
-        Ok(concat(vec![
+        datafusion::logical_expr::when(
+            value.clone().is_null(),
+            lit(datafusion::common::ScalarValue::Utf8(None)),
+        )
+        .otherwise(concat(vec![
             lit(format!("{}_", domain.prefix())),
             encode(
-                function(domain, Direction::Bytes).call(vec![value]),
+                function(Meaning::Identity(domain), Direction::Bytes).call(vec![value]),
                 lit("hex"),
             ),
         ]))
@@ -114,7 +146,7 @@ impl ScalarUDFImpl for IdentityProjection {
     fn coerce_types(&self, types: &[DataType]) -> Result<Vec<DataType>> {
         let expected = match self.direction {
             Direction::FromHash => DataType::Binary,
-            Direction::Bytes => DataType::FixedSizeBinary(32),
+            Direction::Bytes => self.meaning.field(true).data_type().clone(),
         };
         if types != [expected] {
             return datafusion::common::plan_err!(
@@ -124,9 +156,16 @@ impl ScalarUDFImpl for IdentityProjection {
         Ok(types.to_vec())
     }
     fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<FieldRef> {
+        if self.direction == Direction::FromHash
+            && self.meaning.field(true).data_type() != &DataType::FixedSizeBinary(32)
+        {
+            return datafusion::common::plan_err!(
+                "a UUID identity cannot be constructed from a hash"
+            );
+        }
         let input = match self.direction {
             Direction::FromHash => Field::new("hash", DataType::Binary, true),
-            Direction::Bytes => identity_field(self.domain, true),
+            Direction::Bytes => self.meaning.field(true),
         };
         crate::native_schema::function_arguments(args.arg_fields, &[Arc::new(input)])?;
         if args.scalar_arguments.len() != 1 {
@@ -134,7 +173,7 @@ impl ScalarUDFImpl for IdentityProjection {
         }
         let nullable = args.arg_fields[0].is_nullable();
         Ok(Arc::new(match self.direction {
-            Direction::FromHash => identity_field(self.domain, nullable),
+            Direction::FromHash => self.meaning.field(nullable),
             Direction::Bytes => Field::new(self.name(), DataType::Binary, nullable),
         }))
     }

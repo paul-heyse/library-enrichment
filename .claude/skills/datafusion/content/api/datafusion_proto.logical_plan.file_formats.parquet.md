@@ -27,4 +27,7 @@ fn try_encode_file_format(&self, buf: &mut Vec<u8>, node: Arc<dyn FileFormatFact
 fn try_encode_table_provider(&self, _table_ref: &TableReference, _node: Arc<dyn datafusion_catalog::TableProvider>, _buf: &mut Vec<u8>) -> datafusion_common::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_proto.logical_plan.file_formats.parquet.ParquetLogicalExtensionCodec.md).
+
+
 ---

@@ -204,14 +204,20 @@ impl QueryPlanner for NativePlanner {
         logical: &LogicalPlan,
         session: &dyn Session,
     ) -> Result<Arc<dyn ExecutionPlan>> {
-        DefaultPhysicalPlanner::with_extension_planners(vec![
+        // SessionState invokes this after optimization, including when a Delta operation
+        // plans internally. A service execute() wrapper alone would leave that path open.
+        let logical = logical.clone().resolve_lambda_variables()?.data;
+        enrichment_core::native_analysis::validate_plan(&logical)?;
+        let plan = DefaultPhysicalPlanner::with_extension_planners(vec![
             Arc::new(ContractPlanner),
             Arc::new(crate::leases::RetentionExtensionPlanner),
             Arc::new(crate::native_effect::CommandPlanner),
             Arc::new(crate::operation_index::MaterializationPlanner),
             deltalake::delta_datafusion::planner::DeltaExtensionPlanner::new(),
         ])
-        .create_physical_plan(logical, session)
-        .await
+        .create_physical_plan(&logical, session)
+        .await?;
+        crate::preparation::admit_physical(&plan)?;
+        Ok(plan)
     }
 }

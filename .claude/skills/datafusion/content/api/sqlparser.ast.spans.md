@@ -162,6 +162,9 @@ trait Spanned
 fn span(&self) -> Span
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.spans.Spanned.md).
+
+
 Trait for AST nodes that have a source location information.
 
 # Notes:

@@ -1,0 +1,163 @@
+[
+  {
+    "id": "3dc255502e1005cc9fe11e85",
+    "path": "arrow_json::reader::schema::infer_json_schema",
+    "name": "infer_json_schema",
+    "owner": null,
+    "crate": "arrow-json",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn infer_json_schema<R: BufRead>(reader: R, max_read_records: Option<usize>) -> Result<(arrow_schema::Schema, usize), arrow_schema::ArrowError>",
+    "docs": "Infer the fields of a JSON file by reading the first n records of the buffer, with\n`max_read_records` controlling the maximum number of records to read.\n\nIf `max_read_records` is not set, the whole file is read to infer its field types.\n\nReturns inferred schema and number of records read.\n\nThis function will not seek back to the start of the `reader`. The user has to manage the\noriginal file's cursor. This function is useful when the `reader`'s cursor is not available\n(does not implement [`Seek`]), such is the case for compressed streams decoders.\n\n\nNote that JSON is not able to represent all Arrow data types exactly. So the inferred schema\nmight be different from the schema of the original data that was encoded as JSON. For example,\nJSON does not have different integer types, so all integers are inferred as `Int64`. Another\nexample is binary data, which is encoded as a [Base16] string in JSON and therefore inferred\nas String type by this function.\n\n[Base16]: https://en.wikipedia.org/wiki/Base16#Base16\n\n# Examples\n```\nuse std::fs::File;\nuse std::io::{BufReader, SeekFrom, Seek};\nuse flate2::read::GzDecoder;\nuse arrow_json::reader::infer_json_schema;\n\nlet mut file = File::open(\"test/data/mixed_arrays.json.gz\").unwrap();\n\n// file's cursor's offset at 0\nlet mut reader = BufReader::new(GzDecoder::new(&file));\nlet inferred_schema = infer_json_schema(&mut reader, None).unwrap();\n// cursor's offset at end of file\n\n// seek back to start so that the original file is usable again\nfile.seek(SeekFrom::Start(0)).unwrap();\n```",
+    "span": {
+      "filename": "src/reader/schema.rs",
+      "begin": [
+        203,
+        1
+      ],
+      "end": [
+        210,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "reader",
+              {
+                "generic": "R"
+              }
+            ],
+            [
+              "max_read_records",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 11,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "primitive": "usize"
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 12,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": [
+                          {
+                            "resolved_path": {
+                              "path": "arrow_schema::Schema",
+                              "id": 13,
+                              "args": null
+                            }
+                          },
+                          {
+                            "primitive": "usize"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "arrow_schema::ArrowError",
+                          "id": 14,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "R",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "BufRead",
+                          "id": 15,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "11": "core::option::Option",
+      "12": "core::result::Result",
+      "13": "arrow_schema::schema::Schema",
+      "14": "arrow_schema::error::ArrowError",
+      "15": "alloc::io::buf_read::BufRead"
+    },
+    "impl_context": null,
+    "links": {
+      "`Seek`": 16
+    },
+    "link_paths": {
+      "`Seek`": "core::io::seek::Seek"
+    },
+    "artifact": {
+      "id": "dd4cd3d73c7a2495b6756e2be8c5f04e18225bd265f764ae397c35bc0edac616",
+      "format_version": 61,
+      "item_id": "8",
+      "origin": "https://docs.rs/crate/arrow-json/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_json.reader.schema.infer_json_schema.md",
+    "record_file": "operations/arrow_json.reader.schema.infer_json_schema.json",
+    "anchor": "op-3dc255502e1005cc9fe11e85",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

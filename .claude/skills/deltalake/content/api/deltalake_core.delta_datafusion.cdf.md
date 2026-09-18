@@ -5,6 +5,7 @@ Crate `deltalake-core` · 4 public items · structured records in [`model/deltal
 ## CHANGE_TYPE_COL
 
 `constant` · `deltalake_core::delta_datafusion::cdf::CHANGE_TYPE_COL`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.cdf.CHANGE_TYPE_COL.md)
 
 Also reachable as `deltalake::delta_datafusion::cdf::CHANGE_TYPE_COL`
 
@@ -19,6 +20,7 @@ Change type column name
 ## COMMIT_TIMESTAMP_COL
 
 `constant` · `deltalake_core::delta_datafusion::cdf::COMMIT_TIMESTAMP_COL`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.cdf.COMMIT_TIMESTAMP_COL.md)
 
 Also reachable as `deltalake::delta_datafusion::cdf::COMMIT_TIMESTAMP_COL`
 
@@ -33,6 +35,7 @@ Commit Timestamp column name
 ## COMMIT_VERSION_COL
 
 `constant` · `deltalake_core::delta_datafusion::cdf::COMMIT_VERSION_COL`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.cdf.COMMIT_VERSION_COL.md)
 
 Also reachable as `deltalake::delta_datafusion::cdf::COMMIT_VERSION_COL`
 
@@ -47,6 +50,7 @@ Commit version column name
 ## FileAction
 
 `trait` · `deltalake_core::delta_datafusion::cdf::FileAction`
+[Full member contracts, output types and access classification](../operations/deltalake_core.delta_datafusion.cdf.FileAction.md)
 
 Also reachable as `deltalake::delta_datafusion::cdf::FileAction`
 

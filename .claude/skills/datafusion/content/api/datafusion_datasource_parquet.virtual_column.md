@@ -30,6 +30,9 @@ fn field(&self) -> &FieldRef
 fn try_from(field: &FieldRef) -> Result<Self>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_parquet.virtual_column.ParquetVirtualColumn.md).
+
+
 A parquet virtual column validated to have a supported arrow extension
 type.
 

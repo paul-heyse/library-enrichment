@@ -29,6 +29,9 @@ fn return_type(&self, _: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.array.array_contains.SparkArrayContains.md).
+
+
 Spark-compatible `array_contains` function.
 
 Calls DataFusion's `array_has` and then applies Spark's null semantics:

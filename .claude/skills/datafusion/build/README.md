@@ -1,9 +1,19 @@
 # The builder
 
+Reader/research packaging, evidence scope and update workflow are in [maintenance.md](../maintenance.md).
+The builder now preserves full member/module/field/variant contracts and renders reviewed task routes.
+`content/operations` keeps raw type trees separate from display signatures; diagnostics retain unresolved
+links rather than inventing paths. `authoring/` owns curated decisions; generated pages are never edited.
+
+Additional checks: `python3 test_contracts.py` (all-record raw preservation plus reader behavior),
+`python3 test_identity.py` (artifact-ID renumbering), and `../scripts/run_probes.py` (locked runtime
+assertions and registry capture). These are distinct from navigation regexes and deterministic output.
+
+
 Regenerates `content/` and the generated rules from pinned upstream sources.
 
 ```bash
-python3 build.py                      # ~14s warm; first run downloads ~110 MB into .cache/
+python3 build.py                      # uses exact cached inputs; missing inputs are downloaded into .cache/
 python3 build.py --stage model        # indexes only, skip pages and corpora
 python3 verify.py                     # rebuild, then five checks
 python3 verify.py --skip-rebuild      # check recorded digests only
@@ -25,6 +35,9 @@ Zstd comes from `compression.zstd` on Python 3.14+, falling back to the `zstd` C
 | `model.py` | Walks each crate into a canonical item table, then stitches re-exports across all 60. |
 | `render.py` | rustdoc `Type` trees back into Rust signature text. |
 | `link.py` | Runs ast-grep over the example corpus to derive symbol-to-example edges structurally. |
+| `contracts.py` | Preserves and renders full contracts, source spans, raw types and artifact-scoped links. |
+| `capabilities.py` | Validates authored decisions/evidence, generates task/crate/representation routes and invalidation edges. |
+| `licenses.py` | Retains notices from every exact crate archive. |
 | `emit.py` | Writes `model/`, `api/`, and `PROVENANCE.json`. |
 | `traits.py` | Writes one page per extension point. |
 | `topics.py` | Writes one page per capability axis, from the seeds in `topics.json`. |

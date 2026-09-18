@@ -42,6 +42,9 @@ fn deserialize<__D>(__deserializer: __D) -> _serde::__private228::Result<Self, _
 fn serialize<__S>(&self, __serializer: __S) -> _serde::__private228::Result<__S::Ok, __S::Error> where __S: _serde::Serializer
 ```
 
+[Full member, field, variant and typed contracts](../operations/object_store.gcp.builder.GoogleConfigKey.md).
+
+
 Configuration keys for [`GoogleCloudStorageBuilder`]
 
 Configuration via keys can be done via [`GoogleCloudStorageBuilder::with_config`]
@@ -91,6 +94,9 @@ fn with_service_account_path(self, service_account_path: impl Into<String>) -> S
 fn with_skip_signature(self, skip_signature: bool) -> Self
 fn with_url(self, url: impl Into<String>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.gcp.builder.GoogleCloudStorageBuilder.md).
+
 
 Configure a connection to Google Cloud Storage.
 

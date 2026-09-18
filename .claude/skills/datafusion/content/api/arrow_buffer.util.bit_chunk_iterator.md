@@ -29,6 +29,9 @@ fn next(&mut self) -> Option<u64>
 fn size_hint(&self) -> (usize, Option<usize>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_chunk_iterator.BitChunkIterator.md).
+
+
 Iterator over chunks of 64 bits represented as an u64
 
 ---
@@ -66,6 +69,9 @@ const fn remainder_len(&self) -> usize
 fn into_iter(self) -> Self::IntoIter
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_chunk_iterator.BitChunks.md).
+
+
 Iterates over an arbitrarily aligned byte buffer 64 bits at a time
 
 [`Self::iter`] yields iterator of `u64`, and a remainder. The first byte in the buffer
@@ -98,6 +104,9 @@ fn suffix(&self) -> Option<u64>
 fn trailing_padding(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_chunk_iterator.UnalignedBitChunk.md).
+
+
 Iterates over an arbitrarily aligned byte buffer
 
 Yields an iterator of aligned u64, along with the leading and trailing
@@ -117,6 +126,9 @@ Also reachable as `arrow::util::bit_chunk_iterator::UnalignedBitChunkIterator`
 ```rust
 type UnalignedBitChunkIterator<'a> = std::iter::Chain<std::iter::Chain<std::option::IntoIter<u64>, std::iter::Cloned<std::slice::Iter<'a, u64>>>, std::option::IntoIter<u64>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_buffer.util.bit_chunk_iterator.UnalignedBitChunkIterator.md).
+
 
 Iterator over an [`UnalignedBitChunk`]
 

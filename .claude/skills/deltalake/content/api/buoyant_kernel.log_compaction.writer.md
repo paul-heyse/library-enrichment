@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## should_compact
 
 `function` · `buoyant_kernel::log_compaction::writer::should_compact`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.log_compaction.writer.should_compact.md)
 
 Also reachable as `buoyant_kernel::should_compact`, `delta_kernel::log_compaction::writer::should_compact`
 
@@ -22,6 +23,7 @@ Always returns `false` because log compaction is currently disabled.
 ## LogCompactionWriter
 
 `struct` · `buoyant_kernel::log_compaction::writer::LogCompactionWriter`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.log_compaction.writer.LogCompactionWriter.md)
 
 Also reachable as `buoyant_kernel::LogCompactionWriter`, `delta_kernel::log_compaction::writer::LogCompactionWriter`
 
@@ -38,12 +40,6 @@ struct LogCompactionWriter
 ```rust
 fn compaction_data(&mut self, engine: &dyn Engine) -> DeltaResult<ActionReconciliationIterator>
 fn compaction_path(&self) -> &url::Url
-```
-
-**via `buoyant_kernel::action_reconciliation::RetentionCalculator`**
-
-```rust
-fn table_properties(&self) -> &TableProperties
 ```
 
 Writer for log compaction files

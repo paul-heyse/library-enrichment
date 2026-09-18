@@ -110,6 +110,7 @@ pub(super) fn read(
         filled,
         binding,
         bytes,
+        pool: context.memory_pool().clone(),
     };
     let stream = futures::stream::try_unfold(
         (input, reader, cancellation),
@@ -119,7 +120,12 @@ pub(super) fn read(
                 () = cancellation.cancelled() => return Err(super::invalid("operation materialization reader cancelled")),
                 batch = input.try_next() => batch?,
             };
-            Ok(batch.map(|batch| (batch, (input, reader, cancellation))))
+            batch
+                .map(|batch| {
+                    crate::owned_batch::claim(&batch, &reader.pool, "operation-cache-output")?;
+                    Ok((batch, (input, reader, cancellation)))
+                })
+                .transpose()
         },
     );
     Ok(Box::pin(RecordBatchStreamAdapter::new(schema, stream)))
@@ -131,6 +137,7 @@ struct Reader {
     filled: Arc<Filled>,
     binding: Arc<Binding>,
     bytes: usize,
+    pool: Arc<dyn datafusion::execution::memory_pool::MemoryPool>,
 }
 impl Drop for Reader {
     fn drop(&mut self) {

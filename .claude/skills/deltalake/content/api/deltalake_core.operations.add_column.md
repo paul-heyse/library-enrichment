@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## AddColumnBuilder
 
 `struct` · `deltalake_core::operations::add_column::AddColumnBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.add_column.AddColumnBuilder.md)
 
 Also reachable as `deltalake::operations::add_column::AddColumnBuilder`
 
@@ -26,13 +27,6 @@ fn with_fields(self, fields: impl IntoIterator<Item = StructField> + Clone) -> S
 
 ```rust
 fn into_future(self) -> Self::IntoFuture
-```
-
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
 ```
 
 Add new columns and/or nested fields to a table

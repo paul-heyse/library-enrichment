@@ -1,0 +1,109 @@
+[
+  {
+    "id": "b2d3d71b2a2cc696513bb543",
+    "path": "parquet::arrow",
+    "name": "arrow",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod arrow",
+    "docs": " API for reading/writing Arrow [`RecordBatch`]es and [`Array`]s to/from\n Parquet Files.\n\n See the [crate-level documentation](crate) for more details on other APIs\n\n # Schema Conversion\n\n These APIs ensure that data in Arrow [`RecordBatch`]es written to Parquet are\n read back as [`RecordBatch`]es with the exact same types and values.\n\n Parquet and Arrow have different type systems, and there is not\n always a one to one mapping between the systems. For example, data\n stored as a Parquet [`BYTE_ARRAY`] can be read as either an Arrow\n [`BinaryViewArray`] or [`BinaryArray`].\n\n To recover the original Arrow types, the writers in this module add a \"hint\" to\n the metadata in the [`ARROW_SCHEMA_META_KEY`] key which records the original Arrow\n schema. The metadata hint follows the same convention as arrow-cpp based\n implementations such as `pyarrow`. The reader looks for the schema hint in the\n metadata to determine Arrow types, and if it is not present, infers the Arrow schema\n from the Parquet schema.\n\n In situations where the embedded Arrow schema is not compatible with the Parquet\n schema, the Parquet schema takes precedence and no error is raised.\n See [#1663](https://github.com/apache/arrow-rs/issues/1663)\n\n You can also control the type conversion process in more detail using:\n\n * [`ArrowSchemaConverter`] control the conversion of Arrow types to Parquet\n   types.\n\n * [`ArrowReaderOptions::with_schema`] to explicitly specify your own Arrow schema hint\n   to use when reading Parquet, overriding any metadata that may be present.\n\n [`RecordBatch`]: arrow_array::RecordBatch\n [`Array`]: arrow_array::Array\n [`BYTE_ARRAY`]: crate::basic::Type::BYTE_ARRAY\n [`BinaryViewArray`]: arrow_array::BinaryViewArray\n [`BinaryArray`]: arrow_array::BinaryArray\n [`ArrowReaderOptions::with_schema`]: arrow_reader::ArrowReaderOptions::with_schema\n\n # Example: Writing Arrow `RecordBatch` to Parquet file\n\n```rust\n # use arrow_array::{Int32Array, ArrayRef};\n # use arrow_array::RecordBatch;\n # use parquet::arrow::arrow_writer::ArrowWriter;\n # use parquet::file::properties::WriterProperties;\n # use tempfile::tempfile;\n # use std::sync::Arc;\n # use parquet::basic::Compression;\n let ids = Int32Array::from(vec![1, 2, 3, 4]);\n let vals = Int32Array::from(vec![5, 6, 7, 8]);\n let batch = RecordBatch::try_from_iter(vec![\n   (\"id\", Arc::new(ids) as ArrayRef),\n   (\"val\", Arc::new(vals) as ArrayRef),\n ]).unwrap();\n\n let file = tempfile().unwrap();\n\n // WriterProperties can be used to set Parquet file options\n let props = WriterProperties::builder()\n     .set_compression(Compression::SNAPPY)\n     .build();\n\n let mut writer = ArrowWriter::try_new(file, batch.schema(), Some(props)).unwrap();\n\n writer.write(&batch).expect(\"Writing batch\");\n\n // writer must be closed to write footer\n writer.close().unwrap();\n ```\n\n # Example: Reading Parquet file into Arrow `RecordBatch`\n\n ```rust\n # use std::fs::File;\n # use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;\n # use std::sync::Arc;\n # use arrow_array::Int32Array;\n # use arrow::datatypes::{DataType, Field, Schema};\n # use arrow_array::RecordBatch;\n # use parquet::arrow::arrow_writer::ArrowWriter;\n #\n # let ids = Int32Array::from(vec![1, 2, 3, 4]);\n # let schema = Arc::new(Schema::new(vec![\n #     Field::new(\"id\", DataType::Int32, false),\n # ]));\n #\n # let file = File::create(\"data.parquet\").unwrap();\n #\n # let batch = RecordBatch::try_new(Arc::clone(&schema), vec![Arc::new(ids)]).unwrap();\n # let batches = vec![batch];\n #\n # let mut writer = ArrowWriter::try_new(file, Arc::clone(&schema), None).unwrap();\n #\n # for batch in batches {\n #     writer.write(&batch).expect(\"Writing batch\");\n # }\n # writer.close().unwrap();\n #\n let file = File::open(\"data.parquet\").unwrap();\n\n let builder = ParquetRecordBatchReaderBuilder::try_new(file).unwrap();\n println!(\"Converted arrow schema is: {}\", builder.schema());\n\n let mut reader = builder.build().unwrap();\n\n let record_batch = reader.next().unwrap().unwrap();\n\n println!(\"Read {} records.\", record_batch.num_rows());\n ```\n\n # Example: Reading non-uniformly encrypted parquet file into arrow record batch\n\n Note: This requires the experimental `encryption` feature to be enabled at compile time.\n\n```rust\n # use arrow_array::{Int32Array, ArrayRef};\n # use arrow_array::{types, RecordBatch};\n # use parquet::arrow::arrow_reader::{\n #     ArrowReaderMetadata, ArrowReaderOptions, ParquetRecordBatchReaderBuilder,\n # };\n # use arrow_array::cast::AsArray;\n # use parquet::file::metadata::ParquetMetaData;\n # use tempfile::tempfile;\n # use std::fs::File;\n # use parquet::encryption::decrypt::FileDecryptionProperties;\n # let test_data = arrow::util::test_util::parquet_test_data();\n # let path = format!(\"{test_data}/encrypt_columns_and_footer.parquet.encrypted\");\n #\n let file = File::open(path).unwrap();\n\n // Define the AES encryption keys required required for decrypting the footer metadata\n // and column-specific data. If only a footer key is used then it is assumed that the\n // file uses uniform encryption and all columns are encrypted with the footer key.\n // If any column keys are specified, other columns without a key provided are assumed\n // to be unencrypted\n let footer_key = \"0123456789012345\".as_bytes(); // Keys are 128 bits (16 bytes)\n let column_1_key = \"1234567890123450\".as_bytes();\n let column_2_key = \"1234567890123451\".as_bytes();\n\n let decryption_properties = FileDecryptionProperties::builder(footer_key.to_vec())\n     .with_column_key(\"double_field\", column_1_key.to_vec())\n     .with_column_key(\"float_field\", column_2_key.to_vec())\n     .build()\n     .unwrap();\n\n let options = ArrowReaderOptions::default()\n  .with_file_decryption_properties(decryption_properties);\n let reader_metadata = ArrowReaderMetadata::load(&file, options.clone()).unwrap();\n let file_metadata = reader_metadata.metadata().file_metadata();\n assert_eq!(50, file_metadata.num_rows());\n\n let mut reader = ParquetRecordBatchReaderBuilder::try_new_with_options(file, options)\n   .unwrap()\n   .build()\n   .unwrap();\n\n let record_batch = reader.next().unwrap().unwrap();\n assert_eq!(50, record_batch.num_rows());\n ```",
+    "span": {
+      "filename": "src/arrow/mod.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        1072,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = CfgTrace([NameValue { name: \"feature\", value: Some(\"arrow\"), span: src/lib.rs:196:7: 196:24 (#0) }])]"
+      },
+      {
+        "other": "#[attr = CfgAttrTrace([NameValue { name: \"feature\", value: Some(\"encryption\"), span: src/arrow/mod.rs:135:13: 135:35 (#0) },\nNot(NameValue { name: \"feature\", value: Some(\"encryption\"), span: src/arrow/mod.rs:136:17: 136:39 (#0) }, src/arrow/mod.rs:136:16: 136:40 (#0))])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          3180,
+          3383,
+          3416,
+          3579,
+          3673,
+          3858,
+          3859,
+          3860,
+          3861,
+          3862,
+          3863,
+          3864,
+          3865,
+          3866,
+          3867,
+          3868,
+          3846,
+          3871,
+          2521,
+          2924,
+          3909
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`ARROW_SCHEMA_META_KEY`": 3846,
+      "arrow_array::RecordBatch": 2524,
+      "crate::basic::Type::BYTE_ARRAY": 121,
+      "crate": 3546,
+      "arrow_array::BinaryViewArray": 3911,
+      "`ArrowSchemaConverter`": 3266,
+      "arrow_reader::ArrowReaderOptions::with_schema": 3073,
+      "arrow_array::Array": 3910,
+      "arrow_array::BinaryArray": 3912
+    },
+    "link_paths": {
+      "`ARROW_SCHEMA_META_KEY`": "parquet::arrow::ARROW_SCHEMA_META_KEY",
+      "arrow_array::RecordBatch": "arrow_array::record_batch::RecordBatch",
+      "crate::basic::Type::BYTE_ARRAY": "parquet::basic::Type::BYTE_ARRAY",
+      "crate": "parquet",
+      "arrow_array::BinaryViewArray": "arrow_array::array::byte_view_array::BinaryViewArray",
+      "`ArrowSchemaConverter`": null,
+      "arrow_reader::ArrowReaderOptions::with_schema": "parquet::arrow::arrow_reader::ArrowReaderOptions::with_schema",
+      "arrow_array::Array": "arrow_array::array::Array",
+      "arrow_array::BinaryArray": "arrow_array::array::binary_array::BinaryArray"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3071",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/parquet.arrow.md",
+    "record_file": "modules/parquet.arrow.json",
+    "anchor": "op-b2d3d71b2a2cc696513bb543",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ARROW_SCHEMA_META_KEY`": "../operations/parquet.arrow.ARROW_SCHEMA_META_KEY.md#op-40f8e942a81681d7b74aaa33",
+      "arrow_array::RecordBatch": "../operations/arrow_array.record_batch.RecordBatch.md#op-87f977a95cb312da9259aa34",
+      "crate::basic::Type::BYTE_ARRAY": "../operations/parquet.basic.Type.md#op-cb6265c321e8e45191325ad7",
+      "crate": "../modules/parquet.md#op-a2a0c4ff17ff9b4865c11f69",
+      "arrow_array::BinaryViewArray": "../operations/arrow_array.array.byte_view_array.BinaryViewArray.md#op-3ee392743cc781de5833990c",
+      "arrow_reader::ArrowReaderOptions::with_schema": "../operations/parquet.arrow.arrow_reader.ArrowReaderOptions.md#op-549a43157f215c416cd8b1a9",
+      "arrow_array::Array": "../operations/arrow_array.array.Array.md#op-cabb9fba5e3e968cee823d21",
+      "arrow_array::BinaryArray": "../operations/arrow_array.array.binary_array.BinaryArray.md#op-7129d9dc68ce402f881c540c"
+    }
+  }
+]

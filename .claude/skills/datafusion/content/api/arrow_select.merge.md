@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::merge::merge`
 fn merge(mask: &arrow_array::BooleanArray, truthy: &dyn Datum, falsy: &dyn Datum) -> Result<arrow_array::ArrayRef, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_select.merge.merge.md).
+
+
 Merges two arrays in the order specified by a boolean mask.
 
 This algorithm is a variant of [zip] that does not require the truthy and
@@ -52,6 +55,9 @@ Also reachable as `arrow::compute::kernels::merge::merge_n`
 ```rust
 fn merge_n(values: &[&dyn Array], indices: &[impl MergeIndex]) -> Result<arrow_array::ArrayRef, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_select.merge.merge_n.md).
+
 
 Merges elements by index from a list of [`Array`], creating a new [`Array`] from
 those values.
@@ -129,6 +135,9 @@ trait MergeIndex: PartialEq + Eq + Copy
 ```rust
 fn index(&self) -> Option<usize>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_select.merge.MergeIndex.md).
+
 
 An index for the [merge_n] function.
 

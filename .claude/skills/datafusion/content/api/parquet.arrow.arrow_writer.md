@@ -10,6 +10,9 @@ Crate `parquet` · 8 public items · structured records in [`model/parquet.arrow
 fn compute_leaves(field: &arrow_schema::Field, array: &arrow_array::ArrayRef) -> errors::Result<Vec<ArrowLeafColumn>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_writer.compute_leaves.md).
+
+
 Computes the [`ArrowLeafColumn`] for a potentially nested [`ArrayRef`]
 
 This function can be used along with [`get_column_writers`] to encode
@@ -26,6 +29,9 @@ individual columns in parallel. See example on [`ArrowColumnWriter`]
 ```rust
 fn get_column_writers(parquet: &schema::types::SchemaDescriptor, props: &file::properties::WriterPropertiesPtr, arrow: &arrow_schema::SchemaRef) -> errors::Result<Vec<ArrowColumnWriter>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_writer.get_column_writers.md).
+
 
 Returns [`ArrowColumnWriter`]s for each column in a given schema
 
@@ -49,6 +55,9 @@ fn close(&self) -> &ColumnCloseResult
 fn close_mut(&mut self) -> &mut ColumnCloseResult
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_writer.ArrowColumnChunk.md).
+
+
 The data for a single column chunk, see [`ArrowColumnWriter`]
 
 ---
@@ -71,6 +80,9 @@ fn get_estimated_total_bytes(&self) -> usize
 fn memory_size(&self) -> usize
 fn write(&mut self, col: &ArrowLeafColumn) -> Result<()>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_writer.ArrowColumnWriter.md).
+
 
 Encodes [`ArrowLeafColumn`] to [`ArrowColumnChunk`]
 
@@ -182,6 +194,9 @@ struct ArrowLeafColumn
 
 **Derives**: Debug
 
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_writer.ArrowLeafColumn.md).
+
+
 A leaf column that can be encoded by [`ArrowColumnWriter`]
 
 ---
@@ -203,6 +218,9 @@ fn create_column_writers(&self, row_group_index: usize) -> Result<Vec<ArrowColum
 fn new<W: Write + Send>(file_writer: &SerializedFileWriter<W>, arrow_schema: SchemaRef) -> Self
 fn with_page_store_factory(self, page_store_factory: Arc<dyn PageStoreFactory>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_writer.ArrowRowGroupWriterFactory.md).
+
 
 Factory that creates new column writers for each row group in the Parquet file.
 
@@ -256,6 +274,9 @@ fn write_all(&mut self, buf: &[u8]) -> std::io::Result<()>
 fn close(self) -> std::result::Result<(), ArrowError>
 fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_writer.ArrowWriter.md).
+
 
 Encodes [`RecordBatch`] to parquet
 
@@ -396,6 +417,9 @@ fn with_properties(self, properties: WriterProperties) -> Self
 fn with_schema_root(self, schema_root: String) -> Self
 fn with_skip_arrow_metadata(self, skip_arrow_metadata: bool) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.arrow.arrow_writer.ArrowWriterOptions.md).
+
 
 Arrow-specific configuration settings for writing parquet files.
 

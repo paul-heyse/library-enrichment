@@ -12,6 +12,9 @@ Also reachable as `datafusion::common::human_readable_count`, `datafusion_common
 fn human_readable_count(count: usize) -> String
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.display.human_readable.human_readable_count.md).
+
+
 Present count in human-readable form with K, M, B, T suffixes
 
 ---
@@ -26,6 +29,9 @@ Also reachable as `datafusion::common::human_readable_duration`, `datafusion_com
 fn human_readable_duration(nanos: u64) -> String
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.display.human_readable.human_readable_duration.md).
+
+
 Present duration in human-readable form with 2 decimal places
 
 ---
@@ -39,6 +45,9 @@ Also reachable as `datafusion::common::human_readable_size`, `datafusion_common:
 ```rust
 fn human_readable_size(size: usize) -> String
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.display.human_readable.human_readable_size.md).
+
 
 Present size in human-readable form
 

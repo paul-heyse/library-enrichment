@@ -10,4 +10,7 @@ Crate `datafusion-substrait` · 1 public items · structured records in [`model/
 async fn from_singular_or_list(consumer: &impl SubstraitConsumer, expr: &substrait::proto::expression::SingularOrList, input_schema: &datafusion::common::DFSchema) -> datafusion::common::Result<datafusion::logical_expr::Expr>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.consumer.expr.singular_or_list.from_singular_or_list.md).
+
+
 ---

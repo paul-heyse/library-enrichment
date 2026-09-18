@@ -1,0 +1,166 @@
+[
+  {
+    "id": "3fed8edf85f7f1c575996d4d",
+    "path": "arrow_cast::cast::union::union_extract_by_type",
+    "name": "union_extract_by_type",
+    "owner": null,
+    "crate": "arrow-cast",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn union_extract_by_type(union_array: &arrow_array::UnionArray, target_type: &arrow_schema::DataType, cast_options: &super::CastOptions<'_>) -> Result<arrow_array::ArrayRef, arrow_schema::ArrowError>",
+    "docs": "Extracts the best-matching child array from a [`UnionArray`] for a given target type,\nand casts it to that type.\n\nRows where a different child array is active become NULL.\nIf no child array matches, returns an error.\n\n# Example\n\n```\n# use std::sync::Arc;\n# use arrow_schema::{DataType, Field, UnionFields};\n# use arrow_array::{UnionArray, StringArray, Int32Array, Array};\n# use arrow_cast::cast::union_extract_by_type;\n# use arrow_cast::CastOptions;\nlet fields = UnionFields::try_new(\n    [0, 1],\n    [\n        Field::new(\"int\", DataType::Int32, true),\n        Field::new(\"str\", DataType::Utf8, true),\n    ],\n).unwrap();\n\nlet union = UnionArray::try_new(\n    fields,\n    vec![0, 1, 0].into(),\n    None,\n    vec![\n        Arc::new(Int32Array::from(vec![Some(42), None, Some(99)])),\n        Arc::new(StringArray::from(vec![None, Some(\"hello\"), None])),\n    ],\n)\n.unwrap();\n\n// extract the Utf8 child array and cast to Utf8View\nlet result = union_extract_by_type(&union, &DataType::Utf8View, &CastOptions::default()).unwrap();\nassert_eq!(result.data_type(), &DataType::Utf8View);\nassert!(result.is_null(0));   // Int32 row -> NULL\nassert!(!result.is_null(1));  // Utf8 row -> \"hello\"\nassert!(result.is_null(2));   // Int32 row -> NULL\n```",
+    "span": {
+      "filename": "src/cast/union.rs",
+      "begin": [
+        129,
+        1
+      ],
+      "end": [
+        158,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "union_array",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "arrow_array::UnionArray",
+                      "id": 54,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "target_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "arrow_schema::DataType",
+                      "id": 56,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "cast_options",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "super::CastOptions",
+                      "id": 57,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 44,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "arrow_array::ArrayRef",
+                          "id": 58,
+                          "args": null
+                        }
+                      }
+                    },
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "arrow_schema::ArrowError",
+                          "id": 45,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "54": "arrow_array::array::union_array::UnionArray",
+      "56": "arrow_schema::datatype::DataType",
+      "57": "arrow_cast::cast::CastOptions",
+      "44": "core::result::Result",
+      "58": "arrow_array::array::ArrayRef",
+      "45": "arrow_schema::error::ArrowError"
+    },
+    "impl_context": null,
+    "links": {
+      "`UnionArray`": 54
+    },
+    "link_paths": {
+      "`UnionArray`": "arrow_array::array::union_array::UnionArray"
+    },
+    "artifact": {
+      "id": "752ca5e430612af62fa54422058472f37db7f433eac44e7b27649fd34a282785",
+      "format_version": 61,
+      "item_id": "55",
+      "origin": "https://docs.rs/crate/arrow-cast/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/arrow_cast.cast.union.union_extract_by_type.md",
+    "record_file": "operations/arrow_cast.cast.union.union_extract_by_type.json",
+    "anchor": "op-3fed8edf85f7f1c575996d4d",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`UnionArray`": "../operations/arrow_array.array.union_array.UnionArray.md#op-39e2f188616dc0298ba644ac"
+    }
+  }
+]

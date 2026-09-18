@@ -20,6 +20,9 @@ struct IpcWriteContext
 fn set_reserve_scratch(&mut self, reserve: bool)
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.compression.IpcWriteContext.md).
+
+
 Additional context that may be needed for compression.
 
 In the case of zstd, this will contain the zstd context, which can be reused between subsequent
@@ -39,6 +42,9 @@ Also reachable as `arrow_ipc::writer::CompressionContext`
 ```rust
 type CompressionContext = IpcWriteContext
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ipc.compression.CompressionContext.md).
+
 
 Deprecated alias for [`IpcWriteContext`].
 

@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_max`, `datafusion_functions_nested
 fn array_max(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.min_max.array_max.md).
+
+
 returns the maximum value in the array.
 
 ---
@@ -23,6 +26,9 @@ returns the maximum value in the array.
 ```rust
 fn array_max_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.min_max.array_max_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayMax
@@ -39,6 +45,9 @@ Also reachable as `datafusion::prelude::array_min`, `datafusion_functions_nested
 fn array_min(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.min_max.array_min.md).
+
+
 returns the minimum value in the array
 
 ---
@@ -50,6 +59,9 @@ returns the minimum value in the array
 ```rust
 fn array_min_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.min_max.array_min_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayMin
@@ -84,5 +96,8 @@ fn name(&self) -> &str
 fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.min_max.ArrayMax.md).
+
 
 ---

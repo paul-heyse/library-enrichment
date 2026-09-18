@@ -16,6 +16,9 @@ enum ChildStats
 
 **Derives**: Clone, Copy, Debug, Eq, PartialEq, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.statistics.ChildStats.md).
+
+
 Directive returned by [`ExecutionPlan::child_stats_requests`] describing
 how the [`StatisticsContext`] should obtain each child's statistics.
 
@@ -42,6 +45,9 @@ fn set_partition(&mut self, partition: Option<usize>)
 fn with_partition(self, partition: Option<usize>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.statistics.StatisticsArgs.md).
+
+
 Arguments passed to [`ExecutionPlan::statistics_from_inputs`] carrying
 external information that operators can use when computing their
 statistics.
@@ -67,6 +73,9 @@ fn compute(&self, plan: &dyn ExecutionPlan, args: &StatisticsArgs) -> Result<Arc
 fn new() -> Self
 fn reset_cache(&self)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.statistics.StatisticsContext.md).
+
 
 Owns the bottom-up traversal and per-walk memoization cache for statistics
 computation. Call [`StatisticsContext::compute`] to walk a plan tree.

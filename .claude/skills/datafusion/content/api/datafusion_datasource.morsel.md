@@ -26,6 +26,9 @@ fn with_pending_planner<F>(self, io_future: F) -> Self where F: Future<Output = 
 fn with_planners(self, planners: Vec<Box<dyn MorselPlanner>>) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.morsel.MorselPlan.md).
+
+
 Return result of [`MorselPlanner::plan`].
 
 # Logical Ordering
@@ -60,6 +63,9 @@ fn new<F>(future: F) -> Self where F: Future<Output = Result<Box<dyn MorselPlann
 fn poll(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Self::Output>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.morsel.PendingMorselPlanner.md).
+
+
 Wrapper for I/O that must complete before planning can continue.
 
 ---
@@ -77,6 +83,9 @@ trait Morsel: Send + Debug
 ```rust
 fn into_stream(Box<self>) -> BoxStream<'static, Result<RecordBatch>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.morsel.Morsel.md).
+
 
 A Morsel of work ready to resolve to a stream of [`RecordBatch`]es.
 
@@ -99,6 +108,9 @@ trait MorselPlanner: Send + Debug
 ```rust
 fn plan(Box<self>) -> Result<Option<MorselPlan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.morsel.MorselPlanner.md).
+
 
 A Morsel Planner is responsible for creating morsels for a given scan.
 
@@ -133,6 +145,9 @@ trait Morselizer: Send + Sync + Debug
 ```rust
 fn plan_file(&self, file: PartitionedFile) -> Result<Box<dyn MorselPlanner>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.morsel.Morselizer.md).
+
 
 A Morselizer takes a single [`PartitionedFile`] and creates the initial planner
 for that file.

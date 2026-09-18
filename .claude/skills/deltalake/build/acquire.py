@@ -31,6 +31,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -76,6 +77,8 @@ def envelope_key(crate_set: dict) -> str:
         "no_default_features": bool(git.get("no_default_features")),
         "crates": sorted(spec_name(entry) for entry in crate_set["crates"]),
     }
+    if git.get("lock_sha256"):
+        payload["lock_sha256"] = git["lock_sha256"]
     blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(blob).hexdigest()[:12]
 
@@ -189,7 +192,9 @@ def checkout(git: dict, capsule: Path) -> Path:
 # --------------------------------------------------------------------------- phase 2
 
 
-def resolve_lock(git: dict, source: Path, capsule: Path, target_dir: Path) -> tuple[Path, str]:
+def resolve_lock(
+    git: dict, source: Path, capsule: Path, target_dir: Path, retained: Path | None = None
+) -> tuple[Path, str]:
     """Generate a lockfile, then assert it pins the git dependencies the manifest declares.
 
     delta-rs does not commit `Cargo.lock` and takes its kernel from a *branch*. A branch is not
@@ -202,19 +207,35 @@ def resolve_lock(git: dict, source: Path, capsule: Path, target_dir: Path) -> tu
     lock = source / "Cargo.lock"
     manifest_path = source / "Cargo.toml"
 
-    say("  resolving lockfile")
-    run(
-        ["cargo", f"+{toolchain}", "generate-lockfile", "--manifest-path", str(manifest_path)],
-        cwd=capsule,
-        env=env,
-    )
+    if retained is not None:
+        if not retained.is_file():
+            raise AcquireError(
+                "Replay requires retained Cargo.lock bytes; use explicit --re"
+                "fresh for a new resolution"
+            )
+        receipt = json.loads((retained.parent / "ACQUISITION.json").read_text())
+        if hashlib.sha256(retained.read_bytes()).hexdigest() != receipt["lock_sha256"]:
+            raise AcquireError("Retained lock digest differs from acquisition")
+        shutil.copyfile(retained, lock)
+        say("  replaying retained lock without branch resolution")
+    else:
+        say("  explicitly refreshing lock resolution")
+        run(
+            ["cargo", f"+{toolchain}", "generate-lockfile", "--manifest-path", str(manifest_path)],
+            cwd=capsule,
+            env=env,
+        )
 
+    if (
+        git.get("lock_sha256")
+        and hashlib.sha256(lock.read_bytes()).hexdigest() != git["lock_sha256"]
+    ):
+        raise AcquireError("Resolved lock differs from the manifest lock identity")
     text = lock.read_text()
+    packages = tomllib.loads(text)["package"]
     for package, expected in (git.get("lock_deps") or {}).items():
-        marker = f'name = "{package}"'
-        if marker not in text:
-            raise AcquireError(f"{package} absent from the resolved lockfile")
-        if expected not in text:
+        matches = [p for p in packages if p["name"] == package]
+        if len(matches) != 1 or not matches[0].get("source", "").endswith("#" + expected):
             raise AcquireError(
                 f"{package} does not resolve to {expected} -- the tracked branch has moved. "
                 f"Re-pin deliberately; do not build against an undeclared revision."
@@ -413,6 +434,13 @@ def collect(
     out = acquired_dir(crate_set)
     out.mkdir(parents=True, exist_ok=True)
     (out / "manifests").mkdir(exist_ok=True)
+    existing = out / "ACQUISITION.json"
+    if existing.exists() and json.loads(existing.read_text())["lock_sha256"] != lock_digest:
+        raise AcquireError(
+            "A changed lock requires a new manifest capture identity; ref"
+            "using to overwrite retained acquisition"
+        )
+    shutil.copyfile(source / "Cargo.lock", out / "Cargo.lock")
 
     libs, macros = partition_crates(crate_set)
     files: dict[str, dict] = {}
@@ -534,6 +562,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--manifest", type=Path, default=HERE / "manifests" / "deltalake.json")
     parser.add_argument("--check", action="store_true", help="report branch drift and exit")
     parser.add_argument("--clean", action="store_true", help="drop target dirs after collecting")
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="explicitly resolve dependencies anew; never silently move declared git pins",
+    )
     args = parser.parse_args(argv)
 
     manifest = json.loads(args.manifest.read_text())
@@ -556,7 +589,8 @@ def main(argv: list[str] | None = None) -> int:
 
         rustc = assert_toolchain(git, capsule)
         source = checkout(git, capsule)
-        _, lock_digest = resolve_lock(git, source, capsule, target_dir)
+        retained = None if args.refresh else acquired_dir(crate_set) / "Cargo.lock"
+        _, lock_digest = resolve_lock(git, source, capsule, target_dir, retained)
         resolved = document(crate_set, source, capsule, target_dir)
         manifests = manifest_paths(git, source, capsule, target_dir)
         collect(crate_set, source, target_dir, supported, resolved, rustc, lock_digest, manifests)

@@ -29,6 +29,9 @@ fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> Resu
 fn schema_check(&self) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.filter_pushdown.FilterPushdown.md).
+
+
 Attempts to recursively push given filters from the top of the tree into leaves.
 
 # Default Implementation

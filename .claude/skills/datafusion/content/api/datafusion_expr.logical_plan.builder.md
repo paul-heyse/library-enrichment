@@ -12,6 +12,9 @@ Also reachable as `datafusion::logical_expr::UNNAMED_TABLE`, `datafusion_expr::U
 const UNNAMED_TABLE: &str = "?table?"
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.UNNAMED_TABLE.md).
+
+
 Default table name for unnamed table
 
 ---
@@ -23,6 +26,9 @@ Default table name for unnamed table
 ```rust
 fn add_group_by_exprs_from_dependencies(group_expr: Vec<Expr>, schema: &datafusion_common::DFSchemaRef) -> datafusion_common::Result<Vec<Expr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.add_group_by_exprs_from_dependencies.md).
+
 
 Add additional "synthetic" group by expressions based on functional
 dependencies.
@@ -46,6 +52,9 @@ Also reachable as `datafusion::logical_expr::build_join_schema`, `datafusion_exp
 fn build_join_schema(left: &datafusion_common::DFSchema, right: &datafusion_common::DFSchema, join_type: &logical_plan::JoinType) -> datafusion_common::Result<datafusion_common::DFSchema>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.build_join_schema.md).
+
+
 Creates a schema for a join operation.
 The fields from the left side are first
 
@@ -59,6 +68,9 @@ The fields from the left side are first
 fn get_struct_unnested_columns(col_name: &String, inner_fields: &arrow::datatypes::Fields) -> Vec<datafusion_common::Column>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.get_struct_unnested_columns.md).
+
+
 ---
 
 ## project
@@ -68,6 +80,9 @@ fn get_struct_unnested_columns(col_name: &String, inner_fields: &arrow::datatype
 ```rust
 fn project(plan: logical_plan::LogicalPlan, expr: impl IntoIterator<Item = impl Into<select_expr::SelectExpr>>) -> datafusion_common::Result<logical_plan::LogicalPlan>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.project.md).
+
 
 Create Projection
 # Errors
@@ -86,6 +101,9 @@ Also reachable as `datafusion::logical_expr::requalify_sides_if_needed`, `datafu
 ```rust
 fn requalify_sides_if_needed(left: LogicalPlanBuilder, right: LogicalPlanBuilder) -> datafusion_common::Result<(LogicalPlanBuilder, LogicalPlanBuilder, bool)>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.requalify_sides_if_needed.md).
+
 
 (Re)qualify the sides of a join if needed, i.e. if the columns from one side would otherwise
 conflict with the columns from the other.
@@ -107,6 +125,9 @@ The function returns:
 fn subquery_alias(plan: logical_plan::LogicalPlan, alias: impl Into<datafusion_common::TableReference>) -> datafusion_common::Result<logical_plan::LogicalPlan>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.subquery_alias.md).
+
+
 Create a SubqueryAlias to wrap a LogicalPlan.
 
 ---
@@ -121,6 +142,9 @@ Also reachable as `datafusion::logical_expr::table_scan`, `datafusion_expr::logi
 fn table_scan(name: Option<impl Into<datafusion_common::TableReference>>, table_schema: &arrow::datatypes::Schema, projection: Option<Vec<usize>>) -> datafusion_common::Result<LogicalPlanBuilder>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.table_scan.md).
+
+
 Create a LogicalPlanBuilder representing a scan of a table with the provided name and schema.
 This is mostly used for testing and documentation.
 
@@ -133,6 +157,9 @@ This is mostly used for testing and documentation.
 ```rust
 fn table_scan_with_filter_and_fetch(name: Option<impl Into<datafusion_common::TableReference>>, table_schema: &arrow::datatypes::Schema, projection: Option<Vec<usize>>, filters: Vec<Expr>, fetch: Option<usize>) -> datafusion_common::Result<LogicalPlanBuilder>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.table_scan_with_filter_and_fetch.md).
+
 
 Create a LogicalPlanBuilder representing a scan of a table with the provided name and schema,
 filters, and inlined fetch.
@@ -148,6 +175,9 @@ This is mostly used for testing and documentation.
 fn table_scan_with_filters(name: Option<impl Into<datafusion_common::TableReference>>, table_schema: &arrow::datatypes::Schema, projection: Option<Vec<usize>>, filters: Vec<Expr>) -> datafusion_common::Result<LogicalPlanBuilder>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.table_scan_with_filters.md).
+
+
 Create a LogicalPlanBuilder representing a scan of a table with the provided name and schema,
 and inlined filters.
 This is mostly used for testing and documentation.
@@ -162,6 +192,9 @@ This is mostly used for testing and documentation.
 fn table_source(table_schema: &arrow::datatypes::Schema) -> std::sync::Arc<dyn TableSource>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.table_source.md).
+
+
 ---
 
 ## table_source_with_constraints
@@ -171,6 +204,9 @@ fn table_source(table_schema: &arrow::datatypes::Schema) -> std::sync::Arc<dyn T
 ```rust
 fn table_source_with_constraints(table_schema: &arrow::datatypes::Schema, constraints: datafusion_common::Constraints) -> std::sync::Arc<dyn TableSource>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.table_source_with_constraints.md).
+
 
 ---
 
@@ -183,6 +219,9 @@ Also reachable as `datafusion::logical_expr::union`, `datafusion_expr::logical_p
 ```rust
 fn union(left_plan: logical_plan::LogicalPlan, right_plan: logical_plan::LogicalPlan) -> datafusion_common::Result<logical_plan::LogicalPlan>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.union.md).
+
 
 Union two [`LogicalPlan`]s.
 
@@ -206,6 +245,9 @@ apply the expression rewrite with [`coerce_plan_expr_for_schema`].
 fn union_by_name(left_plan: logical_plan::LogicalPlan, right_plan: logical_plan::LogicalPlan) -> datafusion_common::Result<logical_plan::LogicalPlan>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.union_by_name.md).
+
+
 Like [`union`], but combine rows from different tables by name, rather than
 by position.
 
@@ -218,6 +260,9 @@ by position.
 ```rust
 fn unique_field_aliases(fields: &arrow::datatypes::Fields) -> Vec<Option<String>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.unique_field_aliases.md).
+
 
 Returns aliases to make field names unique.
 
@@ -241,6 +286,9 @@ Returns: `[None, Some("a:1"), None, Some("b:1"), Some("a:2"), Some("a:1:1")]`
 fn unnest(input: logical_plan::LogicalPlan, columns: Vec<datafusion_common::Column>) -> datafusion_common::Result<logical_plan::LogicalPlan>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.unnest.md).
+
+
 Create a [`LogicalPlan::Unnest`] plan
 
 ---
@@ -252,6 +300,9 @@ Create a [`LogicalPlan::Unnest`] plan
 ```rust
 fn unnest_with_options(input: logical_plan::LogicalPlan, columns_to_unnest: Vec<datafusion_common::Column>, options: datafusion_common::UnnestOptions) -> datafusion_common::Result<logical_plan::LogicalPlan>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.unnest_with_options.md).
+
 
 Create a [`LogicalPlan::Unnest`] plan with options
 This function receive a list of columns to be unnested
@@ -293,6 +344,9 @@ will generate a new schema as
 fn validate_unique_names<'a>(node_name: &str, expressions: impl IntoIterator<Item = &'a Expr>) -> datafusion_common::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.validate_unique_names.md).
+
+
 Errors if one or more expressions have equal names.
 
 ---
@@ -306,6 +360,9 @@ Also reachable as `datafusion::logical_expr::wrap_projection_for_join_if_necessa
 ```rust
 fn wrap_projection_for_join_if_necessary(join_keys: &[Expr], input: logical_plan::LogicalPlan) -> datafusion_common::Result<(logical_plan::LogicalPlan, Vec<datafusion_common::Column>, bool)>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.wrap_projection_for_join_if_necessary.md).
+
 
 Wrap projection for a plan, if the join keys contains normal expression.
 
@@ -389,6 +446,9 @@ fn from(plan: Arc<LogicalPlan>) -> Self
 fn from(plan: LogicalPlan) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.LogicalPlanBuilder.md).
+
+
 Builder for logical plans
 
 # Example building a simple plan
@@ -448,6 +508,9 @@ fn new() -> Self
 fn with_add_implicit_group_by_exprs(self, add: bool) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.LogicalPlanBuilderOptions.md).
+
+
 Options for [`LogicalPlanBuilder`]
 
 ---
@@ -478,6 +541,9 @@ fn constraints(&self) -> Option<&Constraints>
 fn schema(&self) -> SchemaRef
 fn supports_filters_pushdown(&self, filters: &[&Expr]) -> Result<Vec<TableProviderFilterPushDown>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.logical_plan.builder.LogicalTableSource.md).
+
 
 Basic TableSource implementation intended for use in tests and documentation. It is expected
 that users will provide their own TableSource implementations or use DataFusion's

@@ -1,0 +1,29 @@
+id: native-control-publication-owner
+language: Rust
+severity: error
+message: Control publication uses the native admission and durable acknowledgement owner.
+files:
+  - crates/enrichment-store/src/control.rs
+rule:
+  any:
+    - kind: call_expression
+      pattern: $OWNER.delta.append($$$ARGS)
+      inside:
+        kind: function_item
+        has:
+          field: name
+          regex: '^(commit_once|commit_native)$'
+        stopBy: end
+    - kind: call_expression
+      has:
+        field: function
+        has:
+          kind: field_identifier
+          regex: '^(current|job_publication|comparison_publication)$'
+      inside:
+        kind: function_item
+        has:
+          field: name
+          regex: '^commit_once$'
+        stopBy: end
+note: Command append mechanics live in control/reconciliation.rs; policy lives in control/admission.rs. Immutable bundle copies have a separately owned staging and seal contract. This syntactic guard does not prove durable recovery.

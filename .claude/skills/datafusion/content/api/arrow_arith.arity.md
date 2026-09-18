@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::binary`, `arrow::compute::kernels::arity::bin
 fn binary<A, B, F, O>(a: &PrimitiveArray<A>, b: &PrimitiveArray<B>, op: F) -> Result<PrimitiveArray<O>, arrow_schema::ArrowError> where A: ArrowPrimitiveType, B: ArrowPrimitiveType, O: ArrowPrimitiveType, F: Fn(A::Native, B::Native) -> O::Native
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.arity.binary.md).
+
+
 Allies a binary infallable function to two [`PrimitiveArray`]s,
 producing a new [`PrimitiveArray`]
 
@@ -56,6 +59,9 @@ Also reachable as `arrow::compute::binary_mut`, `arrow::compute::kernels::arity:
 ```rust
 fn binary_mut<T, U, F>(a: PrimitiveArray<T>, b: &PrimitiveArray<U>, op: F) -> Result<Result<PrimitiveArray<T>, arrow_schema::ArrowError>, PrimitiveArray<T>> where T: ArrowPrimitiveType, U: ArrowPrimitiveType, F: Fn(T::Native, U::Native) -> T::Native
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.arity.binary_mut.md).
+
 
 Applies a binary and infallible function to values in two arrays, replacing
 the values in the first array in place.
@@ -134,6 +140,9 @@ Also reachable as `arrow::compute::kernels::arity::try_binary`, `arrow::compute:
 fn try_binary<A: ArrayAccessor, B: ArrayAccessor, F, O>(a: A, b: B, op: F) -> Result<PrimitiveArray<O>, arrow_schema::ArrowError> where O: ArrowPrimitiveType, F: Fn(A::Item, B::Item) -> Result<O::Native, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.arity.try_binary.md).
+
+
 Applies the provided fallible binary operation across `a` and `b`.
 
 This will return any error encountered, or collect the results into
@@ -159,6 +168,9 @@ Also reachable as `arrow::compute::kernels::arity::try_binary_mut`, `arrow::comp
 fn try_binary_mut<T, F>(a: PrimitiveArray<T>, b: &PrimitiveArray<T>, op: F) -> Result<Result<PrimitiveArray<T>, arrow_schema::ArrowError>, PrimitiveArray<T>> where T: ArrowPrimitiveType, F: Fn(T::Native, T::Native) -> Result<T::Native, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.arity.try_binary_mut.md).
+
+
 Applies the provided fallible binary operation across `a` and `b` by mutating the mutable
 [`PrimitiveArray`] `a` with the results.
 
@@ -182,6 +194,9 @@ Also reachable as `arrow::compute::kernels::arity::try_unary`, `arrow::compute::
 fn try_unary<I, F, O>(array: &PrimitiveArray<I>, op: F) -> Result<PrimitiveArray<O>, arrow_schema::ArrowError> where I: ArrowPrimitiveType, O: ArrowPrimitiveType, F: Fn(I::Native) -> Result<O::Native, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.arity.try_unary.md).
+
+
 See [`PrimitiveArray::try_unary`]
 
 ---
@@ -195,6 +210,9 @@ Also reachable as `arrow::compute::kernels::arity::try_unary_mut`, `arrow::compu
 ```rust
 fn try_unary_mut<I, F>(array: PrimitiveArray<I>, op: F) -> Result<Result<PrimitiveArray<I>, arrow_schema::ArrowError>, PrimitiveArray<I>> where I: ArrowPrimitiveType, F: Fn(I::Native) -> Result<I::Native, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.arity.try_unary_mut.md).
+
 
 See [`PrimitiveArray::try_unary_mut`]
 
@@ -210,6 +228,9 @@ Also reachable as `arrow::compute::kernels::arity::unary`, `arrow::compute::unar
 fn unary<I, F, O>(array: &PrimitiveArray<I>, op: F) -> PrimitiveArray<O> where I: ArrowPrimitiveType, O: ArrowPrimitiveType, F: Fn(I::Native) -> O::Native
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_arith.arity.unary.md).
+
+
 See [`PrimitiveArray::unary`]
 
 ---
@@ -223,6 +244,9 @@ Also reachable as `arrow::compute::kernels::arity::unary_mut`, `arrow::compute::
 ```rust
 fn unary_mut<I, F>(array: PrimitiveArray<I>, op: F) -> Result<PrimitiveArray<I>, PrimitiveArray<I>> where I: ArrowPrimitiveType, F: Fn(I::Native) -> I::Native
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_arith.arity.unary_mut.md).
+
 
 See [`PrimitiveArray::unary_mut`]
 

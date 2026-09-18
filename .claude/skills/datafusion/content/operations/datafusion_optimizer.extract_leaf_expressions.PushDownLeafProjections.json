@@ -1,0 +1,851 @@
+[
+  {
+    "id": "4b118316543e73e6c579a135",
+    "path": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections",
+    "name": "PushDownLeafProjections",
+    "owner": null,
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct PushDownLeafProjections",
+    "docs": "Pushes extraction projections down through schema-preserving nodes towards\nleaf nodes (pass 2 of 2, after [`ExtractLeafExpressions`]).\n\nHandles two types of projections:\n- **Pure extraction projections** (all `__datafusion_extracted` aliases + columns):\n  pushes through Filter/Sort/Limit, merges into existing projections, or routes\n  into multi-input node inputs (Join, SubqueryAlias, etc.)\n- **Mixed projections** (user projections containing `MoveTowardsLeafNodes`\n  sub-expressions): splits into a recovery projection + extraction projection,\n  then pushes the extraction projection down.\n\n# Example: Pushing through a Filter\n\nAfter pass 1, the extraction projection sits directly below the filter:\n```text\nProjection: id, user                                                              <-- recovery\n  Filter: __datafusion_extracted_1 = 'active'\n    Projection: user['status'] AS __datafusion_extracted_1, id, user               <-- extraction\n      TableScan: t [id, user]\n```\n\nPass 2 pushes the extraction projection through the recovery and filter,\nand a subsequent `OptimizeProjections` pass removes the (now-redundant)\nrecovery projection:\n```text\nFilter: __datafusion_extracted_1 = 'active'\n  Projection: user['status'] AS __datafusion_extracted_1, id, user                 <-- extraction (pushed down)\n    TableScan: t [id, user]\n```",
+    "span": {
+      "filename": "src/extract_leaf_expressions.rs",
+      "begin": [
+        713,
+        1
+      ],
+      "end": [
+        713,
+        38
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": false
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          598,
+          599,
+          600,
+          601,
+          602,
+          603,
+          604,
+          605,
+          606,
+          607,
+          608,
+          609,
+          610,
+          611,
+          612,
+          613,
+          614,
+          616,
+          618,
+          622
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`ExtractLeafExpressions`": 571
+    },
+    "link_paths": {
+      "`ExtractLeafExpressions`": "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions"
+    },
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "570",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.md",
+    "record_file": "operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.json",
+    "anchor": "op-4b118316543e73e6c579a135",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ExtractLeafExpressions`": "../operations/datafusion_optimizer.extract_leaf_expressions.ExtractLeafExpressions.md#op-0a731b241a2648730b745694"
+    }
+  },
+  {
+    "id": "0be68486a36b6dfa289bc530",
+    "path": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections::apply_order",
+    "name": "apply_order",
+    "owner": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn apply_order(&self) -> Option<ApplyOrder>",
+    "docs": "",
+    "span": {
+      "filename": "src/extract_leaf_expressions.rs",
+      "begin": [
+        726,
+        5
+      ],
+      "end": [
+        728,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 220,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ApplyOrder",
+                          "id": 221,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "220": "core::option::Option",
+      "221": "datafusion_optimizer::optimizer::ApplyOrder"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PushDownLeafProjections",
+          "id": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/extract_leaf_expressions.rs",
+        "begin": [
+          721,
+          1
+        ],
+        "end": [
+          744,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "620",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.md",
+    "record_file": "operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.json",
+    "anchor": "op-0be68486a36b6dfa289bc530",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e3b605e4e70a875d9c77a243",
+    "path": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections::default",
+    "name": "default",
+    "owner": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn default() -> PushDownLeafProjections",
+    "docs": "",
+    "span": {
+      "filename": "src/extract_leaf_expressions.rs",
+      "begin": [
+        712,
+        10
+      ],
+      "end": [
+        712,
+        17
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "resolved_path": {
+              "path": "PushDownLeafProjections",
+              "id": 570,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "570": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PushDownLeafProjections",
+          "id": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/extract_leaf_expressions.rs",
+        "begin": [
+          712,
+          10
+        ],
+        "end": [
+          712,
+          17
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "615",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.md",
+    "record_file": "operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.json",
+    "anchor": "op-e3b605e4e70a875d9c77a243",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "89d295ee19c33bb7d1639f67",
+    "path": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections::fmt",
+    "name": "fmt",
+    "owner": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/extract_leaf_expressions.rs",
+      "begin": [
+        712,
+        19
+      ],
+      "end": [
+        712,
+        24
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 53,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 54,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "53": "core::fmt::Formatter",
+      "54": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PushDownLeafProjections",
+          "id": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/extract_leaf_expressions.rs",
+        "begin": [
+          712,
+          19
+        ],
+        "end": [
+          712,
+          24
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "617",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.md",
+    "record_file": "operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.json",
+    "anchor": "op-89d295ee19c33bb7d1639f67",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "bf791139edd8840b502e942b",
+    "path": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections::name",
+    "name": "name",
+    "owner": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn name(&self) -> &str",
+    "docs": "",
+    "span": {
+      "filename": "src/extract_leaf_expressions.rs",
+      "begin": [
+        722,
+        5
+      ],
+      "end": [
+        724,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "borrowed_ref": {
+              "lifetime": null,
+              "is_mutable": false,
+              "type": {
+                "primitive": "str"
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PushDownLeafProjections",
+          "id": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/extract_leaf_expressions.rs",
+        "begin": [
+          721,
+          1
+        ],
+        "end": [
+          744,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "619",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.md",
+    "record_file": "operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.json",
+    "anchor": "op-bf791139edd8840b502e942b",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "94360002bceeb3b8f81e19a8",
+    "path": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections::new",
+    "name": "new",
+    "owner": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/extract_leaf_expressions.rs",
+      "begin": [
+        716,
+        5
+      ],
+      "end": [
+        718,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PushDownLeafProjections",
+          "id": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/extract_leaf_expressions.rs",
+        "begin": [
+          715,
+          1
+        ],
+        "end": [
+          719,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "597",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.md",
+    "record_file": "operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.json",
+    "anchor": "op-94360002bceeb3b8f81e19a8",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b46711a8de646755a9d32cc2",
+    "path": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections::rewrite",
+    "name": "rewrite",
+    "owner": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections",
+    "crate": "datafusion-optimizer",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>>",
+    "docs": "",
+    "span": {
+      "filename": "src/extract_leaf_expressions.rs",
+      "begin": [
+        730,
+        5
+      ],
+      "end": [
+        743,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "plan",
+              {
+                "resolved_path": {
+                  "path": "LogicalPlan",
+                  "id": 59,
+                  "args": null
+                }
+              }
+            ],
+            [
+              "config",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "dyn_trait": {
+                      "traits": [
+                        {
+                          "trait": {
+                            "path": "OptimizerConfig",
+                            "id": 223,
+                            "args": null
+                          },
+                          "generic_params": []
+                        }
+                      ],
+                      "lifetime": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 61,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Transformed",
+                          "id": 148,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "LogicalPlan",
+                                      "id": 59,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "59": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "223": "datafusion_optimizer::optimizer::OptimizerConfig",
+      "61": "datafusion_common::error::Result",
+      "148": "datafusion_common::tree_node::Transformed"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "PushDownLeafProjections",
+          "id": "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "OptimizerRule",
+        "id": "datafusion_optimizer::optimizer::OptimizerRule",
+        "args": null
+      },
+      "trait_path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/extract_leaf_expressions.rs",
+        "begin": [
+          721,
+          1
+        ],
+        "end": [
+          744,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a3425bba9d85bcb46346bf44749c4d5519c4831d16c43c6f1f2de40d0cd8c739",
+      "format_version": 61,
+      "item_id": "621",
+      "origin": "https://docs.rs/crate/datafusion-optimizer/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.md",
+    "record_file": "operations/datafusion_optimizer.extract_leaf_expressions.PushDownLeafProjections.json",
+    "anchor": "op-b46711a8de646755a9d32cc2",
+    "aliases": [],
+    "resolved_doc_links": {}
+  }
+]

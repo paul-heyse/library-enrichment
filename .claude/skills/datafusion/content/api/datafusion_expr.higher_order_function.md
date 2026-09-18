@@ -16,6 +16,9 @@ enum HigherOrderTypeSignature
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.higher_order_function.HigherOrderTypeSignature.md).
+
+
 The types of arguments for which a function has implementations.
 
 [`HigherOrderTypeSignature`] **DOES NOT** define the types that a user query could call the
@@ -46,6 +49,9 @@ enum LambdaParametersProgress
 
 **Variants**: `Partial`, `Complete`
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.higher_order_function.LambdaParametersProgress.md).
+
+
 Represents a step during the resolution of the parameters of all lambdas of a given
 higher-order function via [HigherOrderUDFImpl::lambda_parameters]. It's valid that the
 fields of a given lambda changes between steps, and is up to the implementation to
@@ -68,6 +74,9 @@ enum ValueOrLambda<V, L>
 **Variants**: `Value`, `Lambda`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.higher_order_function.ValueOrLambda.md).
+
 
 An argument to a higher order function
 
@@ -93,6 +102,9 @@ struct HigherOrderFunctionArgs
 fn return_type(&self) -> &DataType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.higher_order_function.HigherOrderFunctionArgs.md).
+
+
 Arguments passed to [`HigherOrderUDFImpl::invoke_with_args`] when invoking a
 higher order function.
 
@@ -111,6 +123,9 @@ struct HigherOrderReturnFieldArgs<'a>
 **Fields**: `arg_fields`, `scalar_arguments`
 
 **Derives**: Clone, Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.higher_order_function.HigherOrderReturnFieldArgs.md).
+
 
 Information about arguments passed to the function
 
@@ -145,6 +160,9 @@ fn new(type_signature: HigherOrderTypeSignature, volatility: Volatility) -> Self
 fn user_defined(volatility: Volatility) -> Self
 fn variadic_any(volatility: Volatility) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.higher_order_function.HigherOrderSignature.md).
+
 
 Provides information necessary for calling a higher order function.
 
@@ -197,6 +215,9 @@ fn with_aliases(self, aliases: impl IntoIterator<Item = &'static str>) -> Self
 fn from(fun: F) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.higher_order_function.HigherOrderUDF.md).
+
+
 Logical representation of a Higher Order User Defined Function.
 
 A higher order function takes one or more lambda arguments in addition to
@@ -224,6 +245,9 @@ struct LambdaArgument
 fn evaluate(&self, args: &[&dyn Fn() -> Result<ArrayRef>], spread_captures: impl FnOnce(&[ArrayRef]) -> Result<Vec<ArrayRef>>) -> Result<ColumnarValue>
 fn new(params: Vec<FieldRef>, body: Arc<dyn PhysicalExpr>, captures: Option<RecordBatch>, used_param_indices: &[usize]) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.higher_order_function.LambdaArgument.md).
+
 
 A lambda argument to a HigherOrderFunction
 
@@ -263,6 +287,9 @@ fn schema_name(&self, args: &[Expr]) -> Result<String>
 fn short_circuits(&self) -> bool
 fn signature(&self) -> &HigherOrderSignature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.higher_order_function.HigherOrderUDFImpl.md).
+
 
 Trait for implementing user defined higher order functions.
 

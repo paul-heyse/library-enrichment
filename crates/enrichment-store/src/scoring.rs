@@ -7,7 +7,7 @@ use datafusion::{
     functions::{
         core::{
             expr_ext::FieldAccessor,
-            expr_fn::{coalesce, least, named_struct},
+            expr_fn::{coalesce, least},
         },
         string::expr_fn::{concat, ends_with, lower, octet_length, starts_with, trim},
         unicode::expr_fn::strpos,
@@ -23,7 +23,12 @@ use datafusion::{
     },
     prelude::{col, lit},
 };
-use enrichment_core::search::{FACTORS, spec::SearchSpec};
+use enrichment_core::evidence::arrow_model::expressions::record;
+use enrichment_core::{
+    native_union::Cell,
+    search::{FACTORS, Ranking, spec::SearchSpec},
+    wire::data::ScoreFactor,
+};
 use std::{ops::Not, sync::Arc};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -83,33 +88,31 @@ fn any_token(tokens: Expr, predicate: impl FnOnce(Expr) -> Expr) -> Expr {
 
 /// Decode only the bounded query token list at the transport boundary.
 pub async fn tokens(runtime: &crate::runtime::QueryRuntime, query: &str) -> Result<Vec<String>> {
-    use arrow::array::{Array, ListArray};
+    enrichment_core::native_struct! { struct Tokens {tokens:Vec<String> =>enrichment_core::native_union::Rule::SequenceBounds {min:0,max:64}} }
     let session = runtime.session();
     let frame = session
-        .sql("SELECT 1")
-        .await?
+        .read_empty()?
         .select(vec![tokens_expr(&SearchSpec::new(query)).alias("tokens")])?;
-    let result = runtime.execute(frame).await?;
-    let array = result.batches[0]
-        .column(0)
-        .as_any()
-        .downcast_ref::<ListArray>()
-        .ok_or_else(|| DataFusionError::Internal("native tokens are not an Arrow list".into()))?
-        .value(0);
-    if array.len() > 64 {
-        return Err(DataFusionError::Plan(
-            "search query exceeds 64 terms".into(),
-        ));
-    }
-    let values = crate::projection::TextColumn::new(array.as_ref())?;
-    (0..array.len())
-        .map(|i| {
-            values
-                .get(i)
-                .map(ToOwned::to_owned)
-                .ok_or_else(|| DataFusionError::Internal("null native query token".into()))
-        })
-        .collect()
+    runtime
+        .require_empty_with_cause(
+            frame
+                .clone()
+                .filter(
+                    datafusion::functions_nested::expr_fn::array_length(col("tokens"))
+                        .gt(lit(64u64)),
+                )?
+                .select(vec![lit("search_terms").alias("witness")])?,
+            "search_terms",
+            "search_tokens",
+            enrichment_core::wire::DiagnosticCause::InvalidInput,
+        )
+        .await?;
+    runtime
+        .records::<Tokens>(frame, 1)
+        .await?
+        .pop()
+        .map(|row| row.tokens)
+        .ok_or_else(|| DataFusionError::Internal("search token selection missing".into()))
 }
 
 /// Compile a bounded request into built-in expressions, including higher-order list reduction.
@@ -209,16 +212,13 @@ pub fn ranking(kind: ScoreKind, spec: &SearchSpec, args: Vec<Expr>) -> Result<Ex
         }
     }
     let matched = any(rules.iter().map(|(_, condition, _)| condition.clone()));
-    let factor_type = crate::projection::score::factor_type();
+    let factor_type = ScoreFactor::data_type();
     let factors = rules
         .into_iter()
         .map(|(name, condition, points)| {
             when(
                 condition,
-                typed(
-                    named_struct(vec![lit("name"), lit(name), lit("points"), points]),
-                    Arc::new(Field::new("factor", factor_type.clone(), true)),
-                ),
+                record(&factor_type, &[("name", lit(name)), ("points", points)])?,
             )
             .otherwise(null(&factor_type)?)
         })
@@ -231,12 +231,14 @@ pub fn ranking(kind: ScoreKind, spec: &SearchSpec, args: Vec<Expr>) -> Result<Ex
         )),
         Arc::new(Field::new("score", DataType::UInt32, true)),
     );
-    let result = crate::projection::score::field();
-    let value = typed(
-        named_struct(vec![lit("score"), score, lit("factors"), factors]),
-        result.clone(),
-    );
-    when(matched, value).otherwise(null(result.data_type())?)
+    let value = record(
+        &Ranking::data_type(),
+        &[
+            ("score", coalesce(vec![score, lit(0u32)])),
+            ("factors", factors),
+        ],
+    )?;
+    when(matched, value).otherwise(null(&Ranking::data_type())?)
 }
 
 /// Eligibility shares the native matching definition with scoring.

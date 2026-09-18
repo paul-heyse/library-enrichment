@@ -38,6 +38,9 @@ fn try_to_proto(&self, base: &FileScanConfig, ctx: &datafusion_physical_plan::pr
 fn with_batch_size(&self, batch_size: usize) -> Arc<dyn FileSource>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource_avro.source.AvroSource.md).
+
+
 AvroSource holds the extra configuration that is necessary for opening avro files
 
 ---

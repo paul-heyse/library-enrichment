@@ -33,4 +33,7 @@ fn entries(&self) -> Vec<config::ConfigEntry>
 fn set(&mut self, key: &str, value: &str) -> error::Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.tests.config.ExternalConfig.md).
+
+
 ---

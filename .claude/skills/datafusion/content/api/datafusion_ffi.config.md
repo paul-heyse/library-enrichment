@@ -20,6 +20,9 @@ struct FFI_ConfigOptions
 fn from(options: &ConfigOptions) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.config.FFI_ConfigOptions.md).
+
+
 A stable struct for sharing [`ConfigOptions`] across FFI boundaries.
 
 Accessing FFI extension options require a slightly different pattern
@@ -45,6 +48,9 @@ struct FFI_TableOptions
 ```rust
 fn from(options: &TableOptions) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.config.FFI_TableOptions.md).
+
 
 A stable struct for sharing [`TableOptions`] across FFI boundaries.
 
@@ -72,5 +78,8 @@ trait ExtensionOptionsFFIProvider
 ```rust
 fn local_or_ffi_extension<C: ConfigExtension + Clone + Default>(&self) -> Option<C>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.config.ExtensionOptionsFFIProvider.md).
+
 
 ---

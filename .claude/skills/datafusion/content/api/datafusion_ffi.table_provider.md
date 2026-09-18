@@ -29,6 +29,9 @@ fn new_with_ffi_codec(provider: Arc<dyn TableProvider>, can_support_pushdown_fil
 fn drop(&mut self)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.table_provider.FFI_TableProvider.md).
+
+
 A stable struct for sharing [`TableProvider`] across FFI boundaries.
 
 # Struct Layout
@@ -93,6 +96,9 @@ fn statistics(&self) -> Option<Statistics>
 fn supports_filters_pushdown(&self, filters: &[&Expr]) -> Result<Vec<TableProviderFilterPushDown>>
 fn table_type(&self) -> TableType
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.table_provider.ForeignTableProvider.md).
+
 
 This wrapper struct exists on the receiver side of the FFI interface, so it has
 no guarantees about being able to access the data in `private_data`. Any functions

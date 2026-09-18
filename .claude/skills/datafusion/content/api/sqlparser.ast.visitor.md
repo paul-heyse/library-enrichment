@@ -10,6 +10,9 @@ Crate `sqlparser` · 10 public items · structured records in [`model/sqlparser.
 fn visit_expressions<V, E, F>(v: &V, f: F) -> core::ops::ControlFlow<E> where V: Visit, F: FnMut(&ast::Expr) -> core::ops::ControlFlow<E>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.visitor.visit_expressions.md).
+
+
 Invokes the provided closure on all expressions (e.g. `1 + 2`) present in `v`
 
 # Example
@@ -49,6 +52,9 @@ assert_eq!(visited, expected);
 ```rust
 fn visit_expressions_mut<V, E, F>(v: &mut V, f: F) -> core::ops::ControlFlow<E> where V: VisitMut, F: FnMut(&mut ast::Expr) -> core::ops::ControlFlow<E>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.visitor.visit_expressions_mut.md).
+
 
 Invokes the provided closure iteratively with a mutable reference to all expressions
 present in `v`.
@@ -125,6 +131,9 @@ assert_eq!(statements[0].to_string(), "SELECT f(x), y FROM t");
 fn visit_relations<V, E, F>(v: &V, f: F) -> core::ops::ControlFlow<E> where V: Visit, F: FnMut(&ast::ObjectName) -> core::ops::ControlFlow<E>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.visitor.visit_relations.md).
+
+
 Invokes the provided closure on all relations (e.g. table names) present in `v`
 
 # Example
@@ -163,6 +172,9 @@ assert_eq!(visited, expected);
 fn visit_relations_mut<V, E, F>(v: &mut V, f: F) -> core::ops::ControlFlow<E> where V: VisitMut, F: FnMut(&mut ast::ObjectName) -> core::ops::ControlFlow<E>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.visitor.visit_relations_mut.md).
+
+
 Invokes the provided closure with a mutable reference to all relations (e.g. table names)
 present in `v`.
 
@@ -196,6 +208,9 @@ assert_eq!(statements[0].to_string(), "SELECT a FROM bar");
 ```rust
 fn visit_statements<V, E, F>(v: &V, f: F) -> core::ops::ControlFlow<E> where V: Visit, F: FnMut(&ast::Statement) -> core::ops::ControlFlow<E>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.visitor.visit_statements.md).
+
 
 Invokes the provided closure iteratively with a mutable reference to all statements
 present in `v` (e.g. `SELECT`, `CREATE TABLE`, etc).
@@ -235,6 +250,9 @@ assert_eq!(visited, expected);
 ```rust
 fn visit_statements_mut<V, E, F>(v: &mut V, f: F) -> core::ops::ControlFlow<E> where V: VisitMut, F: FnMut(&mut ast::Statement) -> core::ops::ControlFlow<E>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.visitor.visit_statements_mut.md).
+
 
 Invokes the provided closure on all statements (e.g. `SELECT`, `CREATE TABLE`, etc) present in `v`
 
@@ -798,6 +816,9 @@ trait Visit
 fn visit<V: Visitor>(&self, visitor: &mut V) -> ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.visitor.Visit.md).
+
+
 A type that can be visited by a [`Visitor`]. See [`Visitor`] for
 recursively visiting parsed SQL statements.
 
@@ -1349,6 +1370,9 @@ trait VisitMut
 fn visit<V: VisitorMut>(&mut self, visitor: &mut V) -> ControlFlow<V::Break>
 ```
 
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.visitor.VisitMut.md).
+
+
 A type that can be visited by a [`VisitorMut`]. See [`VisitorMut`] for
 recursively visiting parsed SQL statements.
 
@@ -1389,6 +1413,9 @@ fn pre_visit_statement(&mut self, _statement: &Statement) -> ControlFlow<Self::B
 fn pre_visit_table_factor(&mut self, _table_factor: &TableFactor) -> ControlFlow<Self::Break>
 fn pre_visit_value(&mut self, _value: &ValueWithSpan) -> ControlFlow<Self::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.visitor.Visitor.md).
+
 
 A visitor that can be used to walk an AST tree.
 
@@ -1481,6 +1508,9 @@ fn pre_visit_statement(&mut self, _statement: &mut Statement) -> ControlFlow<Sel
 fn pre_visit_table_factor(&mut self, _table_factor: &mut TableFactor) -> ControlFlow<Self::Break>
 fn pre_visit_value(&mut self, _value: &mut ValueWithSpan) -> ControlFlow<Self::Break>
 ```
+
+[Full member, field, variant and typed contracts](../operations/sqlparser.ast.visitor.VisitorMut.md).
+
 
 A visitor that can be used to mutate an AST tree.
 

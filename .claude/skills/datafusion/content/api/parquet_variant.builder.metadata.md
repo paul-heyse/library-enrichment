@@ -30,6 +30,9 @@ fn truncate_field_names(&mut self, new_size: usize)
 fn try_upsert_field_name(&mut self, field_name: &str) -> Result<u32, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant.builder.metadata.ReadOnlyMetadataBuilder.md).
+
+
 A metadata builder that cannot register new field names, and merely returns the field id
 associated with a known field name. This is useful for variant unshredding operations, where the
 metadata column is fixed and -- per variant shredding spec -- already contains all field names
@@ -84,6 +87,9 @@ fn truncate_field_names(&mut self, new_size: usize)
 fn try_upsert_field_name(&mut self, field_name: &str) -> Result<u32, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet_variant.builder.metadata.WritableMetadataBuilder.md).
+
+
 Builder for constructing metadata for [`Variant`] values.
 
 This is used internally by the [`VariantBuilder`] to construct the metadata
@@ -117,6 +123,9 @@ fn num_field_names(&self) -> usize
 fn truncate_field_names(&mut self, new_size: usize)
 fn try_upsert_field_name(&mut self, field_name: &str) -> Result<u32, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet_variant.builder.metadata.MetadataBuilder.md).
+
 
 A trait for building variant metadata dictionaries, to be used in conjunction with a
 [`ValueBuilder`]. The trait provides methods for managing field names and their IDs, as well as

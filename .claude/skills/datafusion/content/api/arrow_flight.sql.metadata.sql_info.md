@@ -12,6 +12,9 @@ enum SqlInfoValue
 
 **Variants**: `String`, `Bool`, `BigInt`, `Bitmask`, `StringList`, `ListMap`
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.metadata.sql_info.SqlInfoValue.md).
+
+
 Represents a dynamic value
 
 ---
@@ -23,6 +26,9 @@ Represents a dynamic value
 ```rust
 struct GetSqlInfoBuilder<'a>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.metadata.sql_info.GetSqlInfoBuilder.md).
+
 
 A builder for a [`CommandGetSqlInfo`] response.
 
@@ -44,6 +50,9 @@ struct SqlInfoData
 fn record_batch(&self, info: impl IntoIterator<Item = u32>) -> Result<RecordBatch>
 fn schema(&self) -> SchemaRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.metadata.sql_info.SqlInfoData.md).
+
 
 A builder for [`SqlInfoData`] which is used to create [`CommandGetSqlInfo`] responses.
 
@@ -88,6 +97,9 @@ fn new() -> Self
 fn schema() -> &'static Schema
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.metadata.sql_info.SqlInfoDataBuilder.md).
+
+
 Helper to create [`CommandGetSqlInfo`] responses.
 
 [`CommandGetSqlInfo`] are metadata requests used by a Flight SQL
@@ -111,6 +123,9 @@ trait SqlInfoName
 ```rust
 fn as_u32(&self) -> u32
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.sql.metadata.sql_info.SqlInfoName.md).
+
 
 Something that can be converted into u32 (the represenation of a [`SqlInfo`] name)
 

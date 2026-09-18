@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## Crc
 
 `struct` · `buoyant_kernel::crc::Crc`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.crc.Crc.md)
 
 Also reachable as `delta_kernel::crc::Crc`
 
@@ -49,6 +50,7 @@ when the `internal-api` feature is enabled (otherwise `pub(crate)`). See `kernel
 ## DeletedRecordCountsHistogram
 
 `struct` · `buoyant_kernel::crc::DeletedRecordCountsHistogram`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.crc.DeletedRecordCountsHistogram.md)
 
 Also reachable as `delta_kernel::crc::DeletedRecordCountsHistogram`
 

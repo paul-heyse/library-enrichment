@@ -12,6 +12,9 @@ Also reachable as `datafusion_physical_expr::expressions::not`, `datafusion_phys
 fn not(arg: std::sync::Arc<dyn PhysicalExpr>) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.not.not.md).
+
+
 Creates a unary expression NOT
 
 ---
@@ -60,6 +63,9 @@ fn return_field(&self, input_schema: &Schema) -> Result<FieldRef>
 fn try_to_proto(&self, ctx: &datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalExprNode>>
 fn with_new_children(Arc<self>, children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.expressions.not.NotExpr.md).
+
 
 Not expression
 

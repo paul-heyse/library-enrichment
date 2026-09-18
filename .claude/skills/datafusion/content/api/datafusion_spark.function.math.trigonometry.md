@@ -29,6 +29,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.trigonometry.SparkCsc.md).
+
+
 <https://spark.apache.org/docs/latest/api/sql/index.html#csc>
 
 ---
@@ -59,6 +62,9 @@ fn name(&self) -> &str
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.trigonometry.SparkSec.md).
+
 
 <https://spark.apache.org/docs/latest/api/sql/index.html#sec>
 

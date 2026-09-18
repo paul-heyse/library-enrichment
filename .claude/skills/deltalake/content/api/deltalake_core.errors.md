@@ -5,6 +5,7 @@ Crate `deltalake-core` · 3 public items · structured records in [`model/deltal
 ## ColumnMappingOperation
 
 `enum` · `deltalake_core::errors::ColumnMappingOperation`
+[Full member contracts, output types and access classification](../operations/deltalake_core.errors.ColumnMappingOperation.md)
 
 Also reachable as `deltalake::ColumnMappingOperation`, `deltalake::errors::ColumnMappingOperation`, `deltalake_core::ColumnMappingOperation`
 
@@ -31,6 +32,7 @@ Whether an unsupported column-mapping access was a read or a write.
 ## DeltaTableError
 
 `enum` · `deltalake_core::errors::DeltaTableError`
+[Full member contracts, output types and access classification](../operations/deltalake_core.errors.DeltaTableError.md)
 
 Also reachable as `deltalake::DeltaTableError`, `deltalake::errors::DeltaTableError`, `deltalake_core::DeltaTableError`
 
@@ -94,6 +96,7 @@ Delta Table specific error
 ## DeltaResult
 
 `type_alias` · `deltalake_core::errors::DeltaResult`
+[Full member contracts, output types and access classification](../operations/deltalake_core.errors.DeltaResult.md)
 
 Also reachable as `deltalake::DeltaResult`, `deltalake::errors::DeltaResult`, `deltalake_core::DeltaResult`
 

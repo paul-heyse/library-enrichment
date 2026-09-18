@@ -12,4 +12,7 @@ Crate `datafusion-optimizer` · 1 public items · structured records in [`model/
 type EliminateNestedUnion = optimize_unions::OptimizeUnions
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.eliminate_nested_union.EliminateNestedUnion.md).
+
+
 ---

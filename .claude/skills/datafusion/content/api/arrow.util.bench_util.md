@@ -10,6 +10,9 @@ Crate `arrow` · 36 public items · structured records in [`model/arrow.util.ben
 fn create_array_for_type(data_type: &DataType, size: usize, null_density: f32) -> ArrayRef
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_array_for_type.md).
+
+
 Creates a random array for the given [`DataType`], `size`, and `null_density`.
 
 Useful for building arrays and record batches in benchmarks without
@@ -25,6 +28,9 @@ repeating per-type construction logic. Panics on unsupported types.
 fn create_binary_array<Offset: OffsetSizeTrait>(size: usize, null_density: f32) -> GenericBinaryArray<Offset>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_binary_array.md).
+
+
 Creates an random (but fixed-seeded) binary array of a given size and null density
 
 ---
@@ -36,6 +42,9 @@ Creates an random (but fixed-seeded) binary array of a given size and null densi
 ```rust
 fn create_binary_array_with_len_range_and_prefix_and_seed<Offset: OffsetSizeTrait>(size: usize, null_density: f32, min_len: usize, max_len: usize, prefix: &[u8], seed: u64) -> GenericBinaryArray<Offset>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_binary_array_with_len_range_and_prefix_and_seed.md).
+
 
 Creates a random [`GenericBinaryArray`] of a given `size` and `null_density`
 filling it with random bytes with lengths in the specified range,
@@ -50,6 +59,9 @@ all starting with the provided `prefix`, generated using the provided `seed`.
 ```rust
 fn create_binary_array_with_seed<Offset: OffsetSizeTrait>(size: usize, null_density: f32, bytes_seed: u64, bytes_length_seed: u64) -> GenericBinaryArray<Offset>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_binary_array_with_seed.md).
+
 
 Creates a random [`GenericBinaryArray`] of a given `size` and `null_density`
 filling it with random bytes, generated using the provided `seed`s.
@@ -69,6 +81,9 @@ These values can be the same as they are used to seed different RNGs internally.
 fn create_boolean_array(size: usize, null_density: f32, true_density: f32) -> BooleanArray where rand::distr::StandardUniform: Distribution<bool>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_boolean_array.md).
+
+
 Creates a random (but fixed-seeded) array of a given size and null density
 
 ---
@@ -81,6 +96,9 @@ Creates a random (but fixed-seeded) array of a given size and null density
 fn create_boolean_array_with_seed(size: usize, null_density: f32, true_density: f32, seed: u64) -> BooleanArray where rand::distr::StandardUniform: Distribution<bool>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_boolean_array_with_seed.md).
+
+
 Creates a random array of a given size and null density based on the provided seed
 
 ---
@@ -92,6 +110,9 @@ Creates a random array of a given size and null density based on the provided se
 ```rust
 fn create_dict_from_values<K>(size: usize, null_density: f32, values: &dyn Array) -> DictionaryArray<K> where K: ArrowDictionaryKeyType, rand::distr::StandardUniform: Distribution<K::Native>, K::Native: SampleUniform
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_dict_from_values.md).
+
 
 Creates a random (but fixed-seeded) dictionary array of a given size and null density
 with the provided values array
@@ -106,6 +127,9 @@ with the provided values array
 fn create_f16_array(size: usize, nan_density: f32) -> Float16Array
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_f16_array.md).
+
+
 Creates a random (but fixed-seeded) f16 array of a given size and nan-value density
 
 ---
@@ -117,6 +141,9 @@ Creates a random (but fixed-seeded) f16 array of a given size and nan-value dens
 ```rust
 fn create_f32_array(size: usize, nan_density: f32) -> Float32Array
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_f32_array.md).
+
 
 Creates a random (but fixed-seeded) f32 array of a given size and nan-value density
 
@@ -130,6 +157,9 @@ Creates a random (but fixed-seeded) f32 array of a given size and nan-value dens
 fn create_f64_array(size: usize, nan_density: f32) -> Float64Array
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_f64_array.md).
+
+
 Creates a random (but fixed-seeded) f64 array of a given size and nan-value density
 
 ---
@@ -141,6 +171,9 @@ Creates a random (but fixed-seeded) f64 array of a given size and nan-value dens
 ```rust
 fn create_f64_array_with_seed(size: usize, nan_density: f32, seed: u64) -> Float64Array
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_f64_array_with_seed.md).
+
 
 Creates a random f64 array of a given size and nan-value density based on a given seed
 
@@ -154,6 +187,9 @@ Creates a random f64 array of a given size and nan-value density based on a give
 fn create_fsb_array(size: usize, null_density: f32, value_len: usize) -> FixedSizeBinaryArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_fsb_array.md).
+
+
 Creates an random (but fixed-seeded) array of a given size and null density
 
 ---
@@ -165,6 +201,9 @@ Creates an random (but fixed-seeded) array of a given size and null density
 ```rust
 fn create_longer_string_array_with_same_prefix<Offset: OffsetSizeTrait>(size: usize, null_density: f32) -> GenericStringArray<Offset>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_longer_string_array_with_same_prefix.md).
+
 
 Creates longer string array with same prefix, the prefix should be larger than 4 bytes,
 and the string length should be larger than 12 bytes
@@ -180,6 +219,9 @@ so that we can compare the performance with StringViewArray, because StringViewA
 fn create_longer_string_view_array_with_same_prefix(size: usize, null_density: f32) -> StringViewArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_longer_string_view_array_with_same_prefix.md).
+
+
 Creates longer string view array with same prefix, the prefix should be larger than 4 bytes,
 and the string length should be larger than 12 bytes
 so that we can compare the StringArray performance with StringViewArray, because StringViewArray has 4 bytes inline for view
@@ -194,6 +236,9 @@ so that we can compare the StringArray performance with StringViewArray, because
 fn create_month_day_nano_array_with_seed(size: usize, null_density: f32, seed: u64) -> IntervalMonthDayNanoArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_month_day_nano_array_with_seed.md).
+
+
 Creates a [`PrimitiveArray`] of a given `size` and `null_density`
 filling it with random [`IntervalMonthDayNano`] generated using the provided `seed`.
 
@@ -207,6 +252,9 @@ filling it with random [`IntervalMonthDayNano`] generated using the provided `se
 fn create_primitive_array<T>(size: usize, null_density: f32) -> PrimitiveArray<T> where T: ArrowPrimitiveType, rand::distr::StandardUniform: Distribution<T::Native>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_primitive_array.md).
+
+
 Creates an random (but fixed-seeded) array of a given size and null density
 
 ---
@@ -218,6 +266,9 @@ Creates an random (but fixed-seeded) array of a given size and null density
 ```rust
 fn create_primitive_array_range<T>(size: usize, null_density: f32, value_range: std::ops::Range<T::Native>) -> PrimitiveArray<T> where T: ArrowPrimitiveType, rand::distr::StandardUniform: Distribution<T::Native>, T::Native: SampleUniform
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_primitive_array_range.md).
+
 
 Creates an random (but fixed-seeded) array of a given size and null density,
 all the values located in the given range
@@ -232,6 +283,9 @@ all the values located in the given range
 fn create_primitive_array_with_seed<T>(size: usize, null_density: f32, seed: u64) -> PrimitiveArray<T> where T: ArrowPrimitiveType, rand::distr::StandardUniform: Distribution<T::Native>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_primitive_array_with_seed.md).
+
+
 Creates a [`PrimitiveArray`] of a given `size` and `null_density`
 filling it with random numbers generated using the provided `seed`.
 
@@ -244,6 +298,9 @@ filling it with random numbers generated using the provided `seed`.
 ```rust
 fn create_primitive_fixed_size_list_array<T>(size: usize, null_density: f32, value_null_density: f32, list_size: i32) -> FixedSizeListArray where T: ArrowPrimitiveType, rand::distr::StandardUniform: Distribution<T::Native>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_primitive_fixed_size_list_array.md).
+
 
 Create a FixedSizeList array of primitive values
 
@@ -263,6 +320,9 @@ Arguments:
 fn create_primitive_list_array<O, T>(size: usize, null_density: f32, list_null_density: f32, max_list_size: usize) -> GenericListArray<O> where O: OffsetSizeTrait, T: ArrowPrimitiveType, rand::distr::StandardUniform: Distribution<T::Native>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_primitive_list_array.md).
+
+
 Create a List/LargeList Array of primitive values using a fixed seed
 
 See [`create_primitive_list_array_with_seed`] for details on arguments.
@@ -276,6 +336,9 @@ See [`create_primitive_list_array_with_seed`] for details on arguments.
 ```rust
 fn create_primitive_list_array_with_seed<O, T>(size: usize, null_density: f32, list_null_density: f32, max_list_size: usize, seed: u64) -> GenericListArray<O> where O: OffsetSizeTrait, T: ArrowPrimitiveType, rand::distr::StandardUniform: Distribution<T::Native>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_primitive_list_array_with_seed.md).
+
 
 Create a List/LargeList Array  of primitive values
 
@@ -296,6 +359,9 @@ Arguments:
 fn create_primitive_list_view_array<O, T>(size: usize, null_density: f32, list_null_density: f32, max_list_size: usize) -> GenericListViewArray<O> where T: ArrowPrimitiveType, rand::distr::StandardUniform: Distribution<T::Native>, O: OffsetSizeTrait
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_primitive_list_view_array.md).
+
+
 Create a ListViewArray of primitive values using a fixed seed
 
 See [`create_primitive_list_array_with_seed`] for details on arguments.
@@ -310,6 +376,9 @@ See [`create_primitive_list_array_with_seed`] for details on arguments.
 fn create_primitive_run_array<R: RunEndIndexType, V: ArrowPrimitiveType>(logical_array_len: usize, physical_array_len: usize) -> RunArray<R>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_primitive_run_array.md).
+
+
 Create primitive run array for given logical and physical array lengths
 
 ---
@@ -321,6 +390,9 @@ Create primitive run array for given logical and physical array lengths
 ```rust
 fn create_sparse_dict_from_values<K>(size: usize, null_density: f32, values: &dyn Array, key_range: std::ops::Range<K::Native>) -> DictionaryArray<K> where K: ArrowDictionaryKeyType, rand::distr::StandardUniform: Distribution<K::Native>, K::Native: SampleUniform
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_sparse_dict_from_values.md).
+
 
 Creates a random (but fixed-seeded) dictionary array of a given size and null density
 with the provided values array and key range
@@ -334,6 +406,9 @@ with the provided values array and key range
 ```rust
 fn create_string_array<Offset: OffsetSizeTrait>(size: usize, null_density: f32) -> GenericStringArray<Offset>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_string_array.md).
+
 
 Creates a random (but fixed-seeded) string array of a given size and null density.
 
@@ -351,6 +426,9 @@ which have a dramatic impact on performance of some queries, e.g. LIKE/ILIKE/reg
 fn create_string_array_for_runs(physical_array_len: usize, logical_array_len: usize, string_len: usize) -> Vec<String>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_string_array_for_runs.md).
+
+
 Create string array to be used by run array builder. The string array
 will result in run array with physical length of `physical_array_len`
 and logical length of `logical_array_len`
@@ -365,6 +443,9 @@ and logical length of `logical_array_len`
 fn create_string_array_with_len<Offset: OffsetSizeTrait>(size: usize, null_density: f32, str_len: usize) -> GenericStringArray<Offset>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_string_array_with_len.md).
+
+
 Creates a random (but fixed-seeded) array of a given size, null density and length
 
 ---
@@ -376,6 +457,9 @@ Creates a random (but fixed-seeded) array of a given size, null density and leng
 ```rust
 fn create_string_array_with_len_range_and_prefix_and_seed<Offset: OffsetSizeTrait>(size: usize, null_density: f32, min_str_len: usize, max_str_len: usize, prefix: &str, seed: u64) -> GenericStringArray<Offset>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_string_array_with_len_range_and_prefix_and_seed.md).
+
 
 Creates a random [`GenericStringArray`] of a given `size` and `null_density`
 filling it with random strings with lengths in the specified range,
@@ -391,6 +475,9 @@ all starting with the provided `prefix`, generated using the provided `seed`.
 fn create_string_array_with_max_len<Offset: OffsetSizeTrait>(size: usize, null_density: f32, max_str_len: usize) -> GenericStringArray<Offset>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_string_array_with_max_len.md).
+
+
 Creates a random (but fixed-seeded) array of rand size with a given max size, null density and length
 
 ---
@@ -402,6 +489,9 @@ Creates a random (but fixed-seeded) array of rand size with a given max size, nu
 ```rust
 fn create_string_dict_array<K: ArrowDictionaryKeyType>(size: usize, null_density: f32, str_len: usize) -> DictionaryArray<K>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_string_dict_array.md).
+
 
 Creates an random (but fixed-seeded) array of a given size and null density
 consisting of random 4 character alphanumeric strings
@@ -415,6 +505,9 @@ consisting of random 4 character alphanumeric strings
 ```rust
 fn create_string_map_array<T>(size: usize, null_density: f32, max_map_size: usize, key_len: usize) -> MapArray where T: ArrowPrimitiveType, rand::distr::StandardUniform: Distribution<T::Native>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_string_map_array.md).
+
 
 Create a Map array with string keys and primitive values
 
@@ -435,6 +528,9 @@ Arguments:
 fn create_string_view_array(size: usize, null_density: f32) -> StringViewArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_string_view_array.md).
+
+
 Creates a random (but fixed-seeded) string view array of a given size and null density.
 
 See `create_string_array` above for more details.
@@ -449,6 +545,9 @@ See `create_string_array` above for more details.
 fn create_string_view_array_with_fixed_len(size: usize, null_density: f32, str_len: usize) -> StringViewArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_string_view_array_with_fixed_len.md).
+
+
 Creates a random (but fixed-seeded) array of a given size, null density and length
 
 ---
@@ -461,6 +560,9 @@ Creates a random (but fixed-seeded) array of a given size, null density and leng
 fn create_string_view_array_with_len(size: usize, null_density: f32, str_len: usize, mixed: bool) -> StringViewArray
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_string_view_array_with_len.md).
+
+
 Creates a random (but fixed-seeded) array of a given size, null density and length
 
 ---
@@ -472,6 +574,9 @@ Creates a random (but fixed-seeded) array of a given size, null density and leng
 ```rust
 fn create_string_view_array_with_len_range_and_seed(size: usize, null_density: f32, range: std::ops::Range<usize>, seed: u64) -> StringViewArray
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_string_view_array_with_len_range_and_seed.md).
+
 
 Creates a string view array of a given range, null density and length
 
@@ -490,6 +595,9 @@ Arguments:
 ```rust
 fn create_string_view_array_with_max_len(size: usize, null_density: f32, max_str_len: usize) -> StringViewArray
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow.util.bench_util.create_string_view_array_with_max_len.md).
+
 
 Creates a random (but fixed-seeded) array of rand size with a given max size, null density and length
 

@@ -30,4 +30,7 @@ fn return_type(&self, args: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions.core.version.VersionFunc.md).
+
+
 ---

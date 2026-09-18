@@ -41,6 +41,9 @@ fn set(&mut self, _: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key: &str, description: &'static str)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.parsers.CompressionTypeVariant.md).
+
+
 Readable file compression type
 
 ---
@@ -77,6 +80,9 @@ fn from_str(s: &str) -> Result<Self, Self::Err>
 fn set(&mut self, _: &str, value: &str) -> Result<()>
 fn visit<V: Visit>(&self, v: &mut V, key: &str, description: &'static str)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.parsers.CsvQuoteStyle.md).
+
 
 CSV quote style
 

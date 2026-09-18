@@ -24,6 +24,9 @@ enum PlanType
 fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.display.PlanType.md).
+
+
 Represents which type of plan, when storing multiple
 for use in EXPLAIN plans
 
@@ -52,6 +55,9 @@ fn new(plan_type: PlanType, plan: impl Into<String>) -> Self
 fn should_display(&self, verbose_mode: bool) -> bool
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.display.StringifiedPlan.md).
+
+
 Represents some sort of execution plan, in String form
 
 ---
@@ -75,6 +81,9 @@ trait ToStringifiedPlan
 ```rust
 fn to_stringified(&self, plan_type: PlanType) -> StringifiedPlan
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.display.ToStringifiedPlan.md).
+
 
 Trait for something that can be formatted as a stringified plan
 

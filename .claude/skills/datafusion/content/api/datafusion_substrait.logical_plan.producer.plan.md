@@ -10,6 +10,9 @@ Crate `datafusion-substrait` · 2 public items · structured records in [`model/
 fn from_subquery_alias(producer: &mut impl SubstraitProducer, alias: &datafusion::logical_expr::SubqueryAlias) -> datafusion::common::Result<Box<substrait::proto::Rel>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.plan.from_subquery_alias.md).
+
+
 ---
 
 ## to_substrait_plan
@@ -19,6 +22,9 @@ fn from_subquery_alias(producer: &mut impl SubstraitProducer, alias: &datafusion
 ```rust
 fn to_substrait_plan(plan: &datafusion::logical_expr::LogicalPlan, state: &datafusion::execution::SessionState) -> datafusion::common::Result<Box<substrait::proto::Plan>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.plan.to_substrait_plan.md).
+
 
 Convert DataFusion LogicalPlan to Substrait Plan
 

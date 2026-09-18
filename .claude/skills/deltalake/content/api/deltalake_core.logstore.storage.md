@@ -5,6 +5,7 @@ Crate `deltalake-core` · 6 public items · structured records in [`model/deltal
 ## client_options_from_certificate
 
 `function` · `deltalake_core::logstore::storage::client_options_from_certificate`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.storage.client_options_from_certificate.md)
 
 Also reachable as `deltalake::logstore::client_options_from_certificate`, `deltalake_core::logstore::client_options_from_certificate`
 
@@ -19,6 +20,7 @@ Read a PEM certificate file and build [`object_store::ClientOptions`] with it.
 ## CertificateConfig
 
 `struct` · `deltalake_core::logstore::storage::CertificateConfig`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.storage.CertificateConfig.md)
 
 ```rust
 struct CertificateConfig
@@ -48,6 +50,7 @@ fn try_update_key(&mut self, key: &str, v: &str) -> DeltaResult<Option<()>>
 ## DefaultObjectStoreRegistry
 
 `struct` · `deltalake_core::logstore::storage::DefaultObjectStoreRegistry`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.storage.DefaultObjectStoreRegistry.md)
 
 Also reachable as `deltalake::logstore::DefaultObjectStoreRegistry`, `deltalake_core::logstore::DefaultObjectStoreRegistry`
 
@@ -79,6 +82,7 @@ The default [`ObjectStoreRegistry`]
 ## LimitConfig
 
 `struct` · `deltalake_core::logstore::storage::LimitConfig`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.storage.LimitConfig.md)
 
 ```rust
 struct LimitConfig
@@ -108,6 +112,7 @@ fn try_update_key(&mut self, key: &str, v: &str) -> DeltaResult<Option<()>>
 ## ObjectStoreRegistry
 
 `trait` · `deltalake_core::logstore::storage::ObjectStoreRegistry`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.storage.ObjectStoreRegistry.md)
 
 Also reachable as `deltalake::logstore::ObjectStoreRegistry`, `deltalake_core::logstore::ObjectStoreRegistry`
 
@@ -134,6 +139,7 @@ A registry mapping URLs to [`ObjectStore`] instances, supporting registration an
 ## ObjectStoreRef
 
 `type_alias` · `deltalake_core::logstore::storage::ObjectStoreRef`
+[Full member contracts, output types and access classification](../operations/deltalake_core.logstore.storage.ObjectStoreRef.md)
 
 Also reachable as `deltalake::logstore::ObjectStoreRef`, `deltalake_core::logstore::ObjectStoreRef`
 

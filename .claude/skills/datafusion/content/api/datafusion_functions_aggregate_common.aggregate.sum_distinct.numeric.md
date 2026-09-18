@@ -33,6 +33,9 @@ fn state(&mut self) -> Result<Vec<ScalarValue>>
 fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.sum_distinct.numeric.DistinctSumAccumulator.md).
+
+
 Accumulator for computing SUM(DISTINCT expr)
 
 ---

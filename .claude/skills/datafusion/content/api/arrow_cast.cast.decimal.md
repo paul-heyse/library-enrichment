@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::parse_string_to_decimal_native`, `arrow_cast:
 fn parse_string_to_decimal_native<T: DecimalType>(value_str: &str, scale: usize) -> Result<T::Native, ArrowError> where T::Native: DecimalCast + ArrowNativeTypeOp
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_cast.cast.decimal.parse_string_to_decimal_native.md).
+
+
 Parses given string to specified decimal native (i128/i256) based on given
 scale. Returns an `Err` if it cannot parse given string.
 
@@ -26,6 +29,9 @@ Also reachable as `arrow::compute::rescale_decimal`, `arrow_cast::cast::rescale_
 ```rust
 fn rescale_decimal<I: DecimalType, O: DecimalType>(value: I::Native, input_precision: u8, input_scale: i8, output_precision: u8, output_scale: i8) -> Option<O::Native> where I::Native: DecimalCast + ArrowNativeTypeOp, O::Native: DecimalCast + ArrowNativeTypeOp
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.cast.decimal.rescale_decimal.md).
+
 
 Rescales a decimal value from `(input_precision, input_scale)` to
 `(output_precision, output_scale)` and returns the converted number when it fits
@@ -54,6 +60,9 @@ Also reachable as `arrow::compute::single_float_to_decimal`, `arrow_cast::cast::
 ```rust
 fn single_float_to_decimal<D>(input: f64, mul: f64) -> Option<D::Native> where D: DecimalType + ArrowPrimitiveType, <D as ArrowPrimitiveType>::Native: DecimalCast
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.cast.decimal.single_float_to_decimal.md).
+
 
 Cast a single floating point value to a decimal native with the given multiple.
 Returns `None` if the value cannot be represented with the requested precision.
@@ -84,6 +93,9 @@ fn to_i256(self) -> Option<i256>
 fn to_i32(self) -> Option<i32>
 fn to_i64(self) -> Option<i64>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_cast.cast.decimal.DecimalCast.md).
+
 
 A utility trait that provides checked conversions between
 decimal types inspired by [`NumCast`]

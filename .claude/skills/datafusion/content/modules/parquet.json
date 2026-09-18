@@ -1,0 +1,134 @@
+[
+  {
+    "id": "a2a0c4ff17ff9b4865c11f69",
+    "path": "parquet",
+    "name": "parquet",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod parquet",
+    "docs": "\nThis crate contains the official Native Rust implementation of\n[Apache Parquet](https://parquet.apache.org/), part of\nthe [Apache Arrow](https://arrow.apache.org/) project.\nThe crate provides a number of APIs to read and write Parquet files,\ncovering a range of use cases.\n\nPlease see the [parquet crates.io](https://crates.io/crates/parquet)\npage for feature flags and tips to improve performance.\n\n# Format Overview\n\nParquet is a columnar format, which means that unlike row formats like [CSV], values are\niterated along columns instead of rows. Parquet is similar in spirit to [Arrow], but\nfocuses on storage efficiency whereas Arrow prioritizes compute efficiency.\n\nParquet files are partitioned for scalability. Each file contains metadata,\nalong with zero or more \"row groups\", each row group containing one or\nmore columns. The APIs in this crate reflect this structure.\n\nData in Parquet files is strongly typed and differentiates between logical\nand physical types (see [`schema`]). In addition, Parquet files may contain\nother metadata, such as statistics, which can be used to optimize reading\n(see [`file::metadata`]).\nFor more details about the Parquet format itself, see the [Parquet spec]\n\n[Parquet spec]: https://github.com/apache/parquet-format/blob/master/README.md#file-format\n\n# APIs\n\nThis crate exposes a number of APIs for different use-cases.\n\n## Metadata and Schema\n\nThe [`schema`] module provides APIs to work with Parquet schemas. The\n[`file::metadata`] module provides APIs to work with Parquet metadata.\n\n## Reading and Writing Arrow (`arrow` feature)\n\nThe [`arrow`] module supports reading and writing Parquet data to/from\nArrow [`RecordBatch`]es. Using Arrow is simple and performant, and allows workloads\nto leverage the wide range of data transforms provided by the [arrow] crate, and by the\necosystem of [Arrow] compatible systems.\n\nMost users will use [`ArrowWriter`] for writing and [`ParquetRecordBatchReaderBuilder`] for\nreading from synchronous IO sources such as files or in-memory buffers.\n\nLower level APIs include\n* [`ParquetPushDecoder`] for file grained control over interleaving of IO and CPU.\n* [`ArrowColumnWriter`] for writing using multiple threads,\n* [`RowFilter`] to apply filters during decode\n\n### EXPERIMENTAL: Content-Defined Chunking\n\n[`ArrowWriter`] supports content-defined chunking (CDC), which creates data page\nboundaries based on content rather than fixed sizes. CDC enables efficient\ndeduplication in content-addressable storage (CAS) systems: when the same data\nappears in successive file versions, it will produce identical byte sequences that\nCAS backends can deduplicate.\n\nEnable CDC via [`WriterProperties`]:\n\n```rust\n# use parquet::file::properties::{WriterProperties, CdcOptions};\nlet props = WriterProperties::builder()\n    .set_content_defined_chunking(Some(CdcOptions::default()))\n    .build();\n```\n\nSee [`CdcOptions`] for chunk size and normalization parameters.\n\n[`WriterProperties`]: file::properties::WriterProperties\n[`CdcOptions`]: file::properties::CdcOptions\n\n[`ArrowWriter`]: arrow::arrow_writer::ArrowWriter\n[`ParquetRecordBatchReaderBuilder`]: arrow::arrow_reader::ParquetRecordBatchReaderBuilder\n[`ParquetPushDecoder`]: arrow::push_decoder::ParquetPushDecoder\n[`ArrowColumnWriter`]: arrow::arrow_writer::ArrowColumnWriter\n[`RowFilter`]: arrow::arrow_reader::RowFilter\n\n## `async` Reading and Writing Arrow (`arrow` feature + `async` feature)\n\nThe [`async_reader`] and [`async_writer`] modules provide async APIs to\nread and write [`RecordBatch`]es  asynchronously.\n\nMost users will use [`AsyncArrowWriter`] for writing and [`ParquetRecordBatchStreamBuilder`]\nfor reading, automatically optimizing IO based on any predicates or projections provided.\nObject storage services such as S3 can be integrated by implementing\n[`AsyncFileReader`] on top of a client such as the [object_store] crate,\nor by passing a writer implementing [`AsyncWrite`] (such as\n`object_store::buffered::BufWriter`) to [`AsyncArrowWriter`].\n\n[`async_reader`]: arrow::async_reader\n[`async_writer`]: arrow::async_writer\n[`AsyncArrowWriter`]: arrow::async_writer::AsyncArrowWriter\n[`AsyncFileReader`]: arrow::async_reader::AsyncFileReader\n[`AsyncWrite`]: https://docs.rs/tokio/latest/tokio/io/trait.AsyncWrite.html\n[`ParquetRecordBatchStreamBuilder`]: arrow::async_reader::ParquetRecordBatchStreamBuilder\n\n## Variant Logical Type (`variant_experimental` feature)\n\nThe [`variant`] module supports reading and writing Parquet files\nwith the [Variant Binary Encoding] logical type, which can represent\nsemi-structured data such as JSON efficiently.\n\n[Variant Binary Encoding]: https://github.com/apache/parquet-format/blob/master/VariantEncoding.md\n\n## Read/Write Parquet Directly\n\nWorkloads needing finer-grained control, or to avoid a dependence on arrow,\ncan use the APIs in [`mod@file`] directly. These APIs  are harder to use\nas they directly use the underlying Parquet data model, and require knowledge\nof the Parquet format, including the details of [Dremel] record shredding\nand [Logical Types].\n\n[arrow]: https://docs.rs/arrow/latest/arrow/index.html\n[Arrow]: https://arrow.apache.org/\n[`RecordBatch`]: https://docs.rs/arrow/latest/arrow/array/struct.RecordBatch.html\n[CSV]: https://en.wikipedia.org/wiki/Comma-separated_values\n[Dremel]: https://research.google/pubs/pub36632/\n[Logical Types]: https://github.com/apache/parquet-format/blob/master/LogicalTypes.md\n[object_store]: https://docs.rs/object_store/latest/object_store/",
+    "span": {
+      "filename": "src/lib.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        230,
+        35
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[warn(missing_docs)]"
+      },
+      {
+        "other": "#[attr = CfgAttrTrace([NameValue { name: \"docsrs\", value: None, span: src/lib.rs:145:13: 145:19 (#0) }])]"
+      },
+      {
+        "other": "#[doc(html_favicon_url = \"https://raw.githubusercontent.com/apache/parquet-format/25f05e73d8cd7f5c83532ce51cb4f4de8ba5f2a2/logo/parquet-logos_1.svg\")]"
+      },
+      {
+        "other": "#[doc(html_logo_url = \"https://raw.githubusercontent.com/apache/parquet-format/25f05e73d8cd7f5c83532ce51cb4f4de8ba5f2a2/logo/parquet-logos_1.svg\")]"
+      },
+      {
+        "other": "#[attr = Feature([doc_cfg#0])]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": true,
+        "items": [
+          108,
+          1098,
+          1657,
+          3071,
+          4435,
+          4920,
+          7143,
+          7605,
+          7900,
+          7912,
+          7967,
+          3648
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`file::metadata`": 5966,
+      "file::properties::WriterProperties": 3207,
+      "`arrow`": 3071,
+      "arrow::push_decoder::ParquetPushDecoder": 3042,
+      "arrow::async_reader::ParquetRecordBatchStreamBuilder": 2995,
+      "`variant`": 7912,
+      "arrow::async_writer::AsyncArrowWriter": 3551,
+      "arrow::arrow_writer::ArrowWriter": 3205,
+      "arrow::arrow_reader::ParquetRecordBatchReaderBuilder": 2994,
+      "arrow::arrow_reader::RowFilter": 2526,
+      "file::properties::CdcOptions": 6267,
+      "arrow::arrow_writer::ArrowColumnWriter": 3229,
+      "`schema`": 7900,
+      "arrow::async_reader::AsyncFileReader": 3034,
+      "arrow::async_reader": 3416,
+      "`mod@file`": 7143,
+      "arrow::async_writer": 3579
+    },
+    "link_paths": {
+      "`file::metadata`": "parquet::file::metadata",
+      "file::properties::WriterProperties": "parquet::file::properties::WriterProperties",
+      "`arrow`": "parquet::arrow",
+      "arrow::push_decoder::ParquetPushDecoder": "parquet::arrow::push_decoder::ParquetPushDecoder",
+      "arrow::async_reader::ParquetRecordBatchStreamBuilder": "parquet::arrow::async_reader::ParquetRecordBatchStreamBuilder",
+      "`variant`": "parquet::variant",
+      "arrow::async_writer::AsyncArrowWriter": "parquet::arrow::async_writer::AsyncArrowWriter",
+      "arrow::arrow_writer::ArrowWriter": "parquet::arrow::arrow_writer::ArrowWriter",
+      "arrow::arrow_reader::ParquetRecordBatchReaderBuilder": "parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder",
+      "arrow::arrow_reader::RowFilter": "parquet::arrow::arrow_reader::filter::RowFilter",
+      "file::properties::CdcOptions": "parquet::file::properties::CdcOptions",
+      "arrow::arrow_writer::ArrowColumnWriter": "parquet::arrow::arrow_writer::ArrowColumnWriter",
+      "`schema`": "parquet::schema",
+      "arrow::async_reader::AsyncFileReader": "parquet::arrow::async_reader::AsyncFileReader",
+      "arrow::async_reader": "parquet::arrow::async_reader",
+      "`mod@file`": "parquet::file",
+      "arrow::async_writer": "parquet::arrow::async_writer"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3546",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/parquet.md",
+    "record_file": "modules/parquet.json",
+    "anchor": "op-a2a0c4ff17ff9b4865c11f69",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`file::metadata`": "../modules/parquet.file.metadata.md#op-83908534150f436bfde8c42b",
+      "file::properties::WriterProperties": "../operations/parquet.file.properties.WriterProperties.md#op-1a8b0462c7a132d1d5004af2",
+      "`arrow`": "../modules/parquet.arrow.md#op-b2d3d71b2a2cc696513bb543",
+      "arrow::push_decoder::ParquetPushDecoder": "../operations/parquet.arrow.push_decoder.ParquetPushDecoder.md#op-4c043486cf5c22ecde7f148a",
+      "arrow::async_reader::ParquetRecordBatchStreamBuilder": "../operations/parquet.arrow.async_reader.ParquetRecordBatchStreamBuilder.md#op-36119f71505f76bb82a22932",
+      "`variant`": "../modules/parquet.variant.md#op-661d0febb503222365f1b4d8",
+      "arrow::async_writer::AsyncArrowWriter": "../operations/parquet.arrow.async_writer.AsyncArrowWriter.md#op-d9df4726e3133f2ae1d81ca9",
+      "arrow::arrow_writer::ArrowWriter": "../operations/parquet.arrow.arrow_writer.ArrowWriter.md#op-dc781972049f13083eb8f4f3",
+      "arrow::arrow_reader::ParquetRecordBatchReaderBuilder": "../operations/parquet.arrow.arrow_reader.ParquetRecordBatchReaderBuilder.md#op-1638827d919dceda05d4f2dd",
+      "arrow::arrow_reader::RowFilter": "../operations/parquet.arrow.arrow_reader.filter.RowFilter.md#op-a310d73e2b8ee5aca56c0c1f",
+      "file::properties::CdcOptions": "../operations/parquet.file.properties.CdcOptions.md#op-e03256b07941edddd28e75b2",
+      "arrow::arrow_writer::ArrowColumnWriter": "../operations/parquet.arrow.arrow_writer.ArrowColumnWriter.md#op-b2f79c40222ecdd56db8aa79",
+      "`schema`": "../modules/parquet.schema.md#op-8f68e8d1972333f8e4689b62",
+      "arrow::async_reader::AsyncFileReader": "../operations/parquet.arrow.async_reader.AsyncFileReader.md#op-69c2992a81570b27e07fe176",
+      "arrow::async_reader": "../modules/parquet.arrow.async_reader.md#op-c489f6e88382778fc1709e8d",
+      "`mod@file`": "../modules/parquet.file.md#op-32c82f677bb3901ca5a9d887",
+      "arrow::async_writer": "../modules/parquet.arrow.async_writer.md#op-7658fdf69eb303596f1af00d"
+    }
+  }
+]

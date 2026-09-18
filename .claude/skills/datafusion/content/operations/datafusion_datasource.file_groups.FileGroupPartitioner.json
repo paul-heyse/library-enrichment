@@ -1,0 +1,1034 @@
+[
+  {
+    "id": "7b24c3a42bf8f20212e4a135",
+    "path": "datafusion_datasource::file_groups::FileGroupPartitioner",
+    "name": "FileGroupPartitioner",
+    "owner": null,
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct FileGroupPartitioner",
+    "docs": "Repartition input files into `target_partitions` partitions, if total file size exceed\n`repartition_file_min_size`\n\nThis partitions evenly by file byte range, and does not have any knowledge\nof how data is laid out in specific files. The specific `FileOpener` are\nresponsible for the actual partitioning on specific data source type. (e.g.\nthe `CsvOpener` will read lines overlap with byte range as well as\nhandle boundaries to ensure all lines will be read exactly once)\n\n# Example\n\nFor example, if there are two files `A` and `B` that we wish to read with 4\npartitions (with 4 threads) they will be divided as follows:\n\n```text\n                                   ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐\n                                     ┌─────────────────┐\n                                   │ │                 │ │\n                                     │     File A      │\n                                   │ │  Range: 0-2MB   │ │\n                                     │                 │\n                                   │ └─────────────────┘ │\n                                    ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─\n┌─────────────────┐                ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐\n│                 │                  ┌─────────────────┐\n│                 │                │ │                 │ │\n│                 │                  │     File A      │\n│                 │                │ │   Range 2-4MB   │ │\n│                 │                  │                 │\n│                 │                │ └─────────────────┘ │\n│  File A (7MB)   │   ────────▶     ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─\n│                 │                ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐\n│                 │                  ┌─────────────────┐\n│                 │                │ │                 │ │\n│                 │                  │     File A      │\n│                 │                │ │  Range: 4-6MB   │ │\n│                 │                  │                 │\n│                 │                │ └─────────────────┘ │\n└─────────────────┘                 ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─\n┌─────────────────┐                ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐\n│  File B (1MB)   │                  ┌─────────────────┐\n│                 │                │ │     File A      │ │\n└─────────────────┘                  │  Range: 6-7MB   │\n                                   │ └─────────────────┘ │\n                                     ┌─────────────────┐\n                                   │ │  File B (1MB)   │ │\n                                     │                 │\n                                   │ └─────────────────┘ │\n                                    ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─\n\n                                   If target_partitions = 4,\n                                     divides into 4 groups\n```\n\n# Maintaining Order\n\nWithin each group files are read sequentially. Thus, if the overall order of\ntuples must be preserved, multiple files can not be mixed in the same group.\n\nIn this case, the code will split the largest files evenly into any\navailable empty groups, but the overall distribution may not be as even\nas if the order did not need to be preserved.\n\n```text\n                                  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐\n                                     ┌─────────────────┐\n                                   │ │                 │ │\n                                     │     File A      │\n                                   │ │  Range: 0-2MB   │ │\n                                     │                 │\n┌─────────────────┐                │ └─────────────────┘ │\n│                 │                 ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─\n│                 │                ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐\n│                 │                  ┌─────────────────┐\n│                 │                │ │                 │ │\n│                 │                  │     File A      │\n│                 │                │ │   Range 2-4MB   │ │\n│  File A (6MB)   │   ────────▶      │                 │\n│    (ordered)    │                │ └─────────────────┘ │\n│                 │                 ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─\n│                 │                ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐\n│                 │                  ┌─────────────────┐\n│                 │                │ │                 │ │\n│                 │                  │     File A      │\n│                 │                │ │  Range: 4-6MB   │ │\n└─────────────────┘                  │                 │\n┌─────────────────┐                │ └─────────────────┘ │\n│  File B (1MB)   │                 ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─\n│    (ordered)    │                ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐\n└─────────────────┘                  ┌─────────────────┐\n                                   │ │  File B (1MB)   │ │\n                                     │                 │\n                                   │ └─────────────────┘ │\n                                    ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─\n\n                                   If target_partitions = 4,\n                                     divides into 4 groups\n```",
+    "span": {
+      "filename": "src/file_groups.rs",
+      "begin": [
+        131,
+        1
+      ],
+      "end": [
+        138,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          424,
+          425,
+          426,
+          427,
+          428,
+          429,
+          430,
+          431,
+          432,
+          433,
+          434,
+          435,
+          436,
+          437,
+          438,
+          439,
+          440,
+          441,
+          442,
+          443,
+          445,
+          447,
+          448,
+          450
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "210",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.md",
+    "record_file": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.json",
+    "anchor": "op-7b24c3a42bf8f20212e4a135",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileGroupPartitioner"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "226313486e44d3c98232c689",
+    "path": "datafusion_datasource::file_groups::FileGroupPartitioner::clone",
+    "name": "clone",
+    "owner": "datafusion_datasource::file_groups::FileGroupPartitioner",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> FileGroupPartitioner",
+    "docs": "",
+    "span": {
+      "filename": "src/file_groups.rs",
+      "begin": [
+        130,
+        17
+      ],
+      "end": [
+        130,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "FileGroupPartitioner",
+              "id": 210,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "210": "datafusion_datasource::file_groups::FileGroupPartitioner"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileGroupPartitioner",
+          "id": "datafusion_datasource::file_groups::FileGroupPartitioner",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_groups.rs",
+        "begin": [
+          130,
+          17
+        ],
+        "end": [
+          130,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "446",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.md",
+    "record_file": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.json",
+    "anchor": "op-226313486e44d3c98232c689",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileGroupPartitioner::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7b2d98b80a46e0f976acf314",
+    "path": "datafusion_datasource::file_groups::FileGroupPartitioner::default",
+    "name": "default",
+    "owner": "datafusion_datasource::file_groups::FileGroupPartitioner",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn default() -> Self",
+    "docs": "",
+    "span": {
+      "filename": "src/file_groups.rs",
+      "begin": [
+        141,
+        5
+      ],
+      "end": [
+        143,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileGroupPartitioner",
+          "id": "datafusion_datasource::file_groups::FileGroupPartitioner",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Default",
+        "id": "core::default::Default",
+        "args": null
+      },
+      "trait_path": "core::default::Default",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_groups.rs",
+        "begin": [
+          140,
+          1
+        ],
+        "end": [
+          144,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "449",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.md",
+    "record_file": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.json",
+    "anchor": "op-7b2d98b80a46e0f976acf314",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileGroupPartitioner::default"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7cd72a6bf4fbebcbd9c96220",
+    "path": "datafusion_datasource::file_groups::FileGroupPartitioner::fmt",
+    "name": "fmt",
+    "owner": "datafusion_datasource::file_groups::FileGroupPartitioner",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/file_groups.rs",
+      "begin": [
+        130,
+        10
+      ],
+      "end": [
+        130,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 108,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 109,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "108": "core::fmt::Formatter",
+      "109": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileGroupPartitioner",
+          "id": "datafusion_datasource::file_groups::FileGroupPartitioner",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_groups.rs",
+        "begin": [
+          130,
+          10
+        ],
+        "end": [
+          130,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "444",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.md",
+    "record_file": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.json",
+    "anchor": "op-7cd72a6bf4fbebcbd9c96220",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileGroupPartitioner::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "770fe0b5244570dd6cbc75ec",
+    "path": "datafusion_datasource::file_groups::FileGroupPartitioner::new",
+    "name": "new",
+    "owner": "datafusion_datasource::file_groups::FileGroupPartitioner",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn new() -> Self",
+    "docs": "Creates a new [`FileGroupPartitioner`] with default values:\n1. `target_partitions = 1`\n2. `repartition_file_min_size = 10MB`\n3. `preserve_order_within_groups = false`",
+    "span": {
+      "filename": "src/file_groups.rs",
+      "begin": [
+        151,
+        5
+      ],
+      "end": [
+        157,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileGroupPartitioner",
+          "id": "datafusion_datasource::file_groups::FileGroupPartitioner",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_groups.rs",
+        "begin": [
+          146,
+          1
+        ],
+        "end": [
+          363,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FileGroupPartitioner`": 210
+    },
+    "link_paths": {
+      "`FileGroupPartitioner`": "datafusion_datasource::file_groups::FileGroupPartitioner"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "419",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.md",
+    "record_file": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.json",
+    "anchor": "op-770fe0b5244570dd6cbc75ec",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileGroupPartitioner::new"
+    ],
+    "resolved_doc_links": {
+      "`FileGroupPartitioner`": "../operations/datafusion_datasource.file_groups.FileGroupPartitioner.md#op-7b24c3a42bf8f20212e4a135"
+    }
+  },
+  {
+    "id": "2a6e269934d0213262fd0e89",
+    "path": "datafusion_datasource::file_groups::FileGroupPartitioner::repartition_file_groups",
+    "name": "repartition_file_groups",
+    "owner": "datafusion_datasource::file_groups::FileGroupPartitioner",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn repartition_file_groups(&self, file_groups: &[FileGroup]) -> Option<Vec<FileGroup>>",
+    "docs": "Repartition input files according to the settings on this [`FileGroupPartitioner`].\n\nIf no repartitioning is needed or possible, return `None`.",
+    "span": {
+      "filename": "src/file_groups.rs",
+      "begin": [
+        186,
+        5
+      ],
+      "end": [
+        200,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "file_groups",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "FileGroup",
+                        "id": 164,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 64,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 215,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "FileGroup",
+                                      "id": 164,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "164": "datafusion_datasource::file_groups::FileGroup",
+      "64": "core::option::Option",
+      "215": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileGroupPartitioner",
+          "id": "datafusion_datasource::file_groups::FileGroupPartitioner",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_groups.rs",
+        "begin": [
+          146,
+          1
+        ],
+        "end": [
+          363,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`FileGroupPartitioner`": 210
+    },
+    "link_paths": {
+      "`FileGroupPartitioner`": "datafusion_datasource::file_groups::FileGroupPartitioner"
+    },
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "423",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.md",
+    "record_file": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.json",
+    "anchor": "op-2a6e269934d0213262fd0e89",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileGroupPartitioner::repartition_file_groups"
+    ],
+    "resolved_doc_links": {
+      "`FileGroupPartitioner`": "../operations/datafusion_datasource.file_groups.FileGroupPartitioner.md#op-7b24c3a42bf8f20212e4a135"
+    }
+  },
+  {
+    "id": "3ee4746760b297fbe9832ada",
+    "path": "datafusion_datasource::file_groups::FileGroupPartitioner::with_preserve_order_within_groups",
+    "name": "with_preserve_order_within_groups",
+    "owner": "datafusion_datasource::file_groups::FileGroupPartitioner",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_preserve_order_within_groups(self, preserve_order_within_groups: bool) -> Self",
+    "docs": "Set whether the order of tuples within a file must be preserved",
+    "span": {
+      "filename": "src/file_groups.rs",
+      "begin": [
+        175,
+        5
+      ],
+      "end": [
+        181,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "preserve_order_within_groups",
+              {
+                "primitive": "bool"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileGroupPartitioner",
+          "id": "datafusion_datasource::file_groups::FileGroupPartitioner",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_groups.rs",
+        "begin": [
+          146,
+          1
+        ],
+        "end": [
+          363,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "422",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.md",
+    "record_file": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.json",
+    "anchor": "op-3ee4746760b297fbe9832ada",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileGroupPartitioner::with_preserve_order_within_groups"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "851e2b1701bf577140545ca1",
+    "path": "datafusion_datasource::file_groups::FileGroupPartitioner::with_repartition_file_min_size",
+    "name": "with_repartition_file_min_size",
+    "owner": "datafusion_datasource::file_groups::FileGroupPartitioner",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_repartition_file_min_size(self, repartition_file_min_size: usize) -> Self",
+    "docs": "Set the minimum size at which to repartition a file",
+    "span": {
+      "filename": "src/file_groups.rs",
+      "begin": [
+        166,
+        5
+      ],
+      "end": [
+        172,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "repartition_file_min_size",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileGroupPartitioner",
+          "id": "datafusion_datasource::file_groups::FileGroupPartitioner",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_groups.rs",
+        "begin": [
+          146,
+          1
+        ],
+        "end": [
+          363,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "421",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.md",
+    "record_file": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.json",
+    "anchor": "op-851e2b1701bf577140545ca1",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileGroupPartitioner::with_repartition_file_min_size"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7147cb1dbedda6d011d293bc",
+    "path": "datafusion_datasource::file_groups::FileGroupPartitioner::with_target_partitions",
+    "name": "with_target_partitions",
+    "owner": "datafusion_datasource::file_groups::FileGroupPartitioner",
+    "crate": "datafusion-datasource",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn with_target_partitions(self, target_partitions: usize) -> Self",
+    "docs": "Set the target partitions",
+    "span": {
+      "filename": "src/file_groups.rs",
+      "begin": [
+        160,
+        5
+      ],
+      "end": [
+        163,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ],
+            [
+              "target_partitions",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "generic": "Self"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "FileGroupPartitioner",
+          "id": "datafusion_datasource::file_groups::FileGroupPartitioner",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/file_groups.rs",
+        "begin": [
+          146,
+          1
+        ],
+        "end": [
+          363,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "117ef985710dadf100ff4bcd04408dbb5a3443a53a0f3244d3503aa41f06ba91",
+      "format_version": 61,
+      "item_id": "420",
+      "origin": "https://docs.rs/crate/datafusion-datasource/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.md",
+    "record_file": "operations/datafusion_datasource.file_groups.FileGroupPartitioner.json",
+    "anchor": "op-7147cb1dbedda6d011d293bc",
+    "aliases": [
+      "datafusion::datasource::physical_plan::FileGroupPartitioner::with_target_partitions"
+    ],
+    "resolved_doc_links": {}
+  }
+]

@@ -1,6 +1,6 @@
 // Catalog domains remain typed Arrow fields, including optional environment knowledge.
 
-use super::cells::{RowSet, batch, column, invalid, text};
+use super::cells::{RowSet, batch, column, invalid, ruled_column, text};
 use arrow::{error::ArrowError, record_batch::RecordBatch};
 use enrichment_core::native_union::NativeStruct;
 use enrichment_core::{
@@ -103,16 +103,17 @@ pub fn attempts(rows: &[SnapshotAttempt]) -> Result<RecordBatch, ArrowError> {
             false,
             "attempt-acquisitions",
         ),
-        column(
+        ruled_column(
             "association_id",
             text(ids.iter().map(String::as_str)),
             false,
             "key:snapshot-attempt",
+            enrichment_core::native_union::Rule::NonEmpty,
         ),
         (
             enrichment_core::native_union::field::<enrichment_core::identity::SnapshotId>(
                 "snapshot_id",
-                enrichment_core::native_union::Rule::Text,
+                enrichment_core::native_union::Rule::foreign_key("snapshots", "snapshot_id"),
             ),
             <enrichment_core::identity::SnapshotId as enrichment_core::native_union::Cell>::encode(
                 &rows

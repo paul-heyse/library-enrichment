@@ -1,0 +1,30 @@
+id: native-acquisition-input-owner
+language: Rust
+severity: error
+message: Acquired bodies and artifact ranges use shared paid byte owners; exact artifact leases precede Rustdoc capture.
+files:
+  - crates/enrichment-daemon/src/fetch/mod.rs
+  - crates/enrichment-daemon/src/ops/artifact_window.rs
+  - crates/enrichment-store/src/http_cache.rs
+  - crates/enrichment-store/src/native_rustdoc.rs
+rule:
+  any:
+    - kind: call_expression
+      has:
+        field: function
+        regex: '^crate::leases::shared$|\.read_to_end$'
+    - kind: function_item
+      has:
+        field: name
+        regex: '^range$'
+    - kind: call_expression
+      has:
+        field: function
+        regex: '^Vec::new$'
+      inside:
+        kind: let_declaration
+        has:
+          field: pattern
+          regex: '^bytes$'
+        stopBy: end
+note: Replaced body-copy and range helpers lost reservations at the async/clone boundary. A root lock alone cannot replace exact retention. Syntax guards complement native lifetime units.

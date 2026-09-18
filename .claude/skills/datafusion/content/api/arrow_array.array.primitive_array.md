@@ -38,6 +38,9 @@ fn from(value: i128) -> Self
 fn from(value: i256) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.NativeAdapter.md).
+
+
 An optional primitive value
 
 This struct is used as an adapter when creating `PrimitiveArray` from an iterator.
@@ -204,6 +207,9 @@ fn from(data: Vec<<Time32MillisecondType as ArrowPrimitiveType>::Native>) -> Sel
 fn from_iter<I: IntoIterator<Item = Ptr>>(iter: I) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.PrimitiveArray.md).
+
+
 An array of primitive values, of type [`ArrowPrimitiveType`]
 
 # Example: From a Vec
@@ -319,6 +325,9 @@ assert_eq!(f32_array, Float32Array::from(vec![1.2, 2.3]));
 type Date32Array = PrimitiveArray<Date32Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Date32Array.md).
+
+
 A [`PrimitiveArray`] of days since UNIX epoch stored as `i32`
 
 This type is similar to the [`chrono::NaiveDate`] type and can hold
@@ -334,6 +343,9 @@ values such as `2018-11-13`
 type Date64Array = PrimitiveArray<Date64Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Date64Array.md).
+
+
 A [`PrimitiveArray`] of milliseconds since UNIX epoch stored as `i64`
 
 This type is similar to the [`chrono::NaiveDate`] type and can hold
@@ -348,6 +360,9 @@ values such as `2018-11-13`
 ```rust
 type Decimal128Array = PrimitiveArray<Decimal128Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Decimal128Array.md).
+
 
 A [`PrimitiveArray`] of 128-bit fixed point decimals
 
@@ -376,6 +391,9 @@ See [`PrimitiveArray`] for more information and examples
 ```rust
 type Decimal256Array = PrimitiveArray<Decimal256Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Decimal256Array.md).
+
 
 A [`PrimitiveArray`] of 256-bit fixed point decimals
 
@@ -406,6 +424,9 @@ See [`PrimitiveArray`] for more information and examples
 type Decimal32Array = PrimitiveArray<Decimal32Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Decimal32Array.md).
+
+
 A [`PrimitiveArray`] of 32-bit fixed point decimals
 
 # Examples
@@ -433,6 +454,9 @@ See [`PrimitiveArray`] for more information and examples
 ```rust
 type Decimal64Array = PrimitiveArray<Decimal64Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Decimal64Array.md).
+
 
 A [`PrimitiveArray`] of 64-bit fixed point decimals
 
@@ -462,6 +486,9 @@ See [`PrimitiveArray`] for more information and examples
 type DurationMicrosecondArray = PrimitiveArray<DurationMicrosecondType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.DurationMicrosecondArray.md).
+
+
 A [`PrimitiveArray`] of elapsed durations in microseconds
 
 ---
@@ -473,6 +500,9 @@ A [`PrimitiveArray`] of elapsed durations in microseconds
 ```rust
 type DurationMillisecondArray = PrimitiveArray<DurationMillisecondType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.DurationMillisecondArray.md).
+
 
 A [`PrimitiveArray`] of elapsed durations in milliseconds
 
@@ -486,6 +516,9 @@ A [`PrimitiveArray`] of elapsed durations in milliseconds
 type DurationNanosecondArray = PrimitiveArray<DurationNanosecondType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.DurationNanosecondArray.md).
+
+
 A [`PrimitiveArray`] of elapsed durations in nanoseconds
 
 ---
@@ -498,6 +531,9 @@ A [`PrimitiveArray`] of elapsed durations in nanoseconds
 type DurationSecondArray = PrimitiveArray<DurationSecondType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.DurationSecondArray.md).
+
+
 A [`PrimitiveArray`] of elapsed durations in seconds
 
 ---
@@ -509,6 +545,9 @@ A [`PrimitiveArray`] of elapsed durations in seconds
 ```rust
 type Float16Array = PrimitiveArray<Float16Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Float16Array.md).
+
 
 A [`PrimitiveArray`] of `f16`
 
@@ -546,6 +585,9 @@ See [`PrimitiveArray`] for more information and examples
 type Float32Array = PrimitiveArray<Float32Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Float32Array.md).
+
+
 A [`PrimitiveArray`] of `f32`
 
 # Examples
@@ -573,6 +615,9 @@ See [`PrimitiveArray`] for more information and examples
 ```rust
 type Float64Array = PrimitiveArray<Float64Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Float64Array.md).
+
 
 A [`PrimitiveArray`] of `f64`
 
@@ -602,6 +647,9 @@ See [`PrimitiveArray`] for more information and examples
 type Int16Array = PrimitiveArray<Int16Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Int16Array.md).
+
+
 A [`PrimitiveArray`] of `i16`
 
 # Examples
@@ -629,6 +677,9 @@ See [`PrimitiveArray`] for more information and examples
 ```rust
 type Int32Array = PrimitiveArray<Int32Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Int32Array.md).
+
 
 A [`PrimitiveArray`] of `i32`
 
@@ -658,6 +709,9 @@ See [`PrimitiveArray`] for more information and examples
 type Int64Array = PrimitiveArray<Int64Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Int64Array.md).
+
+
 A [`PrimitiveArray`] of `i64`
 
 # Examples
@@ -685,6 +739,9 @@ See [`PrimitiveArray`] for more information and examples
 ```rust
 type Int8Array = PrimitiveArray<Int8Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Int8Array.md).
+
 
 A [`PrimitiveArray`] of `i8`
 
@@ -714,6 +771,9 @@ See [`PrimitiveArray`] for more information and examples
 type IntervalDayTimeArray = PrimitiveArray<IntervalDayTimeType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.IntervalDayTimeArray.md).
+
+
 A [`PrimitiveArray`] of “calendar” intervals in days and milliseconds
 
 See [`IntervalDayTime`] for details on representation and caveats.
@@ -738,6 +798,9 @@ let array = IntervalDayTimeArray::from(vec![
 ```rust
 type IntervalMonthDayNanoArray = PrimitiveArray<IntervalMonthDayNanoType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.IntervalMonthDayNanoArray.md).
+
 
 A [`PrimitiveArray`] of “calendar” intervals in  months, days, and nanoseconds.
 
@@ -764,6 +827,9 @@ let array = IntervalMonthDayNanoArray::from(vec![
 type IntervalYearMonthArray = PrimitiveArray<IntervalYearMonthType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.IntervalYearMonthArray.md).
+
+
 A [`PrimitiveArray`] of “calendar” intervals in whole months
 
 See [`IntervalYearMonthType`] for details on representation and caveats.
@@ -788,6 +854,9 @@ let array = IntervalYearMonthArray::from(vec![
 type Time32MillisecondArray = PrimitiveArray<Time32MillisecondType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Time32MillisecondArray.md).
+
+
 A [`PrimitiveArray`] of milliseconds since midnight stored as `i32`
 
 This type is similar to the [`chrono::NaiveTime`] type and can
@@ -802,6 +871,9 @@ hold values such as `00:02:00.123`
 ```rust
 type Time32SecondArray = PrimitiveArray<Time32SecondType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Time32SecondArray.md).
+
 
 A [`PrimitiveArray`] of seconds since midnight stored as `i32`
 
@@ -818,6 +890,9 @@ hold values such as `00:02:00`
 type Time64MicrosecondArray = PrimitiveArray<Time64MicrosecondType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Time64MicrosecondArray.md).
+
+
 A [`PrimitiveArray`] of microseconds since midnight stored as `i64`
 
 This type is similar to the [`chrono::NaiveTime`] type and can
@@ -832,6 +907,9 @@ hold values such as `00:02:00.123456`
 ```rust
 type Time64NanosecondArray = PrimitiveArray<Time64NanosecondType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.Time64NanosecondArray.md).
+
 
 A [`PrimitiveArray`] of nanoseconds since midnight stored as `i64`
 
@@ -848,6 +926,9 @@ hold values such as `00:02:00.123456789`
 type TimestampMicrosecondArray = PrimitiveArray<TimestampMicrosecondType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.TimestampMicrosecondArray.md).
+
+
 A [`PrimitiveArray`] of microseconds since UNIX epoch stored as `i64`
 
 See examples for [`TimestampSecondArray`]
@@ -861,6 +942,9 @@ See examples for [`TimestampSecondArray`]
 ```rust
 type TimestampMillisecondArray = PrimitiveArray<TimestampMillisecondType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.TimestampMillisecondArray.md).
+
 
 A [`PrimitiveArray`] of milliseconds since UNIX epoch stored as `i64`
 
@@ -876,6 +960,9 @@ See examples for [`TimestampSecondArray`]
 type TimestampNanosecondArray = PrimitiveArray<TimestampNanosecondType>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.TimestampNanosecondArray.md).
+
+
 A [`PrimitiveArray`] of nanoseconds since UNIX epoch stored as `i64`
 
 See examples for [`TimestampSecondArray`]
@@ -889,6 +976,9 @@ See examples for [`TimestampSecondArray`]
 ```rust
 type TimestampSecondArray = PrimitiveArray<TimestampSecondType>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.TimestampSecondArray.md).
+
 
 A [`PrimitiveArray`] of seconds since UNIX epoch stored as `i64`
 
@@ -948,6 +1038,9 @@ See [`PrimitiveArray`] for more information and examples
 type UInt16Array = PrimitiveArray<UInt16Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.UInt16Array.md).
+
+
 A [`PrimitiveArray`] of `u16`
 
 # Examples
@@ -975,6 +1068,9 @@ See [`PrimitiveArray`] for more information and examples
 ```rust
 type UInt32Array = PrimitiveArray<UInt32Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.UInt32Array.md).
+
 
 A [`PrimitiveArray`] of `u32`
 
@@ -1004,6 +1100,9 @@ See [`PrimitiveArray`] for more information and examples
 type UInt64Array = PrimitiveArray<UInt64Type>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.UInt64Array.md).
+
+
 A [`PrimitiveArray`] of `u64`
 
 # Examples
@@ -1031,6 +1130,9 @@ See [`PrimitiveArray`] for more information and examples
 ```rust
 type UInt8Array = PrimitiveArray<UInt8Type>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.primitive_array.UInt8Array.md).
+
 
 A [`PrimitiveArray`] of `u8`
 

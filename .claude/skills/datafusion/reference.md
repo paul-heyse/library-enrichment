@@ -1,3 +1,33 @@
+# Decision and contract layers
+
+Start at [task routes](content/routes/tasks.md), [crate roles](content/routes/crates.md), or
+[representation routes](content/routes/representations.md). Use `scripts/reference.py find/show/compare`
+for bounded JSON retrieval. A record can be read directly without the CLI.
+
+| Layer | Location | Contract |
+|---|---|---|
+| Reviewed authoring | `authoring/capabilities/*.json` | Stable capability/claim IDs, conditional alternatives, input/output facets, evidence and unknowns |
+| Generated briefs | `content/capabilities/` | Validated operation links, readable pages and structured records |
+| Typed operations | `content/index/operations.tsv` | path, stable ID, kind, crate, record file, page plus anchor, display signature; no header |
+| Complete contracts | `content/operations/*.json` | Full docs, raw type_tree, artifact-scoped IDs/references, implementation context, span, aliases and links |
+| Modules | `content/modules/` | Module overviews previously absent from compact API pages |
+| Diagnostics | `content/contract-diagnostics.json` | Unresolved links and display placeholders; no inferred replacement contract |
+| Coverage | `content/capabilities/coverage.json` | Reviewed scope separate from full discovery and unreviewed packages |
+
+Operation IDs derive from crate/version/path/kind and implementation context; raw rustdoc IDs are
+local to the recorded artifact and never global identities. Original type trees retain lifetimes,
+generics, predicates and variant/field payloads. Trait signatures rendered as async may have an
+expanded Future in the preserved raw tree. Read the implementation context when paths are shared.
+Unresolved type-reference paths remain explicit nulls. Availability in hosted documentation is
+not a claim about the consumer's features.
+
+Claim evidence classes distinguish upstream documentation, contract interpretation, runtime
+observations and authored conditional judgments. The runtime receipt names tests and their
+profile; it does not promote every sentence in a brief to an executed assertion. Follow
+[maintenance.md](maintenance.md) for validation and update behavior.
+
+---
+
 # Reference: layout, schemas, and query recipes
 
 Everything below is generated from pinned sources by `build/build.py` and verified by
@@ -23,7 +53,7 @@ content/
   PROVENANCE.json        versions, per-crate docs.rs config, counts, per-file sha256
   index/*.tsv            line-oriented projection            -> ripgrep
   model/<module>.json    structure, signatures, edges        -> ast-grep
-  api/<module>.md        the full doc prose, stored once     -> Read
+  api/<module>.md        item docs and compact member summaries     -> Read
   traits/<Trait>.md      the 30 extension points             -> Read
   topics/<slug>.md       15 capability axes + 00-map.md      -> Read
   catalogs/*.md          settings, SQL functions, crate map  -> Read / ripgrep
@@ -97,7 +127,7 @@ qualified paths when not — `Statistics` alone is four different types across t
 
 | File | Holds |
 |---|---|
-| `catalogs/config-options.md` | 155 settings by subsystem, each joined to the `SessionConfig` or `RuntimeEnvBuilder` method that sets it. A dash means no typed builder exists and the setting is reachable only as a string, through `set_bool`/`set_str` or SQL `SET`. |
+| `catalogs/config-options.md` | 155 settings by subsystem with heuristic builder-name candidates. A dash means no name match was found; typed ConfigOptions fields and options_mut may still provide access. Check runtime versus session-setting lifetime. |
 | `catalogs/sql-functions.md` | 332 scalar, aggregate and window functions plus operators, categorized, each linking to its upstream description |
 | `catalogs/crate-map.md` | All 60 crates with item and trait counts, and the most-implemented extension point in each |
 
@@ -227,7 +257,7 @@ largest blind spot in the API, and deprecated code still compiles, so nothing fo
 |---|---|
 | `project-tableprovider-no-pushdown` | `TableProvider` not overriding `supports_filters_pushdown`; every filter runs after the scan |
 | `project-execution-plan-no-statistics` | `ExecutionPlan` reporting no statistics; the optimizer plans that node blind |
-| `project-unbounded-session` | `SessionContext::new` / `new_with_config`: default `RuntimeEnv`, no memory limit, no spill path |
+| `project-unbounded-session` | `SessionContext::new` / `new_with_config`: default `RuntimeEnv` has an unbounded pool; disk defaults to OS temporary storage |
 | `project-collect-over-stream` | Awaited `collect()` where `execute_stream()` would bound memory |
 | `project-deprecated-api` | Qualified use of one of 113 unambiguously deprecated identifiers (generated) |
 

@@ -1,0 +1,12 @@
+id: native-immutable-ingress-owner
+language: Rust
+severity: error
+message: Native Arrow inputs use the shared paid immutable captured provider.
+files:
+  - crates/enrichment-store/src/**/*.rs
+  - crates/enrichment-core/src/native_contract.rs
+rule:
+  any:
+    - pattern: $SESSION.read_batch($$$INPUT)
+    - pattern: $SESSION.read_batches($$$INPUT)
+note: DataFusion owns execution. The ingress wrapper closes MemTable mutation and keeps Arrow buffer claims through readers; it grants no row constraints.

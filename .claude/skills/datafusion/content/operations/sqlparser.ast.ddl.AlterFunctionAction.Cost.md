@@ -1,0 +1,16 @@
+# `sqlparser::ast::ddl::AlterFunctionAction::Cost`
+
+Full upstream contracts; raw type trees and source locators in [structured records](sqlparser.ast.ddl.AlterFunctionAction.Cost.json).
+
+<a id="op-9373c15e3386263e1c725cce"></a>
+## 0
+
+`struct_field` · `sqlparser::ast::ddl::AlterFunctionAction::Cost::0` · sqlparser 0.62.0
+
+```rust
+0: ast::Expr
+```
+
+Source: `src/ast/ddl.rs:5457`. [Exact documentation build](https://docs.rs/crate/sqlparser/0.62.0/json).
+
+No upstream documentation on this item; consult its owner/trait contract.

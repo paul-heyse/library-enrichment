@@ -1,0 +1,19 @@
+# Crate roles
+
+All pinned packages are routed; a role is not exhaustive semantic characterization.
+
+| Crate | Role | Representation | Task vocabulary | Reviewed briefs |
+|---|---|---|---|---|
+| deltalake | Facade and feature selection | Re-exports core and optional adapters; zero locally owned items does not mean no capability | delta.open | [delta.open](../capabilities/delta.open.md) |
+| deltalake-core | Table state, high-level operations, commits, Delta-aware DataFusion integration | Prefer public operation before custom log actions or internal plans | delta.read | [delta.catalog](../capabilities/delta.catalog.md), [delta.cdf](../capabilities/delta.cdf.md), [delta.commit](../capabilities/delta.commit.md), [delta.dml](../capabilities/delta.dml.md), [delta.features](../capabilities/delta.features.md), [delta.history](../capabilities/delta.history.md), [delta.kernel](../capabilities/delta.kernel.md), [delta.merge](../capabilities/delta.merge.md), [delta.open](../capabilities/delta.open.md), [delta.optimize](../capabilities/delta.optimize.md), [delta.read](../capabilities/delta.read.md), [delta.replace](../capabilities/delta.replace.md), [delta.replay](../capabilities/delta.replay.md), [delta.retention](../capabilities/delta.retention.md), [delta.schema](../capabilities/delta.schema.md), [delta.session](../capabilities/delta.session.md), [delta.storage](../capabilities/delta.storage.md), [delta.write](../capabilities/delta.write.md) |
+| buoyant_kernel | Protocol, schema, snapshot/scan and engine interfaces | Cargo alias delta_kernel; fork commit and internal-api feature must remain explicit | delta.kernel | [delta.features](../capabilities/delta.features.md), [delta.kernel](../capabilities/delta.kernel.md), [delta.schema](../capabilities/delta.schema.md) |
+| buoyant_kernel_engine | Default kernel execution and I/O support | Cargo alias delta_kernel_default_engine; distinguish engine primitives from high-level Delta operations | delta.kernel | [delta.kernel](../capabilities/delta.kernel.md) |
+| deltalake-aws | S3 object/log-store integration | Feature selection, factory/handler registration, options and publication backend | delta.storage | [delta.storage](../capabilities/delta.storage.md) |
+| deltalake-azure | Azure object/log-store integration | Credentials and scheme/factory configuration are independent of query planning | delta.storage | [delta.storage](../capabilities/delta.storage.md) |
+| deltalake-gcp | GCS object/log-store integration | Backend behavior must be qualified independently of S3/Azure | delta.storage | [delta.storage](../capabilities/delta.storage.md) |
+| deltalake-hdfs | HDFS storage adapter | Native/platform environment and handler requirements need explicit qualification | delta.storage | [delta.storage](../capabilities/delta.storage.md) |
+| deltalake-lakefs | LakeFS log-store/storage integration | LakeFS service state and configuration are outside local Delta table semantics | delta.storage | [delta.storage](../capabilities/delta.storage.md) |
+| deltalake-mount | Mount URL object/log-store factories | Map supported URL schemes and environment prerequisites from exact implementation | delta.storage | [delta.storage](../capabilities/delta.storage.md) |
+| deltalake-opendal | OpenDAL adapter and service registration | Service-specific features; opendal+ scheme avoids collisions; enabled services are not all services | delta.storage | [delta.storage](../capabilities/delta.storage.md) |
+| deltalake-catalog-glue | Glue catalog integration | Catalog lookup is separate from table storage and table protocol support | delta.catalog | [delta.catalog](../capabilities/delta.catalog.md) |
+| deltalake-catalog-unity | Unity catalog/client and DataFusion catalog integration | Discovery, auth, provider freshness and backend features have separate contracts | delta.catalog | [delta.catalog](../capabilities/delta.catalog.md) |

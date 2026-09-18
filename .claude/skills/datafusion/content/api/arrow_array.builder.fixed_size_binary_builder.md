@@ -40,6 +40,9 @@ fn into_box_any(Box<self>) -> Box<dyn Any>
 fn len(&self) -> usize
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.builder.fixed_size_binary_builder.FixedSizeBinaryBuilder.md).
+
+
 Builder for [`FixedSizeBinaryArray`]
 ```
 # use arrow_array::builder::FixedSizeBinaryBuilder;

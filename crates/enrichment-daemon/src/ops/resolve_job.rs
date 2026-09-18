@@ -12,7 +12,6 @@ use enrichment_core::{
     request::ResolveRequest,
     wire::{Envelope, ErrorCode, JobState, Outcome},
 };
-use enrichment_store::{BlobStore, SnapshotReader, repository::EvidenceRepository};
 use serde::{Deserialize, Serialize};
 use std::{
     io,
@@ -25,7 +24,7 @@ use std::{
 
 pub(super) struct Work {
     pub committed: std::sync::OnceLock<(JobState, enrichment_core::identity::SnapshotId, Envelope)>,
-    pub id: String,
+    pub id: enrichment_core::identity::JobId,
     pub request: ResolveRequest,
     pub cancel: Arc<AtomicBool>,
     pub lease: Arc<crate::execution::cleanup::Lease>,
@@ -61,7 +60,7 @@ pub(super) async fn submit(service: &Service, request: ResolveRequest) -> Envelo
 pub(super) async fn subscribe(
     service: &Service,
     request: ResolveRequest,
-) -> io::Result<(jobs::JobRecord, String, bool)> {
+) -> io::Result<(jobs::JobRecord, enrichment_core::identity::InterestId, bool)> {
     let (record, token, new) = service
         .jobs
         .submit(jobs::Arguments::Resolve {
@@ -71,15 +70,15 @@ pub(super) async fn subscribe(
     service.single_flight.submitted(new);
     if new {
         let service = service.clone();
-        let id = record.job_id.clone();
+        let id = record.job_id;
         let jobs = std::sync::Arc::clone(&service.jobs);
         let runtime = service.repository.runtime.clone();
-        jobs.spawn(&runtime, id.clone(), async move {
+        jobs.spawn(&runtime, id, async move {
             if let Err(e) = service
                 .repository
                 .runtime
                 .job_operation(
-                    id.clone(),
+                    id.to_string(),
                     service.operation_descriptor(&request.clone().into()),
                     std::time::Duration::from_secs(
                         service.config.network.acquisition_timeout_seconds,
@@ -99,7 +98,7 @@ pub(super) async fn subscribe(
 async fn delivery(
     service: &Service,
     record: jobs::JobRecord,
-    token: String,
+    token: enrichment_core::identity::InterestId,
     new: bool,
 ) -> Envelope {
     match verify::wait(
@@ -137,7 +136,11 @@ async fn delivery(
         Err(e) => common::operation_error(&e, "resolve_job"),
     }
 }
-async fn run(service: &Service, id: &str, request: ResolveRequest) -> io::Result<()> {
+async fn run(
+    service: &Service,
+    id: &enrichment_core::identity::JobId,
+    request: ResolveRequest,
+) -> io::Result<()> {
     let cancel = service.jobs.cancellation(id)?;
     let lease = match service
         .lsp
@@ -173,7 +176,7 @@ async fn run(service: &Service, id: &str, request: ResolveRequest) -> io::Result
     let _timing = service.single_flight.running();
     let work = Work {
         committed: std::sync::OnceLock::new(),
-        id: id.into(),
+        id: *id,
         request: request.clone(),
         cancel,
         lease,
@@ -243,7 +246,7 @@ struct ResolutionOutput {
 #[serde(deny_unknown_fields)]
 struct Receipt {
     format: String,
-    job_id: String,
+    job_id: enrichment_core::identity::JobId,
     request: ResolveRequest,
     stage: Resolution,
     normalization: enrichment_core::producer::ProducerRun,
@@ -294,13 +297,13 @@ pub(super) fn prepare(
         release_id: metadata.release.release_id.clone(),
         environment_id: metadata.environment.environment_id.clone(),
         context_id: metadata.context.context_id.clone(),
-        attempt_id: run.attempt_id.clone(),
+        attempt_id: run.attempt_id,
         input_artifact_ids,
         result_artifact_id: result.artifact_id.clone(),
     };
     let receipt = Receipt {
         format: "resolution-attempt/2".into(),
-        job_id: work.id.clone(),
+        job_id: work.id,
         request: work.request.clone(),
         stage: stage.clone(),
         normalization: run.clone(),
@@ -357,141 +360,12 @@ pub(super) fn prepare(
                 .jobs
                 .publication_fence(&work.id)
                 .map_err(|e| e.to_string())?,
-            job_id: work.id.clone(),
+            job_id: work.id,
             kind: PublishedJobKind::Resolve,
 
             attempt_id: stage.attempt_id,
             result_artifact_ids: vec![result.artifact_id],
             result: native_result,
         },
-    )))
-}
-
-/// Recover only a committed exact result, without fetching or starting producers.
-pub(super) async fn recover(
-    repository: &EvidenceRepository,
-    blobs: &BlobStore,
-    record: &jobs::JobRecord,
-) -> io::Result<Option<(JobState, Envelope)>> {
-    let error = |e: enrichment_store::QueryError| io::Error::other(e.to_string());
-    let catalog = repository
-        .catalog
-        .pin()
-        .await
-        .map_err(|e| io::Error::other(e.to_string()))?;
-    let Some(publication) = catalog
-        .job_publication(&repository.runtime, &record.job_id)
-        .await
-        .map_err(|e| io::Error::other(e.to_string()))?
-    else {
-        return Ok(None);
-    };
-    let jobs::Arguments::Resolve { request } = &record.specification else {
-        return Err(io::Error::other(
-            "resolution publication has a different operation",
-        ));
-    };
-    let stage = record
-        .resolution
-        .as_ref()
-        .ok_or_else(|| io::Error::other("committed resolution lacks pinned exact inputs"))?;
-    if publication.kind != PublishedJobKind::Resolve
-        || publication.attempt_id != stage.attempt_id
-        || publication.context_id.clone() != stage.context_id
-        || publication.result_artifact_ids != [stage.result_artifact_id.clone()]
-    {
-        return Err(io::Error::other(
-            "committed resolution disagrees with its exact stage",
-        ));
-    }
-    let reader = SnapshotReader::open(repository, catalog, &publication.snapshot_id)
-        .await
-        .map_err(error)?;
-    let manifest = reader.manifest();
-    if manifest.metadata.release_id.clone() != stage.release_id
-        || manifest.metadata.environment_id.clone() != stage.environment_id
-    {
-        return Err(io::Error::other(
-            "resolution identity disagrees with catalog",
-        ));
-    }
-    let attempt = reader.attempt(&stage.attempt_id).await.map_err(error)?;
-    let log = attempt
-        .artifacts
-        .iter()
-        .find(|a| Some(&a.artifact_id) == attempt.run.log.as_ref())
-        .ok_or_else(|| io::Error::other("resolution attempt log missing"))?;
-    if log.size_bytes > 1024 * 1024 {
-        return Err(io::Error::other(
-            "resolution log exceeds reconstruction bound",
-        ));
-    }
-    let receipt: Receipt = blobs.read_json(log, 1024 * 1024)?;
-    let mut expected_run = attempt.run.clone();
-    expected_run.log = None;
-    if receipt.format != "resolution-attempt/2"
-        || receipt.job_id != record.job_id
-        || receipt.request != *request
-        || receipt.stage != *stage
-        || receipt.normalization != expected_run
-    {
-        return Err(io::Error::other(
-            "resolution receipt differs from journal or producing attempt",
-        ));
-    }
-    let result = attempt
-        .artifacts
-        .iter()
-        .find(|a| a.artifact_id == stage.result_artifact_id)
-        .ok_or_else(|| io::Error::other("resolution output missing"))?;
-    if result.size_bytes > 1024 * 1024 {
-        return Err(io::Error::other(
-            "resolution output exceeds reconstruction bound",
-        ));
-    }
-    let output: ResolutionOutput = blobs.read_json(result, 1024 * 1024)?;
-    let bytes = canonical::to_canonical_string(&serde_json::to_value(&output)?);
-    if canonical::sha256_hex(bytes.as_bytes()) != result.sha256
-        || output.format != "resolution-result/1"
-        || output.metadata.context.context_id != manifest.metadata.context_id
-        || output.metadata.environment.environment_id != manifest.metadata.environment_id
-        || output.metadata.release.release_id != manifest.metadata.release_id
-    {
-        return Err(io::Error::other(
-            "resolution output differs from its canonical exact identity",
-        ));
-    }
-    let mut inputs: Vec<_> = attempt
-        .artifacts
-        .iter()
-        .filter(|a| attempt.run.inputs.values().any(|d| d == &a.sha256))
-        .map(|a| a.artifact_id.clone())
-        .collect();
-    inputs.sort();
-    inputs.dedup();
-    if inputs != stage.input_artifact_ids {
-        return Err(io::Error::other(
-            "resolution input closure differs from its pinned stage",
-        ));
-    }
-    output.metadata.validate().map_err(io::Error::other)?;
-    repository
-        .validate_delivery(&publication)
-        .await
-        .map_err(|e| io::Error::other(e.to_string()))?;
-    Ok(Some((
-        publication.state,
-        crate::delivery::recover_job(
-            blobs,
-            &repository.runtime,
-            repository
-                .catalog
-                .pin()
-                .await
-                .map_err(io::Error::other)?
-                .as_ref(),
-            &publication,
-        )
-        .await?,
     )))
 }

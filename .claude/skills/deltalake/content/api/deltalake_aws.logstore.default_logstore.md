@@ -5,6 +5,7 @@ Crate `deltalake-aws` · 2 public items · structured records in [`model/deltala
 ## default_s3_logstore
 
 `function` · `deltalake_aws::logstore::default_logstore::default_s3_logstore`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.logstore.default_logstore.default_s3_logstore.md)
 
 Also reachable as `deltalake_aws::logstore::default_s3_logstore`
 
@@ -19,6 +20,7 @@ Return the [S3LogStore] implementation with the provided configuration options
 ## S3LogStore
 
 `struct` · `deltalake_aws::logstore::default_logstore::S3LogStore`
+[Full member contracts, output types and access classification](../operations/deltalake_aws.logstore.default_logstore.S3LogStore.md)
 
 Also reachable as `deltalake_aws::logstore::S3LogStore`
 

@@ -32,6 +32,9 @@ fn get_byte_ranges(&mut self, ranges: Vec<Range<u64>>) -> BoxFuture<'_, Result<V
 fn get_bytes(&mut self, range: Range<u64>) -> BoxFuture<'_, Result<Bytes, AvroError>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_avro.reader.async_reader.store.AvroObjectReader.md).
+
+
 An implementation of an AsyncFileReader using the [`ObjectStore`] API.
 
 ---

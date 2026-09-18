@@ -26,6 +26,9 @@ fn try_from(schema_ipc: SchemaAsIpc<'_>) -> std::result::Result<Self, arrow_sche
 fn deref(&self) -> &Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.IpcMessage.md).
+
+
 IpcMessage represents a `Schema` in the format expected in
 `FlightInfo.schema`
 
@@ -54,6 +57,9 @@ fn new(schema: &'a Schema, options: &'a IpcWriteOptions) -> Self
 ```rust
 fn deref(&self) -> &Self::Target
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_flight.SchemaAsIpc.md).
+
 
 SchemaAsIpc represents a pairing of a `Schema` with IpcWriteOptions
 

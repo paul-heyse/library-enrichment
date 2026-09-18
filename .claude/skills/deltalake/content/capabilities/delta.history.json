@@ -1,0 +1,180 @@
+{
+  "id": "delta.history",
+  "title": "Choose time travel, restore, checkpoints or log maintenance",
+  "reviewed": "2026-09-18",
+  "brief": "Time travel reads an old state, restore publishes a new state, and checkpoints accelerate state reconstruction. These operations solve different lifecycle tasks.",
+  "task_aliases": [
+    "restore version",
+    "time travel",
+    "checkpoint log",
+    "history metadata",
+    "recover historical"
+  ],
+  "crates": [
+    "deltalake-core"
+  ],
+  "input": [
+    "table version/history",
+    "restore target",
+    "loaded table"
+  ],
+  "output": [
+    "historical snapshot",
+    "new restored version",
+    "checkpoint artifacts"
+  ],
+  "properties": [
+    "restore version",
+    "time travel",
+    "checkpoint log",
+    "history metadata",
+    "recover historical"
+  ],
+  "operations": [
+    "deltalake_core::table::DeltaTable::history",
+    "deltalake_core::table::DeltaTable::restore",
+    "deltalake_core::table::DeltaTable::load_version",
+    "deltalake_core::operations::restore::RestoreBuilder::with_version_to_restore",
+    "deltalake_core::protocol::checkpoints::create_checkpoint"
+  ],
+  "choices": [
+    {
+      "candidate": "load_version",
+      "choose_when": "You want an historical read without changing head",
+      "tradeoff": "Referenced files must remain available"
+    },
+    {
+      "candidate": "restore",
+      "choose_when": "Current head should reflect an earlier state",
+      "tradeoff": "Creates a new commit; missing files and protocol constraints matter"
+    },
+    {
+      "candidate": "create_checkpoint",
+      "choose_when": "You need a checkpoint for log reconstruction",
+      "tradeoff": "Does not compact user data or restore removed bytes"
+    },
+    {
+      "candidate": "history",
+      "choose_when": "Inspect recorded commit metadata for diagnostics/recovery",
+      "tradeoff": "History availability is limited by retained log state"
+    }
+  ],
+  "claims": [
+    {
+      "id": "delta.history.1",
+      "aspect": "restore",
+      "statement": "Restoring v0 from a table at v1 produced v2 with the original row; v1 still selected the two-row historical state in the fixture.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "restore_creates_new_version_and_checkpoint_preserves_rows"
+    },
+    {
+      "id": "delta.history.2",
+      "aspect": "checkpoint",
+      "statement": "Creating a checkpoint preserved the current relation in the local fixture.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "restore_creates_new_version_and_checkpoint_preserves_rows"
+    },
+    {
+      "id": "delta.history.3",
+      "aspect": "separation",
+      "statement": "Data compaction, log checkpointing, log cleanup and vacuum have different inputs and physical effects; select the intended layer.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    }
+  ],
+  "implementation": [
+    "Record version before/after restore, and test historical data availability independently.",
+    "Use history and application commit metadata for diagnosis without treating them as an indefinitely retained audit log."
+  ],
+  "effects": [
+    "select state",
+    "publish restore version",
+    "write checkpoint metadata"
+  ],
+  "errors": [
+    "An old version may have loadable metadata but unavailable files; restoration has its own missing-file policy."
+  ],
+  "unknowns": [
+    "Every checkpoint format and cleanup/retention combination is not covered by the fixture."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "scope": "Exact git-capture full contracts for the selected operations"
+    },
+    {
+      "id": "source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/operations/restore.rs",
+      "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+    },
+    {
+      "id": "runtime",
+      "kind": "runtime_observation",
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Named local assertions only; see profile, fixtures and source digests",
+      "tests": [
+        "restore_creates_new_version_and_checkpoint_preserves_rows"
+      ]
+    }
+  ],
+  "resolved_operations": [
+    {
+      "path": "deltalake_core::table::DeltaTable::history",
+      "id": "80e9ed24a9f0a3008cd9a869",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.table.DeltaTable.json",
+      "page": "operations/deltalake_core.table.DeltaTable.md#op-80e9ed24a9f0a3008cd9a869",
+      "signature": "async fn history(&self, limit: Option<usize>) -> Result<impl Iterator<Item = CommitInfo> + use<>, DeltaTableError>"
+    },
+    {
+      "path": "deltalake_core::table::DeltaTable::restore",
+      "id": "ccc2e63ad429a29aab780d31",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.table.DeltaTable.json",
+      "page": "operations/deltalake_core.table.DeltaTable.md#op-ccc2e63ad429a29aab780d31",
+      "signature": "fn restore(self) -> RestoreBuilder"
+    },
+    {
+      "path": "deltalake_core::table::DeltaTable::load_version",
+      "id": "bd07223c753e46cf67ac2d8a",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.table.DeltaTable.json",
+      "page": "operations/deltalake_core.table.DeltaTable.md#op-bd07223c753e46cf67ac2d8a",
+      "signature": "async fn load_version(&mut self, version: Version) -> Result<(), DeltaTableError>"
+    },
+    {
+      "path": "deltalake_core::operations::restore::RestoreBuilder::with_version_to_restore",
+      "id": "45dc160b98acde43d1355b28",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.operations.restore.RestoreBuilder.json",
+      "page": "operations/deltalake_core.operations.restore.RestoreBuilder.md#op-45dc160b98acde43d1355b28",
+      "signature": "fn with_version_to_restore(self, version: Version) -> Self"
+    },
+    {
+      "path": "deltalake_core::protocol::checkpoints::create_checkpoint",
+      "id": "e2ce7c6abdadd100ddb3dbb1",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.protocol.checkpoints.create_checkpoint.json",
+      "page": "operations/deltalake_core.protocol.checkpoints.create_checkpoint.md#op-e2ce7c6abdadd100ddb3dbb1",
+      "signature": "async fn create_checkpoint(table: &DeltaTable, operation_id: Option<uuid::Uuid>) -> DeltaResult<()>"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/delta.history.json"
+}

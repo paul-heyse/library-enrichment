@@ -1,0 +1,16 @@
+# `sqlparser::ast::data_type::DataType::Dec`
+
+Full upstream contracts; raw type trees and source locators in [structured records](sqlparser.ast.data_type.DataType.Dec.json).
+
+<a id="op-9f5b0ea312b7ccae07cfafa8"></a>
+## 0
+
+`struct_field` · `sqlparser::ast::data_type::DataType::Dec::0` · sqlparser 0.62.0
+
+```rust
+0: ExactNumberInfo
+```
+
+Source: `src/ast/data_type.rs:152`. [Exact documentation build](https://docs.rs/crate/sqlparser/0.62.0/json).
+
+No upstream documentation on this item; consult its owner/trait contract.

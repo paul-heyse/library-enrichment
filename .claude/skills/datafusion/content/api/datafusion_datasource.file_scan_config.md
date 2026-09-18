@@ -10,6 +10,9 @@ Crate `datafusion-datasource` · 5 public items · structured records in [`model
 fn output_partitioning_from_partition_fields(schema: &arrow::datatypes::Schema, partition_cols: &arrow::datatypes::Fields, partition_count: usize) -> Option<datafusion_physical_expr::Partitioning>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_scan_config.output_partitioning_from_partition_fields.md).
+
+
 Builds output partitioning over `partition_cols` (resolved to their indices in
 `schema`) with `partition_count` partitions. Returns `None` when there are no
 partition columns. Callers use this to declare the output partitioning of a scan
@@ -26,6 +29,9 @@ Also reachable as `datafusion::datasource::physical_plan::wrap_partition_type_in
 ```rust
 fn wrap_partition_type_in_dict(val_type: arrow::datatypes::DataType) -> arrow::datatypes::DataType
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_scan_config.wrap_partition_type_in_dict.md).
+
 
 Convert type to a type suitable for use as a `ListingTable`
 partition column. Returns `Dictionary(UInt16, val_type)`, which is
@@ -49,6 +55,9 @@ Also reachable as `datafusion::datasource::physical_plan::wrap_partition_value_i
 ```rust
 fn wrap_partition_value_in_dict(val: datafusion_common::ScalarValue) -> datafusion_common::ScalarValue
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_scan_config.wrap_partition_value_in_dict.md).
+
 
 Convert a [`ScalarValue`] of partition columns to a type, as
 described in the documentation of [`wrap_partition_type_in_dict`],
@@ -118,6 +127,9 @@ fn with_preserve_order(&self, preserve_order: bool) -> Option<Arc<dyn DataSource
 ```rust
 fn fmt_as(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> FmtResult
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_scan_config.FileScanConfig.md).
+
 
 [`FileScanConfig`] represents scanning data from a group of files
 
@@ -244,6 +256,9 @@ fn with_statistics(self, statistics: Statistics) -> Self
 ```rust
 fn from(config: FileScanConfig) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_datasource.file_scan_config.FileScanConfigBuilder.md).
+
 
 A builder for [`FileScanConfig`]'s.
 

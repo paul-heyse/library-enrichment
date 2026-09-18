@@ -1,0 +1,951 @@
+[
+  {
+    "id": "9c9c43a7d8bf357eb3adcb6e",
+    "path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+    "name": "GroupsAccumulator",
+    "owner": null,
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "trait",
+    "signature": "trait GroupsAccumulator: Send + std::any::Any",
+    "docs": "`GroupsAccumulator` implements a single aggregate (e.g. AVG) and\nstores the state for *all* groups internally.\n\nLogically, a [`GroupsAccumulator`] stores a mapping from each group index to\nthe state of the aggregate for that group. For example an implementation for\n`min` might look like\n\n```text\n   ┌─────┐\n   │  0  │───────────▶   100\n   ├─────┤\n   │  1  │───────────▶   200\n   └─────┘\n     ...                 ...\n   ┌─────┐\n   │ N-2 │───────────▶    50\n   ├─────┤\n   │ N-1 │───────────▶   200\n   └─────┘\n\n\n Logical group      Current Min\n    number          value for that\n                    group\n```\n\n# Notes on Implementing `GroupsAccumulator`\n\nAll aggregates must first implement the simpler [`Accumulator`] trait, which\nhandles state for a single group. Implementing `GroupsAccumulator` is\noptional and is harder to implement than `Accumulator`, but can be much\nfaster for queries with many group values.  See the [Aggregating Millions of\nGroups Fast blog] for more background.\nFor more background, please also see the [Aggregating Millions of Groups Fast in Apache Arrow DataFusion 28.0.0 blog]\n\n[Aggregating Millions of Groups Fast in Apache Arrow DataFusion 28.0.0 blog]: https://datafusion.apache.org/blog/2023/08/05/datafusion_fast_grouping\n\n[`NullState`] can help keep the state for groups that have not seen any\nvalues and produce the correct output for those groups.\n\n[`NullState`]: https://docs.rs/datafusion/latest/datafusion/physical_expr/struct.NullState.html\n\n# Details\nEach group is assigned a `group_index` by the hash table and each\naccumulator manages the specific state, one per `group_index`.\n\n`group_index`es are contiguous (there aren't gaps), and thus it is\nexpected that each `GroupsAccumulator` will use something like `Vec<..>`\nto store the group states.\n\n[`Accumulator`]: crate::accumulator::Accumulator\n[Aggregating Millions of Groups Fast blog]: https://arrow.apache.org/blog/2023/08/05/datafusion_fast_grouping/",
+    "span": {
+      "filename": "src/groups_accumulator.rs",
+      "begin": [
+        105,
+        1
+      ],
+      "end": [
+        246,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "trait": {
+        "is_auto": false,
+        "is_unsafe": false,
+        "is_dyn_compatible": true,
+        "items": [
+          165,
+          167,
+          168,
+          169,
+          170,
+          171
+        ],
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "bounds": [
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "Send",
+                "id": 13,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          },
+          {
+            "trait_bound": {
+              "trait": {
+                "path": "std::any::Any",
+                "id": 16,
+                "args": null
+              },
+              "generic_params": [],
+              "modifier": "none"
+            }
+          }
+        ],
+        "implementations": []
+      }
+    },
+    "type_references": {
+      "13": "core::marker::Send",
+      "16": "core::any::Any"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::accumulator::Accumulator": 7,
+      "`GroupsAccumulator`": 172
+    },
+    "link_paths": {
+      "crate::accumulator::Accumulator": "datafusion_expr_common::accumulator::Accumulator",
+      "`GroupsAccumulator`": "datafusion_expr_common::groups_accumulator::GroupsAccumulator"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "172",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md",
+    "record_file": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.json",
+    "anchor": "op-9c9c43a7d8bf357eb3adcb6e",
+    "aliases": [
+      "datafusion::logical_expr::GroupsAccumulator",
+      "datafusion_expr::GroupsAccumulator",
+      "datafusion_expr::groups_accumulator::GroupsAccumulator"
+    ],
+    "resolved_doc_links": {
+      "crate::accumulator::Accumulator": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-2911d7ffb2098886b7dd6ba8",
+      "`GroupsAccumulator`": "../operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md#op-9c9c43a7d8bf357eb3adcb6e"
+    }
+  },
+  {
+    "id": "0d4ea64ca8d09e96d56b2339",
+    "path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator::convert_to_state",
+    "name": "convert_to_state",
+    "owner": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn convert_to_state(&self, values: &[ArrayRef], opt_filter: Option<&BooleanArray>) -> Result<Vec<ArrayRef>>",
+    "docs": "Converts an input batch directly to the intermediate aggregate state.\n\nThis is the equivalent of treating each input row as its own group. It\nis invoked when the Partial phase of a multi-phase aggregation is not\nreducing the cardinality enough to warrant spending more effort on\npre-aggregation (see `Background` section below), and switches to\npassing intermediate state directly on to the next aggregation phase.\n\nExamples:\n* `COUNT`: an array of 1s for each row in the input batch.\n* `SUM/MIN/MAX`: the input values themselves.\n\n# Arguments\n* `values`: the input arguments to the accumulator\n* `opt_filter`: if present, any row where `opt_filter[i]` is false should be ignored\n\n# Background\n\nIn a multi-phase aggregation (see [`Accumulator::state`]), the initial\nPartial phase reduces the cardinality of the input data as soon as\npossible in the plan.\n\nThis strategy is very effective for queries with a small number of\ngroups, as most of the data is aggregated immediately and only a small\namount of data must be repartitioned (see [`Accumulator::state`] for\nbackground)\n\nHowever, for queries with a large number of groups, the Partial phase\noften does not reduce the cardinality enough to warrant the memory and\nCPU cost of actually performing the aggregation. For such cases, the\nHashAggregate operator will dynamically switch to passing intermediate\nstate directly to the next aggregation phase with minimal processing\nusing this method.\n\n[`Accumulator::state`]: crate::accumulator::Accumulator::state",
+    "span": {
+      "filename": "src/groups_accumulator.rs",
+      "begin": [
+        232,
+        5
+      ],
+      "end": [
+        236,
+        32
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 1,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "opt_filter",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 21,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "BooleanArray",
+                                  "id": 166,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 10,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "ArrayRef",
+                                      "id": 1,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "arrow_array::array::ArrayRef",
+      "21": "core::option::Option",
+      "166": "arrow_array::array::boolean_array::BooleanArray",
+      "2": "datafusion_common::error::Result",
+      "10": "alloc::vec::Vec"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::accumulator::Accumulator::state": 9
+    },
+    "link_paths": {
+      "crate::accumulator::Accumulator::state": "datafusion_expr_common::accumulator::Accumulator::state"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "170",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md",
+    "record_file": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.json",
+    "anchor": "op-0d4ea64ca8d09e96d56b2339",
+    "aliases": [
+      "datafusion::logical_expr::GroupsAccumulator::convert_to_state",
+      "datafusion_expr::GroupsAccumulator::convert_to_state",
+      "datafusion_expr::groups_accumulator::GroupsAccumulator::convert_to_state"
+    ],
+    "resolved_doc_links": {
+      "crate::accumulator::Accumulator::state": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-e13afcecd1da09f0b485e6dc"
+    }
+  },
+  {
+    "id": "0028ea05f0ec12af4fec2e33",
+    "path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator::evaluate",
+    "name": "evaluate",
+    "owner": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn evaluate(&mut self, emit_to: EmitTo) -> Result<ArrayRef>",
+    "docs": "Returns the final aggregate value for each group as a single\n`RecordBatch`, resetting the internal state.\n\nThe rows returned *must* be in group_index order: The value\nfor group_index 0, followed by 1, etc.  Any group_index that\ndid not have values, should be null.\n\nFor example, a `SUM` accumulator maintains a running sum for\neach group, and `evaluate` will produce that running sum as\nits output for all groups, in group_index order\n\nIf `emit_to` is [`EmitTo::All`], the accumulator should\nreturn all groups and release / reset its internal state\nequivalent to when it was first created.\n\nIf `emit_to` is [`EmitTo::First`], only the first `n` groups\nshould be emitted and the state for those first groups\nremoved. State for the remaining groups must be retained for\nfuture use. The group_indices on subsequent calls to\n`update_batch` or `merge_batch` will be shifted down by\n`n`. See [`EmitTo::First`] for more details.",
+    "span": {
+      "filename": "src/groups_accumulator.rs",
+      "begin": [
+        155,
+        5
+      ],
+      "end": [
+        155,
+        65
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "emit_to",
+              {
+                "resolved_path": {
+                  "path": "EmitTo",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrayRef",
+                          "id": 1,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "datafusion_expr_common::groups_accumulator::EmitTo",
+      "2": "datafusion_common::error::Result",
+      "1": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": null,
+    "links": {
+      "`EmitTo::All`": 125,
+      "`EmitTo::First`": 127
+    },
+    "link_paths": {
+      "`EmitTo::All`": "datafusion_expr_common::groups_accumulator::EmitTo::All",
+      "`EmitTo::First`": "datafusion_expr_common::groups_accumulator::EmitTo::First"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "167",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md",
+    "record_file": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.json",
+    "anchor": "op-0028ea05f0ec12af4fec2e33",
+    "aliases": [
+      "datafusion::logical_expr::GroupsAccumulator::evaluate",
+      "datafusion_expr::GroupsAccumulator::evaluate",
+      "datafusion_expr::groups_accumulator::GroupsAccumulator::evaluate"
+    ],
+    "resolved_doc_links": {
+      "`EmitTo::All`": "../operations/datafusion_expr_common.groups_accumulator.EmitTo.md#op-3675659b93702fc0d63f9c0b",
+      "`EmitTo::First`": "../operations/datafusion_expr_common.groups_accumulator.EmitTo.md#op-935d538c0b51c7f0267f586c"
+    }
+  },
+  {
+    "id": "ac4aa90855289638c8197fda",
+    "path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator::merge_batch",
+    "name": "merge_batch",
+    "owner": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn merge_batch(&mut self, values: &[ArrayRef], group_indices: &[usize], total_num_groups: usize) -> Result<()>",
+    "docs": "Merges intermediate state (the output from [`Self::state`])\ninto this accumulator's current state.\n\nFor some aggregates (such as `SUM`), `merge_batch` is the same\nas `update_batch`, but for some aggregates (such as `COUNT`,\nwhere the partial counts must be summed) the operations\ndiffer. See [`Self::state`] for more details on how state is\nused and merged.\n\n* `values`: arrays produced from previously calling `state` on other accumulators.\n\nOther arguments are the same as for [`Self::update_batch`], except that\nthere is no `opt_filter` — aggregate filters are applied during the\npartial (update) phase, so by the time intermediate states are merged\nno per-row filtering is needed.",
+    "span": {
+      "filename": "src/groups_accumulator.rs",
+      "begin": [
+        190,
+        5
+      ],
+      "end": [
+        195,
+        21
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 1,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "group_indices",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "usize"
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "total_num_groups",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "arrow_array::array::ArrayRef",
+      "2": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {
+      "`Self::state`": 168,
+      "`Self::update_batch`": 165
+    },
+    "link_paths": {
+      "`Self::state`": "datafusion_expr_common::groups_accumulator::GroupsAccumulator::state",
+      "`Self::update_batch`": "datafusion_expr_common::groups_accumulator::GroupsAccumulator::update_batch"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "169",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md",
+    "record_file": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.json",
+    "anchor": "op-ac4aa90855289638c8197fda",
+    "aliases": [
+      "datafusion::logical_expr::GroupsAccumulator::merge_batch",
+      "datafusion_expr::GroupsAccumulator::merge_batch",
+      "datafusion_expr::groups_accumulator::GroupsAccumulator::merge_batch"
+    ],
+    "resolved_doc_links": {
+      "`Self::state`": "../operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md#op-8a9d88d91cc4945f7fa28591",
+      "`Self::update_batch`": "../operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md#op-87bd9abfc36bda6d73091c12"
+    }
+  },
+  {
+    "id": "871d63ca775fd70fca8e6d29",
+    "path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator::size",
+    "name": "size",
+    "owner": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn size(&self) -> usize",
+    "docs": "Amount of memory used to store the state of this accumulator,\nin bytes.\n\nThis function is called once per batch, so it should be `O(n)` to\ncompute, not `O(num_groups)`\n\nMay be expensive; check the implementation before calling on hot paths.",
+    "span": {
+      "filename": "src/groups_accumulator.rs",
+      "begin": [
+        245,
+        5
+      ],
+      "end": [
+        245,
+        29
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "171",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md",
+    "record_file": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.json",
+    "anchor": "op-871d63ca775fd70fca8e6d29",
+    "aliases": [
+      "datafusion::logical_expr::GroupsAccumulator::size",
+      "datafusion_expr::GroupsAccumulator::size",
+      "datafusion_expr::groups_accumulator::GroupsAccumulator::size"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "8a9d88d91cc4945f7fa28591",
+    "path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator::state",
+    "name": "state",
+    "owner": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn state(&mut self, emit_to: EmitTo) -> Result<Vec<ArrayRef>>",
+    "docs": "Returns the intermediate aggregate state for this accumulator,\nused for multi-phase grouping, resetting its internal state.\n\nSee [`Accumulator::state`] for more information on multi-phase\naggregation.\n\nFor example, `AVG` might return two arrays: `SUM` and `COUNT`\nbut the `MIN` aggregate would just return a single array.\n\nNote more sophisticated internal state can be passed as\nsingle `StructArray` rather than multiple arrays.\n\nSee [`Self::evaluate`] for details on the required output\norder and `emit_to`.\n\n[`Accumulator::state`]: crate::accumulator::Accumulator::state",
+    "span": {
+      "filename": "src/groups_accumulator.rs",
+      "begin": [
+        173,
+        5
+      ],
+      "end": [
+        173,
+        67
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "emit_to",
+              {
+                "resolved_path": {
+                  "path": "EmitTo",
+                  "id": 128,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 10,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "ArrayRef",
+                                      "id": 1,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "128": "datafusion_expr_common::groups_accumulator::EmitTo",
+      "2": "datafusion_common::error::Result",
+      "10": "alloc::vec::Vec",
+      "1": "arrow_array::array::ArrayRef"
+    },
+    "impl_context": null,
+    "links": {
+      "crate::accumulator::Accumulator::state": 9,
+      "`Self::evaluate`": 167
+    },
+    "link_paths": {
+      "crate::accumulator::Accumulator::state": "datafusion_expr_common::accumulator::Accumulator::state",
+      "`Self::evaluate`": "datafusion_expr_common::groups_accumulator::GroupsAccumulator::evaluate"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "168",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md",
+    "record_file": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.json",
+    "anchor": "op-8a9d88d91cc4945f7fa28591",
+    "aliases": [
+      "datafusion::logical_expr::GroupsAccumulator::state",
+      "datafusion_expr::GroupsAccumulator::state",
+      "datafusion_expr::groups_accumulator::GroupsAccumulator::state"
+    ],
+    "resolved_doc_links": {
+      "crate::accumulator::Accumulator::state": "../operations/datafusion_expr_common.accumulator.Accumulator.md#op-e13afcecd1da09f0b485e6dc",
+      "`Self::evaluate`": "../operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md#op-0028ea05f0ec12af4fec2e33"
+    }
+  },
+  {
+    "id": "87bd9abfc36bda6d73091c12",
+    "path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator::update_batch",
+    "name": "update_batch",
+    "owner": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn update_batch(&mut self, values: &[ArrayRef], group_indices: &[usize], opt_filter: Option<&BooleanArray>, total_num_groups: usize) -> Result<()>",
+    "docs": "Updates the accumulator's state from its arguments, encoded as\na vector of [`ArrayRef`]s.\n\n* `values`: the input arguments to the accumulator\n\n* `group_indices`: The group indices to which each row in `values` belongs.\n\n* `opt_filter`: if present, only update aggregate state using\n  `values[i]` if `opt_filter[i]` is true\n\n* `total_num_groups`: the number of groups (the largest\n  group_index is thus `total_num_groups - 1`).\n\nNote that subsequent calls to update_batch may have larger\ntotal_num_groups as new groups are seen.\n\nSee [`NullState`] to help keep the state for groups that have not seen any\nvalues and produce the correct output for those groups.\n\n[`NullState`]: https://docs.rs/datafusion/latest/datafusion/physical_expr/struct.NullState.html",
+    "span": {
+      "filename": "src/groups_accumulator.rs",
+      "begin": [
+        126,
+        5
+      ],
+      "end": [
+        132,
+        21
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "values",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "resolved_path": {
+                        "path": "ArrayRef",
+                        "id": 1,
+                        "args": null
+                      }
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "group_indices",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "primitive": "usize"
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "opt_filter",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 21,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "resolved_path": {
+                                  "path": "BooleanArray",
+                                  "id": 166,
+                                  "args": null
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "total_num_groups",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 2,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": false,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "1": "arrow_array::array::ArrayRef",
+      "21": "core::option::Option",
+      "166": "arrow_array::array::boolean_array::BooleanArray",
+      "2": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {
+      "`ArrayRef`": 1
+    },
+    "link_paths": {
+      "`ArrayRef`": "arrow_array::array::ArrayRef"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "165",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.md",
+    "record_file": "operations/datafusion_expr_common.groups_accumulator.GroupsAccumulator.json",
+    "anchor": "op-87bd9abfc36bda6d73091c12",
+    "aliases": [
+      "datafusion::logical_expr::GroupsAccumulator::update_batch",
+      "datafusion_expr::GroupsAccumulator::update_batch",
+      "datafusion_expr::groups_accumulator::GroupsAccumulator::update_batch"
+    ],
+    "resolved_doc_links": {
+      "`ArrayRef`": "../operations/arrow_array.array.ArrayRef.md#op-657cc3ff3d24afcacda590e1"
+    }
+  }
+]

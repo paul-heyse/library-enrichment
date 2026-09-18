@@ -41,6 +41,9 @@ fn uses_bounded_memory(&self) -> bool
 fn with_new_expressions(&self, args: Vec<Arc<dyn PhysicalExpr>>, partition_bys: Vec<Arc<dyn PhysicalExpr>>, order_by_exprs: Vec<Arc<dyn PhysicalExpr>>) -> Option<Arc<dyn WindowExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.window.sliding_aggregate.SlidingAggregateWindowExpr.md).
+
+
 A window expr that takes the form of an aggregate function that
 can be incrementally computed over sliding windows.
 

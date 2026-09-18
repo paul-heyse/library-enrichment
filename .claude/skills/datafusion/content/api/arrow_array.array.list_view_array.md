@@ -71,6 +71,9 @@ fn from(value: GenericListArray<OffsetSize>) -> Self
 fn from(data: ArrayData) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.list_view_array.GenericListViewArray.md).
+
+
 An array of [variable length lists], specifically in the [list-view layout].
 
 Differs from [`GenericListArray`] (which represents the [list layout]) in that
@@ -152,6 +155,9 @@ type LargeListViewArray = GenericListViewArray<i64>
 
 **Implements**: `datafusion_common::heap_size::DFHeapSize`
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.list_view_array.LargeListViewArray.md).
+
+
 A [`GenericListViewArray`] of variable size lists, storing offsets as `i64`.
 
 ---
@@ -165,6 +171,9 @@ type ListViewArray = GenericListViewArray<i32>
 ```
 
 **Implements**: `datafusion_common::heap_size::DFHeapSize`
+
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.list_view_array.ListViewArray.md).
+
 
 A [`GenericListViewArray`] of variable size lists, storing offsets as `i32`.
 

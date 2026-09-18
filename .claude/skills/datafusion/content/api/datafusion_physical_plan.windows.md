@@ -10,6 +10,9 @@ Crate `datafusion-physical-plan` · 7 public items · structured records in [`mo
 fn create_udwf_window_expr(fun: &std::sync::Arc<datafusion_expr::WindowUDF>, args: &[std::sync::Arc<dyn PhysicalExpr>], input_schema: &arrow::datatypes::Schema, name: String, ignore_nulls: bool) -> datafusion_common::Result<std::sync::Arc<dyn StandardWindowFunctionExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.windows.create_udwf_window_expr.md).
+
+
 Creates a `StandardWindowFunctionExpr` suitable for a user defined window function
 
 ---
@@ -22,6 +25,9 @@ Creates a `StandardWindowFunctionExpr` suitable for a user defined window functi
 fn create_window_expr(fun: &datafusion_expr::WindowFunctionDefinition, name: String, args: &[std::sync::Arc<dyn PhysicalExpr>], partition_by: &[std::sync::Arc<dyn PhysicalExpr>], order_by: &[expressions::PhysicalSortExpr], window_frame: std::sync::Arc<datafusion_expr::WindowFrame>, input_schema: arrow::datatypes::SchemaRef, ignore_nulls: bool, distinct: bool, filter: Option<std::sync::Arc<dyn PhysicalExpr>>) -> datafusion_common::Result<std::sync::Arc<dyn WindowExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.windows.create_window_expr.md).
+
+
 Create a physical expression for window function
 
 ---
@@ -33,6 +39,9 @@ Create a physical expression for window function
 ```rust
 fn get_best_fitting_window(window_exprs: &[std::sync::Arc<dyn WindowExpr>], input: &std::sync::Arc<dyn ExecutionPlan>, physical_partition_keys: &[std::sync::Arc<dyn PhysicalExpr>], state_observer: Option<std::sync::Arc<dyn WindowStateObserver>>) -> datafusion_common::Result<Option<std::sync::Arc<dyn ExecutionPlan>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.windows.get_best_fitting_window.md).
+
 
 Constructs the best-fitting windowing operator (a `WindowAggExec` or a
 `BoundedWindowExec`) for the given `input` according to the specifications
@@ -55,6 +64,9 @@ not requiring additional sorting and/or partitioning for the given input.
 fn get_ordered_partition_by_indices(partition_by_exprs: &[std::sync::Arc<dyn PhysicalExpr>], input: &std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<Vec<usize>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.windows.get_ordered_partition_by_indices.md).
+
+
 This function calculates the indices such that when partition by expressions reordered with the indices
 resulting expressions define a preset for existing ordering.
 For instance, if input is ordered by a, b, c and PARTITION BY b, a is used,
@@ -70,6 +82,9 @@ resulting vector (a, b) is a preset of the existing ordering (a, b, c).
 ```rust
 fn get_window_mode(partitionby_exprs: &[std::sync::Arc<dyn PhysicalExpr>], orderby_keys: &[expressions::PhysicalSortExpr], input: &std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<Option<(bool, InputOrderMode)>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.windows.get_window_mode.md).
+
 
 Compares physical ordering (output ordering of the `input` operator) with
 `partitionby_exprs` and `orderby_keys` to decide whether existing ordering
@@ -92,6 +107,9 @@ the mode this window operator should work in to accommodate the existing orderin
 ```rust
 fn schema_add_window_field(args: &[std::sync::Arc<dyn PhysicalExpr>], schema: &arrow::datatypes::Schema, window_fn: &datafusion_expr::WindowFunctionDefinition, fn_name: &str) -> datafusion_common::Result<std::sync::Arc<arrow::datatypes::Schema>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.windows.schema_add_window_field.md).
+
 
 Build field from window function and add it into schema
 
@@ -128,6 +146,9 @@ fn limit_effect(&self) -> LimitEffect
 fn name(&self) -> &str
 fn reverse_expr(&self) -> Option<Arc<dyn StandardWindowFunctionExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.windows.WindowUDFExpr.md).
+
 
 Implements [`StandardWindowFunctionExpr`] for [`WindowUDF`]
 

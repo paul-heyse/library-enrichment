@@ -39,6 +39,9 @@ async fn poll_flight_info(&mut self, descriptor: FlightDescriptor) -> Result<Pol
 async fn renew_flight_endpoint(&mut self, request: RenewFlightEndpointRequest) -> Result<FlightEndpoint>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_flight.client.FlightClient.md).
+
+
 A "Mid level" [Apache Arrow Flight](https://arrow.apache.org/docs/format/Flight.html) client.
 
 [`FlightClient`] is intended as a convenience for interactions

@@ -10,6 +10,9 @@ Crate `datafusion-common` · 2 public items · structured records in [`model/dat
 fn parse_compression_string(str_setting: &str) -> Result<parquet::basic::Compression>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.file_options.parquet_writer.parse_compression_string.md).
+
+
 Parses datafusion.execution.parquet.compression String to a parquet::basic::Compression
 
 ---
@@ -40,6 +43,9 @@ fn writer_options(&self) -> &WriterProperties
 ```rust
 fn try_from(parquet_table_options: &TableParquetOptions) -> Result<Self>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.file_options.parquet_writer.ParquetWriterOptions.md).
+
 
 Options for writing parquet files
 

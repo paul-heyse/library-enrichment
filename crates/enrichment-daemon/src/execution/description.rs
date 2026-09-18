@@ -83,7 +83,7 @@ pub fn containment_identity(config: &Execution) -> io::Result<String> {
     enrichment_core::native_key::Key::ContainmentIdentity
         .hex_digest(
             &enrichment_core::operation::identities::ContainmentIdentity {
-                contract: "bounded-execution/4".into(),
+                contract: "bounded-execution/5".into(),
                 protocol: capsule_protocol::VERSION,
                 components: [
                     ("helper".into(), helper),
@@ -165,7 +165,7 @@ pub fn describe(config: &Execution, root: &Path) -> io::Result<Description> {
         Err(e) => (None, Some(e.to_string())),
     };
     Ok(Description {
-        version: "execution-description/4",
+        version: "execution-description/5",
         configuration: config.clone(),
         broker: Broker::new(root, &config.broker()),
         subdirectories: SUBDIRECTORIES,
@@ -281,7 +281,15 @@ pub async fn probe(
     runner.authority = super::Authority::Qualification(Arc::new(Qualification {
         runtime: runtime.clone(),
         image: image.into(),
+        launch: capsule_protocol::Launch::for_execution(
+            config,
+            image,
+            &runner.containment_identity()?,
+            false,
+        )?,
         commands,
+        inputs: Default::default(),
+        outputs: Default::default(),
     }));
     runner.recover_owned().await?;
     super::budget::recover_orphans(&ownership).await?;
@@ -298,7 +306,7 @@ pub async fn probe(
         let mut observed = BTreeMap::new();
         for probe in probes {
             let outcome = runner
-                .run(image, &root, &probe.argv, Arc::new(AtomicBool::new(false)))
+                .run_qualification(image, &root, &probe.argv, Arc::new(AtomicBool::new(false)))
                 .await?;
             if !outcome.cleanup_confirmed
                 || outcome.exit_code != Some(0)
@@ -313,7 +321,7 @@ pub async fn probe(
             observed.insert(probe.tool.into(), outcome);
         }
         let process = runner
-            .run(
+            .run_qualification(
                 image,
                 &root,
                 &[
@@ -348,7 +356,10 @@ pub async fn probe(
 pub(super) struct Qualification {
     runtime: enrichment_store::runtime::QueryRuntime,
     image: String,
+    launch: capsule_protocol::Launch,
     commands: Vec<Vec<String>>,
+    inputs: capsule_protocol::inventory::Inventory,
+    outputs: std::collections::BTreeMap<String, capsule_protocol::OutputKind>,
 }
 impl std::fmt::Debug for Qualification {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -358,27 +369,65 @@ impl std::fmt::Debug for Qualification {
     }
 }
 impl Qualification {
+    #[cfg(test)]
+    pub(super) fn fixture(
+        runtime: enrichment_store::runtime::QueryRuntime,
+        operation: &capsule_protocol::Operation,
+    ) -> Self {
+        Self {
+            runtime,
+            image: operation.launch.image.clone(),
+            launch: operation.launch.clone(),
+            commands: vec![operation.argv.clone()],
+            inputs: operation.inputs.clone(),
+            outputs: operation.outputs.clone(),
+        }
+    }
     pub(super) async fn admit(
         &self,
         image: &str,
         operation: &capsule_protocol::Operation,
         acquisition: bool,
     ) -> io::Result<()> {
-        use datafusion::{common::ScalarValue, prelude::lit};
         let check = async {
-            let session = self.runtime.session();
-            let schema = enrichment_core::operation::process_schema();
-            let mut decoder = arrow::json::ReaderBuilder::new(schema).build_decoder()?;
-            decoder.serialize(std::slice::from_ref(operation))?;
-            let batch = decoder.flush()?.ok_or_else(|| datafusion::error::DataFusionError::Execution("qualification input missing".into()))?;
-            session.register_table("qualification_operation", session.read_batch(batch)?.into_view())?;
-            let mut commands = session.read_empty()?.filter(lit(false))?.select(vec![lit(ScalarValue::List(ScalarValue::new_list(&[], &arrow::datatypes::DataType::Utf8, false))).alias("argv")])?;
-            for argv in &self.commands {
-                commands = commands.union(session.read_empty()?.select(vec![lit(ScalarValue::List(ScalarValue::new_list(&argv.iter().map(|value| ScalarValue::from(value.as_str())).collect::<Vec<_>>(), &arrow::datatypes::DataType::Utf8, false))).alias("argv")])?)?;
-            }
-            session.register_table("qualification_commands", commands.into_view())?;
-            self.runtime.require_empty(session.sql("SELECT 'qualification_scope_mismatch' AS witness FROM qualification_operation p JOIN qualification_commands c ON p.argv=c.argv WHERE p.mode='command' AND cardinality(map_keys(p.inputs))=0 AND cardinality(map_keys(p.outputs))=0 AND $1=$2 AND NOT CAST($3 AS BOOLEAN) HAVING count(*)<>1").await?.with_param_values(vec![ScalarValue::from(image),self.image.as_str().into(),acquisition.into()])?, "fixed_qualification_contract", "operator_qualification").await
-        }.await;
+            operation.validate()?;
+            self.runtime
+                .require_empty(
+                    enrichment_store::process_grants::launch_refusals(
+                        &self.runtime,
+                        &operation.launch,
+                        &self.launch,
+                    )
+                    .await?,
+                    "fixed_qualification_launch",
+                    "operator_qualification",
+                )
+                .await?;
+            let commands = self
+                .commands
+                .iter()
+                .map(|argv| capsule_protocol::Operation {
+                    version: capsule_protocol::VERSION,
+                    invocation: None,
+                    prepared: None,
+                    mode: capsule_protocol::Mode::Command,
+                    argv: argv.clone(),
+                    inputs: self.inputs.clone(),
+                    outputs: self.outputs.clone(),
+                    launch: self.launch.clone(),
+                })
+                .collect::<Vec<_>>();
+            enrichment_store::producer_plan::qualify(
+                &self.runtime,
+                operation,
+                &commands,
+                image,
+                &self.image,
+                acquisition,
+            )
+            .await
+        }
+        .await;
         check.map_err(io::Error::other)
     }
 }
@@ -389,22 +438,37 @@ mod tests {
     #[tokio::test]
     async fn qualification_authority_admits_only_the_fixed_empty_input_probe() {
         let root = tempfile::tempdir().unwrap();
+        let image = format!("sha256:{}", "a".repeat(64));
         let qualification = Qualification {
             runtime: enrichment_store::runtime::QueryRuntime::new(root.path(), Default::default())
                 .unwrap(),
-            image: format!("sha256:{}", "a".repeat(64)),
+            launch: capsule_protocol::Launch::for_execution(
+                &Execution::default(),
+                &image,
+                "fixed-physical-config",
+                false,
+            )
+            .unwrap(),
+            image,
             commands: vec![probes()["rust"][0].argv.clone()],
+            inputs: Default::default(),
+            outputs: Default::default(),
         };
         let mut operation = capsule_protocol::Operation {
             version: capsule_protocol::VERSION,
+            invocation: None,
+            prepared: None,
             mode: capsule_protocol::Mode::Command,
             argv: qualification.commands[0].clone(),
             inputs: Default::default(),
             outputs: Default::default(),
-            data_bytes: 1024,
-            output_bytes: 1024,
-            deadline_millis: 1000,
-            binding: "fixed-physical-config".into(),
+            launch: enrichment_core::capsule_protocol::Launch::for_execution(
+                &Execution::default(),
+                &qualification.image,
+                "fixed-physical-config",
+                false,
+            )
+            .unwrap(),
         };
         qualification
             .admit(&qualification.image, &operation, false)

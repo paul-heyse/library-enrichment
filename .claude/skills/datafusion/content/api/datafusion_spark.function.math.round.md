@@ -29,6 +29,9 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.math.round.SparkRound.md).
+
+
 Spark-compatible `round` expression
 <https://spark.apache.org/docs/latest/api/sql/index.html#round>
 

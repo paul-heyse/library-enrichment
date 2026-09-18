@@ -26,6 +26,9 @@ fn from(ptr: Ptr) -> Self
 fn deref(&self) -> &Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.udf_eq.UdfEq.md).
+
+
 A wrapper around a pointer to UDF that implements `Eq` and `Hash` delegating to
 corresponding methods on the UDF trait.
 

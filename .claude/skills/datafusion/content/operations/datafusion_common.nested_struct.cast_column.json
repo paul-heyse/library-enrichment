@@ -1,0 +1,152 @@
+[
+  {
+    "id": "e3a60b7a33b761444e0681be",
+    "path": "datafusion_common::nested_struct::cast_column",
+    "name": "cast_column",
+    "owner": null,
+    "crate": "datafusion-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn cast_column(source_col: &arrow::array::ArrayRef, target_type: &arrow::datatypes::DataType, cast_options: &arrow::compute::CastOptions<'_>) -> error::Result<arrow::array::ArrayRef>",
+    "docs": "Cast a column to match the target field type, with special handling for nested structs.\n\nThis function serves as the main entry point for column casting operations. For struct\ntypes, it enforces that **only struct columns can be cast to struct types**.\n\n## Casting Behavior\n- **Struct Types**: Delegates to `cast_struct_column` for struct-to-struct casting only\n- **Non-Struct Types**: Uses Arrow's standard `cast` function for primitive type conversions\n\n## Cast Options\nThe `cast_options` argument controls how Arrow handles values that cannot be represented\nin the target type. When `safe` is `false` (DataFusion's default) the cast will return an\nerror if such a value is encountered. Setting `safe` to `true` instead produces `NULL`\nfor out-of-range or otherwise invalid values. The options also allow customizing how\ntemporal values are formatted when cast to strings.\n\n```\nuse arrow::array::{ArrayRef, Int64Array};\nuse arrow::compute::CastOptions;\nuse arrow::datatypes::DataType;\nuse datafusion_common::nested_struct::cast_column;\nuse std::sync::Arc;\n\nlet source: ArrayRef = Arc::new(Int64Array::from(vec![1, i64::MAX]));\n// Permit lossy conversions by producing NULL on overflow instead of erroring\nlet options = CastOptions {\n    safe: true,\n    ..Default::default()\n};\nlet result = cast_column(&source, &DataType::Int32, &options).unwrap();\nassert!(result.is_null(1));\n```\n\n## Struct Casting Requirements\nThe struct casting logic requires that the source column must already be a struct type.\nThis makes the function useful for:\n- Schema evolution scenarios where struct layouts change over time\n- Data migration between different struct schemas\n- Type-safe data processing pipelines that maintain struct type integrity\n\n# Arguments\n* `source_col` - The source array to cast\n* `target_type` - The target data type to cast to\n* `cast_options` - Options that govern strictness and formatting of the cast\n\n# Returns\nA `Result<ArrayRef>` containing the cast array\n\n# Errors\nReturns an error if:\n- Attempting to cast a non-struct column to a struct type\n- Arrow's cast function fails for non-struct types\n- Memory allocation fails during struct construction\n- Invalid data type combinations are encountered",
+    "span": {
+      "filename": "src/nested_struct.rs",
+      "begin": [
+        238,
+        1
+      ],
+      "end": [
+        291,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "source_col",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "arrow::array::ArrayRef",
+                      "id": 3564,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "target_type",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "arrow::datatypes::DataType",
+                      "id": 137,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "cast_options",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "arrow::compute::CastOptions",
+                      "id": 3267,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "crate::error::Result",
+              "id": 21,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "arrow::array::ArrayRef",
+                          "id": 3564,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3564": "arrow_array::array::ArrayRef",
+      "137": "arrow_schema::datatype::DataType",
+      "3267": "arrow_cast::cast::CastOptions",
+      "21": "datafusion_common::error::Result"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "f77e5c31634d76549814f03a0d33e85f6445d11207f7013c6272dc1cd1251acb",
+      "format_version": 61,
+      "item_id": "3787",
+      "origin": "https://docs.rs/crate/datafusion-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_common.nested_struct.cast_column.md",
+    "record_file": "operations/datafusion_common.nested_struct.cast_column.json",
+    "anchor": "op-e3a60b7a33b761444e0681be",
+    "aliases": [
+      "datafusion::common::cast_column",
+      "datafusion_common::cast_column"
+    ],
+    "resolved_doc_links": {}
+  }
+]

@@ -31,6 +31,9 @@ fn state(&mut self, emit_to: EmitTo) -> Result<Vec<ArrayRef>>
 fn update_batch(&mut self, values: &[ArrayRef], group_indices: &[usize], opt_filter: Option<&BooleanArray>, total_num_groups: usize) -> Result<()>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.GroupsAccumulatorAdapter.md).
+
+
 An adapter that implements [`GroupsAccumulator`] for any [`Accumulator`]
 
 While [`Accumulator`] are simpler to implement and can support
@@ -102,6 +105,9 @@ trait VecAllocExt
 ```rust
 fn allocated_size(&self) -> usize
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate_common.aggregate.groups_accumulator.VecAllocExt.md).
+
 
 Extension trait for [`Vec`] to account for allocations.
 

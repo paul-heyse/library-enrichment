@@ -12,6 +12,9 @@ Also reachable as `datafusion_spark::expr_fn::json_tuple`
 fn json_tuple(args: Vec<datafusion_expr::Expr>) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.json.expr_fn.json_tuple.md).
+
+
 Extracts top-level fields from a JSON string and returns them as a struct.
 
 ---

@@ -16,6 +16,9 @@ enum NullHandling
 
 **Derives**: Clone, Copy, Debug, Default, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.unnest.NullHandling.md).
+
+
 How [`UnnestOptions`] handles `NULL` and empty list values in the input column.
 
 The variants enumerate the three observable behaviors so that callers do
@@ -36,6 +39,9 @@ struct RecursionUnnestOption
 **Fields**: `input_column`, `output_column`, `depth`
 
 **Derives**: Clone, Debug, Eq, Hash, PartialEq, PartialOrd, StructuralPartialEq
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.unnest.RecursionUnnestOption.md).
+
 
 Instruction on how to unnest a column (mostly with a list type)
 such as how to name the output, and how many level it should be unnested
@@ -68,6 +74,9 @@ fn with_null_handling(self, null_handling: NullHandling) -> Self
 fn with_preserve_nulls(self, preserve_nulls: bool) -> Self
 fn with_recursions(self, recursion: RecursionUnnestOption) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.unnest.UnnestOptions.md).
+
 
 Options for unnesting a column that contains a list type,
 replicating values in the other, non nested rows.

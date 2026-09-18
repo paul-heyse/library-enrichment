@@ -10,6 +10,9 @@ Crate `datafusion-physical-expr` · 11 public items · structured records in [`m
 fn build_dag<T, F>(expr: std::sync::Arc<dyn PhysicalExpr>, constructor: &F) -> datafusion_common::Result<(petgraph::graph::NodeIndex, petgraph::stable_graph::StableGraph<T, usize>)> where F: Fn(&ExprTreeNode<petgraph::graph::NodeIndex>) -> datafusion_common::Result<T>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.utils.build_dag.md).
+
+
 ---
 
 ## collect_columns
@@ -19,6 +22,9 @@ fn build_dag<T, F>(expr: std::sync::Arc<dyn PhysicalExpr>, constructor: &F) -> d
 ```rust
 fn collect_columns(expr: &std::sync::Arc<dyn PhysicalExpr>) -> datafusion_common::HashSet<expressions::Column>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.utils.collect_columns.md).
+
 
 Recursively extract referenced [`Column`]s within a [`PhysicalExpr`].
 
@@ -33,6 +39,9 @@ Also reachable as `datafusion::physical_expr::conjunction`, `datafusion_physical
 ```rust
 fn conjunction(predicates: impl IntoIterator<Item = std::sync::Arc<dyn PhysicalExpr>>) -> std::sync::Arc<dyn PhysicalExpr>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.utils.conjunction.md).
+
 
 Create a conjunction of the given predicates.
 If the input is empty, return a literal true.
@@ -51,6 +60,9 @@ Also reachable as `datafusion::physical_expr::conjunction_opt`, `datafusion_phys
 fn conjunction_opt(predicates: impl IntoIterator<Item = std::sync::Arc<dyn PhysicalExpr>>) -> Option<std::sync::Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.utils.conjunction_opt.md).
+
+
 Create a conjunction of the given predicates.
 If the input is empty or the return None.
 If the input contains a single predicate, return Some(predicate).
@@ -66,6 +78,9 @@ Otherwise, return a Some(..) of a conjunction of the predicates (e.g. `Some(a AN
 fn convert_to_expr<T: Borrow<PhysicalSortExpr>>(sequence: impl IntoIterator<Item = T>) -> Vec<std::sync::Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.utils.convert_to_expr.md).
+
+
 This function returns all `Arc<dyn PhysicalExpr>`s inside the given
 `PhysicalSortExpr` sequence.
 
@@ -78,6 +93,9 @@ This function returns all `Arc<dyn PhysicalExpr>`s inside the given
 ```rust
 fn get_indices_of_exprs_strict<T: Borrow<std::sync::Arc<dyn PhysicalExpr>>>(targets: impl IntoIterator<Item = T>, items: &[std::sync::Arc<dyn PhysicalExpr>]) -> Vec<usize>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.utils.get_indices_of_exprs_strict.md).
+
 
 This function finds the indices of `targets` within `items` using strict
 equality.
@@ -92,6 +110,9 @@ equality.
 fn map_columns_before_projection(parent_required: &[std::sync::Arc<dyn PhysicalExpr>], proj_exprs: &[(std::sync::Arc<dyn PhysicalExpr>, String)]) -> Vec<std::sync::Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.utils.map_columns_before_projection.md).
+
+
 This function maps back requirement after ProjectionExec
 to the Executor for its input.
 
@@ -104,6 +125,9 @@ to the Executor for its input.
 ```rust
 fn reassign_expr_columns(expr: std::sync::Arc<dyn PhysicalExpr>, schema: &arrow::datatypes::Schema) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.utils.reassign_expr_columns.md).
+
 
 Re-assign indices of [`Column`]s within the given [`PhysicalExpr`] according to
 the provided [`Schema`].
@@ -127,6 +151,9 @@ Also reachable as `datafusion::physical_expr::split_conjunction`, `datafusion_ph
 fn split_conjunction(predicate: &std::sync::Arc<dyn PhysicalExpr>) -> Vec<&std::sync::Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.utils.split_conjunction.md).
+
+
 Assume the predicate is in the form of CNF, split the predicate to a Vec of PhysicalExprs.
 
 For example, split "a1 = a2 AND b1 <= b2 AND c1 != c2" into ["a1 = a2", "b1 <= b2", "c1 != c2"]
@@ -141,6 +168,9 @@ For example, split "a1 = a2 AND b1 <= b2 AND c1 != c2" into ["a1 = a2", "b1 <= b
 fn split_disjunction(predicate: &std::sync::Arc<dyn PhysicalExpr>) -> Vec<&std::sync::Arc<dyn PhysicalExpr>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.utils.split_disjunction.md).
+
+
 Assume the predicate is in the form of DNF, split the predicate to a Vec of PhysicalExprs.
 
 For example, split "a1 = a2 OR b1 <= b2 OR c1 != c2" into ["a1 = a2", "b1 <= b2", "c1 != c2"]
@@ -154,5 +184,8 @@ For example, split "a1 = a2 OR b1 <= b2 OR c1 != c2" into ["a1 = a2", "b1 <= b2"
 ```rust
 type ExprTreeNode<T> = tree_node::ExprContext<Option<T>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.utils.ExprTreeNode.md).
+
 
 ---

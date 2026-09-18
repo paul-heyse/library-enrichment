@@ -1,0 +1,90 @@
+[
+  {
+    "id": "aacfbf3413ace5e290c06216",
+    "path": "arrow_array::builder",
+    "name": "builder",
+    "owner": null,
+    "crate": "arrow-array",
+    "version": "59.3.0",
+    "kind": "module",
+    "signature": "mod builder",
+    "docs": "Defines push-based APIs for constructing arrays\n\n# Basic Usage\n\nBuilders can be used to build simple, non-nested arrays\n\n```\n# use arrow_array::builder::Int32Builder;\n# use arrow_array::PrimitiveArray;\nlet mut a = Int32Builder::new();\na.append_value(1);\na.append_null();\na.append_value(2);\nlet a = a.finish();\n\nassert_eq!(a, PrimitiveArray::from(vec![Some(1), None, Some(2)]));\n```\n\n```\n# use arrow_array::builder::StringBuilder;\n# use arrow_array::{Array, StringArray};\nlet mut a = StringBuilder::new();\na.append_value(\"foo\");\na.append_value(\"bar\");\na.append_null();\nlet a = a.finish();\n\nassert_eq!(a, StringArray::from_iter([Some(\"foo\"), Some(\"bar\"), None]));\n```\n\n# Nested Usage\n\nBuilders can also be used to build more complex nested arrays, such as lists\n\n```\n# use arrow_array::builder::{Int32Builder, ListBuilder};\n# use arrow_array::ListArray;\n# use arrow_array::types::Int32Type;\nlet mut a = ListBuilder::new(Int32Builder::new());\n// [1, 2]\na.values().append_value(1);\na.values().append_value(2);\na.append(true);\n// null\na.append(false);\n// []\na.append(true);\n// [3, null]\na.values().append_value(3);\na.values().append_null();\na.append(true);\n\n// [[1, 2], null, [], [3, null]]\nlet a = a.finish();\n\nassert_eq!(a, ListArray::from_iter_primitive::<Int32Type, _, _>([\n    Some(vec![Some(1), Some(2)]),\n    None,\n    Some(vec![]),\n    Some(vec![Some(3), None])]\n))\n```\n\n# Using the [`Extend`] trait to append values from an iterable:\n\n```\n# use arrow_array::{Array};\n# use arrow_array::builder::{ArrayBuilder, StringBuilder};\n\nlet mut builder = StringBuilder::new();\nbuilder.extend(vec![Some(\"🍐\"), Some(\"🍎\"), None]);\nassert_eq!(builder.finish().len(), 3);\n```\n\n# Using the [`Extend`] trait to write generic functions:\n\n```\n# use arrow_array::{Array, ArrayRef, StringArray};\n# use arrow_array::builder::{ArrayBuilder, Int32Builder, ListBuilder, StringBuilder};\n\n// For generic methods that fill a list of values for an [`ArrayBuilder`], use the [`Extend`] trait.\nfn filter_and_fill<V, I: IntoIterator<Item = V>>(builder: &mut impl Extend<V>, values: I, filter: V)\nwhere V: PartialEq\n{\n    builder.extend(values.into_iter().filter(|v| *v == filter));\n}\nlet mut string_builder = StringBuilder::new();\nfilter_and_fill(\n    &mut string_builder,\n    vec![Some(\"🍐\"), Some(\"🍎\"), None],\n    Some(\"🍎\"),\n);\nassert_eq!(string_builder.finish().len(), 1);\n\nlet mut int_builder = Int32Builder::new();\nfilter_and_fill(\n    &mut int_builder,\n    vec![Some(11), Some(42), None],\n    Some(42),\n);\nassert_eq!(int_builder.finish().len(), 1);\n\n// For generic methods that fill lists-of-lists for an [`ArrayBuilder`], use the [`Extend`] trait.\nfn filter_and_fill_if_contains<T, V, I: IntoIterator<Item = Option<V>>>(\n    list_builder: &mut impl Extend<Option<V>>,\n    values: I,\n    filter: Option<T>,\n) where\n    T: PartialEq,\n    for<'a> &'a V: IntoIterator<Item = &'a Option<T>>,\n{\n    list_builder.extend(values.into_iter().filter(|string: &Option<V>| {\n        string\n            .as_ref()\n            .map(|str: &V| str.into_iter().any(|ch: &Option<T>| ch == &filter))\n            .unwrap_or(false)\n    }));\n }\nlet builder = StringBuilder::new();\nlet mut list_builder = ListBuilder::new(builder);\nlet pear_pear = vec![Some(\"🍐\"),Some(\"🍐\")];\nlet pear_app = vec![Some(\"🍐\"),Some(\"🍎\")];\nfilter_and_fill_if_contains(\n    &mut list_builder,\n    vec![Some(pear_pear), Some(pear_app), None],\n    Some(\"🍎\"),\n);\nassert_eq!(list_builder.finish().len(), 1);\n```\n\n# Custom Builders\n\nIt is common to have a collection of statically defined Rust types that\nyou want to convert to Arrow arrays.\n\nAn example of doing so is below\n\n```\n# use std::any::Any;\n# use arrow_array::builder::{ArrayBuilder, Int32Builder, ListBuilder, StringBuilder};\n# use arrow_array::{ArrayRef, RecordBatch, StructArray};\n# use arrow_schema::{DataType, Field};\n# use std::sync::Arc;\n/// A custom row representation\nstruct MyRow {\n    i32: i32,\n    optional_i32: Option<i32>,\n    string: Option<String>,\n    i32_list: Option<Vec<Option<i32>>>,\n}\n\n/// Converts `Vec<Row>` into `StructArray`\n#[derive(Debug, Default)]\nstruct MyRowBuilder {\n    i32: Int32Builder,\n    string: StringBuilder,\n    i32_list: ListBuilder<Int32Builder>,\n}\n\nimpl MyRowBuilder {\n    fn append(&mut self, row: &MyRow) {\n        self.i32.append_value(row.i32);\n        self.string.append_option(row.string.as_ref());\n        self.i32_list.append_option(row.i32_list.as_ref().map(|x| x.iter().copied()));\n    }\n\n    /// Note: returns StructArray to allow nesting within another array if desired\n    fn finish(&mut self) -> StructArray {\n        let i32 = Arc::new(self.i32.finish()) as ArrayRef;\n        let i32_field = Arc::new(Field::new(\"i32\", DataType::Int32, false));\n\n        let string = Arc::new(self.string.finish()) as ArrayRef;\n        let string_field = Arc::new(Field::new(\"i32\", DataType::Utf8, false));\n\n        let i32_list = Arc::new(self.i32_list.finish()) as ArrayRef;\n        let value_field = Arc::new(Field::new_list_field(DataType::Int32, true));\n        let i32_list_field = Arc::new(Field::new(\"i32_list\", DataType::List(value_field), true));\n\n        StructArray::from(vec![\n            (i32_field, i32),\n            (string_field, string),\n            (i32_list_field, i32_list),\n        ])\n    }\n}\n\n/// For building arrays in generic code, use Extend instead of the append_* methods\n/// e.g. append_value, append_option, append_null\nimpl<'a> Extend<&'a MyRow> for MyRowBuilder {\n    fn extend<T: IntoIterator<Item = &'a MyRow>>(&mut self, iter: T) {\n        iter.into_iter().for_each(|row| self.append(row));\n    }\n}\n\n/// Converts a slice of [`MyRow`] to a [`RecordBatch`]\nfn rows_to_batch(rows: &[MyRow]) -> RecordBatch {\n    let mut builder = MyRowBuilder::default();\n    builder.extend(rows);\n    RecordBatch::from(&builder.finish())\n}\n```\n\n# Null / Validity Masks\n\nThe [`NullBufferBuilder`] is optimized for creating the null mask for an array.\n\n```\n# use arrow_array::builder::NullBufferBuilder;\nlet mut builder = NullBufferBuilder::new(8);\nlet mut builder = NullBufferBuilder::new(8);\nbuilder.append_n_non_nulls(7);\nbuilder.append_null();\nlet buffer = builder.finish().unwrap();\nassert_eq!(buffer.len(), 8);\nassert_eq!(buffer.iter().collect::<Vec<_>>(), vec![true, true, true, true, true, true, true, false]);\n```",
+    "span": {
+      "filename": "src/builder/mod.rs",
+      "begin": [
+        18,
+        1
+      ],
+      "end": [
+        673,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "module": {
+        "is_crate": false,
+        "items": [
+          3270,
+          3272,
+          663,
+          721,
+          722,
+          3291,
+          3292,
+          3293,
+          3294,
+          3295,
+          3296,
+          2968,
+          3297,
+          3298,
+          3299,
+          3300,
+          3301,
+          3302,
+          3303,
+          3304,
+          3305,
+          3306,
+          3307,
+          3308,
+          3309,
+          3310,
+          3311,
+          3312,
+          3313,
+          3314
+        ],
+        "is_stripped": false
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`Extend`": 664,
+      "`NullBufferBuilder`": 3273
+    },
+    "link_paths": {
+      "`Extend`": "core::iter::traits::collect::Extend",
+      "`NullBufferBuilder`": "arrow_buffer::builder::null::NullBufferBuilder"
+    },
+    "artifact": {
+      "id": "e0a2dc730057b72cb9055e3a57612895214d5fbc22149d60915d6f3b7f803278",
+      "format_version": 61,
+      "item_id": "2352",
+      "origin": "https://docs.rs/crate/arrow-array/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "modules/arrow_array.builder.md",
+    "record_file": "modules/arrow_array.builder.json",
+    "anchor": "op-aacfbf3413ace5e290c06216",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`NullBufferBuilder`": "../operations/arrow_buffer.builder.null.NullBufferBuilder.md#op-f629e701548be729fb00ab9e"
+    }
+  }
+]

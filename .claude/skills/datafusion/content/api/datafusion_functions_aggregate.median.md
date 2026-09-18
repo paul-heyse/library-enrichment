@@ -12,6 +12,9 @@ Also reachable as `datafusion_functions_aggregate::expr_fn::median`
 fn median(expression: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.median.median.md).
+
+
 Computes the median of a set of numbers
 
 ---
@@ -23,6 +26,9 @@ Computes the median of a set of numbers
 ```rust
 fn median_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.median.median_udaf.md).
+
 
 AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`Median`]
 
@@ -58,6 +64,9 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_aggregate.median.Median.md).
+
 
 MEDIAN aggregate expression. If using the non-distinct variation, then this uses a
 lot of memory because all values need to be stored in memory before a result can be

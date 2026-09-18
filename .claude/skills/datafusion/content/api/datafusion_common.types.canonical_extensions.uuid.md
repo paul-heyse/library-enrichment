@@ -28,6 +28,9 @@ fn serialize_metadata(&self) -> Option<String>
 fn storage_type(&self) -> DataType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.canonical_extensions.uuid.DFUuid.md).
+
+
 Defines the extension type logic for the canonical `arrow.uuid` extension type. This extension
 type defines that a field should be interpreted as a
 [UUID](https://de.wikipedia.org/wiki/Universally_Unique_Identifier).

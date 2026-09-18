@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 2 public items · structured records in [`model/buoyan
 ## ExpressionDepthChecker
 
 `struct` · `buoyant_kernel::transforms::expression::ExpressionDepthChecker`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transforms.expression.ExpressionDepthChecker.md)
 
 Also reachable as `buoyant_kernel::transforms::ExpressionDepthChecker`, `delta_kernel::transforms::expression::ExpressionDepthChecker`
 
@@ -45,6 +46,7 @@ for verifying that a expression has reasonable depth before attempting to work w
 ## ExpressionTransform
 
 `trait` · `buoyant_kernel::transforms::expression::ExpressionTransform`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.transforms.expression.ExpressionTransform.md)
 
 Also reachable as `buoyant_kernel::transforms::ExpressionTransform`, `delta_kernel::transforms::expression::ExpressionTransform`
 

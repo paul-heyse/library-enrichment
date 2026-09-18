@@ -1,0 +1,2785 @@
+[
+  {
+    "id": "569c9180a7cabd6afe650cff",
+    "path": "datafusion_expr_common::signature::TypeSignature",
+    "name": "TypeSignature",
+    "owner": null,
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "enum",
+    "signature": "enum TypeSignature",
+    "docs": "The types of arguments for which a function has implementations.\n\n[`TypeSignature`] **DOES NOT** define the types that a user query could call the\nfunction with. DataFusion will automatically coerce (cast) argument types to\none of the supported function signatures, if possible.\n\n# Overview\nFunctions typically provide implementations for a small number of different\nargument [`DataType`]s, rather than all possible combinations. If a user\ncalls a function with arguments that do not match any of the declared types,\nDataFusion will attempt to automatically coerce (add casts to) function\narguments so they match the [`TypeSignature`]. See the [`type_coercion`] module\nfor more details\n\n# Example: Numeric Functions\nFor example, a function like `cos` may only provide an implementation for\n[`DataType::Float64`]. When users call `cos` with a different argument type,\nsuch as `cos(int_column)`, and type coercion automatically adds a cast such\nas `cos(CAST int_column AS DOUBLE)` during planning.\n\n[`type_coercion`]: crate::type_coercion\n\n## Example: Strings\n\nThere are several different string types in Arrow, such as\n[`DataType::Utf8`], [`DataType::LargeUtf8`], and [`DataType::Utf8View`].\n\nSome functions may have specialized implementations for these types, while others\nmay be able to handle only one of them. For example, a function that\nonly works with [`DataType::Utf8View`] would have the following signature:\n\n```\n# use arrow::datatypes::DataType;\n# use datafusion_expr_common::signature::{TypeSignature};\n// Declares the function must be invoked with a single argument of type `Utf8View`.\n// if a user calls the function with `Utf8` or `LargeUtf8`, DataFusion will\n// automatically add a cast to `Utf8View` during planning.\nlet type_signature = TypeSignature::Exact(vec![DataType::Utf8View]);\n```\n\n# Example: Timestamps\n\nTypes to match are represented using Arrow's [`DataType`].  [`DataType::Timestamp`] has an optional variable\ntimezone specification. To specify a function can handle a timestamp with *ANY* timezone, use\nthe [`TIMEZONE_WILDCARD`]. For example:\n\n```\n# use arrow::datatypes::{DataType, TimeUnit};\n# use datafusion_expr_common::signature::{TIMEZONE_WILDCARD, TypeSignature};\nlet type_signature = TypeSignature::Exact(vec![\n    // A nanosecond precision timestamp with ANY timezone\n    // matches  Timestamp(Nanosecond, Some(\"+0:00\"))\n    // matches  Timestamp(Nanosecond, Some(\"+5:00\"))\n    // does not match  Timestamp(Nanosecond, None)\n    DataType::Timestamp(TimeUnit::Nanosecond, Some(TIMEZONE_WILDCARD.into())),\n]);\n```",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        157,
+        1
+      ],
+      "end": [
+        253,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "enum": {
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "has_stripped_variants": false,
+        "variants": [
+          537,
+          538,
+          539,
+          542,
+          544,
+          548,
+          551,
+          553,
+          555,
+          558,
+          561,
+          563,
+          536
+        ],
+        "impls": [
+          572,
+          579,
+          580,
+          581,
+          582,
+          583,
+          584,
+          585,
+          586,
+          587,
+          588,
+          589,
+          590,
+          591,
+          592,
+          593,
+          594,
+          595,
+          596,
+          597,
+          598,
+          599,
+          600,
+          602,
+          604,
+          605,
+          607,
+          608,
+          610,
+          612,
+          614
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`DataType`": 20,
+      "`DataType::Utf8`": 566,
+      "`DataType::Float64`": 565,
+      "`DataType::Timestamp`": 569,
+      "`DataType::LargeUtf8`": 567,
+      "`DataType::Utf8View`": 568,
+      "crate::type_coercion": 564,
+      "`TIMEZONE_WILDCARD`": 456,
+      "`TypeSignature`": 455
+    },
+    "link_paths": {
+      "`DataType`": "arrow_schema::datatype::DataType",
+      "`DataType::Utf8`": "arrow_schema::datatype::DataType::Utf8",
+      "`DataType::Float64`": "arrow_schema::datatype::DataType::Float64",
+      "`DataType::Timestamp`": "arrow_schema::datatype::DataType::Timestamp",
+      "`DataType::LargeUtf8`": "arrow_schema::datatype::DataType::LargeUtf8",
+      "`DataType::Utf8View`": "arrow_schema::datatype::DataType::Utf8View",
+      "crate::type_coercion": "datafusion_expr_common::type_coercion",
+      "`TIMEZONE_WILDCARD`": "datafusion_expr_common::signature::TIMEZONE_WILDCARD",
+      "`TypeSignature`": "datafusion_expr_common::signature::TypeSignature"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "455",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-569c9180a7cabd6afe650cff",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature",
+      "datafusion_expr::TypeSignature"
+    ],
+    "resolved_doc_links": {
+      "`DataType`": "../operations/arrow_schema.datatype.DataType.md#op-bf69df5b14436e006d3a531c",
+      "`DataType::Utf8`": "../operations/arrow_schema.datatype.DataType.md#op-4e52d4ade5cb975c8f4c452a",
+      "`DataType::Float64`": "../operations/arrow_schema.datatype.DataType.md#op-c7ea9edacf7b91c7728828e8",
+      "`DataType::Timestamp`": "../operations/arrow_schema.datatype.DataType.md#op-4311beb64d86f8afbc59cba2",
+      "`DataType::LargeUtf8`": "../operations/arrow_schema.datatype.DataType.md#op-d897e1ec91191af958fa69ca",
+      "`DataType::Utf8View`": "../operations/arrow_schema.datatype.DataType.md#op-a3c8435fd0f9a132833a8fc0",
+      "crate::type_coercion": "../modules/datafusion_expr_common.type_coercion.md#op-3244ce15631091034996e287",
+      "`TIMEZONE_WILDCARD`": "../operations/datafusion_expr_common.signature.TIMEZONE_WILDCARD.md#op-5c6a30f50b3ea94ff4230ef5",
+      "`TypeSignature`": "../operations/datafusion_expr_common.signature.TypeSignature.md#op-569c9180a7cabd6afe650cff"
+    }
+  },
+  {
+    "id": "59a951c9a5e477e9ecb9974d",
+    "path": "datafusion_expr_common::signature::TypeSignature::Any",
+    "name": "Any",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Any",
+    "docs": "One or more arguments of arbitrary types.\n\nFor functions that take no arguments (e.g. `random()`), use [`TypeSignature::Nullary`].",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        219,
+        5
+      ],
+      "end": [
+        219,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            552
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`TypeSignature::Nullary`": 536
+    },
+    "link_paths": {
+      "`TypeSignature::Nullary`": "datafusion_expr_common::signature::TypeSignature::Nullary"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "553",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-59a951c9a5e477e9ecb9974d",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::Any",
+      "datafusion_expr::TypeSignature::Any"
+    ],
+    "resolved_doc_links": {
+      "`TypeSignature::Nullary`": "../operations/datafusion_expr_common.signature.TypeSignature.md#op-924c5ed8b17703b662fd11c1"
+    }
+  },
+  {
+    "id": "302ce821e62498e3ca09bdb4",
+    "path": "datafusion_expr_common::signature::TypeSignature::ArraySignature",
+    "name": "ArraySignature",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "ArraySignature",
+    "docs": "A function that has an [`ArrayFunctionSignature`]",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        231,
+        5
+      ],
+      "end": [
+        231,
+        43
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            556
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`ArrayFunctionSignature`": 557
+    },
+    "link_paths": {
+      "`ArrayFunctionSignature`": "datafusion_expr_common::signature::ArrayFunctionSignature"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "558",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-302ce821e62498e3ca09bdb4",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::ArraySignature",
+      "datafusion_expr::TypeSignature::ArraySignature"
+    ],
+    "resolved_doc_links": {
+      "`ArrayFunctionSignature`": "../operations/datafusion_expr_common.signature.ArrayFunctionSignature.md#op-de5878d4c45db0c90f1ffaf5"
+    }
+  },
+  {
+    "id": "3487ca51800f476df4c4ab66",
+    "path": "datafusion_expr_common::signature::TypeSignature::Coercible",
+    "name": "Coercible",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Coercible",
+    "docs": "One or more arguments belonging to the [`TypeSignatureClass`], in order.\n\n[`Coercion`] contains not only the desired type but also the allowed\ncasts. For example, if you expect a function has string type, but you\nalso allow it to be casted from binary type.\n\nFor functions that take no arguments (e.g. `random()`), see [`TypeSignature::Nullary`].",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        195,
+        5
+      ],
+      "end": [
+        195,
+        29
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            545
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`TypeSignatureClass`": 547,
+      "`TypeSignature::Nullary`": 536,
+      "`Coercion`": 546
+    },
+    "link_paths": {
+      "`TypeSignatureClass`": "datafusion_expr_common::signature::TypeSignatureClass",
+      "`TypeSignature::Nullary`": "datafusion_expr_common::signature::TypeSignature::Nullary",
+      "`Coercion`": "datafusion_expr_common::signature::Coercion"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "548",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-3487ca51800f476df4c4ab66",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::Coercible",
+      "datafusion_expr::TypeSignature::Coercible"
+    ],
+    "resolved_doc_links": {
+      "`TypeSignatureClass`": "../operations/datafusion_expr_common.signature.TypeSignatureClass.md#op-dffc1e98d93d952fdb6f02ca",
+      "`TypeSignature::Nullary`": "../operations/datafusion_expr_common.signature.TypeSignature.md#op-924c5ed8b17703b662fd11c1",
+      "`Coercion`": "../operations/datafusion_expr_common.signature.Coercion.md#op-4db7bfb3816e2d62df923c32"
+    }
+  },
+  {
+    "id": "28dc1952ee76b7b1d843aba1",
+    "path": "datafusion_expr_common::signature::TypeSignature::Comparable",
+    "name": "Comparable",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Comparable",
+    "docs": "One or more arguments coercible to a single, comparable type.\n\nEach argument will be coerced to a single type using the\ncoercion rules described in [`comparison_coercion`].\n\n# Examples\n\nIf the `nullif(1, 2)` function is called with `i32` and `i64` arguments\nthe types will both be coerced to `i64` before the function is invoked.\n\nIf the `nullif('1', 2)` function is called with `Utf8` and `i64` arguments\nthe types will both be coerced to `Int64` before the function is invoked\n(numeric is preferred over string).\n\nNote:\n- For functions that take no arguments (e.g. `random()`), see [`TypeSignature::Nullary`].\n- If all arguments have type [`DataType::Null`], they are coerced to `Utf8`\n\n[`comparison_coercion`]: crate::type_coercion::binary::comparison_coercion",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        215,
+        5
+      ],
+      "end": [
+        215,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            549
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "crate::type_coercion::binary::comparison_coercion": 205,
+      "`DataType::Null`": 550,
+      "`TypeSignature::Nullary`": 536
+    },
+    "link_paths": {
+      "crate::type_coercion::binary::comparison_coercion": "datafusion_expr_common::type_coercion::binary::comparison_coercion",
+      "`DataType::Null`": "arrow_schema::datatype::DataType::Null",
+      "`TypeSignature::Nullary`": "datafusion_expr_common::signature::TypeSignature::Nullary"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "551",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-28dc1952ee76b7b1d843aba1",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::Comparable",
+      "datafusion_expr::TypeSignature::Comparable"
+    ],
+    "resolved_doc_links": {
+      "crate::type_coercion::binary::comparison_coercion": "../operations/datafusion_expr_common.type_coercion.binary.comparison_coercion.md#op-360302c9badc4c090a1d63b0",
+      "`DataType::Null`": "../operations/arrow_schema.datatype.DataType.md#op-0e6b89945b6e61141a2fa7ee",
+      "`TypeSignature::Nullary`": "../operations/datafusion_expr_common.signature.TypeSignature.md#op-924c5ed8b17703b662fd11c1"
+    }
+  },
+  {
+    "id": "bde9c2e3d919655f2b2cc5bf",
+    "path": "datafusion_expr_common::signature::TypeSignature::Exact",
+    "name": "Exact",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Exact",
+    "docs": "One or more arguments with exactly the specified types in order.\n\nFor functions that take no arguments (e.g. `random()`), use [`TypeSignature::Nullary`].",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        187,
+        5
+      ],
+      "end": [
+        187,
+        25
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            543
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`TypeSignature::Nullary`": 536
+    },
+    "link_paths": {
+      "`TypeSignature::Nullary`": "datafusion_expr_common::signature::TypeSignature::Nullary"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "544",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-bde9c2e3d919655f2b2cc5bf",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::Exact",
+      "datafusion_expr::TypeSignature::Exact"
+    ],
+    "resolved_doc_links": {
+      "`TypeSignature::Nullary`": "../operations/datafusion_expr_common.signature.TypeSignature.md#op-924c5ed8b17703b662fd11c1"
+    }
+  },
+  {
+    "id": "924c5ed8b17703b662fd11c1",
+    "path": "datafusion_expr_common::signature::TypeSignature::Nullary",
+    "name": "Nullary",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Nullary",
+    "docs": "No arguments",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        252,
+        5
+      ],
+      "end": [
+        252,
+        12
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": "plain",
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "536",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-924c5ed8b17703b662fd11c1",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::Nullary",
+      "datafusion_expr::TypeSignature::Nullary"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2d66132a97f901280e0cf788",
+    "path": "datafusion_expr_common::signature::TypeSignature::Numeric",
+    "name": "Numeric",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Numeric",
+    "docs": "One or more arguments of numeric types, coerced to a common numeric type.\n\nSee [`NativeType::is_numeric`] to know which type is considered numeric\n\nFor functions that take no arguments (e.g. `random()`), use [`TypeSignature::Nullary`].\n\n[`NativeType::is_numeric`]: datafusion_common::types::NativeType::is_numeric",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        239,
+        5
+      ],
+      "end": [
+        239,
+        19
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            559
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`TypeSignature::Nullary`": 536,
+      "datafusion_common::types::NativeType::is_numeric": 560
+    },
+    "link_paths": {
+      "`TypeSignature::Nullary`": "datafusion_expr_common::signature::TypeSignature::Nullary",
+      "datafusion_common::types::NativeType::is_numeric": "datafusion_common::types::native::NativeType::is_numeric"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "561",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-2d66132a97f901280e0cf788",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::Numeric",
+      "datafusion_expr::TypeSignature::Numeric"
+    ],
+    "resolved_doc_links": {
+      "`TypeSignature::Nullary`": "../operations/datafusion_expr_common.signature.TypeSignature.md#op-924c5ed8b17703b662fd11c1"
+    }
+  },
+  {
+    "id": "dace4a06957ffe853cadab3c",
+    "path": "datafusion_expr_common::signature::TypeSignature::OneOf",
+    "name": "OneOf",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "OneOf",
+    "docs": "Matches exactly one of a list of [`TypeSignature`]s.\n\nCoercion is attempted to match the signatures in order, and stops after\nthe first success, if any.\n\n# Examples\n\nSince `make_array` takes 0 or more arguments with arbitrary types, its `TypeSignature`\nis `OneOf(vec![Any(0), VariadicAny])`.",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        229,
+        5
+      ],
+      "end": [
+        229,
+        30
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            554
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`TypeSignature`": 455
+    },
+    "link_paths": {
+      "`TypeSignature`": "datafusion_expr_common::signature::TypeSignature"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "555",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-dace4a06957ffe853cadab3c",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::OneOf",
+      "datafusion_expr::TypeSignature::OneOf"
+    ],
+    "resolved_doc_links": {
+      "`TypeSignature`": "../operations/datafusion_expr_common.signature.TypeSignature.md#op-569c9180a7cabd6afe650cff"
+    }
+  },
+  {
+    "id": "b23eb94d5d0fc95e97c5b48a",
+    "path": "datafusion_expr_common::signature::TypeSignature::String",
+    "name": "String",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "String",
+    "docs": "One or arguments of all the same string types.\n\nThe precedence of type from high to low is Utf8View, LargeUtf8 and Utf8.\nNull is considered as `Utf8` by default\nDictionary with string value type is also handled.\n\nFor example, if a function is called with (utf8, large_utf8), all\narguments will be coerced to  `LargeUtf8`\n\nFor functions that take no arguments (e.g. `random()`), use [`TypeSignature::Nullary`].",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        250,
+        5
+      ],
+      "end": [
+        250,
+        18
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            562
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`TypeSignature::Nullary`": 536
+    },
+    "link_paths": {
+      "`TypeSignature::Nullary`": "datafusion_expr_common::signature::TypeSignature::Nullary"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "563",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-b23eb94d5d0fc95e97c5b48a",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::String",
+      "datafusion_expr::TypeSignature::String"
+    ],
+    "resolved_doc_links": {
+      "`TypeSignature::Nullary`": "../operations/datafusion_expr_common.signature.TypeSignature.md#op-924c5ed8b17703b662fd11c1"
+    }
+  },
+  {
+    "id": "2c3acbe938ab29bf5167f8a2",
+    "path": "datafusion_expr_common::signature::TypeSignature::Uniform",
+    "name": "Uniform",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Uniform",
+    "docs": "One or more arguments of an arbitrary but equal type out of a list of valid types.\n\n# Examples\n\n1. A function of one argument of f64 is `Uniform(1, vec![DataType::Float64])`\n2. A function of one argument of f64 or f32 is `Uniform(1, vec![DataType::Float32, DataType::Float64])`",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        183,
+        5
+      ],
+      "end": [
+        183,
+        34
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            540,
+            541
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "542",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-2c3acbe938ab29bf5167f8a2",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::Uniform",
+      "datafusion_expr::TypeSignature::Uniform"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9a54792c384e19dbdaacb169",
+    "path": "datafusion_expr_common::signature::TypeSignature::UserDefined",
+    "name": "UserDefined",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "UserDefined",
+    "docs": "The acceptable signature and coercions rules are special for this\nfunction.\n\nIf this signature is specified,\nDataFusion will call [`ScalarUDFImpl::coerce_types`] to prepare argument types.\n\n[`ScalarUDFImpl::coerce_types`]: https://docs.rs/datafusion/latest/datafusion/logical_expr/trait.ScalarUDFImpl.html#method.coerce_types",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        174,
+        5
+      ],
+      "end": [
+        174,
+        16
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": "plain",
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "538",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-9a54792c384e19dbdaacb169",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::UserDefined",
+      "datafusion_expr::TypeSignature::UserDefined"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "7aac02d9b19ab50aa0d494c0",
+    "path": "datafusion_expr_common::signature::TypeSignature::Variadic",
+    "name": "Variadic",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "Variadic",
+    "docs": "One or more arguments of a common type out of a list of valid types.\n\nFor functions that take no arguments (e.g. `random()`), see [`TypeSignature::Nullary`].\n\n# Examples\n\nA function such as `concat` is `Variadic(vec![DataType::Utf8,\nDataType::LargeUtf8])`",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        166,
+        5
+      ],
+      "end": [
+        166,
+        28
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": {
+          "tuple": [
+            535
+          ]
+        },
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`TypeSignature::Nullary`": 536
+    },
+    "link_paths": {
+      "`TypeSignature::Nullary`": "datafusion_expr_common::signature::TypeSignature::Nullary"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "537",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-7aac02d9b19ab50aa0d494c0",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::Variadic",
+      "datafusion_expr::TypeSignature::Variadic"
+    ],
+    "resolved_doc_links": {
+      "`TypeSignature::Nullary`": "../operations/datafusion_expr_common.signature.TypeSignature.md#op-924c5ed8b17703b662fd11c1"
+    }
+  },
+  {
+    "id": "126baa1b7dc89216b0e10e58",
+    "path": "datafusion_expr_common::signature::TypeSignature::VariadicAny",
+    "name": "VariadicAny",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "variant",
+    "signature": "VariadicAny",
+    "docs": "One or more arguments with arbitrary types",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        176,
+        5
+      ],
+      "end": [
+        176,
+        16
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "variant": {
+        "kind": "plain",
+        "discriminant": null
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "539",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-126baa1b7dc89216b0e10e58",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::VariadicAny",
+      "datafusion_expr::TypeSignature::VariadicAny"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "b16502081975454fcd2a9ad7",
+    "path": "datafusion_expr_common::signature::TypeSignature::arity",
+    "name": "arity",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn arity(&self) -> Arity",
+    "docs": "Returns the arity (expected number of arguments) for this type signature.\n\nReturns `Arity::Fixed(n)` for signatures with a specific argument count,\nor `Arity::Variable` for variable-arity signatures like `Variadic`, `VariadicAny`, `UserDefined`.\n\n# Examples\n\n```\n# use datafusion_expr_common::signature::{TypeSignature, Arity};\n# use arrow::datatypes::DataType;\n// Exact signature has fixed arity\nlet sig = TypeSignature::Exact(vec![DataType::Int32, DataType::Utf8]);\nassert_eq!(sig.arity(), Arity::Fixed(2));\n\n// Variadic signature has variable arity\nlet sig = TypeSignature::VariadicAny;\nassert_eq!(sig.arity(), Arity::Variable);\n```",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        279,
+        5
+      ],
+      "end": [
+        322,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Arity",
+              "id": 505,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "505": "datafusion_expr_common::signature::Arity"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeSignature",
+          "id": "datafusion_expr_common::signature::TypeSignature",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/signature.rs",
+        "begin": [
+          255,
+          1
+        ],
+        "end": [
+          323,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "571",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-b16502081975454fcd2a9ad7",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::arity",
+      "datafusion_expr::TypeSignature::arity"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c2d68c6deb3ffa80e98e359b",
+    "path": "datafusion_expr_common::signature::TypeSignature::clone",
+    "name": "clone",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> TypeSignature",
+    "docs": "",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        156,
+        17
+      ],
+      "end": [
+        156,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "TypeSignature",
+              "id": 455,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "455": "datafusion_expr_common::signature::TypeSignature"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeSignature",
+          "id": "datafusion_expr_common::signature::TypeSignature",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/signature.rs",
+        "begin": [
+          156,
+          17
+        ],
+        "end": [
+          156,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "603",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-c2d68c6deb3ffa80e98e359b",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::clone",
+      "datafusion_expr::TypeSignature::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a147419749cc6f6cdd24092d",
+    "path": "datafusion_expr_common::signature::TypeSignature::eq",
+    "name": "eq",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &TypeSignature) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        156,
+        24
+      ],
+      "end": [
+        156,
+        33
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "TypeSignature",
+                      "id": 455,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "455": "datafusion_expr_common::signature::TypeSignature"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeSignature",
+          "id": "datafusion_expr_common::signature::TypeSignature",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/signature.rs",
+        "begin": [
+          156,
+          24
+        ],
+        "end": [
+          156,
+          33
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "606",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-a147419749cc6f6cdd24092d",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::eq",
+      "datafusion_expr::TypeSignature::eq"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "4c086d214f7282e7b18668ec",
+    "path": "datafusion_expr_common::signature::TypeSignature::fmt",
+    "name": "fmt",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        326,
+        5
+      ],
+      "end": [
+        359,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::fmt::Formatter",
+                      "id": 97,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 98,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "97": "core::fmt::Formatter",
+      "98": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeSignature",
+          "id": "datafusion_expr_common::signature::TypeSignature",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Display",
+        "id": "core::fmt::Display",
+        "args": null
+      },
+      "trait_path": "core::fmt::Display",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/signature.rs",
+        "begin": [
+          325,
+          1
+        ],
+        "end": [
+          360,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "613",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-4c086d214f7282e7b18668ec",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::fmt",
+      "datafusion_expr::TypeSignature::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "a3ba48e39efc01fe0fbb43ad",
+    "path": "datafusion_expr_common::signature::TypeSignature::fmt",
+    "name": "fmt",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        156,
+        10
+      ],
+      "end": [
+        156,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 97,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 98,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "97": "core::fmt::Formatter",
+      "98": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeSignature",
+          "id": "datafusion_expr_common::signature::TypeSignature",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/signature.rs",
+        "begin": [
+          156,
+          10
+        ],
+        "end": [
+          156,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "601",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-a3ba48e39efc01fe0fbb43ad",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::fmt",
+      "datafusion_expr::TypeSignature::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "3c8dbe8e6c7b5c720e8c6a4c",
+    "path": "datafusion_expr_common::signature::TypeSignature::get_example_types",
+    "name": "get_example_types",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn get_example_types(&self) -> Vec<Vec<DataType>>",
+    "docs": "Return example acceptable types for this `TypeSignature`'\n\nReturns a `Vec<DataType>` for each argument to the function\n\nThis is used for `information_schema` and can be used to generate\ndocumentation or error messages.",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        889,
+        5
+      ],
+      "end": [
+        942,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 10,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Vec",
+                          "id": 10,
+                          "args": {
+                            "angle_bracketed": {
+                              "args": [
+                                {
+                                  "type": {
+                                    "resolved_path": {
+                                      "path": "DataType",
+                                      "id": 20,
+                                      "args": null
+                                    }
+                                  }
+                                }
+                              ],
+                              "constraints": []
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "alloc::vec::Vec",
+      "20": "arrow_schema::datatype::DataType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeSignature",
+          "id": "datafusion_expr_common::signature::TypeSignature",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/signature.rs",
+        "begin": [
+          612,
+          1
+        ],
+        "end": [
+          943,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "578",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-3c8dbe8e6c7b5c720e8c6a4c",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::get_example_types",
+      "datafusion_expr::TypeSignature::get_example_types"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "38a20915f6795a8983a7b3eb",
+    "path": "datafusion_expr_common::signature::TypeSignature::hash",
+    "name": "hash",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn hash<__H: hash::Hasher>(&self, state: &mut __H)",
+    "docs": "",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        156,
+        51
+      ],
+      "end": [
+        156,
+        55
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "state",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "__H"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "__H",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "$crate::hash::Hasher",
+                          "id": 118,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "118": "core::hash::Hasher"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeSignature",
+          "id": "datafusion_expr_common::signature::TypeSignature",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Hash",
+        "id": "core::hash::Hash",
+        "args": null
+      },
+      "trait_path": "core::hash::Hash",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/signature.rs",
+        "begin": [
+          156,
+          51
+        ],
+        "end": [
+          156,
+          55
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "611",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-38a20915f6795a8983a7b3eb",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::hash",
+      "datafusion_expr::TypeSignature::hash"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "552e7e66be97ef1edb3180b0",
+    "path": "datafusion_expr_common::signature::TypeSignature::is_one_of",
+    "name": "is_one_of",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn is_one_of(&self) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        257,
+        5
+      ],
+      "end": [
+        259,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeSignature",
+          "id": "datafusion_expr_common::signature::TypeSignature",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/signature.rs",
+        "begin": [
+          255,
+          1
+        ],
+        "end": [
+          323,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "570",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-552e7e66be97ef1edb3180b0",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::is_one_of",
+      "datafusion_expr::TypeSignature::is_one_of"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "d90eb3bb03e6844459cf649d",
+    "path": "datafusion_expr_common::signature::TypeSignature::join_types",
+    "name": "join_types",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn join_types<T: Display>(types: &[T], delimiter: &str) -> String",
+    "docs": "Helper function to join types with specified delimiter.",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        854,
+        5
+      ],
+      "end": [
+        860,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "types",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "slice": {
+                      "generic": "T"
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "delimiter",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "primitive": "str"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "String",
+              "id": 88,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "T",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "Display",
+                          "id": 90,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "88": "alloc::string::String",
+      "90": "core::fmt::Display"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeSignature",
+          "id": "datafusion_expr_common::signature::TypeSignature",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/signature.rs",
+        "begin": [
+          612,
+          1
+        ],
+        "end": [
+          943,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "575",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-d90eb3bb03e6844459cf649d",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::join_types",
+      "datafusion_expr::TypeSignature::join_types"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "0277b6fd0517ffc32ef46bb2",
+    "path": "datafusion_expr_common::signature::TypeSignature::partial_cmp",
+    "name": "partial_cmp",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn partial_cmp(&self, other: &TypeSignature) -> option::Option<cmp::Ordering>",
+    "docs": "",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        156,
+        39
+      ],
+      "end": [
+        156,
+        49
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "TypeSignature",
+                      "id": 455,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::option::Option",
+              "id": 21,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "$crate::cmp::Ordering",
+                          "id": 407,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "455": "datafusion_expr_common::signature::TypeSignature",
+      "21": "core::option::Option",
+      "407": "core::cmp::Ordering"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeSignature",
+          "id": "datafusion_expr_common::signature::TypeSignature",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PartialOrd",
+        "id": "core::cmp::PartialOrd",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialOrd",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/signature.rs",
+        "begin": [
+          156,
+          39
+        ],
+        "end": [
+          156,
+          49
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "609",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-0277b6fd0517ffc32ef46bb2",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::partial_cmp",
+      "datafusion_expr::TypeSignature::partial_cmp"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "83f12f6b544a89a058f9b7c1",
+    "path": "datafusion_expr_common::signature::TypeSignature::supports_zero_argument",
+    "name": "supports_zero_argument",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn supports_zero_argument(&self) -> bool",
+    "docs": "Check whether 0 input argument is valid for given `TypeSignature`",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        863,
+        5
+      ],
+      "end": [
+        872,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeSignature",
+          "id": "datafusion_expr_common::signature::TypeSignature",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/signature.rs",
+        "begin": [
+          612,
+          1
+        ],
+        "end": [
+          943,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "576",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-83f12f6b544a89a058f9b7c1",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::supports_zero_argument",
+      "datafusion_expr::TypeSignature::supports_zero_argument"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f84c54ec026c87f2bd59e8ef",
+    "path": "datafusion_expr_common::signature::TypeSignature::to_string_repr",
+    "name": "to_string_repr",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn to_string_repr(&self) -> Vec<String>",
+    "docs": "",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        613,
+        5
+      ],
+      "end": [
+        661,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 10,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "String",
+                          "id": 88,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "alloc::vec::Vec",
+      "88": "alloc::string::String"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeSignature",
+          "id": "datafusion_expr_common::signature::TypeSignature",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/signature.rs",
+        "begin": [
+          612,
+          1
+        ],
+        "end": [
+          943,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "573",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-f84c54ec026c87f2bd59e8ef",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::to_string_repr",
+      "datafusion_expr::TypeSignature::to_string_repr"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "af681b941c5c8ad139b99c44",
+    "path": "datafusion_expr_common::signature::TypeSignature::to_string_repr_with_names",
+    "name": "to_string_repr_with_names",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn to_string_repr_with_names(&self, parameter_names: Option<&[String]>) -> Vec<String>",
+    "docs": "Return string representation of the function signature with parameter names.\n\nThis method is similar to [`Self::to_string_repr`] but uses parameter names\ninstead of types when available. This is useful for generating more helpful\nerror messages.\n\n# Arguments\n* `parameter_names` - Optional slice of parameter names. When provided, these\n  names will be used instead of type names in the output.\n\n# Examples\n```\n# use datafusion_expr_common::signature::TypeSignature;\n# use arrow::datatypes::DataType;\nlet sig = TypeSignature::Exact(vec![DataType::Int32, DataType::Utf8]);\n\n// Without names: shows types only\nassert_eq!(sig.to_string_repr_with_names(None), vec![\"Int32, Utf8\"]);\n\n// With names: shows parameter names with types\nassert_eq!(\n    sig.to_string_repr_with_names(Some(&[\"id\".to_string(), \"name\".to_string()])),\n    vec![\"id: Int32, name: Utf8\"]\n);\n```",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        688,
+        5
+      ],
+      "end": [
+        851,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "parameter_names",
+              {
+                "resolved_path": {
+                  "path": "Option",
+                  "id": 21,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "borrowed_ref": {
+                              "lifetime": null,
+                              "is_mutable": false,
+                              "type": {
+                                "slice": {
+                                  "resolved_path": {
+                                    "path": "String",
+                                    "id": 88,
+                                    "args": null
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Vec",
+              "id": 10,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "String",
+                          "id": 88,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "21": "core::option::Option",
+      "88": "alloc::string::String",
+      "10": "alloc::vec::Vec"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeSignature",
+          "id": "datafusion_expr_common::signature::TypeSignature",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/signature.rs",
+        "begin": [
+          612,
+          1
+        ],
+        "end": [
+          943,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::to_string_repr`": 573
+    },
+    "link_paths": {
+      "`Self::to_string_repr`": "datafusion_expr_common::signature::TypeSignature::to_string_repr"
+    },
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "574",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-af681b941c5c8ad139b99c44",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::to_string_repr_with_names",
+      "datafusion_expr::TypeSignature::to_string_repr_with_names"
+    ],
+    "resolved_doc_links": {
+      "`Self::to_string_repr`": "../operations/datafusion_expr_common.signature.TypeSignature.md#op-f84c54ec026c87f2bd59e8ef"
+    }
+  },
+  {
+    "id": "c3f3bdb542803c8dcaf56ee0",
+    "path": "datafusion_expr_common::signature::TypeSignature::used_to_support_zero_arguments",
+    "name": "used_to_support_zero_arguments",
+    "owner": "datafusion_expr_common::signature::TypeSignature",
+    "crate": "datafusion-expr-common",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn used_to_support_zero_arguments(&self) -> bool",
+    "docs": "Returns true if the signature currently supports or used to supported 0\ninput arguments in a previous version of DataFusion.",
+    "span": {
+      "filename": "src/signature.rs",
+      "begin": [
+        876,
+        5
+      ],
+      "end": [
+        881,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "TypeSignature",
+          "id": "datafusion_expr_common::signature::TypeSignature",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/signature.rs",
+        "begin": [
+          612,
+          1
+        ],
+        "end": [
+          943,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "a238cafec2c22418f8f75d04d1d7a55de1587e1aeaa84cc7938ea4f6c6906423",
+      "format_version": 61,
+      "item_id": "577",
+      "origin": "https://docs.rs/crate/datafusion-expr-common/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr_common.signature.TypeSignature.md",
+    "record_file": "operations/datafusion_expr_common.signature.TypeSignature.json",
+    "anchor": "op-c3f3bdb542803c8dcaf56ee0",
+    "aliases": [
+      "datafusion::logical_expr::TypeSignature::used_to_support_zero_arguments",
+      "datafusion_expr::TypeSignature::used_to_support_zero_arguments"
+    ],
+    "resolved_doc_links": {}
+  }
+]

@@ -22,6 +22,9 @@ enum ParquetStatisticsPolicy
 fn skip_except(keep: &[usize]) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.options.ParquetStatisticsPolicy.md).
+
+
 Enum to control decoding of some Parquet statistics fields.
 
 # Example
@@ -79,6 +82,9 @@ fn with_encoding_stats_policy(self, policy: ParquetStatisticsPolicy) -> Self
 fn with_schema(self, val: SchemaDescPtr) -> Self
 fn with_size_stats_policy(self, policy: ParquetStatisticsPolicy) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.file.metadata.options.ParquetMetaDataOptions.md).
+
 
 Options that can be set to control what parts of the Parquet file footer
 metadata will be decoded and made present in the [`ParquetMetaData`] returned

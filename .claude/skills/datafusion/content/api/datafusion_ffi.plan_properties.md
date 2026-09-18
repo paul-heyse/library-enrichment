@@ -22,6 +22,9 @@ enum FFI_Boundedness
 fn from(value: Boundedness) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.plan_properties.FFI_Boundedness.md).
+
+
 FFI safe version of [`Boundedness`].
 
 ---
@@ -45,6 +48,9 @@ enum FFI_EmissionType
 ```rust
 fn from(value: EmissionType) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.plan_properties.FFI_EmissionType.md).
+
 
 FFI safe version of [`EmissionType`].
 
@@ -75,6 +81,9 @@ fn from(props: &PlanProperties) -> Self
 ```rust
 fn drop(&mut self)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_ffi.plan_properties.FFI_PlanProperties.md).
+
 
 A stable struct for sharing [`PlanProperties`] across FFI boundaries.
 

@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_remove`, `datafusion_functions_nes
 fn array_remove(array: datafusion_expr::Expr, element: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.remove.array_remove.md).
+
+
 removes the first element from the array equal to the given value. NULL elements already in the array are preserved when removing a non-NULL value. If `element` evaluates to NULL, the result is NULL rather than removing NULL entries.
 
 ---
@@ -26,6 +29,9 @@ Also reachable as `datafusion::prelude::array_remove_all`, `datafusion_functions
 fn array_remove_all(array: datafusion_expr::Expr, element: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.remove.array_remove_all.md).
+
+
 removes all elements from the array equal to the given value. NULL elements already in the array are preserved when removing a non-NULL value. If `element` evaluates to NULL, the result is NULL rather than removing NULL entries.
 
 ---
@@ -37,6 +43,9 @@ removes all elements from the array equal to the given value. NULL elements alre
 ```rust
 fn array_remove_all_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.remove.array_remove_all_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayRemoveAll
@@ -53,6 +62,9 @@ Also reachable as `datafusion::prelude::array_remove_n`, `datafusion_functions_n
 fn array_remove_n(array: datafusion_expr::Expr, element: datafusion_expr::Expr, max: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.remove.array_remove_n.md).
+
+
 removes the first `max` elements from the array equal to the given value. NULL elements already in the array are preserved when removing a non-NULL value. If `element` evaluates to NULL, the result is NULL rather than removing NULL entries.
 
 ---
@@ -64,6 +76,9 @@ removes the first `max` elements from the array equal to the given value. NULL e
 ```rust
 fn array_remove_n_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.remove.array_remove_n_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayRemoveN
@@ -77,6 +92,9 @@ ArrayRemoveN
 ```rust
 fn array_remove_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.remove.array_remove_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayRemove
@@ -113,6 +131,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.remove.ArrayRemove.md).
+
+
 ---
 
 ## ArrayRemoveAll
@@ -145,6 +166,9 @@ fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.remove.ArrayRemoveAll.md).
+
+
 ---
 
 ## ArrayRemoveN
@@ -176,5 +200,8 @@ fn return_field_from_args(&self, args: datafusion_expr::ReturnFieldArgs<'_>) -> 
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.remove.ArrayRemoveN.md).
+
 
 ---

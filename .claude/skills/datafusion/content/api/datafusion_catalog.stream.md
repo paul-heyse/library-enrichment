@@ -24,6 +24,9 @@ enum StreamEncoding
 fn from_str(s: &str) -> std::result::Result<Self, Self::Err>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.stream.StreamEncoding.md).
+
+
 The data encoding for [`StreamTable`]
 
 ---
@@ -62,6 +65,9 @@ fn stream_write_display(&self, _t: DisplayFormatType, f: &mut Formatter<'_>) -> 
 fn writer(&self) -> Result<Box<dyn RecordBatchWriter>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.stream.FileStreamProvider.md).
+
+
 Stream data from the file at `location`
 
 * Data will be read sequentially from the provided `location`
@@ -91,6 +97,9 @@ fn new(source: Arc<dyn StreamProvider>) -> Self
 fn with_constraints(self, constraints: Constraints) -> Self
 fn with_order(self, order: Vec<Vec<SortExpr>>) -> Self
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.stream.StreamConfig.md).
+
 
 The configuration for a [`StreamTable`]
 
@@ -126,6 +135,9 @@ fn schema(&self) -> SchemaRef
 fn table_type(&self) -> TableType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.stream.StreamTable.md).
+
+
 A [`TableProvider`] for an unbounded stream source
 
 Currently only reading from / appending to a single file in-place is supported, but
@@ -159,6 +171,9 @@ struct StreamTableFactory
 async fn create(&self, state: &dyn Session, cmd: &CreateExternalTable) -> Result<Arc<dyn TableProvider>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.stream.StreamTableFactory.md).
+
+
 A [`TableProviderFactory`] for [`StreamTable`]
 
 ---
@@ -185,6 +200,9 @@ fn schema(&self) -> &SchemaRef
 fn stream_write_display(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> std::fmt::Result
 fn writer(&self) -> Result<Box<dyn RecordBatchWriter>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog.stream.StreamProvider.md).
+
 
 The StreamProvider trait is used as a generic interface for reading and writing from streaming
 data sources (such as FIFO, Websocket, Kafka, etc.).  Implementations of the provider are

@@ -14,7 +14,7 @@ pub const ARTIFACT_URI_SCHEME: &str = "library-evidence://";
 
 /// An opaque per-request identifier. Non-empty.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(into = "String", try_from = "String")]
+#[serde(try_from = "String")]
 #[schemars(inline, extend("minLength" = 1))]
 pub struct RequestId(String);
 
@@ -66,7 +66,7 @@ impl fmt::Display for RequestId {
 /// Artifacts are addressed by ID through this scheme, never by filesystem path -- the skill's
 /// tool contract is explicit that callers do not get unrestricted filesystem reads.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(into = "String", try_from = "String")]
+#[serde(try_from = "String")]
 #[schemars(inline, extend("pattern" = "^library-evidence://"))]
 pub struct ArtifactUri(String);
 

@@ -66,9 +66,9 @@ mod tests {
             result_artifact_id: "result".into(),
             limitations: vec![],
             observations: vec![ProcessObservation {
-                operation_id: "operation".into(),
+                operation_id: format!("process_{}", "1".repeat(64)).try_into().unwrap(),
                 authority: ProcessAuthority::Qualification {
-                    definition_id: "fixture".into(),
+                    definition_id: format!("process_{}", "1".repeat(64)).try_into().unwrap(),
                 },
                 image_id: "image".into(),
                 command: vec!["probe".into()],
@@ -90,13 +90,15 @@ mod tests {
                 unreachable!()
             };
             data.observations[0].end = end;
-            let frame = runtime
-                .session()
-                .read_batch(BoundResult::batch(&[BoundResult {
+            let frame = crate::native_catalog::batch(
+                &runtime.session(),
+                "result_plan",
+                BoundResult::batch(&[BoundResult {
                     result: result.clone(),
                     state: JobState::Failed,
-                }])?)?
-                .with_column("state", terminal_state(col("result"))?)?;
+                }])?,
+            )?
+            .with_column("state", terminal_state(col("result"))?)?;
             assert_eq!(
                 runtime.records::<BoundResult>(frame, 1).await?[0].state,
                 expected
@@ -253,12 +255,12 @@ mod tests {
         )?
         .0;
         let publication = enrichment_core::evidence::catalog::JobPublication {
-            job_id: format!("job_{}", "1".repeat(32)),
+            job_id: format!("job_{}", "1".repeat(32)).try_into().unwrap(),
             context_id: manifest.context_id.clone(),
             snapshot_id: manifest.snapshot_id.clone(),
             kind: PublishedJobKind::Resolve,
             state: complete.state,
-            attempt_id: "attempt".into(),
+            attempt_id: enrichment_core::identity::AttemptId::new(),
             result_artifact_ids: vec![delivery.artifact_id.clone()],
             delivery,
         };
@@ -295,14 +297,17 @@ pub async fn bind(
     native_catalog::work(
         &session,
         "result_binding",
-        session
-            .read_batch(Binding::batch(&[Binding {
+        crate::native_catalog::batch(
+            &session,
+            "result_plan",
+            Binding::batch(&[Binding {
                 template,
                 manifest: manifest.clone(),
                 coverage,
                 kind,
-            }])?)?
-            .into_view(),
+            }])?,
+        )?
+        .into_view(),
     )?;
     let frame = session.sql("SELECT *, array_distinct(array_concat(coverage.limitations,template.header.coverage.limitations)) AS limitations, concat('Published ',manifest.snapshot_id,' for ',manifest.metadata.crate_name,' ',coalesce(manifest.metadata.crate_version,'selected revision'),'; indexed ',CAST(manifest.counts.definitions AS VARCHAR),' definitions and ',CAST(manifest.counts.fragments AS VARCHAR),' evidence fragments. See coverage and gaps for qualified limits.') AS publication_summary FROM result_binding").await?;
     let assessments = col("coverage").field("assessments");
@@ -461,18 +466,62 @@ enrichment_core::native_struct! { struct ComparisonAdmission {
     result: ResultRecord => Rule::Text,
 } }
 
+enrichment_core::native_struct! { struct RetainedAdmission {
+    actual: ResultRecord => Rule::Text,
+    expected: ResultRecord => Rule::Text,
+} }
+
+/// Compare complete typed values from the immutable delivery and captured native relation.
+/// No JSON projection, stringified field or caller-supplied digest can replace either value.
+pub async fn admit_retained(
+    runtime: &QueryRuntime,
+    actual: ResultRecord,
+    expected: ResultRecord,
+) -> Result<()> {
+    let frame = crate::native_catalog::batch(
+        &runtime.session(),
+        "result_plan",
+        RetainedAdmission::batch(&[RetainedAdmission { actual, expected }])?,
+    )?;
+    let encode = enrichment_core::native_identity::canonical_bytes(
+        "enrichment/retained-result/1",
+        vec![std::sync::Arc::new(arrow::datatypes::Field::new(
+            "value",
+            ResultRecord::data_type(),
+            false,
+        ))]
+        .into(),
+    );
+    runtime
+        .require_empty(
+            frame
+                .filter(
+                    encode
+                        .call(vec![col("actual")])
+                        .not_eq(encode.call(vec![col("expected")])),
+                )?
+                .select(vec![lit("retained_result_changed").alias("witness")])?,
+            "retained_result_values",
+            "delivery",
+        )
+        .await
+}
+
 pub async fn admit_job(
     runtime: &QueryRuntime,
     publication: &enrichment_core::evidence::catalog::JobPublication,
     result: ResultRecord,
 ) -> Result<()> {
     let session = runtime.session();
-    let input = session
-        .read_batch(JobAdmission::batch(&[JobAdmission {
+    let input = crate::native_catalog::batch(
+        &session,
+        "result_plan",
+        JobAdmission::batch(&[JobAdmission {
             publication: publication.clone(),
             result,
-        }])?)?
-        .with_column("selected_state", terminal_state(col("result"))?)?;
+        }])?,
+    )?
+    .with_column("selected_state", terminal_state(col("result"))?)?;
     native_catalog::work(&session, "publication_input", input.into_view())?;
     runtime.require_empty(session.sql("SELECT publication.job_id AS witness FROM publication_input WHERE
         (result.header.context_id IS DISTINCT FROM publication.context_id)
@@ -490,12 +539,15 @@ pub async fn admit_comparison(
     result: ResultRecord,
 ) -> Result<()> {
     let session = runtime.session();
-    let input = session
-        .read_batch(ComparisonAdmission::batch(&[ComparisonAdmission {
+    let input = crate::native_catalog::batch(
+        &session,
+        "result_plan",
+        ComparisonAdmission::batch(&[ComparisonAdmission {
             publication: publication.clone(),
             result,
-        }])?)?
-        .with_column("selected_state", terminal_state(col("result"))?)?;
+        }])?,
+    )?
+    .with_column("selected_state", terminal_state(col("result"))?)?;
     native_catalog::work(&session, "publication_input", input.into_view())?;
     runtime.require_empty(session.sql("SELECT publication.job_id AS witness FROM publication_input WHERE
         (result.data.tool IS DISTINCT FROM 'compare_releases')

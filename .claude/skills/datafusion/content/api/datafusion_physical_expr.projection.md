@@ -10,6 +10,9 @@ Crate `datafusion-physical-expr` · 10 public items · structured records in [`m
 fn combine_projections(p1: Option<&ProjectionRef>, p2: Option<&ProjectionRef>) -> datafusion_common::Result<Option<ProjectionRef>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.projection.combine_projections.md).
+
+
 Combine two projections.
 
 If `p1` is [`None`] then there are no changes.
@@ -36,6 +39,9 @@ Also reachable as `datafusion_physical_expr::equivalence::project_ordering`
 ```rust
 fn project_ordering(ordering: &datafusion_physical_expr_common::sort_expr::LexOrdering, schema: &arrow::datatypes::SchemaRef) -> Option<datafusion_physical_expr_common::sort_expr::LexOrdering>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.projection.project_ordering.md).
+
 
 Projects a single [LexOrdering] onto the given schema.
 
@@ -79,6 +85,9 @@ Also reachable as `datafusion_physical_expr::equivalence::project_orderings`
 fn project_orderings(orderings: &[datafusion_physical_expr_common::sort_expr::LexOrdering], schema: &arrow::datatypes::SchemaRef) -> Vec<datafusion_physical_expr_common::sort_expr::LexOrdering>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.projection.project_orderings.md).
+
+
 Projects a slice of [LexOrdering]s onto the given schema.
 
 This is a convenience wrapper that applies [project_ordering] to each
@@ -103,6 +112,9 @@ Also reachable as `datafusion_physical_plan::projection::update_expr`
 ```rust
 fn update_expr(expr: &std::sync::Arc<dyn PhysicalExpr>, projected_exprs: &[ProjectionExpr], unproject: bool) -> datafusion_common::Result<Option<std::sync::Arc<dyn PhysicalExpr>>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.projection.update_expr.md).
+
 
 The function projects / unprojects an expression with respect to set of
 projection expressions.
@@ -194,6 +206,9 @@ fn from(value: (Arc<dyn PhysicalExpr>, String)) -> Self
 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.projection.ProjectionExpr.md).
+
+
 An expression used by projection operations.
 
 The expression is evaluated and the result is stored in a column
@@ -269,6 +284,9 @@ fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
 fn from_iter<T: IntoIterator<Item = ProjectionExpr>>(exprs: T) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.projection.ProjectionExprs.md).
+
+
 A collection of  [`ProjectionExpr`] instances, representing a complete
 projection operation.
 
@@ -313,6 +331,9 @@ fn from_iter<T: IntoIterator<Item = (Arc<dyn PhysicalExpr>, ProjectionTargets)>>
 fn deref(&self) -> &Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.projection.ProjectionMapping.md).
+
+
 Stores the mapping between source expressions and target expressions for a
 projection.
 
@@ -349,6 +370,9 @@ fn from(exprs_indices: Vec<(Arc<dyn PhysicalExpr>, usize)>) -> Self
 fn deref(&self) -> &Self::Target
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.projection.ProjectionTargets.md).
+
+
 Stores target expressions, along with their indices, that associate with a
 source expression in a projection mapping.
 
@@ -373,6 +397,9 @@ fn projection(&self) -> &ProjectionExprs
 fn with_metrics(&self, metrics: &ExecutionPlanMetricsSet, partition: usize) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.projection.Projector.md).
+
+
 Applies a projection to record batches.
 
 A [`Projector`] uses a set of projection expressions to transform
@@ -391,6 +418,9 @@ expressions are complex.
 ```rust
 type ProjectionRef = std::sync::Arc<[usize]>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_expr.projection.ProjectionRef.md).
+
 
 Describes an immutable reference counted projection.
 

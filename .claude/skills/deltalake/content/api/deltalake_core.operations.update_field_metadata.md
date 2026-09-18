@@ -5,6 +5,7 @@ Crate `deltalake-core` · 1 public items · structured records in [`model/deltal
 ## UpdateFieldMetadataBuilder
 
 `struct` · `deltalake_core::operations::update_field_metadata::UpdateFieldMetadataBuilder`
+[Full member contracts, output types and access classification](../operations/deltalake_core.operations.update_field_metadata.UpdateFieldMetadataBuilder.md)
 
 Also reachable as `deltalake::operations::update_field_metadata::UpdateFieldMetadataBuilder`
 
@@ -27,13 +28,6 @@ fn with_metadata(self, metadata: HashMap<String, MetadataValue>) -> Self
 
 ```rust
 fn into_future(self) -> Self::IntoFuture
-```
-
-**via `deltalake_core::operations::Operation`**
-
-```rust
-fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>
-fn log_store(&self) -> &LogStoreRef
 ```
 
 Update a field's metadata in a schema. If the key does not exists, the entry is inserted.

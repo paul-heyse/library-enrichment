@@ -58,6 +58,9 @@ fn to_data(&self) -> ArrayData
 fn from(data: ArrayData) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_array.array.union_array.UnionArray.md).
+
+
 An array of [values of varying types](https://arrow.apache.org/docs/format/Columnar.html#union-layout)
 
 Each slot in a [UnionArray] can have a value chosen from a number

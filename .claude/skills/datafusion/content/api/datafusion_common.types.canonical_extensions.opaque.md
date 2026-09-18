@@ -27,6 +27,9 @@ fn serialize_metadata(&self) -> Option<String>
 fn storage_type(&self) -> DataType
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.types.canonical_extensions.opaque.DFOpaque.md).
+
+
 Defines the extension type logic for the canonical `arrow.opaque` extension type. This extension
 type represents types that DataFusion cannot interpret.
 

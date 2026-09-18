@@ -1,6 +1,6 @@
 # Catalogs and schemas
 
-Three nested levels — catalog list, catalog, schema — each a trait you can implement. The default implementations are in-memory maps. Async variants exist for catalogs backed by a remote service, which matters because the synchronous traits give you nowhere to await.
+Catalog list, catalog and schema traits organize table resolution. Inspect each method: SchemaProvider::table is asynchronous even though other methods are synchronous. Remote metadata access may need async resolution/prefetch rather than blocking synchronous discovery.
 
 ## Entry points
 
@@ -52,7 +52,7 @@ Full table with Rust setters in [`../catalogs/config-options.md`](../catalogs/co
 
 ## Decision rules
 
-- Use the async catalog traits when table resolution requires I/O; the synchronous ones force a block-on.
+- Match remote metadata access to the specific asynchronous resolution hook; do not infer that every SchemaProvider method is synchronous.
 - `information_schema` must be enabled explicitly before schema introspection works.
 
 ## Anti-patterns

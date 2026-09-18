@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 4 public items · structured records in [`model/buoyan
 ## TryFromArrow
 
 `trait` · `buoyant_kernel::engine::arrow_conversion::TryFromArrow`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_conversion.TryFromArrow.md)
 
 Also reachable as `delta_kernel::engine::arrow_conversion::TryFromArrow`
 
@@ -32,6 +33,7 @@ implemented for all types that implement [`TryFromArrow`])
 ## TryFromKernel
 
 `trait` · `buoyant_kernel::engine::arrow_conversion::TryFromKernel`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_conversion.TryFromKernel.md)
 
 Also reachable as `delta_kernel::engine::arrow_conversion::TryFromKernel`
 
@@ -59,6 +61,7 @@ implemented for all types that implement [`TryFromKernel`])
 ## TryIntoArrow
 
 `trait` · `buoyant_kernel::engine::arrow_conversion::TryIntoArrow`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_conversion.TryIntoArrow.md)
 
 Also reachable as `delta_kernel::engine::arrow_conversion::TryIntoArrow`
 
@@ -80,6 +83,7 @@ implement [`TryFromKernel`])
 ## TryIntoKernel
 
 `trait` · `buoyant_kernel::engine::arrow_conversion::TryIntoKernel`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_conversion.TryIntoKernel.md)
 
 Also reachable as `delta_kernel::engine::arrow_conversion::TryIntoKernel`
 

@@ -31,6 +31,9 @@ fn signature(&self) -> &Signature
 fn simplify(&self, args: Vec<Expr>, info: &SimplifyContext) -> Result<ExprSimplifyResult>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.datetime.trunc.SparkTrunc.md).
+
+
 Spark trunc supports date inputs only and extra format aliases.
 Also spark trunc's argument order is (date, format).
 <https://spark.apache.org/docs/latest/api/sql/index.html#trunc>

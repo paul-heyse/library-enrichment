@@ -4,12 +4,13 @@
 //! document versions, requests with cancellation, and shutdown. Blueprint §9.2 requires all of
 //! it, and requires one thing more that is easy to lose: **an empty result, an unsupported
 //! method, an unresolved dependency and incomplete indexing are four distinct outcomes.** They
-//! are four variants of [`Outcome`] here, and nothing collapses them into an empty list.
+//! are distinct native response outcomes; transport never collapses them into an empty list.
 
 use std::io;
 use std::sync::{Arc, atomic::AtomicBool};
 use std::time::Duration;
 
+use enrichment_core::{evidence::execution::SemanticMethod, native_semantics::PositionEncoding};
 use serde_json::{Value, json};
 use tokio::io::BufReader;
 use tokio::process::{ChildStdin, ChildStdout};
@@ -18,70 +19,8 @@ use super::framing;
 use super::settings::Server;
 use crate::execution::ServedSession;
 
-/// One mapped source location, as the server reported it.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct Location {
-    /// The document URI the server named.
-    pub uri: String,
-    /// Zero-based start line.
-    pub line: u32,
-    /// Start character, in the negotiated encoding.
-    pub character: u32,
-    /// Zero-based end line.
-    pub end_line: u32,
-    /// End character, in the negotiated encoding.
-    pub end_character: u32,
-}
-
-impl Location {
-    fn from_value(value: &Value) -> Option<Self> {
-        // A server may answer with `Location`, `LocationLink` or a list of either. Both shapes
-        // are read here rather than requiring one, because both were observed.
-        let (uri, range) = if let Some(uri) = value.get("uri") {
-            (uri, value.get("range")?)
-        } else {
-            (
-                value.get("targetUri")?,
-                value
-                    .get("targetSelectionRange")
-                    .or_else(|| value.get("targetRange"))?,
-            )
-        };
-        Some(Self {
-            uri: uri.as_str()?.to_owned(),
-            line: u32::try_from(range["start"]["line"].as_u64()?).ok()?,
-            character: u32::try_from(range["start"]["character"].as_u64()?).ok()?,
-            end_line: u32::try_from(range["end"]["line"].as_u64()?).ok()?,
-            end_character: u32::try_from(range["end"]["character"].as_u64()?).ok()?,
-        })
-    }
-
-    /// Read every location out of a result value, whatever shape it arrived in.
-    pub fn all_from(value: &Value) -> io::Result<Vec<Self>> {
-        fn decode(value: &Value) -> io::Result<Location> {
-            let location = Location::from_value(value).ok_or_else(|| {
-                io::Error::new(io::ErrorKind::InvalidData, "invalid LSP location")
-            })?;
-            if (location.end_line, location.end_character) < (location.line, location.character) {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidData,
-                    "reversed LSP range",
-                ));
-            }
-            Ok(location)
-        }
-        match value {
-            Value::Array(items) => items.iter().map(decode).collect(),
-            Value::Null => Ok(Vec::new()),
-            single => Ok(vec![decode(single)?]),
-        }
-    }
-}
-
 /// Input closure used by every query in one immutable warm session.
 pub struct Scope {
-    pub environment: enrichment_core::identity::Environment,
-    pub lock: Vec<u8>,
     pub inputs: Vec<enrichment_core::evidence::Artifact>,
 }
 
@@ -103,15 +42,19 @@ pub struct Session {
     pub server_version: String,
     /// The open document's URI, when one is open.
     open: Option<String>,
+    conversation: Option<enrichment_store::semantic_grants::ConversationGrant>,
     notifications: super::notifications::Notifications,
     cancel: Arc<AtomicBool>,
-    /// Immutable prepared scope, retained across warm queries.
-    pub environment: enrichment_core::identity::Environment,
-    pub lock: Vec<u8>,
+    /// Captured source evidence for the immutable prepared scope held by ServedSession.
     pub inputs: Vec<enrichment_core::evidence::Artifact>,
 }
 
 impl Session {
+    pub(crate) fn prepared(
+        &self,
+    ) -> io::Result<&enrichment_core::operation::ownership::PreparedCapsule> {
+        self.session.prepared()
+    }
     pub(crate) async fn admit_current_command(&mut self) -> io::Result<()> {
         self.session.admit_current_command().await
     }
@@ -132,6 +75,7 @@ impl Session {
         cancel: Arc<AtomicBool>,
         scope: Scope,
     ) -> io::Result<Self> {
+        served.prepared()?;
         let taken = || io::Error::other("this served session was already taken over");
         let stdin = served.stdin.take().ok_or_else(taken)?;
         let stdout = BufReader::new(served.stdout.take().ok_or_else(taken)?);
@@ -146,10 +90,9 @@ impl Session {
             server,
             server_version: String::new(),
             open: None,
+            conversation: None,
             notifications: Default::default(),
             cancel,
-            environment: scope.environment,
-            lock: scope.lock,
             inputs: scope.inputs,
         };
 
@@ -221,6 +164,9 @@ impl Session {
     pub fn document_version(&self) -> i32 {
         self.version
     }
+    pub fn conversation_id(&self) -> Option<&enrichment_core::identity::SemanticConversationId> {
+        self.conversation.as_ref().map(|grant| grant.id())
+    }
 
     /// The server's last 64 KiB of stderr, for a failure that needs explaining.
     #[must_use]
@@ -252,7 +198,23 @@ impl Session {
     /// # Errors
     ///
     /// Fails if the notification cannot be written.
-    pub async fn open(&mut self, uri: &str, language: &str, text: &str) -> io::Result<()> {
+    pub async fn open(
+        &mut self,
+        prepared: enrichment_store::semantic_grants::Prepared,
+    ) -> io::Result<()> {
+        let encoding = PositionEncoding::parse(&self.position_encoding)
+            .ok_or_else(|| io::Error::other("unnegotiated position encoding"))?;
+        let conversation = self
+            .session
+            .semantic_conversation(prepared, encoding)
+            .await?;
+        let consumer = &conversation.value().scope.consumer;
+        let uri = &consumer.uri;
+        let text = &consumer.text;
+        let language = match self.server {
+            Server::RustAnalyzer => "rust",
+            Server::Ty => "python",
+        };
         if let Some(previous) = self.open.take() {
             self.notify(
                 "textDocument/didClose",
@@ -276,7 +238,64 @@ impl Session {
         )
         .await?;
         self.open = Some(uri.to_owned());
+        self.conversation = Some(conversation);
         Ok(())
+    }
+
+    /// Mechanical JSON framing of the exact retained conversation. Callers select only a
+    /// finite semantic method; document, anchor and negotiated encoding cannot be replaced.
+    pub fn semantic_parameters(&self, method: SemanticMethod) -> io::Result<Value> {
+        let grant = self
+            .conversation
+            .as_ref()
+            .ok_or_else(|| io::Error::other("no admitted semantic conversation"))?;
+        let value = grant.value();
+        let consumer = &value.scope.consumer;
+        let mut params = json!({"textDocument":{"uri":consumer.uri}});
+        if method != SemanticMethod::Diagnostics {
+            let (line, character) = match value
+                .position
+                .as_ref()
+                .ok_or_else(|| io::Error::other("semantic method requires an exact position"))?
+            {
+                enrichment_core::native_semantics::ProtocolPosition::Utf8 { value } => {
+                    (value.line, value.byte)
+                }
+                enrichment_core::native_semantics::ProtocolPosition::Utf16 { value } => {
+                    (value.line, value.code_unit)
+                }
+            };
+            params["position"] = json!({"line":line,"character":character});
+        }
+        if method == SemanticMethod::References {
+            params["context"] = json!({"includeDeclaration":true});
+        }
+        Ok(params)
+    }
+
+    pub async fn semantic_request(
+        &mut self,
+        method: SemanticMethod,
+        deadline: Duration,
+    ) -> io::Result<Value> {
+        let grant = self
+            .conversation
+            .as_ref()
+            .ok_or_else(|| io::Error::other("no admitted semantic conversation"))?;
+        grant.check(method).await.map_err(io::Error::other)?;
+        if method == SemanticMethod::Diagnostics {
+            let uri = grant.value().scope.consumer.uri.clone();
+            return self.diagnostic(&uri, deadline).await;
+        }
+        if !self.advertises(method.capability()) {
+            return Ok(json!({"kind":"unsupported"}));
+        }
+        self.request(
+            method.protocol_method(),
+            self.semantic_parameters(method)?,
+            deadline,
+        )
+        .await
     }
 
     /// The pinned analyzer explicitly reports when workspace loading/indexing has settled.
@@ -304,11 +323,13 @@ impl Session {
         deadline: Duration,
         done: impl Fn(&super::notifications::Notifications) -> bool,
     ) -> io::Result<()> {
+        self.session.check_authority().await?;
         let conversation = async {
             while !done(&self.notifications) {
                 let message = framing::read(&mut self.stdout).await?;
                 self.notifications.accept(&message)?;
                 if let (Some(_), Some(id)) = (message.get("method"), message.get("id")) {
+                    self.session.check_authority().await?;
                     framing::write(&mut self.stdin, &json!({"jsonrpc":"2.0","id":id,
                         "error":{"code":-32601,"message":"client does not advertise this request capability"}})).await?;
                 }
@@ -318,7 +339,7 @@ impl Session {
         tokio::select! {
             biased;
             () = super::cancelled(&self.cancel) => Err(io::Error::new(io::ErrorKind::Interrupted, "cancelled while awaiting document or indexing state")),
-            result = tokio::time::timeout(deadline, conversation) => match result { Ok(result) => result, Err(_) => Ok(()) },
+            result = tokio::time::timeout(deadline, with_authority(|| Box::pin(self.session.check_authority()), conversation)) => match result { Ok(result) => result, Err(_) => Ok(()) },
         }
     }
 
@@ -327,7 +348,7 @@ impl Session {
     /// # Errors
     ///
     /// Fails on a transport error.
-    pub async fn diagnostic(&mut self, uri: &str, deadline: Duration) -> io::Result<Value> {
+    async fn diagnostic(&mut self, uri: &str, deadline: Duration) -> io::Result<Value> {
         if !self.advertises("diagnosticProvider") {
             self.pump_until(deadline.min(Duration::from_secs(2)), |state| {
                 state.diagnostics.pushed(uri).is_some()
@@ -356,19 +377,26 @@ impl Session {
     pub async fn stop(mut self) -> io::Result<()> {
         self.cancel = Arc::new(AtomicBool::new(false));
         let deadline = Duration::from_secs(2);
-        let _ = self.request("shutdown", Value::Null, deadline).await;
-        let _ = self.notify("exit", Value::Null).await;
-        let _ = tokio::time::timeout(deadline, self.session.child.wait()).await;
+        if self
+            .request("shutdown", Value::Null, deadline)
+            .await
+            .is_ok()
+            && self.notify("exit", Value::Null).await.is_ok()
+        {
+            let _ = tokio::time::timeout(deadline, self.session.child.wait()).await;
+        }
         self.session.guard.settle().await
     }
 
     async fn notify(&mut self, method: &str, params: Value) -> io::Result<()> {
-        self.session.check_authority().await?;
         tokio::time::timeout(
             Duration::from_secs(5),
-            framing::write(
-                &mut self.stdin,
-                &json!({"jsonrpc": "2.0", "method": method, "params": params}),
+            with_authority(
+                || Box::pin(self.session.check_authority()),
+                framing::write(
+                    &mut self.stdin,
+                    &json!({"jsonrpc": "2.0", "method": method, "params": params}),
+                ),
             ),
         )
         .await
@@ -386,14 +414,17 @@ impl Session {
     /// get a minimal reply; document/version-qualified diagnostic notifications are retained.
     /// On timeout we send `$/cancelRequest`, because abandoning a request without cancelling it
     /// leaves the server working on an answer nobody will read.
-    pub async fn request(
+    async fn request(
         &mut self,
         method: &str,
         params: Value,
         deadline: Duration,
     ) -> io::Result<Value> {
         self.session.check_authority().await?;
-        self.next_id += 1;
+        self.next_id = self
+            .next_id
+            .checked_add(1)
+            .ok_or_else(|| io::Error::other("request identity exhausted; discard session"))?;
         let id = self.next_id;
         exchange(
             &mut self.stdin,
@@ -402,6 +433,7 @@ impl Session {
             deadline,
             &mut self.notifications,
             &self.cancel,
+            || Box::pin(self.session.check_authority()),
         )
         .await
         .map_err(|error| {
@@ -421,15 +453,36 @@ impl Session {
     }
 }
 
+/// Poll fresh native authority while I/O is pending and before accepting its result.
+/// Failure drops the protocol future; the session manager then awaits physical cleanup.
+async fn with_authority<'a, T>(
+    check: impl Fn() -> futures::future::BoxFuture<'a, io::Result<()>> + Sync,
+    work: impl std::future::Future<Output = io::Result<T>>,
+) -> io::Result<T> {
+    check().await?;
+    let revoked = async {
+        loop {
+            tokio::time::sleep(Duration::from_millis(250)).await;
+            check().await?;
+        }
+    };
+    tokio::select! {
+        biased;
+        result = revoked => result,
+        result = work => { check().await?; result },
+    }
+}
+
 /// Bound the entire exchange, including a blocked request write or client-response write.
 /// A timed-out stream is discarded by the session manager; cancellation is only best effort.
-async fn exchange(
+async fn exchange<'a>(
     sink: &mut (impl tokio::io::AsyncWrite + Unpin),
     source: &mut BufReader<impl tokio::io::AsyncRead + Unpin>,
     request: &Value,
     deadline: Duration,
     notifications: &mut super::notifications::Notifications,
     cancel: &AtomicBool,
+    check: impl Fn() -> futures::future::BoxFuture<'a, io::Result<()>> + Sync,
 ) -> io::Result<Value> {
     let id = request["id"].clone();
     let mut sent = false;
@@ -441,6 +494,7 @@ async fn exchange(
             if message.get("method").is_some() {
                 notifications.accept(&message)?;
                 if let Some(other) = message.get("id") {
+                    check().await?;
                     framing::write(sink, &json!({
                         "jsonrpc": "2.0", "id": other,
                         "error": {"code": -32601, "message": "this client implements no server-to-client requests"}
@@ -460,7 +514,7 @@ async fn exchange(
     let interrupted = tokio::select! {
         biased;
         () = super::cancelled(cancel) => Some(io::ErrorKind::Interrupted),
-        result = tokio::time::timeout(deadline, conversation) => match result {
+        result = tokio::time::timeout(deadline, with_authority(&check, conversation)) => match result {
             Ok(result) => return result,
             Err(_) => Some(io::ErrorKind::TimedOut),
         },
@@ -471,9 +525,10 @@ async fn exchange(
             if sent {
                 // Never append another frame after a partially written request. Even a complete
                 // request does not guarantee the server is still reading cancellation traffic.
-                let _ = tokio::time::timeout(Duration::from_millis(100), framing::write(sink,
-                    &json!({"jsonrpc": "2.0", "method": "$/cancelRequest", "params": {"id": id}}),
-                )).await;
+                let _ = tokio::time::timeout(Duration::from_millis(100), async {
+                    check().await?;
+                    framing::write(sink, &json!({"jsonrpc": "2.0", "method": "$/cancelRequest", "params": {"id": id}})).await
+                }).await;
             }
             Err(io::Error::new(
                 kind,
@@ -486,6 +541,48 @@ async fn exchange(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn plan19_revocation_interrupts_pending_io_and_discards_completed_answers() {
+        for pending in [false, true] {
+            let live = Arc::new(AtomicBool::new(true));
+            let control = live.clone();
+            let dropped = Arc::new(AtomicBool::new(false));
+            struct PhysicalWait(Arc<AtomicBool>);
+            impl Drop for PhysicalWait {
+                fn drop(&mut self) {
+                    self.0.store(true, std::sync::atomic::Ordering::Release);
+                }
+            }
+            let observed = dropped.clone();
+            let check = || -> futures::future::BoxFuture<'_, io::Result<()>> {
+                Box::pin(async {
+                    if live.load(std::sync::atomic::Ordering::Acquire) {
+                        Ok(())
+                    } else {
+                        Err(io::Error::new(
+                            io::ErrorKind::PermissionDenied,
+                            "native grant revoked",
+                        ))
+                    }
+                })
+            };
+            let work = async move {
+                let _wait = PhysicalWait(observed);
+                control.store(false, std::sync::atomic::Ordering::Release);
+                if pending {
+                    std::future::pending::<()>().await;
+                }
+                Ok("answer captured after revocation")
+            };
+            let error = tokio::time::timeout(Duration::from_secs(2), with_authority(check, work))
+                .await
+                .unwrap()
+                .unwrap_err();
+            assert_eq!(error.kind(), io::ErrorKind::PermissionDenied);
+            assert!(dropped.load(std::sync::atomic::Ordering::Acquire));
+        }
+    }
 
     #[tokio::test]
     async fn a_nonreading_server_cannot_block_the_request_deadline() {
@@ -501,6 +598,7 @@ mod tests {
                 Duration::from_millis(10),
                 &mut Default::default(),
                 &AtomicBool::new(false),
+                || Box::pin(async { Ok(()) }),
             ),
         )
         .await
@@ -539,6 +637,7 @@ mod tests {
                 Duration::from_millis(20),
                 &mut Default::default(),
                 &AtomicBool::new(false),
+                || Box::pin(async { Ok(()) }),
             ),
         )
         .await
@@ -573,6 +672,7 @@ mod tests {
                 Duration::from_secs(30),
                 &mut Default::default(),
                 &cancel,
+                || Box::pin(async { Ok(()) }),
             ),
         )
         .await
@@ -580,50 +680,5 @@ mod tests {
         .unwrap_err();
         assert_eq!(error.kind(), io::ErrorKind::Interrupted);
         server.await.unwrap();
-    }
-
-    #[test]
-    fn a_location_link_and_a_plain_location_both_read() {
-        let link = json!({
-            "targetUri": "file:///capsule/consumer.py",
-            "targetSelectionRange": {"start": {"line": 3, "character": 6},
-                                     "end": {"line": 3, "character": 10}}
-        });
-        let plain = json!({
-            "uri": "file:///capsule/consumer.py",
-            "range": {"start": {"line": 3, "character": 6}, "end": {"line": 3, "character": 10}}
-        });
-        assert_eq!(
-            Location::all_from(&link).unwrap(),
-            Location::all_from(&plain).unwrap()
-        );
-        assert_eq!(Location::all_from(&link).unwrap()[0].line, 3);
-    }
-
-    #[test]
-    fn an_array_a_single_value_and_null_are_three_different_answers() {
-        let one = json!({"uri": "file:///x", "range": {"start": {"line": 0, "character": 0},
-                                                        "end": {"line": 0, "character": 1}}});
-        assert_eq!(
-            Location::all_from(&json!([one.clone(), one.clone()]))
-                .unwrap()
-                .len(),
-            2
-        );
-        assert_eq!(Location::all_from(&one).unwrap().len(), 1);
-        assert!(Location::all_from(&Value::Null).unwrap().is_empty());
-    }
-
-    #[test]
-    fn malformed_locations_are_never_dropped_or_wrapped_into_valid_coordinates() {
-        let valid = json!({"uri":"file:///capsule/f.py", "range":{
-            "start":{"line":0,"character":0}, "end":{"line":0,"character":1}}});
-        assert!(Location::all_from(&json!([valid.clone(), {}])).is_err());
-        let mut overflow = valid.clone();
-        overflow["range"]["start"]["line"] = json!(u64::from(u32::MAX) + 1);
-        assert!(Location::all_from(&overflow).is_err());
-        let mut reversed = valid;
-        reversed["range"]["start"]["character"] = json!(2);
-        assert!(Location::all_from(&reversed).is_err());
     }
 }

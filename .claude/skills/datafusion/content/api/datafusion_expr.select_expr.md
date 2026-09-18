@@ -30,6 +30,9 @@ fn from(value: (Option<&'a TableReference>, &'a FieldRef)) -> Self
 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.select_expr.SelectExpr.md).
+
+
 Represents a SELECT expression in a SQL query.
 
 `SelectExpr` supports three types of expressions commonly found in the SELECT clause:

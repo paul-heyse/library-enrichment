@@ -10,6 +10,9 @@ Crate `datafusion-substrait` · 25 public items · structured records in [`model
 const DATE_32_TYPE_VARIATION_REF: u32 = 0
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.DATE_32_TYPE_VARIATION_REF.md).
+
+
 ---
 
 ## DATE_64_TYPE_VARIATION_REF
@@ -19,6 +22,9 @@ const DATE_32_TYPE_VARIATION_REF: u32 = 0
 ```rust
 const DATE_64_TYPE_VARIATION_REF: u32 = 1
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.DATE_64_TYPE_VARIATION_REF.md).
+
 
 ---
 
@@ -30,6 +36,9 @@ const DATE_64_TYPE_VARIATION_REF: u32 = 1
 const DECIMAL_128_TYPE_VARIATION_REF: u32 = 0
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.DECIMAL_128_TYPE_VARIATION_REF.md).
+
+
 ---
 
 ## DECIMAL_256_TYPE_VARIATION_REF
@@ -39,6 +48,9 @@ const DECIMAL_128_TYPE_VARIATION_REF: u32 = 0
 ```rust
 const DECIMAL_256_TYPE_VARIATION_REF: u32 = 1
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.DECIMAL_256_TYPE_VARIATION_REF.md).
+
 
 ---
 
@@ -50,6 +62,9 @@ const DECIMAL_256_TYPE_VARIATION_REF: u32 = 1
 const DEFAULT_CONTAINER_TYPE_VARIATION_REF: u32 = 0
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.DEFAULT_CONTAINER_TYPE_VARIATION_REF.md).
+
+
 ---
 
 ## DEFAULT_INTERVAL_DAY_TYPE_VARIATION_REF
@@ -59,6 +74,9 @@ const DEFAULT_CONTAINER_TYPE_VARIATION_REF: u32 = 0
 ```rust
 const DEFAULT_INTERVAL_DAY_TYPE_VARIATION_REF: u32 = 0
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.DEFAULT_INTERVAL_DAY_TYPE_VARIATION_REF.md).
+
 
 Used for the arrow type [`DataType::Interval`] with [`IntervalUnit::DayTime`].
 
@@ -75,6 +93,9 @@ Used for the arrow type [`DataType::Interval`] with [`IntervalUnit::DayTime`].
 const DEFAULT_MAP_TYPE_VARIATION_REF: u32 = 0
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.DEFAULT_MAP_TYPE_VARIATION_REF.md).
+
+
 ---
 
 ## DEFAULT_TYPE_VARIATION_REF
@@ -84,6 +105,9 @@ const DEFAULT_MAP_TYPE_VARIATION_REF: u32 = 0
 ```rust
 const DEFAULT_TYPE_VARIATION_REF: u32 = 0
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.DEFAULT_TYPE_VARIATION_REF.md).
+
 
 The "system-preferred" variation (i.e., no variation).
 
@@ -97,6 +121,9 @@ The "system-preferred" variation (i.e., no variation).
 const DICTIONARY_MAP_TYPE_VARIATION_REF: u32 = 1
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.DICTIONARY_MAP_TYPE_VARIATION_REF.md).
+
+
 ---
 
 ## DURATION_INTERVAL_DAY_TYPE_VARIATION_REF
@@ -106,6 +133,9 @@ const DICTIONARY_MAP_TYPE_VARIATION_REF: u32 = 1
 ```rust
 const DURATION_INTERVAL_DAY_TYPE_VARIATION_REF: u32 = 1
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.DURATION_INTERVAL_DAY_TYPE_VARIATION_REF.md).
+
 
 Used for the arrow type [`DataType::Duration`].
 
@@ -121,6 +151,9 @@ Used for the arrow type [`DataType::Duration`].
 const FLOAT_16_TYPE_NAME: &str = "fp16"
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.FLOAT_16_TYPE_NAME.md).
+
+
 Defined in <https://github.com/apache/arrow/blame/main/format/substrait/extension_types.yaml>
 
 ---
@@ -134,6 +167,9 @@ Defined in <https://github.com/apache/arrow/blame/main/format/substrait/extensio
 ```rust
 const INTERVAL_DAY_TIME_TYPE_REF: u32 = 2
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.INTERVAL_DAY_TIME_TYPE_REF.md).
+
 
 For [`DataType::Interval`] with [`IntervalUnit::DayTime`].
 
@@ -159,6 +195,9 @@ See also [`ScalarValue::IntervalDayTime`] for the literal definition in DataFusi
 const INTERVAL_MONTH_DAY_NANO_TYPE_NAME: &str = "interval-month-day-nano"
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.INTERVAL_MONTH_DAY_NANO_TYPE_NAME.md).
+
+
 For [`DataType::Interval`] with [`IntervalUnit::MonthDayNano`].
 
 [`DataType::Interval`]: datafusion::arrow::datatypes::DataType::Interval
@@ -175,6 +214,9 @@ For [`DataType::Interval`] with [`IntervalUnit::MonthDayNano`].
 ```rust
 const INTERVAL_MONTH_DAY_NANO_TYPE_REF: u32 = 3
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.INTERVAL_MONTH_DAY_NANO_TYPE_REF.md).
+
 
 For [`DataType::Interval`] with [`IntervalUnit::MonthDayNano`].
 
@@ -201,6 +243,9 @@ See also [`ScalarValue::IntervalMonthDayNano`] for the literal definition in Dat
 const INTERVAL_YEAR_MONTH_TYPE_REF: u32 = 1
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.INTERVAL_YEAR_MONTH_TYPE_REF.md).
+
+
 For [`DataType::Interval`] with [`IntervalUnit::YearMonth`].
 
 An `i32` for elapsed whole months. See also [`ScalarValue::IntervalYearMonth`]
@@ -220,6 +265,9 @@ for the literal definition in DataFusion.
 const LARGE_CONTAINER_TYPE_VARIATION_REF: u32 = 1
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.LARGE_CONTAINER_TYPE_VARIATION_REF.md).
+
+
 ---
 
 ## NULL_TYPE_NAME
@@ -229,6 +277,9 @@ const LARGE_CONTAINER_TYPE_VARIATION_REF: u32 = 1
 ```rust
 const NULL_TYPE_NAME: &str = "null"
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.NULL_TYPE_NAME.md).
+
 
 For [`DataType::Null`]
 
@@ -246,6 +297,9 @@ For [`DataType::Null`]
 const TIMESTAMP_MICRO_TYPE_VARIATION_REF: u32 = 2
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.TIMESTAMP_MICRO_TYPE_VARIATION_REF.md).
+
+
 ---
 
 ## TIMESTAMP_MILLI_TYPE_VARIATION_REF
@@ -257,6 +311,9 @@ const TIMESTAMP_MICRO_TYPE_VARIATION_REF: u32 = 2
 ```rust
 const TIMESTAMP_MILLI_TYPE_VARIATION_REF: u32 = 1
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.TIMESTAMP_MILLI_TYPE_VARIATION_REF.md).
+
 
 ---
 
@@ -270,6 +327,9 @@ const TIMESTAMP_MILLI_TYPE_VARIATION_REF: u32 = 1
 const TIMESTAMP_NANO_TYPE_VARIATION_REF: u32 = 3
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.TIMESTAMP_NANO_TYPE_VARIATION_REF.md).
+
+
 ---
 
 ## TIMESTAMP_SECOND_TYPE_VARIATION_REF
@@ -282,6 +342,9 @@ const TIMESTAMP_NANO_TYPE_VARIATION_REF: u32 = 3
 const TIMESTAMP_SECOND_TYPE_VARIATION_REF: u32 = 0
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.TIMESTAMP_SECOND_TYPE_VARIATION_REF.md).
+
+
 ---
 
 ## TIME_32_TYPE_VARIATION_REF
@@ -291,6 +354,9 @@ const TIMESTAMP_SECOND_TYPE_VARIATION_REF: u32 = 0
 ```rust
 const TIME_32_TYPE_VARIATION_REF: u32 = 0
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.TIME_32_TYPE_VARIATION_REF.md).
+
 
 ---
 
@@ -302,6 +368,9 @@ const TIME_32_TYPE_VARIATION_REF: u32 = 0
 const TIME_64_TYPE_VARIATION_REF: u32 = 1
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.TIME_64_TYPE_VARIATION_REF.md).
+
+
 ---
 
 ## UNSIGNED_INTEGER_TYPE_VARIATION_REF
@@ -312,6 +381,9 @@ const TIME_64_TYPE_VARIATION_REF: u32 = 1
 const UNSIGNED_INTEGER_TYPE_VARIATION_REF: u32 = 1
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.UNSIGNED_INTEGER_TYPE_VARIATION_REF.md).
+
+
 ---
 
 ## VIEW_CONTAINER_TYPE_VARIATION_REF
@@ -321,5 +393,8 @@ const UNSIGNED_INTEGER_TYPE_VARIATION_REF: u32 = 1
 ```rust
 const VIEW_CONTAINER_TYPE_VARIATION_REF: u32 = 2
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.variation_const.VIEW_CONTAINER_TYPE_VARIATION_REF.md).
+
 
 ---

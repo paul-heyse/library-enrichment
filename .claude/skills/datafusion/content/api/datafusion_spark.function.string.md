@@ -10,6 +10,9 @@ Crate `datafusion-spark` · 19 public items · structured records in [`model/dat
 fn ascii() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.ascii.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of ascii
 
 ---
@@ -21,6 +24,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of ascii
 ```rust
 fn base64() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.base64.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of base64
 
@@ -34,6 +40,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of base64
 fn char() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.char.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of char
 
 ---
@@ -45,6 +54,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of char
 ```rust
 fn concat() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.concat.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of concat
 
@@ -58,6 +70,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of concat
 fn concat_ws() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.concat_ws.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of concat_ws
 
 ---
@@ -69,6 +84,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of concat_ws
 ```rust
 fn elt() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.elt.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of elt
 
@@ -82,6 +100,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of elt
 fn format_string() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.format_string.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of format_string
 
 ---
@@ -94,6 +115,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of format_stri
 fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.functions.md).
+
+
 ---
 
 ## ilike
@@ -103,6 +127,9 @@ fn functions() -> Vec<std::sync::Arc<datafusion_expr::ScalarUDF>>
 ```rust
 fn ilike() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.ilike.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of ilike
 
@@ -116,6 +143,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of ilike
 fn is_valid_utf8() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.is_valid_utf8.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of is_valid_utf8
 
 ---
@@ -127,6 +157,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of is_valid_ut
 ```rust
 fn length() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.length.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of length
 
@@ -140,6 +173,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of length
 fn like() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.like.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of like
 
 ---
@@ -151,6 +187,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of like
 ```rust
 fn luhn_check() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.luhn_check.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of luhn_check
 
@@ -164,6 +203,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of luhn_check
 fn make_valid_utf8() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.make_valid_utf8.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of make_valid_utf8
 
 ---
@@ -175,6 +217,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of make_valid_
 ```rust
 fn quote() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.quote.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of quote
 
@@ -188,6 +233,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of quote
 fn soundex() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.soundex.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of soundex
 
 ---
@@ -199,6 +247,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of soundex
 ```rust
 fn space() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.space.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of space
 
@@ -212,6 +263,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of space
 fn substring() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.substring.md).
+
+
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of substring
 
 ---
@@ -223,6 +277,9 @@ Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of substring
 ```rust
 fn unbase64() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_spark.function.string.unbase64.md).
+
 
 Return a [`ScalarUDF`](datafusion_expr::ScalarUDF) implementation of unbase64
 

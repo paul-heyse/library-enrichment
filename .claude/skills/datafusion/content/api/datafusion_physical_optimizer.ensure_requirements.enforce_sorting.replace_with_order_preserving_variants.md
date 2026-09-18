@@ -10,6 +10,9 @@ Crate `datafusion-physical-optimizer` · 5 public items · structured records in
 fn plan_with_order_breaking_variants(sort_input: OrderPreservationContext) -> datafusion_common::Result<OrderPreservationContext>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.replace_with_order_preserving_variants.plan_with_order_breaking_variants.md).
+
+
 Calculates the updated plan by replacing operators that preserve ordering
 inside `sort_input` with their order-breaking variants. This will restore
 the original plan modified by [`plan_with_order_preserving_variants`].
@@ -23,6 +26,9 @@ the original plan modified by [`plan_with_order_preserving_variants`].
 ```rust
 fn plan_with_order_preserving_variants(sort_input: OrderPreservationContext, is_spr_better: bool, is_spm_better: bool, fetch: Option<usize>) -> datafusion_common::Result<OrderPreservationContext>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.replace_with_order_preserving_variants.plan_with_order_preserving_variants.md).
+
 
 Calculates the updated plan by replacing operators that lose ordering
 inside `sort_input` with their order-preserving variants. This will
@@ -38,6 +44,9 @@ depending on whether it helps us remove a `SortExec`.
 ```rust
 fn replace_with_order_preserving_variants(requirements: OrderPreservationContext, is_spr_better: bool, is_spm_better: bool, config: &datafusion_common::config::ConfigOptions) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<OrderPreservationContext>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.replace_with_order_preserving_variants.replace_with_order_preserving_variants.md).
+
 
 The `replace_with_order_preserving_variants` optimizer sub-rule tries to
 remove `SortExec`s from the physical plan by replacing operators that do
@@ -79,6 +88,9 @@ The algorithm flow is simply like this:
 fn update_order_preservation_ctx_children_data(opc: &mut OrderPreservationContext)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.replace_with_order_preserving_variants.update_order_preservation_ctx_children_data.md).
+
+
 Updates order-preservation data for all children of the given node.
 
 ---
@@ -90,6 +102,9 @@ Updates order-preservation data for all children of the given node.
 ```rust
 type OrderPreservationContext = datafusion_physical_plan::tree_node::PlanContext<bool>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.replace_with_order_preserving_variants.OrderPreservationContext.md).
+
 
 For a given `plan`, this object carries the information one needs from its
 descendants to decide whether it is beneficial to replace order-losing (but

@@ -39,6 +39,9 @@ fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.async_udf.AsyncScalarUDF.md).
+
+
 A scalar UDF that must be invoked using async methods
 
 Note this is not meant to be used directly, but is meant to be an implementation detail
@@ -60,6 +63,9 @@ trait AsyncScalarUDFImpl: ScalarUDFImpl
 fn ideal_batch_size(&self) -> Option<usize>
 async fn invoke_async_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_expr.async_udf.AsyncScalarUDFImpl.md).
+
 
 A scalar UDF that can invoke using async methods
 

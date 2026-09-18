@@ -12,6 +12,9 @@ Also reachable as `datafusion::prelude::array_empty`, `datafusion_functions_nest
 fn array_empty(array: datafusion_expr::Expr) -> datafusion_expr::Expr
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.empty.array_empty.md).
+
+
 returns true for an empty array or false for a non-empty array.
 
 ---
@@ -23,6 +26,9 @@ returns true for an empty array or false for a non-empty array.
 ```rust
 fn array_empty_udf() -> std::sync::Arc<datafusion_expr::ScalarUDF>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.empty.array_empty_udf.md).
+
 
 ScalarFunction that returns a [`ScalarUDF`](datafusion_expr::ScalarUDF) for 
 ArrayEmpty
@@ -57,5 +63,8 @@ fn name(&self) -> &str
 fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>
 fn signature(&self) -> &Signature
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_functions_nested.empty.ArrayEmpty.md).
+
 
 ---

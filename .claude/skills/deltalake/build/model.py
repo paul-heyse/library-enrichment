@@ -437,6 +437,16 @@ def _attach_impls(
             function = (member.get("inner") or {}).get("function")
             if function is None or not member.get("name"):
                 continue
+            if trait_reference:
+                trait_entry = index.get(str(trait_reference["id"]))
+                if (
+                    trait_entry
+                    and trait_entry.get("crate_id") == 0
+                    and trait_entry.get("visibility") != "public"
+                ):
+                    continue
+            elif member.get("visibility") != "public":
+                continue
             if public_only and member.get("visibility") not in ("public", "default", None):
                 continue
             record.methods.append(

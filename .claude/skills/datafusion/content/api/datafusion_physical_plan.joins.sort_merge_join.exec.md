@@ -62,6 +62,9 @@ fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result
 fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_physical_plan.joins.sort_merge_join.exec.SortMergeJoinExec.md).
+
+
 Join execution plan that executes equi-join predicates on multiple partitions using Sort-Merge
 join algorithm and applies an optional filter post join. Can be used to join arbitrarily large
 inputs where one or both of the inputs don't fit in the available memory.

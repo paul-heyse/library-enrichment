@@ -1,0 +1,168 @@
+{
+  "id": "delta.features",
+  "title": "Separate feature vocabulary, protocol admission and operation support",
+  "reviewed": "2026-09-18",
+  "brief": "A recognized feature enum is not an operation-support guarantee. Join table protocol requirements, the consumer's resolved Cargo features, checker admission and the selected operation's restrictions.",
+  "task_aliases": [
+    "protocol support",
+    "reader writer features",
+    "timestamp nanos",
+    "feature flag",
+    "identity columns",
+    "column mapping support"
+  ],
+  "crates": [
+    "deltalake-core",
+    "buoyant_kernel"
+  ],
+  "input": [
+    "table protocol",
+    "Cargo feature profile",
+    "operation"
+  ],
+  "output": [
+    "admission result",
+    "operation-specific decision"
+  ],
+  "properties": [
+    "protocol support",
+    "reader writer features",
+    "timestamp nanos",
+    "feature flag",
+    "identity columns",
+    "column mapping support"
+  ],
+  "operations": [
+    "deltalake_core::kernel::transaction::protocol::ProtocolChecker::can_read_from_protocol",
+    "deltalake_core::kernel::transaction::protocol::ProtocolChecker::can_write_to",
+    "deltalake_core::kernel::transaction::protocol::ProtocolChecker::can_commit",
+    "deltalake_core::table::DeltaTable::add_feature"
+  ],
+  "choices": [
+    {
+      "candidate": "ProtocolChecker and operation preconditions",
+      "choose_when": "You need to decide whether this operation is admitted",
+      "tradeoff": "Checker acceptance still does not certify every semantic/performance path"
+    },
+    {
+      "candidate": "Feature/operation matrix",
+      "choose_when": "You are discovering potentially usable functionality",
+      "tradeoff": "Unknown cells remain unknown; follow evidence and profile"
+    },
+    {
+      "candidate": "Explicit table feature upgrade",
+      "choose_when": "An operation requires a new protocol capability",
+      "tradeoff": "Can affect other readers/writers; inspect the exact builder and table requirements"
+    }
+  ],
+  "claims": [
+    {
+      "id": "delta.features.1",
+      "aspect": "profile",
+      "statement": "Documentation was captured with a broader feature envelope than the local runtime probe. The runtime profile excludes nanosecond-timestamps; its acceptance is tested separately from vocabulary.",
+      "kind": "source_observation",
+      "evidence": [
+        "upstream",
+        "source"
+      ]
+    },
+    {
+      "id": "delta.features.2",
+      "aspect": "admission",
+      "statement": "The protocol probe rejects recognized identityColumns and timestampNanos reader requirements in its profile, while accepting deletionVectors.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "recognized_feature_and_excluded_profile_are_not_reader_support"
+    },
+    {
+      "id": "delta.features.3",
+      "aspect": "operation",
+      "statement": "Deletion-vector scans, one delete and optimize are tested on the retained fixture; column mapping scan succeeds while CDF rejects it. These are separate cells, not universal support.",
+      "kind": "runtime_observation",
+      "evidence": [
+        "runtime"
+      ],
+      "assertion_test": "column_mapping_reads_logical_names_but_cdf_rejects_mapping"
+    }
+  ],
+  "implementation": [
+    "Read content/profile.json and index/coverage.tsv before interpreting a missing symbol or a cfg-gated source insertion.",
+    "Use catalogs/protocol-matrix.json for discovery and then inspect the operation's preconditions and fixtures."
+  ],
+  "effects": [
+    "admit/reject access",
+    "possible protocol upgrade via mutation"
+  ],
+  "errors": [
+    "Recognized-but-unsupported, excluded Cargo feature, unsupported table protocol and operation restriction must not collapse into one boolean."
+  ],
+  "unknowns": [
+    "Variant, identity, generated-column and every cloud/profile combination are not runtime-qualified by this matrix."
+  ],
+  "evidence": [
+    {
+      "id": "upstream",
+      "kind": "upstream_documentation",
+      "scope": "Exact git-capture full contracts for the selected operations"
+    },
+    {
+      "id": "source",
+      "kind": "source_observation",
+      "path": "skill_improvement/evidence/sources/delta-rs/crates/core/src/kernel/transaction/protocol.rs",
+      "scope": "Pinned delta-rs implementation; full file retained with acquisition provenance"
+    },
+    {
+      "id": "runtime",
+      "kind": "runtime_observation",
+      "path": "skill_improvement/evidence/implementation/probe-results.json",
+      "scope": "Named local assertions only; see profile, fixtures and source digests",
+      "tests": [
+        "recognized_feature_and_excluded_profile_are_not_reader_support",
+        "column_mapping_reads_logical_names_but_cdf_rejects_mapping",
+        "deletion_vectors_filter_rows_and_optimize_keeps_logical_rows"
+      ]
+    }
+  ],
+  "resolved_operations": [
+    {
+      "path": "deltalake_core::kernel::transaction::protocol::ProtocolChecker::can_read_from_protocol",
+      "id": "9a65d13a01a3236a76050780",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.kernel.transaction.protocol.ProtocolChecker.json",
+      "page": "operations/deltalake_core.kernel.transaction.protocol.ProtocolChecker.md#op-9a65d13a01a3236a76050780",
+      "signature": "fn can_read_from_protocol(&self, protocol: &Protocol) -> Result<(), TransactionError>"
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::protocol::ProtocolChecker::can_write_to",
+      "id": "9f087de5991d3e750d8260bd",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.kernel.transaction.protocol.ProtocolChecker.json",
+      "page": "operations/deltalake_core.kernel.transaction.protocol.ProtocolChecker.md#op-9f087de5991d3e750d8260bd",
+      "signature": "fn can_write_to(&self, snapshot: &dyn TableReference) -> Result<(), TransactionError>"
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::protocol::ProtocolChecker::can_commit",
+      "id": "44ead6f0afa26e598fc49940",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.kernel.transaction.protocol.ProtocolChecker.json",
+      "page": "operations/deltalake_core.kernel.transaction.protocol.ProtocolChecker.md#op-44ead6f0afa26e598fc49940",
+      "signature": "fn can_commit(&self, snapshot: &dyn TableReference, actions: &[Action], operation: &DeltaOperation) -> Result<(), TransactionError>"
+    },
+    {
+      "path": "deltalake_core::table::DeltaTable::add_feature",
+      "id": "a1986b8a1a4acb7259034938",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "record": "operations/deltalake_core.table.DeltaTable.json",
+      "page": "operations/deltalake_core.table.DeltaTable.md#op-a1986b8a1a4acb7259034938",
+      "signature": "fn add_feature(self) -> AddTableFeatureBuilder"
+    }
+  ],
+  "coverage": "reviewed decision brief; runtime scope is limited to named tests",
+  "source": "authoring/capabilities/delta.features.json"
+}

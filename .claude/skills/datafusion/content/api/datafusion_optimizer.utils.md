@@ -10,6 +10,9 @@ Crate `datafusion-optimizer` · 3 public items · structured records in [`model/
 fn evaluates_to_null<'a>(predicate: datafusion_expr::Expr, null_columns: impl IntoIterator<Item = &'a datafusion_common::Column>) -> datafusion_common::Result<bool>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.utils.evaluates_to_null.md).
+
+
 Determines if an expression will always evaluate to null.
 `c0 + 8` return true
 `c0 IS NULL` return false
@@ -25,6 +28,9 @@ Determines if an expression will always evaluate to null.
 fn is_restrict_null_predicate<'a>(predicate: datafusion_expr::Expr, join_cols_of_predicate: impl IntoIterator<Item = &'a datafusion_common::Column>) -> datafusion_common::Result<bool>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.utils.is_restrict_null_predicate.md).
+
+
 Determine whether a predicate can restrict NULLs. e.g.
 `c0 > 8` return true;
 `c0 IS NULL` return false.
@@ -38,6 +44,9 @@ Determine whether a predicate can restrict NULLs. e.g.
 ```rust
 fn log_plan(description: &str, plan: &datafusion_expr::logical_plan::LogicalPlan)
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.utils.log_plan.md).
+
 
 Log the plan in debug/tracing mode after some part of the optimizer runs
 

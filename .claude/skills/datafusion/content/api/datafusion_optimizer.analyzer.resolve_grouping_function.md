@@ -27,6 +27,9 @@ fn analyze(&self, plan: LogicalPlan, _: &ConfigOptions) -> Result<LogicalPlan>
 fn name(&self) -> &str
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_optimizer.analyzer.resolve_grouping_function.ResolveGroupingFunction.md).
+
+
 Replaces grouping aggregation function with value derived from internal grouping id
 
 ---

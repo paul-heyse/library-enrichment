@@ -10,6 +10,9 @@ Crate `parquet` · 3 public items · structured records in [`model/parquet.schem
 fn print_file_metadata(out: &mut dyn io::Write, file_metadata: &file::metadata::FileMetaData)
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.schema.printer.print_file_metadata.md).
+
+
 Prints file metadata [`FileMetaData`] information.
 
 ---
@@ -22,6 +25,9 @@ Prints file metadata [`FileMetaData`] information.
 fn print_parquet_metadata(out: &mut dyn io::Write, metadata: &file::metadata::ParquetMetaData)
 ```
 
+[Full member, field, variant and typed contracts](../operations/parquet.schema.printer.print_parquet_metadata.md).
+
+
 Prints Parquet metadata [`ParquetMetaData`] information.
 
 ---
@@ -33,6 +39,9 @@ Prints Parquet metadata [`ParquetMetaData`] information.
 ```rust
 fn print_schema(out: &mut dyn io::Write, tp: &schema::types::Type)
 ```
+
+[Full member, field, variant and typed contracts](../operations/parquet.schema.printer.print_schema.md).
+
 
 Prints Parquet [`Type`] information.
 

@@ -1,0 +1,1818 @@
+[
+  {
+    "id": "ec4cb4b20e4e0b500a880004",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate",
+    "name": "Aggregate",
+    "owner": null,
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "struct",
+    "signature": "struct Aggregate",
+    "docs": "Aggregates its input based on a set of grouping and aggregate\nexpressions (e.g. SUM).\n\n# Output Schema\n\nThe output schema is the group expressions followed by the aggregate\nexpressions in order.\n\nFor example, given the input schema `\"A\", \"B\", \"C\"` and the aggregate\n`SUM(A) GROUP BY C+B`, the output schema will be `\"C+B\", \"SUM(A)\"` where\n\"C+B\" and \"SUM(A)\" are the names of the output columns. Note that \"C+B\" is a\nsingle new column",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        3889,
+        1
+      ],
+      "end": [
+        3900,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [
+      "non_exhaustive"
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [
+              5458,
+              5459,
+              5460,
+              5461
+            ],
+            "has_stripped_fields": false
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          5467,
+          5468,
+          5469,
+          5470,
+          5471,
+          5472,
+          5473,
+          5474,
+          5475,
+          5476,
+          5477,
+          5478,
+          5479,
+          5480,
+          5481,
+          5482,
+          5483,
+          5484,
+          5485,
+          5486,
+          5487,
+          5489,
+          5491,
+          5492,
+          5494,
+          5495,
+          5497,
+          5499
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "4549",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-ec4cb4b20e4e0b500a880004",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate",
+      "datafusion_expr::Aggregate",
+      "datafusion_expr::logical_plan::Aggregate"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "f998e00ebaf228c7575ec016",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate::INTERNAL_GROUPING_ID",
+    "name": "INTERNAL_GROUPING_ID",
+    "owner": "datafusion_expr::logical_plan::plan::Aggregate",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "assoc_const",
+    "signature": "INTERNAL_GROUPING_ID",
+    "docs": "Internal column used when the aggregation is a grouping set.\n\nThis column packs two values into a single unsigned integer:\n\n- **Low bits (positions 0 .. n-1)**: a semantic bitmask where each bit\n  represents one of the `n` grouping expressions.  The least significant\n  bit corresponds to the rightmost grouping expression.  A `1` bit means\n  the corresponding column is replaced with `NULL` for this grouping set;\n  a `0` bit means it is included.\n- **High bits (positions n and above)**: a *duplicate ordinal* that\n  distinguishes multiple occurrences of the same semantic grouping set\n  pattern within a single query.  The ordinal is `0` for the first\n  occurrence, `1` for the second, and so on.\n\nThe integer type is chosen by [`Self::grouping_id_type`] to be the\nsmallest `UInt8 / UInt16 / UInt32 / UInt64` that can represent both\nparts.\n\nFor example, for the grouping expressions CUBE(a, b) (no duplicates),\nthe grouping ID column will have the following values:\n    0b00: Both `a` and `b` are included\n    0b01: `b` is excluded\n    0b10: `a` is excluded\n    0b11: Both `a` and `b` are excluded\n\nWhen the same set appears twice and `n = 2`, the duplicate ordinal is\npacked into bit 2:\n    first occurrence:  `0b0_01` (ordinal = 0, mask = 0b01)\n    second occurrence: `0b1_01` (ordinal = 1, mask = 0b01)\n\nThe GROUPING function always masks the value with `(1 << n) - 1` before\ninterpreting it so the ordinal bits are invisible to user-facing SQL.",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        4073,
+        5
+      ],
+      "end": [
+        4073,
+        68
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "assoc_const": {
+        "type": {
+          "borrowed_ref": {
+            "lifetime": "'static",
+            "is_mutable": false,
+            "type": {
+              "primitive": "str"
+            }
+          }
+        },
+        "value": "\"__grouping_id\"",
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Aggregate",
+          "id": "datafusion_expr::logical_plan::plan::Aggregate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/logical_plan/plan.rs",
+        "begin": [
+          3902,
+          1
+        ],
+        "end": [
+          4074,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::grouping_id_type`": 5465
+    },
+    "link_paths": {
+      "`Self::grouping_id_type`": "datafusion_expr::logical_plan::plan::Aggregate::grouping_id_type"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "5466",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-f998e00ebaf228c7575ec016",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate::INTERNAL_GROUPING_ID",
+      "datafusion_expr::Aggregate::INTERNAL_GROUPING_ID",
+      "datafusion_expr::logical_plan::Aggregate::INTERNAL_GROUPING_ID"
+    ],
+    "resolved_doc_links": {
+      "`Self::grouping_id_type`": "../operations/datafusion_expr.logical_plan.plan.Aggregate.md#op-91ad0391fbaba70198d2a51a"
+    }
+  },
+  {
+    "id": "8d7c9d141e88c8f7253182eb",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate::aggr_expr",
+    "name": "aggr_expr",
+    "owner": "datafusion_expr::logical_plan::plan::Aggregate",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "aggr_expr: Vec<Expr>",
+    "docs": "Aggregate expressions.\n\nNote these *must* be either [`Expr::AggregateFunction`] or [`Expr::Alias`]",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        3897,
+        5
+      ],
+      "end": [
+        3897,
+        29
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "Vec",
+          "id": 6,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::Expr",
+                      "id": 301,
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "6": "alloc::vec::Vec",
+      "301": "datafusion_expr::expr::Expr"
+    },
+    "impl_context": null,
+    "links": {
+      "`Expr::Alias`": 1318,
+      "`Expr::AggregateFunction`": 1371
+    },
+    "link_paths": {
+      "`Expr::Alias`": "datafusion_expr::expr::Expr::Alias",
+      "`Expr::AggregateFunction`": "datafusion_expr::expr::Expr::AggregateFunction"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "5460",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-8d7c9d141e88c8f7253182eb",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate::aggr_expr",
+      "datafusion_expr::Aggregate::aggr_expr",
+      "datafusion_expr::logical_plan::Aggregate::aggr_expr"
+    ],
+    "resolved_doc_links": {
+      "`Expr::Alias`": "../operations/datafusion_expr.expr.Expr.md#op-99ef95e1ad9855e695be1ebb",
+      "`Expr::AggregateFunction`": "../operations/datafusion_expr.expr.Expr.md#op-98c26e3c882c5c14cacb82a2"
+    }
+  },
+  {
+    "id": "0f8c6622bc2480ca2b8b13c2",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate::clone",
+    "name": "clone",
+    "owner": "datafusion_expr::logical_plan::plan::Aggregate",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn clone(&self) -> Aggregate",
+    "docs": "",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        3886,
+        17
+      ],
+      "end": [
+        3886,
+        22
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Aggregate",
+              "id": 4549,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4549": "datafusion_expr::logical_plan::plan::Aggregate"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Aggregate",
+          "id": "datafusion_expr::logical_plan::plan::Aggregate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Clone",
+        "id": "core::clone::Clone",
+        "args": null
+      },
+      "trait_path": "core::clone::Clone",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/logical_plan/plan.rs",
+        "begin": [
+          3886,
+          17
+        ],
+        "end": [
+          3886,
+          22
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "5490",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-0f8c6622bc2480ca2b8b13c2",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate::clone",
+      "datafusion_expr::Aggregate::clone",
+      "datafusion_expr::logical_plan::Aggregate::clone"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e62012866f3f1035fcd570df",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate::eq",
+    "name": "eq",
+    "owner": "datafusion_expr::logical_plan::plan::Aggregate",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn eq(&self, other: &Aggregate) -> bool",
+    "docs": "",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        3886,
+        24
+      ],
+      "end": [
+        3886,
+        33
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "Aggregate",
+                      "id": 4549,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "bool"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "4549": "datafusion_expr::logical_plan::plan::Aggregate"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Aggregate",
+          "id": "datafusion_expr::logical_plan::plan::Aggregate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PartialEq",
+        "id": "core::cmp::PartialEq",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialEq",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/logical_plan/plan.rs",
+        "begin": [
+          3886,
+          24
+        ],
+        "end": [
+          3886,
+          33
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "5493",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-e62012866f3f1035fcd570df",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate::eq",
+      "datafusion_expr::Aggregate::eq",
+      "datafusion_expr::logical_plan::Aggregate::eq"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "809b798ae2ebbcb08120aea3",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate::fmt",
+    "name": "fmt",
+    "owner": "datafusion_expr::logical_plan::plan::Aggregate",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        3886,
+        10
+      ],
+      "end": [
+        3886,
+        15
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "$crate::fmt::Formatter",
+                      "id": 78,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "$crate::fmt::Result",
+              "id": 79,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "78": "core::fmt::Formatter",
+      "79": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Aggregate",
+          "id": "datafusion_expr::logical_plan::plan::Aggregate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/logical_plan/plan.rs",
+        "begin": [
+          3886,
+          10
+        ],
+        "end": [
+          3886,
+          15
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "5488",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-809b798ae2ebbcb08120aea3",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate::fmt",
+      "datafusion_expr::Aggregate::fmt",
+      "datafusion_expr::logical_plan::Aggregate::fmt"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "e1df8f63695b8479f72106fe",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate::group_expr",
+    "name": "group_expr",
+    "owner": "datafusion_expr::logical_plan::plan::Aggregate",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "group_expr: Vec<Expr>",
+    "docs": "Grouping expressions",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        3893,
+        5
+      ],
+      "end": [
+        3893,
+        30
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "Vec",
+          "id": 6,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "crate::Expr",
+                      "id": 301,
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "6": "alloc::vec::Vec",
+      "301": "datafusion_expr::expr::Expr"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "5459",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-e1df8f63695b8479f72106fe",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate::group_expr",
+      "datafusion_expr::Aggregate::group_expr",
+      "datafusion_expr::logical_plan::Aggregate::group_expr"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "647b5d4c0e0b51643f9854b4",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate::group_expr_len",
+    "name": "group_expr_len",
+    "owner": "datafusion_expr::logical_plan::plan::Aggregate",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn group_expr_len(&self) -> Result<usize>",
+    "docs": "Get the length of the group by expression in the output schema\nThis is not simply group by expression length. Expression may be\nGroupingSet, etc. In these case we need to get inner expression lengths.",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        4012,
+        5
+      ],
+      "end": [
+        4014,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "primitive": "usize"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "188": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Aggregate",
+          "id": "datafusion_expr::logical_plan::plan::Aggregate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/logical_plan/plan.rs",
+        "begin": [
+          3902,
+          1
+        ],
+        "end": [
+          4074,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "5464",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-647b5d4c0e0b51643f9854b4",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate::group_expr_len",
+      "datafusion_expr::Aggregate::group_expr_len",
+      "datafusion_expr::logical_plan::Aggregate::group_expr_len"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "91ad0391fbaba70198d2a51a",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate::grouping_id_type",
+    "name": "grouping_id_type",
+    "owner": "datafusion_expr::logical_plan::plan::Aggregate",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn grouping_id_type(group_exprs: usize, max_ordinal: usize) -> DataType",
+    "docs": "Returns the data type of the grouping id.\n\nThe grouping ID packs two pieces of information into a single integer:\n- The low `group_exprs` bits are the semantic bitmask (a set bit means the\n  corresponding grouping expression is NULL for this grouping set).\n- The bits above position `group_exprs` encode a duplicate ordinal that\n  distinguishes multiple occurrences of the same grouping set pattern.\n\n`max_ordinal` is the highest ordinal value that will appear (0 when there\nare no duplicate grouping sets).  The type is chosen to be the smallest\nunsigned integer that can represent both parts.",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        4027,
+        5
+      ],
+      "end": [
+        4039,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "group_exprs",
+              {
+                "primitive": "usize"
+              }
+            ],
+            [
+              "max_ordinal",
+              {
+                "primitive": "usize"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "DataType",
+              "id": 10,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "10": "arrow_schema::datatype::DataType"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Aggregate",
+          "id": "datafusion_expr::logical_plan::plan::Aggregate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/logical_plan/plan.rs",
+        "begin": [
+          3902,
+          1
+        ],
+        "end": [
+          4074,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "5465",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-91ad0391fbaba70198d2a51a",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate::grouping_id_type",
+      "datafusion_expr::Aggregate::grouping_id_type",
+      "datafusion_expr::logical_plan::Aggregate::grouping_id_type"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "2dabfe6c837dc9b26f0162f4",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate::hash",
+    "name": "hash",
+    "owner": "datafusion_expr::logical_plan::plan::Aggregate",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn hash<__H: hash::Hasher>(&self, state: &mut __H)",
+    "docs": "",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        3886,
+        39
+      ],
+      "end": [
+        3886,
+        43
+      ]
+    },
+    "visibility": "default",
+    "attributes": [
+      {
+        "other": "#[attr = Inline(Hint)]"
+      }
+    ],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "state",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "__H"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": null,
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [
+            {
+              "name": "__H",
+              "kind": {
+                "type": {
+                  "bounds": [
+                    {
+                      "trait_bound": {
+                        "trait": {
+                          "path": "$crate::hash::Hasher",
+                          "id": 73,
+                          "args": null
+                        },
+                        "generic_params": [],
+                        "modifier": "none"
+                      }
+                    }
+                  ],
+                  "default": null,
+                  "is_synthetic": false
+                }
+              }
+            }
+          ],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "73": "core::hash::Hasher"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Aggregate",
+          "id": "datafusion_expr::logical_plan::plan::Aggregate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Hash",
+        "id": "core::hash::Hash",
+        "args": null
+      },
+      "trait_path": "core::hash::Hash",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/logical_plan/plan.rs",
+        "begin": [
+          3886,
+          39
+        ],
+        "end": [
+          3886,
+          43
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "5496",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-2dabfe6c837dc9b26f0162f4",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate::hash",
+      "datafusion_expr::Aggregate::hash",
+      "datafusion_expr::logical_plan::Aggregate::hash"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "c9c6b15131341d663b599ddc",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate::input",
+    "name": "input",
+    "owner": "datafusion_expr::logical_plan::plan::Aggregate",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "input: std::sync::Arc<LogicalPlan>",
+    "docs": "The incoming logical plan",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        3891,
+        5
+      ],
+      "end": [
+        3891,
+        32
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "std::sync::Arc",
+          "id": 151,
+          "args": {
+            "angle_bracketed": {
+              "args": [
+                {
+                  "type": {
+                    "resolved_path": {
+                      "path": "LogicalPlan",
+                      "id": 545,
+                      "args": null
+                    }
+                  }
+                }
+              ],
+              "constraints": []
+            }
+          }
+        }
+      }
+    },
+    "type_references": {
+      "151": "alloc::sync::Arc",
+      "545": "datafusion_expr::logical_plan::plan::LogicalPlan"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "5458",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-c9c6b15131341d663b599ddc",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate::input",
+      "datafusion_expr::Aggregate::input",
+      "datafusion_expr::logical_plan::Aggregate::input"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "11b4e0fdcbd0dccfca26b29d",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate::partial_cmp",
+    "name": "partial_cmp",
+    "owner": "datafusion_expr::logical_plan::plan::Aggregate",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn partial_cmp(&self, other: &Self) -> Option<Ordering>",
+    "docs": "",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        4078,
+        5
+      ],
+      "end": [
+        4090,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "other",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Option",
+              "id": 91,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "Ordering",
+                          "id": 92,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "91": "core::option::Option",
+      "92": "core::cmp::Ordering"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Aggregate",
+          "id": "datafusion_expr::logical_plan::plan::Aggregate",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "PartialOrd",
+        "id": "core::cmp::PartialOrd",
+        "args": null
+      },
+      "trait_path": "core::cmp::PartialOrd",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/logical_plan/plan.rs",
+        "begin": [
+          4077,
+          1
+        ],
+        "end": [
+          4091,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "5498",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-11b4e0fdcbd0dccfca26b29d",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate::partial_cmp",
+      "datafusion_expr::Aggregate::partial_cmp",
+      "datafusion_expr::logical_plan::Aggregate::partial_cmp"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "778f40a7a2e9ec1dfd9e41b8",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate::schema",
+    "name": "schema",
+    "owner": "datafusion_expr::logical_plan::plan::Aggregate",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "struct_field",
+    "signature": "schema: datafusion_common::DFSchemaRef",
+    "docs": "The schema description of the aggregate output",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        3899,
+        5
+      ],
+      "end": [
+        3899,
+        28
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct_field": {
+        "resolved_path": {
+          "path": "datafusion_common::DFSchemaRef",
+          "id": 3326,
+          "args": null
+        }
+      }
+    },
+    "type_references": {
+      "3326": "datafusion_common::dfschema::DFSchemaRef"
+    },
+    "impl_context": null,
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "5461",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-778f40a7a2e9ec1dfd9e41b8",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate::schema",
+      "datafusion_expr::Aggregate::schema",
+      "datafusion_expr::logical_plan::Aggregate::schema"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "6d187e90f76b92ce140c49d7",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate::try_new",
+    "name": "try_new",
+    "owner": "datafusion_expr::logical_plan::plan::Aggregate",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_new(input: Arc<LogicalPlan>, group_expr: Vec<Expr>, aggr_expr: Vec<Expr>) -> Result<Self>",
+    "docs": "Create a new aggregate operator.",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        3904,
+        5
+      ],
+      "end": [
+        3947,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "input",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 151,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "LogicalPlan",
+                              "id": 545,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "group_expr",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 6,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Expr",
+                              "id": 301,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "aggr_expr",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 6,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Expr",
+                              "id": 301,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "151": "alloc::sync::Arc",
+      "545": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "6": "alloc::vec::Vec",
+      "301": "datafusion_expr::expr::Expr",
+      "188": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Aggregate",
+          "id": "datafusion_expr::logical_plan::plan::Aggregate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/logical_plan/plan.rs",
+        "begin": [
+          3902,
+          1
+        ],
+        "end": [
+          4074,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "5462",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-6d187e90f76b92ce140c49d7",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate::try_new",
+      "datafusion_expr::Aggregate::try_new",
+      "datafusion_expr::logical_plan::Aggregate::try_new"
+    ],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "9f33ba7686de538d93574101",
+    "path": "datafusion_expr::logical_plan::plan::Aggregate::try_new_with_schema",
+    "name": "try_new_with_schema",
+    "owner": "datafusion_expr::logical_plan::plan::Aggregate",
+    "crate": "datafusion-expr",
+    "version": "55.1.0",
+    "kind": "function",
+    "signature": "fn try_new_with_schema(input: Arc<LogicalPlan>, group_expr: Vec<Expr>, aggr_expr: Vec<Expr>, schema: DFSchemaRef) -> Result<Self>",
+    "docs": "Create a new aggregate operator using the provided schema to avoid the overhead of\nbuilding the schema again when the schema is already known.\n\nThis method should only be called when you are absolutely sure that the schema being\nprovided is correct for the aggregate. If in doubt, call [try_new](Self::try_new) instead.",
+    "span": {
+      "filename": "src/logical_plan/plan.rs",
+      "begin": [
+        3954,
+        5
+      ],
+      "end": [
+        3989,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "input",
+              {
+                "resolved_path": {
+                  "path": "Arc",
+                  "id": 151,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "LogicalPlan",
+                              "id": 545,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "group_expr",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 6,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Expr",
+                              "id": 301,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "aggr_expr",
+              {
+                "resolved_path": {
+                  "path": "Vec",
+                  "id": 6,
+                  "args": {
+                    "angle_bracketed": {
+                      "args": [
+                        {
+                          "type": {
+                            "resolved_path": {
+                              "path": "Expr",
+                              "id": 301,
+                              "args": null
+                            }
+                          }
+                        }
+                      ],
+                      "constraints": []
+                    }
+                  }
+                }
+              }
+            ],
+            [
+              "schema",
+              {
+                "resolved_path": {
+                  "path": "DFSchemaRef",
+                  "id": 3326,
+                  "args": null
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 188,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "generic": "Self"
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "151": "alloc::sync::Arc",
+      "545": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "6": "alloc::vec::Vec",
+      "301": "datafusion_expr::expr::Expr",
+      "3326": "datafusion_common::dfschema::DFSchemaRef",
+      "188": "datafusion_common::error::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "Aggregate",
+          "id": "datafusion_expr::logical_plan::plan::Aggregate",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/logical_plan/plan.rs",
+        "begin": [
+          3902,
+          1
+        ],
+        "end": [
+          4074,
+          2
+        ]
+      }
+    },
+    "links": {
+      "Self::try_new": 5462
+    },
+    "link_paths": {
+      "Self::try_new": "datafusion_expr::logical_plan::plan::Aggregate::try_new"
+    },
+    "artifact": {
+      "id": "38b04f7453f0d141c51e4a50cf1680f1dbc04b22896f1d87e55f08f093b92485",
+      "format_version": 61,
+      "item_id": "5463",
+      "origin": "https://docs.rs/crate/datafusion-expr/55.1.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/datafusion_expr.logical_plan.plan.Aggregate.md",
+    "record_file": "operations/datafusion_expr.logical_plan.plan.Aggregate.json",
+    "anchor": "op-9f33ba7686de538d93574101",
+    "aliases": [
+      "datafusion::logical_expr::Aggregate::try_new_with_schema",
+      "datafusion_expr::Aggregate::try_new_with_schema",
+      "datafusion_expr::logical_plan::Aggregate::try_new_with_schema"
+    ],
+    "resolved_doc_links": {
+      "Self::try_new": "../operations/datafusion_expr.logical_plan.plan.Aggregate.md#op-6d187e90f76b92ce140c49d7"
+    }
+  }
+]

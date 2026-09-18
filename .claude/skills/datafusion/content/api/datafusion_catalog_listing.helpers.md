@@ -12,6 +12,9 @@ Also reachable as `datafusion::datasource::listing::helpers::describe_partition`
 fn describe_partition(partition: &Partition) -> (&str, usize, Vec<&str>)
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog_listing.helpers.describe_partition.md).
+
+
 Describe a partition as a (path, depth, files) tuple for easier assertions
 
 ---
@@ -26,6 +29,9 @@ Also reachable as `datafusion::datasource::listing::helpers::evaluate_partition_
 fn evaluate_partition_prefix<'a>(partition_cols: &'a [(String, arrow::datatypes::DataType)], filters: &'a [datafusion_expr::Expr]) -> Option<object_store::path::Path>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog_listing.helpers.evaluate_partition_prefix.md).
+
+
 ---
 
 ## expr_applicable_for_cols
@@ -37,6 +43,9 @@ Also reachable as `datafusion::datasource::listing::helpers::expr_applicable_for
 ```rust
 fn expr_applicable_for_cols(col_names: &[&str], expr: &datafusion_expr::Expr) -> bool
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog_listing.helpers.expr_applicable_for_cols.md).
+
 
 Check whether the given expression can be resolved using only the columns `col_names`.
 This means that if this function returns true:
@@ -56,6 +65,9 @@ Also reachable as `datafusion::datasource::listing::helpers::filter_partitioned_
 fn filter_partitioned_file(pf: datafusion_datasource::PartitionedFile, filters: &[datafusion_expr::Expr], df_schema: &datafusion_common::DFSchema) -> datafusion_common::Result<Option<datafusion_datasource::PartitionedFile>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog_listing.helpers.filter_partitioned_file.md).
+
+
 ---
 
 ## list_partitions
@@ -67,6 +79,9 @@ Also reachable as `datafusion::datasource::listing::helpers::list_partitions`
 ```rust
 async fn list_partitions(store: &dyn ObjectStore, table_path: &datafusion_datasource::ListingTableUrl, max_depth: usize, partition_prefix: Option<object_store::path::Path>) -> datafusion_common::Result<Vec<Partition>>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog_listing.helpers.list_partitions.md).
+
 
 Returns a recursive list of the partitions in `table_path` up to `max_depth`
 
@@ -81,6 +96,9 @@ Also reachable as `datafusion::datasource::listing::helpers::parse_partitions_fo
 ```rust
 fn parse_partitions_for_path<'a, I>(table_path: &datafusion_datasource::ListingTableUrl, file_path: &'a object_store::path::Path, table_partition_cols: I) -> Option<Vec<std::borrow::Cow<'a, str>>> where I: IntoIterator<Item = &'a str>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog_listing.helpers.parse_partitions_for_path.md).
+
 
 Extract the partition values for the given `file_path` (in the given `table_path`)
 associated to the partitions defined by `table_partition_cols`.
@@ -100,6 +118,9 @@ Also reachable as `datafusion::datasource::listing::helpers::pruned_partition_li
 async fn pruned_partition_list<'a>(ctx: &'a dyn Session, store: &'a dyn ObjectStore, table_path: &'a datafusion_datasource::ListingTableUrl, filters: &'a [datafusion_expr::Expr], file_extension: &'a str, partition_cols: &'a [(String, arrow::datatypes::DataType)]) -> datafusion_common::Result<futures::stream::BoxStream<'a, datafusion_common::Result<datafusion_datasource::PartitionedFile>>>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog_listing.helpers.pruned_partition_list.md).
+
+
 Discover the partitions on the given path and prune out files
 that belong to irrelevant partitions using `filters` expressions.
 `filters` should only contain expressions that can be evaluated
@@ -118,5 +139,8 @@ struct Partition
 ```
 
 **Derives**: Debug
+
+[Full member, field, variant and typed contracts](../operations/datafusion_catalog_listing.helpers.Partition.md).
+
 
 ---

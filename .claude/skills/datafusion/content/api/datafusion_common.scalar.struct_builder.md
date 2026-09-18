@@ -25,6 +25,9 @@ fn with_name_and_scalar(self, name: &str, value: ScalarValue) -> Self
 fn with_scalar(self, field: impl IntoFieldRef, value: ScalarValue) -> Self
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_common.scalar.struct_builder.ScalarStructBuilder.md).
+
+
 Builder for [`ScalarValue::Struct`].
 
 See examples on [`ScalarValue`]
@@ -44,6 +47,9 @@ trait IntoFieldRef
 ```rust
 fn into_field_ref(self) -> FieldRef
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.scalar.struct_builder.IntoFieldRef.md).
+
 
 Trait for converting a type into a [`FieldRef`]
 
@@ -68,6 +74,9 @@ trait IntoFields
 ```rust
 fn into(self) -> Fields
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_common.scalar.struct_builder.IntoFields.md).
+
 
 Trait for converting a type into a [`Fields`]
 

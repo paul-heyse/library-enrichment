@@ -1,0 +1,721 @@
+[
+  {
+    "id": "b2f79c40222ecdd56db8aa79",
+    "path": "parquet::arrow::arrow_writer::ArrowColumnWriter",
+    "name": "ArrowColumnWriter",
+    "owner": null,
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "struct",
+    "signature": "struct ArrowColumnWriter",
+    "docs": "Encodes [`ArrowLeafColumn`] to [`ArrowColumnChunk`]\n\n`ArrowColumnWriter` instances can be created using an [`ArrowRowGroupWriterFactory`];\n\nNote: This is a low-level interface for applications that require\nfine-grained control of encoding (e.g. encoding using multiple threads),\nsee [`ArrowWriter`] for a higher-level interface\n\n# Example: Encoding two Arrow Array's in Parallel\n```\n// The arrow schema\n# use std::sync::Arc;\n# use arrow_array::*;\n# use arrow_schema::*;\n# use parquet::arrow::ArrowSchemaConverter;\n# use parquet::arrow::arrow_writer::{compute_leaves, ArrowColumnChunk, ArrowLeafColumn, ArrowRowGroupWriterFactory};\n# use parquet::file::properties::WriterProperties;\n# use parquet::file::writer::{SerializedFileWriter, SerializedRowGroupWriter};\n#\nlet schema = Arc::new(Schema::new(vec![\n    Field::new(\"i32\", DataType::Int32, false),\n    Field::new(\"f32\", DataType::Float32, false),\n]));\n\n// Compute the parquet schema\nlet props = Arc::new(WriterProperties::default());\nlet parquet_schema = ArrowSchemaConverter::new()\n  .with_coerce_types(props.coerce_types())\n  .convert(&schema)\n  .unwrap();\n\n// Create parquet writer\nlet root_schema = parquet_schema.root_schema_ptr();\n// write to memory in the example, but this could be a File\nlet mut out = Vec::with_capacity(1024);\nlet mut writer = SerializedFileWriter::new(&mut out, root_schema, props.clone())\n  .unwrap();\n\n// Create a factory for building Arrow column writers\nlet row_group_factory = ArrowRowGroupWriterFactory::new(&writer, Arc::clone(&schema));\n// Create column writers for the 0th row group\nlet col_writers = row_group_factory.create_column_writers(0).unwrap();\n\n// Spawn a worker thread for each column\n//\n// Note: This is for demonstration purposes, a thread-pool e.g. rayon or tokio, would be better.\n// The `map` produces an iterator of type `tuple of (thread handle, send channel)`.\nlet mut workers: Vec<_> = col_writers\n    .into_iter()\n    .map(|mut col_writer| {\n        let (send, recv) = std::sync::mpsc::channel::<ArrowLeafColumn>();\n        let handle = std::thread::spawn(move || {\n            // receive Arrays to encode via the channel\n            for col in recv {\n                col_writer.write(&col)?;\n            }\n            // once the input is complete, close the writer\n            // to return the newly created ArrowColumnChunk\n            col_writer.close()\n        });\n        (handle, send)\n    })\n    .collect();\n\n// Start row group\nlet mut row_group_writer: SerializedRowGroupWriter<'_, _> = writer\n  .next_row_group()\n  .unwrap();\n\n// Create some example input columns to encode\nlet to_write = vec![\n    Arc::new(Int32Array::from_iter_values([1, 2, 3])) as _,\n    Arc::new(Float32Array::from_iter_values([1., 45., -1.])) as _,\n];\n\n// Send the input columns to the workers\nlet mut worker_iter = workers.iter_mut();\nfor (arr, field) in to_write.iter().zip(&schema.fields) {\n    for leaves in compute_leaves(field, arr).unwrap() {\n        worker_iter.next().unwrap().1.send(leaves).unwrap();\n    }\n}\n\n// Wait for the workers to complete encoding, and append\n// the resulting column chunks to the row group (and the file)\nfor (handle, send) in workers {\n    drop(send); // Drop send side to signal termination\n    // wait for the worker to send the completed chunk\n    let chunk: ArrowColumnChunk = handle.join().unwrap().unwrap();\n    chunk.append_to_row_group(&mut row_group_writer).unwrap();\n}\n// Close the row group which writes to the underlying file\nrow_group_writer.close().unwrap();\n\nlet metadata = writer.close().unwrap();\nassert_eq!(metadata.file_metadata().num_rows(), 3);\n```",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        1090,
+        1
+      ],
+      "end": [
+        1093,
+        2
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "struct": {
+        "kind": {
+          "plain": {
+            "fields": [],
+            "has_stripped_fields": true
+          }
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "impls": [
+          3340,
+          3341,
+          3342,
+          3343,
+          3344,
+          3345,
+          3346,
+          3347,
+          3348,
+          3349,
+          3350,
+          3351,
+          3352,
+          3353,
+          3354,
+          3356
+        ]
+      }
+    },
+    "type_references": {},
+    "impl_context": null,
+    "links": {
+      "`ArrowColumnChunk`": 3231,
+      "`ArrowRowGroupWriterFactory`": 3233,
+      "`ArrowLeafColumn`": 3292,
+      "`ArrowWriter`": 3205
+    },
+    "link_paths": {
+      "`ArrowColumnChunk`": "parquet::arrow::arrow_writer::ArrowColumnChunk",
+      "`ArrowRowGroupWriterFactory`": "parquet::arrow::arrow_writer::ArrowRowGroupWriterFactory",
+      "`ArrowLeafColumn`": "parquet::arrow::arrow_writer::ArrowLeafColumn",
+      "`ArrowWriter`": "parquet::arrow::arrow_writer::ArrowWriter"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3229",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowColumnWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowColumnWriter.json",
+    "anchor": "op-b2f79c40222ecdd56db8aa79",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ArrowColumnChunk`": "../operations/parquet.arrow.arrow_writer.ArrowColumnChunk.md#op-efe7caf4e16e381ce78e4e21",
+      "`ArrowRowGroupWriterFactory`": "../operations/parquet.arrow.arrow_writer.ArrowRowGroupWriterFactory.md#op-94cdff34b1d4b2324c1c0d54",
+      "`ArrowLeafColumn`": "../operations/parquet.arrow.arrow_writer.ArrowLeafColumn.md#op-3606dfdb8cca5efdff1e83c8",
+      "`ArrowWriter`": "../operations/parquet.arrow.arrow_writer.ArrowWriter.md#op-dc781972049f13083eb8f4f3"
+    }
+  },
+  {
+    "id": "c5db0fea588caa48fce60430",
+    "path": "parquet::arrow::arrow_writer::ArrowColumnWriter::close",
+    "name": "close",
+    "owner": "parquet::arrow::arrow_writer::ArrowColumnWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn close(self) -> Result<ArrowColumnChunk>",
+    "docs": "Close this column returning the written [`ArrowColumnChunk`]",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        1162,
+        5
+      ],
+      "end": [
+        1170,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "generic": "Self"
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "resolved_path": {
+                          "path": "ArrowColumnChunk",
+                          "id": 3231,
+                          "args": null
+                        }
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "107": "parquet::errors::Result",
+      "3231": "parquet::arrow::arrow_writer::ArrowColumnChunk"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowColumnWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowColumnWriter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          1106,
+          1
+        ],
+        "end": [
+          1202,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrowColumnChunk`": 3231
+    },
+    "link_paths": {
+      "`ArrowColumnChunk`": "parquet::arrow::arrow_writer::ArrowColumnChunk"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3339",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowColumnWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowColumnWriter.json",
+    "anchor": "op-c5db0fea588caa48fce60430",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ArrowColumnChunk`": "../operations/parquet.arrow.arrow_writer.ArrowColumnChunk.md#op-efe7caf4e16e381ce78e4e21"
+    }
+  },
+  {
+    "id": "76dfc499c0591c5f62c3342e",
+    "path": "parquet::arrow::arrow_writer::ArrowColumnWriter::fmt",
+    "name": "fmt",
+    "owner": "parquet::arrow::arrow_writer::ArrowColumnWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+    "docs": "",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        1096,
+        5
+      ],
+      "end": [
+        1098,
+        6
+      ]
+    },
+    "visibility": "default",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "f",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "resolved_path": {
+                      "path": "std::fmt::Formatter",
+                      "id": 67,
+                      "args": {
+                        "angle_bracketed": {
+                          "args": [
+                            {
+                              "lifetime": "'_"
+                            }
+                          ],
+                          "constraints": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "std::fmt::Result",
+              "id": 68,
+              "args": null
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "67": "core::fmt::Formatter",
+      "68": "core::fmt::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowColumnWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowColumnWriter",
+          "args": null
+        }
+      },
+      "trait": {
+        "path": "Debug",
+        "id": "core::fmt::Debug",
+        "args": null
+      },
+      "trait_path": "core::fmt::Debug",
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          1095,
+          1
+        ],
+        "end": [
+          1099,
+          2
+        ]
+      }
+    },
+    "links": {},
+    "link_paths": {},
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3355",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowColumnWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowColumnWriter.json",
+    "anchor": "op-76dfc499c0591c5f62c3342e",
+    "aliases": [],
+    "resolved_doc_links": {}
+  },
+  {
+    "id": "ea8a3380edb269c669c04508",
+    "path": "parquet::arrow::arrow_writer::ArrowColumnWriter::get_estimated_total_bytes",
+    "name": "get_estimated_total_bytes",
+    "owner": "parquet::arrow::arrow_writer::ArrowColumnWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn get_estimated_total_bytes(&self) -> usize",
+    "docs": "Returns the estimated total encoded bytes for this column writer.\n\nThis includes:\n1. Data buffered in encoded form\n2. An estimate of how large the data buffered in un-encoded form would be once encoded\n\nThis value should be less than or equal to [`Self::memory_size`]",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        1196,
+        5
+      ],
+      "end": [
+        1201,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowColumnWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowColumnWriter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          1106,
+          1
+        ],
+        "end": [
+          1202,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::memory_size`": 3211
+    },
+    "link_paths": {
+      "`Self::memory_size`": "parquet::arrow::arrow_writer::ArrowColumnWriter::memory_size"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3212",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowColumnWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowColumnWriter.json",
+    "anchor": "op-ea8a3380edb269c669c04508",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::memory_size`": "../operations/parquet.arrow.arrow_writer.ArrowColumnWriter.md#op-7bf58191e4f4ed1395186064"
+    }
+  },
+  {
+    "id": "7bf58191e4f4ed1395186064",
+    "path": "parquet::arrow::arrow_writer::ArrowColumnWriter::memory_size",
+    "name": "memory_size",
+    "owner": "parquet::arrow::arrow_writer::ArrowColumnWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn memory_size(&self) -> usize",
+    "docs": "Returns the estimated total memory usage by the writer.\n\nThis  [`Self::get_estimated_total_bytes`] this is an estimate\nof the current memory usage and not it's anticipated encoded size.\n\nThis includes:\n1. Data buffered in encoded form\n2. Data buffered in un-encoded form (e.g. `usize` dictionary keys)\n\nThis value should be greater than or equal to [`Self::get_estimated_total_bytes`]",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        1182,
+        5
+      ],
+      "end": [
+        1187,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "primitive": "usize"
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {},
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowColumnWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowColumnWriter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          1106,
+          1
+        ],
+        "end": [
+          1202,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`Self::get_estimated_total_bytes`": 3212
+    },
+    "link_paths": {
+      "`Self::get_estimated_total_bytes`": "parquet::arrow::arrow_writer::ArrowColumnWriter::get_estimated_total_bytes"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3211",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowColumnWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowColumnWriter.json",
+    "anchor": "op-7bf58191e4f4ed1395186064",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`Self::get_estimated_total_bytes`": "../operations/parquet.arrow.arrow_writer.ArrowColumnWriter.md#op-ea8a3380edb269c669c04508"
+    }
+  },
+  {
+    "id": "0a60be408183d374631bf36b",
+    "path": "parquet::arrow::arrow_writer::ArrowColumnWriter::write",
+    "name": "write",
+    "owner": "parquet::arrow::arrow_writer::ArrowColumnWriter",
+    "crate": "parquet",
+    "version": "59.3.0",
+    "kind": "function",
+    "signature": "fn write(&mut self, col: &ArrowLeafColumn) -> Result<()>",
+    "docs": "Write an [`ArrowLeafColumn`]",
+    "span": {
+      "filename": "src/arrow/arrow_writer/mod.rs",
+      "begin": [
+        1108,
+        5
+      ],
+      "end": [
+        1110,
+        6
+      ]
+    },
+    "visibility": "public",
+    "attributes": [],
+    "deprecation": null,
+    "type_tree": {
+      "function": {
+        "sig": {
+          "inputs": [
+            [
+              "self",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": true,
+                  "type": {
+                    "generic": "Self"
+                  }
+                }
+              }
+            ],
+            [
+              "col",
+              {
+                "borrowed_ref": {
+                  "lifetime": null,
+                  "is_mutable": false,
+                  "type": {
+                    "resolved_path": {
+                      "path": "ArrowLeafColumn",
+                      "id": 3292,
+                      "args": null
+                    }
+                  }
+                }
+              }
+            ]
+          ],
+          "output": {
+            "resolved_path": {
+              "path": "Result",
+              "id": 107,
+              "args": {
+                "angle_bracketed": {
+                  "args": [
+                    {
+                      "type": {
+                        "tuple": []
+                      }
+                    }
+                  ],
+                  "constraints": []
+                }
+              }
+            }
+          },
+          "is_c_variadic": false
+        },
+        "generics": {
+          "params": [],
+          "where_predicates": []
+        },
+        "header": {
+          "is_const": false,
+          "is_unsafe": false,
+          "is_async": false,
+          "abi": "Rust"
+        },
+        "has_body": true,
+        "default_unstable": null
+      }
+    },
+    "type_references": {
+      "3292": "parquet::arrow::arrow_writer::ArrowLeafColumn",
+      "107": "parquet::errors::Result"
+    },
+    "impl_context": {
+      "for": {
+        "resolved_path": {
+          "path": "ArrowColumnWriter",
+          "id": "parquet::arrow::arrow_writer::ArrowColumnWriter",
+          "args": null
+        }
+      },
+      "trait": null,
+      "trait_path": null,
+      "generics": {
+        "params": [],
+        "where_predicates": []
+      },
+      "is_negative": false,
+      "span": {
+        "filename": "src/arrow/arrow_writer/mod.rs",
+        "begin": [
+          1106,
+          1
+        ],
+        "end": [
+          1202,
+          2
+        ]
+      }
+    },
+    "links": {
+      "`ArrowLeafColumn`": 3292
+    },
+    "link_paths": {
+      "`ArrowLeafColumn`": "parquet::arrow::arrow_writer::ArrowLeafColumn"
+    },
+    "artifact": {
+      "id": "e0c0929b9e7cab707a29bad0d3857a4b5d4870efc1eeb514387a96a2d0815aa3",
+      "format_version": 61,
+      "item_id": "3338",
+      "origin": "https://docs.rs/crate/parquet/59.3.0/json"
+    },
+    "availability": "Observed in the hosted documentation configuration; consumer features unverified.",
+    "reader_notes": [],
+    "page": "operations/parquet.arrow.arrow_writer.ArrowColumnWriter.md",
+    "record_file": "operations/parquet.arrow.arrow_writer.ArrowColumnWriter.json",
+    "anchor": "op-0a60be408183d374631bf36b",
+    "aliases": [],
+    "resolved_doc_links": {
+      "`ArrowLeafColumn`": "../operations/parquet.arrow.arrow_writer.ArrowLeafColumn.md#op-3606dfdb8cca5efdff1e83c8"
+    }
+  }
+]

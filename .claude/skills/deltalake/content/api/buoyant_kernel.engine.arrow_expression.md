@@ -5,6 +5,7 @@ Crate `buoyant_kernel` · 3 public items · structured records in [`model/buoyan
 ## ArrowEvaluationHandler
 
 `struct` · `buoyant_kernel::engine::arrow_expression::ArrowEvaluationHandler`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_expression.ArrowEvaluationHandler.md)
 
 Also reachable as `delta_kernel::engine::arrow_expression::ArrowEvaluationHandler`
 
@@ -30,6 +31,7 @@ fn null_row(&self, output_schema: SchemaRef) -> DeltaResult<Box<dyn EngineData>>
 ## DefaultExpressionEvaluator
 
 `struct` · `buoyant_kernel::engine::arrow_expression::DefaultExpressionEvaluator`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_expression.DefaultExpressionEvaluator.md)
 
 Also reachable as `delta_kernel::engine::arrow_expression::DefaultExpressionEvaluator`
 
@@ -52,6 +54,7 @@ fn evaluate(&self, batch: &dyn EngineData) -> DeltaResult<Box<dyn EngineData>>
 ## DefaultPredicateEvaluator
 
 `struct` · `buoyant_kernel::engine::arrow_expression::DefaultPredicateEvaluator`
+[Full member contracts, output types and access classification](../operations/buoyant_kernel.engine.arrow_expression.DefaultPredicateEvaluator.md)
 
 Also reachable as `delta_kernel::engine::arrow_expression::DefaultPredicateEvaluator`
 

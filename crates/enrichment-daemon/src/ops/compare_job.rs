@@ -24,15 +24,15 @@ pub(super) async fn submit(service: &Service, request: CompareRequest) -> Envelo
     };
     if new {
         let owned = service.clone();
-        let id = record.job_id.clone();
+        let id = record.job_id;
         let jobs = std::sync::Arc::clone(&owned.jobs);
         let runtime = owned.repository.runtime.clone();
-        if let Err(error) = jobs.spawn(&runtime, id.clone(), async move {
+        if let Err(error) = jobs.spawn(&runtime, id, async move {
             if let Err(error) = owned
                 .repository
                 .runtime
                 .job_operation(
-                    id.clone(),
+                    id.to_string(),
                     owned.operation_descriptor(&request.clone().into()),
                     std::time::Duration::from_secs(
                         owned.config.network.acquisition_timeout_seconds,
@@ -76,7 +76,11 @@ pub(super) async fn submit(service: &Service, request: CompareRequest) -> Envelo
     }
 }
 
-async fn run(service: &Service, id: &str, request: CompareRequest) -> io::Result<()> {
+async fn run(
+    service: &Service,
+    id: &enrichment_core::identity::JobId,
+    request: CompareRequest,
+) -> io::Result<()> {
     let cancel = service.jobs.cancellation(id)?;
     if !service.jobs.start(id).await? {
         return service
@@ -123,7 +127,7 @@ async fn execute(
     service: &Service,
     mut request: CompareRequest,
     cancel: &AtomicBool,
-    id: &str,
+    id: &enrichment_core::identity::JobId,
     digest: &str,
 ) -> Envelope {
     let prerequisites = match enrichment_store::research_selection::comparison_prerequisites(
@@ -190,70 +194,27 @@ pub(super) async fn recover(
     blobs: &enrichment_store::BlobStore,
     record: &jobs::JobRecord,
 ) -> io::Result<Option<(JobState, Envelope)>> {
-    let jobs::Arguments::Compare { request } = &record.specification else {
-        return Err(io::Error::other(
-            "comparison publication has a different journal kind",
-        ));
-    };
-    let fail = |error| io::Error::other(error);
-    let catalog = repository.catalog.pin().await.map_err(fail)?;
-    let Some(publication) = catalog
-        .comparison_publication(&repository.runtime, &record.job_id)
-        .await
-        .map_err(fail)?
+    let Some(recovered) =
+        enrichment_store::job_recovery::comparison(repository, blobs, &record.snapshot)
+            .await
+            .map_err(io::Error::other)?
     else {
         return Ok(None);
     };
-    let digest = enrichment_core::native_key::Key::ResearchInvocation
-        .hex_digest(
-            &enrichment_core::operation::identities::ResearchInvocation {
-                request: request.clone().into(),
-            },
-        )
-        .expect("declared comparison request identity");
-    if publication.request_digest != digest {
-        return Err(io::Error::other(
-            "comparison publication request differs from journal",
-        ));
-    }
-    let before = repository
-        .open_snapshot(catalog.clone(), &publication.before_snapshot_id)
-        .await
-        .map_err(fail)?;
-    let after = repository
-        .open_snapshot(catalog, &publication.after_snapshot_id)
-        .await
-        .map_err(fail)?;
-    if before.manifest.context_id != publication.before_context_id
-        || after.manifest.context_id != publication.after_context_id
-    {
-        return Err(io::Error::other(
-            "comparison publication input ownership differs",
-        ));
-    }
-    repository
-        .validate_comparison_delivery(&publication)
-        .await
-        .map_err(fail)?;
     let result = crate::delivery::recover_result(
         blobs,
         &repository.runtime,
-        repository
-            .catalog
-            .pin()
-            .await
-            .map_err(io::Error::other)?
-            .as_ref(),
-        &publication.delivery,
+        &recovered.catalog,
+        &recovered.publication.delivery,
     )
     .await?;
-    Ok(Some((publication.state, result)))
+    Ok(Some((recovered.publication.state, result)))
 }
 
 async fn child_context(
     service: &Service,
-    id: &str,
-    token: &str,
+    id: &enrichment_core::identity::JobId,
+    token: &enrichment_core::identity::InterestId,
     cancel: &AtomicBool,
 ) -> io::Result<Result<enrichment_core::identity::ContextId, Box<Envelope>>> {
     let mut detached = false;
@@ -377,8 +338,8 @@ mod tests {
                 limitations: vec![],
             },
         );
-        result.context_id = Some("ctx_exact".into());
-        result.snapshot_id = Some("snap_exact".into());
+        result.context_id = Some(format!("ctx_{}", "a".repeat(64)).try_into().unwrap());
+        result.snapshot_id = Some(format!("snap_{}", "b".repeat(64)).try_into().unwrap());
         service
             .jobs
             .finish(&child.job_id, JobState::Succeeded, result)
@@ -394,7 +355,8 @@ mod tests {
                 .await
                 .unwrap()
                 .unwrap(),
-            "ctx_exact"
+            enrichment_core::identity::ContextId::try_from(format!("ctx_{}", "a".repeat(64)))
+                .unwrap()
         );
     }
 }

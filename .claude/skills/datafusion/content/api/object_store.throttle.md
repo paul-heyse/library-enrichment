@@ -14,6 +14,9 @@ struct ThrottleConfig
 
 **Derives**: Clone, Copy, Debug, Default
 
+[Full member, field, variant and typed contracts](../operations/object_store.throttle.ThrottleConfig.md).
+
+
 Configuration settings for throttled store
 
 ---
@@ -67,6 +70,9 @@ async fn complete_multipart(&self, path: &Path, id: &MultipartId, parts: Vec<Par
 async fn create_multipart(&self, path: &Path) -> Result<MultipartId>
 async fn put_part(&self, path: &Path, id: &MultipartId, part_idx: usize, data: PutPayload) -> Result<PartId>
 ```
+
+[Full member, field, variant and typed contracts](../operations/object_store.throttle.ThrottledStore.md).
+
 
 Store wrapper that wraps an inner store with some `sleep` calls.
 

@@ -10,6 +10,9 @@ Crate `datafusion-substrait` · 2 public items · structured records in [`model/
 fn from_column(col: &datafusion::common::Column, schema: &datafusion::common::DFSchemaRef) -> datafusion::common::Result<substrait::proto::Expression>
 ```
 
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.field_reference.from_column.md).
+
+
 ---
 
 ## from_outer_reference_column
@@ -19,6 +22,9 @@ fn from_column(col: &datafusion::common::Column, schema: &datafusion::common::DF
 ```rust
 fn from_outer_reference_column(col: &datafusion::common::Column, schema: &datafusion::common::DFSchemaRef) -> datafusion::common::Result<substrait::proto::Expression>
 ```
+
+[Full member, field, variant and typed contracts](../operations/datafusion_substrait.logical_plan.producer.expr.field_reference.from_outer_reference_column.md).
+
 
 Convert an outer reference column to a Substrait field reference.
 Outer reference columns reference columns from an outer query scope in correlated subqueries.

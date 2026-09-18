@@ -12,6 +12,9 @@ Also reachable as `arrow::compute::kernels::sort::lexsort`, `arrow::compute::lex
 fn lexsort(columns: &[SortColumn], limit: Option<usize>) -> Result<Vec<ArrayRef>, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ord.sort.lexsort.md).
+
+
 Sort a list of `ArrayRef` using `SortOptions` provided for each array.
 
 Performs an unstable lexicographical sort on values and indices.
@@ -73,6 +76,9 @@ Also reachable as `arrow::compute::kernels::sort::lexsort_to_indices`, `arrow::c
 fn lexsort_to_indices(columns: &[SortColumn], limit: Option<usize>) -> Result<UInt32Array, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ord.sort.lexsort_to_indices.md).
+
+
 Sort elements lexicographically from a list of `ArrayRef` into an unsigned integer
 (`UInt32Array`) of indices.
 
@@ -91,6 +97,9 @@ Also reachable as `arrow::compute::kernels::sort::partial_sort`, `arrow::compute
 fn partial_sort<T, F>(v: &mut [T], limit: usize, is_less: F) where F: FnMut(&T, &T) -> std::cmp::Ordering
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ord.sort.partial_sort.md).
+
+
 It's unstable_sort, may not preserve the order of equal elements
 
 ---
@@ -104,6 +113,9 @@ Also reachable as `arrow::compute::kernels::sort::partition_validity`, `arrow::c
 ```rust
 fn partition_validity(array: &dyn Array) -> (Vec<u32>, Vec<u32>)
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ord.sort.partition_validity.md).
+
 
 Partition indices of an Arrow array into two categories:
 - `valid`: indices of non-null elements
@@ -123,6 +135,9 @@ Also reachable as `arrow::compute::kernels::sort::sort`, `arrow::compute::sort`
 ```rust
 fn sort(values: &dyn Array, options: Option<SortOptions>) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ord.sort.sort.md).
+
 
 Sort the `ArrayRef` using `SortOptions`.
 
@@ -157,6 +172,9 @@ Also reachable as `arrow::compute::kernels::sort::sort_limit`, `arrow::compute::
 ```rust
 fn sort_limit(values: &dyn Array, options: Option<SortOptions>, limit: Option<usize>) -> Result<ArrayRef, arrow_schema::ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ord.sort.sort_limit.md).
+
 
 Sort the `ArrayRef` partially.
 
@@ -199,6 +217,9 @@ Also reachable as `arrow::compute::kernels::sort::sort_to_indices`, `arrow::comp
 fn sort_to_indices(array: &dyn Array, options: Option<SortOptions>, limit: Option<usize>) -> Result<UInt32Array, arrow_schema::ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ord.sort.sort_to_indices.md).
+
+
 Sort elements from `ArrayRef` into an unsigned integer (`UInt32Array`) of indices.
 Floats are sorted using IEEE 754 totalOrder.  `limit` is an option for [partial_sort].
 
@@ -220,6 +241,9 @@ struct FixedLexicographicalComparator<const N: usize>
 fn compare(&self, a_idx: usize, b_idx: usize) -> Ordering
 fn try_new(columns: &[SortColumn]) -> Result<FixedLexicographicalComparator<N>, ArrowError>
 ```
+
+[Full member, field, variant and typed contracts](../operations/arrow_ord.sort.FixedLexicographicalComparator.md).
+
 
 A lexicographical comparator that wraps given array data (columns) and can lexicographically compare data
 at given two indices. This version of the comparator is for compile-time constant number of columns.
@@ -244,6 +268,9 @@ fn compare(&self, a_idx: usize, b_idx: usize) -> Ordering
 fn try_new(columns: &[SortColumn]) -> Result<LexicographicalComparator, ArrowError>
 ```
 
+[Full member, field, variant and typed contracts](../operations/arrow_ord.sort.LexicographicalComparator.md).
+
+
 A lexicographical comparator that wraps given array data (columns) and can lexicographically compare data
 at given two indices. The lifetime is the same at the data wrapped.
 
@@ -262,6 +289,9 @@ struct SortColumn
 **Fields**: `values`, `options`
 
 **Derives**: Clone, Debug
+
+[Full member, field, variant and typed contracts](../operations/arrow_ord.sort.SortColumn.md).
+
 
 One column to be used in lexicographical sort
 

@@ -18,10 +18,11 @@ crate::native_struct! {
         rust_evidence: EvidenceKind => Rule::Text,
         python_evidence: EvidenceKind => Rule::Text,
         observation: RequiredObservation => Rule::Text,
+        fragment_kinds: Vec<FragmentKind> => Rule::SequenceBounds { min: 0, max: 2 },
     }
 }
 macro_rules! inspection_aspects {
-    ($($variant:ident = $name:literal, $ordinal:literal, $items:expr, $characters:expr, $preview:literal, $rust:ident, $python:ident, $observation:ident;)*) => {
+    ($($variant:ident = $name:literal, $ordinal:literal, $items:expr, $characters:expr, $preview:literal, $rust:ident, $python:ident, $observation:ident, [$($fragment:ident),*];)*) => {
         crate::native_vocabulary! {
             /// Independently selectable inspection aspects.
             #[derive(PartialOrd, Ord)]
@@ -33,22 +34,23 @@ macro_rules! inspection_aspects {
                     aspect: Self::$variant, ordinal: $ordinal,
                     default_max_items: $items, default_max_characters: $characters, preview: $preview,
                     rust_evidence: EvidenceKind::$rust, python_evidence: EvidenceKind::$python, observation: RequiredObservation::$observation,
+                    fragment_kinds: vec![$(FragmentKind::$fragment),*],
                 }),*]
             }
         }
     };
 }
 inspection_aspects! {
-    Signature = "signature", 0, Some(32), None, false, PublicApi, PublicApi, None;
-    Availability = "availability", 1, Some(32), None, false, PublicApi, PublicApi, Configuration;
-    Relationships = "relationships", 2, None, None, false, PublicApi, PublicApi, None;
-    Documentation = "documentation", 3, Some(3), Some(1200), true, Documentation, Documentation, None;
-    Examples = "examples", 4, None, None, true, Examples, Examples, None;
-    Source = "source", 5, None, None, false, CrateSource, DistributionSource, Source;
-    Semantics = "semantics", 6, None, None, false, SemanticQueries, SemanticQueries, Execution;
-    Runtime = "runtime", 7, None, None, false, RuntimeApi, RuntimeApi, Execution;
-    Children = "children", 8, None, None, false, PublicApi, PublicApi, None;
-    Members = "members", 9, None, None, false, PublicApi, PublicApi, None;
+    Signature = "signature", 0, Some(32), None, false, PublicApi, PublicApi, None, [];
+    Availability = "availability", 1, Some(32), None, false, PublicApi, PublicApi, Configuration, [];
+    Relationships = "relationships", 2, None, None, false, PublicApi, PublicApi, None, [];
+    Documentation = "documentation", 3, Some(3), Some(1200), true, Documentation, Documentation, None, [DocText, ReadmeSection];
+    Examples = "examples", 4, None, None, true, Examples, Examples, None, [Example];
+    Source = "source", 5, None, None, false, CrateSource, DistributionSource, Source, [];
+    Semantics = "semantics", 6, None, None, false, SemanticQueries, SemanticQueries, Execution, [];
+    Runtime = "runtime", 7, None, None, false, RuntimeApi, RuntimeApi, Execution, [];
+    Children = "children", 8, None, None, false, PublicApi, PublicApi, None, [];
+    Members = "members", 9, None, None, false, PublicApi, PublicApi, None, [];
 }
 
 crate::native_struct! {

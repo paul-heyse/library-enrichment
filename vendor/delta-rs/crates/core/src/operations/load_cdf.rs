@@ -11,6 +11,7 @@
 //! let df = ctx.read_table(provider).await?;
 
 use crate::DeltaTableError;
+use crate::delta_datafusion::engine::AsObjectStoreUrl;
 use crate::delta_datafusion::{
     DataFusionMixins, DeltaSessionExt, extract_partition_only_predicate,
 };
@@ -31,7 +32,6 @@ use datafusion::datasource::memory::DataSourceExec;
 use datafusion::datasource::physical_plan::parquet::CachedParquetFileReaderFactory;
 use datafusion::datasource::physical_plan::{FileGroup, FileScanConfigBuilder, ParquetSource};
 use datafusion::datasource::table_schema::TableSchema;
-use datafusion::execution::cache::default_cache::DefaultCache;
 use datafusion::logical_expr::Expr;
 use datafusion::physical_expr::{PhysicalExpr, expressions};
 use datafusion::physical_expr_common::metrics::ExecutionPlanMetricsSet;
@@ -46,7 +46,6 @@ use std::time::SystemTime;
 use tracing::log;
 
 type ScalarPartitionMap = HashMap<Vec<ScalarValue>, Vec<PartitionedFile>>;
-const METADATA_CACHE_SIZE: usize = 1024 * 1024;
 
 /// Builder for create a read of change data feeds for delta tables
 #[derive(Clone)]
@@ -70,7 +69,6 @@ pub struct CdfLoadBuilder {
     /// conjuncts are ignored here and row-level correctness must be enforced by a
     /// separate `FilterExec` wrapped around the resulting plan.
     filter: Option<Expr>,
-    parquet_metadata_cache: Arc<CachedParquetFileReaderFactory>,
 }
 
 impl std::fmt::Debug for CdfLoadBuilder {
@@ -90,10 +88,6 @@ impl std::fmt::Debug for CdfLoadBuilder {
 impl CdfLoadBuilder {
     /// Create a new [`CdfLoadBuilder`]
     pub(crate) fn new(log_store: LogStoreRef, snapshot: Option<EagerSnapshot>) -> Self {
-        let parquet_metadata_cache = Arc::new(CachedParquetFileReaderFactory::new(
-            log_store.object_store(None),
-            Arc::new(DefaultCache::new(METADATA_CACHE_SIZE)),
-        ));
         Self {
             snapshot,
             log_store,
@@ -103,7 +97,6 @@ impl CdfLoadBuilder {
             ending_timestamp: None,
             allow_out_of_range: false,
             filter: None,
-            parquet_metadata_cache,
         }
     }
 
@@ -480,9 +473,12 @@ impl CdfLoadBuilder {
         groups: ScalarPartitionMap,
     ) -> Arc<DataSourceExec> {
         DataSourceExec::from_data_source(
-            FileScanConfigBuilder::new(self.log_store.object_store_url(), Arc::new(source))
-                .with_file_groups(groups.into_values().map(FileGroup::from).collect())
-                .build(),
+            FileScanConfigBuilder::new(
+                self.log_store.root_url().as_object_store_url(),
+                Arc::new(source),
+            )
+            .with_file_groups(groups.into_values().map(FileGroup::from).collect())
+            .build(),
         )
     }
 
@@ -492,6 +488,7 @@ impl CdfLoadBuilder {
         specs: Vec<CdcDataSpec<F>>,
         table_partition_cols: &[String],
         action_type: Option<ScalarValue>,
+        parquet_metadata_cache: &Arc<CachedParquetFileReaderFactory>,
         metrics: &ExecutionPlanMetricsSet,
     ) -> DeltaResult<ScalarPartitionMap> {
         let mut file_groups: ScalarPartitionMap = HashMap::new();
@@ -507,14 +504,17 @@ impl CdfLoadBuilder {
 
                 let mut new_part_values = spec_partition_values.clone();
                 new_part_values.extend(partition_values);
-                let mut part_file = PartitionedFile::new(action.path(), action.size()? as u64)
-                    .with_partition_values(new_part_values.clone());
+                let mut part_file = PartitionedFile::new(
+                    cdf_file_path(self.log_store.root_url(), &action.path())?,
+                    action.size()? as u64,
+                )
+                .with_partition_values(new_part_values.clone());
 
                 if let Some(access_plan) = create_file_scan_plan(
                     Arc::clone(&self.log_store.engine(None)),
                     action,
                     self.log_store.table_root_url(),
-                    Arc::clone(&self.parquet_metadata_cache),
+                    Arc::clone(parquet_metadata_cache),
                     metrics,
                 )
                 .await?
@@ -563,7 +563,18 @@ impl CdfLoadBuilder {
         let (cdc, add, remove, pairs) = self
             .determine_files_to_read(&snapshot, partition_pruning.as_ref())
             .await?;
-        session.ensure_log_store_registered(self.log_store.as_ref())?;
+        session.ensure_object_store_registered(self.log_store.as_ref(), None)?;
+        // Construct only after binding the caller's Session. Ordinary Delta scans and
+        // CDF use the same root-store paths and runtime metadata cache.
+        let parquet_metadata_cache = Arc::new(CachedParquetFileReaderFactory::new(
+            session
+                .runtime_env()
+                .object_store(self.log_store.root_url().as_object_store_url())?,
+            session
+                .runtime_env()
+                .cache_manager
+                .get_file_metadata_cache(),
+        ));
 
         let schema_fields: Vec<Arc<Field>> = schema
             .fields()
@@ -614,20 +625,27 @@ impl CdfLoadBuilder {
 
         let mut cdc_source = ParquetSource::new(cdc_table_schema)
             .with_table_parquet_options(parquet_options.clone())
-            .with_parquet_file_reader_factory(self.parquet_metadata_cache.clone());
+            .with_parquet_file_reader_factory(parquet_metadata_cache.clone());
         let mut add_source = ParquetSource::new(add_table_schema)
             .with_table_parquet_options(parquet_options.clone())
-            .with_parquet_file_reader_factory(self.parquet_metadata_cache.clone());
+            .with_parquet_file_reader_factory(parquet_metadata_cache.clone());
         let mut remove_source = ParquetSource::new(remove_table_schema)
             .with_table_parquet_options(parquet_options)
-            .with_parquet_file_reader_factory(self.parquet_metadata_cache.clone());
+            .with_parquet_file_reader_factory(parquet_metadata_cache.clone());
 
         // Set up the partition to physical file mapping, this is a mostly unmodified version of what is done in load
         let engine = self.log_store.engine(None);
         let metrics = metrics.unwrap_or_default();
 
         let cdc_file_groups = self
-            .create_file_groups(schema.clone(), cdc, partition_values, None, &metrics)
+            .create_file_groups(
+                schema.clone(),
+                cdc,
+                partition_values,
+                None,
+                &parquet_metadata_cache,
+                &metrics,
+            )
             .await?;
 
         let mut add_file_groups = self
@@ -636,6 +654,7 @@ impl CdfLoadBuilder {
                 add,
                 partition_values,
                 Self::get_add_action_type(),
+                &parquet_metadata_cache,
                 &metrics,
             )
             .await?;
@@ -646,6 +665,7 @@ impl CdfLoadBuilder {
                 remove,
                 partition_values,
                 Self::get_remove_action_type(),
+                &parquet_metadata_cache,
                 &metrics,
             )
             .await?;
@@ -658,7 +678,7 @@ impl CdfLoadBuilder {
             &mut remove_file_groups,
             Arc::clone(&engine),
             self.log_store.table_root_url(),
-            Arc::clone(&self.parquet_metadata_cache),
+            Arc::clone(&parquet_metadata_cache),
             &metrics,
         )
         .await?;
